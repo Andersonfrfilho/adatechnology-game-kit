@@ -14,6 +14,335 @@
     "source": "packages/game-characters-undead/src/data (UNDEAD_TYPES) and packages/game-characters-people/src/data (PROFESSIONS), the items of the area",
     "covered": 25
   },
+  "locomotion": [
+    {
+      "file": "05-undead-wander-side-t00.png",
+      "moment": "wander",
+      "view": "side",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "06-undead-wander-side-t08.png",
+      "moment": "wander",
+      "view": "side",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "07-undead-wander-side-t16.png",
+      "moment": "wander",
+      "view": "side",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "08-undead-wander-side-t24.png",
+      "moment": "wander",
+      "view": "side",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "09-undead-wander-front-t00.png",
+      "moment": "wander",
+      "view": "front",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "10-undead-wander-front-t08.png",
+      "moment": "wander",
+      "view": "front",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "11-undead-wander-front-t16.png",
+      "moment": "wander",
+      "view": "front",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "12-undead-wander-front-t24.png",
+      "moment": "wander",
+      "view": "front",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "13-undead-chase-side-t00.png",
+      "moment": "chase",
+      "view": "side",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "14-undead-chase-side-t08.png",
+      "moment": "chase",
+      "view": "side",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "15-undead-chase-side-t16.png",
+      "moment": "chase",
+      "view": "side",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "16-undead-chase-side-t24.png",
+      "moment": "chase",
+      "view": "side",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "17-undead-chase-front-t00.png",
+      "moment": "chase",
+      "view": "front",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "18-undead-chase-front-t08.png",
+      "moment": "chase",
+      "view": "front",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "19-undead-chase-front-t16.png",
+      "moment": "chase",
+      "view": "front",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "20-undead-chase-front-t24.png",
+      "moment": "chase",
+      "view": "front",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "21-undead-sprint-side-t00.png",
+      "moment": "sprint",
+      "view": "side",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "22-undead-sprint-side-t08.png",
+      "moment": "sprint",
+      "view": "side",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "23-undead-sprint-side-t16.png",
+      "moment": "sprint",
+      "view": "side",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "24-undead-sprint-side-t24.png",
+      "moment": "sprint",
+      "view": "side",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "25-undead-sprint-front-t00.png",
+      "moment": "sprint",
+      "view": "front",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "26-undead-sprint-front-t08.png",
+      "moment": "sprint",
+      "view": "front",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "27-undead-sprint-front-t16.png",
+      "moment": "sprint",
+      "view": "front",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "28-undead-sprint-front-t24.png",
+      "moment": "sprint",
+      "view": "front",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "29-professions-walk-side-t00.png",
+      "moment": "walk-pose",
+      "view": "side",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "30-professions-walk-side-t08.png",
+      "moment": "walk-pose",
+      "view": "side",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "31-professions-walk-side-t16.png",
+      "moment": "walk-pose",
+      "view": "side",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "32-professions-walk-side-t24.png",
+      "moment": "walk-pose",
+      "view": "side",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    },
+    {
+      "file": "33-professions-walk-front-t00.png",
+      "moment": "walk-pose",
+      "view": "front",
+      "stepsAfterFreeze": 0,
+      "stepS": 0.01667
+    },
+    {
+      "file": "34-professions-walk-front-t08.png",
+      "moment": "walk-pose",
+      "view": "front",
+      "stepsAfterFreeze": 8,
+      "stepS": 0.01667
+    },
+    {
+      "file": "35-professions-walk-front-t16.png",
+      "moment": "walk-pose",
+      "view": "front",
+      "stepsAfterFreeze": 16,
+      "stepS": 0.01667
+    },
+    {
+      "file": "36-professions-walk-front-t24.png",
+      "moment": "walk-pose",
+      "view": "front",
+      "stepsAfterFreeze": 24,
+      "stepS": 0.01667
+    }
+  ],
+  "playerStrips": [
+    {
+      "file": "37-player-walk-strip.png",
+      "subject": "player body, walk",
+      "speedMs": 1.4,
+      "views": [
+        "side",
+        "front"
+      ],
+      "cyclePhasesPercent": [
+        0,
+        25,
+        50,
+        75
+      ],
+      "stepsAfterClear": [
+        39,
+        47,
+        56,
+        64
+      ],
+      "stepS": 0.01667,
+      "camera": {
+        "kind": "explicit",
+        "azimuthDegSideFront": [
+          90,
+          0
+        ],
+        "distance": 3.6,
+        "fovDeg": 34,
+        "lookHeight": 0.95
+      }
+    },
+    {
+      "file": "38-player-run-strip.png",
+      "subject": "player body, run",
+      "speedMs": 5,
+      "views": [
+        "side",
+        "front"
+      ],
+      "cyclePhasesPercent": [
+        0,
+        25,
+        50,
+        75
+      ],
+      "stepsAfterClear": [
+        35,
+        41,
+        47,
+        53
+      ],
+      "stepS": 0.01667,
+      "camera": {
+        "kind": "explicit",
+        "azimuthDegSideFront": [
+          90,
+          0
+        ],
+        "distance": 3.6,
+        "fovDeg": 34,
+        "lookHeight": 0.95
+      }
+    },
+    {
+      "file": "39-player-crouch-walk-strip.png",
+      "subject": "player body, crouch-walk",
+      "speedMs": 0.9,
+      "views": [
+        "side",
+        "front"
+      ],
+      "cyclePhasesPercent": [
+        0,
+        25,
+        50,
+        75
+      ],
+      "stepsAfterClear": [
+        30,
+        38,
+        45,
+        53
+      ],
+      "stepS": 0.01667,
+      "camera": {
+        "kind": "explicit",
+        "azimuthDegSideFront": [
+          90,
+          0
+        ],
+        "distance": 3.6,
+        "fovDeg": 34,
+        "lookHeight": 0.95
+      }
+    }
+  ],
+  "gaps": [
+    "undead and professions are walked in place by the module: no ground speed, so no stance slide can be measured for them (only the player body moves)",
+    "no crouch or aim-walk clip is exposed for the undead types",
+    "the lowest point of one undead type is not the same on every sheet or run (zombie_walker read -0.043 to -0.051 m, and the colour of the part that holds it changes between sheets): each spawn looks to draw its own variant, but the source of the variation was not found, so the sink limit has a band of 0.005 m (tools/check-area/contact-sheet.mjs): a type already in known-defects.json is held down to -0.045 m, one that is not is reported only below -0.055 m, and a body that reads between -0.045 and -0.055 m is therefore not told apart from the limit by this check"
+  ],
   "sheets": [
     {
       "file": "01-undead-front.png",
@@ -167,6 +496,1550 @@
         "sinking": true
       },
       "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "05-undead-wander-side-t00.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "06-undead-wander-side-t08.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "07-undead-wander-side-t16.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "08-undead-wander-side-t24.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "09-undead-wander-front-t00.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "10-undead-wander-front-t08.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "11-undead-wander-front-t16.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "12-undead-wander-front-t24.png",
+      "family": "undead-wander",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "13-undead-chase-side-t00.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "14-undead-chase-side-t08.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "15-undead-chase-side-t16.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "16-undead-chase-side-t24.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "17-undead-chase-front-t00.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "18-undead-chase-front-t08.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "19-undead-chase-front-t16.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "20-undead-chase-front-t24.png",
+      "family": "undead-chase",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "21-undead-sprint-side-t00.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "22-undead-sprint-side-t08.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "23-undead-sprint-side-t16.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "24-undead-sprint-side-t24.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "25-undead-sprint-front-t00.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "26-undead-sprint-front-t08.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "27-undead-sprint-front-t16.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "28-undead-sprint-front-t24.png",
+      "family": "undead-sprint",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "29-professions-walk-side-t00.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "30-professions-walk-side-t08.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "31-professions-walk-side-t16.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "32-professions-walk-side-t24.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "33-professions-walk-front-t00.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "34-professions-walk-front-t08.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 8,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "35-professions-walk-front-t16.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 16,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "36-professions-walk-front-t24.png",
+      "family": "professions-walk",
+      "view": "front",
+      "openLeaves": false,
+      "extraFramesAfterFreeze": 24,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
       "camera": {
         "kind": "front",
         "fovDeg": 22,

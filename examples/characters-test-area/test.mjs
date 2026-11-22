@@ -8,6 +8,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { createSheetRecorder, openRoomPage } from '../../tools/check-area/contact-sheet.mjs'
+import { FIXED_STEP } from '../../tools/check-area/phase-zero.mjs'
+import { recordPlayerLocomotion } from './locomotion.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const bundle = join(here, 'dist/characters-area.js')
@@ -78,7 +80,36 @@ try {
       }
     }
   }
-  const summary = recorder.finish()
+
+  // phase 0 of spec 013: the locomotion of the undead types (walk, run, sprint: the moments wander, chase, sprint) at four times of the clock, front and side, on the sheets' own camera (a fixed time after the freeze:
+  // the module walks the bodies in place on its own clock, restarted by every sheet, so a time is the same frame on every run); the cycle of each type differs, so the four times are not the same fraction of every cycle
+  const LOCOMOTION_STEPS = [0, 8, 16, 24]
+  /** @type {Record<string, unknown>[]} */
+  const locomotion = []
+  for (const moment of ['wander', 'chase', 'sprint']) {
+    await opened.page.evaluate((/** @type {string} */ value) => /** @type {any} */ (window).__testRoom.bench().set('moment', value), moment)
+    for (const [name, yaw] of /** @type {[string, number][]} */ ([['side', SIDE], ['front', FRONT]])) {
+      for (const extraFrames of LOCOMOTION_STEPS) {
+        number += 1
+        const file = `${String(number).padStart(2, '0')}-undead-${moment}-${name}-t${String(extraFrames).padStart(2, '0')}`
+        await recorder.sheet({ file, family: `undead-${moment}`, entries: undead.map((/** @type {string} */ id) => ({ id })), view, yaw, gap: 0.45, ruler: true, extraFrames })
+        locomotion.push({ file: `${file}.png`, moment, view: name, stepsAfterFreeze: extraFrames, stepS: +FIXED_STEP.toFixed(5) })
+      }
+    }
+  }
+  await opened.page.evaluate(() => /** @type {any} */ (window).__testRoom.bench().set('moment', 'wander'))
+  // the professions walk at 1.4 m/s in place: one pair of rows at the same times
+  for (const [name, yaw] of /** @type {[string, number][]} */ ([['side', SIDE], ['front', FRONT]])) {
+    for (const extraFrames of LOCOMOTION_STEPS) {
+      number += 1
+      const file = `${String(number).padStart(2, '0')}-professions-walk-${name}-t${String(extraFrames).padStart(2, '0')}`
+      await recorder.sheet({ file, family: 'professions-walk', entries: people.map((/** @type {string} */ id) => ({ id })), view, yaw, gap: 0.45, ruler: true, extraFrames })
+      locomotion.push({ file: `${file}.png`, moment: 'walk-pose', view: name, stepsAfterFreeze: extraFrames, stepS: +FIXED_STEP.toFixed(5) })
+    }
+  }
+  // the player body: walk, run, crouch strips and the foot numbers at 0 to 7 m/s (T0.1 and T0.2)
+  const player = await recordPlayerLocomotion({ opened, outDir: join(here, 'shots'), firstNumber: number, recorder })
+  const summary = recorder.finish({ locomotion, playerStrips: player.strips, gaps: ['undead and professions are walked in place by the module: no ground speed, so no stance slide can be measured for them (only the player body moves)', 'no crouch or aim-walk clip is exposed for the undead types', 'the lowest point of one undead type is not the same on every sheet or run (zombie_walker read -0.043 to -0.051 m, and the colour of the part that holds it changes between sheets): each spawn looks to draw its own variant, but the source of the variation was not found, so the sink limit has a band of 0.005 m (tools/check-area/contact-sheet.mjs): a type already in known-defects.json is held down to -0.045 m, one that is not is reported only below -0.055 m, and a body that reads between -0.045 and -0.055 m is therefore not told apart from the limit by this check'] })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {
