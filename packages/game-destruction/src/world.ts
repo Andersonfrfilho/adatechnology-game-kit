@@ -3116,11 +3116,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    */
   const holeReaches = (host: PartRT, box: { min: Vec3; max: Vec3 }): boolean => {
     if (isLost(host) || host.st.status === 'collapsed') return true
+    const op = host.st.opening
+    // no opening and no unit knocked out: no hole to reach the box
+    if (!op && !host.st.chipped?.length) return false
     const [u, v] = planeAxes(host.thin)
     const corners = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => toLocal(host.pos, host.q, [i & 1 ? box.max[0] : box.min[0], i & 2 ? box.max[1] : box.min[1], i & 4 ? box.max[2] : box.min[2]]))
     const lo = [0, 1, 2].map((k) => Math.min(...corners.map((c) => c[k]!)))
     const hi = [0, 1, 2].map((k) => Math.max(...corners.map((c) => c[k]!)))
-    const op = host.st.opening
     if (op) {
       const lc = toLocal(host.pos, host.q, op.center)
       if (Math.hypot(clamp(lc[u]!, lo[u]!, hi[u]!) - lc[u]!, clamp(lc[v]!, lo[v]!, hi[v]!) - lc[v]!) <= op.radius + HOLE_SLACK) return true
@@ -3987,6 +3989,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
+  const reinforcedBoxes = new WeakMap<ObjRT, PartRT[]>()
+  /** The reinforced box parts of an object, in part order. Parts and their specs are fixed after `build`, so the filter runs once per object. */
+  const reinforcedBoxesOf = (o: ObjRT): PartRT[] => {
+    let found = reinforcedBoxes.get(o)
+    if (!found) {
+      found = o.parts.filter((m) => m.spec.reinforcement && m.spec.shape.kind === 'box')
+      reinforcedBoxes.set(o, found)
+    }
+    return found
+  }
+
   /**
    * A blast on the infill of a confined wall (`PANEL_PI`): the reflected pressure and impulse at the middle of the bay the charge faces (between the two
    * pillars around it, or the ends of the wall) decide whether that panel fails. A failed panel comes out whole into the side away from the charge; the
@@ -3999,8 +4012,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const half = p.dims[u] / 2
     // the pillars standing in this wall, as positions along it
     const posts: { x: number; half: number }[] = []
-    for (const m of o.parts) {
-      if (m === p || !m.spec.reinforcement || isLost(m) || m.spec.shape.kind !== 'box') continue
+    for (const m of reinforcedBoxesOf(o)) {
+      if (m === p || isLost(m)) continue
       const mp = toLocal(p.pos, p.q, m.pos)
       if (Math.abs(mp[p.thin]) > p.dims[p.thin] + 0.15 || Math.abs(mp[u]) > half + 0.15 || m.dims[v] < p.dims[v] * 0.5) continue
       posts.push({ x: mp[u], half: m.dims[u] / 2 })
@@ -4396,6 +4409,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   /** What is lit by a fire or a blast near: the leaks of flammable fluid within `radius` of `centre` (object parts only). */
   const lightLeaksNear = (centre: Vec3, radius: number) => {
     for (const o of objects.values()) {
+      // `bc`/`br` hold every part's centre and bound (`updateBound` at build and at each `setPartPose`): a part within `radius` puts the object within `radius + br`
+      if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), centre) - o.br - SWEEP_BROAD_SLACK > radius) continue
       for (const q of o.parts) {
         if (isLost(q) || q.rt.lit || q.rt.jet || !leaksFlammable(q)) continue
         if (vec.distance(partXf(o, q).c, centre) - q.bound > radius) continue
