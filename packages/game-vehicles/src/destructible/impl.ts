@@ -484,8 +484,13 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     recomputeGroups()
   }
 
-  const damage = (p: PState, amount: number, dtype: DamageType, source: string | undefined, out: DestructionEvent[], cause?: Vec3): void => {
-    if (p.lost || !(amount > 0)) return
+  /**
+   * `pieces` (a fragment that stands for several, `Hit.pieces`) adds the hit points up only to what the part has left: the hp and the wear of its joints take at most
+   * `max(amount, hp)`, as the destruction world does for its own parts.
+   */
+  const damage = (p: PState, hitAmount: number, dtype: DamageType, source: string | undefined, out: DestructionEvent[], cause?: Vec3, pieces = 1): void => {
+    if (p.lost || !(hitAmount > 0)) return
+    const amount = pieces > 1 ? Math.min(hitAmount * pieces, Math.max(hitAmount, p.hp)) : hitAmount
     const before = p.hp
     // the welded body (roof, pillars, frame, side panels) bends and tears but stays: it is never knocked off the car as a piece
     // sheet metal hit by a blow crumples and stays on: it only comes off when its hinges or bolts give way (`wear`)
@@ -755,7 +760,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     if (metal && !through && cosInc < 0.3 && E > 40) {
       const refl = dir.clone().addScaledVector(n, -2 * dir.dot(n))
       out.push(ev({ type: 'ricochet', part: d.id, point: worldPoint, direction: r3(dirToWorld(refl)), energy: r2(E * 0.4) }))
-      damage(p, E * 0.05 * pieces, 'ballistic', h.source, out, worldPoint)
+      damage(p, E * 0.05, 'ballistic', h.source, out, worldPoint, pieces)
       vis?.spark([v.x, v.y, v.z], [refl.x, refl.y, refl.z], 6)
       return
     }
@@ -788,13 +793,13 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           const crack = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), length: r2(0.15 + force * 0.35), rays: 6 + Math.round(force * 6) }
           p.cracks.push(crack)
           out.push(ev({ type: 'crack', part: d.id, crack, worldPoint }))
-          damage(p, E * (armourLevel && !through ? armourLevel.glassTakes : 0.5) * pieces, 'ballistic', h.source, out, worldPoint)
-        } else damage(p, laminated ? E * 0.5 * pieces : p.hp, 'ballistic', h.source, out, worldPoint)
+          damage(p, E * (armourLevel && !through ? armourLevel.glassTakes : 0.5), 'ballistic', h.source, out, worldPoint, pieces)
+        } else damage(p, laminated ? E * 0.5 : p.hp, 'ballistic', h.source, out, worldPoint, laminated ? pieces : 1)
         break
       }
       case 'rubber': {
         push(through)
-        damage(p, E * 0.4 * pieces, 'ballistic', h.source, out, worldPoint)
+        damage(p, E * 0.4, 'ballistic', h.source, out, worldPoint, pieces)
         if (through && !p.lost && !p.flat) {
           // a rifle round, a slug or a big tear bursts it at once; a small hole lets the air out over seconds to minutes
           if (E >= TYRE_BURST_JOULES || cal >= TYRE_BURST_CALIBER) deflate(p, 1)
@@ -810,10 +815,10 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           out.push(ev({ type: 'dent', part: d.id, dent, worldPoint }))
         }
         vis?.spark([v.x, v.y, v.z], [dir.x, dir.y, dir.z], through ? 4 : 8)
-        let amount = (through ? E * 0.6 : E * 0.25) * pieces
+        let amount = through ? E * 0.6 : E * 0.25
         // a pierced battery or alternator is finished
         if (through && (d.role === 'battery' || d.role === 'alternator')) amount = Math.max(amount, p.hp * 0.65)
-        damage(p, amount, 'ballistic', h.source, out, worldPoint)
+        damage(p, amount, 'ballistic', h.source, out, worldPoint, pieces)
         if (through && d.role === 'fuel_tank') rollIgnition(p, h, metal, out)
       }
     }

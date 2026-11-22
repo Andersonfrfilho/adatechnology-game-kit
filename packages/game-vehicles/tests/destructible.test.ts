@@ -371,3 +371,14 @@ describe('a fragment that stands for several (`Hit.pieces`)', () => {
     })
   }
 })
+
+describe('the pieces a ray stands for add up only to what the part has left', () => {
+  it('a welded roof hit by a ray of 1000 pieces and by one of 10 000: the same damage and the same wear of its welds (both take it to the end, no further)', () => {
+    const run = (pieces: number) => {
+      const { d } = make('proto')
+      const events = d.hit({ ...bullet(d, 'roof', [0, 4, 0], 300, 4), pieces })
+      return JSON.stringify([events, d.state().joints, d.state().parts.find((part) => part.id === 'roof')])
+    }
+    expect(run(10_000)).toBe(run(1000))
+  })
+})
