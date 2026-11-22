@@ -435,3 +435,84 @@ describe('the bound of a weight is a world option', () => {
     expect(unweighted / all).toBeLessThan(0.32)
   })
 })
+
+/** Paths of every number in `value` that is not finite (NaN, Infinity), walked before any JSON turns NaN into null. */
+const nonFinite = (value: unknown, path = '', out: string[] = []): string[] => {
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) out.push(`${path}=${value}`)
+  } else if (Array.isArray(value)) value.forEach((item, index) => nonFinite(item, `${path}[${index}]`, out))
+  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) nonFinite(item, `${path}.${key}`, out)
+  return out
+}
+
+describe('under the cap every number stays finite and nothing is weighted', () => {
+  // a closed room (every direction meets a panel) whose panels are half board, half pane, bolted together: the pieces wear the bolts, break panes (their pieces fly off) and hole the boards
+  const panelRoom = (world: ReturnType<typeof createDestruction>): void => {
+    for (let axis = 0; axis < 3; axis++) {
+      for (const sign of [-1, 1]) {
+        for (let i = 0; i < 2; i++) {
+          const at: Vec3 = [0, 0, 0]
+          at[axis] = sign * 3.02
+          at[(axis + 1) % 3] = -1.5 + 3 * i
+          // each half of a panel is 1.5 x 6 m: two panels cover a 6 x 6 m face, so every piece of the case meets one and the whole case is cast
+          const size = (thickness: number): Vec3 => {
+            const s: Vec3 = [1.5, 1.5, 1.5]
+            s[axis] = thickness
+            s[(axis + 2) % 3] = 6.2
+            return s
+          }
+          const offset = (along: number): Vec3 => {
+            const o: Vec3 = [0, 0, 0]
+            o[(axis + 1) % 3] = along
+            return o
+          }
+          world.add({
+            parts: [
+              { id: 'board', material: 'wood_soft', shape: { kind: 'box', size: size(0.02) }, position: offset(-0.75), thickness: 0.02, anchored: true },
+              { id: 'pane', material: 'glass', shape: { kind: 'box', size: size(0.004) }, position: offset(0.75), thickness: 0.004 },
+            ],
+            joints: [{ id: 'board~pane', a: 'board', b: 'pane', kind: 'bolt' }],
+          }, { id: `w${axis}${sign}-${i}`, position: at })
+        }
+      }
+    }
+  }
+  const throwIn = (seed: number, fragmentMaxWeight?: number) => {
+    const world = createDestruction({ seed, ...(fragmentMaxWeight !== undefined ? { fragmentMaxWeight } : {}) })
+    panelRoom(world)
+    const results = world.explode(ORIGIN, PIPE_BOMB.energy, 10, 'test', { charge: PIPE_BOMB.charge })
+    for (let frame = 0; frame < 10; frame++) world.update(1 / 60)
+    return { results, state: world.serialize() }
+  }
+
+  it('a pipe bomb (60 pieces) in a closed room of bolted panels, 200 throws: every number of its events and of the world after it is finite', () => {
+    const bad: string[] = []
+    for (let seed = 1; seed <= 200; seed++) {
+      const { results, state } = throwIn(seed)
+      const found = [...nonFinite(results, 'results'), ...nonFinite(state, 'state')]
+      if (found.length > 0) bad.push(`seed ${seed}: ${found.length} (${found.slice(0, 2).join(', ')})`)
+    }
+    expect(bad).toEqual([])
+  })
+
+  it('and no ray stands for more than itself: the same 200 throws with every weight forced to 1 give the same events', () => {
+    const different: number[] = []
+    // torn splinters are numbered by a counter that runs on across worlds (`#t<n>`): left out of the comparison
+    const stream = (seed: number, fragmentMaxWeight?: number): string => JSON.stringify(throwIn(seed, fragmentMaxWeight).results).replace(/#t\d+-/g, '#t-')
+    for (let seed = 1; seed <= 200; seed++) if (stream(seed) !== stream(seed, 1)) different.push(seed)
+    expect(different).toEqual([])
+  })
+
+  it('and the pieces wear the bolts of the boards they hit in every throw: a weight that is not exactly 1 (NaN) would wear none', () => {
+    const unworn: number[] = []
+    for (let seed = 1; seed <= 200; seed++) {
+      const world = createDestruction({ seed })
+      panelRoom(world)
+      world.explode(ORIGIN, 1, 10, 'test', { charge: caseOnly(PIPE_BOMB) })
+      const ids = world.serialize().objects.map((object) => object.id)
+      const worn = ids.some((id) => world.state(id)!.joints.some((joint) => joint.hp < joint.maxHp))
+      if (!worn) unworn.push(seed)
+    }
+    expect(unworn).toEqual([])
+  })
+})
