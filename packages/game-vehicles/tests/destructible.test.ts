@@ -348,3 +348,37 @@ describe('door and lid plates', () => {
     expect(panel.visible).toBe(false)
   })
 })
+
+describe('a fragment that stands for several (`Hit.pieces`)', () => {
+  // the destruction world casts at most `maxRays` fragments and lets a kept one stand for the ones left out: the hit points add up, the hole is one piece's
+  const shoot = (pieces: number | undefined, energy: number) => {
+    const { d } = make('proto')
+    const hit = bullet(d, 'door_front_left', [3, 1, 0], energy, 4)
+    const events = d.hit(pieces === undefined ? hit : { ...hit, pieces })
+    const marks = events.filter((event) => event.type !== 'damage')
+    const damage = events.filter((event) => event.type === 'damage').reduce((sum, event) => sum + (event as { amount: number }).amount, 0)
+    return { marks: JSON.stringify(marks), damage }
+  }
+
+  for (const energy of [300, 3000]) {
+    it(`${energy} J on a door: the same hole, penetration and exit with pieces 4 as with 1, and four times the hit points`, () => {
+      const one = shoot(1, energy)
+      const four = shoot(4, energy)
+      expect(four.marks).toBe(one.marks)
+      expect(one.damage).toBeGreaterThan(0)
+      expect(four.damage).toBeCloseTo(4 * one.damage, 6)
+      expect(shoot(undefined, energy)).toEqual(one)
+    })
+  }
+})
+
+describe('the pieces a ray stands for add up only to what the part has left', () => {
+  it('a welded roof hit by a ray of 1000 pieces and by one of 10 000: the same damage and the same wear of its welds (both take it to the end, no further)', () => {
+    const run = (pieces: number) => {
+      const { d } = make('proto')
+      const events = d.hit({ ...bullet(d, 'roof', [0, 4, 0], 300, 4), pieces })
+      return JSON.stringify([events, d.state().joints, d.state().parts.find((part) => part.id === 'roof')])
+    }
+    expect(run(10_000)).toBe(run(1000))
+  })
+})

@@ -268,6 +268,11 @@ export interface MaterialStrength {
    * Default true for materials tagged `masonry` that are not reinforced.
    */
   slender?: boolean
+  /**
+   * A piece of a case (`BlastCasing`) goes through this material only if the modified NDRC formula (`concretePerforation`) lets it as well as the linear rule. Set on
+   * concrete, which the formula was fitted on; masonry stays on the linear rule.
+   */
+  ndrc?: boolean
 }
 
 /** Bending of beams, slabs, roofs and stairs (`DestructionOptions.structure.flexure`). Every number is configurable; the defaults are real values. */
@@ -474,6 +479,11 @@ export interface SweepProbe {
 export interface DestructionOptions {
   /** Extra or overriding materials (merged over `MATERIALS` by id). */
   materials?: MaterialDef[]
+  /**
+   * The most fragments of a case one cast ray may stand for when a blast qualifies more than `BlastCharge.maxRays` (default 8). Past it the fragments are left out: a case
+   * with more than `maxRays x fragmentMaxWeight` qualifying pieces in a stratum delivers `fragmentMaxWeight x picked / qualifying` of their hit points.
+   */
+  fragmentMaxWeight?: number
   /** Seed for every random choice (default 1). */
   seed?: number
   /** Ambient temperature (default 20). */

@@ -471,6 +471,8 @@ export interface BlastCasing {
   readonly gurneyVelocity: number
   /** `sphere` (default: a grenade, `v = sqrt(2E) / sqrt(M/C + 3/5)`) or `cylinder` (a pipe, `M/C + 1/2`). */
   readonly geometry?: 'sphere' | 'cylinder'
+  /** Nose factor of its fragments in the modified NDRC formula against concrete (0.72 flat, 0.84 blunt and irregular, the default; 1.0 round; 1.14 very sharp). */
+  readonly noseFactor?: number
 }
 
 /** The charge behind a blast, when the host knows it: its TNT equivalent for the blast wave, and its case for the fragments. */
@@ -571,6 +573,12 @@ export interface Hit {
   blast?: BlastOptions
   /** Explosive hit on an impl: the share of the blast that reaches it after what stood between; `energy` is already reduced by it. Informational. */
   shelter?: number
+  /**
+   * Ballistic, a fragment of a case: how many real fragments this ray stands for (absent = 1). The world casts at most `maxRays` rays and lets each kept one stand for
+   * the ones left out. The ray is still one piece where it lands: penetration, holes, exits, cracks and every other local effect are per piece and must not be scaled by
+   * it. Only accumulated, health-like damage (hit points) may be multiplied by it. Finite and at least 1.
+   */
+  pieces?: number
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------

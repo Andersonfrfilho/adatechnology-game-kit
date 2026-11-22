@@ -115,3 +115,42 @@ export function fragmentDrag(mass: number): number {
   const sphereArea = Math.PI * Math.cbrt((3 * mass) / (4 * Math.PI * STEEL_DENSITY)) ** 2
   return (AIR_DENSITY * DRAG_AREA_FACTOR * sphereArea) / (2 * mass)
 }
+
+/** Nose factor of the modified NDRC formula for a blunt, irregular steel fragment (0.72 flat, 0.84 blunt, 1.0 round, 1.14 very sharp): the default of `BlastCasing.noseFactor`. */
+const BLUNT_FRAGMENT_NOSE = 0.84
+/** The modified NDRC constant in SI units: `G = 3.8e-5 N M / (d sqrt(f'c)) (V / d)^1.8`, M in kg, d in m, V in m/s, f'c in Pa. */
+const NDRC_CONSTANT = 3.8e-5
+
+export interface ConcretePerforationInput {
+  /** kg */
+  readonly mass: number
+  /** m: the diameter of the projectile (for a fragment, the sphere of its volume). */
+  readonly caliber: number
+  /** m/s: its speed when it reaches the face. */
+  readonly speed: number
+  /** MPa: the concrete's compressive strength (`MaterialDef.strength.compressiveMPa`). */
+  readonly compressiveMPa: number
+  /** Nose factor (`BlastCasing.noseFactor`); 0.84, a blunt irregular fragment, when not given. */
+  readonly nose?: number | undefined
+}
+
+/** Depth a projectile goes into concrete and the thickness it goes through, in metres. */
+export interface ConcretePerforation {
+  readonly depth: number
+  readonly perforation: number
+}
+
+/**
+ * NDRC modificado (Kennedy 1976), conhecimento geral, não conferido em norma. With `G = 3.8e-5 N M / (d sqrt(f'c)) (V / d)^1.8` (SI: M kg, d m, V m/s, f'c Pa; N the nose
+ * factor, 0.84 for a blunt irregular fragment) the depth of penetration is `x / d = 2 sqrt(G)` for `G <= 1` and `x / d = G + 1` above, and the thickness the projectile goes
+ * through is `e / d = 3.19 (x / d) - 0.718 (x / d)^2` for `x / d <= 1.35` and `e / d = 1.32 + 1.24 (x / d)` above (fitted up to `x / d = 13.5`; past it the line is extended).
+ * In C25 a 0.19 g piece of an M67 at 2073 m/s goes 32 mm in and through 45 mm; a 49 g piece of a pipe bomb at 1184 m/s 119 mm in and through 178 mm.
+ */
+export function concretePerforation(input: ConcretePerforationInput): ConcretePerforation {
+  const { mass, caliber, speed } = input
+  if (!(mass > 0) || !(caliber > 0) || !(speed > 0)) return { depth: 0, perforation: 0 }
+  const g = (NDRC_CONSTANT * (input.nose ?? BLUNT_FRAGMENT_NOSE) * mass) / (caliber * Math.sqrt(input.compressiveMPa * 1e6)) * (speed / caliber) ** 1.8
+  const relative = g <= 1 ? 2 * Math.sqrt(g) : g + 1
+  const through = relative <= 1.35 ? 3.19 * relative - 0.718 * relative * relative : 1.32 + 1.24 * relative
+  return { depth: relative * caliber, perforation: through * caliber }
+}
