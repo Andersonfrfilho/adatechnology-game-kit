@@ -11,7 +11,8 @@ import { houseSpec } from './wall-helpers'
 /**
  * A casing blast wears the same joints and chips the same units hit after hit: what depends only on a part (a joint's overlap length, the units of a wall near
  * the blow) is kept between hits. The hashes were recorded on the code that measured both again at every hit (the same events, in the same order, and the same
- * world), so a cache that goes stale, or a scan that skips a unit it should have visited, changes one.
+ * world), so a cache that goes stale, or a scan that skips a unit it should have visited, changes one. Record them again only for a change meant to alter what a
+ * blast does, never to make this test pass: `PRINT_CASING_HASH=1` prints the hash of each case.
  */
 const CHARGES = {
   m67: { energy: 200000, radius: 15, charge: { tnt: 0.24, casing: { mass: 0.19, material: 'steel', fragments: 1000, chargeMass: 0.18, gurneyVelocity: 2700 } } },
@@ -53,7 +54,15 @@ const SCENARIOS: Record<string, Scenario> = {
   longWall: { spec: longWallSpec, blasts: [[-2, 1.2, 0.8], [2.5, 1.4, -0.8]], moved: { position: [1, 0, 2], rotation: SKEW, then: [2, 1.4, 2.7] }, posed: { part: 'pillar_east', position: [4.01, 1.1, 0.005] } },
 }
 
-const hashOf = (parts: readonly string[]): string => createHash('sha256').update(parts.join('\n')).digest('hex')
+/** Fragment ids carry a counter shared by every world of the process (`#t<N>-`): numbered here by first appearance, so a hash does not depend on what ran before. */
+const hashOf = (parts: readonly string[]): string => {
+  const order = new Map<string, number>()
+  const text = parts.join('\n').replace(/#t(\d+)-/g, (_match, counter: string) => {
+    if (!order.has(counter)) order.set(counter, order.size)
+    return `#t${order.get(counter)}-`
+  })
+  return createHash('sha256').update(text).digest('hex')
+}
 
 const run = (scenarioName: string, chargeName: keyof typeof CHARGES, seed: number): { hash: string; events: DestructionEvent[]; state: unknown } => {
   const scenario = SCENARIOS[scenarioName]!
@@ -79,9 +88,9 @@ const run = (scenarioName: string, chargeName: keyof typeof CHARGES, seed: numbe
 
 const PINNED: Record<string, string> = {
   'house/m67/3': 'd541fced868d294757bfbec78950e2b46b88d43b025b491610739f460f9b1948',
-  'house/m67/11': '9ae3f617bf4d8551edb82d64756eb52e33967105103bc1340b93c0b6d4e79088',
-  'house/pipe_bomb/3': '42065721574a15d1fa9223ca13b7cfb1f7d1e12082cfc7f90fef94a38b9f8309',
-  'house/pipe_bomb/11': '0db4fd44ad81be1838a51b4d46d7025b7e846b3546ea26898a1cbc459bb2b47c',
+  'house/m67/11': '056f0f14743795d7b77a65b77f7af1df598287737bb288bbcb25e49426d8d73d',
+  'house/pipe_bomb/3': '603465f311f16a8fec56895f2a59c01a427aae2250d8db30b3ece49278b24e2e',
+  'house/pipe_bomb/11': '3b063f504951bb0a817a9cb8db0067548843947f6b245a253f4b12be720d0933',
   'longWall/m67/3': 'a202522342bd836b1370c692451ea5a0b52903700528940e190611905c41b5f0',
   'longWall/m67/11': '3df0b91045f7e256df3ef4a910436135acab3beda7970d90b0e618c702fbac19',
   'longWall/pipe_bomb/3': 'f6ac36c395a93663ca760f6546b6ba805ff6f24c666f84cdfb929ef694564929',
