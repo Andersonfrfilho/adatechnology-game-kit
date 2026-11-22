@@ -420,6 +420,18 @@ describe('a car in a room past the cap', () => {
 })
 
 describe('the bound of a weight is a world option', () => {
+  it('takes only a finite number of at least 1: NaN, Infinity, 0, a negative number and 0.5 throw; 1 and 8 are taken, and 8 is the default', () => {
+    for (const fragmentMaxWeight of [Number.NaN, Number.POSITIVE_INFINITY, 0, -2, 0.5]) expect(() => createDestruction({ fragmentMaxWeight }), String(fragmentMaxWeight)).toThrow(RangeError)
+    const throwWith = (fragmentMaxWeight?: number): string => {
+      const world = createDestruction({ seed: 3, ...(fragmentMaxWeight !== undefined ? { fragmentMaxWeight } : {}) })
+      objectRoom(world, { half: 3, split: 3, material: 'concrete', thickness: 0.3 })
+      return JSON.stringify(world.explode(ORIGIN, 1, 15, 'test', { charge: caseOnly(M67) }).map((result) => result.damage))
+    }
+    expect(() => createDestruction({ fragmentMaxWeight: 1 })).not.toThrow()
+    expect(throwWith(8)).toBe(throwWith())
+    expect(throwWith(1)).not.toBe(throwWith())
+  })
+
   it('with `fragmentMaxWeight: 1` a ray stands for itself: the room takes about a quarter of what all 1000 pieces do with the cap of 256', () => {
     const room = (seed: number, fragmentMaxWeight: number | undefined, maxRays: number) => {
       const world = createDestruction({ seed, ...(fragmentMaxWeight !== undefined ? { fragmentMaxWeight } : {}) })

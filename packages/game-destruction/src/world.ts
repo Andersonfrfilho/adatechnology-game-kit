@@ -630,6 +630,9 @@ const updateBound = (o: ObjRT) => {
 const AXIS = { x: 0, y: 1, z: 2 } as const
 
 export const createDestruction = (options: DestructionOptions = {}): DestructionWorld => {
+  const fragmentMaxWeight = options.fragmentMaxWeight ?? FRAGMENT_MAX_WEIGHT
+  // NaN would make every weight past the cap NaN, Infinity would lift the bound: the option is checked once, here
+  if (!(Number.isFinite(fragmentMaxWeight) && fragmentMaxWeight >= 1)) throw new RangeError(`fragmentMaxWeight must be a finite number of at least 1, got ${fragmentMaxWeight}`)
   const materials = new Map<MaterialId, MaterialDef>()
   for (const m of MATERIALS) materials.set(m.id, m)
   for (const m of options.materials ?? []) materials.set(m.id, m)
@@ -5333,7 +5336,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const rest = cast.length - bodyPieces
     const bodyCap = Math.min(bodyPieces, cap - Math.min(rest, Math.floor(cap / 2)))
     const restCap = over ? Math.min(rest, cap - bodyCap) : rest
-    const maxWeight = Math.max(1, options.fragmentMaxWeight ?? FRAGMENT_MAX_WEIGHT)
+    const maxWeight = fragmentMaxWeight
     const weightOf = (count: number, kept: number): number => (kept > 0 && count > kept ? Math.min(maxWeight, count / kept) : 1)
     const picked: number[] = []
     // the initial energy the cast rays carry, by stratum: [unweighted, body, rest]
