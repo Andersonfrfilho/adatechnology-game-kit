@@ -14,6 +14,36 @@
     "source": "packages/game-vehicles-fleet/src/groups.ts (fleetVehicleIds), loaded as items by loadFleetCatalogueInto of examples/vehicles-test-area/src/entry.js",
     "covered": 69
   },
+  "laneStrips": [
+    {
+      "file": "25-lane-run-strip.png",
+      "subject": "compact_hatch lane run (drive_lane)",
+      "stepsAfterAction": [
+        102,
+        204,
+        210,
+        216,
+        240,
+        270
+      ],
+      "stepS": 0.01667,
+      "camera": {
+        "kind": "explicit",
+        "follows": "the car",
+        "offsetFromCar": [
+          -0.5,
+          1.5,
+          7
+        ],
+        "targetHeightM": 0.6,
+        "fovDeg": 30
+      }
+    }
+  ],
+  "gaps": [
+    "the area drives only the compact_hatch on a fixed lane (drive_lane): no model choice, no steady curve, no hard-brake hook; a sedan, a truck and a motorcycle in motion are not recorded here (the proving area picks the model and drives it by keyboard)",
+    "no cabin or occupant: the vehicle has no seated character in this area"
+  ],
   "sheets": [
     {
       "file": "01-fleet-closed-1.png",

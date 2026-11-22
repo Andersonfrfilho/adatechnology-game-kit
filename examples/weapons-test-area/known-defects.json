@@ -1,40 +1,5 @@
 [
   {
-    "id": "weapon_glock_17/still-low",
-    "what": "blank-third-person",
-    "value": 0.0023,
-    "found": "2026-11-22",
-    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
-  },
-  {
-    "id": "weapon_machete/still-level",
-    "what": "blank-third-person",
-    "value": 0.0011,
-    "found": "2026-11-22",
-    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
-  },
-  {
-    "id": "weapon_machete/still-low",
-    "what": "blank-third-person",
-    "value": 0.0007,
-    "found": "2026-11-22",
-    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
-  },
-  {
-    "id": "weapon_molotov/still-level",
-    "what": "blank-third-person",
-    "value": 0.0012,
-    "found": "2026-11-22",
-    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
-  },
-  {
-    "id": "weapon_molotov/still-low",
-    "what": "blank-third-person",
-    "value": 0.0008,
-    "found": "2026-11-22",
-    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
-  },
-  {
     "id": "hand",
     "what": "no-catalogue-item",
     "value": "no item weapon_hand",
@@ -173,5 +138,26 @@
     "value": "no item weapon_flamethrower",
     "found": "2026-11-22",
     "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
+  },
+  {
+    "id": "weapon_machete/strike-third",
+    "what": "use-not-animated",
+    "value": 0.001,
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ between the frame right after the use and the frames 6, 12, 18 and 30 steps later (explicit side camera, whole body and weapon in frame, fixed clock): at most 0.1%. The use is accepted (room.use) but no swing is drawn on the body; room.handState targets do not move either; third person (machete)"
+  },
+  {
+    "id": "weapon_hammer/strike-first",
+    "what": "use-not-animated",
+    "value": 0.001,
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ between the frame right after the use and the frames 6, 12, 18 and 30 steps later (explicit side camera, whole body and weapon in frame, fixed clock): at most 0.1%. The use is accepted (room.use) but no swing is drawn on the body; room.handState targets do not move either; first person (hammer)"
+  },
+  {
+    "id": "weapon_hammer/strike-third",
+    "what": "use-not-animated",
+    "value": 0.001,
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ between the frame right after the use and the frames 6, 12, 18 and 30 steps later (explicit side camera, whole body and weapon in frame, fixed clock): at most 0.1%. The use is accepted (room.use) but no swing is drawn on the body; room.handState targets do not move either; third person (hammer)"
   }
 ]

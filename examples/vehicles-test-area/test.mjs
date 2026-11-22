@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { chunks, createSheetRecorder, openRoomPage } from '../../tools/check-area/contact-sheet.mjs'
+import { recordLaneMotion } from './motion.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const bundle = join(here, 'dist/vehicles-area.js')
@@ -54,7 +55,9 @@ try {
   }
   // packages/game-vehicles-fleet/src/groups.ts `water`: a hull sits below the waterline, which is the ground of this room
   recorder.exempt('sinks', ['river_skiff', 'speedboat', 'fishing_boat', 'jet_ski', 'sailboat', 'rescue_dinghy', 'patrol_boat'], 'water vessels: the hull is meant to be under the waterline')
-  const summary = recorder.finish()
+  // phase 0 of spec 016: the one scripted drive of the area (the lane run), as a strip with the body and wheel numbers
+  const lane = await recordLaneMotion({ opened, outDir: join(here, 'shots'), firstNumber: firstOpen + Math.ceil(withLeaves.length / 3), recorder })
+  const summary = recorder.finish({ laneStrips: lane.strips, gaps: ['the area drives only the compact_hatch on a fixed lane (drive_lane): no model choice, no steady curve, no hard-brake hook; a sedan, a truck and a motorcycle in motion are not recorded here (the proving area picks the model and drives it by keyboard)', 'no cabin or occupant: the vehicle has no seated character in this area'] })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {

@@ -28,5 +28,15 @@
     },
     "found": "2026-11-22",
     "evidence": "lowest vertex of the visible meshes (exact, every vertex) over a 120-frame cycle sampled every 4th frame, ground at y 0; heldBy is a black (#111111) mesh of 60-85k vertices, 4 levels under the root, 1.2-2.5 m off the axis: a tyre. Wheels 5.5-6.1 cm under the ground against the median of 0.000 m for the 62 land vehicles; limit -0.05 m. Water vessels are exempt (hull under the waterline); a tyre may squash a few cm under load, so whether 6 cm is a defect is for the review to say"
+  },
+  {
+    "id": "compact_hatch/lane-run",
+    "what": "no-body-pitch-or-roll",
+    "value": {
+      "pitchRangeRad": 0,
+      "rollRangeRad": 0
+    },
+    "found": "2026-11-22",
+    "evidence": "rotation x and z of the car group over the whole lane run (accelerating to 12 m/s, braking to a stop before the wall, sampled every 6 steps): range 0 rad on both. The body stays level under braking and acceleration; the group's yaw does change (the weave). No node named wheel/tyre/tire exists in the group, so the wheel steering angle cannot be read by name. Spec 016 T2.2 is the fix"
   }
 ]

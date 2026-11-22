@@ -3,11 +3,12 @@
 // Prints and shots/index.json go to examples/weapons-test-area/shots (the PNGs are not tracked, see .gitignore; index.json is). The sheets and what they are for: tools/check-area/contact-sheet.mjs.
 // Run: node build.mjs && node test.mjs
 import { createRequire } from 'node:module'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { captionInPage, chunks, createSheetRecorder, openRoomPage } from '../../tools/check-area/contact-sheet.mjs'
+import { PHOTO_EMPTY_SHARE, captionInPage, chunks, createSheetRecorder, openRoomPage } from '../../tools/check-area/contact-sheet.mjs'
+import { FIXED_STEP, differenceShare, frameBodyInPage, gameCameraPoseInPage, writeStrip } from '../../tools/check-area/phase-zero.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const bundle = join(here, 'dist/weapons-area.js')
@@ -33,13 +34,17 @@ if (!chromium) {
 }
 
 const SHEET_SIZE = 10
+/** The named time of every hand picture: 40 steps of the fixed clock after the room is cleared. */
+const CLOCK_FRAMES = 40
+/** Third person: from his right side, 3.4 m away, 38 degrees of field of view, looking at the middle of the body: the whole body and the weapon. */
+const THIRD_FRAME = { azimuthDeg: 90, distance: 3.4, fovDeg: 38, lookHeight: 1.0 }
 
 /**
  * Runs in the page: the player holds the weapon (or the fists, for the reference) in the chosen camera, looks level or ten metres ahead with the aim risen or lowered by `rise` metres, optionally walks,
  * then the room is paused. Answers what the room says about the hand and the camera (the numbers rule 5 asks for).
- * @param {{ weaponId: string, mode: string, rise: number, walking: boolean, withSubject: boolean }} args
+ * @param {{ weaponId: string, mode: string, rise: number, walking: boolean, withSubject: boolean, frames: number }} args
  */
-async function holdInPage({ weaponId, mode, rise, walking, withSubject }) {
+async function holdInPage({ weaponId, mode, rise, walking, withSubject, frames }) {
   const room = /** @type {any} */ (window).__testRoom
   room.setDebugCamera(null)
   if (room.paused) room.resume()
@@ -51,13 +56,35 @@ async function holdInPage({ weaponId, mode, rise, walking, withSubject }) {
   room.waitUntilReady()
   room.look([0, 1.7, 6], [0, 1.7 + rise, -4])
   if (walking) room.walk([0, 0, -3], 1.5)
-  for (let frame = 0; frame < 40; frame++) room.update(1 / 60)
+  // the clock is the room's own: `frames` exact steps after the clear (which restarts it), all in this one synchronous call, so no live frame lands in between
+  for (let frame = 0; frame < frames; frame++) room.update(1 / 60)
   const hand = room.handState()
   const round = (/** @type {number[]} */ list) => list.map((value) => +value.toFixed(3))
   const camera = room.camera.position
   const player = room.playerPosition
   room.pause()
   return { mode: room.cameraMode, stance: hand.stance, triggerFinger: hand.triggerFinger, handR: hand.targets?.R?.position ? round(hand.targets.R.position) : null, handL: hand.targets?.L?.position ? round(hand.targets.L.position) : null, camera: round([camera.x, camera.y, camera.z]), player: round(Array.isArray(player) ? player : [player.x, player.y, player.z]) }
+}
+
+/**
+ * Runs in the page: the weapon in the hand, the use started (a tap, or held `hold` seconds), then `steps` exact steps of the fixed clock and the room paused: the swing or the throw at that time.
+ * @param {{ weaponId: string, mode: string, steps: number, hold: number }} args
+ */
+async function strikeInPage({ weaponId, mode, steps, hold }) {
+  const room = /** @type {any} */ (window).__testRoom
+  room.setDebugCamera(null)
+  if (room.paused) room.resume()
+  room.environment.set({ nightFactor: 0, rain: 0, windX: 0, windZ: 0, windSpeed: 0, gust: 0, wetness: 0 })
+  room.clear()
+  room.setCameraMode(mode)
+  room.equip(weaponId)
+  room.waitUntilReady()
+  room.look([0, 1.7, 6], [0, 1.7, -4])
+  const used = room.use(hold)
+  for (let frame = 0; frame < steps; frame++) room.update(1 / 60)
+  const phase = room.tool.phase ?? null
+  room.pause()
+  return { used: String(used), phase: typeof phase === 'string' ? phase : phase === null ? null : 'object' }
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
@@ -96,17 +123,55 @@ try {
           subject: weapon.item,
         detail: String(pose),
           prepare: async (withSubject) => {
-            const measured = await opened.page.evaluate(holdInPage, { weaponId: weapon.id, mode, rise, walking, withSubject })
+            const measured = await opened.page.evaluate(holdInPage, { weaponId: weapon.id, mode, rise, walking, withSubject, frames: CLOCK_FRAMES })
+            // third person: the camera the game puts there (read through applyCamera) and the one the print uses, an explicit pose that frames the body and the weapon from his right side
+            const gameCamera = await opened.page.evaluate(gameCameraPoseInPage)
+            const printCamera = mode === 'third' ? { kind: 'explicit', ...(await opened.page.evaluate(frameBodyInPage, THIRD_FRAME)) } : { kind: 'game', ...gameCamera }
             await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${pose}  seed none`)
-            return { fixed: { pose, aimRise: rise, walking }, measured: { hand: measured } }
+            return { fixed: { pose, aimRise: rise, walking, clock: { stepS: +FIXED_STEP.toFixed(5), stepsAfterClear: CLOCK_FRAMES }, camera: printCamera }, measured: { hand: measured, gameCamera } }
           },
         })
       }
     }
   }
+  // phase 0 of spec 015: the strike of one weapon per melee class and the throw, as a strip of the use at five times after it starts (explicit side camera in third person, the game camera in first)
+  const STRIKE_STEPS = [0, 6, 12, 18, 30]
+  /** @type {Record<string, unknown>[]} */
+  const strips = []
+  /** @type {Record<string, unknown>[]} */
+  const stripNumbers = []
+  const STRIKES = [['melee_blade', 0], ['melee_blunt', 0], ['throwable', 0.5]]
+  for (const [family, hold] of /** @type {[string, number][]} */ (STRIKES)) {
+    const weapon = drawn.find((/** @type {{ family: string, id: string }} */ candidate) => candidate.family === family && candidate.id !== 'kick' && candidate.id !== 'shove')
+    if (!weapon) continue
+    for (const mode of ['first', 'third']) {
+      number += 1
+      const file = `${String(number).padStart(2, '0')}-strike-${family}-${mode}`
+      /** @type {{ png: Buffer, label: string }[]} */
+      const frames = []
+      /** @type {unknown[]} */
+      const states = []
+      for (const steps of STRIKE_STEPS) {
+        states.push(await opened.page.evaluate(strikeInPage, { weaponId: weapon.id, mode, steps, hold }))
+        if (mode === 'third') await opened.page.evaluate(frameBodyInPage, THIRD_FRAME)
+        await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${steps} steps after the use`)
+        await opened.page.waitForTimeout(500)
+        frames.push({ png: await opened.page.screenshot(), label: `${weapon.id}  +${steps} steps` })
+      }
+      const written = await writeStrip({ context: opened.context, frames, file: join(here, 'shots', `${file}.png`) })
+      const differences = []
+      for (let at = 1; at < frames.length; at++) differences.push(+(await differenceShare(opened.context, /** @type {any} */ (frames[0]).png, /** @type {any} */ (frames[at]).png)).toFixed(4))
+      strips.push({ file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' } })
+      stripNumbers.push({ file: `${file}.png`, bytes: written.bytes, differenceFromFirstFrame: differences, states })
+      // the same weapon in the same view that shows no pixel of change over the whole use: no swing (or throw) is drawn
+      if (Math.max(...differences) < PHOTO_EMPTY_SHARE) recorder.observe(`${weapon.item}/strike-${mode}`, 'use-not-animated', Math.max(...differences))
+    }
+  }
+  writeFileSync(join(here, 'shots/phase0-sanity.json'), JSON.stringify({ strips: stripNumbers }, null, 2) + '\n')
+
   const missing = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => !weapon.drawn).map((/** @type {{ id: string }} */ weapon) => weapon.id)
   for (const id of missing) recorder.observe(id, 'no-catalogue-item', `no item weapon_${id}`)
-  const summary = recorder.finish({ notInCatalogue: missing, families })
+  const summary = recorder.finish({ notInCatalogue: missing, families, strips })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {

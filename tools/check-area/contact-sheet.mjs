@@ -36,7 +36,7 @@ const BROWSER_ARGS = ['--use-angle=swiftshader', '--use-gl=angle', '--enable-uns
 
 /**
  * Runs in the page (it is serialised: nothing outside its body may be used). Lays one sheet and answers where everything ended up.
- * @param {{ entries: {id: string, label: string}[], view: {kind: string, fov: number, azimuthDeg: number, elevationDeg: number}, yaw: number | 'long-axis-x', gap: number, ruler: boolean, openLeaves: boolean, title: string, withEntries: boolean }} args
+ * @param {{ entries: {id: string, label: string}[], view: {kind: string, fov: number, azimuthDeg: number, elevationDeg: number}, yaw: number | 'long-axis-x', gap: number, ruler: boolean, openLeaves: boolean, title: string, withEntries: boolean, extraFrames: number }} args
  */
 async function laySheetInPage(args) {
   const room = /** @type {any} */ (window).__testRoom
@@ -220,7 +220,7 @@ async function laySheetInPage(args) {
       if (box && box.min[1] < (lowest.get(item.index)?.y ?? Infinity)) lowest.set(item.index, { y: box.min[1], at: box.minAt })
     }
   }
-  for (let frame = 0; frame < 30; frame++) room.update(1 / 60)
+  for (let frame = 0; frame < 30 + args.extraFrames; frame++) room.update(1 / 60)
 
   // the camera: looks at the middle of the row, far enough for the width and the height with a margin
   const aspect = window.innerWidth / window.innerHeight
@@ -423,14 +423,14 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
   let comparePage = null
   const api = {
     /**
-     * @param {{ file: string, family: string, entries: {id: string, label?: string}[], view: { kind: string, fov?: number, azimuthDeg?: number, elevationDeg?: number }, yaw: number | 'long-axis-x', gap?: number, ruler?: boolean, openLeaves?: boolean }} sheet
+     * @param {{ file: string, family: string, entries: {id: string, label?: string}[], view: { kind: string, fov?: number, azimuthDeg?: number, elevationDeg?: number }, yaw: number | 'long-axis-x', gap?: number, ruler?: boolean, openLeaves?: boolean, extraFrames?: number }} sheet
      * @returns {Promise<any>} what the page answered (cells with their leaves, the camera)
      */
     async sheet(sheet) {
       currentWork = `sheet ${sheet.file} (${sheet.entries.map((entry) => entry.id).join(', ')})`
       const view = { kind: sheet.view.kind, fov: sheet.view.fov ?? 22, azimuthDeg: sheet.view.azimuthDeg ?? 0, elevationDeg: sheet.view.elevationDeg ?? 4 }
       const entries = sheet.entries.map((entry) => ({ id: entry.id, label: entry.label ?? entry.id }))
-      const base = { entries, view, yaw: sheet.yaw, gap: sheet.gap ?? 0.5, ruler: sheet.ruler ?? false, openLeaves: sheet.openLeaves ?? false, title: `${sheet.file}  ${sheet.family}  ${view.kind}  seed ${seed}` }
+      const base = { entries, view, yaw: sheet.yaw, gap: sheet.gap ?? 0.5, ruler: sheet.ruler ?? false, openLeaves: sheet.openLeaves ?? false, title: `${sheet.file}  ${sheet.family}  ${view.kind}  seed ${seed}`, extraFrames: sheet.extraFrames ?? 0 }
       await page.evaluate(laySheetInPage, { ...base, withEntries: false })
       await page.waitForTimeout(700)
       const reference = await page.screenshot()
@@ -445,6 +445,7 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
         family: sheet.family,
         view: view.kind,
         openLeaves: base.openLeaves,
+        ...(sheet.extraFrames ? { extraFramesAfterFreeze: sheet.extraFrames } : {}),
         assesses: { floating: !base.openLeaves, sinking: !base.openLeaves },
         yaw: sheet.yaw,
         camera: { kind: view.kind, fovDeg: view.fov, azimuthDeg: view.azimuthDeg, elevationDeg: view.elevationDeg, framing: 'looks at the middle of the row from the distance that fits it' },

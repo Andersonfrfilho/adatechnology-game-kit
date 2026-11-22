@@ -54,3 +54,6 @@ audio.local.json
 /local-audio/
 tools/audio-pipeline/storage/
 tools/audio-pipeline/*.local.*
+examples/weapons-test-area/shots/phase0-sanity.json
+examples/characters-test-area/shots/phase0-sanity.json
+examples/vehicles-test-area/shots/phase0-sanity.json
