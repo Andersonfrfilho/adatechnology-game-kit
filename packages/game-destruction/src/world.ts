@@ -3259,10 +3259,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** Length of the joint's contact region: the longest side of the overlap box of the two parts' bounds (a wall's bed runs the whole wall). */
+  const jointLengths = new WeakMap<JointRT, { readonly pa: PartRT; readonly pb: PartRT; readonly poses: readonly [Vec3, Quat, Vec3, Quat, Vec3, Quat]; readonly length: number }>()
   const jointLength = (o: ObjRT, j: JointRT): number => {
-    const A = partWorldAabb(o, o.parts[j.ia]), B = partWorldAabb(o, o.parts[j.ib])
+    const pa = o.parts[j.ia], pb = o.parts[j.ib]
+    // the length reads the object's pose and the two parts' poses only; each is replaced, never changed in place, when it moves (`setPartPose`, `applySoilPose`)
+    const kept = jointLengths.get(j)
+    if (kept && kept.pa === pa && kept.pb === pb) {
+      const [pos, rot, apos, aq, bpos, bq] = kept.poses
+      if (pos === o.st.position && rot === o.st.rotation && apos === pa.pos && aq === pa.q && bpos === pb.pos && bq === pb.q) return kept.length
+    }
+    const A = partWorldAabb(o, pa), B = partWorldAabb(o, pb)
     let len = 0
     for (let k = 0; k < 3; k++) len = Math.max(len, Math.min(A.max[k], B.max[k]) - Math.max(A.min[k], B.min[k]))
+    jointLengths.set(j, { pa, pb, poses: [o.st.position, o.st.rotation, pa.pos, pa.q, pb.pos, pb.q], length: len })
     return len
   }
 
