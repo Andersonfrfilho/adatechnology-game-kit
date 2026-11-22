@@ -5359,9 +5359,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const budget = 0.5 * casing.mass * speed * speed
     const bodyWeight = weightOf(bodyPieces, bodyCap)
     const restWeight = weightOf(rest, restCap)
-    const excess = (bodyWeight - 1) * bodyEnergy + (restWeight - 1) * restEnergy
+    // nothing over the cap: every weight is 1 and the bound is not computed at all (with the whole case cast, the room left is a rounding error either side of zero)
+    const excess = over ? (bodyWeight - 1) * bodyEnergy + (restWeight - 1) * restEnergy : 0
     const room = budget - plain - bodyEnergy - restEnergy
-    const shrink = excess > room ? Math.max(0, room) / excess : 1
+    const shrink = excess > 0 && excess > room ? Math.max(0, room) / excess : 1
     const nose = casing.noseFactor
     for (const j of picked) {
       const i = cast[j]!
