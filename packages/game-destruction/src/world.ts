@@ -3989,13 +3989,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
-  /**
-   * A blast on the infill of a confined wall (`PANEL_PI`): the reflected pressure and impulse at the middle of the bay the charge faces (between the two
-   * pillars around it, or the ends of the wall) decide whether that panel fails. A failed panel comes out whole into the side away from the charge; the
-   * pillars and the bond beam around it are parts of their own and stay. Returns whether the panel came out.
-   */
   const reinforcedBoxes = new WeakMap<ObjRT, PartRT[]>()
-  /** The reinforced box parts of an object, in part order: its parts and their specs (a clone of the host's) never change after `build`, so it is found once. */
+  /** The reinforced box parts of an object, in part order. Parts and their specs are fixed after `build`, so the filter runs once per object. */
   const reinforcedBoxesOf = (o: ObjRT): PartRT[] => {
     let found = reinforcedBoxes.get(o)
     if (!found) {
@@ -4005,6 +4000,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return found
   }
 
+  /**
+   * A blast on the infill of a confined wall (`PANEL_PI`): the reflected pressure and impulse at the middle of the bay the charge faces (between the two
+   * pillars around it, or the ends of the wall) decide whether that panel fails. A failed panel comes out whole into the side away from the charge; the
+   * pillars and the bond beam around it are parts of their own and stay. Returns whether the panel came out.
+   */
   const blastPanel = (o: ObjRT, p: PartRT, point: Vec3, energy: number, src?: string): boolean => {
     if (!p.staged || p.st.stripped || isLost(p) || !p.spec.units || p.spec.units.mortar === p.spec.material || p.spec.reinforcement) return false
     const [u, v] = planeAxes(p.thin)
