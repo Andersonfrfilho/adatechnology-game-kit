@@ -14,7 +14,7 @@ export const SOFTWARE_RENDERERS = /swiftshader|llvmpipe|softpipe|software|unknow
 const NVIDIA_PATTERN = /nvidia/i
 const SMI_MISMATCH = /driver\/library version mismatch|failed to initialize nvml/i
 const API_MISMATCH = /NVRM: API mismatch/i
-const BROWSER_CLIENT = /chrome|chromium|playwright|node/i
+const BROWSER_CLIENT = /the client '(?:[^']*\/)?(?:chrome|chromium|google-chrome[\w-]*|headless_shell|playwright)[^']*'/i
 const UNKNOWN_DRIVER = /** @type {DriverHealth} */ ({ module: null, userspace: null, mismatch: 'unknown' })
 
 /** @param {string} renderer */
@@ -146,7 +146,7 @@ export const driverVerdictOf = (gpu) => {
 }
 
 /** The GPU name without version-like parts ("OpenGL ES 3.2", "Mesa 24.1"), so a driver bump alone does not make it another GPU. @param {string} renderer */
-export const normalizedGpuName = (renderer) => renderer.replace(/\b\d+(?:\.\d+)+\b/g, '').replace(/\s+/g, ' ').replace(/\s+([,)/])/g, '$1').trim()
+export const normalizedGpuName = (renderer) => renderer.replace(/\b(?:LLVM|Mesa|DRM|OpenGL(?: ES)?|Vulkan)\s+\d+(?:\.\d+)*\b|\b\d+(?:\.\d+)+\b/g, (found) => (/^\d/.test(found) ? '' : found.replace(/\s+\d[\d.]*$/, ''))).replace(/\s+/g, ' ').replace(/\s+([,)/])/g, '$1').trim()
 
 /**
  * Why a base must not be compared with this run, one reason per cause (another GPU, another driver module, a base that does not say which GPU it was measured on); empty when it can be.

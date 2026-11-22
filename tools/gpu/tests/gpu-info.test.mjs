@@ -10,7 +10,7 @@ import {
   assertGpuIsHardware, assertReportHasHealthyGpu, driverHealthOf, driverVerdictOf, gpuMismatchReasons, isSoftwareRenderer, normalizedGpuName, parseModuleVersion, parseSmiVersion, readDriverHealth, readGpuIdentity, tierOf, userspaceVersionOf, versionOfLibraryPath,
 } from '../gpu-info.mjs'
 import { explosionGateOf } from '../room-explosion.mjs'
-import { mergeBase, trySaveBase } from '../room-explosion-base.mjs'
+import { baseSkipReportOf, gpuPairKeyOf, mergeBase, REBASE_COMMAND, trySaveBase } from '../room-explosion-base.mjs'
 
 const MODULE_TEXT = 'NVRM version: NVIDIA UNIX Open Kernel Module for x86_64  615.78.08  Release Build  (root@)  \nGCC version:  gcc version 16.2.1\n'
 const RTX = 'NVIDIA GeForce RTX 5070 Laptop GPU'
@@ -49,7 +49,7 @@ test('versions: the kernel module line, a library path and the nvidia-smi output
 })
 
 const DOCKER_LINE = 'Nov 21 09:12:01 host kernel: NVRM: API mismatch: the client has the version 550.1, but this kernel module has the version 620.73.04.'
-const CHROME_LINE = 'Nov 21 09:12:01 host kernel: NVRM: API mismatch: the client chrome (pid 12) has the version 620.73.04, but this kernel module has the version 615.78.08.'
+const CHROME_LINE = "Nov 21 09:12:01 host kernel: NVRM: API mismatch: the client 'chrome' (pid 12) has the version 620.73.04, but this kernel module has the version 615.78.08."
 
 test('driver health: equal readable versions are healthy whatever the journal says (an old Docker line, a healed mismatch)', () => {
   const health = driverHealthOf({ moduleText: MODULE_TEXT, userspaceVersion: '615.78.08', journalText: `${DOCKER_LINE}\n${CHROME_LINE}` })
@@ -72,6 +72,8 @@ test('driver health: without the library version, nvidia-smi decides: its failur
 test('driver health: the journal only counts with everything unreadable, and only lines that name the browser', () => {
   assert.equal(driverHealthOf({ journalText: CHROME_LINE }).mismatch, true)
   assert.equal(driverHealthOf({ journalText: DOCKER_LINE }).mismatch, 'unknown')
+  assert.equal(driverHealthOf({ journalText: 'Nov 21 node01 kernel: NVRM: API mismatch: the client \'docker-proxy\' has the version 550.1' }).mismatch, 'unknown')
+  assert.equal(driverHealthOf({ journalText: "Nov 21 node01 kernel: NVRM: API mismatch: the client '/opt/google/chrome/chrome' has the version 1" }).mismatch, true)
   assert.equal(driverHealthOf({ moduleText: MODULE_TEXT, journalText: CHROME_LINE }).mismatch, 'unknown')
 })
 
@@ -158,6 +160,15 @@ test('normalizedGpuName drops the version-like parts only', () => {
   assert.equal(normalizedGpuName('Mesa Intel(R) Graphics 24.1.2'), 'Mesa Intel(R) Graphics')
 })
 
+test('normalizedGpuName: Mesa and AMD strings lose their versions, other GPUs stay distinct', () => {
+  const amd = (/** @type {string} */ llvm) => `AMD Radeon RX 7600 (radeonsi, navi33, LLVM ${llvm}, DRM 3.59)`
+  assert.equal(normalizedGpuName(amd('19.1.0')), normalizedGpuName(amd('20')))
+  assert.equal(normalizedGpuName('Mesa Intel(R) Graphics (ARL)'), 'Mesa Intel(R) Graphics (ARL)')
+  assert.equal(normalizedGpuName('Mesa 25 Intel(R) Graphics (ARL)'), normalizedGpuName('Mesa 24.1 Intel(R) Graphics (ARL)'))
+  const names = ['NVIDIA GeForce RTX 5070 Laptop GPU', 'NVIDIA GeForce RTX 5070 Ti', 'NVIDIA GeForce RTX 3070', amd('19'), 'Mesa Intel(R) Graphics (ARL)'].map(normalizedGpuName)
+  assert.equal(new Set(names).size, names.length)
+})
+
 test('gpuMismatchReasons: one reason per cause; same GPU and driver, or a version suffix alone, compare', () => {
   const other = gpuMismatchReasons(gpu(RTX, '615.78.08'), gpu('AMD Radeon RX 7600', '620.73.04'))
   assert.equal(other.length, 2)
@@ -218,4 +229,20 @@ test('explosionGateOf: a base from another GPU or driver is not compared and say
   const same = explosionGateOf({ ...params, savedBase: base, gpu: gpu(RTX, '620.73.04') })
   assert.equal(same.isBaseInMode, true)
   assert.equal(same.frameVerdict.regressions.length, 1)
+})
+
+test('baseSkipReportOf: the line every night, the notification once per GPU/driver pair, both naming the doc and the command', () => {
+  const pair = gpuPairKeyOf(night(1, gpu(RTX, '615.78.08')), night(1, gpu(RTX, '620.73.04')))
+  const first = baseSkipReportOf({ skipped: 'driver mudou', pair, notified: [] })
+  assert.match(first.line, /desempenho-explosoes\.md/)
+  assert.ok(first.line.includes(REBASE_COMMAND))
+  assert.ok(first.notification?.body.includes(REBASE_COMMAND))
+  assert.deepEqual(first.notified, [pair])
+  const second = baseSkipReportOf({ skipped: 'driver mudou', pair, notified: first.notified })
+  assert.equal(second.notification, undefined)
+  assert.match(second.line, /base NÃO comparada/)
+  const other = baseSkipReportOf({ skipped: 'driver mudou', pair: gpuPairKeyOf(night(1, gpu(RTX, '620.73.04')), night(1, gpu(RTX, '630.1'))), notified: first.notified })
+  assert.notEqual(other.notification, undefined)
+  assert.equal(other.notified.length, 2)
+  assert.notEqual(gpuPairKeyOf({}, night(1, gpu(RTX, '620.73.04'))), pair)
 })
