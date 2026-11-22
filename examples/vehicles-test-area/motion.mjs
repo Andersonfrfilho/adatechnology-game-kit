@@ -90,8 +90,7 @@ export async function recordLaneMotion({ opened, outDir, firstNumber, recorder }
   const wheelYaws = samples.flatMap((sample) => sample.wheelYaw)
   const range = (/** @type {number[]} */ list) => (list.length ? +(Math.max(...list) - Math.min(...list)).toFixed(4) : null)
   const numbers = { topSpeedMs: topSpeed, pitchRangeRad: range(pitches), rollRangeRad: range(rolls), wheelYawRangeRad: range(wheelYaws), wheelNodes: run.wheelNames, samples }
-  // the body stands on the wheels at rest: no pitch or roll over the whole run, and no wheel node that turns, is what the spec 016 (T2.2) says is missing
-  if ((numbers.pitchRangeRad ?? 0) < 0.002 && (numbers.rollRangeRad ?? 0) < 0.002) recorder.observe('compact_hatch/lane-run', 'no-body-pitch-or-roll', { pitchRangeRad: numbers.pitchRangeRad, rollRangeRad: numbers.rollRangeRad })
+  // not judged: the lane's pose() writes only position and yaw to the group (packages/game-vehicles-three/src/test-area/module.ts), so pitch and roll are 0 by construction and say nothing about the car
   writeFileSync(join(outDir, 'phase0-sanity.json'), JSON.stringify({ lane: { file: `${file}.png`, bytes: written.bytes, differenceFromFirstFrame: spread, ...numbers } }, null, 2) + '\n')
-  return { strips: [{ file: `${file}.png`, subject: 'compact_hatch lane run (drive_lane)', stepsAfterAction: steps, stepS: +FIXED_STEP.toFixed(5), camera: { kind: 'explicit', follows: 'the car', offsetFromCar: [-0.5, 1.5, 7], targetHeightM: 0.6, fovDeg: 30 } }], next: number }
+  return { strips: [{ id: 'compact_hatch/lane-run', file: `${file}.png`, subject: 'compact_hatch lane run (drive_lane)', stepsAfterAction: steps, stepS: +FIXED_STEP.toFixed(5), camera: { kind: 'explicit', follows: 'the car', offsetFromCar: [-0.5, 1.5, 7], targetHeightM: 0.6, fovDeg: 30 } }], next: number }
 }

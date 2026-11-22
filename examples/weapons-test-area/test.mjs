@@ -68,23 +68,46 @@ async function holdInPage({ weaponId, mode, rise, walking, withSubject, frames }
 
 /**
  * Runs in the page: the weapon in the hand, the use started (a tap, or held `hold` seconds), then `steps` exact steps of the fixed clock and the room paused: the swing or the throw at that time.
- * @param {{ weaponId: string, mode: string, steps: number, hold: number }} args
+ * @param {{ weaponId: string, mode: string, steps: number, hold: number, settle: number }} args
  */
-async function strikeInPage({ weaponId, mode, steps, hold }) {
+async function strikeInPage({ weaponId, mode, steps, hold, settle }) {
   const room = /** @type {any} */ (window).__testRoom
   room.setDebugCamera(null)
   if (room.paused) room.resume()
   room.environment.set({ nightFactor: 0, rain: 0, windX: 0, windZ: 0, windSpeed: 0, gust: 0, wetness: 0 })
+  // room.clear() keeps the previous sample's blow in flight and its weapon state (cooldown, spent ammunition): let the blow end first and refill the weapon, so the use below is judged on a fresh one
+  for (let frame = 0; frame < settle; frame++) room.update(1 / 60)
   room.clear()
   room.setCameraMode(mode)
   room.equip(weaponId)
+  // refill restarts the weapon's own clock, and the draw it still owes ends within these steps
+  room.tool.refill()
+  for (let frame = 0; frame < settle; frame++) room.update(1 / 60)
   room.waitUntilReady()
   room.look([0, 1.7, 6], [0, 1.7, -4])
   const used = room.use(hold)
   for (let frame = 0; frame < steps; frame++) room.update(1 / 60)
   const phase = room.tool.phase ?? null
+  const hand = room.handState()
+  const round = (/** @type {number[] | undefined} */ list) => (list ? list.map((value) => +value.toFixed(3)) : null)
   room.pause()
-  return { used: String(used), phase: typeof phase === 'string' ? phase : phase === null ? null : 'object' }
+  return { used: String(used), phase: typeof phase === 'string' ? phase : phase === null ? null : 'object', handR: round(hand.targets?.R?.position), handL: round(hand.targets?.L?.position) }
+}
+
+/** Steps of the fixed clock a sample waits before it starts, for the previous blow to land and the cooldowns to run out (4 s), before and after the weapon is put in hand. */
+const BLOW_SETTLE_STEPS = 240
+
+/** A hand target that moves less than this (metres; the states are rounded to a millimetre) is not moving. */
+const HAND_MOVED_M = 0.005
+
+/** The farthest each hand target gets from where it was in the first sample, over the samples. @param {any[]} states */
+function handTargetDeltas(states) {
+  const farthest = (/** @type {'handR' | 'handL'} */ key) => {
+    const first = states[0]?.[key]
+    if (!first) return 0
+    return +Math.max(...states.map((state) => (state[key] ? Math.hypot(...state[key].map((/** @type {number} */ value, /** @type {number} */ at) => value - first[at])) : 0))).toFixed(3)
+  }
+  return { R: farthest('handR'), L: farthest('handL') }
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
@@ -111,7 +134,10 @@ try {
   const POSES = [['still-high', 5, false], ['still-level', 0, false], ['still-low', -5, false], ['walk-level', 0, true]]
   for (const family of HAND_FAMILIES) {
     const weapon = drawn.find((/** @type {{ family: string }} */ candidate) => candidate.family === family)
-    if (!weapon) continue
+    if (!weapon) {
+      recorder.observe(`hand-${family}`, 'strip-family-missing', `no drawn weapon of the family ${family}`)
+      continue
+    }
     for (const mode of ['first', 'third']) {
       for (const [pose, rise, walking] of POSES) {
         number += 1
@@ -143,7 +169,10 @@ try {
   const STRIKES = [['melee_blade', 0], ['melee_blunt', 0], ['throwable', 0.5]]
   for (const [family, hold] of /** @type {[string, number][]} */ (STRIKES)) {
     const weapon = drawn.find((/** @type {{ family: string, id: string }} */ candidate) => candidate.family === family && candidate.id !== 'kick' && candidate.id !== 'shove')
-    if (!weapon) continue
+    if (!weapon) {
+      recorder.observe(`strike-${family}`, 'strip-family-missing', `no drawn weapon of the family ${family}`)
+      continue
+    }
     for (const mode of ['first', 'third']) {
       number += 1
       const file = `${String(number).padStart(2, '0')}-strike-${family}-${mode}`
@@ -152,7 +181,7 @@ try {
       /** @type {unknown[]} */
       const states = []
       for (const steps of STRIKE_STEPS) {
-        states.push(await opened.page.evaluate(strikeInPage, { weaponId: weapon.id, mode, steps, hold }))
+        states.push(await opened.page.evaluate(strikeInPage, { weaponId: weapon.id, mode, steps, hold, settle: BLOW_SETTLE_STEPS }))
         if (mode === 'third') await opened.page.evaluate(frameBodyInPage, THIRD_FRAME)
         await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${steps} steps after the use`)
         await opened.page.waitForTimeout(500)
@@ -161,17 +190,22 @@ try {
       const written = await writeStrip({ context: opened.context, frames, file: join(here, 'shots', `${file}.png`) })
       const differences = []
       for (let at = 1; at < frames.length; at++) differences.push(+(await differenceShare(opened.context, /** @type {any} */ (frames[0]).png, /** @type {any} */ (frames[at]).png)).toFixed(4))
-      strips.push({ file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' } })
+      const statuses = states.map((state) => /** @type {any} */ (state).used)
+      const handMoved = handTargetDeltas(/** @type {any[]} */ (states))
+      strips.push({ id: `${weapon.item}/strike-${mode}`, file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' }, useStatusPerStep: statuses, handTargetMaxDeltaM: handMoved, differenceFromFirstFrame: differences, ...(family === 'throwable' ? { notes: ['not byte-stable between runs; see the gaps'] } : {}) })
       stripNumbers.push({ file: `${file}.png`, bytes: written.bytes, differenceFromFirstFrame: differences, states })
-      // the same weapon in the same view that shows no pixel of change over the whole use: no swing (or throw) is drawn
-      if (Math.max(...differences) < PHOTO_EMPTY_SHARE) recorder.observe(`${weapon.item}/strike-${mode}`, 'use-not-animated', Math.max(...differences))
+      const spread = Math.max(...differences)
+      const refused = [...new Set(statuses.filter((status) => status !== 'ok'))]
+      // judged only when the use was accepted: a refused use (cooldown, drawing, empty) draws nothing for a reason that is not the animation
+      if (refused.length) recorder.observe(`${weapon.item}/strike-${mode}`, 'use-refused', { statuses: refused })
+      else if (spread < PHOTO_EMPTY_SHARE && handMoved.R < HAND_MOVED_M && handMoved.L < HAND_MOVED_M) recorder.observe(`${weapon.item}/strike-${mode}`, 'use-not-animated', { pixelShare: spread, handTargetMaxDeltaM: handMoved })
     }
   }
   writeFileSync(join(here, 'shots/phase0-sanity.json'), JSON.stringify({ strips: stripNumbers }, null, 2) + '\n')
 
   const missing = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => !weapon.drawn).map((/** @type {{ id: string }} */ weapon) => weapon.id)
   for (const id of missing) recorder.observe(id, 'no-catalogue-item', `no item weapon_${id}`)
-  const summary = recorder.finish({ notInCatalogue: missing, families, strips })
+  const summary = recorder.finish({ notInCatalogue: missing, families, strips, gaps: ['the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.'] })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {

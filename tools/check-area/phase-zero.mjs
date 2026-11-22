@@ -6,20 +6,6 @@ import { writeFileSync } from 'node:fs'
 /** The step of the room's fixed clock (s): every recorded pose is a whole number of these after the room was cleared, so a print is the same frame on every run. */
 export const FIXED_STEP = 1 / 60
 
-/** Runs in the page: pauses the live loop (its real-time frames would make the clock vary between runs). Call before the room is cleared and set up. */
-export function freezeLiveClockInPage() {
-  const room = /** @type {any} */ (window).__testRoom
-  room.setDebugCamera(null)
-  room.pause()
-}
-
-/** Runs in the page: `frames` exact steps of the paused room (the clock only moves through these). @param {number} frames */
-export function stepExactInPage(frames) {
-  const room = /** @type {any} */ (window).__testRoom
-  for (let frame = 0; frame < frames; frame++) room.update(1 / 60)
-  return frames
-}
-
 /**
  * Runs in the page: the camera as the room puts it for the picture in the current camera mode (applyCamera moves it to the third-person pose and gives back the way to restore it).
  * @returns {{ position: number[], target: number[], fovDeg: number }}

@@ -142,22 +142,40 @@
   {
     "id": "weapon_machete/strike-third",
     "what": "use-not-animated",
-    "value": 0.001,
+    "value": {
+      "pixelShare": 0.001,
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      }
+    },
     "found": "2026-11-22",
-    "evidence": "share of pixels that differ between the frame right after the use and the frames 6, 12, 18 and 30 steps later (explicit side camera, whole body and weapon in frame, fixed clock): at most 0.1%. The use is accepted (room.use) but no swing is drawn on the body; room.handState targets do not move either; third person (machete)"
+    "evidence": "machete, third person, fixed clock: room.use returned 'ok' at all five sampled times (0, 6, 12, 18 and 30 steps after the use, each sample a fresh run); room.handState targets R and L moved 0 m between the samples; at most 0.1% of the pixels differ between the first frame and the later ones. Nothing the room reports or draws changes over the use. Whether the swing is drawn some other way (a clip the print does not show) is not known"
   },
   {
     "id": "weapon_hammer/strike-first",
     "what": "use-not-animated",
-    "value": 0.001,
+    "value": {
+      "pixelShare": 0.001,
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      }
+    },
     "found": "2026-11-22",
-    "evidence": "share of pixels that differ between the frame right after the use and the frames 6, 12, 18 and 30 steps later (explicit side camera, whole body and weapon in frame, fixed clock): at most 0.1%. The use is accepted (room.use) but no swing is drawn on the body; room.handState targets do not move either; first person (hammer)"
+    "evidence": "hammer, first person, fixed clock: room.use returned 'ok' at all five sampled times (0, 6, 12, 18 and 30 steps after the use, each sample a fresh run); room.handState targets R and L moved 0 m between the samples; at most 0.1% of the pixels differ between the first frame and the later ones. Nothing the room reports or draws changes over the use. Whether the swing is drawn some other way (a clip the print does not show) is not known"
   },
   {
     "id": "weapon_hammer/strike-third",
     "what": "use-not-animated",
-    "value": 0.001,
+    "value": {
+      "pixelShare": 0.001,
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      }
+    },
     "found": "2026-11-22",
-    "evidence": "share of pixels that differ between the frame right after the use and the frames 6, 12, 18 and 30 steps later (explicit side camera, whole body and weapon in frame, fixed clock): at most 0.1%. The use is accepted (room.use) but no swing is drawn on the body; room.handState targets do not move either; third person (hammer)"
+    "evidence": "hammer, third person, fixed clock: room.use returned 'ok' at all five sampled times (0, 6, 12, 18 and 30 steps after the use, each sample a fresh run); room.handState targets R and L moved 0 m between the samples; at most 0.1% of the pixels differ between the first frame and the later ones. Nothing the room reports or draws changes over the use. Whether the swing is drawn some other way (a clip the print does not show) is not known"
   }
 ]

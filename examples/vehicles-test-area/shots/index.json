@@ -16,6 +16,7 @@
   },
   "laneStrips": [
     {
+      "id": "compact_hatch/lane-run",
       "file": "25-lane-run-strip.png",
       "subject": "compact_hatch lane run (drive_lane)",
       "stepsAfterAction": [
@@ -42,6 +43,7 @@
   ],
   "gaps": [
     "the area drives only the compact_hatch on a fixed lane (drive_lane): no model choice, no steady curve, no hard-brake hook; a sedan, a truck and a motorcycle in motion are not recorded here (the proving area picks the model and drives it by keyboard)",
+    "the scripted lane (drive_lane) has no suspension: its pose() writes only position and yaw to the car group, so body pitch and roll read 0 by construction (the semi driver computes them, the lane does not apply them); body attitude can only be read in the proving area (packages/game-vehicles-three/src/test-area/proving/module.ts, which sets group.rotation from pitch and roll); the wheel nodes were not found by name (wheel|tyre|tire) in the lane car, so wheel steering is not read either",
     "no cabin or occupant: the vehicle has no seated character in this area"
   ],
   "sheets": [

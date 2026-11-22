@@ -59,6 +59,7 @@
   ],
   "strips": [
     {
+      "id": "weapon_machete/strike-first",
       "file": "78-strike-melee_blade-first.png",
       "family": "strike-melee_blade",
       "subject": "weapon_machete",
@@ -74,9 +75,27 @@
       "stepS": 0.01667,
       "camera": {
         "kind": "game"
-      }
+      },
+      "useStatusPerStep": [
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "handTargetMaxDeltaM": {
+        "R": 8.999,
+        "L": 0
+      },
+      "differenceFromFirstFrame": [
+        0.0387,
+        0.0396,
+        0.0396,
+        0.0396
+      ]
     },
     {
+      "id": "weapon_machete/strike-third",
       "file": "79-strike-melee_blade-third.png",
       "family": "strike-melee_blade",
       "subject": "weapon_machete",
@@ -96,9 +115,27 @@
         "distance": 3.4,
         "fovDeg": 38,
         "lookHeight": 1
-      }
+      },
+      "useStatusPerStep": [
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      },
+      "differenceFromFirstFrame": [
+        0,
+        0.001,
+        0.001,
+        0.001
+      ]
     },
     {
+      "id": "weapon_hammer/strike-first",
       "file": "80-strike-melee_blunt-first.png",
       "family": "strike-melee_blunt",
       "subject": "weapon_hammer",
@@ -114,9 +151,27 @@
       "stepS": 0.01667,
       "camera": {
         "kind": "game"
-      }
+      },
+      "useStatusPerStep": [
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      },
+      "differenceFromFirstFrame": [
+        0,
+        0.001,
+        0.001,
+        0.001
+      ]
     },
     {
+      "id": "weapon_hammer/strike-third",
       "file": "81-strike-melee_blunt-third.png",
       "family": "strike-melee_blunt",
       "subject": "weapon_hammer",
@@ -136,9 +191,27 @@
         "distance": 3.4,
         "fovDeg": 38,
         "lookHeight": 1
-      }
+      },
+      "useStatusPerStep": [
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      },
+      "differenceFromFirstFrame": [
+        0,
+        0.001,
+        0.001,
+        0.001
+      ]
     },
     {
+      "id": "weapon_molotov/strike-first",
       "file": "82-strike-throwable-first.png",
       "family": "strike-throwable",
       "subject": "weapon_molotov",
@@ -154,9 +227,30 @@
       "stepS": 0.01667,
       "camera": {
         "kind": "game"
-      }
+      },
+      "useStatusPerStep": [
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      },
+      "differenceFromFirstFrame": [
+        0.0003,
+        0.0012,
+        0.1289,
+        0.1069
+      ],
+      "notes": [
+        "not byte-stable between runs; see the gaps"
+      ]
     },
     {
+      "id": "weapon_molotov/strike-third",
       "file": "83-strike-throwable-third.png",
       "family": "strike-throwable",
       "subject": "weapon_molotov",
@@ -176,8 +270,31 @@
         "distance": 3.4,
         "fovDeg": 38,
         "lookHeight": 1
-      }
+      },
+      "useStatusPerStep": [
+        "ok",
+        "ok",
+        "ok",
+        "ok",
+        "ok"
+      ],
+      "handTargetMaxDeltaM": {
+        "R": 0,
+        "L": 0
+      },
+      "differenceFromFirstFrame": [
+        0.0023,
+        0.0033,
+        0.0033,
+        0.0032
+      ],
+      "notes": [
+        "not byte-stable between runs; see the gaps"
+      ]
     }
+  ],
+  "gaps": [
+    "the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable."
   ],
   "sheets": [
     {
@@ -1492,14 +1609,14 @@
       "camera": {
         "kind": "game",
         "position": [
-          0.004,
-          1.707,
-          1.891
+          0,
+          1.7,
+          2.085
         ],
         "target": [
-          0.004,
-          1.707,
-          -3.109
+          0,
+          1.7,
+          -2.915
         ],
         "fovDeg": 72
       }
