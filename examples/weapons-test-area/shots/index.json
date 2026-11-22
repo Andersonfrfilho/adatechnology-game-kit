@@ -1,0 +1,1450 @@
+{
+  "area": "weapons",
+  "seed": "none (the models are drawn without random draws; condition and ammunition at the area defaults)",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "freezeFrames": 30,
+  "timeOfDay": {
+    "nightFactor": 0
+  },
+  "catalogue": {
+    "count": 189,
+    "source": "packages/game-weapons/src/data (the arsenal: room.arsenal.weapons); an entry is covered when the catalogue has the item weapon_<id>",
+    "covered": 169
+  },
+  "notInCatalogue": [
+    "hand",
+    "kick",
+    "shove",
+    "pistol_9mm",
+    "pistol_45",
+    "pistol_22",
+    "revolver_357",
+    "revolver_38",
+    "smg_9mm",
+    "carbine_22",
+    "rifle_5_56",
+    "rifle_7_62x39",
+    "rifle_bolt_308",
+    "sniper_338",
+    "anti_materiel_50",
+    "shotgun_pump_12",
+    "shotgun_double_12",
+    "shotgun_semi_12",
+    "fists",
+    "flamethrower"
+  ],
+  "families": [
+    "bow",
+    "crossbow",
+    "melee_blunt",
+    "melee_blade",
+    "flame",
+    "throwable",
+    "heat",
+    "tool",
+    "extinguisher",
+    "pistol",
+    "revolver",
+    "smg",
+    "shotgun",
+    "rifle",
+    "dmr",
+    "sniper",
+    "hunting",
+    "machine_gun",
+    "launcher"
+  ],
+  "sheets": [
+    {
+      "file": "01-bow-side.png",
+      "family": "bow",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_bow_compound",
+        "weapon_recurve_bow"
+      ],
+      "labels": [
+        "bow_compound",
+        "recurve_bow"
+      ]
+    },
+    {
+      "file": "02-crossbow-side.png",
+      "family": "crossbow",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_crossbow"
+      ],
+      "labels": [
+        "crossbow"
+      ]
+    },
+    {
+      "file": "03-melee_blunt-side.png",
+      "family": "melee_blunt",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_hammer",
+        "weapon_sledgehammer",
+        "weapon_shovel",
+        "weapon_baseball_bat",
+        "weapon_crowbar",
+        "weapon_nail_bat",
+        "weapon_iron_pipe",
+        "weapon_police_baton",
+        "weapon_cast_iron_skillet",
+        "weapon_brass_knuckles"
+      ],
+      "labels": [
+        "hammer",
+        "sledgehammer",
+        "shovel",
+        "baseball_bat",
+        "crowbar",
+        "nail_bat",
+        "iron_pipe",
+        "police_baton",
+        "cast_iron_skillet",
+        "brass_knuckles"
+      ]
+    },
+    {
+      "file": "04-melee_blade-side-1.png",
+      "family": "melee_blade",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_machete",
+        "weapon_axe",
+        "weapon_knife",
+        "weapon_tactical_knife",
+        "weapon_meat_cleaver",
+        "weapon_hatchet",
+        "weapon_pickaxe",
+        "weapon_sickle",
+        "weapon_improvised_spear",
+        "weapon_chainsaw"
+      ],
+      "labels": [
+        "machete",
+        "axe",
+        "knife",
+        "tactical_knife",
+        "meat_cleaver",
+        "hatchet",
+        "pickaxe",
+        "sickle",
+        "improvised_spear",
+        "chainsaw"
+      ]
+    },
+    {
+      "file": "05-melee_blade-side-2.png",
+      "family": "melee_blade",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_kabar",
+        "weapon_katana"
+      ],
+      "labels": [
+        "kabar",
+        "katana"
+      ]
+    },
+    {
+      "file": "06-flame-side.png",
+      "family": "flame",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_lighter"
+      ],
+      "labels": [
+        "lighter"
+      ]
+    },
+    {
+      "file": "07-throwable-side.png",
+      "family": "throwable",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_molotov",
+        "weapon_frag_grenade",
+        "weapon_pipe_bomb",
+        "weapon_flashbang",
+        "weapon_dynamite",
+        "weapon_c4",
+        "weapon_claymore",
+        "weapon_semtex",
+        "weapon_smoke_grenade"
+      ],
+      "labels": [
+        "molotov",
+        "frag_grenade",
+        "pipe_bomb",
+        "flashbang",
+        "dynamite",
+        "c4",
+        "claymore",
+        "semtex",
+        "smoke_grenade"
+      ]
+    },
+    {
+      "file": "08-heat-side.png",
+      "family": "heat",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_cutting_torch",
+        "weapon_blowtorch"
+      ],
+      "labels": [
+        "cutting_torch",
+        "blowtorch"
+      ]
+    },
+    {
+      "file": "09-tool-side.png",
+      "family": "tool",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_screwdriver",
+        "weapon_wrench",
+        "weapon_pry_bar",
+        "weapon_hacksaw",
+        "weapon_utility_knife",
+        "weapon_claw_hammer"
+      ],
+      "labels": [
+        "screwdriver",
+        "wrench",
+        "pry_bar",
+        "hacksaw",
+        "utility_knife",
+        "claw_hammer"
+      ]
+    },
+    {
+      "file": "10-extinguisher-side.png",
+      "family": "extinguisher",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_extinguisher"
+      ],
+      "labels": [
+        "extinguisher"
+      ]
+    },
+    {
+      "file": "11-pistol-side-1.png",
+      "family": "pistol",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_glock_17",
+        "weapon_glock_18",
+        "weapon_glock_19",
+        "weapon_taurus_g2c",
+        "weapon_taurus_ts9",
+        "weapon_beretta_92fs",
+        "weapon_sig_sauer_p226",
+        "weapon_cz_75",
+        "weapon_taurus_pt100",
+        "weapon_colt_m1911"
+      ],
+      "labels": [
+        "glock_17",
+        "glock_18",
+        "glock_19",
+        "taurus_g2c",
+        "taurus_ts9",
+        "beretta_92fs",
+        "sig_sauer_p226",
+        "cz_75",
+        "taurus_pt100",
+        "colt_m1911"
+      ]
+    },
+    {
+      "file": "12-pistol-side-2.png",
+      "family": "pistol",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_makarov_pm",
+        "weapon_fn_five_seven",
+        "weapon_desert_eagle_mark_xix",
+        "weapon_taurus_th380",
+        "weapon_sig_sauer_p320",
+        "weapon_hk_usp",
+        "weapon_walther_p99"
+      ],
+      "labels": [
+        "makarov_pm",
+        "fn_five_seven",
+        "desert_eagle_mark_xix",
+        "taurus_th380",
+        "sig_sauer_p320",
+        "hk_usp",
+        "walther_p99"
+      ]
+    },
+    {
+      "file": "13-revolver-side.png",
+      "family": "revolver",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_taurus_82",
+        "weapon_sw_686",
+        "weapon_sw_model_29",
+        "weapon_colt_python"
+      ],
+      "labels": [
+        "taurus_82",
+        "sw_686",
+        "sw_model_29",
+        "colt_python"
+      ]
+    },
+    {
+      "file": "14-smg-side-1.png",
+      "family": "smg",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_hk_mp5a3",
+        "weapon_taurus_smt9",
+        "weapon_hk_ump_45",
+        "weapon_uzi",
+        "weapon_fn_p90",
+        "weapon_kriss_vector",
+        "weapon_thompson_m1a1",
+        "weapon_cz_scorpion_evo_3",
+        "weapon_mac_10",
+        "weapon_hk_mp5sd3"
+      ],
+      "labels": [
+        "hk_mp5a3",
+        "taurus_smt9",
+        "hk_ump_45",
+        "uzi",
+        "fn_p90",
+        "kriss_vector",
+        "thompson_m1a1",
+        "cz_scorpion_evo_3",
+        "mac_10",
+        "hk_mp5sd3"
+      ]
+    },
+    {
+      "file": "15-smg-side-2.png",
+      "family": "smg",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_hk_mp5k",
+        "weapon_hk_ump9",
+        "weapon_mini_uzi",
+        "weapon_hk_mp7a1",
+        "weapon_sig_mpx",
+        "weapon_pp19_bizon",
+        "weapon_vz61",
+        "weapon_fn_ps90",
+        "weapon_bt_mp9",
+        "weapon_mp40"
+      ],
+      "labels": [
+        "hk_mp5k",
+        "hk_ump9",
+        "mini_uzi",
+        "hk_mp7a1",
+        "sig_mpx",
+        "pp19_bizon",
+        "vz61",
+        "fn_ps90",
+        "bt_mp9",
+        "mp40"
+      ]
+    },
+    {
+      "file": "16-smg-side-3.png",
+      "family": "smg",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_ppsh_41"
+      ],
+      "labels": [
+        "ppsh_41"
+      ]
+    },
+    {
+      "file": "17-shotgun-side-1.png",
+      "family": "shotgun",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_remington_870",
+        "weapon_mossberg_500",
+        "weapon_cbc_pump_military_3_0",
+        "weapon_benelli_m4",
+        "weapon_franchi_spas_12",
+        "weapon_kel_tec_ksg",
+        "weapon_saiga_12",
+        "weapon_aa_12",
+        "weapon_boito_double_barrel",
+        "weapon_mossberg_500_cruiser"
+      ],
+      "labels": [
+        "remington_870",
+        "mossberg_500",
+        "cbc_pump_military_3_0",
+        "benelli_m4",
+        "franchi_spas_12",
+        "kel_tec_ksg",
+        "saiga_12",
+        "aa_12",
+        "boito_double_barrel",
+        "mossberg_500_cruiser"
+      ]
+    },
+    {
+      "file": "18-shotgun-side-2.png",
+      "family": "shotgun",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_mossberg_590"
+      ],
+      "labels": [
+        "mossberg_590"
+      ]
+    },
+    {
+      "file": "19-rifle-side-1.png",
+      "family": "rifle",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_ak_47",
+        "weapon_akm",
+        "weapon_ak_74",
+        "weapon_ak_12",
+        "weapon_imbel_ia2",
+        "weapon_taurus_t4",
+        "weapon_colt_m4a1",
+        "weapon_colt_m16a2",
+        "weapon_hk416",
+        "weapon_steyr_aug_a1"
+      ],
+      "labels": [
+        "ak_47",
+        "akm",
+        "ak_74",
+        "ak_12",
+        "imbel_ia2",
+        "taurus_t4",
+        "colt_m4a1",
+        "colt_m16a2",
+        "hk416",
+        "steyr_aug_a1"
+      ]
+    },
+    {
+      "file": "20-rifle-side-2.png",
+      "family": "rifle",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_fn_fal",
+        "weapon_hk_g3a3",
+        "weapon_sks",
+        "weapon_fn_parafal",
+        "weapon_taurus_t4_civil",
+        "weapon_hk_g36",
+        "weapon_hk_g36k",
+        "weapon_hk_g36c",
+        "weapon_aks_74u",
+        "weapon_m1_garand"
+      ],
+      "labels": [
+        "fn_fal",
+        "hk_g3a3",
+        "sks",
+        "fn_parafal",
+        "taurus_t4_civil",
+        "hk_g36",
+        "hk_g36k",
+        "hk_g36c",
+        "aks_74u",
+        "m1_garand"
+      ]
+    },
+    {
+      "file": "21-rifle-side-3.png",
+      "family": "rifle",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_famas",
+        "weapon_iwi_tavor",
+        "weapon_l85a2"
+      ],
+      "labels": [
+        "famas",
+        "iwi_tavor",
+        "l85a2"
+      ]
+    },
+    {
+      "file": "22-dmr-side.png",
+      "family": "dmr",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_m14_ebr",
+        "weapon_svd_dragunov",
+        "weapon_fn_scar_h",
+        "weapon_knights_sr_25_mk11",
+        "weapon_hk_psg_1",
+        "weapon_fn_scar_l",
+        "weapon_vss_vintorez"
+      ],
+      "labels": [
+        "m14_ebr",
+        "svd_dragunov",
+        "fn_scar_h",
+        "knights_sr_25_mk11",
+        "hk_psg_1",
+        "fn_scar_l",
+        "vss_vintorez"
+      ]
+    },
+    {
+      "file": "23-sniper-side-1.png",
+      "family": "sniper",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_steyr_ssg_69",
+        "weapon_barrett_mrad",
+        "weapon_cheytac_m200",
+        "weapon_remington_700",
+        "weapon_m24_sws",
+        "weapon_mosin_nagant_91_30",
+        "weapon_accuracy_awm",
+        "weapon_sako_trg_42",
+        "weapon_barrett_m82a1",
+        "weapon_remington_700_300wm"
+      ],
+      "labels": [
+        "steyr_ssg_69",
+        "barrett_mrad",
+        "cheytac_m200",
+        "remington_700",
+        "m24_sws",
+        "mosin_nagant_91_30",
+        "accuracy_awm",
+        "sako_trg_42",
+        "barrett_m82a1",
+        "remington_700_300wm"
+      ]
+    },
+    {
+      "file": "24-sniper-side-2.png",
+      "family": "sniper",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_accuracy_l96a1",
+        "weapon_mauser_kar98k"
+      ],
+      "labels": [
+        "accuracy_l96a1",
+        "mauser_kar98k"
+      ]
+    },
+    {
+      "file": "25-hunting-side.png",
+      "family": "hunting",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_ruger_10_22",
+        "weapon_cbc_7022",
+        "weapon_cbc_122",
+        "weapon_winchester_1894",
+        "weapon_rossi_puma",
+        "weapon_hunting_rifle_30_06",
+        "weapon_winchester_1887"
+      ],
+      "labels": [
+        "ruger_10_22",
+        "cbc_7022",
+        "cbc_122",
+        "winchester_1894",
+        "rossi_puma",
+        "hunting_rifle_30_06",
+        "winchester_1887"
+      ]
+    },
+    {
+      "file": "26-machine_gun-side-1.png",
+      "family": "machine_gun",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_fn_minimi",
+        "weapon_pkm",
+        "weapon_m60",
+        "weapon_browning_m2",
+        "weapon_fn_m249",
+        "weapon_fn_minimi_para",
+        "weapon_fn_mag",
+        "weapon_rpk",
+        "weapon_mg3",
+        "weapon_m134"
+      ],
+      "labels": [
+        "fn_minimi",
+        "pkm",
+        "m60",
+        "browning_m2",
+        "fn_m249",
+        "fn_minimi_para",
+        "fn_mag",
+        "rpk",
+        "mg3",
+        "m134"
+      ]
+    },
+    {
+      "file": "27-machine_gun-side-2.png",
+      "family": "machine_gun",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_fn_m240b",
+        "weapon_mg42"
+      ],
+      "labels": [
+        "fn_m240b",
+        "mg42"
+      ]
+    },
+    {
+      "file": "28-launcher-side-1.png",
+      "family": "launcher",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_m79",
+        "weapon_rpg_7",
+        "weapon_m72_law",
+        "weapon_at4",
+        "weapon_carl_gustaf_m4",
+        "weapon_m2_flamethrower",
+        "weapon_improvised_flamethrower",
+        "weapon_m203",
+        "weapon_gp_25",
+        "weapon_ag36"
+      ],
+      "labels": [
+        "m79",
+        "rpg_7",
+        "m72_law",
+        "at4",
+        "carl_gustaf_m4",
+        "m2_flamethrower",
+        "improvised_flamethrower",
+        "m203",
+        "gp_25",
+        "ag36"
+      ]
+    },
+    {
+      "file": "29-launcher-side-2.png",
+      "family": "launcher",
+      "view": "side",
+      "openLeaves": false,
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "weapon_m32_mgl"
+      ],
+      "labels": [
+        "m32_mgl"
+      ]
+    },
+    {
+      "file": "30-hand-pistol-first-still-high.png",
+      "family": "hand-pistol",
+      "view": "first-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "31-hand-pistol-first-still-level.png",
+      "family": "hand-pistol",
+      "view": "first-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "32-hand-pistol-first-still-low.png",
+      "family": "hand-pistol",
+      "view": "first-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "33-hand-pistol-first-walk-level.png",
+      "family": "hand-pistol",
+      "view": "first-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "34-hand-pistol-third-still-high.png",
+      "family": "hand-pistol",
+      "view": "third-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "35-hand-pistol-third-still-level.png",
+      "family": "hand-pistol",
+      "view": "third-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "36-hand-pistol-third-still-low.png",
+      "family": "hand-pistol",
+      "view": "third-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "37-hand-pistol-third-walk-level.png",
+      "family": "hand-pistol",
+      "view": "third-person",
+      "entries": [
+        "weapon_glock_17"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "38-hand-shotgun-first-still-high.png",
+      "family": "hand-shotgun",
+      "view": "first-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "39-hand-shotgun-first-still-level.png",
+      "family": "hand-shotgun",
+      "view": "first-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "40-hand-shotgun-first-still-low.png",
+      "family": "hand-shotgun",
+      "view": "first-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "41-hand-shotgun-first-walk-level.png",
+      "family": "hand-shotgun",
+      "view": "first-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "42-hand-shotgun-third-still-high.png",
+      "family": "hand-shotgun",
+      "view": "third-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "43-hand-shotgun-third-still-level.png",
+      "family": "hand-shotgun",
+      "view": "third-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "44-hand-shotgun-third-still-low.png",
+      "family": "hand-shotgun",
+      "view": "third-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "45-hand-shotgun-third-walk-level.png",
+      "family": "hand-shotgun",
+      "view": "third-person",
+      "entries": [
+        "weapon_remington_870"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "46-hand-rifle-first-still-high.png",
+      "family": "hand-rifle",
+      "view": "first-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "47-hand-rifle-first-still-level.png",
+      "family": "hand-rifle",
+      "view": "first-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "48-hand-rifle-first-still-low.png",
+      "family": "hand-rifle",
+      "view": "first-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "49-hand-rifle-first-walk-level.png",
+      "family": "hand-rifle",
+      "view": "first-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "50-hand-rifle-third-still-high.png",
+      "family": "hand-rifle",
+      "view": "third-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "51-hand-rifle-third-still-level.png",
+      "family": "hand-rifle",
+      "view": "third-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "52-hand-rifle-third-still-low.png",
+      "family": "hand-rifle",
+      "view": "third-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "53-hand-rifle-third-walk-level.png",
+      "family": "hand-rifle",
+      "view": "third-person",
+      "entries": [
+        "weapon_ak_47"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "54-hand-launcher-first-still-high.png",
+      "family": "hand-launcher",
+      "view": "first-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "55-hand-launcher-first-still-level.png",
+      "family": "hand-launcher",
+      "view": "first-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "56-hand-launcher-first-still-low.png",
+      "family": "hand-launcher",
+      "view": "first-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "57-hand-launcher-first-walk-level.png",
+      "family": "hand-launcher",
+      "view": "first-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "58-hand-launcher-third-still-high.png",
+      "family": "hand-launcher",
+      "view": "third-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "59-hand-launcher-third-still-level.png",
+      "family": "hand-launcher",
+      "view": "third-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "60-hand-launcher-third-still-low.png",
+      "family": "hand-launcher",
+      "view": "third-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "61-hand-launcher-third-walk-level.png",
+      "family": "hand-launcher",
+      "view": "third-person",
+      "entries": [
+        "weapon_m79"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "62-hand-melee_blade-first-still-high.png",
+      "family": "hand-melee_blade",
+      "view": "first-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "63-hand-melee_blade-first-still-level.png",
+      "family": "hand-melee_blade",
+      "view": "first-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "64-hand-melee_blade-first-still-low.png",
+      "family": "hand-melee_blade",
+      "view": "first-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "65-hand-melee_blade-first-walk-level.png",
+      "family": "hand-melee_blade",
+      "view": "first-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "66-hand-melee_blade-third-still-high.png",
+      "family": "hand-melee_blade",
+      "view": "third-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "67-hand-melee_blade-third-still-level.png",
+      "family": "hand-melee_blade",
+      "view": "third-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "68-hand-melee_blade-third-still-low.png",
+      "family": "hand-melee_blade",
+      "view": "third-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "69-hand-melee_blade-third-walk-level.png",
+      "family": "hand-melee_blade",
+      "view": "third-person",
+      "entries": [
+        "weapon_machete"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "70-hand-throwable-first-still-high.png",
+      "family": "hand-throwable",
+      "view": "first-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "71-hand-throwable-first-still-level.png",
+      "family": "hand-throwable",
+      "view": "first-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "72-hand-throwable-first-still-low.png",
+      "family": "hand-throwable",
+      "view": "first-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "73-hand-throwable-first-walk-level.png",
+      "family": "hand-throwable",
+      "view": "first-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    },
+    {
+      "file": "74-hand-throwable-third-still-high.png",
+      "family": "hand-throwable",
+      "view": "third-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "still-high",
+      "aimRise": 5,
+      "walking": false
+    },
+    {
+      "file": "75-hand-throwable-third-still-level.png",
+      "family": "hand-throwable",
+      "view": "third-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "still-level",
+      "aimRise": 0,
+      "walking": false
+    },
+    {
+      "file": "76-hand-throwable-third-still-low.png",
+      "family": "hand-throwable",
+      "view": "third-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "still-low",
+      "aimRise": -5,
+      "walking": false
+    },
+    {
+      "file": "77-hand-throwable-third-walk-level.png",
+      "family": "hand-throwable",
+      "view": "third-person",
+      "entries": [
+        "weapon_molotov"
+      ],
+      "pose": "walk-level",
+      "aimRise": 0,
+      "walking": true
+    }
+  ]
+}

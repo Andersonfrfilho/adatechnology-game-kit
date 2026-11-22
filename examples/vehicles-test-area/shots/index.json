@@ -1,0 +1,543 @@
+{
+  "area": "vehicles",
+  "seed": "colour seed of the area bench (default), light quality, doors closed unless the sheet says open",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "freezeFrames": 30,
+  "timeOfDay": {
+    "nightFactor": 0
+  },
+  "catalogue": {
+    "count": 69,
+    "source": "packages/game-vehicles-fleet/src/groups.ts (fleetVehicleIds), loaded as items by loadFleetCatalogueInto of examples/vehicles-test-area/src/entry.js",
+    "covered": 69
+  },
+  "sheets": [
+    {
+      "file": "01-fleet-closed-1.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "hatch",
+        "taxi",
+        "entry_hatch",
+        "electric_hatch",
+        "sedan",
+        "police_sedan"
+      ],
+      "labels": [
+        "hatch",
+        "taxi",
+        "entry_hatch",
+        "electric_hatch",
+        "sedan",
+        "police_sedan"
+      ]
+    },
+    {
+      "file": "02-fleet-closed-2.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "highway_police_sedan",
+        "bicycle",
+        "scooter",
+        "commuter_motorcycle",
+        "trail_bike",
+        "adventure_bike"
+      ],
+      "labels": [
+        "highway_police_sedan",
+        "bicycle",
+        "scooter",
+        "commuter_motorcycle",
+        "trail_bike",
+        "adventure_bike"
+      ]
+    },
+    {
+      "file": "03-fleet-closed-3.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "highway_police_bike",
+        "quad_bike",
+        "beetle",
+        "compact_suv",
+        "hybrid_suv",
+        "midsize_suv"
+      ],
+      "labels": [
+        "highway_police_bike",
+        "quad_bike",
+        "beetle",
+        "compact_suv",
+        "hybrid_suv",
+        "midsize_suv"
+      ]
+    },
+    {
+      "file": "04-fleet-closed-4.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "large_suv",
+        "compact_pickup",
+        "crossover_pickup",
+        "pickup",
+        "monster_truck",
+        "cargo_van"
+      ],
+      "labels": [
+        "large_suv",
+        "compact_pickup",
+        "crossover_pickup",
+        "pickup",
+        "monster_truck",
+        "cargo_van"
+      ]
+    },
+    {
+      "file": "05-fleet-closed-5.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "ambulance",
+        "box_truck",
+        "tanker_truck",
+        "school_bus",
+        "city_bus",
+        "armored_truck"
+      ],
+      "labels": [
+        "ambulance",
+        "box_truck",
+        "tanker_truck",
+        "school_bus",
+        "city_bus",
+        "armored_truck"
+      ]
+    },
+    {
+      "file": "06-fleet-closed-6.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "tractor",
+        "light_4x4",
+        "troop_truck",
+        "apc_6x6",
+        "armored_car_6x6",
+        "battle_tank"
+      ],
+      "labels": [
+        "tractor",
+        "light_4x4",
+        "troop_truck",
+        "apc_6x6",
+        "armored_car_6x6",
+        "battle_tank"
+      ]
+    },
+    {
+      "file": "07-fleet-closed-7.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "transport_helicopter",
+        "river_skiff",
+        "speedboat",
+        "fishing_boat",
+        "single_engine_plane",
+        "crop_duster"
+      ],
+      "labels": [
+        "transport_helicopter",
+        "river_skiff",
+        "speedboat",
+        "fishing_boat",
+        "single_engine_plane",
+        "crop_duster"
+      ]
+    },
+    {
+      "file": "08-fleet-closed-8.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "piston_helicopter",
+        "rescue_helicopter",
+        "step_through_scooter",
+        "naked_bike",
+        "sport_bike",
+        "cruiser"
+      ],
+      "labels": [
+        "piston_helicopter",
+        "rescue_helicopter",
+        "step_through_scooter",
+        "naked_bike",
+        "sport_bike",
+        "cruiser"
+      ]
+    },
+    {
+      "file": "09-fleet-closed-9.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "delivery_bike",
+        "boxy_hatch",
+        "family_hatch",
+        "rideshare_hatch",
+        "turbo_hatch",
+        "fastback_sedan"
+      ],
+      "labels": [
+        "delivery_bike",
+        "boxy_hatch",
+        "family_hatch",
+        "rideshare_hatch",
+        "turbo_hatch",
+        "fastback_sedan"
+      ]
+    },
+    {
+      "file": "10-fleet-closed-10.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "classic_six_sedan",
+        "v8_coupe",
+        "jet_ski",
+        "sailboat",
+        "rescue_dinghy",
+        "patrol_boat"
+      ],
+      "labels": [
+        "classic_six_sedan",
+        "v8_coupe",
+        "jet_ski",
+        "sailboat",
+        "rescue_dinghy",
+        "patrol_boat"
+      ]
+    },
+    {
+      "file": "11-fleet-closed-11.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "tandem_trainer",
+        "regional_turboprop",
+        "amphibian_turboprop",
+        "light_jet",
+        "light_attack_turboprop",
+        "trainer_helicopter"
+      ],
+      "labels": [
+        "tandem_trainer",
+        "regional_turboprop",
+        "amphibian_turboprop",
+        "light_jet",
+        "light_attack_turboprop",
+        "trainer_helicopter"
+      ]
+    },
+    {
+      "file": "12-fleet-closed-12.png",
+      "family": "fleet",
+      "view": "3q-front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "turbine_helicopter",
+        "police_helicopter",
+        "attack_helicopter"
+      ],
+      "labels": [
+        "turbine_helicopter",
+        "police_helicopter",
+        "attack_helicopter"
+      ]
+    },
+    {
+      "file": "13-fleet-open-1.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "hatch",
+        "taxi",
+        "entry_hatch",
+        "electric_hatch",
+        "sedan",
+        "police_sedan"
+      ],
+      "labels": [
+        "hatch",
+        "taxi",
+        "entry_hatch",
+        "electric_hatch",
+        "sedan",
+        "police_sedan"
+      ]
+    },
+    {
+      "file": "14-fleet-open-2.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "highway_police_sedan",
+        "beetle",
+        "compact_suv",
+        "hybrid_suv",
+        "midsize_suv",
+        "large_suv"
+      ],
+      "labels": [
+        "highway_police_sedan",
+        "beetle",
+        "compact_suv",
+        "hybrid_suv",
+        "midsize_suv",
+        "large_suv"
+      ]
+    },
+    {
+      "file": "15-fleet-open-3.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "compact_pickup",
+        "crossover_pickup",
+        "pickup",
+        "monster_truck",
+        "cargo_van",
+        "ambulance"
+      ],
+      "labels": [
+        "compact_pickup",
+        "crossover_pickup",
+        "pickup",
+        "monster_truck",
+        "cargo_van",
+        "ambulance"
+      ]
+    },
+    {
+      "file": "16-fleet-open-4.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "tractor",
+        "light_4x4",
+        "apc_6x6",
+        "armored_car_6x6",
+        "battle_tank",
+        "boxy_hatch"
+      ],
+      "labels": [
+        "tractor",
+        "light_4x4",
+        "apc_6x6",
+        "armored_car_6x6",
+        "battle_tank",
+        "boxy_hatch"
+      ]
+    },
+    {
+      "file": "17-fleet-open-5.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "family_hatch",
+        "rideshare_hatch",
+        "turbo_hatch",
+        "fastback_sedan",
+        "classic_six_sedan",
+        "v8_coupe"
+      ],
+      "labels": [
+        "family_hatch",
+        "rideshare_hatch",
+        "turbo_hatch",
+        "fastback_sedan",
+        "classic_six_sedan",
+        "v8_coupe"
+      ]
+    },
+    {
+      "file": "18-fleet-open-6.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "police_helicopter"
+      ],
+      "labels": [
+        "police_helicopter"
+      ]
+    }
+  ]
+}

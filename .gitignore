@@ -13,6 +13,19 @@ coverage
 !.vscode/extensions.json
 examples/test-room/base
 examples/audio-test-area/shots/body-reel/
+# contact sheets of the six catalogue areas (tools/check-area/contact-sheet.mjs): the PNGs and the pixel check are rewritten by every run (and by the nightly), only shots/index.json is kept
+examples/animals-test-area/shots/*.png
+examples/characters-test-area/shots/*.png
+examples/urban-test-area/shots/*.png
+examples/vegetation-test-area/shots/*.png
+examples/vehicles-test-area/shots/*.png
+examples/weapons-test-area/shots/*.png
+examples/animals-test-area/shots/sanity.json
+examples/characters-test-area/shots/sanity.json
+examples/urban-test-area/shots/sanity.json
+examples/vegetation-test-area/shots/sanity.json
+examples/vehicles-test-area/shots/sanity.json
+examples/weapons-test-area/shots/sanity.json
 
 # the kit's own sounds are packages/game-audio/assets/sfx/<categoria>/*.ogg (CC0 and CC-BY, each one in manifest.json and CREDITOS.md); the
 # originals the converter reads stay outside (ZombiAdA assets/sfx-originais). Local copies or links, by packages/game-audio/scripts/sfx-dir.mjs:

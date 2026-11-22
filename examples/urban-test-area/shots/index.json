@@ -1,0 +1,287 @@
+{
+  "area": "urban",
+  "seed": "bench seed of the area (default); lamps share and light budget at the area defaults",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "freezeFrames": 30,
+  "timeOfDay": {
+    "nightFactor": 0
+  },
+  "catalogue": {
+    "count": 17,
+    "source": "packages/game-urban-three (poles and neighbourhoods of defaultUrbanProviders of game-kit-defaults), the items of the area",
+    "covered": 17
+  },
+  "sheets": [
+    {
+      "file": "01-poles-front.png",
+      "family": "poles",
+      "view": "front",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 26,
+        "azimuthDeg": 0,
+        "elevationDeg": 3,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "pole_led_double",
+        "pole_concrete_arm",
+        "pole_cast_iron",
+        "pole_wood_crossarm",
+        "pole_flood_tower"
+      ],
+      "labels": [
+        "pole_led_double",
+        "pole_concrete_arm",
+        "pole_cast_iron",
+        "pole_wood_crossarm",
+        "pole_flood_tower"
+      ]
+    },
+    {
+      "file": "02-scene-street_grid.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "street_grid"
+      ],
+      "labels": [
+        "street_grid"
+      ]
+    },
+    {
+      "file": "03-scene-terrain_patch.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "terrain_patch"
+      ],
+      "labels": [
+        "terrain_patch"
+      ]
+    },
+    {
+      "file": "04-scene-downtown.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "downtown"
+      ],
+      "labels": [
+        "downtown"
+      ]
+    },
+    {
+      "file": "05-scene-suburb.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "suburb"
+      ],
+      "labels": [
+        "suburb"
+      ]
+    },
+    {
+      "file": "06-scene-working_class.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "working_class"
+      ],
+      "labels": [
+        "working_class"
+      ]
+    },
+    {
+      "file": "07-scene-historic_street.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "historic_street"
+      ],
+      "labels": [
+        "historic_street"
+      ]
+    },
+    {
+      "file": "08-scene-industrial_port.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "industrial_port"
+      ],
+      "labels": [
+        "industrial_port"
+      ]
+    },
+    {
+      "file": "09-scene-railway_village.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "railway_village"
+      ],
+      "labels": [
+        "railway_village"
+      ]
+    },
+    {
+      "file": "10-scene-mountain_resort.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "mountain_resort"
+      ],
+      "labels": [
+        "mountain_resort"
+      ]
+    },
+    {
+      "file": "11-scene-stilt_village.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "stilt_village"
+      ],
+      "labels": [
+        "stilt_village"
+      ]
+    },
+    {
+      "file": "12-scene-military.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "military"
+      ],
+      "labels": [
+        "military"
+      ]
+    },
+    {
+      "file": "13-scene-rural.png",
+      "family": "scenes",
+      "view": "aerial",
+      "openLeaves": false,
+      "yaw": 0,
+      "camera": {
+        "kind": "aerial",
+        "fovDeg": 40,
+        "azimuthDeg": 0,
+        "elevationDeg": 38,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "rural"
+      ],
+      "labels": [
+        "rural"
+      ]
+    }
+  ]
+}
