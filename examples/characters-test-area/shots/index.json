@@ -20,6 +20,10 @@
       "family": "undead",
       "view": "front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 3.141592653589793,
       "camera": {
         "kind": "front",
@@ -64,6 +68,10 @@
       "family": "undead",
       "view": "front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": -1.5707963267948966,
       "camera": {
         "kind": "front",
@@ -108,6 +116,10 @@
       "family": "professions",
       "view": "front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 3.141592653589793,
       "camera": {
         "kind": "front",
@@ -150,6 +162,10 @@
       "family": "professions",
       "view": "front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": -1.5707963267948966,
       "camera": {
         "kind": "front",

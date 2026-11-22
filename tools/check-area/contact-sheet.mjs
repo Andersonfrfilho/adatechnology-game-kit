@@ -17,6 +17,8 @@ export const FREEZE_FRAMES = 153
 export const EMPTY_SHARE = 0.01
 /** An entry standing higher than this above the ground (m) is reported as floating. */
 export const FLOAT_LIMIT_M = 0.05
+/** An entry whose lowest point over the cycle is deeper than this under the ground (m) is reported as sinking. */
+export const SINK_LIMIT_M = 0.05
 /** A picture of a subject in the hand has less than this share of pixels different from the same view without it: nothing of it is seen. */
 export const PHOTO_EMPTY_SHARE = 0.003
 
@@ -51,11 +53,15 @@ async function laySheetInPage(args) {
   const toCamera = [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)]
   const rowAxis = [Math.cos(az), 0, -Math.sin(az)]
 
-  /** @param {any} root @returns {{min: number[], max: number[]} | null} */
+  /** @param {any} root @returns {{min: number[], max: number[], minAt: string | null, maxAt: string | null} | null} */
   const boxOf = (root) => {
     root.updateMatrixWorld(true)
     const min = [Infinity, Infinity, Infinity]
     const max = [-Infinity, -Infinity, -Infinity]
+    /** @type {{ object: any, x: number, z: number } | null} */
+    let minAt = null
+    /** @type {{ object: any, x: number, z: number } | null} */
+    let maxAt = null
     root.traverse((/** @type {any} */ object) => {
       // a static batch is drawn from a unit-box placeholder until it is filled: its box says nothing about the entry
       if (!(object.isMesh || object.isSkinnedMesh) || !object.geometry || String(object.name).startsWith('batch:')) return
@@ -63,13 +69,32 @@ async function laySheetInPage(args) {
       if (!object.geometry.boundingBox) object.geometry.computeBoundingBox()
       const box = object.geometry.boundingBox
       if (!box) return
-      for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
-        const point = new Vector(x, y, z).applyMatrix4(object.matrixWorld)
+      /** @param {any} point */
+      const take = (point) => {
+        if (point.y < min[1]) minAt = { object, x: point.x, z: point.z }
+        if (point.y > max[1]) maxAt = { object, x: point.x, z: point.z }
         min[0] = Math.min(min[0], point.x); min[1] = Math.min(min[1], point.y); min[2] = Math.min(min[2], point.z)
         max[0] = Math.max(max[0], point.x); max[1] = Math.max(max[1], point.y); max[2] = Math.max(max[2], point.z)
       }
+      // the vertices when the mesh is small (the box of a turned sphere or tyre is wider than the thing), the corners of its box when it is huge
+      const position = object.geometry.attributes.position
+      if (position && position.count <= 100000) {
+        for (let at = 0; at < position.count; at++) take(new Vector(position.getX(at), position.getY(at), position.getZ(at)).applyMatrix4(object.matrixWorld))
+      } else {
+        for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) take(new Vector(x, y, z).applyMatrix4(object.matrixWorld))
+      }
     })
-    return Number.isFinite(min[0]) && max[0] > min[0] ? { min, max } : null
+    // what holds the lowest and the highest point: the meshes are unnamed, so the geometry, its colour and how far from the root's axis the point is say whether it is the head, a hand or a foot
+    const describe = (/** @type {{ object: any, x: number, z: number } | null} */ at) => {
+      if (!at) return null
+      const material = Array.isArray(at.object.material) ? at.object.material[0] : at.object.material
+      const colour = material && material.color ? `#${material.color.getHexString()}` : 'no colour'
+      let depth = 0
+      for (let parent = at.object.parent; parent && parent !== root; parent = parent.parent) depth++
+      const lateral = Math.hypot(at.x - root.position.x, at.z - root.position.z)
+      return `${at.object.geometry.type} of ${at.object.geometry.attributes.position?.count ?? 0} vertices, ${colour}, ${depth} levels under the root, ${lateral.toFixed(2)} m from its axis, parent "${at.object.parent?.name || at.object.parent?.type}"`
+    }
+    return Number.isFinite(min[0]) && max[0] > min[0] ? { min, max, minAt: describe(minAt), maxAt: describe(maxAt) } : null
   }
 
   // pass 1: every entry at yaw 0 on its own spot, far apart, to measure it
@@ -167,7 +192,7 @@ async function laySheetInPage(args) {
     }
   }
   // the lowest point each entry reaches over a whole gait cycle (a running body is off the ground between strides): sampled every 4th frame for 120 frames, then the 30 frames of the freeze
-  /** @type {Map<number, number>} */
+  /** @type {Map<number, { y: number, at: string | null }>} */
   const lowest = new Map()
   const sampling = !args.openLeaves && kind !== 'aerial'
   for (let frame = 0; frame < (sampling ? 120 : 0); frame++) {
@@ -175,7 +200,7 @@ async function laySheetInPage(args) {
     if (frame % 4 !== 0) continue
     for (const item of placed) {
       const box = item.ruler ? null : boxOf(item.object.root)
-      if (box) lowest.set(item.index, Math.min(lowest.get(item.index) ?? Infinity, box.min[1]))
+      if (box && box.min[1] < (lowest.get(item.index)?.y ?? Infinity)) lowest.set(item.index, { y: box.min[1], at: box.minAt })
     }
   }
   for (let frame = 0; frame < 30; frame++) room.update(1 / 60)
@@ -241,7 +266,7 @@ async function laySheetInPage(args) {
     const rect = [Math.min(...corners.map((c) => c[0] ?? 0)), Math.min(...corners.map((c) => c[1] ?? 0)), Math.max(...corners.map((c) => c[0] ?? 0)), Math.max(...corners.map((c) => c[1] ?? 0))]
     const base = project([centre[0] ?? 0, 0, centre[2] ?? 0])
     addLabel(entry.label, [base[0] ?? 0, (base[1] ?? 0) + 8], '-50%,0')
-    cells.push({ id: entry.id, label: entry.label, rect, leaves: entry.leaves, size: { dx: +(own?.dx ?? 0).toFixed(3), dy: +(own?.dy ?? 0).toFixed(3), dz: +(own?.dz ?? 0).toFixed(3) }, measuredFrom: dims[index]?.measuredFrom, yaw: +(yaws[index] ?? 0).toFixed(4), floatsAboveGroundM: real ? +(real.min[1] ?? 0).toFixed(3) : null, lowestOverCycleM: lowest.has(index) ? +(lowest.get(index) ?? 0).toFixed(3) : null, openingMax: args.openLeaves && standing ? +Math.max(0, ...room.leaves(standing.object.objectId).map((/** @type {string} */ part) => room.leafOpening(standing.object.objectId, part))).toFixed(3) : null, failed: Boolean(entry.failed) })
+    cells.push({ id: entry.id, label: entry.label, rect, leaves: entry.leaves, size: { dx: +(own?.dx ?? 0).toFixed(3), dy: +(own?.dy ?? 0).toFixed(3), dz: +(own?.dz ?? 0).toFixed(3) }, measuredFrom: dims[index]?.measuredFrom, yaw: +(yaws[index] ?? 0).toFixed(4), floatsAboveGroundM: real ? +(real.min[1] ?? 0).toFixed(3) : null, lowestOverCycleM: lowest.has(index) ? +(lowest.get(index)?.y ?? 0).toFixed(3) : null, lowestAt: lowest.has(index) ? lowest.get(index)?.at : (real ? real.minAt : null), topAt: real ? real.maxAt : null, topM: real ? +(real.max[1] ?? 0).toFixed(3) : null, openingMax: args.openLeaves && standing ? +Math.max(0, ...room.leaves(standing.object.objectId).map((/** @type {string} */ part) => room.leafOpening(standing.object.objectId, part))).toFixed(3) : null, failed: Boolean(entry.failed) })
   }
   if (args.ruler) {
     const base = at(rulerWidth / 2, 0)
@@ -370,6 +395,9 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
   /** What this run saw that a review must know about: { id, what, value } (what: spawn-failed, rendered-empty, blank-third-person, floats, does-not-open, ...). */
   /** @type {{ id: string, what: string, value: unknown }[]} */
   const observed = []
+  /** What a run does not hold against an entry, with the reason (a boat's hull is meant to be under the waterline): `{ what, ids, reason }`. */
+  /** @type {{ what: string, ids: string[], reason: string }[]} */
+  const exemptions = []
   /** @param {string} id @param {string} what @param {unknown} value */
   const observe = (id, what, value) => {
     if (!observed.some((entry) => entry.id === id && entry.what === what)) observed.push({ id, what, value })
@@ -400,21 +428,26 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
         family: sheet.family,
         view: view.kind,
         openLeaves: base.openLeaves,
+        assesses: { floating: !base.openLeaves, sinking: !base.openLeaves },
         yaw: sheet.yaw,
         camera: { kind: view.kind, fovDeg: view.fov, azimuthDeg: view.azimuthDeg, elevationDeg: view.elevationDeg, framing: 'looks at the middle of the row from the distance that fits it' },
         entries: laid.cells.map((/** @type {any} */ cell) => cell.id),
         labels: laid.cells.map((/** @type {any} */ cell) => cell.label),
       })
       const emptyCells = laid.cells.filter((/** @type {any} */ _cell, /** @type {number} */ at) => (compared.cells[at] ?? 0) < EMPTY_SHARE).map((/** @type {any} */ cell) => cell.id)
-      sanity.push({ file: `${sheet.file}.png`, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, lowestOverCycleM: cell.lowestOverCycleM, openingMax: cell.openingMax })), empty: emptyCells })
+      sanity.push({ file: `${sheet.file}.png`, assesses: { floating: !base.openLeaves, sinking: !base.openLeaves }, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, lowestOverCycleM: cell.lowestOverCycleM, lowestAt: cell.lowestAt, topM: cell.topM, topAt: cell.topAt, openingMax: cell.openingMax })), empty: emptyCells })
       for (const failure of laid.failed) failures.push({ file: `${sheet.file}.png`, ...failure })
       for (const id of emptyCells) failures.push({ file: `${sheet.file}.png`, id, reason: 'rendered empty' })
       for (const failure of laid.failed) observe(failure.id, 'spawn-failed', failure.reason)
       for (const id of emptyCells) observe(id, 'rendered-empty', 'no pixel differs from the empty view')
       for (const cell of laid.cells) {
-        // the lowest point over the cycle when it was sampled, else the one of the frozen frame
-        const lowestPoint = cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0
-        if (lowestPoint > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${lowestPoint} m`)
+        // floating and sinking are judged on the closed sheets only: the open-leaf sheets stand at the middle of the room, where a table would fool them
+        if (!base.openLeaves) {
+          // the lowest point over the cycle when it was sampled, else the one of the frozen frame
+          const lowestPoint = cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0
+          if (lowestPoint > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${lowestPoint} m`)
+          if (lowestPoint < -SINK_LIMIT_M) observe(cell.id, 'sinks', { lowestPointM: lowestPoint, heldBy: cell.lowestAt })
+        }
         if (base.openLeaves && (cell.openingMax ?? 0) < 0.9) observe(cell.id, 'does-not-open', cell.openingMax)
       }
       return laid
@@ -444,8 +477,13 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
     /** @param {Record<string, unknown>} [extra] */
     finish(extra = {}) {
       const covered = [...new Set(index.flatMap((sheet) => sheet.entries))]
+      for (let at = observed.length - 1; at >= 0; at--) if (exemptions.some((rule) => rule.what === observed[at]?.what && rule.ids.includes(observed[at]?.id ?? ''))) observed.splice(at, 1)
+      // what the floating and sinking limits are judged against: the lowest point of each entry over its cycle
+      const lows = sanity.flatMap((image) => (image.cells ?? []).map((/** @type {any} */ cell) => cell.lowestOverCycleM)).filter((/** @type {unknown} */ value) => typeof value === 'number').sort((/** @type {number} */ a, /** @type {number} */ b) => a - b)
+      const lowestPoints = lows.length ? { entries: lows.length, minM: lows[0], medianM: lows[Math.floor(lows.length / 2)], maxM: lows[lows.length - 1] } : null
+      if (lowestPoints) console.log(`${area}: lowest point over the cycle, ${lowestPoints.entries} entries: min ${lowestPoints.minM} m, median ${lowestPoints.medianM} m, max ${lowestPoints.maxM} m (limits: floats above ${FLOAT_LIMIT_M} m, sinks below -${SINK_LIMIT_M} m)`)
       writeFileSync(join(outDir, 'index.json'), JSON.stringify({ area, seed, viewport: SHEET_VIEWPORT, freezeFrames: FREEZE_FRAMES, timeOfDay: { nightFactor: 0 }, catalogue: { ...catalogue, covered: covered.length }, ...extra, sheets: index }, null, 2) + '\n')
-      writeFileSync(join(outDir, 'sanity.json'), JSON.stringify({ area, emptyShareThreshold: EMPTY_SHARE, images: sanity, failures, observed }, null, 2) + '\n')
+      writeFileSync(join(outDir, 'sanity.json'), JSON.stringify({ area, emptyShareThreshold: EMPTY_SHARE, images: sanity, failures, observed, exemptions, lowestPoints }, null, 2) + '\n')
       const bytes = sanity.reduce((sum, image) => sum + image.bytes, 0)
       console.log(`${area}: ${index.length} sheets, ${covered.length}/${catalogue.count} catalogue entries, ${(bytes / 1048576).toFixed(2)} MB`)
       for (const image of sanity) console.log(`  ${image.file}  ${(image.bytes / 1024).toFixed(0)} KB  ${image.width}x${image.height}  non-background ${(image.nonBackgroundShare * 100).toFixed(1)}%${image.empty.length ? `  EMPTY: ${image.empty.join(', ')}` : ''}`)
@@ -478,6 +516,8 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
     sheet: (/** @type {Parameters<typeof api.sheet>[0]} */ sheet) => within(() => api.sheet(sheet)),
     photo: (/** @type {Parameters<typeof api.photo>[0]} */ shot) => within(() => api.photo(shot)),
     observe,
+    /** @param {string} what @param {string[]} ids @param {string} reason */
+    exempt: (what, ids, reason) => void exemptions.push({ what, ids, reason }),
     finish: api.finish,
   }
 }

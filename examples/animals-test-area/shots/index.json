@@ -20,6 +20,10 @@
       "family": "species",
       "view": "side",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": "long-axis-x",
       "camera": {
         "kind": "side",
@@ -54,6 +58,10 @@
       "family": "species",
       "view": "side",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": "long-axis-x",
       "camera": {
         "kind": "side",

@@ -45,6 +45,7 @@ try {
   for (const [at, id] of scenes.entries()) {
     await recorder.sheet({ file: `${String(at + 2).padStart(2, '0')}-scene-${id}`, family: 'scenes', entries: [{ id }], view: { kind: 'aerial', fov: 40, elevationDeg: 38 }, yaw: 0, gap: 0 })
   }
+  recorder.exempt('sinks', scenes, 'the street and terrain scenes carry their own underground (foundations, soil layers) below the ground plane')
   const summary = recorder.finish()
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode

@@ -52,6 +52,8 @@ try {
   for (const [at, ids] of chunks(withLeaves, 3).entries()) {
     await recorder.sheet({ file: `${String(firstOpen + at).padStart(2, '0')}-fleet-open-${at + 1}`, family: 'fleet-open', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 4, openLeaves: true })
   }
+  // packages/game-vehicles-fleet/src/groups.ts `water`: a hull sits below the waterline, which is the ground of this room
+  recorder.exempt('sinks', ['river_skiff', 'speedboat', 'fishing_boat', 'jet_ski', 'sailboat', 'rescue_dinghy', 'patrol_boat'], 'water vessels: the hull is meant to be under the waterline')
   const summary = recorder.finish()
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode

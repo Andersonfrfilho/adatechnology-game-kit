@@ -20,6 +20,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -50,6 +54,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -80,6 +88,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -110,6 +122,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -140,6 +156,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -170,6 +190,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -200,6 +224,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -230,6 +258,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -260,6 +292,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -290,6 +326,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -320,6 +360,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -350,6 +394,10 @@
       "family": "fleet",
       "view": "3q-front",
       "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -374,6 +422,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -398,6 +450,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -422,6 +478,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -446,6 +506,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -470,6 +534,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -494,6 +562,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -518,6 +590,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -542,6 +618,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -566,6 +646,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -590,6 +674,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
@@ -614,6 +702,10 @@
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,
+      "assesses": {
+        "floating": false,
+        "sinking": false
+      },
       "yaw": 0,
       "camera": {
         "kind": "3q-front",
