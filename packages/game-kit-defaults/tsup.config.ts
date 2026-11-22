@@ -10,7 +10,7 @@ export default defineConfig([
     dts: { entry: 'src/index.ts' },
     splitting: false,
     sourcemap: true,
-    clean: true,
+    clean: false,
     target: 'es2020',
   },
   {

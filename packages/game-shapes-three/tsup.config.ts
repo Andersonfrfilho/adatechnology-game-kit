@@ -7,7 +7,7 @@ export default defineConfig([
     format: ['esm'],
     dts: true,
     sourcemap: true,
-    clean: true,
+    clean: false,
     target: 'es2020',
     external: ['three'],
   },
