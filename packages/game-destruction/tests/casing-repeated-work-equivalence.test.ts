@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { assemblyPart, createDestruction } from '../src'
 import type { DestructibleSpec, DestructionEvent, JointSpec, PartSpec, Quat, Vec3 } from '../src'
+import { planeAxes, unitGrid, unitRowsWithin } from '../src/breach'
 import { nonFinitePaths } from '../../../test-support/non-finite'
 import { houseSpec } from './wall-helpers'
 
@@ -101,5 +102,46 @@ describe('a casing blast measures the same as measuring everything again at ever
         })
       }
     }
+  }
+})
+
+describe('the rows of a unit grid that can be within reach of a blow', () => {
+  const lcg = (seed: number) => {
+    let state = seed
+    return (): number => (state = (Math.imul(state, 1664525) + 1013904223) >>> 0) / 4294967296
+  }
+  const GRIDS = [
+    { name: 'running bond', dims: [4.5, 0.2, 2.8] as Vec3, thin: 1, units: { size: [0.19, 0.09] as [number, number], bond: 'running' as const } },
+    { name: 'stack, merged', dims: [8, 2.8, 0.2] as Vec3, thin: 2, units: { size: [0.1, 0.1] as [number, number], bond: 'stack' as const } },
+    { name: 'thin along x', dims: [0.2, 3, 5] as Vec3, thin: 0, units: { size: [0.3, 0.12] as [number, number], bond: 'running' as const } },
+  ]
+  for (const grid of GRIDS) {
+    it(`${grid.name}: every unit within reach is visited, once, in ascending order`, () => {
+      const cells = unitGrid(grid.dims, grid.thin, grid.units as never, 400)
+      const [u, v] = planeAxes(grid.thin)
+      const next = lcg(7)
+      for (let trial = 0; trial < 400; trial++) {
+        const point: Vec3 = [0, 0, 0]
+        point[u] = (next() - 0.5) * grid.dims[u] * 1.4
+        point[v] = (next() - 0.5) * grid.dims[v] * 1.4
+        const radius = next() < 0.1 ? 0 : next() * 1.2
+        const visited = unitRowsWithin(cells, grid.thin, point, radius).flatMap(([from, to]) => Array.from({ length: to - from }, (_, k) => from + k))
+        expect(visited).toEqual([...visited].sort((a, b) => a - b))
+        expect(new Set(visited).size).toBe(visited.length)
+        const reference = cells.flatMap((cell, i) => (Math.hypot(Math.max(0, Math.abs(point[u]! - cell.center[u]!) - cell.size[u]! / 2), Math.max(0, Math.abs(point[v]! - cell.center[v]!) - cell.size[v]! / 2)) > radius ? [] : [i]))
+        expect(visited.filter((i) => reference.includes(i))).toEqual(reference)
+      }
+    })
+    it(`${grid.name}: a point or a radius that is not finite leaves the whole grid to visit`, () => {
+      const cells = unitGrid(grid.dims, grid.thin, grid.units as never, 400)
+      const [u, v] = planeAxes(grid.thin)
+      for (const [axis, bad] of [[u, NaN], [v, NaN], [u, Infinity], [v, -Infinity]] as const) {
+        const point: Vec3 = [0, 0, 0]
+        point[axis] = bad
+        expect(unitRowsWithin(cells, grid.thin, point, 0.5)).toEqual([[0, cells.length]])
+      }
+      expect(unitRowsWithin(cells, grid.thin, [0, 0, 0], NaN)).toEqual([[0, cells.length]])
+      expect(unitRowsWithin(cells, grid.thin, [0, 0, 0], Infinity)).toEqual([[0, cells.length]])
+    })
   }
 })

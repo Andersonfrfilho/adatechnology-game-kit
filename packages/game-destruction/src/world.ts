@@ -5,7 +5,7 @@ import { chainDelayOf, drawChainDelay, FIRE_PRIME_C, shotDamageFractionOf } from
 import type { ChainTrigger } from './chain'
 import { planFragments } from './fracture'
 import type { PlannedFragment } from './fracture'
-import { cellsOutside, cellsWithin, clumpUnits, holeInBox, marksInBox, planeAxes, unitGrid, unsupportedCells } from './breach'
+import { cellsOutside, cellsWithin, clumpUnits, holeInBox, marksInBox, planeAxes, unitGrid, unitRowsWithin, unsupportedCells } from './breach'
 import type { LocalHole, UnitCell } from './breach'
 import { buildPartGrid, PART_GRID_MIN_PARTS } from './part-grid'
 import type { PartGrid } from './part-grid'
@@ -3756,7 +3756,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const out: UnitCell[] = []
     const wholeBefore = Object.values(worn).filter((w) => w === -1).length
     const shot = kind === 'ballistic'
-    for (let i = 0; i < grid.length; i++) {
+    // the rows too far from the blow hold no unit within `radius`: the units are visited in the same order, only the ones that would be skipped are not
+    for (const [from, to] of unitRowsWithin(grid, p.thin, lp, radius)) for (let i = from; i < to; i++) {
       const cell = grid[i]!
       if (!laidAt(p, worn, i)) continue
       const gap = Math.hypot(Math.max(0, Math.abs(lp[u] - cell.center[u]) - cell.size[u] / 2), Math.max(0, Math.abs(lp[v] - cell.center[v]) - cell.size[v] / 2))

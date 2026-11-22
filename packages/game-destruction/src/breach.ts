@@ -43,6 +43,36 @@ export const unitGrid = (dims: Vec3, thin: number, units: Pick<PartUnits, 'size'
   return cells
 }
 
+const rowsOfGrid = new WeakMap<readonly UnitCell[], ReadonlyArray<{ readonly from: number; readonly to: number; readonly center: number; readonly size: number }>>()
+
+/**
+ * The stretches of cell indices of `cells` (a `unitGrid`: row after row, the cells of a row sharing their extent along the plane's second axis) that can hold
+ * a cell within `radius` of `point` (part-local) in the wall plane, in ascending order: a row whose gap along it is over `radius` has no cell within `radius` in the plane.
+ * Whole grid when the point's coordinates in the plane or `radius` are not finite numbers (the gap of every cell is then compared as it is).
+ */
+export const unitRowsWithin = (cells: readonly UnitCell[], thin: number, point: Vec3, radius: number): Array<[number, number]> => {
+  const [u, v] = planeAxes(thin)
+  if (!Number.isFinite(point[u]) || !Number.isFinite(point[v]) || !Number.isFinite(radius)) return [[0, cells.length]]
+  let rows = rowsOfGrid.get(cells)
+  if (!rows) {
+    const found: Array<{ from: number; to: number; center: number; size: number }> = []
+    cells.forEach((cell, i) => {
+      const last = found[found.length - 1]
+      if (last && last.center === cell.center[v] && last.size === cell.size[v]) last.to = i + 1
+      else found.push({ from: i, to: i + 1, center: cell.center[v], size: cell.size[v] })
+    })
+    rowsOfGrid.set(cells, (rows = found))
+  }
+  const ranges: Array<[number, number]> = []
+  for (const row of rows) {
+    if (Math.max(0, Math.abs(point[v] - row.center) - row.size / 2) > radius) continue
+    const last = ranges[ranges.length - 1]
+    if (last && last[1] === row.from) last[1] = row.to
+    else ranges.push([row.from, row.to])
+  }
+  return ranges
+}
+
 const planeDistance = (cell: UnitCell, thin: number, point: Vec3): number => {
   const [u, v] = planeAxes(thin)
   const du = cell.center[u] - point[u], dv = cell.center[v] - point[v]
