@@ -20,7 +20,7 @@ export const EMPTY_SHARE = 0.01
 export const FLOAT_LIMIT_M = 0.05
 /** An entry whose lowest point over the cycle is deeper than this under the ground (m) is reported as sinking. */
 export const SINK_LIMIT_M = 0.05
-/** The reading varies a few millimetres between runs; the ledger keeps a verdict from flipping at the limit: an id in known-defects.json is held past limit - this, one that is not only past limit + this. */
+/** The reading varies a few millimetres between runs; the ledger keeps a verdict from flipping at the limit: an id in known-defects.json is held past limit - this, one that is not only past limit + this, so a first reading within this past the limit is not recorded. */
 export const LIMIT_TOLERANCE_M = 0.005
 /** A picture of a subject in the hand has less than this share of pixels different from the same view without it: nothing of it is seen. */
 export const PHOTO_EMPTY_SHARE = 0.003

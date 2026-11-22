@@ -267,7 +267,7 @@
   "gaps": [
     "the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.",
     "the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified.",
-    "the third-person camera is too far to judge a swing by pixels: the throw that is known to animate changes about 0.003 of the frame there, at the limit"
+    "the third-person camera is too far to judge a swing by pixels: its strike strips carry no use-not-animated verdict, and its throw strip records no animated flag"
   ],
   "sheets": [
     {
