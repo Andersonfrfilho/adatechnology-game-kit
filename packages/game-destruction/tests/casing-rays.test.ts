@@ -2,6 +2,7 @@ import { checkHit } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
 
+import { nonFinitePaths } from '../../../test-support/non-finite'
 import { createDestruction } from '../src'
 import { FRAGMENT_MIN_SPEED, casingFlight, fragmentDrag } from '../src/blast-wave'
 import type { BlastCharge, DestructibleImpl, Hit, PartSpec, Vec3 } from '../src'
@@ -436,15 +437,6 @@ describe('the bound of a weight is a world option', () => {
   })
 })
 
-/** Paths of every number in `value` that is not finite (NaN, Infinity), walked before any JSON turns NaN into null. */
-const nonFinite = (value: unknown, path = '', out: string[] = []): string[] => {
-  if (typeof value === 'number') {
-    if (!Number.isFinite(value)) out.push(`${path}=${value}`)
-  } else if (Array.isArray(value)) value.forEach((item, index) => nonFinite(item, `${path}[${index}]`, out))
-  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) nonFinite(item, `${path}.${key}`, out)
-  return out
-}
-
 describe('under the cap every number stays finite and nothing is weighted', () => {
   // a closed room (every direction meets a panel) whose panels are half board, half pane, bolted together: the pieces wear the bolts, break panes (their pieces fly off) and hole the boards
   const panelRoom = (world: ReturnType<typeof createDestruction>): void => {
@@ -489,7 +481,7 @@ describe('under the cap every number stays finite and nothing is weighted', () =
     const bad: string[] = []
     for (let seed = 1; seed <= 200; seed++) {
       const { results, state } = throwIn(seed)
-      const found = [...nonFinite(results, 'results'), ...nonFinite(state, 'state')]
+      const found = [...nonFinitePaths(results, Infinity, 'results'), ...nonFinitePaths(state, Infinity, 'state')]
       if (found.length > 0) bad.push(`seed ${seed}: ${found.length} (${found.slice(0, 2).join(', ')})`)
     }
     expect(bad).toEqual([])

@@ -8,6 +8,7 @@ import type { BlastCharge } from '@adatechnology/game-destruction'
 import type { Scheduler } from '@adatechnology/game-runtime'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
 
+import { nonFinitePaths } from '../../../test-support/non-finite'
 import { buildFromSpec } from '../src/build-from-spec'
 import type { TestRoom, TestRoomItem } from '../src'
 import { demoItems } from './fixtures/demo-items'
@@ -71,10 +72,10 @@ const casedStrike = (id: string): CasedStrike => {
 
 type SchedulerHolder = { readonly frameParts: { readonly scheduler: Scheduler } }
 
-const stateOf = (room: TestRoom, loop: PhysicsLoop | null): string => {
+const stateOf = (room: TestRoom, loop: PhysicsLoop | null): unknown => {
   const pieces = room.renderer.pieces().map((piece) => [piece.objectId, piece.root.position.toArray(), piece.root.quaternion.toArray(), piece.velocity, piece.angularVelocity, piece.sleeping])
   const frame = loop ? [loop.frame.time, loop.frame.steps] : null
-  return JSON.stringify([room.world.serialize(), pieces, room.fluids.stains(), frame])
+  return [room.world.serialize(), pieces, room.fluids.stains(), frame]
 }
 
 /** The hash of every tick `0..TICKS-1`, with the frame time `frameTimes` gives: the actions are by tick index, the hash is the state when the tick ends. */
@@ -102,7 +103,14 @@ const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly ha
   )
   scheduler.add(
     (context) => {
-      if (context.tick < TICKS) hashes.push(hashOf(stateOf(room, variant.loop) + sobrado))
+      if (context.tick >= TICKS) return
+      const state = stateOf(room, variant.loop)
+      // JSON writes NaN as null at every rate, so the hashes alone would match with NaN in the state: a cased run walks the state of every tick for it
+      if (variant.strike) {
+        const [first] = nonFinitePaths(state, 1, 'state')
+        if (first !== undefined) throw new Error(`tick ${context.tick}: not a finite number at ${first}`)
+      }
+      hashes.push(hashOf(JSON.stringify(state) + sobrado))
     },
     { phase: 'fixedSimulate', order: LAST_ORDER, id: 'window-hash' },
   )
