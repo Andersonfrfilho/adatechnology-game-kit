@@ -1150,6 +1150,7 @@ class Renderer implements DestructionRenderer {
 
   /** An event of the object (a blow, fire, char): its meshes leave the batches before it is drawn (`SettledBatches.release`). */
   private releaseBatched(objectId: string): void {
+    if (!this.settledBatches.hasMembers()) return
     const b = this.bounds.get(objectId)
     if (b) this.settledBatches.release(this.meshesOf(b).map((mv) => mv.mesh))
   }
