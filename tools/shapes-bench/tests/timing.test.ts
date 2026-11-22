@@ -40,6 +40,7 @@ describe('compare with the baseline', () => {
     warn: 0.5,
     groupBudget: 0.25,
     minGroupSize: 2,
+    peerMin: 99,
     noiseFloorMs: 0.05,
     overrides: { 'a/noisy': 2 },
     entries: { 'a/same': { ratio: 1, ms: 1 }, 'a/warn': { ratio: 1, ms: 1 }, 'a/slow': { ratio: 1, ms: 1 }, 'a/tiny': { ratio: 0.01, ms: 0.01 }, 'a/noisy': { ratio: 1, ms: 1 }, 'a/fast': { ratio: 1, ms: 1 }, 'a/gone': { ratio: 1, ms: 1 } },
@@ -57,6 +58,17 @@ describe('compare with the baseline', () => {
     ]
     const verdicts = Object.fromEntries(compare(timings, 2, baseline).map((c) => [c.id, c.verdict]))
     expect(verdicts).toEqual({ 'a/same': 'ok', 'a/warn': 'warn', 'a/slow': 'slower', 'a/tiny': 'noise', 'a/noisy': 'warn', 'a/fast': 'faster', 'a/new': 'new', 'a/gone': 'gone' })
+  })
+  it('an entry slower than its budget but not slower than its group is a warning: the runner was slow, not the builder', () => {
+    const entries = Object.fromEntries(['a', 'b', 'c', 'd', 'e', 'f'].map((name) => [`g/${name}`, { ratio: 1, ms: 1 }]))
+    const base: Baseline = { ...baseline, peerMin: undefined, overrides: {}, entries }
+    const slowRunner = ['a', 'b', 'c', 'd', 'e', 'f'].map((name) => ({ id: `g/${name}`, ms: 2.4, runs: 5 }))
+    expect(compare(slowRunner, 1, base).map((c) => c.verdict)).toEqual(Array(6).fill('warn'))
+    const oneBuilder = slowRunner.map((t) => (t.id === 'g/a' ? { ...t, ms: 2.4 } : { ...t, ms: 1.1 }))
+    const verdicts = compare(oneBuilder, 1, base)
+    expect(verdicts[0]!.verdict).toBe('slower')
+    expect(verdicts[0]!.peerChange).toBeCloseTo(2.4 / 1.1, 10)
+    expect(verdicts.slice(1).every((c) => c.verdict === 'ok')).toBe(true)
   })
   it('a new baseline keeps the budget and the overrides, sorted by id', () => {
     const next = toBaseline([{ id: 'b', ms: 2, runs: 3 }, { id: 'a', ms: 1, runs: 3 }], 4, baseline, 'v22.1')

@@ -88,6 +88,9 @@ jobs:
         with:
           name: dist
 
+      # a declaration the build lost shows up as TS7016 in a dependent package: name it here instead
+      - run: node tools/check-packages.mjs --built
+
       - run: pnpm typecheck
       # every JS script (examples, tools, site), typed with JSDoc and checked strict: docs/migracao-typescript.md
       - run: pnpm typecheck:scripts
