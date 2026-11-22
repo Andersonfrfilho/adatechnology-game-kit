@@ -63,7 +63,7 @@ de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin
 
 - Antes do push: `pnpm build && pnpm test && pnpm typecheck && pnpm lint` (o pre-push roda a metade de CPU só do que mudou; ver `CONTRIBUTING.md`).
 - **Uma sala de teste de ponta a ponta**: `pnpm check:<área>` builda o que a página carrega, roda os testes unitários desses pacotes e abre a
-  página no navegador, que grava os prints em `examples/<pasta>/shots/` (lista os novos no fim). Áreas: `pnpm check:area --list`
+  página no navegador, que grava os prints em `examples/<pasta>/shots/` (lista os novos no fim; só `vehicles-proving` não grava; as folhas do catálogo de `animals`, `characters`, `urban`, `vegetation`, `vehicles` e `weapons` ficam fora do git, só o `shots/index.json` entra). Áreas: `pnpm check:area --list`
   (`floorplan`, `interactables`, `room`, `vehicles`, `weapons`, ...). `--no-browser` pula o navegador, `--no-unit` os testes, `--room` refaz a página da sala.
 - Suítes de navegador da branch: `node tools/gpu/browser-checks.mjs`; desempenho: `node tools/gpu/perf-gate.mjs` (§9).
 - **4280 e app de desktop**: `pnpm serve:room [--isolate]` serve a sala (com `--isolate`, COOP/COEP e `crossOriginIsolated`); `pnpm desktop [--area=<id>]`

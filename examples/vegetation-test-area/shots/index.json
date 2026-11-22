@@ -1,0 +1,121 @@
+{
+  "area": "vegetation",
+  "seed": "bench seed of the area (default), wind 0, condition and season at the area defaults",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "freezeFrames": 153,
+  "timeOfDay": {
+    "nightFactor": 0
+  },
+  "catalogue": {
+    "count": 18,
+    "source": "packages/game-vegetation-species (defaultVegetationSpecies of game-kit-defaults), the items of the area",
+    "covered": 18
+  },
+  "sheets": [
+    {
+      "file": "01-species-front-1.png",
+      "family": "species",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 0,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 28,
+        "azimuthDeg": 0,
+        "elevationDeg": 4,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "mango_tree",
+        "mango_young_15",
+        "mango_young_30",
+        "yellow_ipe",
+        "coconut_palm",
+        "banana_with_bunch"
+      ],
+      "labels": [
+        "mango_tree",
+        "mango_young_15",
+        "mango_young_30",
+        "yellow_ipe",
+        "coconut_palm",
+        "banana_with_bunch"
+      ]
+    },
+    {
+      "file": "02-species-front-2.png",
+      "family": "species",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 0,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 28,
+        "azimuthDeg": 0,
+        "elevationDeg": 4,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "araucaria",
+        "dead_tree",
+        "hibiscus_shrub",
+        "boxwood_hedge",
+        "rose_bush_red",
+        "sunflower"
+      ],
+      "labels": [
+        "araucaria",
+        "dead_tree",
+        "hibiscus_shrub",
+        "boxwood_hedge",
+        "rose_bush_red",
+        "sunflower"
+      ]
+    },
+    {
+      "file": "03-species-front-3.png",
+      "family": "species",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 0,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 28,
+        "azimuthDeg": 0,
+        "elevationDeg": 4,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "mandacaru",
+        "prickly_pear",
+        "crown_cactus",
+        "potted_fern",
+        "potted_cactus",
+        "lawn_tuft"
+      ],
+      "labels": [
+        "mandacaru",
+        "prickly_pear",
+        "crown_cactus",
+        "potted_fern",
+        "potted_cactus",
+        "lawn_tuft"
+      ]
+    }
+  ]
+}

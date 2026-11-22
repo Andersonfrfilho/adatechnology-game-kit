@@ -1,0 +1,357 @@
+[
+  {
+    "id": "zombie_runner",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.102,
+      "heldBy": "SphereGeometry of 221 vertices, #b8b4a8, 3 levels under the root, 0.16 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.097,
+      "allowanceM": 0.16,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_crawler",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.098,
+      "heldBy": "CylinderGeometry of 100 vertices, #d8b394, 5 levels under the root, 1.08 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.74,
+      "allowanceM": 0.803,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_brute",
+    "what": "sinks",
+    "value": {
+      "lowestPointM": -0.107,
+      "heldBy": "SphereGeometry of 221 vertices, #4a1a1a, 3 levels under the root, 0.26 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.028,
+      "allowanceM": 0.091,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "as sinks-as-declared, but the lowest point is deeper than the declared drop allows (allowanceM): beyond what the posture declares"
+  },
+  {
+    "id": "zombie_sniffer",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.066,
+      "heldBy": "SphereGeometry of 221 vertices, #b8b4a8, 3 levels under the root, 0.12 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.04,
+      "allowanceM": 0.103,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_leaper",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.165,
+      "heldBy": "SphereGeometry of 221 vertices, #1d1f22, 3 levels under the root, 0.15 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.36,
+      "allowanceM": 0.423,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_stalker",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.216,
+      "heldBy": "SphereGeometry of 221 vertices, #3a2a1a, 3 levels under the root, 0.10 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.36,
+      "allowanceM": 0.423,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_charred",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.054,
+      "heldBy": "SphereGeometry of 221 vertices, #4a1a1a, 3 levels under the root, 0.12 m from its axis, parent \"Group\"",
+      "declaredDropM": 0,
+      "allowanceM": 0.063,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_devourer",
+    "what": "sinks-as-declared",
+    "value": {
+      "lowestPointM": -0.059,
+      "heldBy": "SphereGeometry of 221 vertices, #1d1f22, 3 levels under the root, 0.22 m from its axis, parent \"Group\"",
+      "declaredDropM": 0.42,
+      "allowanceM": 0.483,
+      "note": "whether a declared drop that buries the feet is intended is a review question"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over a 120-frame cycle sampled every 4th frame (the bodies are rigid mesh groups moved by the rig: 201 batch SkinnedMeshes are skipped, the guard throws on any other); posture.drop lowers the hip (best-builder.ts, knees bend to keep the feet down) times posture.s; allowance = drop + 0.043 m gait dip + 0.02 m; measured inside it. Whether a declared drop that buries the feet is intended is a review question"
+  },
+  {
+    "id": "zombie_walker",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.929,
+      "highestVertexM": 1.929,
+      "highestVertexHeldBy": "SphereGeometry of 357 vertices, #ac907b, 5 levels under the root, 0.17 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_brute",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 2.556,
+      "headTopM": 3.467,
+      "highestVertexM": 3.763,
+      "highestVertexHeldBy": "SphereGeometry of 221 vertices, #6a4a2a, 5 levels under the root, 0.31 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_bloater",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.854,
+      "headTopM": 1.949,
+      "highestVertexM": 1.975,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #7a2a1a, 5 levels under the root, 0.07 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_blind",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.966,
+      "highestVertexM": 1.966,
+      "highestVertexHeldBy": "SphereGeometry of 357 vertices, #d8b394, 5 levels under the root, 0.11 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_screamer",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 2.001,
+      "highestVertexM": 2.018,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #6a4a2a, 5 levels under the root, 0.22 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_leaper",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 2.471,
+      "highestVertexM": 2.471,
+      "highestVertexHeldBy": "SphereGeometry of 357 vertices, #d8b394, 5 levels under the root, 0.08 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_charred",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.964,
+      "highestVertexM": 1.964,
+      "highestVertexHeldBy": "SphereGeometry of 357 vertices, #1c1612, 5 levels under the root, 0.21 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "zombie_drowned",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.9,
+      "highestVertexM": 1.933,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #b08a50, 5 levels under the root, 0.28 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_nurse",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.935,
+      "highestVertexM": 1.961,
+      "highestVertexHeldBy": "SphereGeometry of 221 vertices, #1a1310, 5 levels under the root, 0.11 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_police_officer",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.96,
+      "highestVertexM": 1.996,
+      "highestVertexHeldBy": "CylinderGeometry of 124 vertices, #23272c, 5 levels under the root, 0.22 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_firefighter",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.99,
+      "highestVertexM": 2.078,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #9a2a20, 5 levels under the root, 0.05 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_mechanic",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.98,
+      "highestVertexM": 1.989,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #1d140e, 5 levels under the root, 0.02 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_builder",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.988,
+      "highestVertexM": 2.081,
+      "highestVertexHeldBy": "BoxGeometry of 24 vertices, #e0b020, 5 levels under the root, 0.14 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_cook",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.956,
+      "highestVertexM": 1.971,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #2b2b2b, 5 levels under the root, 0.02 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_sport_shooter",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.98,
+      "highestVertexM": 1.989,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #3b2a1c, 5 levels under the root, 0.02 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_farmer",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.976,
+      "highestVertexM": 2.083,
+      "highestVertexHeldBy": "CylinderGeometry of 124 vertices, #c9b06a, 5 levels under the root, 0.11 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_electrician",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.957,
+      "highestVertexM": 2.049,
+      "highestVertexHeldBy": "BoxGeometry of 24 vertices, #e8e8e2, 5 levels under the root, 0.14 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_courier",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.938,
+      "highestVertexM": 2.01,
+      "highestVertexHeldBy": "SphereGeometry of 357 vertices, #1d1f22, 5 levels under the root, 0.03 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_teacher",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.985,
+      "highestVertexM": 1.985,
+      "highestVertexHeldBy": "SphereGeometry of 357 vertices, #d2a885, 5 levels under the root, 0.04 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "person_unemployed",
+    "what": "height-over-declared",
+    "value": {
+      "declaredM": 1.8,
+      "headTopM": 1.968,
+      "highestVertexM": 1.977,
+      "highestVertexHeldBy": "SphereGeometry of 231 vertices, #2a1d14, 5 levels under the root, 0.02 m from its axis, parent \"Group\""
+    },
+    "found": "2026-11-22",
+    "evidence": "declared: packages/game-characters/src/data/body.json guide.heightMetres 1.8 times posture.s (packages/game-characters-undead/src/data/types.json); headTopM: top of the skull sphere (first visible mesh of rig.headG's first child, as tools/measure-body-and-cabin.mjs skullTopOfHeadGroup), so hair, a raised hand and a leap are not in it; highestVertexM and what holds it are the sheet's other number; ground y 0; tolerance 5%; front sheet at the frozen frame"
+  },
+  {
+    "id": "professions",
+    "what": "observation-lowest-point-offset",
+    "value": {
+      "lowestPointM": -0.043,
+      "heldBy": "CylinderGeometry of 112 vertices, #161616, 3 levels under the root, 0.15 m from its axis, parent \"Group\"",
+      "note": "not a failure; for the reviewer: every profession stands this far below the floor origin, under the 0.05 m limit"
+    },
+    "found": "2026-11-22",
+    "evidence": "lowest vertex over the cycle of each of the 12 professions, identical at -0.043 m; held by a dark (#161616) CylinderGeometry 0.15 m off the axis, a shoe sole below the foot origin. NOT A FAILURE (under the 0.05 m limit): kept for the reviewer"
+  }
+]

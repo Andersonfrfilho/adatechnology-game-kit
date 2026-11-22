@@ -1,0 +1,207 @@
+{
+  "area": "characters",
+  "seed": "none (the bodies are drawn without random draws; ages and wounds at the area defaults)",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "freezeFrames": 153,
+  "timeOfDay": {
+    "nightFactor": 0
+  },
+  "catalogue": {
+    "count": 25,
+    "source": "packages/game-characters-undead/src/data (UNDEAD_TYPES) and packages/game-characters-people/src/data (PROFESSIONS), the items of the area",
+    "covered": 25
+  },
+  "sheets": [
+    {
+      "file": "01-undead-front.png",
+      "family": "undead",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "02-undead-side.png",
+      "family": "undead",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ],
+      "labels": [
+        "zombie_walker",
+        "zombie_runner",
+        "zombie_crawler",
+        "zombie_brute",
+        "zombie_sniffer",
+        "zombie_leaper",
+        "zombie_bloater",
+        "zombie_stalker",
+        "zombie_blind",
+        "zombie_screamer",
+        "zombie_charred",
+        "zombie_drowned",
+        "zombie_devourer"
+      ]
+    },
+    {
+      "file": "03-professions-front.png",
+      "family": "professions",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": 3.141592653589793,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    },
+    {
+      "file": "04-professions-side.png",
+      "family": "professions",
+      "view": "front",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": -1.5707963267948966,
+      "camera": {
+        "kind": "front",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 2,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ],
+      "labels": [
+        "person_nurse",
+        "person_police_officer",
+        "person_firefighter",
+        "person_mechanic",
+        "person_builder",
+        "person_cook",
+        "person_sport_shooter",
+        "person_farmer",
+        "person_electrician",
+        "person_courier",
+        "person_teacher",
+        "person_unemployed"
+      ]
+    }
+  ]
+}

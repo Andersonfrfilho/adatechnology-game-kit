@@ -5,9 +5,10 @@
 // a car down a lane with the arcade or the semi-simulation driver on the chosen surface. Thirteen scenarios check it.
 import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
+import { fleetVehicleIds } from '@adatechnology/game-vehicles-fleet'
 import { VEHICLES_AREA_ID, createVehiclesTestModule, loadVehiclesTestModule } from '@adatechnology/game-vehicles-three/testing'
 
-export { createVehiclesTestModule, loadVehiclesTestModule }
+export { createVehiclesTestModule, loadVehiclesTestModule, fleetVehicleIds }
 
 /** @type {NonNullable<Parameters<typeof createVehiclesTestModule>[0]>['wall']} */
 const crashWall = (THREE, { length, height, thickness }) =>
@@ -31,4 +32,14 @@ export function loadInto(room, options = {}) {
   if (room.openAreaAsync) void room.openAreaAsync(VEHICLES_AREA_ID)
   else room.openArea(VEHICLES_AREA_ID)
   return report
+}
+
+/**
+ * Loads every vehicle of the fleet as a catalogue item (no wrecks) without laying an area, for a page that spawns them one by one (the contact sheets of test.mjs). Returns the room's module report.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {Partial<Parameters<typeof createVehiclesTestModule>[0]>} [options]
+ */
+export function loadFleetCatalogueInto(room, options = {}) {
+  const lang = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
+  return loadVehiclesTestModule(room, { fleet: defaultVehicleFleet(), wall: crashWall, ...options, vehicles: fleetVehicleIds, wrecks: [], locale: lang })
 }

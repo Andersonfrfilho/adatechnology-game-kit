@@ -1,0 +1,89 @@
+{
+  "area": "animals",
+  "seed": "species seed 7 (the module default: drawSeed)",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "freezeFrames": 153,
+  "timeOfDay": {
+    "nightFactor": 0
+  },
+  "catalogue": {
+    "count": 13,
+    "source": "packages/game-animals-species/src (SPECIES), the items of the area",
+    "covered": 13
+  },
+  "sheets": [
+    {
+      "file": "01-species-side-1.png",
+      "family": "species",
+      "view": "side",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 4,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "animal_cow",
+        "animal_horse",
+        "animal_pig",
+        "animal_wild_boar",
+        "animal_capybara",
+        "animal_jaguar",
+        "animal_dog",
+        "animal_cat"
+      ],
+      "labels": [
+        "animal_cow",
+        "animal_horse",
+        "animal_pig",
+        "animal_wild_boar",
+        "animal_capybara",
+        "animal_jaguar",
+        "animal_dog",
+        "animal_cat"
+      ]
+    },
+    {
+      "file": "02-species-side-2.png",
+      "family": "species",
+      "view": "side",
+      "openLeaves": false,
+      "assesses": {
+        "floating": true,
+        "sinking": true
+      },
+      "yaw": "long-axis-x",
+      "camera": {
+        "kind": "side",
+        "fovDeg": 22,
+        "azimuthDeg": 0,
+        "elevationDeg": 4,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "animal_chicken",
+        "animal_southern_lapwing",
+        "animal_vulture",
+        "animal_lancehead",
+        "animal_rat"
+      ],
+      "labels": [
+        "animal_chicken",
+        "animal_southern_lapwing",
+        "animal_vulture",
+        "animal_lancehead",
+        "animal_rat"
+      ]
+    }
+  ]
+}
