@@ -8,6 +8,7 @@ import type { FragmentSystemOptions } from '../src/fragments'
 import { PieceSystem } from '../src/pieces'
 import type { PieceSystemOptions } from '../src/pieces'
 import { createDestructionRenderer } from '../src/renderer'
+import { SettledBatches } from '../src/settled-batches'
 import type { SettledBatchOptions } from '../src/settled-batches'
 import { FakeWorld, partState } from './fake-world'
 import { IS_JOLT, physicsOption } from './setup-physics'
@@ -337,5 +338,79 @@ describe('a fragment woken while its batch waits to be merged (a merge budget)',
     expect(batches.stats().batched).toBeGreaterThan(0)
     expect(meshes.some((mesh) => mesh.layers.mask === 1 << INSTANCED_FRAGMENT_LAYER)).toBe(false)
     expect(meshes.filter((mesh) => mesh.layers.mask === 1 << BATCHED_LAYER).length).toBeLessThanOrEqual(batches.stats().batched)
+  })
+})
+
+describe('the release of the batches on an event', () => {
+  const crack = (object: string) =>
+    ({ type: 'crack', object, part: 'body', crack: { point: [0, 0.2, 0], normal: [0, 1, 0], length: 0.1, rays: 4 }, worldPoint: [0, 0.2, 0] }) as const
+  type Spied = { meshesOf: (b: unknown) => unknown[]; applyEvent: (ev: unknown) => void; settledBatches: { release: (meshes: readonly THREE.Mesh[]) => void } }
+
+  /** Counts the calls of `meshesOf` and records what `release` is given, through the instance (no production hook). */
+  const spy = (renderer: unknown) => {
+    const inner = renderer as Spied
+    const calls = { meshesOf: 0, released: [] as THREE.Mesh[][] }
+    const meshesOf = inner.meshesOf.bind(inner)
+    let inEvent = false
+    inner.meshesOf = (b) => {
+      if (inEvent) calls.meshesOf++
+      return meshesOf(b)
+    }
+    const applyEvent = inner.applyEvent.bind(inner)
+    inner.applyEvent = (ev) => {
+      inEvent = true
+      try {
+        applyEvent(ev)
+      } finally {
+        inEvent = false
+      }
+    }
+    const release = inner.settledBatches.release.bind(inner.settledBatches)
+    inner.settledBatches.release = (meshes) => {
+      calls.released.push([...meshes])
+      release(meshes)
+    }
+    return calls
+  }
+
+  it('tells whether any mesh is in the batches, from the first making to the clear', () => {
+    const scene = new THREE.Scene()
+    const batches = new SettledBatches(THREE, scene, PROMPT_BATCHES)
+    expect(batches.hasMembers()).toBe(false)
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial())
+    scene.add(mesh)
+    batches.update(DT, () => [mesh])
+    expect(batches.hasMembers()).toBe(true)
+    batches.clear()
+    expect(batches.hasMembers()).toBe(false)
+  })
+
+  it('with members, the first event of a batched object releases exactly its meshes, once, as before', () => {
+    const { world, renderer, box, run } = rendererScene()
+    const meshes = Array.from({ length: 4 }, (_, index) => box(`crate_${index}`, [index * 0.6, 0.3, 0]))
+    run(2)
+    const calls = spy(renderer)
+    world.emit(crack('crate_2'))
+    run(DT)
+    expect(calls.released).toEqual([[meshes[2]]])
+    expect(meshes.map((mesh) => mesh.layers.isEnabled(0))).toEqual([true, true, true, true])
+    expect(renderer.settledBatchStats?.()).toEqual({ batches: 0, batched: 0 })
+  })
+
+  it('with no members, the event allocates no mesh list and calls no release; one meshesOf fewer than with members', () => {
+    const batched = rendererScene()
+    const plain = rendererScene({ enabled: false })
+    for (const scene of [batched, plain]) Array.from({ length: 4 }, (_, index) => scene.box(`crate_${index}`, [index * 0.6, 0.3, 0]))
+    batched.run(2)
+    plain.run(2)
+    const withMembers = spy(batched.renderer)
+    const withoutMembers = spy(plain.renderer)
+    batched.world.emit(crack('crate_2'))
+    plain.world.emit(crack('crate_2'))
+    batched.run(DT)
+    plain.run(DT)
+    expect(withoutMembers.released).toEqual([])
+    expect(withMembers.released).toHaveLength(1)
+    expect(withMembers.meshesOf - withoutMembers.meshesOf).toBe(1)
   })
 })

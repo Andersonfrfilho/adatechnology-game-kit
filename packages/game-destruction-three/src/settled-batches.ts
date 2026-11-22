@@ -140,6 +140,11 @@ export class SettledBatches {
     return { batches: this.batcher ? this.batcher.group.children.filter((child) => child.visible).length : 0, batched: stats?.batched ?? 0 }
   }
 
+  /** Whether any mesh is given to the batches now: with none, `release` has nothing to do for any meshes. */
+  hasMembers(): boolean {
+    return this.members.size > 0
+  }
+
   /**
    * Something happened to one of `meshes` (a blow, fire, char): if any is drawn by a batch, every mesh draws on its own again at once and the batches are made again after
    * `intervalSeconds`. A change the batcher cannot see (a colour written in place) never shows late.
