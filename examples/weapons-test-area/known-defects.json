@@ -3,150 +3,175 @@
     "id": "weapon_glock_17/still-low",
     "what": "blank-third-person",
     "value": 0.0023,
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
   },
   {
     "id": "weapon_machete/still-level",
     "what": "blank-third-person",
     "value": 0.0011,
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
   },
   {
     "id": "weapon_machete/still-low",
     "what": "blank-third-person",
     "value": 0.0007,
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
   },
   {
     "id": "weapon_molotov/still-level",
     "what": "blank-third-person",
     "value": 0.0012,
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
   },
   {
     "id": "weapon_molotov/still-low",
     "what": "blank-third-person",
     "value": 0.0008,
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "share of pixels that differ from the same view holding the fists, below 0.3% (PHOTO_EMPTY_SHARE); first-person prints of the same weapon differ by 6-15%. Not proven to be a model defect: the third-person camera pose is not readable (room.camera stays at the eye), so it may be the weapon out of the third-person frame at this aim"
   },
   {
     "id": "hand",
     "what": "no-catalogue-item",
     "value": "no item weapon_hand",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "kick",
     "what": "no-catalogue-item",
     "value": "no item weapon_kick",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "shove",
     "what": "no-catalogue-item",
     "value": "no item weapon_shove",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "pistol_9mm",
     "what": "no-catalogue-item",
     "value": "no item weapon_pistol_9mm",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "pistol_45",
     "what": "no-catalogue-item",
     "value": "no item weapon_pistol_45",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "pistol_22",
     "what": "no-catalogue-item",
     "value": "no item weapon_pistol_22",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "revolver_357",
     "what": "no-catalogue-item",
     "value": "no item weapon_revolver_357",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "revolver_38",
     "what": "no-catalogue-item",
     "value": "no item weapon_revolver_38",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "smg_9mm",
     "what": "no-catalogue-item",
     "value": "no item weapon_smg_9mm",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "carbine_22",
     "what": "no-catalogue-item",
     "value": "no item weapon_carbine_22",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "rifle_5_56",
     "what": "no-catalogue-item",
     "value": "no item weapon_rifle_5_56",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "rifle_7_62x39",
     "what": "no-catalogue-item",
     "value": "no item weapon_rifle_7_62x39",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "rifle_bolt_308",
     "what": "no-catalogue-item",
     "value": "no item weapon_rifle_bolt_308",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "sniper_338",
     "what": "no-catalogue-item",
     "value": "no item weapon_sniper_338",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "anti_materiel_50",
     "what": "no-catalogue-item",
     "value": "no item weapon_anti_materiel_50",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "shotgun_pump_12",
     "what": "no-catalogue-item",
     "value": "no item weapon_shotgun_pump_12",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "shotgun_double_12",
     "what": "no-catalogue-item",
     "value": "no item weapon_shotgun_double_12",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "shotgun_semi_12",
     "what": "no-catalogue-item",
     "value": "no item weapon_shotgun_semi_12",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "fists",
     "what": "no-catalogue-item",
     "value": "no item weapon_fists",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
     "id": "flamethrower",
     "what": "no-catalogue-item",
     "value": "no item weapon_flamethrower",
-    "found": "2026-11-22"
+    "found": "2026-11-22",
+    "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   }
 ]

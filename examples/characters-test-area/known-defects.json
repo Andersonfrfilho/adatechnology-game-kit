@@ -1,14 +1,9 @@
 [
   {
-    "id": "zombie_runner",
-    "what": "floats",
-    "value": "0.164 m above the ground",
-    "found": "2026-11-22"
-  },
-  {
     "id": "professions",
     "what": "height-over-declared",
-    "value": "2.01-2.11 m against 1.80 m declared",
-    "found": "2026-11-22"
+    "value": "2.02-2.06 m with hair or headgear; skull top 1.98 m; declared 1.80 m",
+    "found": "2026-11-22",
+    "evidence": "floor reference: lowest point of the bodies -0.03..0.00 m over a gait cycle, spawn y 0, ground y -0.001 m (potted_cactus control). Tops measured in the page by the boxes of the visible meshes (nurse 2.021, police_officer 2.040, firefighter 2.056; zombie_walker 2.248). tools/measure-body-and-cabin.mjs (spec 012), run once: skull top 1.979-1.982 m, with hair 2.045-2.062 m, base minY -0.003..0.001 m. The sheet's number includes hair and headgear, the script's skull number does not; both are over 1.80 m."
   }
 ]

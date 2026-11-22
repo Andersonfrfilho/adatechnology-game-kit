@@ -5,7 +5,7 @@
     "width": 1600,
     "height": 900
   },
-  "freezeFrames": 30,
+  "freezeFrames": 153,
   "timeOfDay": {
     "nightFactor": 0
   },
@@ -385,18 +385,12 @@
       "entries": [
         "hatch",
         "taxi",
-        "entry_hatch",
-        "electric_hatch",
-        "sedan",
-        "police_sedan"
+        "entry_hatch"
       ],
       "labels": [
         "hatch",
         "taxi",
-        "entry_hatch",
-        "electric_hatch",
-        "sedan",
-        "police_sedan"
+        "entry_hatch"
       ]
     },
     {
@@ -413,20 +407,14 @@
         "framing": "looks at the middle of the row from the distance that fits it"
       },
       "entries": [
-        "highway_police_sedan",
-        "beetle",
-        "compact_suv",
-        "hybrid_suv",
-        "midsize_suv",
-        "large_suv"
+        "electric_hatch",
+        "sedan",
+        "police_sedan"
       ],
       "labels": [
-        "highway_police_sedan",
-        "beetle",
-        "compact_suv",
-        "hybrid_suv",
-        "midsize_suv",
-        "large_suv"
+        "electric_hatch",
+        "sedan",
+        "police_sedan"
       ]
     },
     {
@@ -443,20 +431,14 @@
         "framing": "looks at the middle of the row from the distance that fits it"
       },
       "entries": [
-        "compact_pickup",
-        "crossover_pickup",
-        "pickup",
-        "monster_truck",
-        "cargo_van",
-        "ambulance"
+        "highway_police_sedan",
+        "beetle",
+        "compact_suv"
       ],
       "labels": [
-        "compact_pickup",
-        "crossover_pickup",
-        "pickup",
-        "monster_truck",
-        "cargo_van",
-        "ambulance"
+        "highway_police_sedan",
+        "beetle",
+        "compact_suv"
       ]
     },
     {
@@ -473,20 +455,14 @@
         "framing": "looks at the middle of the row from the distance that fits it"
       },
       "entries": [
-        "tractor",
-        "light_4x4",
-        "apc_6x6",
-        "armored_car_6x6",
-        "battle_tank",
-        "boxy_hatch"
+        "hybrid_suv",
+        "midsize_suv",
+        "large_suv"
       ],
       "labels": [
-        "tractor",
-        "light_4x4",
-        "apc_6x6",
-        "armored_car_6x6",
-        "battle_tank",
-        "boxy_hatch"
+        "hybrid_suv",
+        "midsize_suv",
+        "large_suv"
       ]
     },
     {
@@ -503,24 +479,138 @@
         "framing": "looks at the middle of the row from the distance that fits it"
       },
       "entries": [
+        "compact_pickup",
+        "crossover_pickup",
+        "pickup"
+      ],
+      "labels": [
+        "compact_pickup",
+        "crossover_pickup",
+        "pickup"
+      ]
+    },
+    {
+      "file": "18-fleet-open-6.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "monster_truck",
+        "cargo_van",
+        "ambulance"
+      ],
+      "labels": [
+        "monster_truck",
+        "cargo_van",
+        "ambulance"
+      ]
+    },
+    {
+      "file": "19-fleet-open-7.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "tractor",
+        "light_4x4",
+        "apc_6x6"
+      ],
+      "labels": [
+        "tractor",
+        "light_4x4",
+        "apc_6x6"
+      ]
+    },
+    {
+      "file": "20-fleet-open-8.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
+        "armored_car_6x6",
+        "battle_tank",
+        "boxy_hatch"
+      ],
+      "labels": [
+        "armored_car_6x6",
+        "battle_tank",
+        "boxy_hatch"
+      ]
+    },
+    {
+      "file": "21-fleet-open-9.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
         "family_hatch",
         "rideshare_hatch",
-        "turbo_hatch",
+        "turbo_hatch"
+      ],
+      "labels": [
+        "family_hatch",
+        "rideshare_hatch",
+        "turbo_hatch"
+      ]
+    },
+    {
+      "file": "22-fleet-open-10.png",
+      "family": "fleet-open",
+      "view": "3q-front",
+      "openLeaves": true,
+      "yaw": 0,
+      "camera": {
+        "kind": "3q-front",
+        "fovDeg": 28,
+        "azimuthDeg": 45,
+        "elevationDeg": 14,
+        "framing": "looks at the middle of the row from the distance that fits it"
+      },
+      "entries": [
         "fastback_sedan",
         "classic_six_sedan",
         "v8_coupe"
       ],
       "labels": [
-        "family_hatch",
-        "rideshare_hatch",
-        "turbo_hatch",
         "fastback_sedan",
         "classic_six_sedan",
         "v8_coupe"
       ]
     },
     {
-      "file": "18-fleet-open-6.png",
+      "file": "23-fleet-open-11.png",
       "family": "fleet-open",
       "view": "3q-front",
       "openLeaves": true,

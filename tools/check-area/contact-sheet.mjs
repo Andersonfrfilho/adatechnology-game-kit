@@ -2,6 +2,8 @@
 // Contact sheets for the example areas whose page test records the catalogue (examples/<area>/test.mjs): several catalogue entries in a row, each labelled with its id drawn in the page,
 // from a fixed debug camera over the shared test room, at a fixed time of day, the animation frozen after a fixed number of frames. Writes the PNGs and shots/index.json (the entry ids of
 // every image in grid order, the camera and the seed: what a review ledger references) and shots/sanity.json (the share of pixels that differ from the same view with nothing spawned, per image and per entry).
+// A manual review tool, like every page test (CLAUDE.md section 9): do not wire it as a nightly or CI gate. It fails on a defect that is not in known-defects.json and on one listed that is no longer seen,
+// so one transient render glitch would fail it.
 // Only what the room already exposes is used (spawn, clear, update, pause, setDebugCamera, leaves, useLeaf, environment): nothing here adds game logic and nothing is added to the room.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -10,7 +12,7 @@ import { pathToFileURL } from 'node:url'
 /** The viewport of every sheet: wide enough for a row of eight, 16:9 so the horizontal field of view is stable. */
 export const SHEET_VIEWPORT = { width: 1600, height: 900 }
 /** Frames of 1/60 s the room runs after the entries are spawned, then it is paused: the animation stands at this time in every sheet. */
-export const FREEZE_FRAMES = 30
+export const FREEZE_FRAMES = 153
 /** An entry whose cell has less than this share of pixels different from the empty view rendered nothing. */
 export const EMPTY_SHARE = 0.01
 /** An entry standing higher than this above the ground (m) is reported as floating. */
@@ -117,7 +119,7 @@ async function laySheetInPage(args) {
   const totalWidth = Math.max(cursor - args.gap, rulerWidth)
   const along = (/** @type {number} */ distance) => distance - totalWidth / 2
   // the row stands away from the room's own furniture, which would hold an entry up (a table 78 cm high is under the middle of the room)
-  // (a leaf needs the room's ground and its physics to swing, so the sheets with open leaves stay in the middle)
+  // (the player is held inside the room's arena (`arenaSize`, 14 m) and the hand reaches a handle only from where he can stand: at z=300, or at the ends of a long row, a leaf stays shut. So these sheets stay at the middle and carry few entries)
   const origin = args.openLeaves ? [0, 0] : [0, 300]
   const at = (/** @type {number} */ distance, /** @type {number} */ height) => [(origin[0] ?? 0) + (rowAxis[0] ?? 0) * along(distance), height, (origin[1] ?? 0) + (rowAxis[2] ?? 0) * along(distance)]
 
@@ -155,11 +157,25 @@ async function laySheetInPage(args) {
         const standsAt = item.object.root.position
         for (const part of room.leaves(item.object.objectId)) {
           // the hand has to reach the handle: the player stands beside the vehicle whose leaf is worked
-          room.look([standsAt.x, 1.7, standsAt.z + 2.5], [standsAt.x, 1.2, standsAt.z])
+          // on the camera's side of the vehicle, where no neighbour of the row stands
+          const side = Math.hypot(toCamera[0] ?? 0, toCamera[2] ?? 1) || 1
+          room.look([standsAt.x + (2.5 * (toCamera[0] ?? 0)) / side, 1.7, standsAt.z + (2.5 * (toCamera[2] ?? 1)) / side], [standsAt.x, 1.2, standsAt.z])
           room.useLeaf(item.object.objectId, part)
           for (let frame = 0; frame < 360 && room.door; frame++) room.update(1 / 60)
         }
       }
+    }
+  }
+  // the lowest point each entry reaches over a whole gait cycle (a running body is off the ground between strides): sampled every 4th frame for 120 frames, then the 30 frames of the freeze
+  /** @type {Map<number, number>} */
+  const lowest = new Map()
+  const sampling = !args.openLeaves && kind !== 'aerial'
+  for (let frame = 0; frame < (sampling ? 120 : 0); frame++) {
+    room.update(1 / 60)
+    if (frame % 4 !== 0) continue
+    for (const item of placed) {
+      const box = item.ruler ? null : boxOf(item.object.root)
+      if (box) lowest.set(item.index, Math.min(lowest.get(item.index) ?? Infinity, box.min[1]))
     }
   }
   for (let frame = 0; frame < 30; frame++) room.update(1 / 60)
@@ -225,7 +241,7 @@ async function laySheetInPage(args) {
     const rect = [Math.min(...corners.map((c) => c[0] ?? 0)), Math.min(...corners.map((c) => c[1] ?? 0)), Math.max(...corners.map((c) => c[0] ?? 0)), Math.max(...corners.map((c) => c[1] ?? 0))]
     const base = project([centre[0] ?? 0, 0, centre[2] ?? 0])
     addLabel(entry.label, [base[0] ?? 0, (base[1] ?? 0) + 8], '-50%,0')
-    cells.push({ id: entry.id, label: entry.label, rect, leaves: entry.leaves, size: { dx: +(own?.dx ?? 0).toFixed(3), dy: +(own?.dy ?? 0).toFixed(3), dz: +(own?.dz ?? 0).toFixed(3) }, measuredFrom: dims[index]?.measuredFrom, yaw: +(yaws[index] ?? 0).toFixed(4), floatsAboveGroundM: real ? +(real.min[1] ?? 0).toFixed(3) : null, openingMax: args.openLeaves && standing ? +Math.max(0, ...room.leaves(standing.object.objectId).map((/** @type {string} */ part) => room.leafOpening(standing.object.objectId, part))).toFixed(3) : null, failed: Boolean(entry.failed) })
+    cells.push({ id: entry.id, label: entry.label, rect, leaves: entry.leaves, size: { dx: +(own?.dx ?? 0).toFixed(3), dy: +(own?.dy ?? 0).toFixed(3), dz: +(own?.dz ?? 0).toFixed(3) }, measuredFrom: dims[index]?.measuredFrom, yaw: +(yaws[index] ?? 0).toFixed(4), floatsAboveGroundM: real ? +(real.min[1] ?? 0).toFixed(3) : null, lowestOverCycleM: lowest.has(index) ? +(lowest.get(index) ?? 0).toFixed(3) : null, openingMax: args.openLeaves && standing ? +Math.max(0, ...room.leaves(standing.object.objectId).map((/** @type {string} */ part) => room.leafOpening(standing.object.objectId, part))).toFixed(3) : null, failed: Boolean(entry.failed) })
   }
   if (args.ruler) {
     const base = at(rulerWidth / 2, 0)
@@ -390,13 +406,15 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
         labels: laid.cells.map((/** @type {any} */ cell) => cell.label),
       })
       const emptyCells = laid.cells.filter((/** @type {any} */ _cell, /** @type {number} */ at) => (compared.cells[at] ?? 0) < EMPTY_SHARE).map((/** @type {any} */ cell) => cell.id)
-      sanity.push({ file: `${sheet.file}.png`, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, openingMax: cell.openingMax })), empty: emptyCells })
+      sanity.push({ file: `${sheet.file}.png`, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, lowestOverCycleM: cell.lowestOverCycleM, openingMax: cell.openingMax })), empty: emptyCells })
       for (const failure of laid.failed) failures.push({ file: `${sheet.file}.png`, ...failure })
       for (const id of emptyCells) failures.push({ file: `${sheet.file}.png`, id, reason: 'rendered empty' })
       for (const failure of laid.failed) observe(failure.id, 'spawn-failed', failure.reason)
       for (const id of emptyCells) observe(id, 'rendered-empty', 'no pixel differs from the empty view')
       for (const cell of laid.cells) {
-        if ((cell.floatsAboveGroundM ?? 0) > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${cell.floatsAboveGroundM} m`)
+        // the lowest point over the cycle when it was sampled, else the one of the frozen frame
+        const lowestPoint = cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0
+        if (lowestPoint > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${lowestPoint} m`)
         if (base.openLeaves && (cell.openingMax ?? 0) < 0.9) observe(cell.id, 'does-not-open', cell.openingMax)
       }
       return laid
@@ -438,7 +456,7 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
       const stillThere = known.filter((item) => observed.some((entry) => same(item, entry)))
       const gone = known.filter((item) => !observed.some((entry) => same(item, entry)))
       for (const entry of fresh) console.log(`NEW defect      ${entry.id}  ${entry.what}  ${JSON.stringify(entry.value)}`)
-      for (const item of gone) console.log(`GONE defect     ${item.id}  ${item.what}: no longer seen, remove it from ${knownDefectsFile}`)
+      for (const item of gone) console.log(`GONE defect     ${item.id}  ${item.what}: no longer seen: remove this entry from ${knownDefectsFile} in the commit that fixes it`)
       console.log(`${area}: defects: ${fresh.length} new, ${stillThere.length} known still present, ${gone.length} known gone`)
       // a defect nobody sees any more fails the run too: the list shrinks in the commit that fixes it, as the z-fighting debt ledger does
       const exitCode = fresh.length > 0 || gone.length > 0 || index.length === 0 ? 1 : 0

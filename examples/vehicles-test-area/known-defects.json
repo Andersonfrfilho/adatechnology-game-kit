@@ -1,14 +1,1 @@
-[
-  {
-    "id": "tractor",
-    "what": "does-not-open",
-    "value": 0,
-    "found": "2026-11-22"
-  },
-  {
-    "id": "boxy_hatch",
-    "what": "does-not-open",
-    "value": 0,
-    "found": "2026-11-22"
-  }
-]
+[]

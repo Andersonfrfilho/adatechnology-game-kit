@@ -49,8 +49,8 @@ try {
     for (const cell of laid.cells) if (cell.leaves.length > 0) withLeaves.push(cell.id)
   }
   const firstOpen = Math.ceil(fleet.itemIds.length / 6) + 1
-  for (const [at, ids] of chunks(withLeaves, 6).entries()) {
-    await recorder.sheet({ file: `${String(firstOpen + at).padStart(2, '0')}-fleet-open-${at + 1}`, family: 'fleet-open', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 1.2, openLeaves: true })
+  for (const [at, ids] of chunks(withLeaves, 3).entries()) {
+    await recorder.sheet({ file: `${String(firstOpen + at).padStart(2, '0')}-fleet-open-${at + 1}`, family: 'fleet-open', entries: ids.map((/** @type {string} */ id) => ({ id })), view, yaw: 0, gap: 4, openLeaves: true })
   }
   const summary = recorder.finish()
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
