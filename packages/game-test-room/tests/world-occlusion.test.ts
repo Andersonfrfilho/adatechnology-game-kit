@@ -2,9 +2,33 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AudioEngineOptions } from '@adatechnology/game-audio'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createTerrain, createTerrainImpl } from '@adatechnology/game-terrain'
-import type { DestructibleSpec, RaycastOptions } from '@adatechnology/game-destruction'
+import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
+import type { DestructibleImpl, DestructibleSpec, ObjectState, PartSpec, RaycastOptions } from '@adatechnology/game-destruction'
 import { OCCLUDER_MIN_RADIUS } from '../src/world-occlusion'
 import { makeRoom } from './helpers'
+
+/** Where two parts overlap, each end of the path places the face between them within the default step of 1 mm. */
+const WITHIN_ONE_STEP = 0.0011
+
+type Point = [number, number, number]
+/** The reference walk over a real world: one millimetre past every hit, the same part counted once in a row. `rays` is what it costs. */
+const worldMillimetreWalk = (world: ReturnType<typeof createDestruction>, from: Point, to: Point): { keys: string[]; rays: number } => {
+  const length = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2])
+  const direction: Point = [(to[0] - from[0]) / length, (to[1] - from[1]) / length, (to[2] - from[2]) / length]
+  const skip: RaycastOptions = { skipLoose: true, minObjectRadius: OCCLUDER_MIN_RADIUS }
+  const keys: string[] = []
+  let travelled = 0
+  let rays = 0
+  while (keys.length < 6 && travelled < length) {
+    rays++
+    const hit = world.raycast([from[0] + direction[0] * travelled, from[1] + direction[1] * travelled, from[2] + direction[2] * travelled], direction, length - travelled, skip)
+    if (!hit) break
+    const key = `${hit.object}/${hit.part}`
+    if (keys.at(-1) !== key) keys.push(key)
+    travelled += hit.distance + 0.001
+  }
+  return { keys, rays }
+}
 
 const captured: AudioEngineOptions[] = []
 
@@ -111,7 +135,7 @@ describe('createWorldOcclusion from a source buried in the ground', () => {
       ]
       let best: { part: string; distance: number } | null = null
       for (const layer of layers) {
-        if (options?.ignoreParts?.some((ignored) => ignored.part === layer.part)) continue
+        if (options?.ignoreParts?.some((ignored) => ignored.object === 'scene' && ignored.part === layer.part)) continue
         const isInside = z >= layer.near && z <= layer.far
         const entering = forward ? layer.near : layer.far
         const distance = isInside ? 0 : (entering - z) / direction[2]
@@ -233,6 +257,53 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
       expect(counter.rays).toBeLessThan(scene.maxRays ?? 400)
     })
   }
+
+  /** mulberry32: the scenes below are the same on every run. */
+  const seeded = (seed: number) => () => {
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  const SCENE = { from: 0, to: 2.5 }
+  /** One to five layers anywhere on the path (overlapping, touching, buried or apart), each 3 mm wide or more; about half answer from inside. */
+  const randomScene = (random: () => number): Layer[] =>
+    Array.from({ length: 1 + Math.floor(random() * 5) }, (_, index): Layer => {
+      const near = -0.3 + random() * 2.6
+      const width = 0.003 + random() ** 3
+      return { part: `layer${index}`, near, far: near + width, ...(random() < 0.5 ? { ordinary: true as const } : {}) }
+    })
+  const mirrored = (layers: readonly Layer[]): Layer[] => layers.map((layer) => ({ ...layer, near: SCENE.from + SCENE.to - layer.far, far: SCENE.from + SCENE.to - layer.near }))
+
+  const overlap = (a: Layer, b: Layer): boolean => a.near < b.far && b.near < a.far
+  /** Two layers that both answer from inside and overlap: the stretch the walk still crosses one millimetre at a time. */
+  const hasSolidOverlap = (layers: readonly Layer[]): boolean => layers.some((a, i) => !a.ordinary && layers.some((b, j) => j > i && !b.ordinary && overlap(a, b)))
+  /** An ordinary layer wholly inside one that answers from inside: the buried part the walk must not count. */
+  const hasBuriedOrdinary = (layers: readonly Layer[]): boolean => layers.some((a) => a.ordinary && layers.some((b) => !b.ordinary && b.near < a.near && a.far < b.far))
+
+  it('counts the same layers as the walk of one millimetre over 300 seeded random scenes, each read both ways', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const random = seeded(20261120)
+    let solidOverlaps = 0
+    let buriedOrdinary = 0
+    let mostRays = 0
+    for (let index = 0; index < 300; index++) {
+      const scene = randomScene(random)
+      if (hasSolidOverlap(scene)) solidOverlaps++
+      if (hasBuriedOrdinary(scene)) buriedOrdinary++
+      for (const layers of [scene, mirrored(scene)]) {
+        const { world, counter } = worldOf(layers)
+        const hits = createWorldOcclusion(world)([0, 0, SCENE.from], [0, 0, SCENE.to])
+        expect(hits.map((hit) => hit.material), `scene ${index}: ${JSON.stringify(layers)}`).toEqual(millimetreWalk(layers, SCENE.from, SCENE.to))
+        mostRays = Math.max(mostRays, counter.rays)
+      }
+    }
+    // the seed must keep reaching the hard branches, or the comparison above says little
+    expect(solidOverlaps).toBeGreaterThan(20)
+    expect(buriedOrdinary).toBeGreaterThan(20)
+    // both walks of a query on 2.5 m: crossing all of it one millimetre at a time with a second ray per step would be 10 000; the worst scene here takes about 2 300
+    expect(mostRays).toBeLessThan(5000)
+  })
 })
 
 describe('createWorldOcclusion from a source buried deep in the ground', () => {
@@ -246,7 +317,7 @@ describe('createWorldOcclusion from a source buried deep in the ground', () => {
         const z = origin[2]
         let best: { part: string; distance: number } | null = null
         for (const layer of layers) {
-          if (options?.ignoreParts?.some((ignored) => ignored.part === layer.part)) continue
+          if (options?.ignoreParts?.some((ignored) => ignored.object === 'scene' && ignored.part === layer.part)) continue
           const distance = z >= layer.near && z <= layer.far ? 0 : ((direction[2] > 0 ? layer.near : layer.far) - z) / direction[2]
           if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
           best = { part: layer.part, distance }
@@ -273,7 +344,7 @@ describe('createWorldOcclusion over air narrower than the old stride between two
           const z = origin[2]
           let best: { part: string; distance: number } | null = null
           for (const layer of layers) {
-            if (options?.ignoreParts?.some((ignored) => ignored.part === layer.part)) continue
+            if (options?.ignoreParts?.some((ignored) => ignored.object === 'scene' && ignored.part === layer.part)) continue
             const distance = z >= layer.near && z <= layer.far ? 0 : (layer.near - z) / direction[2]
             if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
             best = { part: layer.part, distance }
@@ -300,22 +371,6 @@ describe('createWorldOcclusion over a destruction world with the real terrain', 
     walls.forEach((position, index) => world.add(wallSpec(heights[index] ?? 2), { position }))
     return world
   }
-  /** The walk of one millimetre at a time, the part of the same layer counted once in a row. */
-  const millimetreWalk = (world: ReturnType<typeof createDestruction>, from: Vec, to: Vec): string[] => {
-    const length = Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2])
-    const direction: Vec = [(to[0] - from[0]) / length, (to[1] - from[1]) / length, (to[2] - from[2]) / length]
-    const skip: RaycastOptions = { skipLoose: true, minObjectRadius: OCCLUDER_MIN_RADIUS }
-    const found: string[] = []
-    let travelled = 0
-    while (found.length < 6 && travelled < length) {
-      const hit = world.raycast([from[0] + direction[0] * travelled, from[1] + direction[1] * travelled, from[2] + direction[2] * travelled], direction, length - travelled, skip)
-      if (!hit) break
-      const key = `${hit.object}/${hit.part}`
-      if (found.at(-1) !== key) found.push(key)
-      travelled += hit.distance + 0.001
-    }
-    return found
-  }
   const CASES: readonly { name: string; walls: readonly Vec[]; heights?: readonly number[]; from: Vec; to: Vec }[] = [
     { name: 'a source buried in the ground looking up at a wall standing on it', walls: [[0, 1, 0]], from: [-8, -1, 0], to: [8, 1.5, 0] },
     { name: 'a path inside the ground with a wall buried across it', walls: [[0, -1.2, 0]], heights: [1], from: [-8, -1, 0], to: [8, -1, 0] },
@@ -326,7 +381,7 @@ describe('createWorldOcclusion over a destruction world with the real terrain', 
       const { createWorldOcclusion } = await import('../src/world-occlusion')
       const world = sceneWith(scene.walls, scene.heights ?? [])
       const counted = createWorldOcclusion(world)(scene.from, scene.to).length
-      const reference = millimetreWalk(world, scene.from, scene.to)
+      const reference = worldMillimetreWalk(world, scene.from, scene.to).keys
       expect(counted, JSON.stringify(reference)).toBe(reference.length)
     })
   }
@@ -342,7 +397,7 @@ describe('createWorldOcclusion cost over overlapping solids', () => {
         const z = origin[2]
         let best: { part: string; distance: number } | null = null
         for (const layer of layers) {
-          if (options?.ignoreParts?.some((ignored) => ignored.part === layer.part)) continue
+          if (options?.ignoreParts?.some((ignored) => ignored.object === 'scene' && ignored.part === layer.part)) continue
           const distance = !layer.ordinary && z >= layer.near && z <= layer.far ? 0 : ((direction[2] > 0 ? layer.near : layer.far) - z) / direction[2]
           if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
           best = { part: layer.part, distance }
@@ -369,5 +424,251 @@ describe('createWorldOcclusion step', () => {
     const { createWorldOcclusion } = await import('../src/world-occlusion')
     const world = { raycast: () => null, part: () => null }
     for (const step of [0, -0.001, Number.NaN, Number.POSITIVE_INFINITY]) expect(() => createWorldOcclusion(world, { step })).toThrow(RangeError)
+  })
+})
+
+describe('createWorldOcclusion ignoring one part of one object at a time', () => {
+  type Vec = [number, number, number]
+  /** `ordinary`: answers only at its entry face. Two layers may share a part name under different objects. */
+  type Layer = { object: string; part: string; near: number; far: number; ordinary?: true }
+  const sceneOf = (layers: readonly Layer[]) => {
+    const ignoredLists: (readonly { object: string; part: string }[])[] = []
+    const world = {
+      raycast(origin: Vec, direction: Vec, maxDistance = Infinity, options?: RaycastOptions) {
+        if (options?.ignoreParts) ignoredLists.push(options.ignoreParts)
+        const z = origin[2]
+        let best: { layer: Layer; distance: number } | null = null
+        for (const layer of layers) {
+          if (options?.ignoreParts?.some((ignored) => ignored.object === layer.object && ignored.part === layer.part)) continue
+          const isInside = !layer.ordinary && z >= layer.near && z <= layer.far
+          const distance = isInside ? 0 : ((direction[2] > 0 ? layer.near : layer.far) - z) / direction[2]
+          if (distance < 0 || distance > maxDistance || (best && distance >= best.distance)) continue
+          best = { layer, distance }
+        }
+        return best && { object: best.layer.object, part: best.layer.part, point: [origin[0], origin[1], z + direction[2] * best.distance] as Vec, normal: [0, 0, 1] as Vec, distance: best.distance }
+      },
+      part: (object: string, part: string) => ({ material: `${object}/${part}` }),
+    }
+    return { world, ignoredLists }
+  }
+  const FROM: Vec = [0, 0, -9]
+  const TO: Vec = [0, 0, 8]
+
+  it('ignores the object and the part of the layer it stands in, never a part of the same name in another object', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    // the ground and the wall past it both call their part `body`: a world that compared the part alone would lose the wall with the ground
+    const { world, ignoredLists } = sceneOf([{ object: 'ground', part: 'body', near: -10, far: 0 }, { object: 'wall', part: 'body', near: 0.5, far: 0.62, ordinary: true }])
+    const hits = createWorldOcclusion(world)(FROM, TO)
+    expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'wall/body'])
+    expect(hits[1]?.thickness).toBeCloseTo(0.12, 6)
+    expect(ignoredLists.length).toBeGreaterThan(0)
+    for (const list of ignoredLists) expect(list.map(({ object, part }) => ({ object, part }))).toEqual([{ object: 'ground', part: 'body' }])
+  })
+
+  it('stops at maxHits, the last one counted found by the ray that ignores the part it is in (2) or by a plain ray (3 and up)', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const layers: Layer[] = [
+      { object: 'ground', part: 'body', near: -10, far: 0 },
+      { object: 'first', part: 'slab', near: 0.5, far: 0.6, ordinary: true },
+      { object: 'second', part: 'slab', near: 1, far: 1.1, ordinary: true },
+      { object: 'third', part: 'slab', near: 1.5, far: 1.6, ordinary: true },
+    ]
+    const all = ['ground/body', 'first/slab', 'second/slab', 'third/slab']
+    for (const maxHits of [1, 2, 3, 4, 6]) {
+      const { world, ignoredLists } = sceneOf(layers)
+      const hits = createWorldOcclusion(world, { maxHits })(FROM, TO)
+      expect(hits.map((hit) => hit.material), `maxHits ${maxHits}`).toEqual(all.slice(0, maxHits))
+      // with one hit allowed the walk ends on the ground and never asks what is past it
+      expect(ignoredLists.length > 0, `maxHits ${maxHits}`).toBe(maxHits > 1)
+    }
+  })
+
+  it('cut short by maxHits, the way in and the way out count different layers and no thickness is paired', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { world } = sceneOf([
+      { object: 'ground', part: 'body', near: -10, far: 0 },
+      { object: 'first', part: 'slab', near: 0.5, far: 0.6, ordinary: true },
+      { object: 'second', part: 'slab', near: 1, far: 1.1, ordinary: true },
+    ])
+    // in: ground, first. Out, in the order of the way in: first, second. The lists are as long as each other but no place holds the same layer
+    const hits = createWorldOcclusion(world, { maxHits: 2 })(FROM, TO)
+    expect(hits).toEqual([{ material: 'ground/body' }, { material: 'first/slab' }])
+  })
+
+  it('an ordinary part buried in the ground is counted from neither end, and the ground and the glass are paired with their thickness', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { world } = sceneOf([
+      { object: 'ground', part: 'body', near: -10, far: 6 },
+      { object: 'pipe', part: 'shell', near: 1, far: 1.2, ordinary: true },
+      { object: 'pane', part: 'glass', near: 6.002, far: 6.006, ordinary: true },
+    ])
+    const hits = createWorldOcclusion(world)(FROM, TO)
+    expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'pane/glass'])
+    // the source is inside the ground: its way in is the source itself
+    expect(hits[0]?.thickness).toBeCloseTo(15, 6)
+    expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
+  })
+
+  it('a part that answers from inside, buried in the ground, is counted from neither end, and the thickness is paired past it', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { world } = sceneOf([
+      { object: 'ground', part: 'body', near: -10, far: 6 },
+      { object: 'rock', part: 'body', near: 1, far: 1.2 },
+      { object: 'pane', part: 'glass', near: 6.002, far: 6.006, ordinary: true },
+    ])
+    const hits = createWorldOcclusion(world)(FROM, TO)
+    expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'pane/glass'])
+    expect(hits[0]?.thickness).toBeCloseTo(15, 6)
+    expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
+  })
+
+  it('a part half buried in the ground is paired from both ends: the overlap goes to the ground, the rest to the part', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { world } = sceneOf([{ object: 'ground', part: 'body', near: -10, far: 2 }, { object: 'rock', part: 'body', near: 1, far: 2.5 }])
+    const hits = createWorldOcclusion(world)(FROM, TO)
+    expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'rock/body'])
+    expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 11)).toBeLessThan(WITHIN_ONE_STEP)
+    expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 0.5)).toBeLessThan(WITHIN_ONE_STEP)
+  })
+})
+
+describe('createWorldOcclusion over a destruction world with an impl of several parts', () => {
+  type Vec = [number, number, number]
+  const SPANS = [
+    { part: 'soil', near: -5, far: 2 },
+    { part: 'rock', near: 1, far: 6 },
+  ] as const
+  /** A hosted body of two parts that overlap from z = 1 to z = 2; each answers a point inside it at distance 0, as the ground does, and honours `ignored`. */
+  const strata = (): DestructibleImpl => {
+    const spec: DestructibleSpec = {
+      name: 'strata',
+      parts: [
+        { id: 'soil', material: 'dirt', shape: { kind: 'box', size: [10, 10, 7] }, position: [0, 0, -1.5] },
+        { id: 'rock', material: 'concrete', shape: { kind: 'box', size: [10, 10, 5] }, position: [0, 0, 3.5] },
+      ],
+    }
+    return {
+      id: 'strata',
+      describe: () => spec,
+      hit: () => [],
+      update: () => [],
+      // the world reads a hosted part's material from its state
+      state: (): ObjectState => ({
+        id: 'strata', position: [0, 0, 0], rotation: [0, 0, 0, 1], groups: [['soil', 'rock']], destroyed: false, joints: [],
+        parts: spec.parts.map((part) => ({ id: part.id, material: part.material, status: 'intact', hp: 1, maxHp: 1, mass: 0, temperature: 0, burning: false, fuel: 0, char: 0, melt: 0, dents: [], holes: [], cracks: [], group: 0 })),
+      }),
+      surfaceRay(ray: SurfaceRay): SurfaceRayHit | null {
+        const z = ray.origin[2]
+        let best: SurfaceRayHit | null = null
+        for (const span of SPANS) {
+          if (ray.ignored?.(span.part)) continue
+          const distance = z >= span.near && z <= span.far ? 0 : ((ray.direction[2] > 0 ? span.near : span.far) - z) / ray.direction[2]
+          if (!(distance >= 0) || distance > ray.maxDistance || (best && distance >= best.distance)) continue
+          best = { part: span.part, point: [ray.origin[0], ray.origin[1], z + ray.direction[2] * distance], normal: [0, 0, -Math.sign(ray.direction[2])], distance, pathLen: span.far - span.near }
+        }
+        return best
+      },
+    }
+  }
+  const IN_BOTH: Vec = [0, 0, 1.5]
+  const AHEAD: Vec = [0, 0, 1]
+
+  it('with one part ignored its sister answers at distance 0 from inside the overlap, and with both ignored the ray goes on', () => {
+    const world = createDestruction()
+    world.register(strata())
+    const wall = world.add({ name: 'wall', parts: [{ id: 'slab', material: 'brick', shape: { kind: 'box', size: [4, 4, 0.1] }, position: [0, 0, 0] }] }, { position: [0, 0, 7] })
+    expect(world.raycast(IN_BOTH, AHEAD)).toMatchObject({ object: 'strata', part: 'soil', distance: 0 })
+    expect(world.raycast(IN_BOTH, AHEAD, undefined, { ignoreParts: [{ object: 'strata', part: 'soil' }] })).toMatchObject({ object: 'strata', part: 'rock', distance: 0 })
+    expect(world.raycast(IN_BOTH, AHEAD, undefined, { ignoreParts: [{ object: 'strata', part: 'rock' }] })).toMatchObject({ object: 'strata', part: 'soil', distance: 0 })
+    const past = world.raycast(IN_BOTH, AHEAD, undefined, { ignoreParts: [{ object: 'strata', part: 'soil' }, { object: 'strata', part: 'rock' }] })
+    expect(past).toMatchObject({ object: wall, part: 'slab' })
+    // from z = 1.5 to the face of the wall at z = 6.95
+    expect(past?.distance).toBeCloseTo(5.45, 6)
+  })
+
+  it('the occlusion counts both parts once each and pairs their thickness from both ends', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const world = createDestruction()
+    world.register(strata())
+    const hits = createWorldOcclusion(world)([0, 0, -8], [0, 0, 9])
+    expect(hits.map((hit) => hit.material)).toEqual(['dirt', 'concrete'])
+    // the overlap is the soil's from both ends (it answers first), within one step
+    expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 7)).toBeLessThan(WITHIN_ONE_STEP)
+    expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 4)).toBeLessThan(WITHIN_ONE_STEP)
+  })
+})
+
+// What the occlusion reads today where a pillar is cast in a wall, next to the walk of one millimetre. Reported as found: nothing here says it is what it should read.
+describe('createWorldOcclusion over a destruction world with a pillar cast in a wall', () => {
+  const REBAR = { material: 'steel', spacing: 0.15, diameter: 0.01, residualCapacity: 0.15 } as const
+  const wall: PartSpec = {
+    id: 'wall', material: 'brick', shape: { kind: 'box', size: [3, 2.4, 0.13] }, position: [0, 1.2, 0], thickness: 0.13, mass: 1400,
+    units: { size: [0.23, 0.075, 0.11], bond: 'running', mortar: 'plaster' }, breach: { area: 0.25 },
+  }
+  // the same wall plastered over its faces and the pillar: its box stands 2 cm proud of the pillar on each side
+  const coated: PartSpec = { ...wall, shape: { kind: 'box', size: [3, 2.4, 0.17] }, thickness: 0.17, layers: [{ material: 'plaster', thickness: 0.02, faces: 'both' }] }
+  // the pillar at the wall's right end (x from 1.2 to 1.5), inside its box: the wall keeps it as a cast member
+  const pillar: PartSpec = { id: 'pillar', material: 'concrete', shape: { kind: 'box', size: [0.3, 2.4, 0.13] }, position: [1.35, 1.2, 0], structure: { role: 'column' }, reinforcement: REBAR, breach: { area: 0.25 } }
+
+  /** `sunk`: metres the wall is lowered into the real terrain (its top stays above it); without it there is no ground at all. */
+  const sceneOf = (parts: readonly PartSpec[], sunk?: number) => {
+    const world = createDestruction({ seed: 1 })
+    if (sunk !== undefined) world.register(createTerrainImpl(createTerrain({ bounds: [-20, -20, 20, 20], layout: { surface: 'dirt' } }), { id: 'ground' }))
+    world.add({ parts: [...parts] }, { id: 'w', position: [0, -(sunk ?? 0), 0] })
+    const counter = { rays: 0 }
+    const counted = { raycast: (...args: Parameters<typeof world.raycast>) => (counter.rays++, world.raycast(...args)), part: (object: string, part: string) => world.part(object, part) }
+    return { world, counted, counter }
+  }
+  const WALLS = [
+    { label: 'bare', parts: [wall, pillar] },
+    { label: 'plastered', parts: [coated, pillar] },
+  ] as const
+  const ACROSS = [
+    { where: 'the pillar', x: 1.35 },
+    { where: 'the pillar 1 cm from its edge', x: 1.21 },
+    { where: 'the seam between the bricks and the pillar', x: 1.2 },
+    { where: 'the bricks', x: 0.5 },
+  ] as const
+  const PATHS: readonly { how: string; sunk?: number; from: (x: number) => Point; to: (x: number) => Point }[] = [
+    { how: 'in the open', from: (x) => [x, 1.2, 5], to: (x) => [x, 1.2, -5] },
+    { how: 'standing on the ground', sunk: 0, from: (x) => [x, 1.2, 5], to: (x) => [x, 1.2, -5] },
+    { how: 'on a path inside the ground', sunk: 1.6, from: (x) => [x, -0.8, 5], to: (x) => [x, -0.8, -5] },
+    { how: 'from a source buried in the ground to an ear above it', sunk: 1.2, from: (x) => [x, -1, 5], to: (x) => [x, 2, -2.5] },
+  ]
+
+  /** Both walks of one query: the worst scene here (plastered, across the pillar, inside the ground) takes 18. */
+  const RAY_CEILING = 20
+
+  for (const { label, parts } of WALLS) {
+    for (const { where, x } of ACROSS) {
+      for (const path of PATHS) {
+        it(`${label} wall, across ${where}, ${path.how}: the parts the walk of one millimetre counts, in a handful of rays`, async () => {
+          const { createWorldOcclusion } = await import('../src/world-occlusion')
+          const { world, counted, counter } = sceneOf(parts, path.sunk)
+          const hits = createWorldOcclusion(counted)(path.from(x), path.to(x))
+          const reference = worldMillimetreWalk(world, path.from(x), path.to(x))
+          const materials = reference.keys.map((key) => world.part(...(key.split('/') as [string, string]))?.material)
+          expect(hits.map((hit) => hit.material), JSON.stringify(reference.keys)).toEqual(materials)
+          expect(counter.rays, `reference: ${reference.rays} rays`).toBeLessThan(RAY_CEILING)
+        })
+      }
+    }
+  }
+  it('reads the pillar under the plaster as bare concrete 13 cm thick: the 2 cm of plaster on each side is not counted there, and is counted over the bricks', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { counted } = sceneOf([coated, pillar])
+    expect(createWorldOcclusion(counted)([1.35, 1.2, 5], [1.35, 1.2, -5])).toEqual([{ material: 'concrete', thickness: expect.closeTo(0.13, 6) }])
+    expect(createWorldOcclusion(counted)([0.5, 1.2, 5], [0.5, 1.2, -5])).toEqual([{ material: 'brick', thickness: expect.closeTo(0.17, 6) }])
+  })
+
+  it('along the wall the bricks and the pillar are both counted and neither gets a thickness: the way back meets the pillar alone, the wall never answers from inside', async () => {
+    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const FROM: Point = [-4, 1.2, 0.01]
+    const TO: Point = [4, 1.2, 0.01]
+    const cast = sceneOf([wall, pillar])
+    expect(createWorldOcclusion(cast.counted)(FROM, TO)).toEqual([{ material: 'brick' }, { material: 'concrete' }])
+    expect(worldMillimetreWalk(cast.world, FROM, TO).keys).toEqual(['w/wall', 'w/pillar'])
+    // the wall alone, end to end, is paired
+    expect(createWorldOcclusion(sceneOf([wall]).counted)(FROM, TO)).toEqual([{ material: 'brick', thickness: expect.closeTo(3, 6) }])
   })
 })
