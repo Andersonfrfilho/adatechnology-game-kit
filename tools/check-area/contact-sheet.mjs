@@ -20,6 +20,8 @@ export const EMPTY_SHARE = 0.01
 export const FLOAT_LIMIT_M = 0.05
 /** An entry whose lowest point over the cycle is deeper than this under the ground (m) is reported as sinking. */
 export const SINK_LIMIT_M = 0.05
+/** The reading varies a few millimetres between runs; the ledger keeps a verdict from flipping at the limit: an id in known-defects.json is held past limit - this, one that is not only past limit + this. */
+export const LIMIT_TOLERANCE_M = 0.005
 /** A picture of a subject in the hand has less than this share of pixels different from the same view without it: nothing of it is seen. */
 export const PHOTO_EMPTY_SHARE = 0.003
 
@@ -403,6 +405,11 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
   mkdirSync(outDir, { recursive: true })
   // the sheets of an earlier run go, so a catalogue that shrank leaves no stale image behind
   for (const name of readdirSync(outDir)) if (/^\d\d-.*\.png$/.test(name)) rmSync(join(outDir, name))
+  /** @type {{ id: string, what: string }[]} */
+  let ledger = []
+  try { ledger = JSON.parse(readFileSync(knownDefectsFile, 'utf8')) } catch { ledger = [] }
+  /** @param {string} id @param {string[]} kinds */
+  const isLedgered = (id, kinds) => Array.isArray(ledger) && ledger.some((item) => item.id === id && kinds.includes(item.what))
   /** @type {any[]} */
   const index = []
   /** @type {any[]} */
@@ -462,10 +469,9 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
         // floating and sinking are judged on the closed sheets only: the open-leaf sheets stand at the middle of the room, where a table would fool them
         if (!base.openLeaves) {
           // the lowest point over the cycle when it was sampled, else the one of the frozen frame
-          // to the centimetre: the same body reads a millimetre apart between runs (-0.051, then -0.050) and the limit is a whole 0.05
-          const lowestPoint = +(cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0).toFixed(2)
-          if (lowestPoint > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${lowestPoint} m`)
-          if (lowestPoint < -SINK_LIMIT_M) {
+          const lowestPoint = +(cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0)
+          if (lowestPoint > FLOAT_LIMIT_M + (isLedgered(cell.id, ['floats']) ? -LIMIT_TOLERANCE_M : LIMIT_TOLERANCE_M)) observe(cell.id, 'floats', `${lowestPoint} m`)
+          if (lowestPoint < -(SINK_LIMIT_M + (isLedgered(cell.id, ['sinks', 'sinks-as-declared']) ? -LIMIT_TOLERANCE_M : LIMIT_TOLERANCE_M))) {
             const verdict = classifySink ? classifySink(cell.id, lowestPoint) : null
             observe(cell.id, verdict ? verdict.what : 'sinks', { lowestPointM: lowestPoint, heldBy: cell.lowestAt, ...(verdict ? verdict.extra : {}) })
           }

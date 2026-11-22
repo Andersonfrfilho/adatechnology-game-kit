@@ -157,7 +157,7 @@ try {
             const gameCamera = await opened.page.evaluate(gameCameraPoseInPage)
             const printCamera = mode === 'third' ? { kind: 'explicit', ...(await opened.page.evaluate(frameBodyInPage, THIRD_FRAME)) } : { kind: 'game', ...gameCamera }
             await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${pose}  seed none`)
-            return { fixed: { pose, aimRise: rise, walking, clock: { stepS: +FIXED_STEP.toFixed(5), stepsAfterClear: CLOCK_FRAMES }, camera: printCamera }, measured: { hand: measured, gameCamera } }
+            return { fixed: { pose, aimRise: rise, walking, clock: { stepS: +FIXED_STEP.toFixed(5), stepsAfterClear: CLOCK_FRAMES }, camera: walking ? { kind: printCamera.kind } : printCamera }, measured: { hand: measured, gameCamera, ...(walking ? { printCamera } : {}) } }
           },
         })
       }
@@ -195,8 +195,8 @@ try {
       for (let at = 1; at < frames.length; at++) differences.push(+(await differenceShare(opened.context, /** @type {any} */ (frames[0]).png, /** @type {any} */ (frames[at]).png)).toFixed(4))
       const statuses = states.map((state) => /** @type {any} */ (state).used)
       const warmupGapM = warmupDisagreement(/** @type {any[]} */ (states))
-      strips.push({ id: `${weapon.item}/strike-${mode}`, file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, warmupSteps: WARMUP_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' }, useStatusPerStep: statuses, differenceFromFirstFrame: differences, firstSampleHandGapM: warmupGapM, ...(family === 'throwable' ? { notes: ['not byte-stable between runs; see the gaps'] } : {}) })
-      stripNumbers.push({ file: `${file}.png`, bytes: written.bytes, differenceFromFirstFrame: differences, states })
+      strips.push({ id: `${weapon.item}/strike-${mode}`, file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, warmupSteps: WARMUP_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' }, useStatusPerStep: statuses, ...(family === 'throwable' ? { ...(mode === 'first' ? { animated: Math.max(...differences) >= PHOTO_EMPTY_SHARE } : {}), notes: ['not byte-stable between runs; see the gaps'] } : { differenceFromFirstFrame: differences }) })
+      stripNumbers.push({ file: `${file}.png`, bytes: written.bytes, differenceFromFirstFrame: differences, handTargetSpreadM: warmupGapM, states })
       const spread = Math.max(...differences)
       const refused = [...new Set(statuses.filter((status) => status !== 'ok'))]
       const id = `${weapon.item}/strike-${mode}`
@@ -204,6 +204,7 @@ try {
       else if (warmupGapM > WARMUP_AGREE_M) recorder.observe(id, 'strip-warmup-unsettled', { gapM: warmupGapM })
       // judged only when the use was accepted: a refused use (cooldown, drawing, empty) draws nothing for a reason that is not the animation
       if (refused.length) recorder.observe(id, 'use-refused', { statuses: refused })
+      else if (mode === 'third') continue
       else if (family === 'throwable') {
         // the positive control: the throw is known to move pixels, so a static reading here means the measure (or the strip) cannot see motion, and no "not animated" verdict of this run can be trusted
         if (spread < PHOTO_EMPTY_SHARE) recorder.observe(id, 'strip-control-static', { pixelShare: spread })
@@ -214,7 +215,7 @@ try {
 
   const missing = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => !weapon.drawn).map((/** @type {{ id: string }} */ weapon) => weapon.id)
   for (const id of missing) recorder.observe(id, 'no-catalogue-item', `no item weapon_${id}`)
-  const summary = recorder.finish({ notInCatalogue: missing, families, strips, gaps: ['the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.', 'the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified.'] })
+  const summary = recorder.finish({ notInCatalogue: missing, families, strips, gaps: ['the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.', 'the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified.', 'the third-person camera is too far to judge a swing by pixels: the throw that is known to animate changes about 0.003 of the frame there, at the limit'] })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {

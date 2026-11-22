@@ -89,8 +89,7 @@
         0.001,
         0.001,
         0.001
-      ],
-      "firstSampleHandGapM": 0
+      ]
     },
     {
       "id": "weapon_machete/strike-third",
@@ -127,8 +126,7 @@
         0.001,
         0.001,
         0.001
-      ],
-      "firstSampleHandGapM": 0
+      ]
     },
     {
       "id": "weapon_hammer/strike-first",
@@ -161,8 +159,7 @@
         0.001,
         0.001,
         0.001
-      ],
-      "firstSampleHandGapM": 0
+      ]
     },
     {
       "id": "weapon_hammer/strike-third",
@@ -199,8 +196,7 @@
         0.001,
         0.001,
         0.001
-      ],
-      "firstSampleHandGapM": 0
+      ]
     },
     {
       "id": "weapon_molotov/strike-first",
@@ -228,13 +224,7 @@
         "ok",
         "ok"
       ],
-      "differenceFromFirstFrame": [
-        0.0003,
-        0.0012,
-        0.1159,
-        0.1093
-      ],
-      "firstSampleHandGapM": 0,
+      "animated": true,
       "notes": [
         "not byte-stable between runs; see the gaps"
       ]
@@ -269,13 +259,6 @@
         "ok",
         "ok"
       ],
-      "differenceFromFirstFrame": [
-        0.0023,
-        0.0033,
-        0.0033,
-        0.0032
-      ],
-      "firstSampleHandGapM": 0,
       "notes": [
         "not byte-stable between runs; see the gaps"
       ]
@@ -283,7 +266,8 @@
   ],
   "gaps": [
     "the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.",
-    "the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified."
+    "the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified.",
+    "the third-person camera is too far to judge a swing by pixels: the throw that is known to animate changes about 0.003 of the frame there, at the limit"
   ],
   "sheets": [
     {
@@ -1364,18 +1348,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "game",
-        "position": [
-          -0.001,
-          1.7,
-          2.085
-        ],
-        "target": [
-          -0.001,
-          1.7,
-          -2.915
-        ],
-        "fovDeg": 72
+        "kind": "game"
       }
     },
     {
@@ -1480,18 +1453,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "explicit",
-        "position": [
-          3.4,
-          1.25,
-          2.085
-        ],
-        "target": [
-          0,
-          1,
-          2.085
-        ],
-        "fovDeg": 38
+        "kind": "explicit"
       }
     },
     {
@@ -1596,18 +1558,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "game",
-        "position": [
-          0,
-          1.7,
-          2.085
-        ],
-        "target": [
-          0,
-          1.7,
-          -2.915
-        ],
-        "fovDeg": 72
+        "kind": "game"
       }
     },
     {
@@ -1712,18 +1663,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "explicit",
-        "position": [
-          3.399,
-          1.25,
-          2.085
-        ],
-        "target": [
-          -0.001,
-          1,
-          2.085
-        ],
-        "fovDeg": 38
+        "kind": "explicit"
       }
     },
     {
@@ -1828,18 +1768,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "game",
-        "position": [
-          0,
-          1.7,
-          2.085
-        ],
-        "target": [
-          0,
-          1.7,
-          -2.915
-        ],
-        "fovDeg": 72
+        "kind": "game"
       }
     },
     {
@@ -1944,18 +1873,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "explicit",
-        "position": [
-          3.4,
-          1.25,
-          2.085
-        ],
-        "target": [
-          0,
-          1,
-          2.085
-        ],
-        "fovDeg": 38
+        "kind": "explicit"
       }
     },
     {
@@ -2060,18 +1978,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "game",
-        "position": [
-          -0.001,
-          1.7,
-          2.085
-        ],
-        "target": [
-          -0.001,
-          1.7,
-          -2.915
-        ],
-        "fovDeg": 72
+        "kind": "game"
       }
     },
     {
@@ -2176,18 +2083,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "explicit",
-        "position": [
-          3.4,
-          1.25,
-          2.085
-        ],
-        "target": [
-          0,
-          1,
-          2.085
-        ],
-        "fovDeg": 38
+        "kind": "explicit"
       }
     },
     {
@@ -2292,18 +2188,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "game",
-        "position": [
-          0,
-          1.7,
-          2.085
-        ],
-        "target": [
-          0,
-          1.7,
-          -2.915
-        ],
-        "fovDeg": 72
+        "kind": "game"
       }
     },
     {
@@ -2408,18 +2293,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "explicit",
-        "position": [
-          3.399,
-          1.25,
-          2.085
-        ],
-        "target": [
-          -0.001,
-          1,
-          2.085
-        ],
-        "fovDeg": 38
+        "kind": "explicit"
       }
     },
     {
@@ -2524,18 +2398,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "game",
-        "position": [
-          -0.006,
-          1.707,
-          1.891
-        ],
-        "target": [
-          -0.006,
-          1.707,
-          -3.109
-        ],
-        "fovDeg": 72
+        "kind": "game"
       }
     },
     {
@@ -2640,18 +2503,7 @@
         "stepsAfterClear": 40
       },
       "camera": {
-        "kind": "explicit",
-        "position": [
-          3.4,
-          1.25,
-          2.085
-        ],
-        "target": [
-          0,
-          1,
-          2.085
-        ],
-        "fovDeg": 38
+        "kind": "explicit"
       }
     }
   ]
