@@ -4,6 +4,7 @@
 // every image in grid order, the camera and the seed: what a review ledger references) and shots/sanity.json (the share of pixels that differ from the same view with nothing spawned, per image and per entry).
 // A manual review tool, like every page test (CLAUDE.md section 9): do not wire it as a nightly or CI gate. It fails on a defect that is not in known-defects.json and on one listed that is no longer seen,
 // so one transient render glitch would fail it.
+// The measuring (boxOf) reads the vertices of rigid mesh groups; if skinned meshes appear this must use posed vertices (the guard in boxOf throws when one does).
 // Only what the room already exposes is used (spawn, clear, update, pause, setDebugCamera, leaves, useLeaf, environment): nothing here adds game logic and nothing is added to the room.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -66,6 +67,8 @@ async function laySheetInPage(args) {
       // a static batch is drawn from a unit-box placeholder until it is filled: its box says nothing about the entry
       if (!(object.isMesh || object.isSkinnedMesh) || !object.geometry || String(object.name).startsWith('batch:')) return
       for (let parent = object; parent; parent = parent.parent) if (parent.visible === false) return
+      // the bodies are rigid groups moved by the rig, so the vertices as stored are the posed ones; the only SkinnedMeshes are the static batches, skipped above
+      if (object.isSkinnedMesh) throw new Error(`contact-sheet: a visible SkinnedMesh (${object.name || 'unnamed'}): its vertices are in bind pose, measure it with posed vertices (SkinnedMesh.getVertexPosition)`)
       if (!object.geometry.boundingBox) object.geometry.computeBoundingBox()
       const box = object.geometry.boundingBox
       if (!box) return
@@ -96,6 +99,20 @@ async function laySheetInPage(args) {
     }
     return Number.isFinite(min[0]) && max[0] > min[0] ? { min, max, minAt: describe(minAt), maxAt: describe(maxAt) } : null
   }
+
+  // the top of the skull as tools/measure-body-and-cabin.mjs takes it (the first visible mesh of the head group's first child), so hair, a raised hand and a leap are not in it; null for a body without a rig head
+  const headTopOf = (/** @type {any} */ root) => {
+    const headGroup = root.userData && root.userData.rig ? root.userData.rig.headG : null
+    const skull = headGroup && headGroup.children[0] ? headGroup.children[0].children.find((/** @type {any} */ child) => child.isMesh && child.visible) : null
+    if (!skull) return null
+    root.updateMatrixWorld(true)
+    const position = skull.geometry.attributes.position
+    let top = -Infinity
+    for (let at = 0; at < position.count; at++) top = Math.max(top, new Vector(position.getX(at), position.getY(at), position.getZ(at)).applyMatrix4(skull.matrixWorld).y)
+    return Number.isFinite(top) ? top : null
+  }
+
+  const headTopRounded = (/** @type {number | null} */ top) => (top === null ? null : +top.toFixed(3))
 
   // pass 1: every entry at yaw 0 on its own spot, far apart, to measure it
   room.clear()
@@ -266,7 +283,7 @@ async function laySheetInPage(args) {
     const rect = [Math.min(...corners.map((c) => c[0] ?? 0)), Math.min(...corners.map((c) => c[1] ?? 0)), Math.max(...corners.map((c) => c[0] ?? 0)), Math.max(...corners.map((c) => c[1] ?? 0))]
     const base = project([centre[0] ?? 0, 0, centre[2] ?? 0])
     addLabel(entry.label, [base[0] ?? 0, (base[1] ?? 0) + 8], '-50%,0')
-    cells.push({ id: entry.id, label: entry.label, rect, leaves: entry.leaves, size: { dx: +(own?.dx ?? 0).toFixed(3), dy: +(own?.dy ?? 0).toFixed(3), dz: +(own?.dz ?? 0).toFixed(3) }, measuredFrom: dims[index]?.measuredFrom, yaw: +(yaws[index] ?? 0).toFixed(4), floatsAboveGroundM: real ? +(real.min[1] ?? 0).toFixed(3) : null, lowestOverCycleM: lowest.has(index) ? +(lowest.get(index)?.y ?? 0).toFixed(3) : null, lowestAt: lowest.has(index) ? lowest.get(index)?.at : (real ? real.minAt : null), topAt: real ? real.maxAt : null, topM: real ? +(real.max[1] ?? 0).toFixed(3) : null, openingMax: args.openLeaves && standing ? +Math.max(0, ...room.leaves(standing.object.objectId).map((/** @type {string} */ part) => room.leafOpening(standing.object.objectId, part))).toFixed(3) : null, failed: Boolean(entry.failed) })
+    cells.push({ id: entry.id, label: entry.label, rect, leaves: entry.leaves, size: { dx: +(own?.dx ?? 0).toFixed(3), dy: +(own?.dy ?? 0).toFixed(3), dz: +(own?.dz ?? 0).toFixed(3) }, measuredFrom: dims[index]?.measuredFrom, yaw: +(yaws[index] ?? 0).toFixed(4), floatsAboveGroundM: real ? +(real.min[1] ?? 0).toFixed(3) : null, lowestOverCycleM: lowest.has(index) ? +(lowest.get(index)?.y ?? 0).toFixed(3) : null, lowestAt: lowest.has(index) ? lowest.get(index)?.at : (real ? real.minAt : null), headTopM: headTopRounded(standing ? headTopOf(standing.object.root) : null), topAt: real ? real.maxAt : null, topM: real ? +(real.max[1] ?? 0).toFixed(3) : null, openingMax: args.openLeaves && standing ? +Math.max(0, ...room.leaves(standing.object.objectId).map((/** @type {string} */ part) => room.leafOpening(standing.object.objectId, part))).toFixed(3) : null, failed: Boolean(entry.failed) })
   }
   if (args.ruler) {
     const base = at(rulerWidth / 2, 0)
@@ -380,9 +397,9 @@ export async function openRoomPage({ chromium, pageFile, query = '' }) {
 
 /**
  * The recorder of one area: `sheet` lays and photographs one sheet, `finish` writes shots/index.json and shots/sanity.json.
- * @param {{ page: any, context: any, outDir: string, area: string, seed: string, catalogue: { count: number, source: string }, knownDefectsFile: string }} options
+ * @param {{ page: any, context: any, outDir: string, area: string, seed: string, catalogue: { count: number, source: string }, knownDefectsFile: string, classifySink?: (id: string, lowestPointM: number) => { what: string, extra: Record<string, unknown> } | null }} options
  */
-export function createSheetRecorder({ page, context, outDir, area, seed, catalogue, knownDefectsFile }) {
+export function createSheetRecorder({ page, context, outDir, area, seed, catalogue, knownDefectsFile, classifySink }) {
   mkdirSync(outDir, { recursive: true })
   // the sheets of an earlier run go, so a catalogue that shrank leaves no stale image behind
   for (const name of readdirSync(outDir)) if (/^\d\d-.*\.png$/.test(name)) rmSync(join(outDir, name))
@@ -435,7 +452,7 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
         labels: laid.cells.map((/** @type {any} */ cell) => cell.label),
       })
       const emptyCells = laid.cells.filter((/** @type {any} */ _cell, /** @type {number} */ at) => (compared.cells[at] ?? 0) < EMPTY_SHARE).map((/** @type {any} */ cell) => cell.id)
-      sanity.push({ file: `${sheet.file}.png`, assesses: { floating: !base.openLeaves, sinking: !base.openLeaves }, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, lowestOverCycleM: cell.lowestOverCycleM, lowestAt: cell.lowestAt, topM: cell.topM, topAt: cell.topAt, openingMax: cell.openingMax })), empty: emptyCells })
+      sanity.push({ file: `${sheet.file}.png`, assesses: { floating: !base.openLeaves, sinking: !base.openLeaves }, camera: laid.camera, bytes: final.length, width: compared.width, height: compared.height, nonBackgroundShare: +compared.whole.toFixed(4), cells: laid.cells.map((/** @type {any} */ cell, /** @type {number} */ at) => ({ id: cell.id, share: +(compared.cells[at] ?? 0).toFixed(4), measuredFrom: cell.measuredFrom, size: cell.size, floatsAboveGroundM: cell.floatsAboveGroundM, lowestOverCycleM: cell.lowestOverCycleM, lowestAt: cell.lowestAt, topM: cell.topM, headTopM: cell.headTopM, topAt: cell.topAt, openingMax: cell.openingMax })), empty: emptyCells })
       for (const failure of laid.failed) failures.push({ file: `${sheet.file}.png`, ...failure })
       for (const id of emptyCells) failures.push({ file: `${sheet.file}.png`, id, reason: 'rendered empty' })
       for (const failure of laid.failed) observe(failure.id, 'spawn-failed', failure.reason)
@@ -446,7 +463,10 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
           // the lowest point over the cycle when it was sampled, else the one of the frozen frame
           const lowestPoint = cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0
           if (lowestPoint > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${lowestPoint} m`)
-          if (lowestPoint < -SINK_LIMIT_M) observe(cell.id, 'sinks', { lowestPointM: lowestPoint, heldBy: cell.lowestAt })
+          if (lowestPoint < -SINK_LIMIT_M) {
+            const verdict = classifySink ? classifySink(cell.id, lowestPoint) : null
+            observe(cell.id, verdict ? verdict.what : 'sinks', { lowestPointM: lowestPoint, heldBy: cell.lowestAt, ...(verdict ? verdict.extra : {}) })
+          }
         }
         if (base.openLeaves && (cell.openingMax ?? 0) < 0.9) observe(cell.id, 'does-not-open', cell.openingMax)
       }
