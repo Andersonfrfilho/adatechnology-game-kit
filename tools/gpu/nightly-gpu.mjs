@@ -159,6 +159,10 @@ async function main() {
       if (!saved.ok) {
         note(`- room-explosion-base: FAILED, the base was not saved: ${saved.reason}`)
         results.push({ name: 'room-explosion-base', ok: false, log: explosionOut, seconds: 0 })
+      } else if (saved.skipped) {
+        // the night itself was valid, so it does not fail: but a base that is no longer compared must not pass unseen every night until someone re-bases by hand (docs/desempenho-explosoes.md)
+        note(`- room-explosion-base: NOT compared and NOT saved, regrave a base à mão: ${saved.skipped}`)
+        notify('game-kit: room-explosion base de outra placa/driver', `regrave a base à mão (docs/desempenho-explosoes.md): ${saved.skipped}`)
       }
     }
   }

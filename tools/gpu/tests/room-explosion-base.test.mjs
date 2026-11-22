@@ -85,9 +85,10 @@ test('saveBase: a non-c4 night leaves the base file as it was, and writes nothin
   writeFileSync(report, JSON.stringify({ ...night(10), explosive: 'dynamite', machine: MACHINE, pageBuild: CLEAN_BUILD }))
   saveBase(report, baseFile, HEAD)
   assert.equal(existsSync(baseFile), false)
-  writeFileSync(baseFile, JSON.stringify(night(65)))
+  const savedNight = { ...night(65), machine: MACHINE }
+  writeFileSync(baseFile, JSON.stringify(savedNight))
   saveBase(report, baseFile, HEAD)
-  assert.deepEqual(JSON.parse(readFileSync(baseFile, 'utf8')), night(65))
+  assert.deepEqual(JSON.parse(readFileSync(baseFile, 'utf8')), savedNight)
   writeFileSync(report, JSON.stringify({ ...night(60), machine: MACHINE, pageBuild: CLEAN_BUILD }))
   saveBase(report, baseFile, HEAD)
   assert.equal(JSON.parse(readFileSync(baseFile, 'utf8')).frameMetrics[0].f0Ms, 60)

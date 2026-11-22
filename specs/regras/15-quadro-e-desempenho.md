@@ -36,7 +36,7 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **A régua grava qual placa desenhou** (`machine.gpu` no JSON: placa, fabricante, faixa e a saúde do driver) e se recusa a medir em GL por software. Atualizar o sistema
   (driver da NVIDIA incluído) sem reiniciar invalida a medição: em 2026-11-21 o módulo do kernel (615.78.08) ficou diferente da biblioteca (620.73.04) e o quadro depois da
   explosão leu ~105 ms em vez de ~26 ms. Com `NVRM: API mismatch` a régua para e manda reiniciar. Número de kernel, driver ou placa diferentes não se compara: a base de
-  outra placa ou de outro módulo do driver dá `SEM COMPARAÇÃO NESTA RODADA` e fica como está.
+  outra placa, de outro módulo do driver ou sem `machine.gpu` dá `SEM COMPARAÇÃO NESTA RODADA` e fica como está; a rodada diária avisa e notifica até alguém regravar a base à mão. A versão do módulo contra a da biblioteca manda; o journal é só dica.
 - Continua valendo a §9: nada disso roda no CI nem no pre-push.
 
 ## Um dono do tempo do quadro

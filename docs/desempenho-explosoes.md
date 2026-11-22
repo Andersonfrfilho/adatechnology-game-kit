@@ -288,50 +288,8 @@ ROOM_EXPLOSION_PAGE=/tmp/depois.html ROOM_EXPLOSION_OTHER_PAGE=/tmp/antes.html n
 - **A conferência vale também para as dependências do workspace:** o `dist` de um pacote é comparado com o `src` dele e com o de todas as dependências `@adatechnology/*` (`dependencies` e `peerDependencies`, transitivas), porque vários `tsup` embutem dependências (`noExternal`) e não lemos qual. Dependência que na verdade é externa só custa uma reconstrução a mais; a mensagem diz de qual `src` veio o atraso.
 - **Limitação a vigiar:** arquivo rastreado fora de `shots/` em `packages/` ou `examples/` que o `browser-checks` regrave marcaria toda noite como `dirty` (nenhum conhecido hoje).
 - **Limitação aceita:** um `dist` restaurado de cache com mtimes antigos aparece como velho até ser refeito (não há cache de turbo hoje).
-- **A base só aceita relatório de build limpo do commit gravado**: sem `pageBuild`, com `dirty` ou de outro commit, `saveBase` recusa. Na rodada diária a recusa não derruba o script: o passo `room-explosion-base` entra como falho com o motivo no `summary.md`, a noite termina `FAILED` com a notificação normal e a base fica como estava. A base mesclada não guarda `pageBuild` (mistura noites de commits diferentes).
-- **A rodada diária recusa essas variáveis**: `nightly-gpu.mjs` para antes de rodar qualquer passo se `ROOM_EXPLOSION_PAGE` ou `ROOM_EXPLOSION_OTHER_PAGE` estiver definida (vazia conta como não definida), porque a base da noite tem de vir do build do próprio commit.
-- **Uma corrida com página guardada não grava a base**: se `ROOM_EXPLOSION_OUT` for o mesmo arquivo de `ROOM_EXPLOSION_BASE` junto com `ROOM_EXPLOSION_PAGE`, a régua para. A base só é gravada pela rodada diária (`saveBase`), e essa recusa a página guardada.
-
-### O fecho da frente "sem mudar a simulação" (f0 de ~78 para ~64 ms; meta 33,3)
-
-| Tentativa | Ganho medido no f0 (modo de prazo) | Estado |
-|---|---|---|
-| Pintura da casa fora do quadro do golpe (T3.1) | ~13 ms (78 → 65) | entrou |
-| Malha da casa reescrita uma vez por lote | ~1,7 ms, no rótulo `rebuildHost` | entrou |
-| Cortes A–D do `explode` (para na primeira peça, pose reaproveitada, menos alocação) | ~1 ms (dentro do ruído) | entrou, não muda nenhum bit |
-| Cache do furo (`specOf`/`hostsOf`/`riders` por id) | 8 a 13 ms, mas em modo de cota | entrou |
-| Eventos estruturais no tique (T2.2) | 0 (é correção de determinismo) | entrou |
-| Eventos visuais adiados (3 revisões) | ~1 ms (ruído) | não entrou |
-| Som montado pela fila | 0 na versão correta (o ganho vinha do teto de 4 sons) | não entrou |
-| Corte da parede adiado (item F) | 0, e gravava o amassado na casca | não entrou |
-| `reachAt` / grade de peças | 0: a sala usa `blastPlain`, o `reachAt` roda 0 vezes | sem o que cortar |
-
-O que sobra é o laço por peça do `explode` (~17,6 ms, 521 peças) e a aplicação dos eventos estruturais (~17 ms, a maior parte malha, marcas, efeitos e som
-espalhados em itens pequenos): trabalho que muda a simulação, a fronteira da decisão D5. Não repita as tentativas marcadas "não entrou" sem uma razão nova.
-
-### Depois de mergear as travas: gravar a base no modo de prazo (uma vez, à mão)
-
-A base guardada pela rodada diária (`~/.cache/adatechnology-game-kit/room-explosion-base.json`, ver `cacheDir` em `tools/gpu/nightly-gpu.mjs`) foi medida em modo
-de cota e não é comparável: a primeira rodada depois da mudança não compara nada (`SEM COMPARAÇÃO NESTA RODADA`). Para a base nascer de uma rodada conferida e não da
-primeira noite que acontecer, rode uma vez, com a máquina quieta (carga < 1,5), a página refeita e o relatório lido antes de gravar:
-
-```bash
-pnpm build && flock ~/.cache/adatechnology-game-kit/perf-measure.lock env ROOM_EXPLOSION_FRAME_PARTS=1 \
-  ROOM_EXPLOSION_OUT=/tmp/room-explosion-prazo.json node tools/gpu/perf-gate.mjs room-explosion
-# confira /tmp/room-explosion-prazo.json (budgetMode "deadline", frameMetrics sem problemas, gate.compared) e então:
-cp /tmp/room-explosion-prazo.json ~/.cache/adatechnology-game-kit/room-explosion-base.json
-```
-
-### Qual placa desenhou (2026-11-21)
-
-O relatório da régua da explosão grava `machine.gpu` = `{ renderer, vendor, tier, driver: { module, userspace, mismatch } }`, e a primeira linha do log mostra a placa ao lado
-da página. `module` é a versão do módulo do kernel (`/proc/driver/nvidia/version`), `userspace` a da biblioteca (`libnvidia-ml.so.*`, ou o `nvidia-smi` quando ele responde) e
-`mismatch` é `true`, `false` ou `'unknown'` (fora do Linux, sem NVIDIA ou sem poder ler). O `NVRM: API mismatch` no `journalctl -k -b` e o "Driver/library version mismatch" do
-`nvidia-smi` também valem como `true`.
-
-- **Atualizou o sistema sem reiniciar? Reinicie antes de medir.** Em 2026-11-21 o driver foi atualizado sem reiniciar (biblioteca 620.73.04, módulo 615.78.08): seis horas de
-  rodadas leram o quadro depois da explosão em ~105 ms em vez de ~26 ms. Com `mismatch: true` numa NVIDIA a régua falha antes de abrir a página medida; com `'unknown'` avisa e segue.
-- **GL por software não mede tempo.** A régua da explosão recusa SwiftShader, llvmpipe e afins (antes ela passava direto pelo teste do `perf-gate`, que só pulava o gate normal).
-- **A base só aceita relatório com `machine.gpu`, em placa de verdade e sem `mismatch: true`.** Uma noite em outra placa ou em outro módulo do driver não é comparada nem
-  mesclada à base (`SEM COMPARAÇÃO NESTA RODADA`, com o motivo), e a base fica como está. Para passar a medir numa configuração nova, troque a base à mão, como em "gravar a
-  base no modo de prazo" acima (relatório conferido, depois `cp` por cima do arquivo da base). Base antiga, sem `machine.gpu`, ainda é comparada e passa a registrar a placa na primeira noite que a mescla.
+- **A base só aceita relatório com `machine.gpu`, em placa de verdade e sem `mismatch: true`.** Uma noite em outra placa (nome sem os sufixos de versão) ou em outro módulo do
+  driver não é comparada nem mesclada (`SEM COMPARAÇÃO NESTA RODADA`, um motivo por causa) e a base fica como está. **Base sem `machine.gpu` também não é comparada**: os números
+  dela podem ser de outro driver (a base anterior a este campo cai aqui). A rodada diária, nesses casos, escreve uma linha no resumo e manda notificação crítica a cada noite
+  (sem falhar a noite: a medição dela vale, só a base não anda). Para passar a medir na configuração nova, troque a base à mão, como em "gravar a base no modo de prazo" acima
+  (relatório conferido, depois `cp` por cima do arquivo da base). Nada troca a base sozinho.

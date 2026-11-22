@@ -10,7 +10,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
-import { assertReportHasHealthyGpu, gpuMismatchReason } from './gpu-info.mjs'
+import { assertReportHasHealthyGpu, gpuMismatchReasons } from './gpu-info.mjs'
 import { DEFAULT_EXPLOSIVE } from './room-explosion-frame.mjs'
 
 const keyOf = (/** @type {{ variant: string, throttle: number, kind: string }} */ entry) => `${entry.variant}|${entry.throttle}|${entry.kind}`
@@ -32,6 +32,9 @@ const mergeEntries = (base, now, fields) => {
   return [...merged.values()]
 }
 
+/** Why a night is not merged into the base (another GPU or driver, or a base that does not record its GPU), or undefined. @param {BaseReport} base @param {BaseReport} report @returns {string | undefined} */
+export const skipReasonOf = (base, report) => gpuMismatchReasons(base.machine?.gpu, report.machine?.gpu).join('; ') || undefined
+
 /**
  * The base to save after a night that passed. Without a base, or with one measured in another mode or with another explosive, the night is the base; otherwise nothing rises.
  * A report with an explosive other than c4 is never the base nor merged into it: the base stays as it was (undefined when there was none). The same for a report
@@ -41,7 +44,7 @@ const mergeEntries = (base, now, fields) => {
  */
 export const mergeBase = (base, report) => {
   if ((report.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return /** @type {TReport | undefined} */ (base)
-  if (base && gpuMismatchReason(base.machine?.gpu, report.machine?.gpu)) return /** @type {TReport} */ (base)
+  if (base && skipReasonOf(base, report)) return /** @type {TReport} */ (base)
   if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return report
   // the merged numbers come from several nights and commits, so no single stamp or hash describes them
   const { pageSha256: _lastNightPage, pageBuild: _lastNightBuild, ...reportWithoutPage } = report
@@ -81,7 +84,7 @@ export const assertReportIsOfHead = (report, head) => {
 
 /**
  * Saves the base after a night that passed: `mergeBase` of the file's base and the night's report, which must be of a clean build of `head`. Writes nothing when `mergeBase` gives nothing (a non-c4 report and no base).
- * @param {string} reportFile @param {string} baseFile @param {string} head
+ * @param {string} reportFile @param {string} baseFile @param {string} head @returns {{ skipped?: string }}
  */
 export const saveBase = (reportFile, baseFile, head) => {
   const report = JSON.parse(readFileSync(reportFile, 'utf8'))
@@ -90,16 +93,17 @@ export const saveBase = (reportFile, baseFile, head) => {
   const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
   const merged = mergeBase(base, report)
   if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))
+  const skipped = base && (report.explosive ?? DEFAULT_EXPLOSIVE) === DEFAULT_EXPLOSIVE ? skipReasonOf(base, report) : undefined
+  return skipped ? { skipped } : {}
 }
 
 /**
- * `saveBase` that reports a refusal (or any failure) instead of throwing, for a caller that must record it and go on.
- * @param {string} reportFile @param {string} baseFile @param {string} head @returns {{ ok: true } | { ok: false, reason: string }}
+ * `saveBase` that reports a refusal (or any failure) instead of throwing, for a caller that must record it and go on; `skipped` says why the base was left as it was.
+ * @param {string} reportFile @param {string} baseFile @param {string} head @returns {{ ok: true, skipped?: string } | { ok: false, reason: string }}
  */
 export const trySaveBase = (reportFile, baseFile, head) => {
   try {
-    saveBase(reportFile, baseFile, head)
-    return { ok: true }
+    return { ok: true, ...saveBase(reportFile, baseFile, head) }
   } catch (error) {
     return { ok: false, reason: error instanceof Error ? error.message : String(error) }
   }

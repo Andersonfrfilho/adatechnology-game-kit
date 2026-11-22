@@ -4,16 +4,17 @@
 // The pure parts are exported for tests; `readDriverHealth` is the thin wrapper over the machine and never throws.
 
 import { spawnSync } from 'node:child_process'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync, realpathSync } from 'node:fs'
 
 /** @typedef {{ renderer: string, vendor: string, tier: 'discrete' | 'integrated' }} GpuIdentity */
-/** @typedef {{ module: string | null, userspace: string | null, mismatch: boolean | 'unknown' }} DriverHealth */
+/** @typedef {{ module: string | null, userspace: string | null, mismatch: boolean | 'unknown', reason?: string, journalLines?: number }} DriverHealth */
 /** @typedef {GpuIdentity & { driver: DriverHealth }} Gpu */
 
 export const SOFTWARE_RENDERERS = /swiftshader|llvmpipe|softpipe|software|unknown/i
 const NVIDIA_PATTERN = /nvidia/i
 const SMI_MISMATCH = /driver\/library version mismatch|failed to initialize nvml/i
 const API_MISMATCH = /NVRM: API mismatch/i
+const BROWSER_CLIENT = /chrome|chromium|playwright|node/i
 const UNKNOWN_DRIVER = /** @type {DriverHealth} */ ({ module: null, userspace: null, mismatch: 'unknown' })
 
 /** @param {string} renderer */
@@ -50,31 +51,50 @@ export const assertGpuIsHardware = (identity) => {
 /** "NVRM version: NVIDIA UNIX Open Kernel Module for x86_64  615.78.08  Release Build ..." -> "615.78.08". @param {string | undefined} text @returns {string | null} */
 export const parseModuleVersion = (text) => /NVRM version:.*?\s(\d+\.\d+(?:\.\d+)?)\s/.exec(text ?? '')?.[1] ?? null
 
-/** The versions of the libnvidia-ml.so.<version> files of a library directory (the userspace the browser and nvidia-smi load). @param {string[]} fileNames @returns {string[]} */
-export const userspaceVersionsOf = (fileNames) =>
-  fileNames.flatMap((name) => /^libnvidia-ml\.so\.(\d+\.\d+(?:\.\d+)?)$/.exec(name)?.[1] ?? [])
-
 /** `nvidia-smi --query-gpu=driver_version --format=csv,noheader` output -> the version, or null. @param {string | undefined} text @returns {string | null} */
 export const parseSmiVersion = (text) => /^(\d+\.\d+(?:\.\d+)?)$/m.exec((text ?? '').trim())?.[1] ?? null
 
+/** The version in the file name a `libnvidia-ml.so.1` link resolves to. @param {string | undefined} path @returns {string | null} */
+export const versionOfLibraryPath = (path) => /libnvidia-ml\.so\.(\d+\.\d+(?:\.\d+)?)$/.exec(path ?? '')?.[1] ?? null
+
+/** The `NVRM: API mismatch` lines of a kernel log; `clientOnly` keeps those that name the browser or the gauge as the client. @param {string | undefined} text @param {boolean} clientOnly @returns {string[]} */
+export const apiMismatchLinesOf = (text, clientOnly) =>
+  (text ?? '').split('\n').filter((line) => API_MISMATCH.test(line) && (!clientOnly || BROWSER_CLIENT.test(line)))
+
 /**
- * The health of the NVIDIA driver from what the machine says; a positive signal of mismatch (versions that differ, nvidia-smi's own failure text, the kernel's
- * `NVRM: API mismatch`) wins, `false` needs both versions known and equal, anything else is `unknown`.
- * @param {{ moduleText?: string, libraryNames?: string[], smi?: { ok: boolean, text: string }, journalText?: string }} sources
+ * The health of the NVIDIA driver. The VERSION COMPARISON is authoritative: the kernel module (/proc/driver/nvidia/version) against the userspace library on disk; equal and readable is
+ * `false` whatever the journal says (a line of the boot may come from a Docker VM or a flatpak, or be of a mismatch that healed). Without the userspace version, `nvidia-smi` decides (its
+ * failure text is the mismatch signal; a success is healthy). Only with both unreadable does the journal count, and then only the lines naming the browser as the client.
+ * @param {{ moduleText?: string, userspaceVersion?: string | null, smi?: () => { ok: boolean, text: string } | undefined, journalText?: string }} sources
  * @returns {DriverHealth}
  */
-export const driverHealthOf = ({ moduleText, libraryNames = [], smi, journalText }) => {
+export const driverHealthOf = ({ moduleText, userspaceVersion = null, smi, journalText }) => {
   const module = parseModuleVersion(moduleText)
-  const libraryVersions = userspaceVersionsOf(libraryNames)
-  const smiVersion = smi?.ok ? parseSmiVersion(smi.text) : null
-  const userspace = module !== null && libraryVersions.includes(module) ? module : (libraryVersions[0] ?? smiVersion)
-  const hasSignal = (smi !== undefined && !smi.ok && SMI_MISMATCH.test(smi.text)) || API_MISMATCH.test(journalText ?? '')
-  if (hasSignal || (module !== null && userspace !== null && module !== userspace)) return { module, userspace, mismatch: true }
-  if (module !== null && userspace !== null) return { module, userspace, mismatch: false }
-  return { module, userspace, mismatch: 'unknown' }
+  const journalLines = apiMismatchLinesOf(journalText, false).length
+  if (module !== null && userspaceVersion !== null) return { module, userspace: userspaceVersion, mismatch: module !== userspaceVersion, journalLines }
+  const smiResult = smi?.()
+  if (smiResult && !smiResult.ok && SMI_MISMATCH.test(smiResult.text)) return { module, userspace: userspaceVersion, mismatch: true, reason: 'nvidia-smi: driver/library version mismatch', journalLines }
+  const smiVersion = smiResult?.ok ? parseSmiVersion(smiResult.text) : null
+  if (smiVersion !== null) return { module, userspace: smiVersion, mismatch: false, reason: 'userspace library not found, nvidia-smi answers', journalLines }
+  if (module === null && userspaceVersion === null && apiMismatchLinesOf(journalText, true).length > 0) return { module, userspace: userspaceVersion, mismatch: true, reason: 'journal: NVRM API mismatch from the browser', journalLines }
+  return { module, userspace: userspaceVersion, mismatch: 'unknown', reason: userspaceVersion === null ? 'userspace not found' : 'kernel module version not readable', journalLines }
 }
 
-/** @param {() => string | undefined} read @returns {string | undefined} */
+const LIBRARY_DIRECTORIES = ['/usr/lib', '/usr/lib64', '/usr/lib/x86_64-linux-gnu']
+const TOOL_TIMEOUT_MS = 1000
+
+/** @param {string} command @param {string[]} args @returns {{ ok: boolean, text: string } | undefined} undefined when the tool is missing, times out or cannot run */
+const runTool = (command, args) => {
+  const result = spawnSync(command, args, { encoding: 'utf8', timeout: TOOL_TIMEOUT_MS, maxBuffer: 1024 * 1024 })
+  if (result.error || result.status === null) return undefined
+  return { ok: result.status === 0, text: `${result.stdout ?? ''}${result.stderr ?? ''}` }
+}
+
+/** @typedef {{ readFile: (path: string) => string, realpath: (path: string) => string, run: (command: string, args: string[]) => { ok: boolean, text: string } | undefined }} MachineAccess */
+/** @type {MachineAccess} */
+const REAL_MACHINE = { readFile: (path) => readFileSync(path, 'utf8'), realpath: (path) => realpathSync(path), run: runTool }
+
+/** @template T @param {() => T} read @returns {T | undefined} */
 const safely = (read) => {
   try {
     return read()
@@ -83,34 +103,32 @@ const safely = (read) => {
   }
 }
 
-const LIBRARY_DIRECTORIES = ['/usr/lib', '/usr/lib64', '/usr/lib/x86_64-linux-gnu']
-
-/** @param {string} command @param {string[]} args @returns {{ ok: boolean, text: string } | undefined} undefined when the tool is missing */
-const runTool = (command, args) => {
-  const result = spawnSync(command, args, { encoding: 'utf8', timeout: 10000, maxBuffer: 64 * 1024 * 1024 })
-  if (result.error) return undefined
-  return { ok: result.status === 0, text: `${result.stdout ?? ''}${result.stderr ?? ''}` }
+/**
+ * The userspace library the loader would use: the target of `libnvidia-ml.so.1` in the first of the standard directories that has one (the order of `directories`; a stale file left
+ * in a later directory or beside the link never counts). Its file name carries the version.
+ * @param {{ directories?: string[], realpath: MachineAccess['realpath'] }} params @returns {string | null}
+ */
+export const userspaceVersionOf = ({ directories = LIBRARY_DIRECTORIES, realpath }) => {
+  for (const directory of directories) {
+    const version = versionOfLibraryPath(safely(() => realpath(`${directory}/libnvidia-ml.so.1`)))
+    if (version !== null) return version
+  }
+  return null
 }
 
 /**
- * Reads the driver health on Linux with an NVIDIA renderer; anywhere else it is `unknown` without looking. Best effort: a missing tool or file leaves its source out.
- * @param {{ platform?: string, renderer: string }} params
+ * Reads the driver health on Linux with an NVIDIA renderer; anywhere else it is `unknown` without looking. Best effort and never throws: a missing tool, a timeout or a
+ * refused read leaves its source out. The child processes together stay under 3 s (1 s each, `nvidia-smi` only when the library version is unreadable).
+ * @param {{ platform?: string, renderer: string, machine?: MachineAccess, libraryDirectories?: string[] }} params
  * @returns {DriverHealth}
  */
-export const readDriverHealth = ({ platform = process.platform, renderer }) => {
+export const readDriverHealth = ({ platform = process.platform, renderer, machine = REAL_MACHINE, libraryDirectories }) => {
   if (platform !== 'linux' || !isNvidia(renderer)) return UNKNOWN_DRIVER
-  const libraryNames = LIBRARY_DIRECTORIES.flatMap((directory) => {
-    try {
-      return readdirSync(directory)
-    } catch {
-      return []
-    }
-  })
   return driverHealthOf({
-    moduleText: safely(() => readFileSync('/proc/driver/nvidia/version', 'utf8')),
-    libraryNames,
-    smi: runTool('nvidia-smi', ['--query-gpu=driver_version', '--format=csv,noheader']),
-    journalText: runTool('journalctl', ['-k', '-b', '--no-pager'])?.text,
+    moduleText: safely(() => machine.readFile('/proc/driver/nvidia/version')),
+    userspaceVersion: userspaceVersionOf({ ...(libraryDirectories ? { directories: libraryDirectories } : {}), realpath: machine.realpath }),
+    smi: () => safely(() => machine.run('nvidia-smi', ['--query-gpu=driver_version', '--format=csv,noheader'])),
+    journalText: safely(() => machine.run('journalctl', ['-k', '-b', '--no-pager', '--since', '-10min', '-n', '200'])?.text),
   })
 }
 
@@ -123,22 +141,27 @@ export const driverVerdictOf = (gpu) => {
   if (gpu.driver.mismatch === true) {
     throw new Error(`room-explosion: NVIDIA driver in API mismatch (kernel module ${gpu.driver.module ?? '?'}, userspace ${gpu.driver.userspace ?? '?'}): the frame times are wrong, reboot the machine and run again`)
   }
-  if (gpu.driver.mismatch === 'unknown') return 'room-explosion: WARNING the NVIDIA driver health could not be read (module/userspace versions unknown): check `dmesg`/`journalctl -k -b` for `NVRM: API mismatch` before trusting the times'
+  if (gpu.driver.mismatch === 'unknown') return `room-explosion: WARNING the NVIDIA driver health could not be read (${gpu.driver.reason ?? 'versions unknown'}): check dmesg or journalctl -k -b for NVRM: API mismatch before trusting the times`
   return undefined
 }
 
+/** The GPU name without version-like parts ("OpenGL ES 3.2", "Mesa 24.1"), so a driver bump alone does not make it another GPU. @param {string} renderer */
+export const normalizedGpuName = (renderer) => renderer.replace(/\b\d+(?:\.\d+)+\b/g, '').replace(/\s+/g, ' ').replace(/\s+([,)/])/g, '$1').trim()
+
 /**
- * Why a base measured on another GPU or driver must not be compared with this run, or undefined when it can be. A base without a recorded GPU (older than this field) is compared.
+ * Why a base must not be compared with this run, one reason per cause (another GPU, another driver module, a base that does not say which GPU it was measured on); empty when it can be.
  * @param {{ renderer?: string, driver?: { module?: string | null } } | undefined} baseGpu @param {{ renderer?: string, driver?: { module?: string | null } } | undefined} nowGpu
- * @returns {string | undefined}
+ * @returns {string[]}
  */
-export const gpuMismatchReason = (baseGpu, nowGpu) => {
-  if (!baseGpu?.renderer || !nowGpu?.renderer) return undefined
-  if (baseGpu.renderer !== nowGpu.renderer) return `a base medida na placa ${baseGpu.renderer}, esta rodada em ${nowGpu.renderer}`
+export const gpuMismatchReasons = (baseGpu, nowGpu) => {
+  if (!nowGpu?.renderer) return []
+  if (!baseGpu?.renderer) return ['a base não registra a placa (anterior ao campo machine.gpu): os números dela podem ser de outro driver']
+  const reasons = []
+  if (normalizedGpuName(baseGpu.renderer) !== normalizedGpuName(nowGpu.renderer)) reasons.push(`a base medida na placa ${baseGpu.renderer}, esta rodada em ${nowGpu.renderer}`)
   const was = baseGpu.driver?.module
   const now = nowGpu.driver?.module
-  if (was && now && was !== now) return `a base medida com o driver ${was}, esta rodada com ${now}`
-  return undefined
+  if (was && now && was !== now) reasons.push(`a base medida com o driver ${was}, esta rodada com ${now}`)
+  return reasons
 }
 
 /**

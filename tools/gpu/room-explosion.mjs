@@ -69,7 +69,7 @@ import { cpus, loadavg } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-import { assertGpuIsHardware, driverVerdictOf, gpuMismatchReason, readDriverHealth, readGpuIdentity } from './gpu-info.mjs'
+import { assertGpuIsHardware, driverVerdictOf, gpuMismatchReasons, readDriverHealth, readGpuIdentity } from './gpu-info.mjs'
 import { savedPagesOf } from './room-explosion-base.mjs'
 import { assertStampIsHead, pageHashOf, parsePageStamp } from './page-stamp.mjs'
 import { assertDistsAreFresh } from './stale-dist.mjs'
@@ -149,7 +149,7 @@ export const isBlastingExplosive = (def) => def.energy > 0 && !def.smoke && !def
  */
 export const explosionGateOf = ({ measure, savedBase, mode, explosive, gated, gpu }) => {
   const isBaseInMode = isBaseComparable(savedBase, mode, explosive)
-  const gpuReason = isBaseInMode ? gpuMismatchReason(savedBase?.machine?.gpu, gpu) : undefined
+  const gpuReason = (isBaseInMode ? gpuMismatchReasons(savedBase?.machine?.gpu, gpu) : []).join('; ') || undefined
   const frameVerdict = frameGate({ measure, base: gpuReason ? undefined : savedBase, mode, variant: DEFAULT_VARIANT, gated, explosive })
   const verdict = gpuReason && frameVerdict.status === 'no-base' ? { ...frameVerdict, status: /** @type {const} */ ('other-gpu'), reason: gpuReason } : frameVerdict
   return { isBaseInMode: isBaseInMode && !gpuReason, gpuReason, frameVerdict: verdict }
