@@ -68,9 +68,9 @@ async function holdInPage({ weaponId, mode, rise, walking, withSubject, frames }
 
 /**
  * Runs in the page: the weapon in the hand, the use started (a tap, or held `hold` seconds), then `steps` exact steps of the fixed clock and the room paused: the swing or the throw at that time.
- * @param {{ weaponId: string, mode: string, steps: number, hold: number, settle: number }} args
+ * @param {{ weaponId: string, mode: string, steps: number, hold: number, settle: number, warmup: number }} args
  */
-async function strikeInPage({ weaponId, mode, steps, hold, settle }) {
+async function strikeInPage({ weaponId, mode, steps, hold, settle, warmup }) {
   const room = /** @type {any} */ (window).__testRoom
   room.setDebugCamera(null)
   if (room.paused) room.resume()
@@ -85,29 +85,32 @@ async function strikeInPage({ weaponId, mode, steps, hold, settle }) {
   for (let frame = 0; frame < settle; frame++) room.update(1 / 60)
   room.waitUntilReady()
   room.look([0, 1.7, 6], [0, 1.7, -4])
+  // look() moves the player, but the hand targets and the frame only follow on an update: without these steps sample 0 would still carry the previous scene
+  for (let frame = 0; frame < warmup; frame++) room.update(1 / 60)
+  const round = (/** @type {number[] | undefined} */ list) => (list ? list.map((value) => +value.toFixed(3)) : null)
+  const handBeforeUse = round(room.handState().targets?.R?.position)
   const used = room.use(hold)
   for (let frame = 0; frame < steps; frame++) room.update(1 / 60)
   const phase = room.tool.phase ?? null
   const hand = room.handState()
-  const round = (/** @type {number[] | undefined} */ list) => (list ? list.map((value) => +value.toFixed(3)) : null)
   room.pause()
-  return { used: String(used), phase: typeof phase === 'string' ? phase : phase === null ? null : 'object', handR: round(hand.targets?.R?.position), handL: round(hand.targets?.L?.position) }
+  return { used: String(used), handBeforeUse, phase: typeof phase === 'string' ? phase : phase === null ? null : 'object', handR: round(hand.targets?.R?.position), handL: round(hand.targets?.L?.position) }
 }
 
 /** Steps of the fixed clock a sample waits before it starts, for the previous blow to land and the cooldowns to run out (4 s), before and after the weapon is put in hand. */
 const BLOW_SETTLE_STEPS = 240
 
-/** A hand target that moves less than this (metres; the states are rounded to a millimetre) is not moving. */
-const HAND_MOVED_M = 0.005
+/** Steps of the fixed clock after the look and before the use, for the hand targets and the frame to follow the player: in the probe the targets equal the ones after 12 steps to 0.1 mm from the first step on, in both cameras. */
+const WARMUP_STEPS = 1
 
-/** The farthest each hand target gets from where it was in the first sample, over the samples. @param {any[]} states */
-function handTargetDeltas(states) {
-  const farthest = (/** @type {'handR' | 'handL'} */ key) => {
-    const first = states[0]?.[key]
-    if (!first) return 0
-    return +Math.max(...states.map((state) => (state[key] ? Math.hypot(...state[key].map((/** @type {number} */ value, /** @type {number} */ at) => value - first[at])) : 0))).toFixed(3)
-  }
-  return { R: farthest('handR'), L: farthest('handL') }
+/** How far (m) the hand target before the use may differ between the samples of a strip for the warm-up to count as settled. */
+const WARMUP_AGREE_M = 0.002
+
+/** The farthest any sample's hand target before the use is from the first sample's, or null when a sample has none. @param {any[]} states */
+function warmupDisagreement(states) {
+  const first = states[0]?.handBeforeUse
+  if (!first || states.some((state) => !state.handBeforeUse)) return null
+  return +Math.max(...states.map((state) => Math.hypot(...state.handBeforeUse.map((/** @type {number} */ value, /** @type {number} */ at) => value - first[at])))).toFixed(4)
 }
 
 const opened = await openRoomPage({ chromium, pageFile: page })
@@ -181,7 +184,7 @@ try {
       /** @type {unknown[]} */
       const states = []
       for (const steps of STRIKE_STEPS) {
-        states.push(await opened.page.evaluate(strikeInPage, { weaponId: weapon.id, mode, steps, hold, settle: BLOW_SETTLE_STEPS }))
+        states.push(await opened.page.evaluate(strikeInPage, { weaponId: weapon.id, mode, steps, hold, settle: BLOW_SETTLE_STEPS, warmup: WARMUP_STEPS }))
         if (mode === 'third') await opened.page.evaluate(frameBodyInPage, THIRD_FRAME)
         await opened.page.evaluate(captionInPage, `${file}  ${weapon.id}  ${mode} person  ${steps} steps after the use`)
         await opened.page.waitForTimeout(500)
@@ -191,21 +194,27 @@ try {
       const differences = []
       for (let at = 1; at < frames.length; at++) differences.push(+(await differenceShare(opened.context, /** @type {any} */ (frames[0]).png, /** @type {any} */ (frames[at]).png)).toFixed(4))
       const statuses = states.map((state) => /** @type {any} */ (state).used)
-      const handMoved = handTargetDeltas(/** @type {any[]} */ (states))
-      strips.push({ id: `${weapon.item}/strike-${mode}`, file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' }, useStatusPerStep: statuses, handTargetMaxDeltaM: handMoved, differenceFromFirstFrame: differences, ...(family === 'throwable' ? { notes: ['not byte-stable between runs; see the gaps'] } : {}) })
+      const warmupGapM = warmupDisagreement(/** @type {any[]} */ (states))
+      strips.push({ id: `${weapon.item}/strike-${mode}`, file: `${file}.png`, family: `strike-${family}`, subject: weapon.item, mode, hold, stepsAfterUse: STRIKE_STEPS, warmupSteps: WARMUP_STEPS, stepS: +FIXED_STEP.toFixed(5), camera: mode === 'third' ? { kind: 'explicit', ...THIRD_FRAME } : { kind: 'game' }, useStatusPerStep: statuses, differenceFromFirstFrame: differences, firstSampleHandGapM: warmupGapM, ...(family === 'throwable' ? { notes: ['not byte-stable between runs; see the gaps'] } : {}) })
       stripNumbers.push({ file: `${file}.png`, bytes: written.bytes, differenceFromFirstFrame: differences, states })
       const spread = Math.max(...differences)
       const refused = [...new Set(statuses.filter((status) => status !== 'ok'))]
+      const id = `${weapon.item}/strike-${mode}`
+      if (warmupGapM === null) recorder.observe(id, 'hand-state-missing', 'room.handState gave no right-hand target in at least one sample')
+      else if (warmupGapM > WARMUP_AGREE_M) recorder.observe(id, 'strip-warmup-unsettled', { gapM: warmupGapM })
       // judged only when the use was accepted: a refused use (cooldown, drawing, empty) draws nothing for a reason that is not the animation
-      if (refused.length) recorder.observe(`${weapon.item}/strike-${mode}`, 'use-refused', { statuses: refused })
-      else if (spread < PHOTO_EMPTY_SHARE && handMoved.R < HAND_MOVED_M && handMoved.L < HAND_MOVED_M) recorder.observe(`${weapon.item}/strike-${mode}`, 'use-not-animated', { pixelShare: spread, handTargetMaxDeltaM: handMoved })
+      if (refused.length) recorder.observe(id, 'use-refused', { statuses: refused })
+      else if (family === 'throwable') {
+        // the positive control: the throw is known to move pixels, so a static reading here means the measure (or the strip) cannot see motion, and no "not animated" verdict of this run can be trusted
+        if (spread < PHOTO_EMPTY_SHARE) recorder.observe(id, 'strip-control-static', { pixelShare: spread })
+      } else if (spread < PHOTO_EMPTY_SHARE) recorder.observe(id, 'use-not-animated', { pixelShare: +spread.toFixed(3) })
     }
   }
   writeFileSync(join(here, 'shots/phase0-sanity.json'), JSON.stringify({ strips: stripNumbers }, null, 2) + '\n')
 
   const missing = arsenal.filter((/** @type {{ drawn: boolean }} */ weapon) => !weapon.drawn).map((/** @type {{ id: string }} */ weapon) => weapon.id)
   for (const id of missing) recorder.observe(id, 'no-catalogue-item', `no item weapon_${id}`)
-  const summary = recorder.finish({ notInCatalogue: missing, families, strips, gaps: ['the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.'] })
+  const summary = recorder.finish({ notInCatalogue: missing, families, strips, gaps: ['the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.', 'the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified.'] })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {

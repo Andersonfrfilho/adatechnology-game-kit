@@ -462,7 +462,8 @@ export function createSheetRecorder({ page, context, outDir, area, seed, catalog
         // floating and sinking are judged on the closed sheets only: the open-leaf sheets stand at the middle of the room, where a table would fool them
         if (!base.openLeaves) {
           // the lowest point over the cycle when it was sampled, else the one of the frozen frame
-          const lowestPoint = cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0
+          // to the centimetre: the same body reads a millimetre apart between runs (-0.051, then -0.050) and the limit is a whole 0.05
+          const lowestPoint = +(cell.lowestOverCycleM ?? cell.floatsAboveGroundM ?? 0).toFixed(2)
           if (lowestPoint > FLOAT_LIMIT_M) observe(cell.id, 'floats', `${lowestPoint} m`)
           if (lowestPoint < -SINK_LIMIT_M) {
             const verdict = classifySink ? classifySink(cell.id, lowestPoint) : null

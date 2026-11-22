@@ -109,7 +109,7 @@ try {
   }
   // the player body: walk, run, crouch strips and the foot numbers at 0 to 7 m/s (T0.1 and T0.2)
   const player = await recordPlayerLocomotion({ opened, outDir: join(here, 'shots'), firstNumber: number, recorder })
-  const summary = recorder.finish({ locomotion, playerStrips: player.strips, gaps: ['undead and professions are walked in place by the module: no ground speed, so no stance slide can be measured for them (only the player body moves)', 'no crouch or aim-walk clip is exposed for the undead types'] })
+  const summary = recorder.finish({ locomotion, playerStrips: player.strips, gaps: ['undead and professions are walked in place by the module: no ground speed, so no stance slide can be measured for them (only the player body moves)', 'no crouch or aim-walk clip is exposed for the undead types', 'the lowest point of one undead type is not the same on every sheet or run (zombie_walker read -0.043 to -0.051 m, and the colour of the part that holds it changes between sheets): each spawn looks to draw its own variant, but the source of the variation was not found, so the sink limit is judged on the lowest point rounded to the centimetre (tools/check-area/contact-sheet.mjs) and a body that reads between -0.045 and -0.055 m is not told apart from the limit'] })
   if (opened.external.length) throw new Error(`a request left the page: ${opened.external.slice(0, 3).join(', ')}`)
   process.exitCode = summary.exitCode
 } finally {

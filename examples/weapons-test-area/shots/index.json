@@ -72,6 +72,7 @@
         18,
         30
       ],
+      "warmupSteps": 1,
       "stepS": 0.01667,
       "camera": {
         "kind": "game"
@@ -83,16 +84,13 @@
         "ok",
         "ok"
       ],
-      "handTargetMaxDeltaM": {
-        "R": 8.999,
-        "L": 0
-      },
       "differenceFromFirstFrame": [
-        0.0387,
-        0.0396,
-        0.0396,
-        0.0396
-      ]
+        0,
+        0.001,
+        0.001,
+        0.001
+      ],
+      "firstSampleHandGapM": 0
     },
     {
       "id": "weapon_machete/strike-third",
@@ -108,6 +106,7 @@
         18,
         30
       ],
+      "warmupSteps": 1,
       "stepS": 0.01667,
       "camera": {
         "kind": "explicit",
@@ -123,16 +122,13 @@
         "ok",
         "ok"
       ],
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      },
       "differenceFromFirstFrame": [
         0,
         0.001,
         0.001,
         0.001
-      ]
+      ],
+      "firstSampleHandGapM": 0
     },
     {
       "id": "weapon_hammer/strike-first",
@@ -148,6 +144,7 @@
         18,
         30
       ],
+      "warmupSteps": 1,
       "stepS": 0.01667,
       "camera": {
         "kind": "game"
@@ -159,16 +156,13 @@
         "ok",
         "ok"
       ],
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      },
       "differenceFromFirstFrame": [
         0,
         0.001,
         0.001,
         0.001
-      ]
+      ],
+      "firstSampleHandGapM": 0
     },
     {
       "id": "weapon_hammer/strike-third",
@@ -184,6 +178,7 @@
         18,
         30
       ],
+      "warmupSteps": 1,
       "stepS": 0.01667,
       "camera": {
         "kind": "explicit",
@@ -199,16 +194,13 @@
         "ok",
         "ok"
       ],
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      },
       "differenceFromFirstFrame": [
         0,
         0.001,
         0.001,
         0.001
-      ]
+      ],
+      "firstSampleHandGapM": 0
     },
     {
       "id": "weapon_molotov/strike-first",
@@ -224,6 +216,7 @@
         18,
         30
       ],
+      "warmupSteps": 1,
       "stepS": 0.01667,
       "camera": {
         "kind": "game"
@@ -235,16 +228,13 @@
         "ok",
         "ok"
       ],
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      },
       "differenceFromFirstFrame": [
         0.0003,
         0.0012,
-        0.1289,
-        0.1069
+        0.1159,
+        0.1093
       ],
+      "firstSampleHandGapM": 0,
       "notes": [
         "not byte-stable between runs; see the gaps"
       ]
@@ -263,6 +253,7 @@
         18,
         30
       ],
+      "warmupSteps": 1,
       "stepS": 0.01667,
       "camera": {
         "kind": "explicit",
@@ -278,23 +269,21 @@
         "ok",
         "ok"
       ],
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      },
       "differenceFromFirstFrame": [
         0.0023,
         0.0033,
         0.0033,
         0.0032
       ],
+      "firstSampleHandGapM": 0,
       "notes": [
         "not byte-stable between runs; see the gaps"
       ]
     }
   ],
   "gaps": [
-    "the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable."
+    "the throwable strike strips (weapon_molotov) are not byte-stable between runs. The unseeded Math.random of packages/game-test-room/src/explosives.ts:157 (context.random ?? Math.random) is read only by smoke (smoke sources, puffs), which a molotov never makes, so it is not the cause here; the molotov bursts on impact into fire, and the source of the variation is not identified (not confirmed). The melee strips are byte-stable.",
+    "the first-person walking shots (41-hand-shotgun-first-walk-level and 73-hand-throwable-first-walk-level) read one of two camera poses from run to run, never in between (position z 2.085 or 1.891; x 0, 0.004 or -0.006; y 1.7 or 1.707), while the other walking shots read the same on three runs: the walk is judged from the room at a fixed number of steps, and the source of the variation was not identified."
   ],
   "sheets": [
     {
@@ -2537,14 +2526,14 @@
       "camera": {
         "kind": "game",
         "position": [
-          0,
-          1.7,
-          2.085
+          -0.006,
+          1.707,
+          1.891
         ],
         "target": [
-          0,
-          1.7,
-          -2.915
+          -0.006,
+          1.707,
+          -3.109
         ],
         "fovDeg": 72
       }

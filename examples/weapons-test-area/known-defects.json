@@ -140,42 +140,39 @@
     "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
   },
   {
+    "id": "weapon_machete/strike-first",
+    "what": "use-not-animated",
+    "value": {
+      "pixelShare": 0.001
+    },
+    "found": "2026-11-22",
+    "evidence": "machete, first person, fixed clock, 1 warm-up step after the look: room.use returned 'ok' at all five samples (0, 6, 12, 18 and 30 steps after the use); the share of pixels that differ from the first frame (the first sample, taken after the warm-up) is [0, 0.001, 0.001, 0.001] for the four later samples, all under the 0.003 limit. This rests on the pixels of this one camera (the game camera) and nothing else: the room's hand targets were not used as a signal (they did not move in the molotov throw either). The same camera reads 0.1221 for the molotov throw, which is the control of the run. Whether the swing is drawn in a way this camera cannot see is not known"
+  },
+  {
     "id": "weapon_machete/strike-third",
     "what": "use-not-animated",
     "value": {
-      "pixelShare": 0.001,
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      }
+      "pixelShare": 0.001
     },
     "found": "2026-11-22",
-    "evidence": "machete, third person, fixed clock: room.use returned 'ok' at all five sampled times (0, 6, 12, 18 and 30 steps after the use, each sample a fresh run); room.handState targets R and L moved 0 m between the samples; at most 0.1% of the pixels differ between the first frame and the later ones. Nothing the room reports or draws changes over the use. Whether the swing is drawn some other way (a clip the print does not show) is not known"
+    "evidence": "machete, third person, fixed clock, 1 warm-up step after the look: room.use returned 'ok' at all five samples (0, 6, 12, 18 and 30 steps after the use); the share of pixels that differ from the first frame (the first sample, taken after the warm-up) is [0, 0.001, 0.001, 0.001] for the four later samples, all under the 0.003 limit. This rests on the pixels of this one camera (an explicit camera on his right side, 3.4 m, 38 degrees) and nothing else: the room's hand targets were not used as a signal (they did not move in the molotov throw either). The same camera reads 0.0033 for the molotov throw, which is the control of the run. Whether the swing is drawn in a way this camera cannot see is not known; the control is only just above the limit in this camera, so this verdict is weak"
   },
   {
     "id": "weapon_hammer/strike-first",
     "what": "use-not-animated",
     "value": {
-      "pixelShare": 0.001,
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      }
+      "pixelShare": 0.001
     },
     "found": "2026-11-22",
-    "evidence": "hammer, first person, fixed clock: room.use returned 'ok' at all five sampled times (0, 6, 12, 18 and 30 steps after the use, each sample a fresh run); room.handState targets R and L moved 0 m between the samples; at most 0.1% of the pixels differ between the first frame and the later ones. Nothing the room reports or draws changes over the use. Whether the swing is drawn some other way (a clip the print does not show) is not known"
+    "evidence": "hammer, first person, fixed clock, 1 warm-up step after the look: room.use returned 'ok' at all five samples (0, 6, 12, 18 and 30 steps after the use); the share of pixels that differ from the first frame (the first sample, taken after the warm-up) is [0, 0.001, 0.001, 0.001] for the four later samples, all under the 0.003 limit. This rests on the pixels of this one camera (the game camera) and nothing else: the room's hand targets were not used as a signal (they did not move in the molotov throw either). The same camera reads 0.1221 for the molotov throw, which is the control of the run. Whether the swing is drawn in a way this camera cannot see is not known"
   },
   {
     "id": "weapon_hammer/strike-third",
     "what": "use-not-animated",
     "value": {
-      "pixelShare": 0.001,
-      "handTargetMaxDeltaM": {
-        "R": 0,
-        "L": 0
-      }
+      "pixelShare": 0.001
     },
     "found": "2026-11-22",
-    "evidence": "hammer, third person, fixed clock: room.use returned 'ok' at all five sampled times (0, 6, 12, 18 and 30 steps after the use, each sample a fresh run); room.handState targets R and L moved 0 m between the samples; at most 0.1% of the pixels differ between the first frame and the later ones. Nothing the room reports or draws changes over the use. Whether the swing is drawn some other way (a clip the print does not show) is not known"
+    "evidence": "hammer, third person, fixed clock, 1 warm-up step after the look: room.use returned 'ok' at all five samples (0, 6, 12, 18 and 30 steps after the use); the share of pixels that differ from the first frame (the first sample, taken after the warm-up) is [0, 0.001, 0.001, 0.001] for the four later samples, all under the 0.003 limit. This rests on the pixels of this one camera (an explicit camera on his right side, 3.4 m, 38 degrees) and nothing else: the room's hand targets were not used as a signal (they did not move in the molotov throw either). The same camera reads 0.0033 for the molotov throw, which is the control of the run. Whether the swing is drawn in a way this camera cannot see is not known; the control is only just above the limit in this camera, so this verdict is weak"
   }
 ]
