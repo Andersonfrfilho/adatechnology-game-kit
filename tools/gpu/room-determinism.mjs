@@ -112,13 +112,19 @@ export const firstDivergence = (left, right) => {
   return { frame: (left[Math.min(left.length, right.length)] ?? right[Math.min(left.length, right.length)]).frame, differingFields: ['rowCount'], rowCountLeft: left.length, rowCountRight: right.length, differingObjects: [], differingTotal: 0 }
 }
 
+// time advances every tick, so the no-op check compares the objects only
+const hasObjectChanged = (/** @type {any} */ first, /** @type {any} */ last) => {
+  const ids = new Set([...Object.keys(first.objects), ...Object.keys(last.objects)])
+  return [...ids].some((id) => first.objects[id] !== last.objects[id])
+}
+
 /** What makes one run worthless as proof: the blast did nothing, the settle time is off, the page loop was not caught, or the page threw. @param {any} result @param {{ isStubbed: boolean, expectedPreTime: number }} options */
 const runProblems = (result, { isStubbed, expectedPreTime }) => {
   const problems = result.errors.map((/** @type {string} */ message) => `run ${result.run}: page error: ${message}`)
   const first = result.rows[0]
   const last = result.rows[result.rows.length - 1]
   if (!first || !last || result.rows.length < 2) return [...problems, `run ${result.run}: no rows recorded`]
-  if (last.stateHash === first.stateHash) problems.push(`run ${result.run}: the world after the blast equals the world before it (no-op)`)
+  if (!hasObjectChanged(first, last)) problems.push(`run ${result.run}: no object changed between before and after the blast (no-op)`)
   if (last.eventCount === 0) problems.push(`run ${result.run}: no event fired during the blast`)
   if (!isStubbed) return problems
   if (Math.abs(first.time - expectedPreTime) > TICK_SECONDS * 1.01) problems.push(`run ${result.run}: pre-blast time ${first.time} is not the expected ${expectedPreTime} (+-1 tick)`)
@@ -186,21 +192,28 @@ const recordRun = async (browser, { settings, paceMs, run }) => {
   }
 }
 
+/** @param {string} name @param {string | undefined} raw @param {number} fallback @returns {number} */
+export const readNonNegativeNumber = (name, raw, fallback) => {
+  const value = Number(raw ?? fallback)
+  if (!Number.isFinite(value) || value < 0) throw new Error(`room-determinism: ${name} must be a non-negative number (got ${raw})`)
+  return value
+}
+
 const readSettings = () => {
-  const settleTicks = Number(process.env.ROOM_DET_SETTLE_TICKS ?? 600)
+  const settleTicks = readNonNegativeNumber('ROOM_DET_SETTLE_TICKS', process.env.ROOM_DET_SETTLE_TICKS, 600)
   return {
     runs: parseRuns(process.env.ROOM_DET_RUNS),
-    frames: Number(process.env.ROOM_DET_FRAMES ?? 90),
+    frames: readNonNegativeNumber('ROOM_DET_FRAMES', process.env.ROOM_DET_FRAMES, 90),
     explosive: process.env.ROOM_DET_EXPLOSIVE ?? 'm67',
     query: process.env.ROOM_DET_QUERY ?? VARIANTS[DEFAULT_VARIANT],
     isRendered: process.env.ROOM_DET_RENDER !== '0',
     pageFile: resolve(process.env.ROOM_DET_PAGE ?? join(root, 'examples/test-room/dist/test-room.html')),
     out: process.env.ROOM_DET_OUT,
     // the frame pace of each run (ms; 0 = back to back): different paces move every wall-clock deadline of the frame budget, and the state must not notice
-    paces: (process.env.ROOM_DET_PACES ?? '').split(',').filter(Boolean).map(Number),
+    paces: (process.env.ROOM_DET_PACES ?? '').split(',').filter(Boolean).map((pace) => readNonNegativeNumber('ROOM_DET_PACES', pace, 0)),
     isStubbed: process.env.ROOM_DET_PAGE_LOOP !== '1',
     settleTicks,
-    maxLoad: Number(process.env.ROOM_DET_MAX_LOAD ?? 1.5),
+    maxLoad: readNonNegativeNumber('ROOM_DET_MAX_LOAD', process.env.ROOM_DET_MAX_LOAD, 1.5),
   }
 }
 

@@ -59,7 +59,7 @@ ela acabou de gerar.
    e o `vfx.update` está ali. Uma pausa de verdade precisa parar só o tique fixo; no protótipo isso
    se chama `freezeFixed`. Essa forma custa o mesmo nos quadros congelados, e o quadro de volta
    piora (38 a 45 ms). Esse é o mesmo problema da aplicação acumulada.
-2. **A sala é determinística; a diferença vinha do preparo.** No pacote, um teste unitário
+2. **Na configuração medida, a sala é determinística; a diferença vinha do preparo.** No pacote, um teste unitário
    (`d2-slice.spike.test.ts`) mostra que eventos, `serialize()` e resultados ficam idênticos byte a
    byte para K = 1, 7, 32, 64 e 128. Na sala, as rodadas pareciam divergir, mas a divergência já
    existia antes da explosão. O preparo da régua (`inPage`) deixa o laço da página rodar 8 s em
@@ -76,8 +76,8 @@ ela acabou de gerar.
    `~/.cache/adatechnology-game-kit/medicoes/2026-11-23-sala-deterministica/`: `final-v2-5x90.json`
    (5 rodadas, preparo com laço parado), `base-v2-3x60.json` (caminho antigo, laço da página,
    `ROOM_DET_PAGE_LOOP=1`: o harness detecta a divergência) e `paces-4x90.json`.
-3. **Sem pausa, o estado final muda.** Isso era esperado, mas não foi demonstrado na sala pelo mesmo
-   motivo do item 2.
+3. **Sem pausa, o estado final muda.** Isso era esperado. Ainda não foi medido na sala com o harness
+   determinístico do item 2.
 
 ## O que muda no contrato entre pacotes (variante com pausa)
 

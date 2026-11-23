@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { firstDivergence, judgeRuns, parseRuns } from '../room-determinism.mjs'
+import { firstDivergence, judgeRuns, parseRuns, readNonNegativeNumber } from '../room-determinism.mjs'
 
 /** @param {number} frame @param {number} stateHash @param {Record<string, number>} objects @param {Record<string, any>} [extra] */
 const row = (frame, stateHash, objects, extra = {}) => ({ frame, time: 10, stateHash, timeHash: 1, rngHash: 2, counterHash: 3, eventCount: 3, eventHash: 7, objectCount: Object.keys(objects).length, objects, kinds: {}, ...extra })
@@ -53,7 +53,8 @@ test('fewer than 2 runs, or NaN, is refused', () => {
 })
 
 test('a run where the blast changed nothing is refused', () => {
-  const noOp = goodRun(1, { rows: [row(-1, 1, { a: 1 }), row(0, 1, { a: 1 })] })
+  // the time moves every tick, so the whole-state hash differs even when no object did
+  const noOp = goodRun(1, { rows: [row(-1, 1, { a: 1 }), row(0, 5, { a: 1 }, { time: 11.5 })] })
   const verdict = judgeRuns({ results: [goodRun(0), noOp], ...options })
   assert.equal(verdict.isDeterministic, false)
   assert.match(verdict.problems.join(), /no-op/)
@@ -86,4 +87,10 @@ test('a real divergence fails and a clean pair passes', () => {
 test('the old page-loop path skips the settle-time and dropped-callback checks', () => {
   const late = goodRun(0, { rows: [row(-1, 1, { a: 1 }, { time: 7.3 }), row(0, 2, { a: 2 })], droppedFrames: 0 })
   assert.equal(judgeRuns({ results: [late, { ...late, run: 1 }], isStubbed: false, expectedPreTime: 10 }).isDeterministic, true)
+})
+
+test('a non-numeric or negative setting is refused', () => {
+  assert.throws(() => readNonNegativeNumber('ROOM_DET_FRAMES', 'abc', 90))
+  assert.throws(() => readNonNegativeNumber('ROOM_DET_FRAMES', '-1', 90))
+  assert.equal(readNonNegativeNumber('ROOM_DET_FRAMES', undefined, 90), 90)
 })
