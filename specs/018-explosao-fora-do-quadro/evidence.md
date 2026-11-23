@@ -700,3 +700,38 @@ triângulos (`assign`), que gasta o orçamento da chamada: é uma cópia do esta
 Com o protótipo, o quadro em que o mundo volta caiu em f7 em 4 de 9 estágios; na `main` foi 1 de 9. A `main` também varia de quadro para
 quadro, então a contagem de quadros segurados já depende de alguma coisa que não é contagem (filas por prazo ou respostas do worker). Não foi
 investigado. A régua do #444 cobre os dois casos, porque a janela segue os quadros segurados.
+
+## Sólido da peça hospedada reaproveitado (`hostedPieces`), aprovado pelo dono (2026-11-23)
+
+Branch `perf/hosted-pieces-reuse` sobre a `main` `2af75d16d`. Só a parte do `game-destruction` do protótipo da opção (a): o `hostedPieces`
+devolve o mesmo sólido para a mesma peça no mesmo lugar (e, numa peça sem chave, no mesmo índice). O `prepareColliders` do carro e o
+`prepareStaticSolids` do marca-passo ficaram de fora. Brutos em `~/.cache/adatechnology-game-kit/medicoes/2026-11-23-hosted-pieces-reuse/`.
+
+- **Testes:** em `hosted-solids-cache.test.ts`, 3 novos.
+  - A peça igual devolve o mesmo sólido com os mesmos números.
+  - Um corpo que anda, ou uma peça sem chave que muda de lugar na lista, ganha sólido novo.
+  - O sólido devolvido é igual, número a número, ao que um mundo novo faz das mesmas peças.
+  - Sem a mudança, os dois primeiros falham.
+  - Suítes completas: `game-destruction` 697, `game-destruction-three` 721 (195 pulados, como antes), `game-test-room` 553, todas passando.
+- **Mesmos bytes na sala** (`tools/gpu/room-determinism.mjs`, M67, `jolt-d4-worker`, 2 rodadas em cada página, 90 quadros; páginas `main`
+  `92622f211fea` e branch `5ae4c62c6be9`). Comparado pelo tempo do mundo (`detcmp.cjs`):
+  - Com marca-passo: 75 tiques idênticos em todos os 4 pares `main`×branch, tique final `stateHash` 3822996173, 1702 eventos.
+  - Sem marca-passo (`&blastPacing=0`): 90 tiques idênticos nos 4 pares, `stateHash` 3822996173 → 1819424859 no fim, 1702 eventos.
+  - Uma rodada da branch começou com carga 11,1 (a espera do harness desistiu). Ela também saiu idêntica.
+- **Tempo** (régua do #444, M67, prazo, 1x, `FRAME_SERIES=24`): rodadas alternadas `main`, branch, 3 de cada, 9 estágios por lado. RTX 5070
+  Laptop, driver 620.73.04 (módulo = biblioteca), `flock`, carga de 1,30 a 1,49 no início de cada rodada.
+
+| | `main` | branch |
+|---|---|---|
+| `afterMs` (f1..f15), por rodada | 33,93 / 28,43 / 28,77 | 31,0 / 28,87 / 26,8 |
+| quadro da volta (f7 ou f8), mediana dos 9 | 30,5 | 30,4 |
+| f8, mediana dos 9 | 30,5 | 27,1 |
+| f9 / f10 / f11, medianas | 15,6 / 16,0 / 14,6 | 11,7 / 13,1 / 12,9 |
+| `f0Ms`, por rodada | 23,8 / 23,77 / 21,53 | 22,03 / 22,8 / 20,87 |
+
+- **Leitura:** o ganho está em f9–f11 (2–4 ms cada), onde o `EngineStatics.fit` deixa de comparar vértice por vértice. O pior quadro da janela
+  não muda: o quadro da volta fica em 30,4 contra 30,5, e o `afterMs` mediano em 28,87 contra 28,77.
+- A queda do f8 (30,5 → 27,1) vem de o mundo voltar em f7 em mais estágios da branch. O quadro da volta, comparado quadro com quadro, não
+  mudou.
+- Os ~2 ms no quadro da volta que o protótipo da opção (a) mostrou **não vêm desta parte**. Pelos contadores, o `prepare` do carro também não
+  trabalhava. Aquela diferença fica dentro do ruído entre sessões (±2 ms).
