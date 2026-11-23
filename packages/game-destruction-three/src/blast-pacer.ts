@@ -9,7 +9,7 @@ export const BLAST_RAYS_PER_FRAME = 64
 export type BlastPacerOptions = {
   readonly world: Pick<DestructionWorld, 'beginExplosion'>
   readonly renderer: Pick<DestructionRenderer, 'holdEvents' | 'applyStructuralEventsSliced'>
-  /** Fragment rays per frame (`ExplosionJob.advance`). Default `BLAST_RAYS_PER_FRAME`. */
+  /** Fragment rays per frame (`ExplosionJob.advance`). Default `BLAST_RAYS_PER_FRAME`; Infinity runs every blast whole in `begin` (the one-shot blast, through the pacer). */
   readonly raysPerFrame?: number
   /** Units of `EVENT_APPLY_WEIGHT` of structural events applied per frame once the blast is done. Default `STRUCTURAL_UNITS_PER_FRAME`. */
   readonly unitsPerFrame?: number
@@ -69,8 +69,10 @@ export function createBlastPacer(options: BlastPacerOptions): BlastPacer {
       // one queued behind another is advanced from the frame after the one before it ends
       open.push({ job, onDone, isFresh: isFirst })
       if (!isFirst) return
-      // a blast that fits in one slice is the one-shot blast: nothing is held, its events apply in the tick as always
-      if (job.advance(raysPerFrame) && !isApplying) {
+      // a blast that fits in one slice (or every blast, with `raysPerFrame` Infinity) is the one-shot blast: nothing is held, its events apply in the tick as always
+      let isDone = job.advance(raysPerFrame)
+      while (!isDone && raysPerFrame === Infinity) isDone = job.advance(raysPerFrame)
+      if (isDone && !isApplying) {
         open.shift()
         renderer.holdEvents(false)
         onDone(job.result())
