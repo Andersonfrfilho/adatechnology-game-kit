@@ -18,17 +18,19 @@
 // The `room-explosion` scenario (spec 008 B6) is a different gate, by hand or in the nightly, never in CI: the physics ms of the house explosion at 1x, 2x, 4x and 6x CPU
 // throttling (a proxy for a weaker or AMD machine), exit 1 over the p99 and max budgets. It blocks only on a regression against the base report ROOM_EXPLOSION_BASE (the nightly keeps the best of its passing nights); see tools/gpu/room-explosion.mjs for the variables and the kinds (blast, hammer; opt-in crater: C4 digging loose ground). The default and gated variant is jolt-d4-worker (the page default, paced); jolt-d4 stays available by name.
 //   flock ~/.cache/adatechnology-game-kit/perf-measure.lock node tools/gpu/perf-gate.mjs room-explosion
+// The rounds of perf.mjs take the same lock themselves (tools/gpu/measure-lock.mjs): never wrap the other scenarios in `flock ... perf-measure.lock` without PERF_MEASURE_LOCKED=1, or perf.mjs waits for its own caller.
 import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { homedir, loadavg } from 'node:os'
+import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { bestOf, compare, failuresOf, worstOf } from './compare.mjs'
 import { isSoftwareRenderer, readGpuIdentity } from './gpu-info.mjs'
-import { buildSequence, describeRound, formatSteps, needsBuild, timesRecord, WAIT_FOR_QUIET_MS } from './perf-gate-plan.mjs'
+import { waitForQuietMachine } from './measure-lock.mjs'
+import { buildSequence, describeRound, formatSteps, needsBuild, timesRecord } from './perf-gate-plan.mjs'
 import { batterySkipReason } from './power.mjs'
 import { runRoomExplosion } from './room-explosion.mjs'
 
@@ -113,17 +115,10 @@ const harness = createHash('sha1').update(readFileSync(join(root, 'examples/test
 const slug = createHash('sha1').update(`${renderer}|${VIEWPORT}|${tier}`).digest('hex').slice(0, 10)
 const baseReport = baseSha ? join(cacheDir, `${baseSha.slice(0, 12)}-${slug}-${harness}.json`) : ''
 
-// the budgets hold for a quiet machine: other work on the CPU reads as a slow frame
-const QUIET_LOAD = 4
 const waitForQuiet = async () => {
   const waitStarted = Date.now()
-  const until = Date.now() + WAIT_FOR_QUIET_MS
-  while (loadavg()[0] >= QUIET_LOAD && Date.now() < until) {
-    console.log(`pre-push: waiting for a quiet machine (load ${loadavg()[0].toFixed(1)}, under ${QUIET_LOAD} wanted)`)
-    await new Promise((done) => setTimeout(done, 30000))
-  }
+  await waitForQuietMachine({ label: 'pre-push' })
   record('wait-quiet', waitStarted)
-  if (loadavg()[0] >= QUIET_LOAD) console.log(`pre-push: the machine is still busy (load ${loadavg()[0].toFixed(1)}): the frame times below read slower than a player sees`)
 }
 
 /**
