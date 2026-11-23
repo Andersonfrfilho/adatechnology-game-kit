@@ -4855,15 +4855,24 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const FLAG_OPEN = 2
 
   /** The legacy blast: every part of every object, then every impl, each at full strength. */
-  const blastPlain = (point: Vec3, energy: number, radius: number, src?: string, lethal?: number): HitResult[] => {
+  /** The wave with no shelter, fragment hits or confinement, as steps: a `'part'` after each part of an object (`blastObject`, cut) and after each impl it reached. */
+  function* blastPlainSteps(point: Vec3, energy: number, radius: number, src?: string, lethal?: number): Generator<'part', HitResult[]> {
     const out: HitResult[] = []
     for (const o of [...objects.values()]) {
       if (vec.distance(toWorld(o.st.position, o.st.rotation, o.bc), point) - o.br >= radius) continue
-      const r = blastObject(o, point, energy, radius, src)
+      const start = cur.length
+      const r: HitResult = { object: o.id, damage: 0, penetrated: false, exitEnergy: 0, events: [] }
+      for (const p of blastCandidates(o, point, radius)) {
+        blastPart(o, p, point, energy, radius, src, r)
+        yield 'part'
+      }
+      r.events = cur.slice(start)
       if (r.part) out.push(r)
     }
     for (const im of [...impls.values()]) {
-      if (implInRange(im, point, radius)) out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
+      if (!implInRange(im, point, radius)) continue
+      out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
+      yield 'part'
     }
     return out
   }
@@ -4884,8 +4893,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return false
   }
 
-  /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
-  /** The wave through the scene as steps: a `'part'` after each part (or impl) it reached, nearest first; what comes after the last part (thrown fragments, reports, the `blast` event) ends the last step. */
+  /**
+   * A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is
+   * behind it. As steps: a `'part'` after each part (or impl) it reached; what comes after the last part (thrown fragments, reports, the `blast` event) ends the last step.
+   */
   function* blastSceneSteps(point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): Generator<'part', HitResult[]> {
     const mult = confinementOf(cfg.conf, point, radius)
     const E = energy * mult
@@ -5469,9 +5480,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     yield 'wave'
     let wave: HitResult[]
-    if (!cfg.shelter && !cfg.frag && cfg.conf === null) wave = inBlast(() => blastPlain(point, energy, radius, src, lethal))
-    else {
-      const scene = blastSceneSteps(point, energy, radius, src, cfg, only, lethal)
+    {
+      const scene = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlainSteps(point, energy, radius, src, lethal) : blastSceneSteps(point, energy, radius, src, cfg, only, lethal)
       for (;;) {
         const step = inBlast(() => scene.next())
         if (step.done) {

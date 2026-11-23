@@ -66,13 +66,15 @@ describe('beginExplosion', () => {
     }
   })
 
-  it('with the wave through the scene (shelter, fragment hits, confinement), cut by parts too: the bytes of explode for 1, 3 and 16 parts per call', () => {
-    const scene = { charge: GRENADE, shelter: true, fragmentHits: true, confinement: true } as const
+  it.each([
+    ['plain (no shelter, fragment hits or confinement)', { charge: GRENADE }],
+    ['through the scene (shelter, fragment hits, confinement)', { charge: GRENADE, shelter: true, fragmentHits: true, confinement: true }],
+  ] as const)('with the wave %s cut by parts too: the bytes of explode for 1, 3 and 16 parts per call', (_name, blast) => {
     const reference = ringWorld()
-    const whole = outcome(reference.world, reference.events, reference.world.explode(ORIGIN, m67.energy, 15, 'test', scene), 1)
+    const whole = outcome(reference.world, reference.events, reference.world.explode(ORIGIN, m67.energy, 15, 'test', blast), 1)
     for (const [rays, parts] of [[64, 1], [7, 3], [128, 16]] as const) {
       const { world, events } = ringWorld()
-      const job = world.beginExplosion(ORIGIN, m67.energy, 15, 'test', scene)
+      const job = world.beginExplosion(ORIGIN, m67.energy, 15, 'test', blast)
       let calls = 0
       while (!job.advance(rays, parts)) calls++
       // one part per call: a call per part the wave reaches, past the rays' calls

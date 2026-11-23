@@ -6,7 +6,7 @@ import type { DestructionRenderer } from './types'
 /** Fragment rays a frame of a spread blast casts by default: the M67's 256 in 4 frames and its wave in a fifth (spec 018, `proposta-d2.md`). */
 export const BLAST_RAYS_PER_FRAME = 64
 /** Parts the wave of a spread blast reaches per frame by default, nearest first (`ExplosionJob.advance`): the wave of the M67 in the room house over a few frames. */
-export const BLAST_WAVE_PARTS_PER_FRAME = 16
+export const BLAST_WAVE_PARTS_PER_FRAME = 128
 
 export type BlastPacerOptions = {
   readonly world: Pick<DestructionWorld, 'beginExplosion'>
