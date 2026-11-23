@@ -98,4 +98,21 @@ describe('hostedSolids keeps the solid of a piece that did not change (spec 018 
     fresh.setTransform('car', [0.5, 0, -2], [0, 0.3826834, 0, 0.9238795])
     expect(reused).toEqual(fresh.hostedSolids?.('car'))
   })
+
+  it('a body only turned (same position) gets a new solid, and a keyed piece at another place in the list keeps its solid', () => {
+    const door = piece('door')
+    const hood = piece('hood')
+    let drawn = [door, hood]
+    const world = createDestruction()
+    world.register(burning(() => [...drawn]))
+    const first = world.hostedSolids?.('car') ?? []
+    drawn = [hood, door]
+    const swapped = world.hostedSolids?.('car') ?? []
+    expect(swapped[0]).toBe(first[1])
+    expect(swapped[1]).toBe(first[0])
+    world.setTransform('car', [0, 0, 0], [0, 0.3826834, 0, 0.9238795])
+    const turned = world.hostedSolids?.('car') ?? []
+    expect(turned[0]).not.toBe(swapped[0])
+    expect(turned[1]).not.toBe(swapped[1])
+  })
 })
