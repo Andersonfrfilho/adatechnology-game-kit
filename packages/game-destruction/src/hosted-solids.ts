@@ -37,18 +37,34 @@ export const hostedSolids = (spec: DestructibleSpec, state: Readonly<ObjectState
   return out
 }
 
-/** The drawn pieces of a hosted body (`DestructibleImpl.colliders`, in its frame) as the world holds them: each box placed with the body, the triangles of a piece carried along. */
+type DrawnPiece = ReturnType<NonNullable<DestructibleImpl['colliders']>>[number]
+/** The solid last made of a drawn piece, with the place and the list index it was made at: the same piece at the same place is the very same solid (no vertex walked again). */
+const placedPieces = new WeakMap<DrawnPiece, { readonly position: Vec3; readonly rotation: Quat; readonly index: number; readonly solid: HostedSolid }>()
+
+/**
+ * The drawn pieces of a hosted body (`DestructibleImpl.colliders`, in its frame) as the world holds them: each box placed with the body, the triangles of a piece carried along.
+ * A piece the impl hands back unchanged at the same place gives back the solid made of it last time, so an engine finds it unchanged by identity (`EngineStatics`).
+ */
 export const hostedPieces = (pieces: ReturnType<NonNullable<DestructibleImpl['colliders']>>, pose: Pick<HostedPose, 'position' | 'rotation'>): HostedSolid[] =>
   pieces.map((piece, index) => {
-    const base = { center: toWorld(pose.position, pose.rotation, piece.center), half: piece.half, rotation: quat.mul(pose.rotation, piece.rotation), key: piece.key ?? `${piece.id}:${index}` }
-    if (!piece.mesh) return base
-    const source = piece.mesh.vertices
-    const vertices = new Float32Array(source.length)
-    for (let i = 0; i < source.length; i += 3) {
-      const world = toWorld(pose.position, pose.rotation, [source[i] as number, source[i + 1] as number, source[i + 2] as number])
-      vertices[i] = world[0]
-      vertices[i + 1] = world[1]
-      vertices[i + 2] = world[2]
-    }
-    return { ...base, mesh: { vertices, indices: piece.mesh.indices } }
+    const known = placedPieces.get(piece)
+    const p = pose.position, q = pose.rotation
+    if (known && (piece.key !== undefined || known.index === index) && known.position[0] === p[0] && known.position[1] === p[1] && known.position[2] === p[2] && known.rotation[0] === q[0] && known.rotation[1] === q[1] && known.rotation[2] === q[2] && known.rotation[3] === q[3]) return known.solid
+    const solid = placedPiece(piece, index, pose)
+    placedPieces.set(piece, { position: [p[0], p[1], p[2]], rotation: [q[0], q[1], q[2], q[3]], index, solid })
+    return solid
   })
+
+const placedPiece = (piece: DrawnPiece, index: number, pose: Pick<HostedPose, 'position' | 'rotation'>): HostedSolid => {
+  const base = { center: toWorld(pose.position, pose.rotation, piece.center), half: piece.half, rotation: quat.mul(pose.rotation, piece.rotation), key: piece.key ?? `${piece.id}:${index}` }
+  if (!piece.mesh) return base
+  const source = piece.mesh.vertices
+  const vertices = new Float32Array(source.length)
+  for (let i = 0; i < source.length; i += 3) {
+    const world = toWorld(pose.position, pose.rotation, [source[i] as number, source[i + 1] as number, source[i + 2] as number])
+    vertices[i] = world[0]
+    vertices[i + 1] = world[1]
+    vertices[i + 2] = world[2]
+  }
+  return { ...base, mesh: { vertices, indices: piece.mesh.indices } }
+}
