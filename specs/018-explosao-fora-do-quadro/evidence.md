@@ -650,3 +650,53 @@ Conferência da máquina: M67 sem marca-passo (`&blastPacing=0`, sonda) leu upda
   (`game-vehicles-three`) e no `hostedSolids` (`game-destruction`), no modelo do protótipo acima, para mover ~10–14 ms sem mudar bytes;
   (b) deixar o `lay` dos fixos entrar aos poucos nos tiques depois da volta (muda os bytes do caminho fatiado: o motor vê as paredes um ou
   mais tiques depois); (c) segurar um quadro a mais para refazer os fixos (mais ~17 ms de mundo parado). Nada disso foi feito.
+
+## D2, opção (a): colisores do carro feitos antes, no último quadro segurado — descartado (2026-11-23)
+
+Pedido pelo dono ("pode seguir", opção (a) da entrada do #444). Branch `perf/d2-colisores-adiantados` sobre a `main` `aed85288c` (com #440 e #431).
+Brutos em `~/.cache/adatechnology-game-kit/medicoes/2026-11-23-d2-colisores-adiantados/` (`conditions.log`, JSONs da régua, sondas, páginas).
+**Nada disto ficou na branch**: o patch inteiro, com os testes, está em `experiment-colisores-adiantados.patch` na pasta dos brutos.
+
+### O que o protótipo fazia
+
+- `game-contracts`: `DestructibleImpl.prepareColliders?(triangles)`.
+- `game-vehicles-three` (`colliders.ts`): `prepare(triangles)` segue o que mudou (matriz e versão das posições, como o `read` seguiria) e faz de
+  antemão as peças marcadas, guardando cada uma com o contador de mudanças da peça. O `pieces()` seguinte cobra o orçamento igual
+  (`COLLIDER_BUDGET`, um por triângulo) e usa a peça feita antes só se o contador não mudou desde então.
+- `game-destruction`: `world.prepareHostedSolids(triangles)` repassa a cada corpo hospedado. O `hostedPieces` devolve o mesmo sólido para a
+  mesma peça no mesmo lugar (antes, cada lista nova refazia os sólidos de todas as peças, e o `EngineStatics.fit` comparava vértice por vértice).
+- `game-destruction-three`: `renderer.prepareStaticSolids(triangles)`. O marca-passo chama no último quadro segurado com
+  `BLAST_PREPARE_TRIANGLES` = 25000 (um `COLLIDER_BUDGET`).
+- Testes (passavam): o carro gêmeo mostra cada `pieces()` igual com e sem `prepare`, o mesmo `pending`, e nenhuma peça feita de novo
+  (`vehicle-colliders-ahead.test.ts`); amassado depois do `prepare` refaz a peça; `hostedSolids` devolve o mesmo sólido de peça igual, e um novo
+  quando o corpo anda ou uma peça sem chave muda de lugar; o marca-passo chama uma vez, no quadro em que os eventos acabam.
+
+### Medido (régua do #444, M67, prazo, 1x, `jolt-d4-worker`, `FRAME_SERIES=24`)
+
+Alternado `main`, protótipo, `main`, protótipo, 3 rodadas de cada (9 estágios por lado). Páginas: `main` `92622f211fea`, protótipo
+`8134ca99d70c`. RTX 5070 Laptop, driver 620.73.04, `flock`, carga de 1,09 a 1,48 no início de cada rodada.
+
+| | `main` | protótipo |
+|---|---|---|
+| `afterMs` (f1..f15), por rodada | 26,8 / 30,13 / 35,23 | 27,93 / 27,37 / 26,3 |
+| quadro da volta, mediana dos 9 estágios | 30,6 | 28,6 |
+| pior da janela, mediana | 30,6 | 28,9 |
+| f9 / f10 / f11, medianas | 14,5 / 16,0 / 14,4 | 10,8 / 11,8 / 12,5 |
+
+**Descartado:** cerca de 2 ms no quadro da volta, abaixo dos 3 ms que a régua lê. Os 3–4 ms que caíram em f9–f11 vêm do sólido reaproveitado no
+`hostedPieces` (o `fit` próprio caiu de 3–4 ms para 0,3–0,4 ms nos rótulos). Mas esses quadros não são o pior da janela.
+
+### Por que o `prepare` do carro quase não trabalhou
+
+Contadores temporários na régua (`debug-counters.patch`, `ruler-vc.log`): no último quadro segurado o `prepare` não achou nada a seguir
+nem peça marcada. No quadro da volta o carro chama `pieces()` 3–4 vezes (19–26 ms com os contadores), refaz 20–36 peças que o `prepare` não viu
+e não segue nenhum amassado. As peças ficam marcadas porque **malhas entram ou saem do que o carro desenha** (o `read` cria a entrada e
+distribui os triângulos com o orçamento da chamada, ou o `release` solta a entrada) entre o último quadro segurado e o primeiro passo. Não é
+amassado nem mudança de matriz. Fazer isso de antemão exigiria repetir no `prepare` a montagem do conjunto vivo e a distribuição dos
+triângulos (`assign`), que gasta o orçamento da chamada: é uma cópia do estado do `pieces()`, não um "medir antes".
+
+### Achado à parte
+
+Com o protótipo, o quadro em que o mundo volta caiu em f7 em 4 de 9 estágios; na `main` foi 1 de 9. A `main` também varia de quadro para
+quadro, então a contagem de quadros segurados já depende de alguma coisa que não é contagem (filas por prazo ou respostas do worker). Não foi
+investigado. A régua do #444 cobre os dois casos, porque a janela segue os quadros segurados.
