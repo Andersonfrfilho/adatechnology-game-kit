@@ -31,6 +31,7 @@ export interface SurfaceRayHit {
 /**
  * One drawn piece of a hosted body as a solid for a physics engine, in the impl's frame (`DestructibleImpl.colliders`): a box turned as drawn where a box fits the piece
  * (every corner within 1 cm of a vertex), else the piece's triangles (`mesh`, with the box around them). `id` is the part of `describe()` the piece is.
+ * A piece handed back is never changed in place: a piece that changed is a new object (the world reuses what it made of an object it has seen, `hostedSolids`).
  */
 export interface DrawnCollider {
   readonly id: string
