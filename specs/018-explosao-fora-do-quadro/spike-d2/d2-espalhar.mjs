@@ -35,6 +35,7 @@ const rounds = Number(process.env.D2_ROUNDS ?? 3)
 const explosive = process.env.D2_EXPLOSIVE ?? 'm67'
 const frames = Number(process.env.D2_FRAMES ?? 30)
 const ks = (process.env.D2_KS ?? '32,64,128').split(',').map(Number)
+const applies = (process.env.D2_APPLIES ?? '256').split(',').map(Number)
 const QUIET = Number(process.env.D2_QUIET_LOAD ?? 1.5)
 const MAX_WAIT_MS = Number(process.env.D2_MAX_WAIT_MS ?? 15 * 60 * 1000)
 
@@ -125,6 +126,14 @@ export async function d2Run(job) {
         applied.structCalls++
       }
     }
+    const sliceApply = renderer.applyStructuralEventsSliced
+    renderer.applyStructuralEventsSliced = function (...args) {
+      const started = performance.now()
+      try { return sliceApply.apply(this, args) } finally {
+        applied.structMs += performance.now() - started
+        applied.structCalls++
+      }
+    }
     const rebuild = renderer.visuals?.rebuildHost
     if (rebuild) renderer.visuals.rebuildHost = function (...args) {
       const started = performance.now()
@@ -134,6 +143,7 @@ export async function d2Run(job) {
   const rows = []
   const snapshotApplied = () => JSON.parse(JSON.stringify(applied))
   let simulatedTicks = 0
+  let applyStarted = false
   let doneFrame = null
   const frame = async (options = {}) => {
     const appliedBefore = job.isApplyTimed ? snapshotApplied() : undefined
@@ -153,14 +163,18 @@ export async function d2Run(job) {
       doneFrame = rows.length
       if (job.isHashing) takeSnap()
     }
-    const isFrozen = options.freeze === 'simulate' || (options.freezeWhenPending && !finished)
-    const mode = options.freeze === 'simulate' ? 'simulate' : options.freezeWhenPending && !finished ? options.freezeWhenPending : 'normal'
+    const backlog = renderer.structuralBacklog?.() ?? 0
+    const isSliceApply = Boolean(job.applyPerFrame) && options.freezeWhenPending === 'freezeFixed'
+    const isFrozenForApply = isSliceApply && finished && (!applyStarted || backlog > 0)
+    const mode = options.freeze === 'simulate' ? 'simulate' : options.freezeWhenPending && (!finished || isFrozenForApply) ? options.freezeWhenPending : 'normal'
     const roomOptions = { frameStartMs: started }
+    if (isSliceApply && mode === 'freezeFixed') roomOptions.structuralSlice = { count: !finished || (!applyStarted && !job.waveFrameApply) ? 0 : job.applyPerFrame, isComplete: finished }
     if (mode === 'simulate') roomOptions.simulate = false
     else if (mode === 'freezeFixed') roomOptions.freezeFixed = true
     const updateStart = performance.now()
     room.update(dt, roomOptions)
     const now = performance.now()
+    if (roomOptions.structuralSlice?.isComplete) applyStarted = true
     if (mode === 'normal') simulatedTicks++
     const updateMs = now - started
     const renderStart = performance.now()
@@ -169,7 +183,7 @@ export async function d2Run(job) {
     const renderCpu = performance.now() - renderStart
     gl.finish?.()
     const gpuWait = performance.now() - renderStart - renderCpu
-    const row = { frame: rows.length, mode, updateMs, renderCpu, gpuWait, totalMs: updateMs + renderCpu, fireMs: afterFire - started, advanceMs, roomUpdateMs: now - updateStart, fragments: room.renderer.fragments?.count ?? 0, pieces: room.renderer.pieceSys.list?.length ?? 0 }
+    const row = { frame: rows.length, mode, backlog, updateMs, renderCpu, gpuWait, totalMs: updateMs + renderCpu, fireMs: afterFire - started, advanceMs, roomUpdateMs: now - updateStart, fragments: room.renderer.fragments?.count ?? 0, pieces: room.renderer.pieceSys.list?.length ?? 0 }
     if (appliedBefore) {
       row.appliedFragN = applied.frag.n - appliedBefore.frag.n
       row.appliedFragMs = applied.frag.ms - appliedBefore.frag.ms
@@ -223,6 +237,11 @@ const variantsOf = () => {
       { name: `freeze-fixed-k${k}`, job: { plan: 'sliced', k, freezeKind: 'freezeFixed', isTiming: true, isHashing } },
       { name: `nopause-k${k}`, job: { plan: 'sliced', k, isTiming: true, isHashing } },
     ]),
+  ]
+  if (series === 'm5') return [
+    { name: 'unsliced', job: { plan: 'plain', isTiming: true, isApplyTimed: true } },
+    { name: 'freeze-fixed-k64', job: { plan: 'sliced', k: 64, freezeKind: 'freezeFixed', isTiming: true, isApplyTimed: true } },
+    ...applies.map((a) => ({ name: `freeze-slice-k64-a${a}`, job: { plan: 'sliced', k: 64, freezeKind: 'freezeFixed', applyPerFrame: a, waveFrameApply: process.env.D2_WAVE_APPLY === '1', isTiming: true, isApplyTimed: true } })),
   ]
   if (series === 'm4') return [{ name: 'unsliced', job: { plan: 'plain', isTiming: true } }, ...sliced(false)]
   if (series === 'snap') return [{ name: 'unsliced-a', job: { plan: 'plain', isHashing: true, isSnapOnly: true } }, { name: 'unsliced-b', job: { plan: 'plain', isHashing: true, isSnapOnly: true } }, ...ks.map((k) => ({ name: `pause-simulate-k${k}`, job: { plan: 'sliced', k, freezeKind: 'simulate', isHashing: true, isSnapOnly: true } })), ...ks.map((k) => ({ name: `nopause-k${k}`, job: { plan: 'sliced', k, isHashing: true, isSnapOnly: true } }))]

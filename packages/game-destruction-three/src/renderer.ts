@@ -1220,6 +1220,47 @@ class Renderer implements DestructionRenderer {
     })
   }
 
+  /** SPIKE D2: the structural events of a sliced blast, arranged ONCE (as `applyStructuralEvents` would have), waiting to be applied a fixed count per frozen frame. */
+  private heldStructural: { events: DestructionEvent[]; next: number } | undefined
+
+  /** SPIKE D2: how many held events are still to apply. */
+  structuralBacklog(): number {
+    return this.heldStructural ? this.heldStructural.events.length - this.heldStructural.next : 0
+  }
+
+  /**
+   * SPIKE D2: `applyStructuralEvents` in slices. While the blast runs (`isComplete` false) nothing is arranged (a later event may move an earlier one); when it has finished the queue is arranged
+   * once, exactly as the whole call does, and the events up to the last structural one are applied `count` at a time, in that order. The rest stays queued for the frame.
+   */
+  applyStructuralEventsSliced(count: number, isComplete: boolean): void {
+    if (this.disposed || this.work) return
+    this.stalledFrames = 0
+    if (!isComplete && !this.heldStructural) return
+    if (!this.heldStructural) {
+      let last = -1
+      for (let i = this.queue.length - 1; i >= 0 && last < 0; i--) if (isStructuralEvent(this.queue[i]!)) last = i
+      if (last < 0) return
+      const ordered = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
+      let end = ordered.length
+      while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
+      this.requeue(ordered, end)
+      this.heldStructural = { events: ordered.slice(0, end), next: 0 }
+    }
+    const held = this.heldStructural
+    const stop = Math.min(held.events.length, held.next + count)
+    this.visuals.batchRebuilds(() => {
+      for (let i = held.next; i < stop; i++) {
+        try {
+          this.apply(held.events[i]!)
+        } catch (err) {
+          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', held.events[i]!.type, err)
+        }
+      }
+    })
+    held.next = stop
+    if (held.next >= held.events.length) this.heldStructural = undefined
+  }
+
   /** Puts `events` from `from` on, back at the front of the queue, in order (no spread: a blast leaves tens of thousands). */
   private requeue(events: readonly DestructionEvent[], from: number): void {
     if (from >= events.length) return

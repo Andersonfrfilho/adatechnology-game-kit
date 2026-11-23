@@ -5233,7 +5233,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true, ...(options?.frameStartMs === undefined ? {} : { frameStartMs: options.frameStartMs }), ...(options?.simulate === false ? { simulate: false } : {}), ...(options?.freezeFixed ? { freezeFixed: true } : {}) })), options?.live),
+    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => { structuralSlice = options?.structuralSlice; try { scheduler.frame(dt, { render: false, exact: options?.live !== true, ...(options?.frameStartMs === undefined ? {} : { frameStartMs: options.frameStartMs }), ...(options?.simulate === false ? { simulate: false } : {}), ...(options?.freezeFixed ? { freezeFixed: true } : {}) }) } finally { structuralSlice = undefined } }), options?.live),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
@@ -5542,6 +5542,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     { phase: 'input', id: 'room.input' },
   )
   const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer, structural: renderer })
+  let structuralSlice: { count: number; isComplete: boolean } | undefined
+  // SPIKE D2: in a frozen frame the structural events of a sliced blast are applied a fixed count at a time, on the step pose, before the frame's drain
+  scheduler.add(() => { if (structuralSlice) (renderer as unknown as { applyStructuralEventsSliced(count: number, isComplete: boolean): void }).applyStructuralEventsSliced(structuralSlice.count, structuralSlice.isComplete) }, { phase: 'lateSimulate', order: -2000, id: 'room.structural-slice' })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
