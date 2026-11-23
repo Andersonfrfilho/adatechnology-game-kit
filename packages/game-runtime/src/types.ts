@@ -55,6 +55,12 @@ export interface SchedulerOptions {
   readonly mustDrainIds?: ReadonlySet<string>
   /** Milliseconds clock; default `performance.now` (or `Date.now`). Tests inject a fake. */
   readonly clock?: () => number
+  /**
+   * Asked at the start of each frame and before each fixed step: true holds the world as `FrameRunOptions.freezeFixed` does, from that point of the frame on (the steps of
+   * the frame not run yet are dropped, not kept for later: held time does not count). A host whose fixed step started heavy work it spreads over frames (a blast) holds
+   * the steps until the work is done, so no step runs in between. Default: never held.
+   */
+  readonly holdFixed?: () => boolean
   /** A system that throws: default logs once per system id and keeps the frame going. */
   readonly onError?: (error: unknown, system: { id: string; phase: FramePhase }) => void
 }

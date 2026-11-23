@@ -381,6 +381,27 @@ describe('freezeFixed', () => {
     expect(run(new Set())).not.toEqual(run(frozenFrames))
   })
 
+  it('holdFixed stops the steps left in a frame once a step starts the hold, and freezes the frames while it lasts', () => {
+    let isHeld = false
+    const scheduler = createScheduler({ snapMs: 0, holdFixed: () => isHeld })
+    const ticks: number[] = []
+    const frozen: boolean[] = []
+    scheduler.add((ctx) => {
+      ticks.push(ctx.tick)
+      if (ctx.tick === 1) isHeld = true
+    }, { phase: 'fixedSimulate' })
+    scheduler.add((ctx) => frozen.push(ctx.fixedFrozen), { phase: 'lateSimulate' })
+    scheduler.frame(3.5 * H)
+    expect(ticks).toEqual([0, 1])
+    scheduler.frame(2 * H)
+    expect(ticks).toEqual([0, 1])
+    isHeld = false
+    scheduler.frame(1.2 * H)
+    // the frame that held dropped its third step and the held frame fed nothing: the next step is tick 2, from the half tick left before the hold
+    expect(ticks).toEqual([0, 1, 2])
+    expect(frozen).toEqual([true, true, false])
+  })
+
   it('is ignored with simulate:false', () => {
     const scheduler = createScheduler()
     let late = 0

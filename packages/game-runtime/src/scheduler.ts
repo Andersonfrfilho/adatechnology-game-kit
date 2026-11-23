@@ -74,8 +74,9 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
       accumulator = maxSubsteps * fixedMicros
     }
     accumulator -= steps * fixedMicros
-    substepsLastFrame = steps
-    runFixed(steps)
+    substepsLastFrame = runFixed(steps, options.holdFixed)
+    // held inside the frame: what is left of it is frozen (its steps are dropped above with the rest of the accumulator they took)
+    if (substepsLastFrame < steps) ctx.fixedFrozen = true
     ctx.alpha = accumulator / fixedMicros
     ctx.simTime += seconds * timeScale
     runPhase('lateSimulate', seconds * timeScale)
@@ -90,7 +91,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     begin(run.frameStartMs)
     try {
       ctx.simulated = run.simulate !== false
-      ctx.fixedFrozen = ctx.simulated && run.freezeFixed === true
+      ctx.fixedFrozen = ctx.simulated && (run.freezeFixed === true || options.holdFixed?.() === true)
       ctx.realDt = seconds
       ctx.alpha = accumulator / fixedMicros
       substepsLastFrame = 0
