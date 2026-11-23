@@ -26,7 +26,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
   let nextSystem = 0
   const reportedErrors = new Set<string>()
   const lists = Object.fromEntries(FRAME_PHASES.map((phase) => [phase, createSystemList(() => running)])) as Record<FramePhase, SystemList>
-  const ctx: MutableContext = { dt: 0, realDt: 0, fixedDt, alpha: 0, frame: 0, tick: 0, substep: 0, simTime: 0, paused: false, scripted: false, simulated: true }
+  const ctx: MutableContext = { dt: 0, realDt: 0, fixedDt, alpha: 0, frame: 0, tick: 0, substep: 0, simTime: 0, paused: false, scripted: false, simulated: true, fixedFrozen: false }
 
   const reportError =
     options.onError ??
@@ -57,10 +57,15 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     settleAll()
   }
 
-  /** The input phase and, unless paused, the fixed steps and the late phase; `micros` is the real time to feed the accumulator. */
+  /** The input phase and, unless paused, the fixed steps (none when frozen) and the late phase; `micros` is the real time to feed the accumulator. */
   const simulate = (seconds: number, micros: number, exact: boolean): void => {
     runPhase('input', seconds)
     if (paused) return
+    if (ctx.fixedFrozen) {
+      ctx.simTime += seconds * timeScale
+      runPhase('lateSimulate', seconds * timeScale)
+      return
+    }
     accumulator += Math.round(micros * timeScale)
     let steps = Math.floor(accumulator / fixedMicros)
     if (!exact && steps > maxSubsteps) {
@@ -85,6 +90,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     begin(run.frameStartMs)
     try {
       ctx.simulated = run.simulate !== false
+      ctx.fixedFrozen = ctx.simulated && run.freezeFixed === true
       ctx.realDt = seconds
       ctx.alpha = accumulator / fixedMicros
       substepsLastFrame = 0
@@ -100,6 +106,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
       budget.drain('idle')
     } finally {
       ctx.simulated = true
+      ctx.fixedFrozen = false
       end()
     }
   }

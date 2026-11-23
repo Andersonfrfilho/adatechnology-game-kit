@@ -22,6 +22,8 @@ export interface FrameContext {
   readonly scripted: boolean
   /** false in a frame run with `simulate: false` (the display frame while a scenario steps the world), true otherwise. */
   readonly simulated: boolean
+  /** true in a frame run with `freezeFixed: true`: no fixed step runs and the accumulator does not move; input, lateSimulate and the effects do. */
+  readonly fixedFrozen: boolean
 }
 
 export type SystemFn = (ctx: FrameContext) => void
@@ -62,6 +64,12 @@ export interface FrameRunOptions {
   readonly render?: boolean
   /** false skips input, fixedSimulate and lateSimulate (a scenario is stepping the world synchronously). Default true. */
   readonly simulate?: boolean
+  /**
+   * true freezes the world for this frame: no fixed step runs and the frame's time is not fed to the accumulator (the remainder from before stays as it was, so the
+   * frames after it step as if this one had not happened), while input, lateSimulate (effects, sound, camera) and the queues run with the frame's `dt`. A host
+   * spreading heavy simulated work over frames (a blast cast a few rays per frame) holds the ticks with it. Default false. Ignored with `simulate: false`.
+   */
+  readonly freezeFixed?: boolean
   /**
    * true: `realSeconds` is used as given. No clamp, no snap, no `maxSubsteps` cap (every whole fixed step runs, the remainder stays in the
    * accumulator, nothing goes to `droppedSeconds`), one `input` with `dt = realSeconds` and one `lateSimulate` with `dt = realSeconds * scale`.

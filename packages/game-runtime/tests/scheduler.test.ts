@@ -326,6 +326,73 @@ describe('exact frames and scenario frames', () => {
   })
 })
 
+describe('freezeFixed', () => {
+  it('runs input, lateSimulate and the queues but no fixed step, and leaves the accumulator as it was', () => {
+    const scheduler = createScheduler({ snapMs: 0 })
+    const log = recorder(scheduler)
+    const frozen: boolean[] = []
+    const alphas: number[] = []
+    let ticksSeen = 0
+    scheduler.add((ctx) => frozen.push(ctx.fixedFrozen), { phase: 'lateSimulate' })
+    scheduler.add((ctx) => alphas.push(ctx.alpha), { phase: 'present' })
+    scheduler.add(() => ticksSeen++, { phase: 'fixedSimulate' })
+    scheduler.frame(1.5 * H)
+    expect(ticksSeen).toBe(1)
+    const alphaBefore = alphas[0]!
+    log.length = 0
+    scheduler.frame(3 * H, { freezeFixed: true })
+    scheduler.frame(3 * H, { freezeFixed: true })
+    expect(log).toEqual(['input', 'lateSimulate', 'present', 'render', 'idle', 'input', 'lateSimulate', 'present', 'render', 'idle'])
+    expect(ticksSeen).toBe(1)
+    expect(alphas[1]).toBe(alphaBefore)
+    expect(alphas[2]).toBe(alphaBefore)
+    expect(scheduler.stats().droppedSeconds).toBe(0)
+    // unfrozen, the remainder of the first frame (half a tick) is still there: 0.6 of a tick more makes the second tick
+    scheduler.frame(0.6 * H)
+    expect(ticksSeen).toBe(2)
+    expect(frozen).toEqual([false, true, true, false])
+  })
+
+  it('gives, with the frozen frames taken out, the ticks and hash of the run without them', () => {
+    const run = (freezeAt: ReadonlySet<number>): { ticks: number; hash: number } => {
+      const scheduler = createScheduler({ snapMs: 0 })
+      let hash = 7
+      let ticks = 0
+      scheduler.add((ctx) => {
+        ticks++
+        hash = (Math.imul(hash, 31) + ctx.tick) >>> 0
+      }, { phase: 'fixedSimulate' })
+      for (let frame = 0; frame < 40; frame++) scheduler.frame(((frame % 3) + 0.7) * H, freezeAt.has(frame) ? { freezeFixed: true } : {})
+      return { ticks, hash }
+    }
+    const frames = (skip: ReadonlySet<number>): { ticks: number; hash: number } => {
+      const scheduler = createScheduler({ snapMs: 0 })
+      let hash = 7
+      let ticks = 0
+      scheduler.add((ctx) => {
+        ticks++
+        hash = (Math.imul(hash, 31) + ctx.tick) >>> 0
+      }, { phase: 'fixedSimulate' })
+      for (let frame = 0; frame < 40; frame++) if (!skip.has(frame)) scheduler.frame(((frame % 3) + 0.7) * H)
+      return { ticks, hash }
+    }
+    const frozenFrames = new Set([5, 6, 7, 20])
+    expect(run(frozenFrames)).toEqual(frames(frozenFrames))
+    expect(run(new Set())).not.toEqual(run(frozenFrames))
+  })
+
+  it('is ignored with simulate:false', () => {
+    const scheduler = createScheduler()
+    let late = 0
+    const frozen: boolean[] = []
+    scheduler.add(() => late++, { phase: 'lateSimulate' })
+    scheduler.add((ctx) => frozen.push(ctx.fixedFrozen), { phase: 'present' })
+    scheduler.frame(H, { simulate: false, freezeFixed: true })
+    expect(late).toBe(0)
+    expect(frozen).toEqual([false])
+  })
+})
+
 describe('systemProbe', () => {
   it('is off by default and, when set, is told around every system, also when the system throws', () => {
     const scheduler = createScheduler({ onError: () => undefined })
