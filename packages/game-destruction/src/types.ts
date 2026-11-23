@@ -695,6 +695,8 @@ export interface DestructionWorld {
   explosionProbe(): { finishedByOperation: number }
   /** Times the world has solved the load path of an object (`solveStructure`) since it was made: inside an operation, once per object it changed and at each read of it. */
   structureProbe(): { solves: number }
+  /** Times `revealHostedIn` ran (`runs`) and objects whose hosted parts were checked (`objects`) since the world was made. */
+  hostedProbe(): { runs: number; objects: number }
   /** Cost of the last `sweepBox` (`SweepProbe`). */
   sweepProbe(): SweepProbe
   /**

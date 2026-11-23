@@ -392,6 +392,8 @@ interface ObjRT {
   loose: boolean
   /** Parts hosted by another part (`PartSpec.hostedIn`) that no hole of it has reached yet. */
   hosted?: PartRT[]
+  /** Ids of parts that currently host at least one entry in `hosted`. */
+  hostedHosts?: Set<string>
   /** The cast members of each wall (`markCastMembers`), by wall id: what the halves of a split read instead of looking again (theirs are among these). */
   cast: Map<string, readonly CastEntry[]>
 }
@@ -710,9 +712,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let runDepth = 0
   /** Changes to the structure of an object inside the operation being run (`loosened`) whose solution waits for `settleStructure`, in the order they happened. */
   const pendingStructure = new Map<ObjRT, Array<{ opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }>>()
+  const dirtyHosted = new Set<ObjRT>()
+  const markHostedDirty = (o: ObjRT, partId?: string) => {
+    if (!o.hosted) return
+    if (partId === undefined || o.hostedHosts?.has(partId)) dirtyHosted.add(o)
+  }
   /** The detach events of the operation being run, in the order the joints opened: they come out at its end, with the groups it left (`emitDetaches`). */
   const pendingDetaches: Array<{ o: ObjRT; opened: JointRT[]; by: 'break' | 'tool' | 'part_lost'; src?: string; blow?: DamageType }> = []
   let structureSolves = 0
+  let hostedRuns = 0
+  let hostedObjects = 0
 
   // Scratch for `recomputeGroups` and `solveStructure`: sized by part count, grown when needed, rewritten on each call (neither runs inside the other)
   let ufParent = new Int32Array(0)
@@ -751,7 +760,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         settleAllStructure()
         flushCollapse()
         settleAllStructure()
-        if (revealHostedIn(objects.values())) {
+        if (dirtyHosted.size > 0 && revealHostedIn()) {
           settleAllStructure()
           flushCollapse()
           settleAllStructure()
@@ -899,7 +908,14 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const box = aabbOf(p.spec.shape, p.pos, p.q)
       p.embedded = [0, 1, 2].every((k) => box.min[k]! >= host.min[k]! - HOSTED_TOLERANCE && box.max[k]! <= host.max[k]! + HOSTED_TOLERANCE)
     }
-    if (hosted.length > 0) o.hosted = hosted
+    if (hosted.length > 0) {
+      o.hosted = hosted
+      o.hostedHosts = new Set(hosted.map((p) => p.spec.hostedIn!))
+      if (carry && hosted.some((p) => {
+        const h = o.byId.get(p.spec.hostedIn!)!
+        return isLost(h) || h.st.status === 'collapsed' || !!h.st.opening || !!h.st.chipped?.length
+      })) dirtyHosted.add(o)
+    }
     markCastMembers(o, carry?.cast)
     // open joints whose parts are no longer both here (left behind by `splitGroup`) stay listed, inert, so callers still see them open
     for (const [jid, c] of carry?.joints ?? []) if (c.st.open && !o.jointMap.has(jid)) o.st.joints.push(c.st)
@@ -1919,6 +1935,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         for (const p of whole) {
           o.collapsed.add(p.spec.id)
           p.st.status = 'collapsed'
+          markHostedDirty(o, p.spec.id)
           setStage(o, p, 3, {}, src)
         }
         if (whole.length > 0) emit({ ...base(o, src), type: 'collapse', parts: whole.map((p) => p.spec.id), mass: whole.reduce((sum, p) => sum + p.st.mass, 0) })
@@ -2341,6 +2358,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     p.st.mass = Math.max(0, p.st.mass - removed)
     p.rt.removed = (p.rt.removed ?? 0) + removed
     p.st.opening = { center: objLocal(o, worldCenter), radius: hole.radius }
+    markHostedDirty(o, p.spec.id)
     markDamaged(p)
     if (p.staged) {
       setStage(o, p, 1, {}, src)
@@ -2783,6 +2801,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (o.st.soil) restCarry.soil = o.st.soil
     if (o.soil?.sets.size) restCarry.soilSets = Object.fromEntries(o.soil.sets)
     const rest = build(sub(inOld), o.id, o.soil ? o.base.pos : pos, o.soil ? o.base.rot : rot, restCarry)
+    dirtyHosted.delete(o)
     objects.set(o.id, rest)
     for (const [nid, object] of fresh) objects.set(nid, object)
     return fresh.map(([nid]) => nid)
@@ -3162,7 +3181,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     if (shown.length === 0) return false
     o.hosted = o.hosted!.filter((p) => !p.st.exposed)
-    if (o.hosted.length === 0) delete o.hosted
+    if (o.hosted.length === 0) {
+      delete o.hosted
+      delete o.hostedHosts
+    } else {
+      o.hostedHosts = new Set(o.hosted.map((p) => p.spec.hostedIn!))
+    }
     // it shows before it comes off, so what draws the piece that detaches finds it drawn
     for (const p of shown) emit({ ...base(o), type: 'reveal', part: p.spec.id, host: p.spec.hostedIn! })
     if (opened.length > 0) {
@@ -3174,19 +3198,26 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   const revealScratch: ObjRT[] = []
   const updateScratch: ObjRT[] = []
-  const revealHostedIn = (all: Iterable<ObjRT>): boolean => {
+  const revealHostedIn = (): boolean => {
+    if (dirtyHosted.size === 0) return false
+    hostedRuns++
     let any = false
     revealScratch.length = 0
-    for (const o of all) revealScratch.push(o)
+    for (const o of dirtyHosted) revealScratch.push(o)
+    dirtyHosted.clear()
     for (let i = 0; i < revealScratch.length; i++) {
       const o = revealScratch[i]
-      if (o.hosted && revealHosted(o)) any = true
+      if (o.hosted && objects.get(o.id) === o) {
+        hostedObjects++
+        if (revealHosted(o)) any = true
+      }
     }
     revealScratch.length = 0
     return any
   }
 
   const partLost = (o: ObjRT, p: PartRT, src?: string) => {
+    markHostedDirty(o, p.spec.id)
     const opened: JointRT[] = []
     for (const j of o.byPart.get(p.spec.id) ?? []) {
       if (j.st.open) continue
@@ -3772,6 +3803,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       emit({ ...base(o, src), type: 'chip', part: p.spec.id, center, size: [cell.size[0], cell.size[1], cell.size[2]], rotation: q, fragments })
       debris(o, p, p.mat.breakDebris, center, vec.scale(dir ?? [0, 1, 0], -1), 6, 2, src)
     }
+    markHostedDirty(o, p.spec.id)
     // what the units that came out held up and nothing else holds comes down
     if (Object.values(worn).filter((w) => w === -1).length > wholeBefore) dropUnsupported(o, p, src)
     if (p.spec.reinforcement) exposeRebar(o, p, src)
@@ -3898,6 +3930,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     p.st.mass = Math.max(0, p.st.mass - removed)
     p.rt.removed = (p.rt.removed ?? 0) + removed
     p.st.opening = { center: objLocal(o, worldCenter), radius }
+    markHostedDirty(o, p.spec.id)
     markDamaged(p)
     setStage(o, p, 1, {}, src)
     setStage(o, p, 2, { opening: { center: worldCenter, radius }, fragments }, src)
@@ -4107,6 +4140,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         hi[k] = Math.max(hi[k]!, cell.center[k]! + cell.size[k]! / 2)
       }
     }
+    if (cells.length > 0) markHostedDirty(o, p.spec.id)
     p.st.mass = Math.max(0, p.st.mass - blownMass - fallenMass)
     p.rt.removed = (p.rt.removed ?? 0) + blownMass + fallenMass
     markDamaged(p)
@@ -4155,6 +4189,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const holes = localHolesOf(p)
     p.st.holes = p.st.holes.filter((_, k) => !fallen.some((cell) => marksInBox(cell.center, cell.size, undefined, [holes[k]!]).length > 0))
     for (const cell of fallen) chipped.push({ center: [cell.center[0], cell.center[1], cell.center[2]], size: [cell.size[0], cell.size[1], cell.size[2]] })
+    markHostedDirty(o, p.spec.id)
     p.st.mass = Math.max(0, p.st.mass - mass)
     p.rt.removed = (p.rt.removed ?? 0) + mass
     markDamaged(p)
@@ -6116,10 +6151,13 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       poseVersion++
       objectPoses.set(o, (objectPoses.get(o) ?? 0) + 1)
       updateBound(o)
+      if (o.hosted && (o.hostedHosts?.has(partId) || (p.spec.hostedIn !== undefined && p.st.exposed !== true))) dirtyHosted.add(o)
     },
     remove(id) {
       finishExplosions()
       impls.get(id)?.impl.dispose?.()
+      const existing = objects.get(id)
+      if (existing) dirtyHosted.delete(existing)
       objects.delete(id)
       impls.delete(id)
     },
@@ -6185,6 +6223,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     structureProbe() {
       return { solves: structureSolves }
+    },
+    hostedProbe() {
+      return { runs: hostedRuns, objects: hostedObjects }
     },
     blastReach(point, target, options = {}) {
       const L = vec.distance(point, target)
@@ -6470,6 +6511,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         return
       }
       const o = getObj(id)
+      dirtyHosted.delete(o)
       objects.set(id, build(o.spec, id, o.base.pos, o.base.rot))
     },
     on(type: DestructionEventType | '*', fn) {
@@ -6499,12 +6541,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     loadObject(entry, id = entry.id) {
       finishExplosions()
+      const existing = objects.get(id)
+      if (existing) dirtyHosted.delete(existing)
       objects.set(id, buildFromEntry(entry, id))
     },
     load(snap) {
       // the whole world is replaced: what an open blast would still do belongs to the world that goes
       cancelExplosions()
       if (snap.version !== 1) throw new Error(`unsupported snapshot version ${String(snap.version)}`)
+      dirtyHosted.clear()
       objects.clear()
       time = snap.time
       rng.set(snap.rng)
