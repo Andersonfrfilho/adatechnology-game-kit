@@ -561,3 +561,92 @@ Medições intermediárias na mesma pasta: `branch-a` (onda inteira: o quadro da
   60 quadros, fatiado 76 quadros (os 15 primeiros congelados, como antes: a leitura não terminou a explosão), 2 rodadas cada, cargas
   ~1,2–1,5: **idênticos em todos os 60 tiques**, `stateHash` 1505117557 e 1702 eventos no tique 60 (`det-review-*.json`, `detcmp-review.cjs`).
 - Sem medição nova de tempo: nenhuma correção mexeu no caminho quente da régua (a opção a do H3, que mudaria o começo, não foi feita).
+
+## D2, depois do #443: a régua lê o quadro da volta, e a causa do quadro da volta (2026-11-23)
+
+Branch `perf/d2-quadro-da-volta` (sobre a `main` com o #443, `d94089d0d`). Brutos em
+`~/.cache/adatechnology-game-kit/medicoes/2026-11-23-d2-quadro-da-volta/` (`conditions.log` com carga e GPU de cada rodada).
+
+### 1. A régua passa a ver o quadro em que o mundo volta (decisão do dono, 2026-11-23)
+
+- **O dono aprovou mudar o que a régua mede** (2026-11-23): o `afterMs` era o pior dos 7 quadros depois do f0 e, com o marca-passo,
+  deixava de fora o quadro da volta (f7/f8).
+- Agora a régua grava `held: true` em cada quadro do `frameSeries` em que o `heldSeconds` do agendador cresceu, e a janela do `afterMs`
+  é f1..f(segurados + 7): todos os quadros segurados (contados do f0, seguidos), o quadro da volta e os 7 depois dele. O `frameMetrics`
+  ganha `afterLastFrame` (o último quadro lido) só quando houve espera. Sem espera (o C4 da base, ou relatório antigo sem o campo) a janela
+  é a mesma f1..f7: o formato só ganhou campos opcionais, a base gravada continua comparável e nenhum limiar do portão mudou (15% e 3 ms).
+- Testes: `tools/gpu/tests/room-explosion-frame.test.mjs` (janela com espera, borda do 7º quadro depois da volta, espera com buraco,
+  relatório sem o campo, série curta dá `missing-after-frames`). Doc: `docs/desempenho-explosoes.md`.
+- Número novo, M67 na `main` (página `469dee2366a4`, 3 rodadas de 3 estágios): **`afterMs` 31,07 / 29,53 / 29,47 ms (f1..f15)**; antes a
+  relatório do #443 (`final-a.json`, f1..f7) dava 21,63. `f0Ms` 21,5 / 20,3 / 20,6.
+
+### 2. O quadro da volta: a causa não é o passo do Jolt
+
+Rotulado em três medições (régua com rótulos temporários, `labels-main.json` e `labels-branch.json`; sonda por quadro, `probe-main-*.json`; perfil de CPU do Chrome, `profile-branch.json`; nada disso ficou no código):
+
+| quadro da volta (ms, 3 rodadas; `labels-branch.json`, página do protótipo abaixo, que só muda a medição das paredes) | r1 | r2 | r3 |
+|---|---|---|---|
+| física (coluna da régua) | 26,9 | 6,2 (a volta caiu no f7: 31,6) | 20,3 |
+| `world.hostedSolids` (os colisores do carro da cena, `colliders.pieces()` do `game-vehicles-three`) | 13,6 | — (9,5 no f7) | — |
+| `EngineStatics.fit` (próprio) | 4,1 | 3,2 | 3,2 |
+| `setShape` do Jolt (peças fixas reformadas) | 4,3 | — (2,7 no f7) | — |
+| `createBodies` (peças fixas novas) | 1,2 | 2,2 | 1,0 |
+| `iface.Step` do Jolt | ~0,2 | 0,3 | 0,2 |
+
+- **Confirmado:** o `stepFixed` de 19–21 ms é quase todo o `beforeStep` do primeiro passo (`EnginePieces.prepare` → `layStatics`): o
+  `staticSolids` do desenho e o `EngineStatics.lay`, que refazem os colisores fixos de tudo que os eventos mudaram nos quadros segurados
+  (o carro atingido, as paredes da casa). O passo do Jolt em si custa 0,1–0,4 ms. Na `main` sem marca-passo o mesmo trabalho cai no f0
+  (sonda: `layStatics` 12,6 + `statics.lay` 10,9 ms no f0 de 117–126 ms).
+- Os `createBodies` de f9–f11 (1–3,7 ms) e o `fit` de ~3 ms em cada um são as malhas fixas entrando aos poucos pelo `TRIANGLES_PER_UPDATE`
+  (1200 triângulos por atualização), contagem que já existe.
+- **Por que não foi espalhado nos quadros segurados:** os dois maiores pedaços têm estado por chamada. O `colliders.pieces()` do carro tem
+  orçamento próprio por chamada (`COLLIDER_BUDGET` = 25000 triângulos) e guarda o que já fez; o `staticSolids` mede no máximo
+  `VERTICES_PER_UPDATE` por chamada e o que fica marca o objeto para a próxima. Chamar qualquer um deles mais cedo muda quais peças fixas
+  o Jolt tem no primeiro passo, e com isso os bytes do caminho fatiado. E o `lay` é mutação do Jolt cujas entradas só existem depois do
+  `world.update` do próprio tique.
+
+### Protótipo descartado: medir as paredes antes (sem mudar o que o motor recebe)
+
+`prepareDrawnSolids`: no último quadro segurado, medir de antemão (6000 vértices, por contagem) as partes desenhadas que mudaram, e no
+tique usar o resultado só se os números forem os mesmos, cobrando o orçamento como sempre (mesmas peças, no mesmo tique). Testado no
+pacote (mesmos sólidos e o mesmo orçamento com e sem). Medido em rodadas alternadas, `main`, protótipo, `main`, protótipo... (página do
+protótipo `2beef388690b`, de árvore suja; 3 rodadas de cada, 9 estágios cada lado, carga 0,86–1,46 no início):
+
+| | `main` | protótipo |
+|---|---|---|
+| `afterMs` (f1..f15) | 31,07 / 29,53 / 29,47 | 28,67 / 27,07 / 27,30 |
+| f8, mediana (mín–máx) | 29,9 (13,8–32,9) | 29,5 (12,0–32,1) |
+| f7, mediana | 10,4 | 12,4 (o último quadro segurado paga a medição) |
+
+**Descartado:** ~2 ms no `afterMs` e nada no f8, abaixo dos ~3 ms que a régua lê; a medição das paredes é ~1 ms do f8 (`measureSolids`
+0,8–1,4 ms nos rótulos), o resto é o carro e o Jolt. O patch está em `experiment-prepare-static-solids.patch` na pasta dos brutos.
+
+### Quadro a quadro, `main` (`d94089d0d`, página `469dee2366a4`), M67, prazo, 1x, `jolt-d4-worker`, 9 estágios (3 rodadas)
+
+Quadro = update + renderCpu, ms; "segurado" pelo `held` novo. RTX 5070 Laptop, driver 620.73.04 (módulo = biblioteca), `flock`, carga < 1,5
+no início de cada rodada. A branch não muda a página (só a régua), então a tabela da branch é esta mesma.
+
+| quadro | mediana (mín–máx) | segurado |
+|---|---|---|
+| f0 | 21,1 (18,5–23,5) | 9/9 |
+| f1 | 17,0 (15,5–21,3) | 9/9 |
+| f2 | 21,8 (21,0–26,3) | 9/9 |
+| f3 | 6,0 (5,0–7,2) | 9/9 |
+| f4 | 18,9 (18,4–23,0) | 9/9 |
+| f5 | 18,6 (17,4–19,8) | 9/9 |
+| f6 | 18,6 (16,1–21,5) | 9/9 |
+| f7 | 10,4 (7,2–29,1) | 6/9 |
+| f8 | 29,9 (13,8–32,9) | 0/9 |
+| f9 | 14,8 (13,6–16,4) | 0/9 |
+| f10 | 14,8 (13,1–18,3) | 0/9 |
+| f11 | 14,2 (8,5–15,9) | 0/9 |
+| f12 | 8,7 (8,3–10,9) | 0/9 |
+
+Conferência da máquina: M67 sem marca-passo (`&blastPacing=0`, sonda) leu update de 117 e 126 ms no f0.
+
+### O que fica para o dono decidir
+
+- Cortar o quadro da volta exige escolher entre: (a) um "medir antes, entregar no mesmo turno" também nos colisores do carro
+  (`game-vehicles-three`) e no `hostedSolids` (`game-destruction`), no modelo do protótipo acima, para mover ~10–14 ms sem mudar bytes;
+  (b) deixar o `lay` dos fixos entrar aos poucos nos tiques depois da volta (muda os bytes do caminho fatiado: o motor vê as paredes um ou
+  mais tiques depois); (c) segurar um quadro a mais para refazer os fixos (mais ~17 ms de mundo parado). Nada disso foi feito.

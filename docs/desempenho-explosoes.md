@@ -253,7 +253,10 @@ flock ~/.cache/adatechnology-game-kit/perf-measure.lock env \
 ```
 
 - **Ler `f0Ms` e `afterMs`** (no relatório, em `frameMetrics`, por tipo): `f0Ms` é a média dos 3 piores quadros 0 de `update + renderCpu`; `afterMs` é a média, sobre
-  essas 3 piores rodadas, do pior quadro dos 7 seguintes ao golpe de cada rodada. Menos de 3 rodadas, quadro 0 ou quadros 1 a 7 sem `renderCpu` não dão número: o
+  essas 3 piores rodadas, do pior quadro dos 7 seguintes ao golpe de cada rodada. Numa explosão espalhada com o mundo segurado (spec 018 D2) a janela vai até o quadro em
+  que o mundo volta a andar e os 7 depois dele: os quadros segurados (`held: true` no `frameSeries`, quando o `heldSeconds` do agendador cresceu) contam a partir do f0, e a
+  janela é f1..f(segurados + 7); `afterLastFrame` no `frameMetrics` diz o último quadro lido (só aparece quando houve espera). Sem mundo segurado (o C4 da base, ou relatório
+  antigo sem o campo) a janela é a mesma f1..f7 de antes, e a base continua comparável. Menos de 3 rodadas, quadro 0 ou um quadro da janela sem `renderCpu` não dão número: o
   log diz o motivo (`too-few-rounds`, `missing-hit-frame`, `missing-after-frames`) e nada bloqueia. O portão do `room-explosion` bloqueia quando um dos dois piora mais de 15% e mais de 3 ms contra a
   base, só a 1x, na variante padrão e com base no mesmo modo de orçamento. Quando nada é comparado (base em outro modo ou sem `frameMetrics`, rodada sem as partes
   do quadro, estágio sem nível que bloqueia) o log imprime `SEM COMPARAÇÃO NESTA RODADA: <motivo>` e o relatório grava `gate.compared: false` com o motivo. A rodada

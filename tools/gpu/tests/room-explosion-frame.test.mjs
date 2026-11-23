@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { frameGate, frameMetricsOf, isBaseComparable, isFrameWorse } from '../room-explosion-frame.mjs'
+import { AFTER_FRAMES, afterLastFrameOf, frameGate, frameMetricsOf, heldFramesOf, isBaseComparable, isFrameWorse } from '../room-explosion-frame.mjs'
 
 const VARIANT = 'jolt-d4-worker'
 const GATED = new Set([1])
@@ -12,8 +12,8 @@ const metric = (/** @type {number} */ f0Ms, /** @type {number} */ afterMs, /** @
 /** A realistic round: frame 0 and 660 frames, the 7 after it with `after` ms at the worst. @param {number} round @param {number} f0 @param {number} after @param {string} [kind] */
 const roundOf = (round, f0, after, kind = 'blast') => Array.from({ length: 661 }, (_, frame) => row(round, frame, frame === 0 ? f0 - 8 : frame === 4 ? after - 1 : 3, frame === 0 ? 8 : 1, kind))
 /** @typedef {import('../room-explosion-frame.mjs').FrameProblem} FrameProblem */
-const measureOf = (/** @type {ReturnType<typeof metric>[]} */ metrics, /** @type {FrameProblem[]} */ problems = []) => ({ metrics, problems })
-const gate = (/** @type {ReturnType<typeof metric>[]} */ now, /** @type {object | undefined} */ base, mode = 'deadline') => frameGate({ measure: measureOf(now), base, mode, variant: VARIANT, gated: GATED })
+const measureOf = (/** @type {import('../room-explosion-frame.mjs').FrameMetric[]} */ metrics, /** @type {FrameProblem[]} */ problems = []) => ({ metrics, problems })
+const gate = (/** @type {import('../room-explosion-frame.mjs').FrameMetric[]} */ now, /** @type {object | undefined} */ base, mode = 'deadline') => frameGate({ measure: measureOf(now), base, mode, variant: VARIANT, gated: GATED })
 
 test('f0Ms is the mean of the 3 worst f0 (update + render) and afterMs the worst of the 7 frames after, in those rounds', () => {
   const rows = [roundOf(1, 68, 26), roundOf(2, 58, 30), roundOf(3, 78, 10), roundOf(4, 11, 99)].flat()
@@ -27,6 +27,36 @@ test('a realistic series of 660 frames a round gives the numbers', () => {
   const { metrics, problems } = frameMetricsOf([roundOf(1, 65, 25), roundOf(2, 66, 24), roundOf(3, 64, 26)].flat())
   assert.deepEqual(problems, [])
   assert.deepEqual(metrics.map((entry) => [entry.f0Ms, entry.afterMs]), [[65, 25]])
+})
+
+/** A paced round (spec 018 D2): frames 0..held-1 hold the world, frame `held` resumes it at `resume` ms, frame `held + late` reads `lateMs`, the rest 5 ms. @param {number} round @param {number} held @param {number} resume @param {number} [late] @param {number} [lateMs] */
+const pacedRoundOf = (round, held, resume, late = 0, lateMs = 0) =>
+  Array.from({ length: 40 }, (_, frame) => ({ ...row(round, frame, frame === 0 ? 15 : frame === held ? resume - 1 : late > 0 && frame === held + late ? lateMs - 1 : 4, 1), ...(frame < held ? { held: true } : {}) }))
+
+test('with the world held, afterMs reaches the frame the world resumes in and the 7 after it', () => {
+  const { metrics, problems } = frameMetricsOf([pacedRoundOf(1, 8, 30), pacedRoundOf(2, 8, 31), pacedRoundOf(3, 8, 29)].flat())
+  assert.deepEqual(problems, [])
+  assert.equal(metrics[0]?.afterMs, 30)
+  assert.equal(metrics[0]?.afterLastFrame, 8 + AFTER_FRAMES)
+})
+
+test('the window ends 7 frames after the resume: a frame past it is not read, the 7th after it is', () => {
+  assert.equal(frameMetricsOf([1, 2, 3].flatMap((round) => pacedRoundOf(round, 8, 12, AFTER_FRAMES, 40))).metrics[0]?.afterMs, 40)
+  assert.equal(frameMetricsOf([1, 2, 3].flatMap((round) => pacedRoundOf(round, 8, 12, AFTER_FRAMES + 1, 40))).metrics[0]?.afterMs, 12)
+})
+
+test('the held frames count from frame 0, one after the other; a report without the field holds none, so its window is the old 1..7', () => {
+  assert.equal(heldFramesOf([row(1, 0, 1, 1), row(1, 1, 1, 1)]), 0)
+  assert.equal(afterLastFrameOf([row(1, 0, 1, 1)]), AFTER_FRAMES)
+  const gap = [{ ...row(1, 0, 1, 1), held: true }, { ...row(1, 1, 1, 1), held: true }, row(1, 2, 1, 1), { ...row(1, 3, 1, 1), held: true }]
+  assert.equal(heldFramesOf(gap), 2)
+  assert.equal(heldFramesOf([row(1, 0, 1, 1), { ...row(1, 1, 1, 1), held: true }]), 0)
+  assert.equal(frameMetricsOf([roundOf(1, 65, 25), roundOf(2, 66, 24), roundOf(3, 64, 26)].flat()).metrics[0]?.afterLastFrame, undefined)
+})
+
+test('a held round whose series ends before the window does is missing-after-frames, never a shorter window', () => {
+  const short = [1, 2, 3].flatMap((round) => pacedRoundOf(round, 8, 30).filter((entry) => entry.frame <= 8 + AFTER_FRAMES - 1))
+  assert.equal(frameMetricsOf(short).problems[0]?.status, 'missing-after-frames')
 })
 
 test('a run without the render time has no numbers and no problems', () => {
@@ -127,4 +157,18 @@ test('the default explosive is c4: a base without the field, or with it, compare
   assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'c4' }, 'deadline', 'c4'), true)
   assert.equal(gate(now, { budgetMode: 'deadline', frameMetrics: [metric(65, 25)] }).compared, true)
   assert.equal(gate(now, { budgetMode: 'deadline', explosive: 'c4', frameMetrics: [metric(65, 25)] }).regressions.length, 2)
+})
+
+test('afterMs read over another window than the base (one side held the world) is not compared: only f0Ms is, and the pair is listed in skipped', () => {
+  const base = { budgetMode: 'deadline', frameMetrics: [metric(65, 21)] }
+  const held = gate([{ ...metric(66, 30), afterLastFrame: 15 }], base)
+  assert.equal(held.status, 'compared')
+  assert.deepEqual(held.regressions, [])
+  assert.equal(held.skipped.length, 1)
+  assert.match(held.skipped[0] ?? '', /afterMs \(other window: f1\.\.f15 now, f1\.\.f7 in the base\)/)
+  const worse = gate([{ ...metric(90, 30), afterLastFrame: 15 }], base)
+  assert.deepEqual(worse.regressions.map((entry) => entry.field), ['f0Ms'])
+  const same = gate([{ ...metric(65, 30), afterLastFrame: 15 }], { budgetMode: 'deadline', frameMetrics: [{ ...metric(65, 21), afterLastFrame: 15 }] })
+  assert.deepEqual(same.regressions.map((entry) => entry.field), ['afterMs'])
+  assert.deepEqual(same.skipped, [])
 })
