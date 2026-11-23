@@ -233,15 +233,17 @@ const CAST_TOLERANCE = 1e-3
 const CAST_REACH = 2e-3
 const cutFactorOf = (shape: PartSpec['shape']): number => clamp(Math.max(...shapeDims(shape)) / CUT_SLICE, 1, 50)
 
-/** How a part that lies on another stands (`restingStance`): half its height and its level axes (in the object's frame) with their half-widths. */
-/** A resumable explosion of the world (`beginExplosion`): its steps, the events it emitted, and its results once it ended. */
+/** A resumable explosion of the world (`beginExplosion`): its steps, the events it emitted, and its results once it ended (or what a step threw). */
 interface ExplosionRT {
   readonly steps: Generator<'ray' | 'wave' | 'part', HitResult[]>
   readonly mine: DestructionEvent[]
   isStarted: boolean
   result: HitResult[] | undefined
+  /** Set when a step threw: the explosion is over (`isDone`), `result()` throws it again. */
+  failure: { readonly error: unknown } | undefined
 }
 
+/** How a part that lies on another stands (`restingStance`): half its height and its level axes (in the object's frame) with their half-widths. */
 interface RestingStance {
   readonly halfHeight: number
   readonly across: ReadonlyArray<{ readonly x: number; readonly z: number; readonly half: number }>
@@ -5558,6 +5560,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     } catch (error) {
       isFinished = true
+      job.failure = { error }
       throw error
     } finally {
       runDepth--
@@ -5574,14 +5577,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
   }
 
+  /** How many open explosions an operation of the world ran to their end before itself (`finishExplosions`): a host spreading blasts over frames lost that spread. */
+  const explosionProbe = { finishedByOperation: 0 }
+
   /** Runs every open explosion to its end, oldest first: called before any other operation of the world. */
   const finishExplosions = (): void => {
     if (isAdvancing) return
+    explosionProbe.finishedByOperation += explosions.length
     while (explosions.length > 0) advanceOldest(Infinity, Infinity)
   }
 
   const beginExplosion = (point: Vec3, energy: number, radius: number, source?: string, blast?: BlastOptions): ExplosionJob => {
-    const job: ExplosionRT = { steps: blastSteps(point, energy, radius, source, blast), mine: [], isStarted: false, result: undefined }
+    const job: ExplosionRT = { steps: blastSteps(point, energy, radius, source, blast), mine: [], isStarted: false, result: undefined, failure: undefined }
+    const isOver = (): boolean => job.result !== undefined || job.failure !== undefined
     // inside another operation (a listener of one of its events) the blast is part of it, as an `explode` there always was
     if (runDepth > 0) {
       blastProbe.partsTested = 0
@@ -5590,17 +5598,18 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     } else explosions.push(job)
     return {
       get isDone() {
-        return job.result !== undefined
+        return isOver()
       },
       advance(rays, waveParts = Infinity) {
-        if (job.result) return true
+        if (isOver() || !explosions.includes(job)) return isOver()
         if (isAdvancing) throw new Error('beginExplosion: advance called from inside a step of an explosion')
         // the ones begun before it go first, whole; then this one by the budget
         while (explosions[0] !== job && explosions.length > 0) advanceOldest(Infinity, Infinity)
-        if (!job.result) advanceOldest(Math.max(1, Math.floor(rays)), Math.max(1, Math.floor(waveParts)))
-        return job.result !== undefined
+        if (!isOver()) advanceOldest(Math.max(1, Math.floor(rays)), Math.max(1, Math.floor(waveParts)))
+        return isOver()
       },
       result() {
+        if (job.failure) throw job.failure.error
         if (!job.result) throw new Error('beginExplosion: result() of an explosion not finished yet (advance it until it is done)')
         return job.result
       },
@@ -6157,6 +6166,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     blastProbe() {
       return { ...blastProbe }
     },
+    explosionProbe() {
+      return { ...explosionProbe }
+    },
     structureProbe() {
       return { solves: structureSolves }
     },
@@ -6454,6 +6466,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     },
     serialize(): DestructionSnapshot {
+      finishExplosions()
       return {
         version: 1,
         time,

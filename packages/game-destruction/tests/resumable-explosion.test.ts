@@ -131,4 +131,37 @@ describe('beginExplosion', () => {
     open.world.shoot([0, 1, 4], [0, 0, -1], 2000, 7.62, 'shot')
     expect(outcome(open.world, open.events, job.result(), 1)).toEqual(expected)
   })
+
+  it('a step that throws ends its explosion: isDone, result() throws it again, advance never touches another job, and the next blast runs', () => {
+    const { world, events } = ringWorld()
+    let isArmed = true
+    world.on('*', () => {
+      if (!isArmed) return
+      isArmed = false
+      throw new Error('listener failed')
+    })
+    const broken = world.beginExplosion(ORIGIN, m67.energy, 15, 'a', { charge: GRENADE })
+    const next = world.beginExplosion(SECOND, m67.energy, 15, 'b', { charge: GRENADE })
+    expect(() => broken.advance(64)).toThrow('listener failed')
+    expect(broken.isDone).toBe(true)
+    expect(() => broken.result()).toThrow('listener failed')
+    // the dropped job does not advance the one behind it
+    const before = events.length
+    expect(broken.advance(64)).toBe(true)
+    expect(events.length).toBe(before)
+    while (!next.advance(64));
+    expect(next.result().length).toBeGreaterThan(0)
+  })
+
+  it('serialize runs an open explosion to its end first (never a half-applied state) and counts it in explosionProbe', () => {
+    const reference = ringWorld()
+    reference.world.explode(ORIGIN, m67.energy, 15, 'test', { charge: GRENADE })
+    const { world } = ringWorld()
+    const job = world.beginExplosion(ORIGIN, m67.energy, 15, 'test', { charge: GRENADE })
+    job.advance(32)
+    expect(world.explosionProbe().finishedByOperation).toBe(0)
+    expect(JSON.stringify(world.serialize())).toBe(JSON.stringify(reference.world.serialize()))
+    expect(job.isDone).toBe(true)
+    expect(world.explosionProbe().finishedByOperation).toBe(1)
+  })
 })
