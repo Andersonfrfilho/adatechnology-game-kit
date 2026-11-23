@@ -10,7 +10,7 @@ export default defineConfig([
     // one copy of the registries and module state, shared by the root and the ./testing entries
     splitting: true,
     sourcemap: true,
-    clean: true,
+    clean: false,
     target: 'es2020',
   },
   {
