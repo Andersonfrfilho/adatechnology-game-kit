@@ -1,0 +1,138 @@
+import type { BlastOptions, DestructionWorld, ExplosionJob, HitResult, Vec3 } from '@adatechnology/game-destruction'
+
+import { STRUCTURAL_UNITS_PER_FRAME } from './event-weight'
+import type { DestructionRenderer } from './types'
+
+/** Fragment rays a frame of a spread blast casts by default: the M67's 256 in 4 frames and its wave in a fifth (spec 018, `proposta-d2.md`). */
+export const BLAST_RAYS_PER_FRAME = 64
+/** Parts the wave of a spread blast reaches per frame by default, nearest first (`ExplosionJob.advance`): the wave of the M67 in the room house over a few frames. */
+export const BLAST_WAVE_PARTS_PER_FRAME = 128
+
+export type BlastPacerOptions = {
+  readonly world: Pick<DestructionWorld, 'beginExplosion' | 'cancelExplosions'>
+  readonly renderer: Pick<DestructionRenderer, 'holdEvents' | 'applyStructuralEventsSliced'>
+  /** Fragment rays per frame (`ExplosionJob.advance`). Default `BLAST_RAYS_PER_FRAME`; Infinity runs every blast whole in `begin` (the one-shot blast, through the pacer). */
+  readonly raysPerFrame?: number
+  /** Parts of the wave per frame, once the rays are cast. Default `BLAST_WAVE_PARTS_PER_FRAME`; Infinity runs the wave in one frame. */
+  readonly wavePartsPerFrame?: number
+  /** Units of `EVENT_APPLY_WEIGHT` of structural events applied per frame once the blast is done. Default `STRUCTURAL_UNITS_PER_FRAME`. */
+  readonly unitsPerFrame?: number
+}
+
+/** A blast for the pacer: the arguments of `DestructionWorld.explode`. */
+export type PacedBlast = {
+  readonly point: Vec3
+  readonly energy: number
+  readonly radius: number
+  readonly source?: string
+  readonly options?: BlastOptions
+}
+
+export type BlastPacer = {
+  /**
+   * Begins a blast and runs its first slice now; `onDone` gets what `explode` would have returned when it ends (in this call when it fits in one slice). A blast begun
+   * while another is open waits for it (`beginExplosion`).
+   */
+  begin(blast: PacedBlast, onDone: (results: HitResult[]) => void): void
+  /** true while the world must not step: a blast still open, or the structural events of the blasts done still being applied. The host holds its fixed steps on it. */
+  isHolding(): boolean
+  /** Once per frame while holding, outside the fixed step: the next slice of the oldest open blast, or, all done, the next slice of their structural events. */
+  step(): void
+  /**
+   * Drops every open blast (no `onDone`) and both holds: the host is clearing or replacing its world. It calls `world.cancelExplosions()`, which cancels every open
+   * explosion of the world, also one begun outside this pacer.
+   */
+  clear(): void
+}
+
+type OpenBlast = { readonly job: ExplosionJob; readonly onDone: (results: HitResult[]) => void; isFresh: boolean }
+
+/**
+ * Spreads a large blast over frames with the world held (spec 018 D2): the fragments a fixed number of rays per frame, the wave a fixed number of the parts it reaches per frame, then the
+ * structural events a fixed weight per frame, every count fixed so the world it leaves is the one the one-shot blast leaves. The host holds the fixed steps while
+ * `isHolding` (`game-runtime`'s `holdFixed`) and calls `step` once per frame; the effects, the sound and the camera go on meanwhile.
+ */
+export function createBlastPacer(options: BlastPacerOptions): BlastPacer {
+  const { world, renderer } = options
+  const raysPerFrame = options.raysPerFrame ?? BLAST_RAYS_PER_FRAME
+  const waveParts = raysPerFrame === Infinity ? Infinity : (options.wavePartsPerFrame ?? BLAST_WAVE_PARTS_PER_FRAME)
+  const unitsPerFrame = options.unitsPerFrame ?? STRUCTURAL_UNITS_PER_FRAME
+  const open: OpenBlast[] = []
+  let isApplying = false
+
+  /** With no blast left open, the events go; `isSpread`: their structural ones are applied a slice per frame from the next one, else in the tick as always. */
+  const letGo = (isSpread: boolean): void => {
+    if (open.length > 0) return
+    renderer.holdEvents(false)
+    if (isSpread) isApplying = true
+  }
+
+  /** Hands every blast that ended to its host, oldest first. A blast whose step threw is dropped (its `onDone` never runs) and the error goes on to the caller. */
+  const settleDone = (isSpread: boolean): void => {
+    while (open.length > 0 && open[0]!.job.isDone) {
+      const done = open.shift()!
+      let results: HitResult[]
+      try {
+        results = done.job.result()
+      } catch (error) {
+        // a failed blast is not spread: what it emitted applies in the next tick, whole
+        letGo(false)
+        throw error
+      }
+      done.onDone(results)
+    }
+    letGo(isSpread)
+  }
+
+  /** Runs a slice of the oldest open blast; a throw drops it (`settleDone`) and is thrown on. */
+  const advanceOldest = (oldest: OpenBlast, isSpread: boolean): void => {
+    try {
+      oldest.job.advance(raysPerFrame, waveParts)
+    } catch (error) {
+      if (open[0] === oldest) open.shift()
+      letGo(false)
+      throw error
+    }
+    if (oldest.job.isDone) settleDone(isSpread)
+  }
+
+  return {
+    begin(blast, onDone) {
+      const job = world.beginExplosion(blast.point, blast.energy, blast.radius, blast.source, blast.options)
+      // begun inside another blast's step (a charge it set off, from a listener) it ran whole there: its host hears of it now, as without the pacer
+      if (job.isDone) {
+        onDone(job.result())
+        return
+      }
+      const isFirst = open.length === 0
+      if (isFirst) renderer.holdEvents(true)
+      // one queued behind another is advanced from the frame after the one before it ends
+      const entry: OpenBlast = { job, onDone, isFresh: isFirst }
+      open.push(entry)
+      if (!isFirst) return
+      // a blast that fits in one slice (or every blast, with `raysPerFrame` Infinity) is the one-shot blast: nothing is held, its events apply in the tick as always
+      advanceOldest(entry, isApplying)
+      while (raysPerFrame === Infinity && open[0] === entry) advanceOldest(entry, isApplying)
+    },
+    isHolding: () => open.length > 0 || isApplying,
+    step() {
+      const oldest = open[0]
+      if (oldest) {
+        // the frame that began it already ran its first slice
+        if (oldest.isFresh) {
+          oldest.isFresh = false
+          return
+        }
+        advanceOldest(oldest, true)
+        return
+      }
+      if (isApplying) isApplying = renderer.applyStructuralEventsSliced(unitsPerFrame) > 0
+    },
+    clear() {
+      open.length = 0
+      isApplying = false
+      world.cancelExplosions()
+      renderer.holdEvents(false)
+    },
+  }
+}

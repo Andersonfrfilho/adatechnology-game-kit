@@ -15,13 +15,15 @@ export interface FrameContext {
   readonly tick: number
   /** Index of the substep inside this frame (fixedSimulate only), else 0. */
   readonly substep: number
-  /** Simulated seconds since start (sum of the dt given to lateSimulate). */
+  /** Simulated seconds since start (sum of the dt given to lateSimulate). It keeps advancing in a frozen frame (`fixedFrozen`): the effects of that frame play; `tick` does not. */
   readonly simTime: number
   readonly paused: boolean
   /** true inside `advance` (a scenario steps the world): systems that do not run in a scenario step read it and skip. */
   readonly scripted: boolean
   /** false in a frame run with `simulate: false` (the display frame while a scenario steps the world), true otherwise. */
   readonly simulated: boolean
+  /** true in a frame run with `freezeFixed: true`: no fixed step runs and the accumulator does not move; input, lateSimulate and the effects do. */
+  readonly fixedFrozen: boolean
 }
 
 export type SystemFn = (ctx: FrameContext) => void
@@ -53,6 +55,13 @@ export interface SchedulerOptions {
   readonly mustDrainIds?: ReadonlySet<string>
   /** Milliseconds clock; default `performance.now` (or `Date.now`). Tests inject a fake. */
   readonly clock?: () => number
+  /**
+   * Asked at the start of each frame and before each fixed step: true holds the world as `FrameRunOptions.freezeFixed` does, from that point of the frame on (the steps of
+   * the frame not run yet are dropped, not kept for later: held time does not count; `stats().heldSeconds` sums it). A host whose fixed step started heavy work it
+   * spreads over frames (a blast) holds the steps until the work is done, so no step runs in between. An `exact` frame is held the same way: the steps it would have run
+   * from the hold on are dropped, not kept in the accumulator. Not asked inside `advance` (a scenario steps the world itself). Default: never held.
+   */
+  readonly holdFixed?: () => boolean
   /** A system that throws: default logs once per system id and keeps the frame going. */
   readonly onError?: (error: unknown, system: { id: string; phase: FramePhase }) => void
 }
@@ -62,6 +71,12 @@ export interface FrameRunOptions {
   readonly render?: boolean
   /** false skips input, fixedSimulate and lateSimulate (a scenario is stepping the world synchronously). Default true. */
   readonly simulate?: boolean
+  /**
+   * true freezes the world for this frame: no fixed step runs and the frame's time is not fed to the accumulator (the remainder from before stays as it was, so the
+   * frames after it step as if this one had not happened), while input, lateSimulate (effects, sound, camera) and the queues run with the frame's `dt`. A host
+   * spreading heavy simulated work over frames (a blast cast a few rays per frame) holds the ticks with it. Default false. Ignored with `simulate: false`.
+   */
+  readonly freezeFixed?: boolean
   /**
    * true: `realSeconds` is used as given. No clamp, no snap, no `maxSubsteps` cap (every whole fixed step runs, the remainder stays in the
    * accumulator, nothing goes to `droppedSeconds`), one `input` with `dt = realSeconds` and one `lateSimulate` with `dt = realSeconds * scale`.
@@ -163,6 +178,8 @@ export interface SchedulerStats {
   readonly tick: number
   readonly substepsLastFrame: number
   readonly droppedSeconds: number
+  /** Simulated seconds held since start (`freezeFixed`, `holdFixed`): the time of frozen frames and the fixed steps a hold dropped, never stepped and never caught up. */
+  readonly heldSeconds: number
   /** Milliseconds per phase in the last frame. */
   readonly phaseMs: Readonly<Record<FramePhase, number>>
   readonly budget: BudgetStats

@@ -616,6 +616,19 @@ export interface AddOptions {
   rotation?: Quat
 }
 
+/** A blast begun with `DestructionWorld.beginExplosion`, run a few fragment rays at a time. */
+export interface ExplosionJob {
+  /** true once the blast is over: it ran to its end (its results are ready), or a step threw (`result()` throws it again). */
+  readonly isDone: boolean
+  /**
+   * Runs the blast on: the blasts begun before it first (each to its end), then up to `rays` fragment rays of this one (at least 1), or, its rays all cast, up to
+   * `waveParts` of the parts its wave reaches, nearest first (default all: the wave whole); the wave never starts in a call that cast rays. Returns `isDone`.
+   */
+  advance(rays: number, waveParts?: number): boolean
+  /** What `explode` would have returned; throws while the blast is not done, and throws what a step threw. A job dropped by a throw is never advanced again (`advance` returns true). */
+  result(): HitResult[]
+}
+
 export interface DestructionWorld {
   readonly materials: ReadonlyMap<MaterialId, MaterialDef>
   /** Add an object and return its id. */
@@ -660,6 +673,16 @@ export interface DestructionWorld {
    */
   explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
   /**
+   * The same blast as `explode`, resumable: nothing runs until `advance`, which casts the fragments of the case (`BlastCharge.casing`) a fixed number of rays per call and
+   * then runs the wave, in calls of its own, a fixed number of the parts it reaches per call (all by default). Run to its end with nothing else in between, it emits the same events and leaves the same state and results as `explode`, for
+   * any number of rays per call (the blast is the same operation, cut). A blast begun while another is open waits for it and never runs inside it; any other operation of
+   * the world (`explode`, `shoot`, `hit`, `update`, `add`, `serialize`...) first runs every open one to its end (counted in `explosionProbe`). Inside an operation (a listener of an event) it runs whole at once, as
+   * `explode` there does. The host that spreads it over frames holds the simulation meanwhile (`game-runtime`'s `holdFixed`).
+   */
+  beginExplosion(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): ExplosionJob
+  /** Drops every open `beginExplosion` where it stands: nothing more of it runs and its `result()` throws. For a host clearing or replacing its world (`load` does it itself). */
+  cancelExplosions(): void
+  /**
    * The share (0..1) of a blast at `point` that reaches `target` through what stands between them: every part the straight line crosses lets
    * `exp(-r / k)` through (`ShelterOptions`; `r` the hit points of the slab per square metre), a broken part or a hole lets it all by. Always on, whatever
    * `BlastOptions.shelter` says: the shove of a blast (people, the player, loose things) is blocked by cover in every room. `ignore` lists objects that never
@@ -668,6 +691,8 @@ export interface DestructionWorld {
   blastReach(point: Vec3, target: Vec3, options?: { readonly ignore?: readonly string[]; readonly shelter?: ShelterOptions }): number
   /** Cost of the last `explode`: parts in range of the broad phase (`partsTested`) and those whose bounding sphere the blast reached (`partsNear`). */
   blastProbe(): { partsTested: number; partsNear: number }
+  /** Open explosions (`beginExplosion`) an operation of the world ran to their end before itself, since the world was made: what a host spreading blasts over frames lost to them. */
+  explosionProbe(): { finishedByOperation: number }
   /** Times the world has solved the load path of an object (`solveStructure`) since it was made: inside an operation, once per object it changed and at each read of it. */
   structureProbe(): { solves: number }
   /** Cost of the last `sweepBox` (`SweepProbe`). */

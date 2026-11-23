@@ -15,6 +15,8 @@ export type SimulationHooks = {
   readonly pose: { readonly restoreStepPose: () => void; readonly present: (alpha: number) => void }
   /** The destruction events that change the simulation apply in the tick on the step pose, never in the frame's `present`: those queued outside the tick before its step, those its step emitted at its end. */
   readonly structural: { readonly setStructuralInTick: (isInTick: boolean) => void; readonly applyStructuralEvents: () => void }
+  /** The room's blast pacing (`TestRoomOptions.blastPacing`): its systems go on the same scheduler. */
+  readonly blastPacing?: { readonly attach: (scheduler: Scheduler) => void } | undefined
 }
 
 export type SimulationPhases = {
@@ -30,6 +32,7 @@ export function resolveSimulationTick(loopStep: number | undefined, nominalTick:
 }
 
 export function registerSimulationPhases(scheduler: Scheduler, tick: number, hooks: SimulationHooks): SimulationPhases {
+  hooks.blastPacing?.attach(scheduler)
   let isLegacyStep = false
   let isSynchronousFrame = false
   // before `input`: the player's actions (push, carry, doors) write on the step pose, never on last frame's blend
@@ -57,7 +60,7 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
     if (!isLegacyStep) hooks.structural.applyStructuralEvents()
   }, { phase: 'fixedSimulate', order: 2000, id: 'room.structural-events' })
   scheduler.add((ctx) => {
-    if (isLegacyStep) hooks.fixed(ctx.dt, false)
+    if (isLegacyStep && !ctx.fixedFrozen) hooks.fixed(ctx.dt, false)
     hooks.frame(ctx.dt)
   }, { phase: 'lateSimulate', order: -1000, id: 'room.simulate-frame' })
   scheduler.add((ctx) => hooks.frameEnd(ctx.dt), { phase: 'lateSimulate', order: 1000, id: 'room.simulate-end' })

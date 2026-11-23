@@ -127,6 +127,9 @@ const room = createTestRoom({
     ...(params.get('workBudget') ? { workBudget: { budgetMs: Number(params.get('workBudget')) } } : {}),
     jitWarmUp: params.get('warmup') === '0' ? false : { engine: /** @type {any} */ (window).__joltEngine },
   },
+  // a fragmentation grenade spread over frames with the world held (spec 018 D2): flash at once, 64 rays a frame, the wave, then its damage by fixed weights;
+  // ?blastPacing=0 sets every blast off in its frame as before
+  ...(params.get('blastPacing') !== '0' ? { blastPacing: {} } : {}),
   strikeCombo: PUNCH_COMBO,
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
   firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),

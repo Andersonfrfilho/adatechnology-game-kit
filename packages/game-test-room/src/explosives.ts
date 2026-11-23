@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
 import type { BlastOptions, DestructionWorld, HitResult, Vec3 } from '@adatechnology/game-destruction'
-import type { DestructionRenderer } from '@adatechnology/game-destruction-three'
+import type { DestructionRenderer, PacedBlast } from '@adatechnology/game-destruction-three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import { ExplosiveBody, backblastEffect, blastEffect, createExplosiveBody, sweepGround, tripwireSegment } from '@adatechnology/game-weapons'
 import type { Arsenal, Detonation, SurfaceProbe, Use } from '@adatechnology/game-weapons'
@@ -130,6 +130,11 @@ export type ExplosivesContext = {
   readonly waterLevelAt?: (x: number, z: number) => number | null
   /** A thrown charge falls into the water at `point` with `velocity`. */
   readonly splash?: (point: Vec3, velocity: Vec3) => void
+  /**
+   * The pacer that spreads a blast with a casing over frames (spec 018 D2, `TestRoomOptions.blastPacing`): the fireball shows at once, and everything that needs what
+   * the blast did (the report, the shove and sound of `renderer.explode`, the log, the host event, the fire) comes when it ends. Without it every blast is one-shot.
+   */
+  readonly blasts?: { readonly begin: (blast: PacedBlast, onDone: (results: HitResult[]) => void) => void; readonly clear: () => void } | undefined
 }
 
 export type Explosives = {
@@ -204,6 +209,8 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   const clear = (): void => {
+    // a blast still spread over frames goes with the room: nothing of it lands on what comes back
+    context.blasts?.clear()
     smokeSources.length = 0
     smokeHiss?.stop()
     smokeHiss = null
@@ -416,27 +423,46 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     action('blast_report', translate('act.blast_report', { shelter: format(summary.shelter * 100, 0), confinement: format(summary.confinement, 2), fragments: summary.fragmentHits, n: summary.targets }), { data: { ...summary } })
   }
 
+  /** What a blast showed when it went off: whether under water, whether the effects drew the fireball, and where the player stood (the share it took is read there). */
+  type Shown = { readonly isUnderwater: boolean; readonly isPlayed: boolean; readonly playerAt: Vec3 }
+  const showBlast = (detonation: Detonation): Shown => {
+    // under the water the water takes the blast: a column and a dome of white water, no fireball
+    const isUnderwater = detonation.energy > 0 && context.water?.(detonation)?.underwater === true
+    const isPlayed = detonation.energy > 0 && !isUnderwater && context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
+    return { isUnderwater, isPlayed, playerAt: toArray(camera.position) }
+  }
+
   /** The only place a blast is applied: the world, the drawing, the log, the player's share, the host event and the fire. */
   const detonate = (projectile: Projectile, detonation: Detonation): void => {
-    const weaponName = context.toolName(projectile.weapon)
     const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
     if (detonation.smoke) {
       const [shortest, longest] = detonation.smoke.seconds
       smokeSources.push({ point: detonation.point, left: shortest + (longest - shortest) * random(), owed: 0, color: detonation.smoke.color })
-      action('smoke', translate('act.smoke', { weapon: weaponName, seconds: format(smokeSources[smokeSources.length - 1]!.left, 0) }), { data: { weapon: projectile.weapon, explosive: detonation.explosive, point: detonation.point } })
+      action('smoke', translate('act.smoke', { weapon: context.toolName(projectile.weapon), seconds: format(smokeSources[smokeSources.length - 1]!.left, 0) }), { data: { weapon: projectile.weapon, explosive: detonation.explosive, point: detonation.point } })
       return
     }
-    const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', { ...context.blast(), charge: { ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}), ...(detonation.casing ? { casing: detonation.casing } : {}) } })
+    const options: BlastOptions = { ...context.blast(), charge: { ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}), ...(detonation.casing ? { casing: detonation.casing } : {}) } }
+    // a blast with a casing goes through the pacer when the room has one: the flash now, the rest when the blast has run
+    if (context.blasts && detonation.energy > 0 && !detonation.cone && detonation.casing) {
+      const shown = showBlast(detonation)
+      context.blasts.begin({ point: detonation.point, energy: detonation.energy, radius: reach, source: 'player', options }, (results) => blasted(projectile, detonation, results, shown))
+      return
+    }
+    const results = detonation.energy <= 0 || detonation.cone ? [] : world.explode(detonation.point, detonation.energy, reach, 'player', options)
+    blasted(projectile, detonation, results)
+  }
+
+  /** What follows a blast once the world has it: the report, the drawing, the log, the player's share, the host event and the fire; `shown` when the flash already played. */
+  const blasted = (projectile: Projectile, detonation: Detonation, results: readonly HitResult[], shown?: Shown): void => {
+    const weaponName = context.toolName(projectile.weapon)
+    const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
     const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : results.length
     if (!detonation.cone) told(results)
-    // under the water the water takes the blast: a column and a dome of white water, no fireball
-    const isUnderwater = detonation.energy > 0 && context.water?.(detonation)?.underwater === true
-    if (detonation.energy > 0) {
-      const isPlayed = !isUnderwater && context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
-      renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed && !isUnderwater, report: results, effect: detonation.explosive })
-    }
+    const { isUnderwater, isPlayed, playerAt } = shown ?? showBlast(detonation)
+    if (detonation.energy > 0) renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed && !isUnderwater, report: results, effect: detonation.explosive })
     if (detonation.stunSeconds !== undefined) renderer.emit('flash', detonation.point, [0, 1, 0], 1, 1)
-    const onPlayer = blastEffect(detonation, toArray(camera.position))
+    // the player's share is read where they stood when it went off, not where they are when a spread blast ends
+    const onPlayer = blastEffect(detonation, playerAt)
     action('explode', translate('act.explode', { weapon: weaponName, energy: format(detonation.energy, 0), radius: format(reach, 1), n: reached }), {
       data: { weapon: projectile.weapon, explosive: detonation.explosive, cause: detonation.cause, energyJ: detonation.energy, radius: reach, point: detonation.point, player: onPlayer.zone, stunSeconds: onPlayer.stunSeconds },
     })

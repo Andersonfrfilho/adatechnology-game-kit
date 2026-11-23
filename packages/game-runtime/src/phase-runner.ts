@@ -15,8 +15,8 @@ export interface PhaseRunnerDeps {
 
 export interface PhaseRunner {
   runPhase(phase: FramePhase, dt: number): void
-  /** Runs `steps` fixed steps of the `fixedSimulate` phase. */
-  runFixed(steps: number): void
+  /** Runs up to `steps` fixed steps of the `fixedSimulate` phase, stopping before one when `isHeld` says so; returns the steps run. */
+  runFixed(steps: number, isHeld?: () => boolean): number
   /** Fixed steps run since start. */
   readonly tick: number
   readonly phaseMs: Readonly<Record<FramePhase, number>>
@@ -50,10 +50,13 @@ export function createPhaseRunner(deps: PhaseRunnerDeps): PhaseRunner {
       runEntries(phase)
       phaseMs[phase] = clock() - started
     },
-    runFixed(steps) {
+    runFixed(steps, isHeld) {
       const started = clock()
       ctx.dt = fixedDt
+      let ran = 0
       for (let substep = 0; substep < steps; substep++) {
+        if (isHeld?.()) break
+        ran++
         ctx.substep = substep
         ctx.tick = tick
         runEntries('fixedSimulate')
@@ -62,6 +65,7 @@ export function createPhaseRunner(deps: PhaseRunnerDeps): PhaseRunner {
       ctx.substep = 0
       ctx.tick = tick
       phaseMs.fixedSimulate = clock() - started
+      return ran
     },
     get tick() {
       return tick
