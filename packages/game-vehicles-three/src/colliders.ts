@@ -58,10 +58,18 @@ interface Piece {
   collider: DrawnCollider | null
 }
 
-const isDrawn = (mesh: THREE_NS.Mesh): boolean => {
+/**
+ * Whether `mesh` is a drawn part of the vehicle under `stop` (`c.vehicle`): visibility walks only up to `stop` so `createVehicleLod` hiding the full group to draw the fused
+ * copy (`vehicle-lite`) does not drop every collider and force a full rebuild when the car unfuses. Static-batch copies (`noSurfaceRay`) are skipped for the same reason as
+ * `surfaceRay`: the parts they copy are already here.
+ */
+const isDrawn = (mesh: THREE_NS.Mesh, stop: THREE_NS.Object3D): boolean => {
   if (!mesh.isMesh || !mesh.geometry || mesh.userData.ghost || mesh.userData.helper) return false
   if (!mesh.geometry.getAttribute('position')) return false
-  for (let node: THREE_NS.Object3D | null = mesh; node; node = node.parent) if (node.visible === false) return false
+  for (let node: THREE_NS.Object3D | null = mesh; node; node = node.parent) {
+    if (node.visible === false || node.userData.noSurfaceRay) return false
+    if (node === stop) break
+  }
   return true
 }
 
@@ -106,7 +114,6 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
   const partIndex = new Map(vehicle.model.parts.map((part, index) => [part.id, index]))
   const isShown = new Map(vehicle.model.parts.map((part) => [part.id, part.visual]))
   const shell = vehicle.model.parts.filter((part) => SHELL_ROLES.has(part.role))
-  const root = vehicle.vehicle.vehicle as THREE_NS.Object3D
   const toFrame = new THREE.Matrix4()
   const toVehicle = new THREE.Matrix4()
   const toShell = new THREE.Matrix4()
@@ -234,6 +241,8 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
   }
 
   const make = (): DrawnCollider[] => {
+    // `vehicle.vehicle` is replaced on `reset()`: reading it each call follows the live vehicle instead of the disposed one
+    const root = vehicle.vehicle.vehicle as THREE_NS.Object3D
     frame.updateWorldMatrix(true, true)
     root.updateWorldMatrix(true, true)
     toFrame.copy(frame.matrixWorld).invert()
@@ -253,13 +262,13 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
           const mesh = node as THREE_NS.Mesh
           if (claimed.has(mesh)) return
           claimed.add(mesh)
-          if (!isGone(part.id) && isDrawn(mesh)) live.set(mesh, part.id)
+          if (!isGone(part.id) && isDrawn(mesh, root)) live.set(mesh, part.id)
         })
       }
     }
     root.traverse((node) => {
       const mesh = node as THREE_NS.Mesh
-      if (!claimed.has(mesh) && isDrawn(mesh)) live.set(mesh, null)
+      if (!claimed.has(mesh) && isDrawn(mesh, root)) live.set(mesh, null)
     })
     for (const [mesh, entry] of entries) {
       if (live.has(mesh)) continue

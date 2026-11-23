@@ -735,3 +735,58 @@ devolve o mesmo sólido para a mesma peça no mesmo lugar (e, numa peça sem cha
   mudou.
 - Os ~2 ms no quadro da volta que o protótipo da opção (a) mostrou **não vêm desta parte**. Pelos contadores, o `prepare` do carro também não
   trabalhava. Aquela diferença fica dentro do ruído entre sessões (±2 ms).
+
+## D2: colisores do carro preservados no LOD fundido e após `reset()` (`game-vehicles-three`) (2026-11-23)
+
+Branch `perf/colisores-carro` sobre a `main` `80680fa51` (com #446). Brutos em
+`~/.cache/adatechnology-game-kit/medicoes/2026-11-23-perf-colisores-carro/` (`conditions.log`, páginas, JSONs da régua e de determinismo).
+
+### Causa medida
+
+Dois defeitos combinados em `packages/game-vehicles-three/src/colliders.ts`:
+1. `createVehicleColliders` guardava `const root = vehicle.vehicle.vehicle` uma vez na criação. Quando `vehicle.reset()` substituía
+   `vehicle.vehicle` por um novo `VehicleContext`, `colliders.ts` continuava percorrendo o `old.vehicle` descartado (175 peças antigas).
+2. `isDrawn(mesh)` subia `node.parent` até o topo da cena, passando por `c.vehicle` até o grupo `full` (`frame.children[0]`) que
+   `createVehicleLod` esconde (`visible = false`) ao desenhar o carro fundido (`vehicle-lite`) a mais de 14 m da câmera. Enquanto fundido,
+   todas as peças próprias do `next.vehicle` (`bumper_front`, `hood`, `bumper_rear`, `wheel_*`, `battery`, `tow_hitch`, `mirror_*` — 33 peças)
+   eram descartadas; ao receber a explosão e sair do fundido (`full.visible = true`), todas reentravam em `live` no quadro da volta e
+   consumiam 4 chamadas de `COLLIDER_BUDGET` (20–26 ms).
+
+Correção: ler `const root = vehicle.vehicle.vehicle` em cada `make()`, parar a verificação de visibilidade de `isDrawn` em `root`
+(`c.vehicle`, como `surfaceRay` em `impl.ts` já faz) e ignorar cópias de batch estático marcadas com `userData.noSurfaceRay`.
+
+### Testes
+
+- `packages/game-vehicles-three/tests/vehicle-colliders-lod.test.ts` (4 testes novos):
+  - Mantém as mesmas peças (identidade e quantidade, `isPending() === false`) ao esconder `frame.children[0]` (LOD fundido) e ao mostrar de volta.
+  - Continua removendo peça escondida dentro de `c.vehicle`.
+  - Ignora cópias `static-batches` marcadas com `noSurfaceRay`.
+  - Segue o `c.vehicle` vivo após `vehicle.reset()` sem perder peças próprias enquanto fundido.
+  - Sem a correção, 3 dos 4 falham.
+- Suíte completa `game-vehicles-three`: 31 arquivos, 422 testes passando (`tsc --noEmit` e `eslint` limpos).
+
+### Mesmos bytes na sala (`tools/gpu/room-determinism.mjs`, M67, `jolt-d4-worker`, 2 rodadas, 90 quadros)
+
+Páginas: `main` `9a09c9da29d1`, branch `11d42ca3129a`. Comparado pelo tempo do mundo (`detcmp.cjs`):
+- Com marca-passo (`main`×branch): 75 tiques idênticos nos 4 pares, tique final `stateHash` 3822996173, 1702 eventos.
+- Sem marca-passo (`&blastPacing=0`, `main`×branch): 90 tiques idênticos nos 4 pares, tique final `stateHash` 1819424859, 1702 eventos.
+- Com × sem marca-passo na branch: 75 tiques idênticos nos 4 pares, tique final `stateHash` 3822996173, 1702 eventos.
+
+### Tempo (régua do #444, M67, prazo, 1x, `jolt-d4-worker`, `FRAME_SERIES=24`)
+
+Rodadas alternadas `main`, branch, 3 de cada (9 estágios por lado). RTX 5070 Laptop, driver 620.73.04 (módulo = biblioteca), GPU P8,
+`flock`, carga de 1,33 a 1,47 no início de cada rodada (`conditions.log`).
+
+| | `main` (`80680fa51`) | branch (`10b44a1`) | diferença |
+|---|---|---|---|
+| `afterMs` (f1..f15), por rodada | 31,43 / 30,90 / 27,67 | 28,57 / 22,47 / 21,73 | — |
+| `afterMs`, mediana das 3 rodadas | 30,90 ms | 22,47 ms | −8,43 ms (−27,3%) |
+| quadro da volta (f7/f8), mediana dos 9 (mín–máx) | 31,2 ms (13,8–38,2) | 18,1 ms (9,7–28,9) | −13,1 ms (−42,0%) |
+| física no quadro da volta, mediana (máx) | 8,2 ms (23,0) | 5,1 ms (5,7) | −3,1 ms (máx −17,3 ms) |
+| pior quadro da janela, mediana dos 9 (mín–máx) | 31,2 ms (22,4–38,2) | 23,1 ms (20,0–28,9) | −8,1 ms (−26,0%) |
+| f8, mediana dos 9 | 29,3 ms | 16,6 ms | −12,7 ms |
+| f9 / f10 / f11, medianas | 13,7 / 14,1 / 14,1 ms | 10,9 / 10,7 / 11,5 ms | −2,8 / −3,4 / −2,6 ms |
+| `f0Ms`, mediana das 3 rodadas | 24,30 ms | 22,63 ms | −1,67 ms |
+
+- **Leitura:** ganho bem acima do ruído da régua (±2–3 ms), sem mudar um único byte com ou sem pausa. Todos os 9 estágios da branch
+  ficaram abaixo de 28,9 ms no pior quadro da janela (folga > 4,4 ms frente à meta de 33,3 ms).
