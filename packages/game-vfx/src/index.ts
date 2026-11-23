@@ -3,8 +3,8 @@
  * screen state, LOD and the game's area cap. The three.js renderer is `@adatechnology/game-vfx-three`.
  */
 export { createVfx } from './world'
-export { Enclosures, slideAlong } from './enclosures'
-export type { Confiner, ConfineResult, VfxEnclosure, VfxEnclosureBox } from './enclosures'
+export { Enclosures, slideAlong, slideInto } from './enclosures'
+export type { Confiner, ConfineMove, ConfineResult, VfxEnclosure, VfxEnclosureBox } from './enclosures'
 export type { ExplosionOptions, FireOptions, VfxOptions, VfxPoolsView, VfxWorld } from './world'
 export { EXPLOSIONS, EXPLOSION_ALIASES, explosionEffectIds, patchExplosions } from './catalog'
 export { GAME_EFFECTS, WORKSHOP_EFFECTS, patchEffects } from './effects/catalog'

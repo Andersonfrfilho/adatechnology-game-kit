@@ -44,7 +44,7 @@ export interface Confiner {
    * walls (a puff is a ball, not a point: its middle stops before its edge goes through the glass).
    */
   confine(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, pad: number, dt: number): boolean
-  /** `confine` with the step in an object the caller reuses: eight numbers passed to a call are boxed on the heap, one object is not. */
+  /** `confine` with the step in an object the caller reuses: eight numbers passed to a call are boxed on the heap, one object is not. `move` is only read during the call: it is not kept. */
   confineMove(move: ConfineMove, dt: number): boolean
   readonly out: ConfineResult
 }
@@ -281,7 +281,6 @@ export class Enclosures implements Confiner {
   }
 }
 
-/** Takes the part of a velocity that runs into the wall away (what is left slides along it). */
 /** {@link slideAlong} written back into the particle's own velocity, nothing allocated. */
 export function slideInto(out: ConfineResult, velocity: { vx: number; vy: number; vz: number }): void {
   const into = velocity.vx * out.nx + velocity.vy * out.ny + velocity.vz * out.nz
@@ -291,6 +290,7 @@ export function slideInto(out: ConfineResult, velocity: { vx: number; vy: number
   velocity.vz -= into * out.nz
 }
 
+/** Takes the part of a velocity that runs into the wall away (what is left slides along it). */
 export function slideAlong(out: ConfineResult, vx: number, vy: number, vz: number): [number, number, number] {
   const into = vx * out.nx + vy * out.ny + vz * out.nz
   if (into >= 0) return [vx, vy, vz]
