@@ -5587,7 +5587,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
             settleAllStructure()
             flushCollapse()
             settleAllStructure()
-            if (revealHostedIn(objects.values())) {
+            if (revealHostedIn()) {
               settleAllStructure()
               flushCollapse()
               settleAllStructure()
