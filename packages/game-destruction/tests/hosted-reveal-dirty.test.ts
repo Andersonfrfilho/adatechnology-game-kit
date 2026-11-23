@@ -30,6 +30,16 @@ const collapseHostSpec = (): DestructibleSpec => ({
   ],
 })
 
+/** A reveal the world still owes: a copy loaded from its snapshot checks every damaged host on its first operation, so anything it reveals was missed. */
+const missedReveals = (world: ReturnType<typeof createDestruction>): string[] => {
+  const copy = createDestruction({ seed: 7 })
+  copy.load(world.serialize())
+  const events: DestructionEvent[] = []
+  copy.on('reveal', (event) => events.push(event))
+  copy.update(0)
+  return ofType(events, 'reveal').map((event) => `${event.object}/${event.part}`)
+}
+
 describe('revealHostedIn dirty tracking', () => {
   it('does not run revealHostedIn on idle steps when nothing hosted changed', () => {
     const world = createDestruction({ seed: 7 })
@@ -136,5 +146,74 @@ describe('revealHostedIn dirty tracking', () => {
 
     expect(restored.part(id, stretchId(1))!.exposed).toBe(true)
     expect(ofType(events, 'reveal').map((event) => event.part)).toContain(stretchId(1))
+  })
+  it('reveals in world order, as a full scan does, whatever order the objects were marked in', () => {
+    const world = createDestruction({ seed: 7 })
+    const first = world.add(hostedWallSpec(), { id: 'first', position: [0, 0, 0] })
+    const second = world.add(hostedWallSpec(), { id: 'second', position: [40, 0, 0] })
+    world.explode([-0.75, 1, 0.3], 20000, 15)
+    world.explode([39.25, 1, 0.3], 20000, 15)
+    world.update(0.1)
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+
+    // marked second first: the reveals still come out in the order the objects were added
+    world.setPartPose(second, stretchId(3), [-0.75, 1, 0])
+    world.setPartPose(first, stretchId(3), [-0.75, 1, 0])
+    world.update(1 / 60)
+
+    expect(ofType(events, 'reveal').map((event) => event.object)).toEqual([first, second])
+  })
+
+  it('keeps an object dirty when the reveal of an earlier one throws, and reveals it on the next operation', () => {
+    const world = createDestruction({ seed: 7 })
+    const first = world.add(hostedWallSpec(), { id: 'first', position: [0, 0, 0] })
+    const second = world.add(hostedWallSpec(), { id: 'second', position: [40, 0, 0] })
+    world.explode([-0.75, 1, 0.3], 20000, 15)
+    world.explode([39.25, 1, 0.3], 20000, 15)
+    world.update(0.1)
+    world.setPartPose(first, stretchId(3), [-0.75, 1, 0])
+    world.setPartPose(second, stretchId(3), [-0.75, 1, 0])
+    let thrown = false
+    world.on('reveal', () => {
+      if (thrown) return
+      thrown = true
+      throw new Error('listener failed')
+    })
+
+    expect(() => world.update(1 / 60)).toThrow('listener failed')
+    world.update(1 / 60)
+
+    expect(world.part(second, stretchId(3))!.exposed).toBe(true)
+  })
+  it('owes no reveal after any swing of a sledgehammer that chips and then breaches the host', () => {
+    const world = createDestruction({ seed: 7 })
+    const id = world.add(hostedWallSpec())
+    let swings = 0
+    for (; swings < 200 && world.part(id, stretchId(1))!.exposed !== true; swings++) {
+      world.hit(id, { type: 'blunt', point: [-0.75, 1, 0.065], direction: [0, 0, -1], energy: 128, radius: 0.05 })
+      expect(missedReveals(world)).toEqual([])
+    }
+    expect(world.part(id, stretchId(1))!.exposed).toBe(true)
+  })
+
+  it('owes no reveal after any shot that chips the host', () => {
+    const world = createDestruction({ seed: 7 })
+    const id = world.add(hostedWallSpec())
+    for (let shot = 0; shot < 60 && world.part(id, stretchId(2))!.exposed !== true; shot++) {
+      world.shoot([0.6 + (shot % 7) * 0.05, 0.95 + (shot % 3) * 0.05, 5], [0, 0, -1], 2100, 7.62, 'test')
+      expect(missedReveals(world)).toEqual([])
+    }
+    expect(world.part(id, stretchId(2))!.exposed).toBe(true)
+  })
+  it('owes no reveal after any swing above the pipe, until the breach opening reaches it', () => {
+    const world = createDestruction({ seed: 7 })
+    const id = world.add(hostedWallSpec())
+    for (let swing = 0; swing < 200 && (world.part(id, 'wall')!.stage ?? 0) < 2; swing++) {
+      world.hit(id, { type: 'blunt', point: [-0.75, 1.3, 0.065], direction: [0, 0, -1], energy: 128, radius: 0.05 })
+      expect(missedReveals(world)).toEqual([])
+    }
+    expect(world.part(id, 'wall')!.stage).toBe(2)
+    expect(world.part(id, stretchId(1))!.exposed).toBe(true)
   })
 })

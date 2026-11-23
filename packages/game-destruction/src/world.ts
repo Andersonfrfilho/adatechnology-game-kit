@@ -760,7 +760,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         settleAllStructure()
         flushCollapse()
         settleAllStructure()
-        if (dirtyHosted.size > 0 && revealHostedIn()) {
+        if (revealHostedIn()) {
           settleAllStructure()
           flushCollapse()
           settleAllStructure()
@@ -3201,18 +3201,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const revealHostedIn = (): boolean => {
     if (dirtyHosted.size === 0) return false
     hostedRuns++
-    let any = false
+    for (const o of dirtyHosted) if (objects.get(o.id) !== o) dirtyHosted.delete(o)
     revealScratch.length = 0
-    for (const o of dirtyHosted) revealScratch.push(o)
-    dirtyHosted.clear()
-    for (let i = 0; i < revealScratch.length; i++) {
-      const o = revealScratch[i]
-      if (o.hosted && objects.get(o.id) === o) {
+    // in world order, as the full scan went: the reveals, and the structure they loosen, keep their order whatever order the marks came in
+    if (dirtyHosted.size === 1) for (const o of dirtyHosted) revealScratch.push(o)
+    else for (const o of objects.values()) if (dirtyHosted.has(o)) revealScratch.push(o)
+    let any = false
+    try {
+      for (let i = 0; i < revealScratch.length; i++) {
+        const o = revealScratch[i]!
+        // unmarked one at a time: a reveal that throws leaves the rest marked for the next operation
+        if (!dirtyHosted.delete(o) || !o.hosted) continue
         hostedObjects++
         if (revealHosted(o)) any = true
       }
+    } finally {
+      revealScratch.length = 0
     }
-    revealScratch.length = 0
     return any
   }
 
