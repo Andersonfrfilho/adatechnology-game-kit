@@ -59,12 +59,14 @@ ela acabou de gerar.
    e o `vfx.update` está ali. Uma pausa de verdade precisa parar só o tique fixo; no protótipo isso
    se chama `freezeFixed`. Essa forma custa o mesmo nos quadros congelados, e o quadro de volta
    piora (38 a 45 ms). Esse é o mesmo problema da aplicação acumulada.
-2. **Os mesmos bytes valem no pacote, não estão provados na sala.** Um teste unitário
+2. **A sala é determinística; a diferença vinha do preparo.** No pacote, um teste unitário
    (`d2-slice.spike.test.ts`) mostra que eventos, `serialize()` e resultados ficam idênticos byte a
-   byte para K = 1, 7, 32, 64 e 128. Na sala, duas rodadas **iguais e sem fatiar** já dão hashes
-   diferentes em 5 de 6 pares, e o número de eventos varia entre 1685 e 1692. A sala não é
-   determinística hoje, então não dá para comparar a pausa com o original nela. As suspeitas são as
-   filas por prazo de relógio e o retorno do Jolt; nenhuma das duas foi testada.
+   byte para K = 1, 7, 32, 64 e 128. Na sala, as rodadas pareciam divergir, mas a divergência já
+   existia antes da explosão. O preparo da régua (`inPage`) deixa o laço da página rodar 8 s em
+   tempo real, então o número de tiques até a explosão varia. Com o laço parado no preparo e o mesmo
+   número de tiques, 5 rodadas ficaram idênticas em todos os 90 tiques (corrigido em 2026-11-23;
+   o harness é `tools/gpu/room-determinism.mjs`). Com 4 ritmos de quadro diferentes (0, 60 e 100 ms),
+   o resultado também foi idêntico, então as filas por prazo não mudam o resultado.
 3. **Sem pausa, o estado final muda.** Isso era esperado, mas não foi demonstrado na sala pelo mesmo
    motivo do item 2.
 
