@@ -38,7 +38,7 @@ import type {
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastCharge, BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
-  BallisticExtras, SweepProbe,
+  BallisticExtras, ExplosionJob, SweepProbe,
 } from './types'
 import { bodyImpulse, chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, fuelFireball, ignitionChance, ignitionDose, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
 import type { Fireball } from '@adatechnology/game-contracts'
@@ -234,6 +234,14 @@ const CAST_REACH = 2e-3
 const cutFactorOf = (shape: PartSpec['shape']): number => clamp(Math.max(...shapeDims(shape)) / CUT_SLICE, 1, 50)
 
 /** How a part that lies on another stands (`restingStance`): half its height and its level axes (in the object's frame) with their half-widths. */
+/** A resumable explosion of the world (`beginExplosion`): its steps, the events it emitted, and its results once it ended. */
+interface ExplosionRT {
+  readonly steps: Generator<'ray' | 'wave', HitResult[]>
+  readonly mine: DestructionEvent[]
+  isStarted: boolean
+  result: HitResult[] | undefined
+}
+
 interface RestingStance {
   readonly halfHeight: number
   readonly across: ReadonlyArray<{ readonly x: number; readonly z: number; readonly half: number }>
@@ -729,6 +737,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   const run = <T>(fn: () => T): { value: T; events: DestructionEvent[] } => {
+    if (runDepth === 0) finishExplosions()
     const prev = cur
     const mine: DestructionEvent[] = []
     cur = mine
@@ -5238,7 +5247,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * pieces left out are not cast and their energy is not delivered. The masses drawn are scaled down when they add up to more than the case, so what the pieces deliver never
    * exceeds half the case's mass times the square of its first speed. Each piece is a ballistic round through the same path as a shot (`shootRay`): penetration by material, ricochet, holes.
    */
-  const throwCasing = (point: Vec3, charge: BlastCharge, src: string | undefined): HitResult[] => {
+  function* throwCasing(point: Vec3, charge: BlastCharge, src: string | undefined): Generator<undefined, HitResult[]> {
     const casing = charge.casing
     if (!casing || !(casing.mass > 0) || !(casing.fragments > 0)) return []
     const { mottScale, speed } = casingFlight(casing)
@@ -5389,6 +5398,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const weight = 1 + ((atBody[j]! ? bodyWeight : restWeight) - 1) * shrink
       const flight: FragmentFlight = { drag: fragmentDrag(mass), minEnergy: 0.5 * mass * FRAGMENT_MIN_SPEED * FRAGMENT_MIN_SPEED, mass, nose, weight }
       out.push(...shootRay(point, dir, 0.5 * mass * speed * speed, fragmentCaliberMm(mass), src, {}, flight, ignore))
+      yield
     }
     return out
   }
@@ -5412,7 +5422,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return base
   }
 
-  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
+  /**
+   * The blast as steps: a `'ray'` after each fragment of the case (`throwCasing`), then a `'wave'` before the wave, which runs whole in the last step. Run without a stop
+   * between them (`blastWorld`) it is what the blast always was; a resumable explosion (`beginExplosion`) stops between them. The blast's globals (`blastTntPerJoule`,
+   * `blastFireball`, the blow of the fragments) are set around each step and put back after it, so other work may run between two steps.
+   */
+  function* blastSteps(point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): Generator<'ray' | 'wave', HitResult[]> {
     const cfg = blastCfg(call)
     const charge = call?.charge ?? options.blast?.charge
     // a charge under soil spends most of its energy in it: the structures feel only what comes out, and the soil stops the casing fragments
@@ -5423,21 +5438,145 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       radius *= Math.cbrt(transmitted)
       if (lethal !== undefined) lethal *= Math.cbrt(transmitted)
     }
-    const outer = blastTntPerJoule
-    const outerFireball = blastFireball
-    blastTntPerJoule = charge?.tnt !== undefined && energy > 0 ? (charge.tnt * transmitted) / energy : TNT_PER_JOULE
-    blastFireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * blastTntPerJoule)
-    try {
-      // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
-      const fragments = charge?.casing && !(cover > 0) ? withBlow('ballistic', () => throwCasing(point, charge, src))() : []
+    const tntPerJoule = charge?.tnt !== undefined && energy > 0 ? (charge.tnt * transmitted) / energy : TNT_PER_JOULE
+    const fireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * tntPerJoule)
+    const inBlast = <T>(fn: () => T): T => {
+      const outer = blastTntPerJoule
+      const outerFireball = blastFireball
+      blastTntPerJoule = tntPerJoule
+      blastFireball = fireball
+      try {
+        return fn()
+      } finally {
+        blastTntPerJoule = outer
+        blastFireball = outerFireball
+      }
+    }
+    // the fragments are faster than the wave: they land first, so what they open does not shelter what the wave then reaches
+    let fragments: HitResult[] = []
+    if (charge?.casing && !(cover > 0)) {
+      const flight = throwCasing(point, charge, src)
+      for (;;) {
+        const step = inBlast(withBlow('ballistic', () => flight.next()))
+        if (step.done) {
+          fragments = step.value
+          break
+        }
+        yield 'ray'
+      }
+    }
+    yield 'wave'
+    return inBlast(() => {
       const wave = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
       const res = fragments.length > 0 ? mergeResults(wave, fragments) : wave
       // a blast is a flame: a container that leaks flammable fluid inside its fireball catches
       lightLeaksNear(point, blastFireball.radius)
       return res
+    })
+  }
+
+  const blastWorld = (point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
+    const steps = blastSteps(point, energy, radius, src, call, only, lethal)
+    for (;;) {
+      const step = steps.next()
+      if (step.done) return step.value
+    }
+  }
+
+  /**
+   * The resumable explosions not finished yet, oldest first (`beginExplosion`). The first is the one being run; the others wait for it, never run inside it. Between two
+   * steps of one the world is inside its operation (its structure changes wait in `pendingStructure`, its events in `mine`), so any other operation first runs every one
+   * of them to its end (`finishExplosions`): what a blast does is never mixed with what comes after it.
+   */
+  const explosions: ExplosionRT[] = []
+  /** true while a step of an explosion runs: the work it does is part of it, not an operation from outside to run after it. */
+  let isAdvancing = false
+
+  /** Runs the oldest open explosion up to `rays` rays (the wave is a step of its own, never in a call that cast rays); closes its operation as `run` does when it ends. */
+  const advanceOldest = (rays: number): void => {
+    const job = explosions[0]!
+    const outer = cur
+    cur = job.mine
+    isAdvancing = true
+    runDepth++
+    let isFinished = false
+    try {
+      if (!job.isStarted) {
+        job.isStarted = true
+        blastProbe.partsTested = 0
+        blastProbe.partsNear = 0
+      }
+      let cast = 0
+      for (;;) {
+        const step = job.steps.next()
+        if (step.done) {
+          drainBlasts()
+          if (runDepth === 1) {
+            settleAllStructure()
+            flushCollapse()
+            settleAllStructure()
+            if (revealHostedIn(objects.values())) {
+              settleAllStructure()
+              flushCollapse()
+              settleAllStructure()
+            }
+            emitDetaches()
+          }
+          job.result = withCollapses({ value: step.value, events: job.mine })
+          isFinished = true
+          return
+        }
+        if (step.value === 'wave' ? cast > 0 : ++cast >= rays) return
+      }
+    } catch (error) {
+      isFinished = true
+      throw error
     } finally {
-      blastTntPerJoule = outer
-      blastFireball = outerFireball
+      runDepth--
+      isAdvancing = false
+      cur = outer
+      if (isFinished) {
+        explosions.shift()
+        // an explosion that ended (or threw) hands nothing half done to the next operation
+        if (runDepth === 0) {
+          pendingStructure.clear()
+          pendingDetaches.length = 0
+        }
+      }
+    }
+  }
+
+  /** Runs every open explosion to its end, oldest first: called before any other operation of the world. */
+  const finishExplosions = (): void => {
+    if (isAdvancing) return
+    while (explosions.length > 0) advanceOldest(Infinity)
+  }
+
+  const beginExplosion = (point: Vec3, energy: number, radius: number, source?: string, blast?: BlastOptions): ExplosionJob => {
+    const job: ExplosionRT = { steps: blastSteps(point, energy, radius, source, blast), mine: [], isStarted: false, result: undefined }
+    // inside another operation (a listener of one of its events) the blast is part of it, as an `explode` there always was
+    if (runDepth > 0) {
+      blastProbe.partsTested = 0
+      blastProbe.partsNear = 0
+      job.result = withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
+    } else explosions.push(job)
+    return {
+      get isDone() {
+        return job.result !== undefined
+      },
+      advance(rays) {
+        if (job.result) return true
+        if (isAdvancing) throw new Error('beginExplosion: advance called from inside a step of an explosion')
+        const budget = Math.max(1, Math.floor(rays))
+        // the ones begun before it go first, whole; then this one by the budget
+        while (explosions[0] !== job && explosions.length > 0) advanceOldest(Infinity)
+        if (!job.result) advanceOldest(budget)
+        return job.result !== undefined
+      },
+      result() {
+        if (!job.result) throw new Error('beginExplosion: result() of an explosion not finished yet (advance it until it is done)')
+        return job.result
+      },
     }
   }
 
@@ -5896,18 +6035,21 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return time
     },
     add(spec, opts: AddOptions = {}) {
+      finishExplosions()
       const id = opts.id ?? nextId()
       if (taken(id)) throw new Error(`object "${id}" already exists`)
       objects.set(id, build(resolveSpec(spec), id, opts.position ?? [0, 0, 0], opts.rotation ?? [0, 0, 0, 1]))
       return id
     },
     register(impl, opts: AddOptions = {}) {
+      finishExplosions()
       const id = opts.id ?? impl.id
       if (taken(id)) throw new Error(`object "${id}" already exists`)
       impls.set(id, { impl, position: opts.position ?? [0, 0, 0], rotation: opts.rotation ?? [0, 0, 0, 1], poses: new Map(), posesVersion: 0 })
       return id
     },
     setPartPose(objectId, partId, position, rotation) {
+      finishExplosions()
       const q = quatFromEuler(...(rotation ?? [0, 0, 0]))
       const im = impls.get(objectId)
       if (im) {
@@ -5926,6 +6068,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       updateBound(o)
     },
     remove(id) {
+      finishExplosions()
       impls.get(id)?.impl.dispose?.()
       objects.delete(id)
       impls.delete(id)
@@ -5933,6 +6076,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     has: (id) => taken(id),
     ids: () => [...objects.keys(), ...impls.keys()],
     setTransform(id, position, rotation) {
+      finishExplosions()
       const im = impls.get(id)
       if (im) {
         im.position = [position[0], position[1], position[2]]
@@ -6030,10 +6174,17 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return t
     },
     explode(point, energy, radius, source, blast) {
-      blastProbe.partsTested = 0
-      blastProbe.partsNear = 0
-      return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
+      if (runDepth > 0) {
+        blastProbe.partsTested = 0
+        blastProbe.partsNear = 0
+        return withCollapses(run(() => blastWorld(point, energy, radius, source, blast)))
+      }
+      // one shot: the resumable explosion run to its end at once (after any begun before it)
+      const job = beginExplosion(point, energy, radius, source, blast)
+      while (!job.advance(Infinity));
+      return job.result()
     },
+    beginExplosion,
     groundLoss(loss) {
       if (!(loss.radius > 0) || !(loss.depth > 0) || !Number.isFinite(loss.x) || !Number.isFinite(loss.z)) return
       pendingLosses.push({ ...loss })
@@ -6258,6 +6409,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     part: (id, partId) => objects.get(id)?.byId.get(partId)?.st ?? impls.get(id)?.impl.state().parts.find((p) => p.id === partId) ?? null,
     reset(id) {
+      finishExplosions()
       const im = impls.get(id)
       if (im) {
         im.impl.reset?.()
@@ -6291,9 +6443,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return o ? serializeObject(o) : null
     },
     loadObject(entry, id = entry.id) {
+      finishExplosions()
       objects.set(id, buildFromEntry(entry, id))
     },
     load(snap) {
+      finishExplosions()
       if (snap.version !== 1) throw new Error(`unsupported snapshot version ${String(snap.version)}`)
       objects.clear()
       time = snap.time

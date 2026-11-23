@@ -616,6 +616,19 @@ export interface AddOptions {
   rotation?: Quat
 }
 
+/** A blast begun with `DestructionWorld.beginExplosion`, run a few fragment rays at a time. */
+export interface ExplosionJob {
+  /** true once the blast ran to its end (its results are ready). */
+  readonly isDone: boolean
+  /**
+   * Runs the blast on: the blasts begun before it first (each to its end), then up to `rays` fragment rays of this one (at least 1), or its wave when the rays are all
+   * cast; the wave never runs in a call that cast rays. Returns `isDone`.
+   */
+  advance(rays: number): boolean
+  /** What `explode` would have returned; throws while the blast is not done. */
+  result(): HitResult[]
+}
+
 export interface DestructionWorld {
   readonly materials: ReadonlyMap<MaterialId, MaterialDef>
   /** Add an object and return its id. */
@@ -659,6 +672,14 @@ export interface DestructionWorld {
    * that target, and a `blast` event sums it up.
    */
   explode(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): HitResult[]
+  /**
+   * The same blast as `explode`, resumable: nothing runs until `advance`, which casts the fragments of the case (`BlastCharge.casing`) a fixed number of rays per call and
+   * then runs the wave in a call of its own. Run to its end with nothing else in between, it emits the same events and leaves the same state and results as `explode`, for
+   * any number of rays per call (the blast is the same operation, cut). A blast begun while another is open waits for it and never runs inside it; any other operation of
+   * the world (`explode`, `shoot`, `hit`, `update`, `add`...) first runs every open one to its end. Inside an operation (a listener of an event) it runs whole at once, as
+   * `explode` there does. The host that spreads it over frames holds the simulation meanwhile (`game-runtime`'s `holdFixed`).
+   */
+  beginExplosion(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): ExplosionJob
   /**
    * The share (0..1) of a blast at `point` that reaches `target` through what stands between them: every part the straight line crosses lets
    * `exp(-r / k)` through (`ShelterOptions`; `r` the hit points of the slab per square metre), a broken part or a hole lets it all by. Always on, whatever
