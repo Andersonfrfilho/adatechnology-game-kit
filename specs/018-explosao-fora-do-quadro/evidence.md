@@ -716,7 +716,7 @@ devolve o mesmo sólido para a mesma peça no mesmo lugar (e, numa peça sem cha
 - **Mesmos bytes na sala** (`tools/gpu/room-determinism.mjs`, M67, `jolt-d4-worker`, 2 rodadas em cada página, 90 quadros; páginas `main`
   `92622f211fea` e branch `5ae4c62c6be9`). Comparado pelo tempo do mundo (`detcmp.cjs`):
   - Com marca-passo: 75 tiques idênticos em todos os 4 pares `main`×branch, tique final `stateHash` 3822996173, 1702 eventos.
-  - Sem marca-passo (`&blastPacing=0`): 90 tiques idênticos nos 4 pares, `stateHash` 3822996173 → 1819424859 no fim, 1702 eventos.
+  - Sem marca-passo (`&blastPacing=0`): 90 tiques idênticos nos 4 pares, tique final `stateHash` 1819424859, 1702 eventos.
   - Uma rodada da branch começou com carga 11,1 (a espera do harness desistiu). Ela também saiu idêntica.
 - **Tempo** (régua do #444, M67, prazo, 1x, `FRAME_SERIES=24`): rodadas alternadas `main`, branch, 3 de cada, 9 estágios por lado. RTX 5070
   Laptop, driver 620.73.04 (módulo = biblioteca), `flock`, carga de 1,30 a 1,49 no início de cada rodada.
