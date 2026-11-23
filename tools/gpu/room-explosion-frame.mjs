@@ -129,13 +129,20 @@ export const frameGate = ({ measure, base, mode, variant, gated, explosive = DEF
   }
   if (!base.frameMetrics || base.frameMetrics.length === 0) return none('base-without-metrics', 'the base has no frameMetrics')
   const was = new Map(base.frameMetrics.map((entry) => [frameKey(entry), entry]))
+  // afterMs read over different windows (one side held the world, the other did not) is not the same number: compare only f0Ms then
+  const isSameWindow = (/** @type {FrameMetric} */ now, /** @type {FrameMetric} */ before) => (now.afterLastFrame ?? AFTER_FRAMES) === (before.afterLastFrame ?? AFTER_FRAMES)
   const regressions = blocking.flatMap((entry) => {
     const before = was.get(frameKey(entry))
     if (!before) return []
-    return /** @type {const} */ (['f0Ms', 'afterMs']).filter((field) => isFrameWorse(entry[field], before[field])).map((field) => ({ key: frameKey(entry), field, now: entry[field], was: before[field] }))
+    const fields = isSameWindow(entry, before) ? /** @type {const} */ (['f0Ms', 'afterMs']) : /** @type {const} */ (['f0Ms'])
+    return fields.filter((field) => isFrameWorse(entry[field], before[field])).map((field) => ({ key: frameKey(entry), field, now: entry[field], was: before[field] }))
+  })
+  const otherWindow = blocking.flatMap((entry) => {
+    const before = was.get(frameKey(entry))
+    return before && !isSameWindow(entry, before) ? [`${frameKey(entry)} afterMs (other window: f1..f${entry.afterLastFrame ?? AFTER_FRAMES} now, f1..f${before.afterLastFrame ?? AFTER_FRAMES} in the base)`] : []
   })
   const nowKeys = new Set(blocking.map(frameKey))
   const atLevel = base.frameMetrics.filter((entry) => entry.variant === variant && gated.has(entry.throttle))
-  const skipped = [...atLevel.filter((entry) => !nowKeys.has(frameKey(entry))).map((entry) => `${frameKey(entry)} (in the base, not in this run)`), ...blocking.filter((entry) => !was.has(frameKey(entry))).map((entry) => `${frameKey(entry)} (in this run, not in the base)`)]
+  const skipped = [...atLevel.filter((entry) => !nowKeys.has(frameKey(entry))).map((entry) => `${frameKey(entry)} (in the base, not in this run)`), ...blocking.filter((entry) => !was.has(frameKey(entry))).map((entry) => `${frameKey(entry)} (in this run, not in the base)`), ...otherWindow]
   return { status: 'compared', compared: true, reason: 'compared with the base', regressions, problems: measure.problems, skipped }
 }

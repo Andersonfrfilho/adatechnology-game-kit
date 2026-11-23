@@ -466,10 +466,10 @@ export async function inPage(job) {
       actionMs.push(performance.now() - lateStart)
     }
     const queuesBefore = frameLabels.length > 0 ? queueSpent() : []
+    const heldBefore = room.frameStats?.().heldSeconds ?? 0
     const started = performance.now()
     if (!(fire && job.isF0Late)) frameStartMs = started
     if (fire && !job.isF0Late) timedAction(fire)
-    const heldBefore = room.frameStats?.().heldSeconds ?? 0
     room.update(job.frameSeconds, job.budgetMode === 'deadline' ? { frameStartMs } : undefined)
     heldFrames.push((room.frameStats?.().heldSeconds ?? 0) > heldBefore)
     const budgetNow = room.frameStats?.().budget

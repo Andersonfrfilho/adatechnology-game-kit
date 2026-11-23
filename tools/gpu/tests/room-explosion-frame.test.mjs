@@ -12,8 +12,8 @@ const metric = (/** @type {number} */ f0Ms, /** @type {number} */ afterMs, /** @
 /** A realistic round: frame 0 and 660 frames, the 7 after it with `after` ms at the worst. @param {number} round @param {number} f0 @param {number} after @param {string} [kind] */
 const roundOf = (round, f0, after, kind = 'blast') => Array.from({ length: 661 }, (_, frame) => row(round, frame, frame === 0 ? f0 - 8 : frame === 4 ? after - 1 : 3, frame === 0 ? 8 : 1, kind))
 /** @typedef {import('../room-explosion-frame.mjs').FrameProblem} FrameProblem */
-const measureOf = (/** @type {ReturnType<typeof metric>[]} */ metrics, /** @type {FrameProblem[]} */ problems = []) => ({ metrics, problems })
-const gate = (/** @type {ReturnType<typeof metric>[]} */ now, /** @type {object | undefined} */ base, mode = 'deadline') => frameGate({ measure: measureOf(now), base, mode, variant: VARIANT, gated: GATED })
+const measureOf = (/** @type {import('../room-explosion-frame.mjs').FrameMetric[]} */ metrics, /** @type {FrameProblem[]} */ problems = []) => ({ metrics, problems })
+const gate = (/** @type {import('../room-explosion-frame.mjs').FrameMetric[]} */ now, /** @type {object | undefined} */ base, mode = 'deadline') => frameGate({ measure: measureOf(now), base, mode, variant: VARIANT, gated: GATED })
 
 test('f0Ms is the mean of the 3 worst f0 (update + render) and afterMs the worst of the 7 frames after, in those rounds', () => {
   const rows = [roundOf(1, 68, 26), roundOf(2, 58, 30), roundOf(3, 78, 10), roundOf(4, 11, 99)].flat()
@@ -157,4 +157,18 @@ test('the default explosive is c4: a base without the field, or with it, compare
   assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'c4' }, 'deadline', 'c4'), true)
   assert.equal(gate(now, { budgetMode: 'deadline', frameMetrics: [metric(65, 25)] }).compared, true)
   assert.equal(gate(now, { budgetMode: 'deadline', explosive: 'c4', frameMetrics: [metric(65, 25)] }).regressions.length, 2)
+})
+
+test('afterMs read over another window than the base (one side held the world) is not compared: only f0Ms is, and the pair is listed in skipped', () => {
+  const base = { budgetMode: 'deadline', frameMetrics: [metric(65, 21)] }
+  const held = gate([{ ...metric(66, 30), afterLastFrame: 15 }], base)
+  assert.equal(held.status, 'compared')
+  assert.deepEqual(held.regressions, [])
+  assert.equal(held.skipped.length, 1)
+  assert.match(held.skipped[0] ?? '', /afterMs \(other window: f1\.\.f15 now, f1\.\.f7 in the base\)/)
+  const worse = gate([{ ...metric(90, 30), afterLastFrame: 15 }], base)
+  assert.deepEqual(worse.regressions.map((entry) => entry.field), ['f0Ms'])
+  const same = gate([{ ...metric(65, 30), afterLastFrame: 15 }], { budgetMode: 'deadline', frameMetrics: [{ ...metric(65, 21), afterLastFrame: 15 }] })
+  assert.deepEqual(same.regressions.map((entry) => entry.field), ['afterMs'])
+  assert.deepEqual(same.skipped, [])
 })
