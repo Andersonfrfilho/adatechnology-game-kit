@@ -5159,7 +5159,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const ignore = new Set<string>(ignored)
     let org = origin
     let E = energy
-    const round: FragmentRound = flight ? { ...extras, piece: flight } : extras
+    // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
+    const scaledExtras = (left: number): BallisticExtras => (extras.penetration && left < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (left / energy)])) } : extras)
     for (let i = 0; i < 4 && E > 0; i++) {
       // E exp(-2 k d) = minEnergy: the distance this leg can fly before the piece is too slow to do anything
       const reach = flight ? (E > flight.minEnergy ? Math.log(E / flight.minEnergy) / (2 * flight.drag) : 0) : Infinity
@@ -5169,8 +5170,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (flight) E *= Math.exp(-2 * flight.drag * vec.distance(org, rh.point))
       const im = impls.get(rh.object)
       if (im) {
-        // the penetration a weapon gives is for the muzzle energy: past each part the round goes through less
-        const scaled = extras.penetration && E < energy ? { ...extras, penetration: Object.fromEntries(Object.entries(extras.penetration).map(([k, mm]) => [k, mm * (E / energy)])) } : extras
+        const scaled = scaledExtras(E)
         const r = implHit(im, { type: 'ballistic', point: rh.point, part: rh.part, normal: rh.normal, direction: d, energy: E, caliber, ...scaled, ...(source !== undefined ? { source } : {}), ...(flight && flight.weight > 1 ? { pieces: flight.weight } : {}) })
         r.part = rh.part
         r.point = rh.point
@@ -5189,7 +5189,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       const o = getObj(rh.object)
       const p = getPart(o, rh.part)
       const start = cur.length
-      const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, round)
+      const out = ballistic(o, p, rh.point, rh.normal, d, E, caliber, rh.pathLen, source, flight ? { ...scaledExtras(E), piece: flight } : scaledExtras(E))
       results.push({ object: o.id, part: p.spec.id, point: rh.point, damage: out.damage, penetrated: out.penetrated, exitEnergy: out.exitEnergy, events: cur.slice(start) })
       ignore.add(`${o.id}\0${p.spec.id}`)
       if (!out.penetrated || !out.exitPoint) break

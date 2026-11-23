@@ -1,6 +1,6 @@
-// pnpm check:packages — package.json policy of spec 005 (D9) and "declared = imported" for internal dependencies. Needs no build.
+// pnpm check:packages [--built] — package.json policy of spec 005 (D9) and "declared = imported" for internal dependencies. Needs no build.
 // Exits 1 with one line per problem.
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -112,8 +112,30 @@ function checkTyping(directory, report) {
   }
 }
 
+// tsup runs the configs of an array at the same time and a `clean: true` one also deletes every *.d.ts of dist/ (cleanDtsFiles), so it can
+// erase the declarations another config just wrote: dist is cleaned by the build script instead.
+/** @param {string} directory @param {Report} report */
+function checkConcurrentClean(directory, report) {
+  const configPath = join(ROOT, 'packages', directory, 'tsup.config.ts')
+  if (!existsSync(configPath)) return
+  const config = readFileSync(configPath, 'utf8')
+  if (/defineConfig\(\s*\[/.test(config) && /clean:\s*true/.test(config)) report('tsup.config.ts is an array with clean: true: it races the other configs and can delete their .d.ts; use clean: false and clean dist in the build script')
+}
+
+// `--built`: after a build, every file the exports map points at must exist (a missing .d.ts only shows up as TS7016 in a dependent's typecheck).
+/** @param {string} directory @param {Manifest} manifest @param {Report} report */
+function checkBuiltExports(directory, manifest, report) {
+  const exportsMap = /** @type {Record<string, unknown> | undefined} */ (manifest.exports)
+  if (exportsMap === undefined) return
+  const targets = JSON.stringify(exportsMap).match(/"\.\/dist\/[^"]+"/g) ?? []
+  for (const target of new Set(targets.map((quoted) => quoted.slice(1, -1)))) {
+    if (!existsSync(join(ROOT, 'packages', directory, target))) report(`exports points at ${target}, which the build did not write`)
+  }
+}
+
 /** @type {string[]} */
 const problems = []
+const checkBuilt = process.argv.includes('--built')
 
 for (const directory of packageDirectories) {
   const manifest = /** @type {Manifest} */ (readJson(join(ROOT, 'packages', directory, 'package.json')))
@@ -131,6 +153,8 @@ for (const directory of packageDirectories) {
   }
   checkDeclaredEqualsImported(directory, manifest, report)
   checkTyping(directory, report)
+  checkConcurrentClean(directory, report)
+  if (checkBuilt) checkBuiltExports(directory, manifest, report)
 
   const threePeer = manifest.peerDependencies?.three
   if (threePeer !== undefined && threePeer !== THREE_PEER_RANGE) report(`peerDependencies.three is "${threePeer}", expected "${THREE_PEER_RANGE}"`)

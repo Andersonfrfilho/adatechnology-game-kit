@@ -25,6 +25,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
+import { flockExists, lockDecision, rerunUnderLock, waitForQuietMachine } from '../../tools/gpu/measure-lock.mjs'
 import { BURST_SHARD, shardOf } from '../../tools/gpu/perf-shard.mjs'
 
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
@@ -46,6 +47,10 @@ const require = createRequire(import.meta.url)
 const EXPLOSIVES = ['frag_grenade', 'molotov', 'pipe_bomb', 'm79', 'rpg_7', 'at4', 'dynamite', 'c4', 'claymore']
 const sliceOf = (/** @type {string[]} */ list) => list.filter((_, at) => at % SLICE_COUNT === SLICE_AT - 1)
 const GPU_MODE = process.env.PERF_MODE === 'gpu'
+// Frame times only mean something alone on a quiet machine: a gpu run takes the machine-wide measure lock and waits for a load under 4 (counters mode, CI's, times nothing).
+// A caller that already holds ~/.cache/adatechnology-game-kit/perf-measure.lock (`flock ... node perf.mjs`) sets PERF_MEASURE_LOCKED=1.
+if (GPU_MODE && lockDecision({ env: process.env, hasFlock: flockExists() }) === 'reexec') process.exit(rerunUnderLock(fileURLToPath(import.meta.url), process.argv.slice(2)))
+const { loadAtStart: LOAD_AT_START } = GPU_MODE ? await waitForQuietMachine({ label: 'perf' }) : { loadAtStart: undefined }
 // PERF_SHARD=cold|warm|burst|horde runs one share (CI runs them in parallel); cold:K/N runs the K-th of N slices of the explosives; unset runs everything
 const { shard: SHARD, slice: SLICE, warning: SHARD_WARNING } = shardOf(process.env.PERF_SHARD)
 if (SHARD_WARNING) console.warn(`perf: ${SHARD_WARNING}`)
@@ -218,7 +223,7 @@ if (after && after.drawsPerFrame > idle.drawsPerFrame * BUDGET.drawGrowthAfterBu
 for (const [id, found] of Object.entries(hordeMetrics)) checkHorde(id, found)
 if (pageErrors.length > 0) hard(`page errors: ${pageErrors.slice(0, 3).join(' | ')}`)
 
-writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ pageSha256, mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, burst: burst?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
+writeFileSync(process.env.PERF_OUT ?? join(outDir, 'perf.json'), JSON.stringify({ pageSha256, mode: GPU_MODE ? 'gpu' : 'counters', viewport: VIEWPORT, tier: TIER, pixelRatio: PIXEL_RATIO || undefined, loadAtStart: LOAD_AT_START, gpu, calibration, subsystems, budget: BUDGET, phases, shard: SHARD, burst: burst?.name, lightSlots: lightSlotReport, horde: { agents: HORDE, gpuMachine: process.env.PERF_GPU ?? 'nvidia', budget: HORDE_BUDGET, metrics: hordeMetrics }, failures }, null, 1))
 const REPORT_TARGETS = process.env.PERF_TARGETS === 'report'
 for (const { text, kind } of failures) console.log(`${kind === 'hard' || !REPORT_TARGETS ? 'FAIL ' : 'TARGET'}  ${text}`)
 const blocking = failures.filter((failure) => failure.kind === 'hard' || !REPORT_TARGETS)
