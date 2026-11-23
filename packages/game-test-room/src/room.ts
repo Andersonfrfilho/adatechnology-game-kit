@@ -35,9 +35,9 @@ import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
 import { displacedVolume } from './displaced-volume'
 import { createExplosives } from './explosives'
-import { attachBlastPacing, type BlastPacing } from './blast-pacing'
+import { createBlastPacing } from './blast-pacing'
+import { createBlastSettings } from './blast-settings'
 import { createTestTable } from './test-table'
-import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
 import { createDualReload } from './dual-reload'
 import { createLoading } from './loading'
@@ -874,7 +874,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (floor === -Infinity && world && Number.isFinite(feet)) {
       const downRay = world.raycast([x, feet + STEP_UP, z], [0, -1, 0], STEP_UP + 2.5, { skipLoose: true })
-      if (downRay && downRay.point && downRay.point[1] <= feet + STEP_UP) floor = Math.max(floor, downRay.point[1])
+      if (downRay && downRay.point && downRay.point[1] <= feet + STEP_UP) {
+        floor = Math.max(floor, downRay.point[1])
+      }
     }
     return { floor, blocked }
   }
@@ -2923,13 +2925,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return bodies
   }
 
-  // ----- the blast options of the room's explosions (the HUD toggles them), and what the last blast did
-  let blastOptions: BlastOptions = { ...options.blast }
-  let lastBlast: BlastSummary | undefined
-  const blastOn = (key: 'shelter' | 'fragmentHits' | 'confinement'): boolean => Boolean(blastOptions[key])
-  const toggleBlast = (key: 'shelter' | 'fragmentHits' | 'confinement'): void => {
-    blastOptions = { ...blastOptions, [key]: blastOn(key) ? false : true }
-  }
+  // ----- the blast options of the room's explosions (the HUD toggles them), what the last blast did, and the pacer that spreads a grenade over frames (spec 018 D2)
+  const blastSettings = createBlastSettings(options.blast)
+  const blastPacing = createBlastPacing(options.blastPacing, { world, renderer })
 
   // ----- projectiles (grenades, molotovs, rockets) and charges set down: the room lends the explosives its world, log and host
   const explosives = createExplosives({
@@ -2946,10 +2944,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     toolName,
     withoutHeld,
     groundAt,
-    blast: () => blastOptions,
-    blasted: (summary) => {
-      lastBlast = summary
-    },
+    blast: blastSettings.options,
+    blasted: blastSettings.blasted,
+    blasts: blastPacing,
     translate: t,
     format: num,
     action,
@@ -2960,7 +2957,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     audio,
     water: blastWater,
     waterLevelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null,
-    ...(options.blastPacing ? { blasts: { begin: (blast, onDone) => blastPacing?.begin(blast, onDone) } } : {}),
     splash: (point, velocity) => {
       const speed = Math.hypot(velocity[0], velocity[1], velocity[2])
       if (speed < 1e-3) return
@@ -4081,10 +4077,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const simulationTick = resolveSimulationTick(physicsLoop?.world.fixedStep, FIXED_DT)
   const scheduler = createScheduler({ fixedDt: simulationTick, maxSubsteps: MAX_TICKS_PER_FRAME, maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError, holdFixed: () => blastPacing?.isHolding() === true })
-  const blastPacing: BlastPacing | undefined = options.blastPacing ? attachBlastPacing(scheduler, { world, renderer, ...options.blastPacing }) : undefined
   registerFrameQueues({ budget: scheduler.budget, destruction: renderer, audio, film, staticBatchQueue, hasWorkBudget: options.debris?.workBudget !== undefined })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
-  const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
+  const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: blastSettings.last })
   // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
   const MEMORY_CLEARS = 4
   const memoryWatch = createMemoryWatch({
@@ -4251,7 +4246,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     else player.takeWish()
     stepAvatar(isPaused ? 0 : dt)
     stepFeet(isPaused ? 0 : dt)
-    if (tiltKey || heldTilt > 0) heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
+    if (tiltKey || heldTilt > 0) {
+      heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
+    }
     // a click that was pressed and let go between two frames still counts (useFirst stays until a frame reads it)
     if ((useHeld || useFirst) && !isPaused && !push.active) {
       if (tool.def.category === 'hand') {
@@ -4322,7 +4319,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       fast: fastForward,
       tap: isTapOn(),
       combo: combo ? comboOn : null,
-      blast: { shelter: blastOn('shelter'), fragmentHits: blastOn('fragmentHits'), confinement: blastOn('confinement') },
+      blast: { shelter: blastSettings.isOn('shelter'), fragmentHits: blastSettings.isOn('fragmentHits'), confinement: blastSettings.isOn('confinement') },
       quality: qualityName,
       camera: avatar ? cameraMode : null,
       objects: [...entries.values()].filter((e) => !e.arena).length,
@@ -5252,10 +5249,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldTilt = rad
     },
     toggleTap,
-    blast: () => ({ ...blastOptions }),
-    setBlast: (next) => {
-      blastOptions = { ...blastOptions, ...next }
-    },
+    blast: () => ({ ...blastSettings.options() }),
+    setBlast: blastSettings.set,
     blastAt: (explosive, point) => explosives.blastAt(toolId, explosive, point),
     pause() {
       scheduler.pause()
@@ -5493,7 +5488,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       onTap: () => toggleTap(),
       ...(combo ? { combo: { label: combo.name?.[locale] ?? combo.id, onToggle: () => setStrikeCombo(!comboOn) } } : {}),
       ...(arsenal.weapons.has('kick') ? { kick: { label: `${t('ui.kick')} (${kickKeys.map((key) => key.replace(/^Key/, '')).join('/')})`, onKick: () => void kick() } } : {}),
-      onBlast: (key) => toggleBlast(key),
+      onBlast: (key) => blastSettings.toggle(key),
       onPlay: (objectId, clipId) => {
         playAnimation(clipId, objectId)
       },
@@ -5540,7 +5535,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer, structural: renderer })
+  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer, structural: renderer, blastPacing })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
@@ -5606,7 +5601,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  if (options.initial) for (const [i, id] of options.initial.entries()) spawn(id, [(i - (options.initial.length - 1) / 2) * 1.3, 0, 0.5])
+  if (options.initial) {
+    for (const [i, id] of options.initial.entries()) spawn(id, [(i - (options.initial.length - 1) / 2) * 1.3, 0, 0.5])
+  }
   if (options.avatar) setAvatar(options.avatar)
   if (options.area) openArea(options.area)
 

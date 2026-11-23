@@ -134,7 +134,7 @@ export type ExplosivesContext = {
    * The pacer that spreads a blast with a casing over frames (spec 018 D2, `TestRoomOptions.blastPacing`): the fireball shows at once, and everything that needs what
    * the blast did (the report, the shove and sound of `renderer.explode`, the log, the host event, the fire) comes when it ends. Without it every blast is one-shot.
    */
-  readonly blasts?: { readonly begin: (blast: PacedBlast, onDone: (results: HitResult[]) => void) => void }
+  readonly blasts?: { readonly begin: (blast: PacedBlast, onDone: (results: HitResult[]) => void) => void; readonly clear: () => void } | undefined
 }
 
 export type Explosives = {
@@ -209,6 +209,8 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   const clear = (): void => {
+    // a blast still spread over frames goes with the room: nothing of it lands on what comes back
+    context.blasts?.clear()
     smokeSources.length = 0
     smokeHiss?.stop()
     smokeHiss = null
@@ -421,12 +423,13 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     action('blast_report', translate('act.blast_report', { shelter: format(summary.shelter * 100, 0), confinement: format(summary.confinement, 2), fragments: summary.fragmentHits, n: summary.targets }), { data: { ...summary } })
   }
 
-  /** The water's answer and the fireball of a blast that goes off: whether it went off under water, and whether the effects drew the fireball. */
-  const showBlast = (detonation: Detonation): { readonly isUnderwater: boolean; readonly isPlayed: boolean } => {
+  /** What a blast showed when it went off: whether under water, whether the effects drew the fireball, and where the player stood (the share it took is read there). */
+  type Shown = { readonly isUnderwater: boolean; readonly isPlayed: boolean; readonly playerAt: Vec3 }
+  const showBlast = (detonation: Detonation): Shown => {
     // under the water the water takes the blast: a column and a dome of white water, no fireball
     const isUnderwater = detonation.energy > 0 && context.water?.(detonation)?.underwater === true
     const isPlayed = detonation.energy > 0 && !isUnderwater && context.effects.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
-    return { isUnderwater, isPlayed }
+    return { isUnderwater, isPlayed, playerAt: toArray(camera.position) }
   }
 
   /** The only place a blast is applied: the world, the drawing, the log, the player's share, the host event and the fire. */
@@ -450,15 +453,16 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   /** What follows a blast once the world has it: the report, the drawing, the log, the player's share, the host event and the fire; `shown` when the flash already played. */
-  const blasted = (projectile: Projectile, detonation: Detonation, results: readonly HitResult[], shown?: { readonly isUnderwater: boolean; readonly isPlayed: boolean }): void => {
+  const blasted = (projectile: Projectile, detonation: Detonation, results: readonly HitResult[], shown?: Shown): void => {
     const weaponName = context.toolName(projectile.weapon)
     const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
     const reached = detonation.energy <= 0 ? 0 : detonation.cone ? coneBlast(detonation) : results.length
     if (!detonation.cone) told(results)
-    const { isUnderwater, isPlayed } = shown ?? showBlast(detonation)
+    const { isUnderwater, isPlayed, playerAt } = shown ?? showBlast(detonation)
     if (detonation.energy > 0) renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed && !isUnderwater, report: results, effect: detonation.explosive })
     if (detonation.stunSeconds !== undefined) renderer.emit('flash', detonation.point, [0, 1, 0], 1, 1)
-    const onPlayer = blastEffect(detonation, toArray(camera.position))
+    // the player's share is read where they stood when it went off, not where they are when a spread blast ends
+    const onPlayer = blastEffect(detonation, playerAt)
     action('explode', translate('act.explode', { weapon: weaponName, energy: format(detonation.energy, 0), radius: format(reach, 1), n: reached }), {
       data: { weapon: projectile.weapon, explosive: detonation.explosive, cause: detonation.cause, energyJ: detonation.energy, radius: reach, point: detonation.point, player: onPlayer.zone, stunSeconds: onPlayer.stunSeconds },
     })
