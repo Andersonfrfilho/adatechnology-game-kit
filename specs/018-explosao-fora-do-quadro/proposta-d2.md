@@ -65,8 +65,17 @@ ela acabou de gerar.
    existia antes da explosão. O preparo da régua (`inPage`) deixa o laço da página rodar 8 s em
    tempo real, então o número de tiques até a explosão varia. Com o laço parado no preparo e o mesmo
    número de tiques, 5 rodadas ficaram idênticas em todos os 90 tiques (corrigido em 2026-11-23;
-   o harness é `tools/gpu/room-determinism.mjs`). Com 4 ritmos de quadro diferentes (0, 60 e 100 ms),
-   o resultado também foi idêntico, então as filas por prazo não mudam o resultado.
+   o harness é `tools/gpu/room-determinism.mjs`).
+   Ritmos de quadro testados: 4 rodadas de 90 tiques, a 0, 60, 0 e 100 ms por quadro, todas idênticas
+   (`paces-4x90.json`, `ROOM_DET_PACES=0,60,0,100`). Configuração testada: página `jolt-d4-worker`
+   (`&solver=jolt&blastDebris=1&groundWorker=1`), granada M67, carga da máquina entre 1,3 e 1,5.
+   O que isso prova é só isto: com esses ritmos e essa carga, as filas por prazo não mudaram o
+   resultado. Não vale para outra configuração (sem worker de chão, outro explosivo) nem para carga
+   alta. Comando: `ROOM_DET_RUNS=5 node tools/gpu/room-determinism.mjs` (pega a trava sozinho; o
+   veredito falha com menos de 2 rodadas, explosão sem efeito ou erro de página). Resultados em
+   `~/.cache/adatechnology-game-kit/medicoes/2026-11-23-sala-deterministica/`: `final-v2-5x90.json`
+   (5 rodadas, preparo com laço parado), `base-v2-3x60.json` (caminho antigo, laço da página,
+   `ROOM_DET_PAGE_LOOP=1`: o harness detecta a divergência) e `paces-4x90.json`.
 3. **Sem pausa, o estado final muda.** Isso era esperado, mas não foi demonstrado na sala pelo mesmo
    motivo do item 2.
 
