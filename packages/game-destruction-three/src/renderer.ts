@@ -11,6 +11,7 @@ import { WorkBudget, WorkQueue } from '@adatechnology/game-physics'
 import { BlastWakes, PhysicsCostMeter, chooseForPhysics, physicsPieceCount, resolveBlastDebris, resolveWorkUnitCosts, splitWorkUnits } from './blast-debris'
 import type { BlastWake, DebrisCostSample, ResolvedBlastDebris, WorkUnitCosts } from './blast-debris'
 import { EventOrder, isStructuralEvent } from './event-class'
+import { eventApplyWeight } from './event-weight'
 import { FragmentSystem } from './fragments'
 import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
@@ -446,6 +447,13 @@ class Renderer implements DestructionRenderer {
   /** true while the host applies the structural events itself, at the end of each tick (`applyStructuralEvents`): a frame drain leaves them, and what waits behind them, for the next tick. */
   private structuralInTick = false
   private readonly eventOrder = new EventOrder()
+  /** true while the host holds every event (a blast still being run in slices, `holdEvents`): no drain applies one and no stall is counted. */
+  private areEventsHeld = false
+  /**
+   * The structural events of a spread blast, arranged once as `applyStructuralEvents` arranges them, applied a slice per frame (`applyStructuralEventsSliced`); `tail`
+   * is what followed the last structural one, given back to the queue when they are all applied.
+   */
+  private heldStructural: { readonly events: readonly DestructionEvent[]; readonly tail: readonly DestructionEvent[]; next: number } | undefined
   private stalledFrames = 0
   private watchedFrame = -1
   private readonly eventQueue: DeferredQueue = {
@@ -1200,8 +1208,10 @@ class Renderer implements DestructionRenderer {
    * an object with a structural one goes before it). What follows the last structural event is the frame's.
    */
   applyStructuralEvents(): void {
-    if (this.disposed || this.work) return
+    if (this.disposed || this.work || this.areEventsHeld) return
     this.stalledFrames = 0
+    // a spread blast whose slices are not all applied yet goes first, whole: the tick never runs past events of an earlier blast
+    if (this.heldStructural) this.applyHeldStructural(Infinity)
     let last = -1
     for (let i = this.queue.length - 1; i >= 0 && last < 0; i--) if (isStructuralEvent(this.queue[i]!)) last = i
     if (last < 0) return
@@ -1220,6 +1230,59 @@ class Renderer implements DestructionRenderer {
     })
   }
 
+  /** Holds every event of the queue (no drain applies any, no stall is counted) while the host runs a blast in slices, or lets them go. */
+  holdEvents(isHeld: boolean): void {
+    this.areEventsHeld = isHeld
+    this.stalledFrames = 0
+  }
+
+  /**
+   * `applyStructuralEvents` spread over frames: the first call arranges the waiting events once, exactly as the whole call does, and keeps those up to the last structural
+   * one; each call applies the next of them in order until their weights (`EVENT_APPLY_WEIGHT`) reach `units` (at least one event). The same events in the same order as
+   * the whole call, so the same world. What followed the last structural event goes back to the queue once they are all applied. Returns the events still held.
+   */
+  applyStructuralEventsSliced(units: number): number {
+    if (this.disposed || this.work) return 0
+    this.stalledFrames = 0
+    if (!this.heldStructural) {
+      let last = -1
+      for (let i = this.queue.length - 1; i >= 0 && last < 0; i--) if (isStructuralEvent(this.queue[i]!)) last = i
+      if (last < 0) return 0
+      const ordered = this.eventOrder.arrange(this.queue.splice(0, this.queue.length))
+      let end = ordered.length
+      while (end > 0 && !isStructuralEvent(ordered[end - 1]!)) end--
+      this.heldStructural = { events: ordered.slice(0, end), tail: ordered.slice(end), next: 0 }
+    }
+    this.applyHeldStructural(units)
+    return this.structuralBacklog()
+  }
+
+  /** Structural events of a spread blast not applied yet (`applyStructuralEventsSliced`). */
+  structuralBacklog(): number {
+    return this.heldStructural ? this.heldStructural.events.length - this.heldStructural.next : 0
+  }
+
+  private applyHeldStructural(units: number): void {
+    const held = this.heldStructural
+    if (!held) return
+    let spent = 0
+    let stop = held.next
+    while (stop < held.events.length && (stop === held.next || spent + eventApplyWeight(held.events[stop]!) <= units)) spent += eventApplyWeight(held.events[stop++]!)
+    this.visuals.batchRebuilds(() => {
+      for (let i = held.next; i < stop; i++) {
+        try {
+          this.apply(held.events[i]!)
+        } catch (err) {
+          if (typeof console !== 'undefined') console.error('game-destruction-three: failed to apply', held.events[i]!.type, err)
+        }
+      }
+    })
+    held.next = stop
+    if (held.next < held.events.length) return
+    this.heldStructural = undefined
+    this.requeue(held.tail, 0)
+  }
+
   /** Puts `events` from `from` on, back at the front of the queue, in order (no spread: a blast leaves tens of thousands). */
   private requeue(events: readonly DestructionEvent[], from: number): void {
     if (from >= events.length) return
@@ -1229,6 +1292,11 @@ class Renderer implements DestructionRenderer {
   /** Counts the frames (once each) a structural event has waited with no tick to apply it; always 0, for `pending`'s sum. */
   private watchStall(frame: number | undefined): number {
     if (!this.structuralInTick || frame === undefined || frame === this.watchedFrame) return 0
+    // a held blast is not stalled: the host applies it in slices and lets the ticks go when it is done
+    if (this.areEventsHeld || this.heldStructural) {
+      this.stalledFrames = 0
+      return 0
+    }
     this.watchedFrame = frame
     this.stalledFrames = this.queue.some(isStructuralEvent) ? this.stalledFrames + 1 : 0
     return 0
@@ -1236,6 +1304,7 @@ class Renderer implements DestructionRenderer {
 
   /** How many events a drain may apply now: all, or (the host applies the structural ones in the tick) only those ahead of the first structural one. */
   private appliableEvents(all = false): number {
+    if (this.areEventsHeld && !all) return 0
     if (all || !this.structuralInTick || this.stalledFrames >= STALLED_FRAMES) return this.queue.length
     let count = 0
     while (count < this.queue.length && !isStructuralEvent(this.queue[count]!)) count++

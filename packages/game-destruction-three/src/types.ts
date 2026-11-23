@@ -384,6 +384,18 @@ export interface DestructionRenderer {
   /** At the end of a tick, on the step pose: applies the structural events that wait and the visual ones of their objects, in the order of emission. */
   applyStructuralEvents(): void
   /**
+   * Holds every event in the queue (no frame drain applies one, no stall dump) while the host runs a blast in slices (`DestructionWorld.beginExplosion`), or lets them
+   * go. Held, they stay for `applyStructuralEventsSliced` or the next tick.
+   */
+  holdEvents(isHeld: boolean): void
+  /**
+   * `applyStructuralEvents` spread over frames for a large blast: arranged once, the same events in the same order, a slice of `units` (`EVENT_APPLY_WEIGHT`, never a
+   * clock) per call; returns the structural events still to apply. `applyStructuralEvents` applies what is left first.
+   */
+  applyStructuralEventsSliced(units: number): number
+  /** Structural events of a spread blast not applied yet. */
+  structuralBacklog(): number
+  /**
    * The waiting events and the presentation slices they left, as a `DeferredQueue` for a shared frame budget (id `destruction.events`). `budget.register`
    * attaches it and `update` stops draining by itself; unregistering gives the draining back to `update` and `eventBudgetMs`. Asking for it changes nothing.
    */
