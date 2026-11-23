@@ -8,6 +8,7 @@
  * Every action and result goes to a behaviour log shown on screen in plain words and exportable as JSON / NDJSON, and scripted scenarios run
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
+import type { BlastPacingOptions } from './blast-pacing'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
@@ -334,6 +335,12 @@ export interface TestRoomOptions {
   frameBudgetMs?: number
   /** Frame deadline in ms for the deferred queues (they get what is left of it after the frame's other work). Default: the player's FPS cap, else 1000 / 60. */
   frameTargetMs?: number
+  /**
+   * Spread a blast with a casing (a fragmentation grenade) over frames with the world held (spec 018 D2): the flash at once, its fragment rays a fixed count per frame
+   * and its wave in a frame of its own, then its structural events a fixed weight per frame, the fixed steps held meanwhile (`holdFixed`), and the world it leaves the
+   * one the one-shot blast leaves. A blast set off inside a fixed step begins at the end of that step. Off by default (every blast in the frame it goes off, as before).
+   */
+  blastPacing?: BlastPacingOptions | false
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */
   metrics?: readonly RoomMetricId[] | false
   /**

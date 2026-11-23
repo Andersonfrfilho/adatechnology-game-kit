@@ -57,7 +57,7 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
     if (!isLegacyStep) hooks.structural.applyStructuralEvents()
   }, { phase: 'fixedSimulate', order: 2000, id: 'room.structural-events' })
   scheduler.add((ctx) => {
-    if (isLegacyStep) hooks.fixed(ctx.dt, false)
+    if (isLegacyStep && !ctx.fixedFrozen) hooks.fixed(ctx.dt, false)
     hooks.frame(ctx.dt)
   }, { phase: 'lateSimulate', order: -1000, id: 'room.simulate-frame' })
   scheduler.add((ctx) => hooks.frameEnd(ctx.dt), { phase: 'lateSimulate', order: 1000, id: 'room.simulate-end' })

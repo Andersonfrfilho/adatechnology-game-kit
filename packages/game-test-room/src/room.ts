@@ -35,6 +35,7 @@ import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
 import { displacedVolume } from './displaced-volume'
 import { createExplosives } from './explosives'
+import { attachBlastPacing, type BlastPacing } from './blast-pacing'
 import { createTestTable } from './test-table'
 import type { BlastSummary } from './explosives'
 import { toHostEvent } from './host-events'
@@ -873,9 +874,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (floor === -Infinity && world && Number.isFinite(feet)) {
       const downRay = world.raycast([x, feet + STEP_UP, z], [0, -1, 0], STEP_UP + 2.5, { skipLoose: true })
-      if (downRay && downRay.point && downRay.point[1] <= feet + STEP_UP) {
-        floor = Math.max(floor, downRay.point[1])
-      }
+      if (downRay && downRay.point && downRay.point[1] <= feet + STEP_UP) floor = Math.max(floor, downRay.point[1])
     }
     return { floor, blocked }
   }
@@ -2961,6 +2960,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     audio,
     water: blastWater,
     waterLevelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null,
+    ...(options.blastPacing ? { blasts: { begin: (blast, onDone) => blastPacing?.begin(blast, onDone) } } : {}),
     splash: (point, velocity) => {
       const speed = Math.hypot(velocity[0], velocity[1], velocity[2])
       if (speed < 1e-3) return
@@ -4080,7 +4080,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     throw errors.length === 1 ? errors[0] : new AggregateError(errors, `${errors.length} systems threw in one frame`)
   }
   const simulationTick = resolveSimulationTick(physicsLoop?.world.fixedStep, FIXED_DT)
-  const scheduler = createScheduler({ fixedDt: simulationTick, maxSubsteps: MAX_TICKS_PER_FRAME, maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError })
+  const scheduler = createScheduler({ fixedDt: simulationTick, maxSubsteps: MAX_TICKS_PER_FRAME, maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError, holdFixed: () => blastPacing?.isHolding() === true })
+  const blastPacing: BlastPacing | undefined = options.blastPacing ? attachBlastPacing(scheduler, { world, renderer, ...options.blastPacing }) : undefined
   registerFrameQueues({ budget: scheduler.budget, destruction: renderer, audio, film, staticBatchQueue, hasWorkBudget: options.debris?.workBudget !== undefined })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: () => lastBlast })
@@ -4250,9 +4251,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     else player.takeWish()
     stepAvatar(isPaused ? 0 : dt)
     stepFeet(isPaused ? 0 : dt)
-    if (tiltKey || heldTilt > 0) {
-      heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
-    }
+    if (tiltKey || heldTilt > 0) heldTilt = Math.max(0, Math.min(2.4, heldTilt + (tiltKey ? 2.2 : -3) * dt))
     // a click that was pressed and let go between two frames still counts (useFirst stays until a frame reads it)
     if ((useHeld || useFirst) && !isPaused && !push.active) {
       if (tool.def.category === 'hand') {
@@ -5607,9 +5606,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  if (options.initial) {
-    for (const [i, id] of options.initial.entries()) spawn(id, [(i - (options.initial.length - 1) / 2) * 1.3, 0, 0.5])
-  }
+  if (options.initial) for (const [i, id] of options.initial.entries()) spawn(id, [(i - (options.initial.length - 1) / 2) * 1.3, 0, 0.5])
   if (options.avatar) setAvatar(options.avatar)
   if (options.area) openArea(options.area)
 
