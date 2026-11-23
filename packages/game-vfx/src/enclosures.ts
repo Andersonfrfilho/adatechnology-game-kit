@@ -44,7 +44,20 @@ export interface Confiner {
    * walls (a puff is a ball, not a point: its middle stops before its edge goes through the glass).
    */
   confine(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, pad: number, dt: number): boolean
+  /** `confine` with the step in an object the caller reuses: eight numbers passed to a call are boxed on the heap, one object is not. `move` is only read during the call: it is not kept. */
+  confineMove(move: ConfineMove, dt: number): boolean
   readonly out: ConfineResult
+}
+
+/** One particle's step for {@link Confiner.confineMove}: from `(x0, y0, z0)` to `(x1, y1, z1)`, kept `pad` metres off the walls. */
+export interface ConfineMove {
+  x0: number
+  y0: number
+  z0: number
+  x1: number
+  y1: number
+  z1: number
+  pad: number
 }
 
 interface Space {
@@ -92,6 +105,8 @@ export class Enclosures implements Confiner {
   private readonly l0 = new Float64Array(3)
   private readonly l1 = new Float64Array(3)
   private readonly q = new Float64Array(3)
+  private readonly h = new Float64Array(3)
+  private readonly move: ConfineMove = { x0: 0, y0: 0, z0: 0, x1: 0, y1: 0, z1: 0, pad: 0 }
 
   constructor(seed = 0x51ed) {
     this.random = lehmer(seed)
@@ -176,9 +191,22 @@ export class Enclosures implements Confiner {
   }
 
   confine(x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, pad: number, dt: number): boolean {
+    const move = this.move
+    move.x0 = x0
+    move.y0 = y0
+    move.z0 = z0
+    move.x1 = x1
+    move.y1 = y1
+    move.z1 = z1
+    move.pad = pad
+    return this.confineMove(move, dt)
+  }
+
+  confineMove(move: ConfineMove, dt: number): boolean {
     const list = this.list
     if (list.length === 0) return false
-    const p = Math.min(Math.max(0, pad), MAX_PAD)
+    const { x0, y0, z0, x1, y1, z1 } = move
+    const p = Math.min(Math.max(0, move.pad), MAX_PAD)
     const l0 = this.l0
     const l1 = this.l1
     const q = this.q
@@ -195,7 +223,10 @@ export class Enclosures implements Confiner {
       }
       this.toLocal(s, x0, y0, z0, l0)
       this.toLocal(s, x1, y1, z1, l1)
-      const h = [s.hx, s.hy, s.hz] as const
+      const h = this.h
+      h[0] = s.hx
+      h[1] = s.hy
+      h[2] = s.hz
       const in0 = Math.abs(l0[0]!) <= s.hx && Math.abs(l0[1]!) <= s.hy && Math.abs(l0[2]!) <= s.hz
       let axis = 0
       let sign = 1
@@ -248,6 +279,15 @@ export class Enclosures implements Confiner {
     }
     return false
   }
+}
+
+/** {@link slideAlong} written back into the particle's own velocity, nothing allocated. */
+export function slideInto(out: ConfineResult, velocity: { vx: number; vy: number; vz: number }): void {
+  const into = velocity.vx * out.nx + velocity.vy * out.ny + velocity.vz * out.nz
+  if (into >= 0) return
+  velocity.vx -= into * out.nx
+  velocity.vy -= into * out.ny
+  velocity.vz -= into * out.nz
 }
 
 /** Takes the part of a velocity that runs into the wall away (what is left slides along it). */
