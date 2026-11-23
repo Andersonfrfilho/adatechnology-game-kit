@@ -11,6 +11,7 @@ import { physicsOption } from './setup-physics'
 const FRAME = 1 / 60
 
 type Renderer = ReturnType<typeof createDestructionRenderer>
+type Emitted = Parameters<FakeWorld['emit']>[0]
 
 /** Two objects with a base and a loose group each; `applied` lists every event the renderer applies, in order. */
 function scene(): { readonly world: FakeWorld; readonly renderer: Renderer; readonly applied: DestructionEvent[]; readonly sounds: string[] } {
@@ -41,12 +42,12 @@ function scene(): { readonly world: FakeWorld; readonly renderer: Renderer; read
   return { world, renderer, applied, sounds }
 }
 
-const hole = (object: string): DestructionEvent => ({ type: 'hole', object, part: 'b', hole: { normal: [0, 1, 0], diameter: 0.01, through: false }, worldPoint: [1, 0.2, 0], blow: undefined }) as unknown as DestructionEvent
-const detach = (object: string): DestructionEvent => ({ type: 'detach', object, part: 'b', by: 'force' }) as unknown as DestructionEvent
-const crack = (object: string): DestructionEvent => ({ type: 'crack', object, part: 'base', time: 0 }) as unknown as DestructionEvent
+const hole = (object: string): Emitted => ({ type: 'hole', object, part: 'b', hole: { normal: [0, 1, 0], diameter: 0.01, through: false }, worldPoint: [1, 0.2, 0], blow: undefined }) as unknown as Emitted
+const detach = (object: string): Emitted => ({ type: 'detach', object, part: 'b', by: 'force' }) as unknown as Emitted
+const crack = (object: string): Emitted => ({ type: 'crack', object, part: 'base', time: 0 }) as unknown as Emitted
 
 /** A blast's worth of events: visual ones around structural ones of two objects, a visual one of an object after its structural one, and a visual tail. */
-const BLAST: readonly DestructionEvent[] = [hole('o1'), crack('o2'), hole('o2'), detach('o2'), hole('o1'), crack('o1'), detach('o1'), hole('o2'), crack('o1'), crack('o2')]
+const BLAST: readonly Emitted[] = [hole('o1'), crack('o2'), hole('o2'), detach('o2'), hole('o1'), crack('o1'), detach('o1'), hole('o2'), crack('o1'), crack('o2')]
 
 const emitAll = (world: FakeWorld): void => {
   for (const event of BLAST) world.emit(event)
