@@ -10,6 +10,11 @@ import { clamp, createRng, hashString } from './math'
 import { PoseTrail } from './pose-trail'
 import type { LooseBody } from './types'
 
+/** three.js calls a material's `onBeforeRender` right before drawing with it (`WebGLRenderer.renderObject`); `@types/three` 0.160 leaves it out of `Material`. */
+interface GlassBackPass {
+  onBeforeRender(renderer: THREE_NS.WebGLRenderer, scene: THREE_NS.Scene, camera: THREE_NS.Camera, geometry: THREE_NS.BufferGeometry, object: THREE_NS.Object3D, group: THREE_NS.Group | null): void
+}
+
 /** @internal */
 export interface Live {
   mesh: THREE_NS.Mesh
@@ -220,6 +225,8 @@ export class FragmentSystem {
   private shardGeos: THREE_NS.BufferGeometry[] = []
   private readonly shapeGeos = new Map<Exclude<SharedShape, 'shard'>, THREE_NS.BufferGeometry[]>()
   private readonly materials = new Map<string, THREE_NS.Material>()
+  /** The back-face twin of each glass material (`glassMaterial`). */
+  private readonly glassBacks = new Map<THREE_NS.Material, THREE_NS.Material>()
   private readonly q: THREE_NS.Quaternion
   private readonly dq: THREE_NS.Quaternion
   private readonly m: THREE_NS.Matrix4
@@ -281,12 +288,24 @@ export class FragmentSystem {
     const key = `${materialId}:${color}:${transparent ? 1 : 0}`
     let m = this.materials.get(key)
     if (!m) {
-      m = transparent
-        ? new this.THREE.MeshStandardMaterial({ color, roughness: 0.15, metalness: 0.1, transparent: true, opacity, side: this.THREE.DoubleSide, depthWrite: false })
-        : new this.THREE.MeshLambertMaterial({ color })
+      m = transparent ? this.glassMaterial(color, opacity) : new this.THREE.MeshLambertMaterial({ color })
       this.materials.set(key, m)
     }
     return m
+  }
+
+  /**
+   * Glass drawn from both faces, back faces first, as three draws a transparent `DoubleSide` material, but with two materials of their own: three draws that
+   * one by flipping `side` and bumping `version` twice per draw, which looks up the program again (`getParameters`) on every draw of every shard.
+   */
+  private glassMaterial(color: number, opacity: number): THREE_NS.MeshStandardMaterial {
+    const look = { color, roughness: 0.15, metalness: 0.1, transparent: true, opacity, depthWrite: false }
+    const back = new this.THREE.MeshStandardMaterial({ ...look, side: this.THREE.BackSide })
+    const front = new this.THREE.MeshStandardMaterial({ ...look, side: this.THREE.FrontSide, shadowSide: this.THREE.DoubleSide })
+    const drawBackFaces: GlassBackPass['onBeforeRender'] = (renderer, scene, camera, geometry, object, group) => renderer.renderBufferDirect(camera, scene, geometry, back, object, group)
+    Object.assign(front, { onBeforeRender: drawBackFaces })
+    this.glassBacks.set(front, back)
+    return front
   }
 
   private shardGeometry(seed: number): THREE_NS.BufferGeometry {
@@ -368,11 +387,17 @@ export class FragmentSystem {
     this.warmInstanced = new this.THREE.InstancedMesh(this.box, opaque, 1)
     this.warmInstanced.castShadow = true
     return [
-      ...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass)]),
+      ...geometries.flatMap((shared) => [new this.THREE.Mesh(shared, opaque), new this.THREE.Mesh(shared, glass), ...this.glassBackMeshes(shared, glass)]),
       ...shaped.map((shared) => new this.THREE.Mesh(shared, opaque)),
       new this.THREE.Mesh(geometry, material),
       this.warmInstanced,
     ]
+  }
+
+  /** The back faces of `glass` as a mesh of their own, so a host that compiles the warm meshes without drawing them makes that program at load too. */
+  private glassBackMeshes(shared: THREE_NS.BufferGeometry, glass: THREE_NS.Material): THREE_NS.Mesh[] {
+    const back = this.glassBacks.get(glass)
+    return back ? [new this.THREE.Mesh(shared, back)] : []
   }
 
   /**
@@ -917,5 +942,7 @@ export class FragmentSystem {
     this.shapeGeos.clear()
     for (const m of this.materials.values()) m.dispose()
     this.materials.clear()
+    for (const m of this.glassBacks.values()) m.dispose()
+    this.glassBacks.clear()
   }
 }

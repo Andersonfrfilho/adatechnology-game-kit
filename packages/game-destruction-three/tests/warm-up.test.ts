@@ -24,7 +24,10 @@ describe('warm-up probes', () => {
     const fragmentMeshes = group.children.slice(3) as THREE.Mesh[]
     const geometries = new Set(fragmentMeshes.map((mesh) => mesh.geometry))
     expect(geometries.size).toBe(8 + 5 * 6)
-    expect(fragmentMeshes.filter((mesh) => (mesh.material as THREE.Material).transparent)).toHaveLength(7)
+    const glass = fragmentMeshes.filter((mesh) => (mesh.material as THREE.Material).transparent)
+    // each shared piece in glass twice: the front faces and their back-face twin, which glass draws first
+    expect(glass.filter((mesh) => (mesh.material as THREE.Material).side === THREE.FrontSide)).toHaveLength(7)
+    expect(glass.filter((mesh) => (mesh.material as THREE.Material).side === THREE.BackSide)).toHaveLength(7)
     const again = (renderer.warmUpProbes().group as THREE.Group).children.slice(3) as THREE.Mesh[]
     expect(new Set(again.map((mesh) => mesh.geometry))).toEqual(geometries)
     for (const geometry of geometries) expect(geometry.getAttribute('position').count).toBeGreaterThan(0)
