@@ -177,6 +177,9 @@ export function compare(timings: readonly Timing[], calibrationMs: number, basel
   return out
 }
 
+/** Smallest group whose builders are judged against their peers (see `Baseline.peerMin`). */
+export const DEFAULT_PEER_MIN = 5
+
 const groupOf = (id: string): string => id.split('/')[0] as string
 
 /** Per entry of a group with at least `peerMin` entries in the baseline, the median `change` of the other entries of its group. */
@@ -191,7 +194,7 @@ function peerMedianChanges(timings: readonly Timing[], calibrationMs: number, ba
   }
   const medians = new Map<string, number>()
   for (const list of byGroup.values()) {
-    if (list.length < (baseline.peerMin ?? 5)) continue
+    if (list.length < (baseline.peerMin ?? DEFAULT_PEER_MIN)) continue
     for (const entry of list) medians.set(entry.id, median(list.filter((other) => other !== entry).map((other) => other.change)))
   }
   return medians

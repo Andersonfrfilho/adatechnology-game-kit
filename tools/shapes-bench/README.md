@@ -38,7 +38,8 @@ node tools/shapes-bench/dist/cli.js --baseline-from run.json  # baseline from an
   ratios passes `× (1 + groupBudget)` (0.5). A builder in a group of 5 or more (`peerMin`) fails only if it is also past the budget against the
   median change of the *other* builders of its group in the same run; otherwise it is a `warn`: a slow stretch of the runner moves a whole group
   (62 CI runs: 5 failed on one builder alone, 0 fail with this rule; a single builder made 2.5x slower is still caught in 90% to 100% of them,
-  2.2x in 71% to 100%, the houses at the low end). Builders over the warning, and every builder of a failing group, are timed 5 more rounds before
+  2.2x in 71% to 100%, the houses at the low end). Blind spot: a group of 5 to 7 builders (today `houses` and `urban`) has no group check, so a slowdown shared by most of
+  the group, such as a common helper, only warns there. Builders over the warning, and every builder of a failing group, are timed 5 more rounds before
   the verdict.
 - The CI job `shapes-bench` runs `--check`, writes the table to the job summary and uploads the run (`shapes-bench-run.json`).
 

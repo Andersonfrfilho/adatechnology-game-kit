@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { compare, compareGroups, median, summary, timeEntry, toBaseline } from '../src/timing'
+import { DEFAULT_PEER_MIN, compare, compareGroups, median, summary, timeEntry, toBaseline } from '../src/timing'
 import type { Baseline } from '../src/timing'
 
 const clock = (steps: number[]): (() => number) => {
@@ -64,11 +64,20 @@ describe('compare with the baseline', () => {
     const base: Baseline = { ...baseline, peerMin: undefined, overrides: {}, entries }
     const slowRunner = ['a', 'b', 'c', 'd', 'e', 'f'].map((name) => ({ id: `g/${name}`, ms: 2.4, runs: 5 }))
     expect(compare(slowRunner, 1, base).map((c) => c.verdict)).toEqual(Array(6).fill('warn'))
-    const oneBuilder = slowRunner.map((t) => (t.id === 'g/a' ? { ...t, ms: 2.4 } : { ...t, ms: 1.1 }))
+    const oneBuilder = slowRunner.map((t) => (t.id === 'g/a' ? t : { ...t, ms: 1.1 }))
     const verdicts = compare(oneBuilder, 1, base)
     expect(verdicts[0]!.verdict).toBe('slower')
     expect(verdicts[0]!.peerChange).toBeCloseTo(2.4 / 1.1, 10)
     expect(verdicts.slice(1).every((c) => c.verdict === 'ok')).toBe(true)
+  })
+  it('a group under the peer minimum keeps failing on the entry budget alone', () => {
+    const names = Array.from({ length: DEFAULT_PEER_MIN - 1 }, (_, index) => `n${index}`)
+    const entries = Object.fromEntries(names.map((name) => [`g/${name}`, { ratio: 1, ms: 1 }]))
+    const base: Baseline = { ...baseline, peerMin: undefined, overrides: {}, entries }
+    const slowRunner = names.map((name) => ({ id: `g/${name}`, ms: 2.4, runs: 5 }))
+    const verdicts = compare(slowRunner, 1, base)
+    expect(verdicts.map((c) => c.verdict)).toEqual(Array(names.length).fill('slower'))
+    expect(verdicts.every((c) => c.peerChange === null)).toBe(true)
   })
   it('a new baseline keeps the budget and the overrides, sorted by id', () => {
     const next = toBaseline([{ id: 'b', ms: 2, runs: 3 }, { id: 'a', ms: 1, runs: 3 }], 4, baseline, 'v22.1')
