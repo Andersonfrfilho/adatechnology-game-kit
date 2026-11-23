@@ -1,6 +1,6 @@
 # Proposta D2: espalhar a explosão em vários quadros
 
-Status: **aguardando decisão do dono** (D2 segue aberta). Nada disto está implementado na main.
+Status: **caminho escolhido pelo dono em 2026-11-23: plano recomendado** (primeiro a sala determinística, depois o segundo protótipo medido, e só então a implementação). A latência da D2 fecha com o número do segundo protótipo. Nada disto está implementado na main.
 Medido em 2026-11-22 na RTX 5070 Laptop (`machine.gpu` em todo JSON). Os dados brutos estão em
 `~/.cache/adatechnology-game-kit/medicoes/2026-11-22-d2-espalhar/`, e o protótipo descartável na
 branch `spike/d2-espalhar-explosao`. Foi caso M67 na casa `floorplan`, 1x, 3 rodadas por variante,
