@@ -680,6 +680,8 @@ export interface DestructionWorld {
    * `explode` there does. The host that spreads it over frames holds the simulation meanwhile (`game-runtime`'s `holdFixed`).
    */
   beginExplosion(point: Vec3, energy: number, radius: number, source?: string, options?: BlastOptions): ExplosionJob
+  /** Drops every open `beginExplosion` where it stands: nothing more of it runs and its `result()` throws. For a host clearing or replacing its world (`load` does it itself). */
+  cancelExplosions(): void
   /**
    * The share (0..1) of a blast at `point` that reaches `target` through what stands between them: every part the straight line crosses lets
    * `exp(-r / k)` through (`ShelterOptions`; `r` the hit points of the slab per square metre), a broken part or a hole lets it all by. Always on, whatever

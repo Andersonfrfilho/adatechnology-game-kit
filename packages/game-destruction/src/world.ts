@@ -5589,6 +5589,15 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     while (explosions.length > 0) advanceOldest(Infinity, Infinity)
   }
 
+  /** Drops every open explosion where it stands (nothing more of it runs, `result()` throws): the world is being replaced or cleared. */
+  const cancelExplosions = (): void => {
+    for (const job of explosions) job.failure = { error: new Error('beginExplosion: the explosion was cancelled (cancelExplosions or load)') }
+    explosions.length = 0
+    pendingStructure.clear()
+    pendingDetaches.length = 0
+    pendingCollapse.clear()
+  }
+
   const beginExplosion = (point: Vec3, energy: number, radius: number, source?: string, blast?: BlastOptions): ExplosionJob => {
     const job: ExplosionRT = { steps: blastSteps(point, energy, radius, source, blast), mine: [], isStarted: false, result: undefined, failure: undefined }
     const isOver = (): boolean => job.result !== undefined || job.failure !== undefined
@@ -6226,6 +6235,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       return job.result()
     },
     beginExplosion,
+    cancelExplosions,
     groundLoss(loss) {
       if (!(loss.radius > 0) || !(loss.depth > 0) || !Number.isFinite(loss.x) || !Number.isFinite(loss.z)) return
       pendingLosses.push({ ...loss })
@@ -6489,7 +6499,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       objects.set(id, buildFromEntry(entry, id))
     },
     load(snap) {
-      finishExplosions()
+      // the whole world is replaced: what an open blast would still do belongs to the world that goes
+      cancelExplosions()
       if (snap.version !== 1) throw new Error(`unsupported snapshot version ${String(snap.version)}`)
       objects.clear()
       time = snap.time

@@ -140,7 +140,7 @@ describe('createBlastPacer (spec 018 D2)', () => {
     renderer.setStructuralInTick(true)
     const log: string[] = []
     const jobs = [fakeJob(world, 3, log, 'a')]
-    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()! }, renderer, unitsPerFrame: 1 })
+    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()!, cancelExplosions: () => undefined }, renderer, unitsPerFrame: 1 })
     const done: string[] = []
     pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, (results) => done.push(results[0]!.object))
     expect(log).toEqual(['a:1'])
@@ -166,7 +166,7 @@ describe('createBlastPacer (spec 018 D2)', () => {
     const { world, renderer } = scene()
     const log: string[] = []
     const jobs = [fakeJob(world, 2, log, 'a'), fakeJob(world, 2, log, 'b'), fakeJob(world, 1, log, 'c')]
-    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()! }, renderer })
+    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()!, cancelExplosions: () => undefined }, renderer })
     const done: string[] = []
     const onDone = (results: HitResult[]): void => void done.push(results[0]!.object)
     pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, onDone)
@@ -179,5 +179,103 @@ describe('createBlastPacer (spec 018 D2)', () => {
     pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, onDone)
     expect(done).toEqual(['a', 'b', 'c'])
     expect(pacer.isHolding()).toBe(false)
+  })
+
+  it('a slice that throws drops its blast (no onDone), lets go of both holds and throws on; in begin too', () => {
+    const { world, renderer, applied } = scene()
+    renderer.setStructuralInTick(true)
+    const failing = (failOn: number): ExplosionJob => {
+      let calls = 0
+      let failure: Error | undefined
+      return {
+        get isDone() {
+          return failure !== undefined
+        },
+        advance() {
+          calls++
+          world.emit(hole('o1'))
+          if (calls < failOn) return false
+          failure = new Error('step threw')
+          throw failure
+        },
+        result() {
+          throw failure ?? new Error('not done')
+        },
+      }
+    }
+    const jobs = [failing(2), failing(1)]
+    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()!, cancelExplosions: () => undefined }, renderer })
+    const done: string[] = []
+    pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, () => done.push('a'))
+    expect(pacer.isHolding()).toBe(true)
+    pacer.step()
+    expect(() => pacer.step()).toThrow('step threw')
+    expect(pacer.isHolding()).toBe(false)
+    // the events are not held any more: the frame draws them
+    renderer.update(FRAME)
+    expect(applied.length).toBeGreaterThan(0)
+    expect(() => pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, () => done.push('b'))).toThrow('step threw')
+    expect(pacer.isHolding()).toBe(false)
+    expect(done).toEqual([])
+  })
+
+  it('a blast begun inside the step of another (already whole) is told at once, before the one that set it off, and holds nothing more', () => {
+    const { world, renderer } = scene()
+    const log: string[] = []
+    const done: string[] = []
+    const host: { pacer?: ReturnType<typeof createBlastPacer> } = {}
+    const chained = fakeJob(world, 0, log, 'chained')
+    const outer = fakeJob(world, 2, log, 'outer')
+    const outerAdvance = outer.advance.bind(outer)
+    // the first slice of `outer` sets off a charge whose blast runs whole inside it
+    let isChaining = true
+    outer.advance = (rays, parts) => {
+      if (isChaining) {
+        isChaining = false
+        host.pacer?.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, () => done.push('chained'))
+      }
+      return outerAdvance(rays, parts)
+    }
+    const jobs = [outer, chained]
+    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()!, cancelExplosions: () => undefined }, renderer })
+    host.pacer = pacer
+    pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, () => done.push('outer'))
+    expect(done).toEqual(['chained'])
+    pacer.step()
+    pacer.step()
+    expect(done).toEqual(['chained', 'outer'])
+    let frames = 0
+    while (pacer.isHolding() && frames < 10) {
+      pacer.step()
+      frames++
+    }
+    expect(frames).toBeLessThan(4)
+  })
+
+  it('clear drops the open blast (no onDone), cancels it in the world and lets go of both holds', () => {
+    const { world, renderer, applied } = scene()
+    renderer.setStructuralInTick(true)
+    const log: string[] = []
+    let cancelled = 0
+    const jobs = [fakeJob(world, 4, log, 'a')]
+    const pacer = createBlastPacer({ world: { beginExplosion: () => jobs.shift()!, cancelExplosions: () => void cancelled++ }, renderer })
+    const done: string[] = []
+    pacer.begin({ point: [0, 0, 0], energy: 1, radius: 1 }, () => done.push('a'))
+    pacer.step()
+    pacer.step()
+    pacer.clear()
+    expect(cancelled).toBe(1)
+    expect(pacer.isHolding()).toBe(false)
+    pacer.step()
+    expect(log).toEqual(['a:1', 'a:2'])
+    expect(done).toEqual([])
+    // the renderer's clear drops what it held
+    renderer.holdEvents(true)
+    renderer.applyStructuralEventsSliced(1)
+    renderer.clear()
+    expect(renderer.structuralBacklog()).toBe(0)
+    world.emit(hole('o1'))
+    renderer.update(FRAME)
+    expect(applied.some((event) => event.type === 'hole')).toBe(true)
   })
 })

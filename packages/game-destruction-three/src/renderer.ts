@@ -3702,6 +3702,9 @@ class Renderer implements DestructionRenderer {
     // what was bound is gone: the next read measures what is left, all of it
     this.staticAll = true
     this.queue.length = 0
+    // a spread blast's events held or still to apply go with the world they were for
+    this.heldStructural = undefined
+    this.areEventsHeld = false
     this.slices.length = 0
     this.splitQueue.clear()
     this.looseToCheck.clear()

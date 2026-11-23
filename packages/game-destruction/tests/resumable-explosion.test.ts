@@ -164,4 +164,17 @@ describe('beginExplosion', () => {
     expect(job.isDone).toBe(true)
     expect(world.explosionProbe().finishedByOperation).toBe(1)
   })
+
+  it('cancelExplosions drops an open blast where it stands: the next operation does not run it on, and its result() throws', () => {
+    const { world, events } = ringWorld()
+    const job = world.beginExplosion(ORIGIN, m67.energy, 15, 'a', { charge: GRENADE })
+    job.advance(32)
+    world.cancelExplosions()
+    const before = events.length
+    world.update(1 / 60)
+    expect(events.slice(before).some((event) => event.includes('"source":"a"') && event.includes('"type":"blast"'))).toBe(false)
+    expect(job.isDone).toBe(true)
+    expect(() => job.result()).toThrow('cancelled')
+    expect(world.explosionProbe().finishedByOperation).toBe(0)
+  })
 })
