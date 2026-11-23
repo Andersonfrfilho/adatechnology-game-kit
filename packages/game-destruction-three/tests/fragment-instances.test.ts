@@ -28,13 +28,30 @@ const instanceMatrix = (mesh: THREE.InstancedMesh, index: number): THREE.Matrix4
 /** A mesh's matrix as the GPU gets it (float32, as the `modelMatrix` uniform of its own draw would be). */
 const asDrawn = (matrix: THREE.Matrix4): THREE.Matrix4 => new THREE.Matrix4().fromArray(Float32Array.from(matrix.elements))
 
+/** A material that looks as `source` does (what an instance draws with in place of the fragment's own, see `FragmentInstances`). */
+const looksLike = (drawn: THREE.Material, source: THREE.Material): boolean =>
+  drawn.type === source.type && (drawn as THREE.MeshLambertMaterial).color.getHex() === (source as THREE.MeshLambertMaterial).color.getHex()
+
+/** The materials handed to an `InstancedMesh` and to a plain `Mesh` under `root`: a material in both makes three rebuild the program key at every draw that alternates the two. */
+const materialsSharedByInstancedAndPlain = (root: THREE.Object3D): THREE.Material[] => {
+  const instanced = new Set<THREE.Material>()
+  const plain = new Set<THREE.Material>()
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh
+    if (!mesh.isMesh) return
+    const into = (mesh as THREE.InstancedMesh).isInstancedMesh ? instanced : plain
+    for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) into.add(material)
+  })
+  return [...instanced].filter((material) => plain.has(material))
+}
+
 /** Every drawn instance as geometry, material and matrix, and every member as the same: what the instances draw is what the meshes would have drawn. */
 const expectDrawnAsMembers = (scene: THREE.Object3D, members: readonly THREE.Mesh[]): void => {
   const drawn = instancedIn(scene).flatMap((mesh) => Array.from({ length: mesh.count }, (_, index) => ({ geometry: mesh.geometry, material: mesh.material, matrix: instanceMatrix(mesh, index) })))
   expect(drawn).toHaveLength(members.length)
   for (const member of members) {
     member.updateMatrix()
-    const match = drawn.findIndex((entry) => entry.geometry === member.geometry && entry.material === member.material && entry.matrix.equals(asDrawn(member.matrix)))
+    const match = drawn.findIndex((entry) => entry.geometry === member.geometry && looksLike(entry.material as THREE.Material, member.material as THREE.Material) && entry.matrix.equals(asDrawn(member.matrix)))
     expect(match).toBeGreaterThanOrEqual(0)
     drawn.splice(match, 1)
   }
@@ -165,6 +182,51 @@ describe('fragment instances', () => {
     expectDrawnAsMembers(scene, meshes)
   })
 
+  it('never hands the material of a mesh it draws by an instance to the instanced mesh: each has its own', () => {
+    const scene = new THREE.Scene()
+    const instances = new FragmentInstances(THREE, scene)
+    const meshes = [0, 1, 2].map((x) => meshAt(x))
+    for (const mesh of meshes) {
+      scene.add(mesh)
+      instances.add(mesh)
+    }
+    instances.sync()
+    expect(instancedIn(scene)).toHaveLength(1)
+    expect(materialsSharedByInstancedAndPlain(scene)).toEqual([])
+    expect(instancedIn(scene)[0]!.material).not.toBe(stone)
+    for (const mesh of meshes) instances.remove(mesh)
+    instances.sync()
+    for (const mesh of meshes) instances.add(mesh)
+    for (let i = 3; i < 40; i++) {
+      const mesh = meshAt(i)
+      scene.add(mesh)
+      instances.add(mesh)
+    }
+    instances.sync()
+    expect(materialsSharedByInstancedAndPlain(scene)).toEqual([])
+    expect(new Set(instancedIn(scene).map((mesh) => mesh.material)).size).toBe(1)
+  })
+
+  it('follows a fragment material marked for update, and disposes its twin with the instances', () => {
+    const scene = new THREE.Scene()
+    const instances = new FragmentInstances(THREE, scene)
+    const source = new THREE.MeshLambertMaterial({ color: 0x808080 })
+    const mesh = meshAt(0, source)
+    scene.add(mesh)
+    instances.add(mesh)
+    instances.sync()
+    const twin = instancedIn(scene)[0]!.material as THREE.MeshLambertMaterial
+    expect(twin.color.getHex()).toBe(0x808080)
+    source.color.set(0x204060)
+    source.needsUpdate = true
+    instances.sync()
+    expect(twin.color.getHex()).toBe(0x204060)
+    const twinDisposed = vi.fn()
+    twin.addEventListener('dispose', twinDisposed)
+    instances.dispose()
+    expect(twinDisposed).toHaveBeenCalledTimes(1)
+  })
+
   it('frees an emptied bucket and everything on dispose: nothing is left in the scene, every instance buffer is disposed', () => {
     const disposed = vi.spyOn(THREE.InstancedMesh.prototype, 'dispose')
     const scene = new THREE.Scene()
@@ -213,6 +275,7 @@ describe('the fragment system draws its fragments in flight by instances', () =>
     // glass and the marked fragment draw on their own
     expect(system.meshes().filter((mesh) => mesh.layers.mask === 1)).toHaveLength(2)
     expectDrawnAsMembers(scene, opaque)
+    expect(materialsSharedByInstancedAndPlain(scene)).toEqual([])
     for (let frame = 0; frame < 30; frame++) system.update(1 / 60)
     expectDrawnAsMembers(scene, opaque)
     for (let frame = 0; frame < 600; frame++) system.update(1 / 60)

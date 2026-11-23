@@ -17,6 +17,7 @@ const FIRST_CAPACITY = 16
 
 interface Bucket {
   readonly key: string
+  readonly source: THREE_NS.Material
   mesh: THREE_NS.InstancedMesh
   readonly members: THREE_NS.Mesh[]
 }
@@ -59,6 +60,8 @@ export class FragmentInstances {
   private readonly slots = new Map<THREE_NS.Mesh, Slot>()
   private readonly sphere: THREE_NS.Sphere
   private readonly reaches = new WeakMap<THREE_NS.BufferGeometry, number>()
+  /** The material the instanced meshes draw with, one per fragment material: sharing the fragment's own would make three rebuild the program key every draw that alternates between a mesh and an instanced mesh. */
+  private readonly twins = new Map<THREE_NS.Material, { readonly twin: THREE_NS.Material; version: number }>()
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -79,7 +82,7 @@ export class FragmentInstances {
     const key = keyOf(geometry, material)
     let bucket = this.buckets.get(key)
     if (!bucket) {
-      bucket = { key, mesh: this.makeMesh(geometry, material, FIRST_CAPACITY, mesh), members: [] }
+      bucket = { key, source: material, mesh: this.makeMesh(geometry, material, FIRST_CAPACITY, mesh), members: [] }
       this.buckets.set(key, bucket)
     }
     if (bucket.members.length === bucket.mesh.instanceMatrix.count) this.grow(bucket)
@@ -126,6 +129,7 @@ export class FragmentInstances {
       this.remove(mesh)
       this.add(mesh)
     }
+    this.syncTwins()
     for (const bucket of [...this.buckets.values()]) this.syncBucket(bucket)
   }
 
@@ -148,6 +152,28 @@ export class FragmentInstances {
 
   dispose(): void {
     this.clear()
+    for (const { twin } of this.twins.values()) twin.dispose()
+    this.twins.clear()
+  }
+
+  /** The instanced material standing for `material` (made once; a program already linked for the same look is reused, so no shader compiles for it). */
+  private twinOf(material: THREE_NS.Material): THREE_NS.Material {
+    let entry = this.twins.get(material)
+    if (!entry) {
+      entry = { twin: material.clone(), version: material.version }
+      this.twins.set(material, entry)
+    }
+    return entry.twin
+  }
+
+  /** A fragment material that was marked for update (`needsUpdate`) gets its twin copied again; a read of one number per material, nothing allocated otherwise. */
+  private syncTwins(): void {
+    for (const [material, entry] of this.twins) {
+      if (entry.version === material.version) continue
+      entry.twin.copy(material)
+      entry.twin.needsUpdate = true
+      entry.version = material.version
+    }
   }
 
   /** An empty bucket is let go (made again when a fragment of its kind flies): nothing empty is left in the scene. */
@@ -200,7 +226,7 @@ export class FragmentInstances {
   }
 
   private makeMesh(geometry: THREE_NS.BufferGeometry, material: THREE_NS.Material, capacity: number, like: THREE_NS.Mesh): THREE_NS.InstancedMesh {
-    const mesh = new this.THREE.InstancedMesh(geometry, material, capacity)
+    const mesh = new this.THREE.InstancedMesh(geometry, this.twinOf(material), capacity)
     mesh.instanceMatrix.setUsage(this.THREE.DynamicDrawUsage)
     mesh.count = 0
     mesh.name = FRAGMENT_INSTANCES_NAME
@@ -218,14 +244,14 @@ export class FragmentInstances {
 
   private grow(bucket: Bucket): void {
     const old = bucket.mesh
-    const bigger = this.makeMesh(old.geometry, old.material as THREE_NS.Material, old.instanceMatrix.count * 2, bucket.members[0] ?? old)
+    const bigger = this.makeMesh(old.geometry, bucket.source, old.instanceMatrix.count * 2, bucket.members[0] ?? old)
     this.release(old)
     bucket.mesh = bigger
   }
 
   /**
    * Out of the scene, its instance buffer freed. `dispose()` and not `discardObject3D`: the only resource of its own is the instance buffer, which `releaseObject3D` does not
-   * free; its geometry and material are the fragment system's, shared with the fragments' meshes and freed by the fragment system's `dispose`.
+   * free; its geometry is the fragment system's, shared with the fragments' meshes, and its material is the twin kept until `dispose`.
    */
   private release(mesh: THREE_NS.InstancedMesh): void {
     mesh.removeFromParent()
