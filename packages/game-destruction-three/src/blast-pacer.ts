@@ -5,12 +5,16 @@ import type { DestructionRenderer } from './types'
 
 /** Fragment rays a frame of a spread blast casts by default: the M67's 256 in 4 frames and its wave in a fifth (spec 018, `proposta-d2.md`). */
 export const BLAST_RAYS_PER_FRAME = 64
+/** Parts the wave of a spread blast reaches per frame by default, nearest first (`ExplosionJob.advance`): the wave of the M67 in the room house over a few frames. */
+export const BLAST_WAVE_PARTS_PER_FRAME = 16
 
 export type BlastPacerOptions = {
   readonly world: Pick<DestructionWorld, 'beginExplosion'>
   readonly renderer: Pick<DestructionRenderer, 'holdEvents' | 'applyStructuralEventsSliced'>
   /** Fragment rays per frame (`ExplosionJob.advance`). Default `BLAST_RAYS_PER_FRAME`; Infinity runs every blast whole in `begin` (the one-shot blast, through the pacer). */
   readonly raysPerFrame?: number
+  /** Parts of the wave per frame, once the rays are cast. Default `BLAST_WAVE_PARTS_PER_FRAME`; Infinity runs the wave in one frame. */
+  readonly wavePartsPerFrame?: number
   /** Units of `EVENT_APPLY_WEIGHT` of structural events applied per frame once the blast is done. Default `STRUCTURAL_UNITS_PER_FRAME`. */
   readonly unitsPerFrame?: number
 }
@@ -39,13 +43,14 @@ export type BlastPacer = {
 type OpenBlast = { readonly job: ExplosionJob; readonly onDone: (results: HitResult[]) => void; isFresh: boolean }
 
 /**
- * Spreads a large blast over frames with the world held (spec 018 D2): the fragments a fixed number of rays per frame, the wave in a frame of its own, then the
+ * Spreads a large blast over frames with the world held (spec 018 D2): the fragments a fixed number of rays per frame, the wave a fixed number of the parts it reaches per frame, then the
  * structural events a fixed weight per frame, every count fixed so the world it leaves is the one the one-shot blast leaves. The host holds the fixed steps while
  * `isHolding` (`game-runtime`'s `holdFixed`) and calls `step` once per frame; the effects, the sound and the camera go on meanwhile.
  */
 export function createBlastPacer(options: BlastPacerOptions): BlastPacer {
   const { world, renderer } = options
   const raysPerFrame = options.raysPerFrame ?? BLAST_RAYS_PER_FRAME
+  const waveParts = raysPerFrame === Infinity ? Infinity : (options.wavePartsPerFrame ?? BLAST_WAVE_PARTS_PER_FRAME)
   const unitsPerFrame = options.unitsPerFrame ?? STRUCTURAL_UNITS_PER_FRAME
   const open: OpenBlast[] = []
   let isApplying = false
@@ -70,8 +75,8 @@ export function createBlastPacer(options: BlastPacerOptions): BlastPacer {
       open.push({ job, onDone, isFresh: isFirst })
       if (!isFirst) return
       // a blast that fits in one slice (or every blast, with `raysPerFrame` Infinity) is the one-shot blast: nothing is held, its events apply in the tick as always
-      let isDone = job.advance(raysPerFrame)
-      while (!isDone && raysPerFrame === Infinity) isDone = job.advance(raysPerFrame)
+      let isDone = job.advance(raysPerFrame, waveParts)
+      while (!isDone && raysPerFrame === Infinity) isDone = job.advance(raysPerFrame, waveParts)
       if (isDone && !isApplying) {
         open.shift()
         renderer.holdEvents(false)
@@ -89,7 +94,7 @@ export function createBlastPacer(options: BlastPacerOptions): BlastPacer {
           oldest.isFresh = false
           return
         }
-        oldest.job.advance(raysPerFrame)
+        oldest.job.advance(raysPerFrame, waveParts)
         if (oldest.job.isDone) settleDone()
         return
       }

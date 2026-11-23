@@ -236,7 +236,7 @@ const cutFactorOf = (shape: PartSpec['shape']): number => clamp(Math.max(...shap
 /** How a part that lies on another stands (`restingStance`): half its height and its level axes (in the object's frame) with their half-widths. */
 /** A resumable explosion of the world (`beginExplosion`): its steps, the events it emitted, and its results once it ended. */
 interface ExplosionRT {
-  readonly steps: Generator<'ray' | 'wave', HitResult[]>
+  readonly steps: Generator<'ray' | 'wave' | 'part', HitResult[]>
   readonly mine: DestructionEvent[]
   isStarted: boolean
   result: HitResult[] | undefined
@@ -4885,7 +4885,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   }
 
   /** A blast with shelter, fragment hits or confinement. Parts are served from the nearest to the farthest, so a wall takes the blast (and may break) before what is behind it. */
-  const blastScene = (point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): HitResult[] => {
+  /** The wave through the scene as steps: a `'part'` after each part (or impl) it reached, nearest first; what comes after the last part (thrown fragments, reports, the `blast` event) ends the last step. */
+  function* blastSceneSteps(point: Vec3, energy: number, radius: number, src: string | undefined, cfg: BlastCfg, only?: ObjRT | ImplRT, lethal?: number): Generator<'part', HitResult[]> {
     const mult = confinementOf(cfg.conf, point, radius)
     const E = energy * mult
     const shelter = cfg.shelter
@@ -5004,6 +5005,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         results.set(im, res)
         report(im).shelter = k
       }
+      yield 'part'
     }
 
     if (cfg.frag && thrown.length > 0) {
@@ -5427,7 +5429,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
    * between them (`blastWorld`) it is what the blast always was; a resumable explosion (`beginExplosion`) stops between them. The blast's globals (`blastTntPerJoule`,
    * `blastFireball`, the blow of the fragments) are set around each step and put back after it, so other work may run between two steps.
    */
-  function* blastSteps(point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): Generator<'ray' | 'wave', HitResult[]> {
+  function* blastSteps(point: Vec3, energy: number, radius: number, src?: string, call?: BlastOptions, only?: ObjRT | ImplRT, lethal?: number): Generator<'ray' | 'wave' | 'part', HitResult[]> {
     const cfg = blastCfg(call)
     const charge = call?.charge ?? options.blast?.charge
     // a charge under soil spends most of its energy in it: the structures feel only what comes out, and the soil stops the casing fragments
@@ -5466,8 +5468,20 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
     }
     yield 'wave'
+    let wave: HitResult[]
+    if (!cfg.shelter && !cfg.frag && cfg.conf === null) wave = inBlast(() => blastPlain(point, energy, radius, src, lethal))
+    else {
+      const scene = blastSceneSteps(point, energy, radius, src, cfg, only, lethal)
+      for (;;) {
+        const step = inBlast(() => scene.next())
+        if (step.done) {
+          wave = step.value
+          break
+        }
+        yield 'part'
+      }
+    }
     return inBlast(() => {
-      const wave = !cfg.shelter && !cfg.frag && cfg.conf === null ? blastPlain(point, energy, radius, src, lethal) : blastScene(point, energy, radius, src, cfg, only, lethal)
       const res = fragments.length > 0 ? mergeResults(wave, fragments) : wave
       // a blast is a flame: a container that leaks flammable fluid inside its fireball catches
       lightLeaksNear(point, blastFireball.radius)
@@ -5492,8 +5506,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   /** true while a step of an explosion runs: the work it does is part of it, not an operation from outside to run after it. */
   let isAdvancing = false
 
-  /** Runs the oldest open explosion up to `rays` rays (the wave is a step of its own, never in a call that cast rays); closes its operation as `run` does when it ends. */
-  const advanceOldest = (rays: number): void => {
+  /**
+   * Runs the oldest open explosion up to `rays` rays, or (its rays all cast) up to `waveParts` parts of its wave: the wave never starts in a call that cast rays. Closes
+   * its operation as `run` does when it ends.
+   */
+  const advanceOldest = (rays: number, waveParts: number): void => {
     const job = explosions[0]!
     const outer = cur
     cur = job.mine
@@ -5507,6 +5524,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         blastProbe.partsNear = 0
       }
       let cast = 0
+      let reached = 0
       for (;;) {
         const step = job.steps.next()
         if (step.done) {
@@ -5526,7 +5544,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           isFinished = true
           return
         }
-        if (step.value === 'wave' ? cast > 0 : ++cast >= rays) return
+        if (step.value === 'wave' ? cast > 0 : step.value === 'part' ? ++reached >= waveParts : ++cast >= rays) return
       }
     } catch (error) {
       isFinished = true
@@ -5549,7 +5567,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   /** Runs every open explosion to its end, oldest first: called before any other operation of the world. */
   const finishExplosions = (): void => {
     if (isAdvancing) return
-    while (explosions.length > 0) advanceOldest(Infinity)
+    while (explosions.length > 0) advanceOldest(Infinity, Infinity)
   }
 
   const beginExplosion = (point: Vec3, energy: number, radius: number, source?: string, blast?: BlastOptions): ExplosionJob => {
@@ -5564,13 +5582,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       get isDone() {
         return job.result !== undefined
       },
-      advance(rays) {
+      advance(rays, waveParts = Infinity) {
         if (job.result) return true
         if (isAdvancing) throw new Error('beginExplosion: advance called from inside a step of an explosion')
-        const budget = Math.max(1, Math.floor(rays))
         // the ones begun before it go first, whole; then this one by the budget
-        while (explosions[0] !== job && explosions.length > 0) advanceOldest(Infinity)
-        if (!job.result) advanceOldest(budget)
+        while (explosions[0] !== job && explosions.length > 0) advanceOldest(Infinity, Infinity)
+        if (!job.result) advanceOldest(Math.max(1, Math.floor(rays)), Math.max(1, Math.floor(waveParts)))
         return job.result !== undefined
       },
       result() {

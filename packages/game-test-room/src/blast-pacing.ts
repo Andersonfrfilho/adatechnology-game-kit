@@ -4,7 +4,7 @@ import type { HitResult } from '@adatechnology/game-destruction'
 import type { Scheduler } from '@adatechnology/game-runtime'
 
 /** `TestRoomOptions.blastPacing`: spread a large blast over frames with the world held (spec 018 D2); the counts per frame, each with its default. */
-export type BlastPacingOptions = Pick<BlastPacerOptions, 'raysPerFrame' | 'unitsPerFrame'>
+export type BlastPacingOptions = Pick<BlastPacerOptions, 'raysPerFrame' | 'wavePartsPerFrame' | 'unitsPerFrame'>
 
 export type BlastPacing = {
   /** Sets a blast off through the pacer; `onDone` gets its results when it ends. Asked inside a fixed step, it begins at the end of that step, never before the step's world work. */
