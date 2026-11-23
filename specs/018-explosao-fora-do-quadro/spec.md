@@ -65,7 +65,7 @@ pedaços que nascem depois, invariantes estruturais por tique).
 | # | Decisão | Estado |
 |---|---|---|
 | D1 | A, B ou C, ou desistir da meta de 33,3 ms | **Decidida em 2026-11-21:** não abrir caminho de worker (A, B ou C) agora. Primeiro se ataca, na thread principal, o custo dos explosivos de fragmentação. O dono pediu antes uma **proposta de cortes na simulação de fragmentos** (quanto cada corte rende e quais goldens mudam), antes de qualquer mudança de código de simulação. A proposta está pendente (T1.1 em `tasks.md`). Ver §4.1 |
-| D2 | [NEEDS CLARIFICATION] Quantos quadros de latência entre o clarão e o dano são aceitáveis (a 017 fixou clarão, som e empurrão no primeiro tique; o dano no mundo 1–2 quadros depois muda a sensação). **Pesa mais agora:** espalhar os impactos dos fragmentos por 2 ou 3 tiques é um dos cortes candidatos da T1.1 e é exatamente latência entre clarão e dano | o dono, vendo na sala; exigida só para cortes que atrasam o dano (§4.1) |
+| D2 | [NEEDS CLARIFICATION] Quantos quadros de latência entre o clarão e o dano são aceitáveis (a 017 fixou clarão, som e empurrão no primeiro tique; o dano no mundo 1–2 quadros depois muda a sensação). **Pesa mais agora:** espalhar os impactos dos fragmentos por 2 ou 3 tiques é um dos cortes candidatos da T1.1 e é exatamente latência entre clarão e dano. Proposta medida em [`proposta-d2.md`](proposta-d2.md) (2026-11-22) | o dono, vendo na sala; exigida só para cortes que atrasam o dano (§4.1) |
 | D3 | A meta vale para o pior caso ou para um caso típico | **Decidida em 2026-11-21:** o caso de referência da meta passa a ser a **granada M67** (o explosivo de fragmentação comum), não o C4 contra a casa inteira. Ver §4.1 |
 
 ### 4.1 O que a medição de 2026-11-21 mudou
