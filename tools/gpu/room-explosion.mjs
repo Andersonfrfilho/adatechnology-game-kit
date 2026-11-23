@@ -44,6 +44,7 @@
 //
 //   ROOM_EXPLOSION_BUDGET=deadline         deadline (default since spec 017: the mode the page's loop runs in, the queues get what is left of the frame) or quota (the old default: in quota the deadline queues get
 //                                          8 ms in every frame, even one that already overran, so the f0 reads more than in the game). In deadline the frame starts at the `performance.now()` taken before the strike's action
+//   ROOM_EXPLOSION_FRAME_SERIES=0         N > 0 writes the first N frames of every stage round (`frameSeries`) to the report, as they are; it measures nothing more
 //   ROOM_EXPLOSION_F0_CLOCK=               late: the frame clock of frame 0 opens after the explosion call, as in the T0.2 ruler (default: before it)
 //   ROOM_EXPLOSION_FRAME_PARTS=            1: the stage pass also times the rest of the frame (below); off by default, so the stage table stays comparable with older runs. It also arms the explosion-frame gate (below);
 //                                          the nightly run sets it. Cost: the stage pass draws and waits for the GPU once per frame, about 5 s per page at 1x and 20 s at 4x (660 frames), a few minutes in all
@@ -772,6 +773,8 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   }
   await browser.close()
   const worst = worstFrames(stageFrames)
+  // ROOM_EXPLOSION_FRAME_SERIES=N: the first N frames of every stage round, whole, in the report (output only: a blast spread over frames is read frame by frame, spec 018 D2)
+  const frameSeries = Number(process.env.ROOM_EXPLOSION_FRAME_SERIES ?? 0)
 
   /** @type {Cell[]} */
   const cells = []
@@ -854,7 +857,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const out = process.env.ROOM_EXPLOSION_OUT
   if (out) {
     mkdirSync(dirname(out), { recursive: true })
-    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, pageSha256, pageBuild, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
+    writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), note: PROXY_NOTE, pageSha256, pageBuild, machine, budget, rounds, frames, frameSeconds: FRAME_SECONDS, budgetMode: mode, explosive, gatedThrottles: [...gated], errors, cells, stageLabels: STAGE_LABELS, ...(hasFrameParts ? { frameLabels: FRAME_LABELS, frameExtras: FRAME_EXTRAS } : {}), frameMetrics: frameMeasure.metrics, ...(frameSeries > 0 ? { frameSeries: stageFrames.filter((entry) => entry.frame < frameSeries) } : {}), gate: { compared: frameVerdict.compared, status: frameVerdict.status, reason: frameVerdict.reason, physicsCompared: isBaseInMode, problems: frameVerdict.problems, skipped: frameVerdict.skipped }, worstFrames: worst }, null, 1))
     console.log(`room-explosion: report written to ${out}`)
   }
   const failed = blocked || errors.length > 0
