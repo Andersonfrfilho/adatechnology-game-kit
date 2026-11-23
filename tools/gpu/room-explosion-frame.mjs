@@ -8,14 +8,17 @@ export const DEFAULT_EXPLOSIVE = 'c4'
 
 /** How many of the worst f0 (one per stage round) `f0Ms` averages. */
 export const WORST_F0_COUNT = 3
-/** How many frames after the strike's frame `afterMs` looks at (its worst one). */
+/**
+ * How many frames `afterMs` looks at (its worst one) after the frame the world steps again: frames 1..AFTER_FRAMES for a strike that does not hold the world, and for a blast
+ * spread over frames with the fixed steps held (spec 018 D2) every held frame, the frame the world resumes in and AFTER_FRAMES more (frames 1..held + AFTER_FRAMES; the resume frame is frame `held`).
+ */
 export const AFTER_FRAMES = 7
 /** How much worse than the base the f0 or the frames after it may read before it blocks, and the floor under which a difference is the noise between sessions (the same code read +-2 ms between sessions, evidence 017 rounds 3 to 5). */
 export const FRAME_REGRESSION = { tolerance: 0.15, floorMs: 3 }
 
 /**
- * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, extras?: Record<string, number> }} FrameRow
- * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number }} FrameMetric
+ * @typedef {{ variant: string, throttle: number, kind: string, round: number, frame: number, updateMs: number, held?: boolean, extras?: Record<string, number> }} FrameRow
+ * @typedef {{ variant: string, throttle: number, kind: string, f0Ms: number, afterMs: number, afterLastFrame?: number }} FrameMetric
  * @typedef {{ budgetMode?: string, explosive?: string, frameMetrics?: FrameMetric[], machine?: { gpu?: { renderer?: string, driver?: { module?: string | null } } } }} SavedReport
  */
 
@@ -32,17 +35,29 @@ export const frameKey = (entry) => `${entry.variant}|${entry.throttle}|${entry.k
 
 /**
  * @typedef {{ isOk: false, status: 'missing-hit-frame' | 'missing-after-frames' }} RoundMissing
- * @typedef {{ isOk: true, hit: FrameRow, f0: number, after: number }} RoundRead
+ * @typedef {{ isOk: true, hit: FrameRow, f0: number, after: number, lastFrame: number }} RoundRead
  */
 
-/** The rows of one round, or why they cannot give a number: frame 0 (with the render time) and each of frames 1..AFTER_FRAMES (with it) must be there. @param {FrameRow[]} frames @returns {RoundRead | RoundMissing} */
+/** How many frames from frame 0 on, one after the other, held the world's fixed steps (`held`: a row of a report written before the field held none). @param {FrameRow[]} frames */
+export const heldFramesOf = (frames) => {
+  const held = new Set(frames.filter((row) => row.held === true).map((row) => row.frame))
+  let count = 0
+  while (held.has(count)) count++
+  return count
+}
+
+/** The last frame `afterMs` looks at in a round: the held frames, then AFTER_FRAMES from the one the world resumes in (7 with nothing held, as before). @param {FrameRow[]} frames */
+export const afterLastFrameOf = (frames) => heldFramesOf(frames) + AFTER_FRAMES
+
+/** The rows of one round, or why they cannot give a number: frame 0 (with the render time) and each of frames 1..`afterLastFrameOf` (with it) must be there. @param {FrameRow[]} frames @returns {RoundRead | RoundMissing} */
 const roundOf = (frames) => {
   const timed = frames.filter((row) => row.extras?.renderCpu !== undefined)
   const hit = timed.find((row) => row.frame === 0)
   if (!hit) return { isOk: false, status: 'missing-hit-frame' }
-  const after = timed.filter((row) => row.frame >= 1 && row.frame <= AFTER_FRAMES).map(wholeFrameMs)
-  if (after.length < AFTER_FRAMES) return { isOk: false, status: 'missing-after-frames' }
-  return { isOk: true, hit, f0: wholeFrameMs(hit), after: Math.max(...after) }
+  const lastFrame = afterLastFrameOf(frames)
+  const after = timed.filter((row) => row.frame >= 1 && row.frame <= lastFrame).map(wholeFrameMs)
+  if (after.length < lastFrame) return { isOk: false, status: 'missing-after-frames' }
+  return { isOk: true, hit, f0: wholeFrameMs(hit), after: Math.max(...after), lastFrame }
 }
 
 /** @param {RoundRead | RoundMissing} entry @returns {entry is RoundRead} */
@@ -57,11 +72,13 @@ const metricOf = (key, rounds) => {
   const first = worst[0]
   if (worst.length < WORST_F0_COUNT || !first) return { problem: { key, status: 'too-few-rounds' } }
   const { variant, throttle, kind } = first.hit
-  return { metric: { variant, throttle, kind, f0Ms: round2(mean(worst.map((entry) => entry.f0))), afterMs: round2(mean(worst.map((entry) => entry.after))) } }
+  const afterLastFrame = Math.max(...worst.map((entry) => entry.lastFrame))
+  return { metric: { variant, throttle, kind, f0Ms: round2(mean(worst.map((entry) => entry.f0))), afterMs: round2(mean(worst.map((entry) => entry.after))), ...(afterLastFrame > AFTER_FRAMES ? { afterLastFrame } : {}) } }
 }
 
 /**
- * `f0Ms` (mean of the worst three f0, update + renderCpu) and `afterMs` (mean, over those same rounds, of the worst of the seven frames after the strike) per variant, throttle and kind.
+ * `f0Ms` (mean of the worst three f0, update + renderCpu) and `afterMs` (mean, over those same rounds, of the worst of the seven frames after the strike, or with the world held of
+ * every held frame, the resume frame and the seven after it: `afterLastFrameOf`) per variant, throttle and kind; `afterLastFrame` is the last frame it looked at, only when the world was held.
  * A group that cannot give both numbers honestly gives a problem instead (`missing-hit-frame`, `missing-after-frames`, `too-few-rounds`), never a number: a 0 in the base would block everything after it.
  * A run where no row has the render time (no frame parts) gives nothing at all.
  * @param {FrameRow[]} rows every frame of the stage pass @returns {FrameMeasure}

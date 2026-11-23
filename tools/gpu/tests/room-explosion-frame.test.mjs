@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { frameGate, frameMetricsOf, isBaseComparable, isFrameWorse } from '../room-explosion-frame.mjs'
+import { AFTER_FRAMES, afterLastFrameOf, frameGate, frameMetricsOf, heldFramesOf, isBaseComparable, isFrameWorse } from '../room-explosion-frame.mjs'
 
 const VARIANT = 'jolt-d4-worker'
 const GATED = new Set([1])
@@ -27,6 +27,36 @@ test('a realistic series of 660 frames a round gives the numbers', () => {
   const { metrics, problems } = frameMetricsOf([roundOf(1, 65, 25), roundOf(2, 66, 24), roundOf(3, 64, 26)].flat())
   assert.deepEqual(problems, [])
   assert.deepEqual(metrics.map((entry) => [entry.f0Ms, entry.afterMs]), [[65, 25]])
+})
+
+/** A paced round (spec 018 D2): frames 0..held-1 hold the world, frame `held` resumes it at `resume` ms, frame `held + late` reads `lateMs`, the rest 5 ms. @param {number} round @param {number} held @param {number} resume @param {number} [late] @param {number} [lateMs] */
+const pacedRoundOf = (round, held, resume, late = 0, lateMs = 0) =>
+  Array.from({ length: 40 }, (_, frame) => ({ ...row(round, frame, frame === 0 ? 15 : frame === held ? resume - 1 : late > 0 && frame === held + late ? lateMs - 1 : 4, 1), ...(frame < held ? { held: true } : {}) }))
+
+test('with the world held, afterMs reaches the frame the world resumes in and the 7 after it', () => {
+  const { metrics, problems } = frameMetricsOf([pacedRoundOf(1, 8, 30), pacedRoundOf(2, 8, 31), pacedRoundOf(3, 8, 29)].flat())
+  assert.deepEqual(problems, [])
+  assert.equal(metrics[0]?.afterMs, 30)
+  assert.equal(metrics[0]?.afterLastFrame, 8 + AFTER_FRAMES)
+})
+
+test('the window ends 7 frames after the resume: a frame past it is not read, the 7th after it is', () => {
+  assert.equal(frameMetricsOf([1, 2, 3].flatMap((round) => pacedRoundOf(round, 8, 12, AFTER_FRAMES, 40))).metrics[0]?.afterMs, 40)
+  assert.equal(frameMetricsOf([1, 2, 3].flatMap((round) => pacedRoundOf(round, 8, 12, AFTER_FRAMES + 1, 40))).metrics[0]?.afterMs, 12)
+})
+
+test('the held frames count from frame 0, one after the other; a report without the field holds none, so its window is the old 1..7', () => {
+  assert.equal(heldFramesOf([row(1, 0, 1, 1), row(1, 1, 1, 1)]), 0)
+  assert.equal(afterLastFrameOf([row(1, 0, 1, 1)]), AFTER_FRAMES)
+  const gap = [{ ...row(1, 0, 1, 1), held: true }, { ...row(1, 1, 1, 1), held: true }, row(1, 2, 1, 1), { ...row(1, 3, 1, 1), held: true }]
+  assert.equal(heldFramesOf(gap), 2)
+  assert.equal(heldFramesOf([row(1, 0, 1, 1), { ...row(1, 1, 1, 1), held: true }]), 0)
+  assert.equal(frameMetricsOf([roundOf(1, 65, 25), roundOf(2, 66, 24), roundOf(3, 64, 26)].flat()).metrics[0]?.afterLastFrame, undefined)
+})
+
+test('a held round whose series ends before the window does is missing-after-frames, never a shorter window', () => {
+  const short = [1, 2, 3].flatMap((round) => pacedRoundOf(round, 8, 30).filter((entry) => entry.frame <= 8 + AFTER_FRAMES - 1))
+  assert.equal(frameMetricsOf(short).problems[0]?.status, 'missing-after-frames')
 })
 
 test('a run without the render time has no numbers and no problems', () => {
