@@ -489,3 +489,60 @@ Sem medição nova nesta entrada: registra a decisão do dono e de onde vêm os 
   hash), `main` depois do #417 (página `b4a1ac7e07c1`). `f0Ms`: molotov 22–26, C4 63–67, M67 117–138, bomba de cano 177–227 ms. As tabelas estão nas
   descrições dos PRs #417 e #419; os JSONs brutos ficaram numa pasta de rascunho não durável e não são citados.
 - Resumo e o que muda na recomendação: `relatorio-fase-0.md`, seção "Depois da Fase 0".
+
+## D2 implementada: a granada espalhada em quadros com o mundo segurado (2026-11-23)
+
+Branch `perf/d2-explosao-fatiada` (sobre a `main` com o #442). O que foi construído, por pacote:
+
+- `game-runtime`: `FrameRunOptions.freezeFixed` e `SchedulerOptions.holdFixed` (o quadro congelado roda input, lateSimulate e as filas,
+  nenhum tique, e o acumulador não anda; o `holdFixed` para também os tiques que faltam no quadro em que a espera começa).
+- `game-destruction`: `world.beginExplosion` → `ExplosionJob` (`advance(raios, partesDaOnda)`, `isDone`, `result()`); `explode` é começar +
+  avançar até o fim; uma segunda explosão espera a primeira; qualquer outra operação do mundo termina antes as abertas.
+- `game-destruction-three`: `EVENT_APPLY_WEIGHT` (peso fixo por tipo de evento), `holdEvents`, `applyStructuralEventsSliced`,
+  `structuralBacklog`, e o `createBlastPacer` (64 raios por quadro, 128 peças da onda por quadro, 1000 unidades de eventos por quadro).
+- `game-test-room`: opção `blastPacing` (padrão desligado na sala; a página `examples/test-room` liga, `?blastPacing=0` desliga).
+
+### Mesmos bytes
+
+- Pacote (CI): eventos, `serialize()` e resultados idênticos ao `explode` para K = 1, 7, 32, 64, 128 raios e 1, 3, 16 peças da onda, nas duas
+  ondas (`resumable-explosion.test.ts`); ordem da aplicação fatiada idêntica à chamada inteira (`structural-sliced.test.ts`); na sala headless,
+  `blastAt` fatiado = sem marca-passo e granada no tique fatiada = inteira (`blast-pacing.test.ts`).
+- Sala no navegador (`tools/gpu/room-determinism.mjs`, M67, `floorplan`, `jolt-d4-worker`, página `131dfc237137`): sem marca-passo
+  (`&blastPacing=0`, 60 quadros) contra fatiado (76 quadros, 15 congelados), 2 rodadas cada, comparados pelo tempo do mundo: **idênticos em
+  todos os 60 tiques** (estado, eventos, rng, contador); no tique 60 `stateHash` 1505117557 e 1702 eventos dos dois lados. Cargas 0,96/1,30 e
+  0,24/0,80. Brutos: `det-unsliced.json`, `det-sliced.json`, comparador `detcmp.cjs`.
+
+### Tempo (régua `room-explosion`, M67, modo de prazo, 1x, `jolt-d4-worker`)
+
+Comando da T1.1 com `ROOM_EXPLOSION_FRAME_SERIES=24` (saída nova, só escreve os quadros). RTX 5070 Laptop (`machine.gpu` em todo JSON),
+driver 620.73.04 sem divergência, `flock`, carga de 1 min entre 1,13 e 1,57 no começo e no fim de cada rodada, máquina conferida antes
+(main f0 ~100 ms). Rodadas alternadas: branch, main, branch, main (3 rodadas de estágios cada = 6 por página). Páginas por hash: main
+`1e32397b0890` (origin/main 132f6995d), branch `131dfc237137`. Quadro = update + renderCpu, ms.
+
+| frame | main median (min–max) | branch median (min–max) | branch frozen in rounds |
+|---|---|---|---|
+| f0 | 100.9 (99.3–106.4) | 19.1 (17.6–22.1) | 6/6 |
+| f1 | 19.6 (19.1–19.9) | 15.8 (15.1–21.5) | 6/6 |
+| f2 | 17.3 (14.6–18.5) | 21.5 (20.0–22.8) | 6/6 |
+| f3 | 9.6 (8.2–11.0) | 5.1 (4.7–6.4) | 6/6 |
+| f4 | 8.1 (7.8–8.6) | 19.3 (18.8–20.8) | 6/6 |
+| f5 | 8.7 (8.0–9.8) | 18.5 (18.2–19.0) | 6/6 |
+| f6 | 9.5 (9.0–10.0) | 19.3 (18.3–20.6) | 6/6 |
+| f7 | 8.8 (7.5–9.1) | 7.8 (7.1–27.6) | 5/6 |
+| f8 | 8.7 (7.1–9.8) | 30.5 (29.5–31.3) | 1/6 |
+| f9 | 9.5 (7.7–13.4) | 14.2 (13.7–15.3) | 0/6 |
+| f10 | 8.1 (7.8–9.1) | 14.2 (13.9–15.9) | 0/6 |
+| f11 | 8.1 (7.1–9.2) | 14.2 (9.7–15.9) | 0/6 |
+| f12 | 7.2 (7.0–7.7) | 8.7 (7.4–9.0) | 0/6 |
+
+- **f0: ~101 → ~19 ms.** O pior quadro depois do f0 é o **f8, o da volta do mundo: 29,5 a 31,3 ms** (6 de 6 rodadas abaixo de 33,3).
+  Nenhum quadro acima de 33,3 ms de f1 a f12 nas 6 rodadas. O mundo fica parado 8 quadros (~133 ms; 7 a 9), com fogo, som e câmera andando.
+  Soma da janela f0..f12: main 214–235, branch 200–229 (C3 pede ≤ 110% de hoje: atende).
+- Divisão do f8: física ~20 ms (o `stepFixed` do Jolt mede 19–21 ms na sonda `probe-return-*.json`, contra 4,5 ms no primeiro passo da main),
+  renderCpu ~5,5, fragments ~1,8, pieceBodies ~1,2, groundBody ~1.
+- Uma rodada (final-b r2) teve um quadro de 37,0 ms no f22, todo em renderCpu (30,3): fora da janela da explosão, não atribuído a ela.
+- Atenção: o `afterMs` da régua é a pior dos 7 quadros depois do f0; com o marca-passo o quadro da volta (f8) fica fora dessa janela.
+
+Medições intermediárias na mesma pasta: `branch-a` (onda inteira: o quadro da onda fica em 32,8–36,2 ms, por isso a onda também foi fatiada),
+`w16-a` (16 peças: sem efeito, a sala usa a onda simples, fatiada depois), `w128-a`. `main-a` descartada: carga subiu a 7,8 durante a rodada
+(build em paralelo). `main-1` foi a conferência da máquina.
