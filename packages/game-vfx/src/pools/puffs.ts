@@ -1,7 +1,7 @@
 import type { Rgb } from '../color'
 import { SMOKE_COLORS } from '../constants'
-import { slideAlong } from '../enclosures'
-import type { Confiner } from '../enclosures'
+import { slideInto } from '../enclosures'
+import type { ConfineMove, Confiner } from '../enclosures'
 import { OrderedPool } from '../pool'
 import type { RandomStream } from '../random'
 
@@ -68,6 +68,8 @@ const GROWTH_CAP_SECONDS = 3.5
 const CARRIED_KINDS: readonly boolean[] = [true, true, false, true, false]
 /** A puff outside a closed space stops this share of its size off the wall. */
 const PAD_OF_SIZE = 0.35
+/** The step `updatePuffs` hands the confiner, reused for every puff. */
+const MOVE: ConfineMove = { x0: 0, y0: 0, z0: 0, x1: 0, y1: 0, z1: 0, pad: 0 }
 
 export function createPuffPool(capacity: number): OrderedPool<Puff> {
   const placeholder: RandomStream = { next: () => 0, between: (min) => min, direction: (out) => out, state: 0 }
@@ -144,6 +146,14 @@ function moveFree(puff: Puff, dt: number, age: number, heat: number, wind: { x: 
   }
 }
 
+function confine(confiner: Confiner, puff: Puff, dt: number): boolean {
+  MOVE.x1 = puff.x
+  MOVE.y1 = puff.y
+  MOVE.z1 = puff.z
+  MOVE.pad = puff.size * PAD_OF_SIZE
+  return confiner.confineMove(MOVE, dt)
+}
+
 /** `updatePuffs` (L205-238): ages, removes what ended, then moves the rest with the wind (or along their mushroom ring) and derives what the shader reads. */
 export function updatePuffs(pool: OrderedPool<Puff>, dt: number, wind: { x: number; z: number }, confiner?: Confiner): void {
   pool.compact(ageOrKeep, dt)
@@ -151,18 +161,18 @@ export function updatePuffs(pool: OrderedPool<Puff>, dt: number, wind: { x: numb
   for (const puff of pool.items) {
     const age = puff.t / puff.life
     const heat = puff.h0 > 0 ? puff.h0 * Math.pow(Math.max(0, 1 - puff.t / puff.hl), 1.25) : 0
-    const x0 = puff.x
-    const y0 = puff.y
-    const z0 = puff.z
+    MOVE.x0 = puff.x
+    MOVE.y0 = puff.y
+    MOVE.z0 = puff.z
     if (puff.ring) moveOnRing(puff, puff.ring, wind)
     else moveFree(puff, dt, age, heat, wind)
     // the smoke, dust and gas go round a closed space (a shut car) and in only through its openings
-    if (confining && CARRIED_KINDS[puff.kind] && confiner.confine(x0, y0, z0, puff.x, puff.y, puff.z, puff.size * PAD_OF_SIZE, dt)) {
+    if (confining && CARRIED_KINDS[puff.kind] && confine(confiner, puff, dt)) {
       const out = confiner.out
       puff.x = out.x
       puff.y = out.y
       puff.z = out.z
-      ;[puff.vx, puff.vy, puff.vz] = slideAlong(out, puff.vx, puff.vy, puff.vz)
+      slideInto(out, puff)
     }
     const size = puff.s0 + (puff.s1 - puff.s0) * (1 - Math.exp(-puff.t * puff.gk)) + puff.sg * Math.min(puff.t, GROWTH_CAP_SECONDS)
     puff.size = size * Math.min(1, puff.t * ARRIVAL_FRAME + ARRIVAL_BASE)
