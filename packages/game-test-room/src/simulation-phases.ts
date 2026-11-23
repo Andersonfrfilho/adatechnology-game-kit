@@ -13,7 +13,7 @@ export type SimulationHooks = {
   readonly frameEnd: (dt: number) => void
   /** What draws the simulation between two ticks: the step pose back at the start of a tick, the blend at `present`. */
   readonly pose: { readonly restoreStepPose: () => void; readonly present: (alpha: number) => void }
-  /** The destruction events that change the simulation apply at the end of each tick, on the step pose, never in the frame's `present`. */
+  /** The destruction events that change the simulation apply at the start of each tick, before its step and on the step pose, never in the frame's `present`. */
   readonly structural: { readonly setStructuralInTick: (isInTick: boolean) => void; readonly applyStructuralEvents: () => void }
 }
 
@@ -45,12 +45,13 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
     },
     { phase: 'present', order: -1000, id: 'room.pose-present' },
   )
+  // before the step: the bodies a blast's events create take part in the very tick that applies them (spec 018 D2)
+  scheduler.add(() => {
+    if (!isLegacyStep) hooks.structural.applyStructuralEvents()
+  }, { phase: 'fixedSimulate', order: -1000, id: 'room.structural-events' })
   scheduler.add((ctx) => {
     if (!isLegacyStep) hooks.fixed(ctx.dt, true)
   }, { phase: 'fixedSimulate', order: 1000, id: 'room.simulate' })
-  scheduler.add(() => {
-    if (!isLegacyStep) hooks.structural.applyStructuralEvents()
-  }, { phase: 'fixedSimulate', order: 2000, id: 'room.structural-events' })
   scheduler.add((ctx) => {
     if (isLegacyStep) hooks.fixed(ctx.dt, false)
     hooks.frame(ctx.dt)
