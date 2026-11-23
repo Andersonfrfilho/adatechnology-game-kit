@@ -83,6 +83,11 @@ describe('vehicle colliders across LOD swaps (spec 018 D2)', () => {
     expect(colliders.isPending()).toBe(false)
     expect(afterUnfuse.length).toBe(pieces.length)
     expect(afterUnfuse.every((piece, index) => piece === pieces[index])).toBe(true)
+
+    // a mutation on the post-reset vehicle must update colliders (proving the live c.vehicle is read, not the disposed one)
+    vehicle.crumple(vehicle.partWorldCenter('bumper_front'), [-1, 0, 0], 0.3)
+    const afterCrumple = colliders.pieces()
+    expect(afterCrumple.some((piece, index) => piece !== afterUnfuse[index])).toBe(true)
     dispose()
   }, 60000)
 })
