@@ -279,10 +279,10 @@ export function totals(timings: readonly Timing[]): Array<{ group: string; count
 
 /** The markdown table of a run (the CI job writes it to the job summary). */
 export function summary(comparisons: readonly Comparison[], timings: readonly Timing[], calibrationMs: number, groups: readonly GroupComparison[] = [], limit = 25): string {
-  const lines = [`Calibration loop: ${calibrationMs.toFixed(3)} ms`, '', '| group | builders | total ms | change | verdict |', '|---|---:|---:|---:|---|']
+  const lines = [`Calibration loop: ${calibrationMs.toFixed(3)} ms`, '', '| group | builders | total ms | change | median change | verdict |', '|---|---:|---:|---:|---:|---|']
   for (const row of totals(timings)) {
     const g = groups.find((x) => x.group === row.group)
-    lines.push(`| ${row.group} | ${row.count} | ${row.ms.toFixed(2)} | ${g ? `×${g.change.toFixed(2)}` : '-'} | ${g?.verdict ?? 'new'} |`)
+    lines.push(`| ${row.group} | ${row.count} | ${row.ms.toFixed(2)} | ${g ? `×${g.change.toFixed(2)}` : '-'} | ${g && g.medianChange !== null ? `×${g.medianChange.toFixed(2)}` : '-'} | ${g?.verdict ?? 'new'} |`)
   }
   const flagged = comparisons.filter((c) => c.verdict !== 'ok')
   const counts = (['slower', 'warn', 'noise', 'faster', 'new', 'gone'] as const).map((v) => `${v} ${comparisons.filter((c) => c.verdict === v).length}`).join(', ')

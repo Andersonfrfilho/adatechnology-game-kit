@@ -98,7 +98,7 @@ describe('compare with the baseline', () => {
     const comparisons = compare(timings, 2, baseline)
     const text = summary(comparisons, timings, 2, compareGroups(comparisons, baseline))
     // one entry is under minGroupSize: the group gets the entry budget
-    expect(text).toContain('| a | 1 | 3.20 | ×1.60 | ok |')
+    expect(text).toContain('| a | 1 | 3.20 | ×1.60 | - | ok |')
     expect(text).toContain('| a/slow | 3.200 | 1.600 | 1.000 | ×1.60 | warn |')
   })
   it('a group of 5 to 7 builders fails on its median when most builders slow down, even when one heavy builder hides the sum', () => {
@@ -133,6 +133,8 @@ describe('compare with the baseline', () => {
     const groups = compareGroups(comparisons, base)
     expect(groups[0]!.change).toBeLessThan(1.5)
     expect(groups[0]!.verdict).toBe('slower')
+    // the summary shows the median that failed it, not only the sum that passed
+    expect(summary(comparisons, timings, 1, groups)).toMatch(/\| urban \| 6 \| [0-9.]+ \| ×1\.0[0-9] \| ×2\.20 \| slower \|/)
   })
   it('a group of 7 builders fails on its median when 5 of 7 slow down by 2x, while a fast runner at 1.4x median with one noisy spike still passes', () => {
     // shape of houses: 5 lighter builders + 2 heavier ones (~50% of the sum)
