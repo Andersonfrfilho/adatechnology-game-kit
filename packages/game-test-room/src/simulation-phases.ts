@@ -13,7 +13,7 @@ export type SimulationHooks = {
   readonly frameEnd: (dt: number) => void
   /** What draws the simulation between two ticks: the step pose back at the start of a tick, the blend at `present`. */
   readonly pose: { readonly restoreStepPose: () => void; readonly present: (alpha: number) => void }
-  /** The destruction events that change the simulation apply at the end of each tick, on the step pose, never in the frame's `present`. */
+  /** The destruction events that change the simulation apply in the tick on the step pose, never in the frame's `present`: those queued outside the tick before its step, those its step emitted at its end. */
   readonly structural: { readonly setStructuralInTick: (isInTick: boolean) => void; readonly applyStructuralEvents: () => void }
 }
 
@@ -45,9 +45,14 @@ export function registerSimulationPhases(scheduler: Scheduler, tick: number, hoo
     },
     { phase: 'present', order: -1000, id: 'room.pose-present' },
   )
+  // before the step: events queued outside a tick (a blast spread over frozen frames) create bodies that take part in this tick's step (spec 018 D2)
+  scheduler.add(() => {
+    if (!isLegacyStep) hooks.structural.applyStructuralEvents()
+  }, { phase: 'fixedSimulate', order: -1000, id: 'room.structural-events-before-step' })
   scheduler.add((ctx) => {
     if (!isLegacyStep) hooks.fixed(ctx.dt, true)
   }, { phase: 'fixedSimulate', order: 1000, id: 'room.simulate' })
+  // after the step: events the step itself emitted (a fuse, a collapse) still land in their own tick, so damage never trails the flash
   scheduler.add(() => {
     if (!isLegacyStep) hooks.structural.applyStructuralEvents()
   }, { phase: 'fixedSimulate', order: 2000, id: 'room.structural-events' })

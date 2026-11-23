@@ -70,7 +70,9 @@ dessas causas é a [spec 010](../010-quadro-com-prazo/spec.md); esta regra imped
 - **Ainda fora do passo fixo:** o que a fase `input` faz na física (empurrar, objeto na mão, portas, ferramentas) integra com o `dt` do quadro e
   não dá o mesmo estado a 144 Hz. Passa para o tique numa spec própria; até lá o teste de 60/120/144 Hz roda sem entrada do jogador.
 - **O desenho interpola** pela pose do passo anterior e o `alpha`; a simulação nunca lê a pose desenhada.
-- **Evento que muda a simulação** é aplicado no fim do tique, sobre a pose do passo (`applyStructuralEvents`, `game-destruction-three`), e todo tipo de
+- **Evento que muda a simulação** é aplicado dentro do tique, sobre a pose do passo (`applyStructuralEvents`, `game-destruction-three`): o que chegou
+  de fora do tique (uma explosão espalhada em quadros congelados) entra antes do passo, e o que o próprio passo emitiu entra no fim dele, para o dano
+  nunca ficar atrás do clarão (spec 018 D2). Todo tipo de
   evento tem classe em `EVENT_CLASS` (`structural` ou `visual`; na dúvida, estrutural; tipo novo não compila sem classe). O teste de mesmos bytes
   (`step-equivalence-window.test.ts`) roda a 30, 60, 120 e 144 Hz e com tempo de quadro aleatório. Pendência conhecida: o caminho com `workBudget`
   desliga o modo tique e ainda lê a pose desenhada.
