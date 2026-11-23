@@ -16,6 +16,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
   let accumulator = 0
   let residual = 0
   let droppedMicros = 0
+  let heldMicros = 0
   let substepsLastFrame = 0
   let running = false
   let disposed = false
@@ -62,6 +63,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     runPhase('input', seconds)
     if (paused) return
     if (ctx.fixedFrozen) {
+      heldMicros += Math.round(micros * timeScale)
       ctx.simTime += seconds * timeScale
       runPhase('lateSimulate', seconds * timeScale)
       return
@@ -76,7 +78,10 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     accumulator -= steps * fixedMicros
     substepsLastFrame = runFixed(steps, options.holdFixed)
     // held inside the frame: what is left of it is frozen (its steps are dropped above with the rest of the accumulator they took)
-    if (substepsLastFrame < steps) ctx.fixedFrozen = true
+    if (substepsLastFrame < steps) {
+      heldMicros += (steps - substepsLastFrame) * fixedMicros
+      ctx.fixedFrozen = true
+    }
     ctx.alpha = accumulator / fixedMicros
     ctx.simTime += seconds * timeScale
     runPhase('lateSimulate', seconds * timeScale)
@@ -199,7 +204,7 @@ export function createScheduler(options: SchedulerOptions = {}): Scheduler {
     budget,
     commands: createCommandBuffer(() => runner.tick),
     stats(): SchedulerStats {
-      return { frame: ctx.frame, tick: runner.tick, substepsLastFrame, droppedSeconds: droppedMicros / MICROS_PER_SECOND, phaseMs: { ...runner.phaseMs }, budget: budget.stats() }
+      return { frame: ctx.frame, tick: runner.tick, substepsLastFrame, droppedSeconds: droppedMicros / MICROS_PER_SECOND, heldSeconds: heldMicros / MICROS_PER_SECOND, phaseMs: { ...runner.phaseMs }, budget: budget.stats() }
     },
     dispose() {
       disposed = true

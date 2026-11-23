@@ -15,7 +15,7 @@ export interface FrameContext {
   readonly tick: number
   /** Index of the substep inside this frame (fixedSimulate only), else 0. */
   readonly substep: number
-  /** Simulated seconds since start (sum of the dt given to lateSimulate). */
+  /** Simulated seconds since start (sum of the dt given to lateSimulate). It keeps advancing in a frozen frame (`fixedFrozen`): the effects of that frame play; `tick` does not. */
   readonly simTime: number
   readonly paused: boolean
   /** true inside `advance` (a scenario steps the world): systems that do not run in a scenario step read it and skip. */
@@ -57,8 +57,9 @@ export interface SchedulerOptions {
   readonly clock?: () => number
   /**
    * Asked at the start of each frame and before each fixed step: true holds the world as `FrameRunOptions.freezeFixed` does, from that point of the frame on (the steps of
-   * the frame not run yet are dropped, not kept for later: held time does not count). A host whose fixed step started heavy work it spreads over frames (a blast) holds
-   * the steps until the work is done, so no step runs in between. Default: never held.
+   * the frame not run yet are dropped, not kept for later: held time does not count; `stats().heldSeconds` sums it). A host whose fixed step started heavy work it
+   * spreads over frames (a blast) holds the steps until the work is done, so no step runs in between. An `exact` frame is held the same way: the steps it would have run
+   * from the hold on are dropped, not kept in the accumulator. Not asked inside `advance` (a scenario steps the world itself). Default: never held.
    */
   readonly holdFixed?: () => boolean
   /** A system that throws: default logs once per system id and keeps the frame going. */
@@ -177,6 +178,8 @@ export interface SchedulerStats {
   readonly tick: number
   readonly substepsLastFrame: number
   readonly droppedSeconds: number
+  /** Simulated seconds held since start (`freezeFixed`, `holdFixed`): the time of frozen frames and the fixed steps a hold dropped, never stepped and never caught up. */
+  readonly heldSeconds: number
   /** Milliseconds per phase in the last frame. */
   readonly phaseMs: Readonly<Record<FramePhase, number>>
   readonly budget: BudgetStats

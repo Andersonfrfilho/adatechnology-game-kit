@@ -4856,8 +4856,10 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   const FLAG_LOST = 1
   const FLAG_OPEN = 2
 
-  /** The legacy blast: every part of every object, then every impl, each at full strength. */
-  /** The wave with no shelter, fragment hits or confinement, as steps: a `'part'` after each part of an object (`blastObject`, cut) and after each impl it reached. */
+  /**
+   * The legacy blast (no shelter, fragment hits or confinement): every part of every object, then every impl, each at full strength. As steps: a `'part'` after each part
+   * of an object (`blastObject`, cut) and after each impl it reached.
+   */
   function* blastPlainSteps(point: Vec3, energy: number, radius: number, src?: string, lethal?: number): Generator<'part', HitResult[]> {
     const out: HitResult[] = []
     for (const o of [...objects.values()]) {

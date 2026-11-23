@@ -15,8 +15,7 @@ export interface PhaseRunnerDeps {
 
 export interface PhaseRunner {
   runPhase(phase: FramePhase, dt: number): void
-  /** Runs `steps` fixed steps of the `fixedSimulate` phase. */
-  /** Runs up to `steps` fixed steps, stopping before one when `isHeld` says so; returns the steps run. */
+  /** Runs up to `steps` fixed steps of the `fixedSimulate` phase, stopping before one when `isHeld` says so; returns the steps run. */
   runFixed(steps: number, isHeld?: () => boolean): number
   /** Fixed steps run since start. */
   readonly tick: number

@@ -400,6 +400,9 @@ describe('freezeFixed', () => {
     // the frame that held dropped its third step and the held frame fed nothing: the next step is tick 2, from the half tick left before the hold
     expect(ticks).toEqual([0, 1, 2])
     expect(frozen).toEqual([true, true, false])
+    // held: the dropped third step of the first frame and the 2 ticks of the frozen frame
+    expect(Math.round(scheduler.stats().heldSeconds / H)).toBe(3)
+    expect(scheduler.stats().droppedSeconds).toBe(0)
   })
 
   it('is ignored with simulate:false', () => {
