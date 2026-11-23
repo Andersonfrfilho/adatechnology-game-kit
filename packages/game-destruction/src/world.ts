@@ -5596,6 +5596,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     pendingStructure.clear()
     pendingDetaches.length = 0
     pendingCollapse.clear()
+    // the blasts its fragments set off (an explosive part that broke) and the ground they dug wait for the end of the operation: they go with it
+    blasts.length = 0
+    pendingLosses.length = 0
   }
 
   const beginExplosion = (point: Vec3, energy: number, radius: number, source?: string, blast?: BlastOptions): ExplosionJob => {

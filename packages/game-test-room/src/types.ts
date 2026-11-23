@@ -337,8 +337,10 @@ export interface TestRoomOptions {
   frameTargetMs?: number
   /**
    * Spread a blast with a casing (a fragmentation grenade) over frames with the world held (spec 018 D2): the flash at once, its fragment rays a fixed count per frame
-   * and its wave in a frame of its own, then its structural events a fixed weight per frame, the fixed steps held meanwhile (`holdFixed`), and the world it leaves the
-   * one the one-shot blast leaves. A blast set off inside a fixed step begins at the end of that step. Off by default (every blast in the frame it goes off, as before).
+   * and its wave a fixed number of parts per frame, then its structural events a fixed weight per frame, the fixed steps held meanwhile (`holdFixed`). A blast set off
+   * outside a fixed step (`blastAt`) leaves the bytes the one-shot blast leaves. One set off inside a fixed step (a fuse) begins at the end of that step's simulation,
+   * after its world update and physics step: the same point, its events one tick later than without pacing (spec 018 D2). Off by default (every blast in the frame
+   * it goes off, as before).
    */
   blastPacing?: BlastPacingOptions | false
   /** Room counters the bench panel shows and `TestRoom.metrics()` returns (default all); `false` for none. */

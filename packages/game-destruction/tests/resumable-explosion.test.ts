@@ -2,8 +2,8 @@
 import { createArsenal } from '@adatechnology/game-weapons'
 import { describe, expect, it } from 'vitest'
 
-import { createDestruction } from '../src'
-import type { BlastCharge, DestructibleSpec, DestructionWorld, HitResult, Vec3 } from '../src'
+import { createDestruction, explosivePart } from '../src'
+import type { BlastCharge, DestructibleSpec, DestructionEvent, DestructionWorld, HitResult, Vec3 } from '../src'
 
 const m67 = createArsenal().explosives.get('m67')!
 const GRENADE: BlastCharge = { tnt: m67.tnt!, casing: m67.casing! }
@@ -176,5 +176,27 @@ describe('beginExplosion', () => {
     expect(job.isDone).toBe(true)
     expect(() => job.result()).toThrow('cancelled')
     expect(world.explosionProbe().finishedByOperation).toBe(0)
+  })
+
+  it('cancelExplosions also drops the blasts its fragments set off: after a load, the next update sets off nothing of the cancelled blast', () => {
+    const world = createDestruction({ seed: 7 })
+    const fuel = createArsenal().explosives.get('gas_cylinder') ?? createArsenal().explosives.get('fuel_barrel')!
+    for (let k = 0; k < 12; k++) {
+      const angle = (k / 12) * Math.PI * 2
+      const can: DestructibleSpec = { parts: [explosivePart(fuel, { id: 'tank', material: 'steel', shape: { kind: 'box', size: [0.3, 0.5, 0.3] }, position: [0, 0, 0], thickness: 0.001, fill: 0.03, hp: 1 })] }
+      world.add(can, { id: `c${k}`, position: [Math.cos(angle) * 0.7, 1, Math.sin(angle) * 0.7] })
+    }
+    const pristine = world.serialize()
+    const events: DestructionEvent[] = []
+    world.on('*', (event) => events.push(event))
+    const job = world.beginExplosion(ORIGIN, m67.energy, 15, 'cancelled', { charge: GRENADE })
+    // rays until one of them breaks a can (its blast waits for the end of the operation)
+    for (let ray = 0; ray < 400 && !events.some((event) => event.type === 'explode'); ray++) job.advance(1)
+    expect(events.some((event) => event.type === 'explode')).toBe(true)
+    expect(job.isDone).toBe(false)
+    world.load(pristine)
+    const before = events.length
+    world.update(1 / 60)
+    expect(events.slice(before).filter((event) => event.source === 'cancelled')).toEqual([])
   })
 })

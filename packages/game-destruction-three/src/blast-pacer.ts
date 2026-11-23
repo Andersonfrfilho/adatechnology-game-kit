@@ -38,7 +38,10 @@ export type BlastPacer = {
   isHolding(): boolean
   /** Once per frame while holding, outside the fixed step: the next slice of the oldest open blast, or, all done, the next slice of their structural events. */
   step(): void
-  /** Drops every open blast (`cancelExplosions`, no `onDone`) and both holds: the host is clearing or replacing its world. */
+  /**
+   * Drops every open blast (no `onDone`) and both holds: the host is clearing or replacing its world. It calls `world.cancelExplosions()`, which cancels every open
+   * explosion of the world, also one begun outside this pacer.
+   */
   clear(): void
 }
 

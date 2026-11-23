@@ -50,7 +50,17 @@ export function createBlastPacing(options: BlastPacingOptions | false | undefine
       scheduler.add(() => void (isInStep = true), { phase: 'fixedSimulate', order: -1_000_000, id: 'room.blast-pacing-step-start' })
       scheduler.add(() => {
         isInStep = false
-        for (let next = pending.shift(); next; next = pending.shift()) pacer.begin(next.blast, next.onDone)
+        // taken first: a blast that throws in its begin leaves the others of the step to begin, not to wait a tick
+        const asked = pending.splice(0, pending.length)
+        let failure: { readonly error: unknown } | undefined
+        for (const next of asked) {
+          try {
+            pacer.begin(next.blast, next.onDone)
+          } catch (error) {
+            failure ??= { error }
+          }
+        }
+        if (failure) throw failure.error
       }, { phase: 'fixedSimulate', order: 1999, id: 'room.blast-pacing-begin' })
       scheduler.add(() => {
         if (pacer.isHolding()) pacer.step()
