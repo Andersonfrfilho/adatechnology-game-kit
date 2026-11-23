@@ -33,17 +33,17 @@ export const rerunUnderLock = (script, args) => {
 
 /**
  * Waits for the 1-minute load to fall under QUIET_LOAD, up to `maxMs`; says when it gives up. Returns the load at the start and whether the machine is still busy.
- * @param {{ label: string, load?: () => number, now?: () => number, sleep?: (ms: number) => Promise<void>, log?: (line: string) => void, maxMs?: number }} options
+ * @param {{ label: string, load?: () => number, now?: () => number, sleep?: (ms: number) => Promise<void>, log?: (line: string) => void, maxMs?: number, quietLoad?: number }} options
  * @returns {Promise<{ loadAtStart: number, busy: boolean }>}
  */
-export const waitForQuietMachine = async ({ label, load = () => loadavg()[0] ?? 0, now = Date.now, sleep = (ms) => new Promise((done) => setTimeout(done, ms)), log = console.log, maxMs = WAIT_FOR_QUIET_MS }) => {
+export const waitForQuietMachine = async ({ label, load = () => loadavg()[0] ?? 0, now = Date.now, sleep = (ms) => new Promise((done) => setTimeout(done, ms)), log = console.log, maxMs = WAIT_FOR_QUIET_MS, quietLoad = QUIET_LOAD }) => {
   const loadAtStart = load()
   const until = now() + maxMs
-  while (load() >= QUIET_LOAD && now() < until) {
-    log(`${label}: waiting for a quiet machine (load ${load().toFixed(1)}, under ${QUIET_LOAD} wanted)`)
+  while (load() >= quietLoad && now() < until) {
+    log(`${label}: waiting for a quiet machine (load ${load().toFixed(1)}, under ${quietLoad} wanted)`)
     await sleep(QUIET_POLL_MS)
   }
-  const busy = load() >= QUIET_LOAD
-  if (busy) log(`${label}: the machine is still busy (load ${load().toFixed(1)}): the frame times below read slower than a player sees`)
+  const busy = load() >= quietLoad
+  if (busy) log(`${label}: the machine is still busy (load ${load().toFixed(1)}, under ${quietLoad} wanted): the frame times below read slower than a player sees`)
   return { loadAtStart, busy }
 }

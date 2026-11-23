@@ -59,14 +59,25 @@ ela acabou de gerar.
    e o `vfx.update` está ali. Uma pausa de verdade precisa parar só o tique fixo; no protótipo isso
    se chama `freezeFixed`. Essa forma custa o mesmo nos quadros congelados, e o quadro de volta
    piora (38 a 45 ms). Esse é o mesmo problema da aplicação acumulada.
-2. **Os mesmos bytes valem no pacote, não estão provados na sala.** Um teste unitário
+2. **Na configuração medida, a sala é determinística; a diferença vinha do preparo.** No pacote, um teste unitário
    (`d2-slice.spike.test.ts`) mostra que eventos, `serialize()` e resultados ficam idênticos byte a
-   byte para K = 1, 7, 32, 64 e 128. Na sala, duas rodadas **iguais e sem fatiar** já dão hashes
-   diferentes em 5 de 6 pares, e o número de eventos varia entre 1685 e 1692. A sala não é
-   determinística hoje, então não dá para comparar a pausa com o original nela. As suspeitas são as
-   filas por prazo de relógio e o retorno do Jolt; nenhuma das duas foi testada.
-3. **Sem pausa, o estado final muda.** Isso era esperado, mas não foi demonstrado na sala pelo mesmo
-   motivo do item 2.
+   byte para K = 1, 7, 32, 64 e 128. Na sala, as rodadas pareciam divergir, mas a divergência já
+   existia antes da explosão. O preparo da régua (`inPage`) deixa o laço da página rodar 8 s em
+   tempo real, então o número de tiques até a explosão varia. Com o laço parado no preparo e o mesmo
+   número de tiques, 5 rodadas ficaram idênticas em todos os 90 tiques (corrigido em 2026-11-23;
+   o harness é `tools/gpu/room-determinism.mjs`).
+   Ritmos de quadro testados: 4 rodadas de 90 tiques, a 0, 60, 0 e 100 ms por quadro, todas idênticas
+   (`paces-4x90.json`, `ROOM_DET_PACES=0,60,0,100`). Configuração testada: página `jolt-d4-worker`
+   (`&solver=jolt&blastDebris=1&groundWorker=1`), granada M67, carga da máquina entre 1,3 e 1,5.
+   O que isso prova é só isto: com esses ritmos e essa carga, as filas por prazo não mudaram o
+   resultado. Não vale para outra configuração (sem worker de chão, outro explosivo) nem para carga
+   alta. Comando: `ROOM_DET_RUNS=5 node tools/gpu/room-determinism.mjs` (pega a trava sozinho; o
+   veredito falha com menos de 2 rodadas, explosão sem efeito ou erro de página). Resultados em
+   `~/.cache/adatechnology-game-kit/medicoes/2026-11-23-sala-deterministica/`: `final-v2-5x90.json`
+   (5 rodadas, preparo com laço parado), `base-v2-3x60.json` (caminho antigo, laço da página,
+   `ROOM_DET_PAGE_LOOP=1`: o harness detecta a divergência) e `paces-4x90.json`.
+3. **Sem pausa, o estado final muda.** Isso era esperado. Ainda não foi medido na sala com o harness
+   determinístico do item 2.
 
 ## O que muda no contrato entre pacotes (variante com pausa)
 
