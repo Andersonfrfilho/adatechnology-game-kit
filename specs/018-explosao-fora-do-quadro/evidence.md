@@ -546,3 +546,18 @@ driver 620.73.04 sem divergência, `flock`, carga de 1 min entre 1,13 e 1,57 no 
 Medições intermediárias na mesma pasta: `branch-a` (onda inteira: o quadro da onda fica em 32,8–36,2 ms, por isso a onda também foi fatiada),
 `w16-a` (16 peças: sem efeito, a sala usa a onda simples, fatiada depois), `w128-a`. `main-a` descartada: carga subiu a 7,8 durante a rodada
 (build em paralelo). `main-1` foi a conferência da máquina.
+
+### Revisão do PR #443 (2026-11-23)
+
+- **Mesmos bytes: o que foi provado e o que não.** A prova no navegador usa `room.blastAt` (explosão pedida fora do tique): fatiado e sem
+  marca-passo são idênticos. A granada com espoleta que dispara **dentro** do tique, com o marca-passo, explode no fim da simulação desse
+  tique (depois do `world.update`, do fogo, dos fluidos e do passo do Jolt), não dentro do `explosives.update`: mesmo ponto, eventos com o
+  tempo de um tique depois (teste `blast-pacing.test.ts` contra `blastPacing: undefined`). Fatiada ou inteira nesse caminho, o mundo é o
+  mesmo, e nenhum tique roda antes de o dano entrar. **Decisão (opção b da revisão):** o desvio fica documentado; ser exato pediria parar o
+  tique no meio ou aplicar todos os eventos no fim do tique N, que é o custo que se quer espalhar. Na cena do teste o estado final depois de
+  420 tiques saiu igual nos dois caminhos; isso é observação dessa cena, não garantia.
+- `serialize()` agora termina as explosões abertas (M1). O `tools/gpu/room-determinism.mjs` passou a não ler o mundo nos quadros sem tique
+  (os quadros que o marca-passo segura). Prova refeita com a página `page-branch-review.html` (commit 2b1281b53 + harness): sem marca-passo
+  60 quadros, fatiado 76 quadros (os 15 primeiros congelados, como antes: a leitura não terminou a explosão), 2 rodadas cada, cargas
+  ~1,2–1,5: **idênticos em todos os 60 tiques**, `stateHash` 1505117557 e 1702 eventos no tique 60 (`det-review-*.json`, `detcmp-review.cjs`).
+- Sem medição nova de tempo: nenhuma correção mexeu no caminho quente da régua (a opção a do H3, que mudaria o começo, não foi feita).

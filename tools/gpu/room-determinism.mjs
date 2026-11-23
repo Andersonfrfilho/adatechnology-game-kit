@@ -59,13 +59,15 @@ export async function determinismRun(job) {
   for (let index = 0; index < job.frames; index++) {
     const started = performance.now()
     if (index === 0 && !room.blastAt(job.explosive, win.__roomExplosion.spot)) throw new Error(`room.blastAt did not detonate ${job.explosive}`)
+    const tickBefore = room.frameStats?.().tick
     room.update(1 / 60, { frameStartMs: started })
     if (gl) {
       const restoreCamera = room.applyCamera?.()
       try { room.webgl.render(room.scene, room.camera) } finally { restoreCamera?.() }
       gl.finish?.()
     }
-    snap(index)
+    // a frame the blast pacing held (no tick) is not read: `serialize` would run the open blast to its end (spec 018 D2)
+    if (tickBefore === undefined || room.frameStats().tick !== tickBefore) snap(index)
     await new Promise((done) => setTimeout(done, Math.max(0, job.paceMs - (performance.now() - started))))
   }
   return { rows, droppedFrames: win.__droppedFrames ?? 0 }
