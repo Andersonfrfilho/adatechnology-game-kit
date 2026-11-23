@@ -122,6 +122,11 @@ export interface Baseline {
    * in one builder does not. Applies to groups of at least this many entries with a baseline (default 5); a group-wide slowdown is the group's check.
    */
   readonly peerMin?: number
+  /**
+   * Fail budget for the median `change` of a group with at least `peerMin` entries above `noiseFloorMs` (default `(groupBudget + budget) / 2`, i.e. 0.75 / ×1.75).
+   * Catches a slowdown shared by most of a 5–7 builder group (`houses`, `urban`) that the peer filter turns into warnings and an unbalanced group sum hides.
+   */
+  readonly groupMedianBudget?: number
   /** Entries under this median (ms) are reported, never failed. */
   readonly noiseFloorMs: number
   /** Fail budget per entry, for the noisy ones. */
@@ -212,6 +217,7 @@ export function toBaseline(timings: readonly Timing[], calibrationMs: number, pr
     groupBudget: previous?.groupBudget ?? 0.5,
     minGroupSize: previous?.minGroupSize ?? 8,
     ...(previous?.peerMin === undefined ? {} : { peerMin: previous.peerMin }),
+    ...(previous?.groupMedianBudget === undefined ? {} : { groupMedianBudget: previous.groupMedianBudget }),
     noiseFloorMs: previous?.noiseFloorMs ?? 0.05,
     overrides: previous?.overrides ?? {},
     entries,
@@ -224,27 +230,35 @@ export interface GroupComparison {
   readonly ratio: number
   readonly baseline: number
   readonly change: number
+  /** Median `change` of the group's entries above `noiseFloorMs`, when at least `peerMin` qualify (null otherwise). */
+  readonly medianChange: number | null
   readonly verdict: 'ok' | 'faster' | 'slower'
 }
 
 /** Per group, the sum of the ratios of the entries in both the run and the baseline, against the baseline's sum. */
 export function compareGroups(comparisons: readonly Comparison[], baseline: Baseline | null): GroupComparison[] {
   if (!baseline) return []
-  const by = new Map<string, { ratio: number; baseline: number; count: number }>()
+  const by = new Map<string, { ratio: number; baseline: number; count: number; changes: number[] }>()
   for (const c of comparisons) {
     if (c.ratio === null || c.baseline === null) continue
     const group = groupOf(c.id)
-    const row = by.get(group) ?? { ratio: 0, baseline: 0, count: 0 }
+    const row = by.get(group) ?? { ratio: 0, baseline: 0, count: 0, changes: [] }
     row.ratio += c.ratio
     row.baseline += c.baseline
     row.count++
+    if (c.ms !== null && c.ms >= baseline.noiseFloorMs && c.change !== null) row.changes.push(c.change)
     by.set(group, row)
   }
+  const peerMin = baseline.peerMin ?? DEFAULT_PEER_MIN
+  const medianBudget = baseline.groupMedianBudget ?? (baseline.groupBudget + baseline.budget) / 2
   return [...by.entries()].map(([group, row]) => {
     const change = row.ratio / row.baseline
     const budget = row.count >= baseline.minGroupSize ? baseline.groupBudget : baseline.budget
-    const verdict = change > 1 + budget ? 'slower' : change < 1 / (1 + budget) ? 'faster' : 'ok'
-    return { group, ratio: row.ratio, baseline: row.baseline, change, verdict }
+    const medianChange = row.changes.length >= peerMin ? median(row.changes) : null
+    const slowBySum = change > 1 + budget
+    const slowByMedian = medianChange !== null && medianChange > 1 + medianBudget
+    const verdict = slowBySum || slowByMedian ? 'slower' : change < 1 / (1 + budget) ? 'faster' : 'ok'
+    return { group, ratio: row.ratio, baseline: row.baseline, change, medianChange, verdict }
   })
 }
 

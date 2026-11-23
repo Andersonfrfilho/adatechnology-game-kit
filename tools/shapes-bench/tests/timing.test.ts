@@ -101,4 +101,93 @@ describe('compare with the baseline', () => {
     expect(text).toContain('| a | 1 | 3.20 | ×1.60 | ok |')
     expect(text).toContain('| a/slow | 3.200 | 1.600 | 1.000 | ×1.60 | warn |')
   })
+  it('a group of 5 to 7 builders fails on its median when most builders slow down, even when one heavy builder hides the sum', () => {
+    // shape of urban: 5 small builders + 1 heavy builder (~97% of the group sum)
+    const base: Baseline = {
+      ...baseline,
+      budget: 1,
+      groupBudget: 0.5,
+      minGroupSize: 8,
+      peerMin: undefined,
+      overrides: {},
+      entries: {
+        'urban/patterns': { ratio: 13.26, ms: 13.26 },
+        'urban/block': { ratio: 0.12, ms: 0.12 },
+        'urban/pole_a': { ratio: 0.08, ms: 0.08 },
+        'urban/pole_b': { ratio: 0.08, ms: 0.08 },
+        'urban/tent': { ratio: 0.06, ms: 0.06 },
+        'urban/tower': { ratio: 0.1, ms: 0.1 },
+      },
+    }
+    const timings = [
+      { id: 'urban/patterns', ms: 13.26, runs: 5 },
+      { id: 'urban/block', ms: 0.12 * 2.2, runs: 5 },
+      { id: 'urban/pole_a', ms: 0.08 * 2.2, runs: 5 },
+      { id: 'urban/pole_b', ms: 0.08 * 2.2, runs: 5 },
+      { id: 'urban/tent', ms: 0.06 * 2.2, runs: 5 },
+      { id: 'urban/tower', ms: 0.1 * 2.2, runs: 5 },
+    ]
+    const comparisons = compare(timings, 1, base)
+    // peer check downgrades each of the 5 slow entries to warn
+    expect(comparisons.filter((c) => c.verdict === 'slower')).toEqual([])
+    const groups = compareGroups(comparisons, base)
+    expect(groups[0]!.change).toBeLessThan(1.5)
+    expect(groups[0]!.verdict).toBe('slower')
+  })
+  it('a group of 7 builders fails on its median when 5 of 7 slow down by 2x, while a fast runner at 1.4x median with one noisy spike still passes', () => {
+    // shape of houses: 5 lighter builders + 2 heavier ones (~50% of the sum)
+    const base: Baseline = {
+      ...baseline,
+      budget: 1,
+      groupBudget: 0.5,
+      minGroupSize: 8,
+      peerMin: undefined,
+      overrides: {},
+      entries: {
+        'houses/a': { ratio: 40, ms: 40 },
+        'houses/b': { ratio: 50, ms: 50 },
+        'houses/c': { ratio: 40, ms: 40 },
+        'houses/d': { ratio: 35, ms: 35 },
+        'houses/e': { ratio: 60, ms: 60 },
+        'houses/big1': { ratio: 115, ms: 115 },
+        'houses/big2': { ratio: 130, ms: 130 },
+      },
+    }
+    const sharedSlowdown = [
+      { id: 'houses/a', ms: 80, runs: 5 },
+      { id: 'houses/b', ms: 100, runs: 5 },
+      { id: 'houses/c', ms: 80, runs: 5 },
+      { id: 'houses/d', ms: 70, runs: 5 },
+      { id: 'houses/e', ms: 120, runs: 5 },
+      { id: 'houses/big1', ms: 115, runs: 5 },
+      { id: 'houses/big2', ms: 130, runs: 5 },
+    ]
+    const slowComparisons = compare(sharedSlowdown, 1, base)
+    expect(slowComparisons.filter((c) => c.verdict === 'slower')).toEqual([])
+    const slowGroups = compareGroups(slowComparisons, base)
+    expect(slowGroups[0]!.change).toBeLessThan(2)
+    expect(slowGroups[0]!.verdict).toBe('slower')
+
+    // fast-runner shift (like PR #436 CI run 44918299535): group median 1.4x, one noisy spike at 2.35x
+    const fastRunner = [
+      { id: 'houses/a', ms: 40 * 1.4, runs: 5 },
+      { id: 'houses/b', ms: 50 * 2.35, runs: 5 },
+      { id: 'houses/c', ms: 40 * 1.35, runs: 5 },
+      { id: 'houses/d', ms: 35 * 1.4, runs: 5 },
+      { id: 'houses/e', ms: 60 * 1.3, runs: 5 },
+      { id: 'houses/big1', ms: 115 * 1.45, runs: 5 },
+      { id: 'houses/big2', ms: 130 * 1.4, runs: 5 },
+    ]
+    const fastComparisons = compare(fastRunner, 1, base)
+    expect(fastComparisons.filter((c) => c.verdict === 'slower')).toEqual([])
+    expect(compareGroups(fastComparisons, base)[0]!.verdict).toBe('ok')
+  })
+  it('entries under the noise floor do not fail a group through its median', () => {
+    const names = ['a', 'b', 'c', 'd', 'e', 'f']
+    const entries = Object.fromEntries(names.map((name) => [`tiny/${name}`, { ratio: 0.01, ms: 0.01 }]))
+    const base: Baseline = { ...baseline, budget: 1, groupBudget: 0.5, minGroupSize: 8, peerMin: undefined, overrides: {}, entries }
+    const timings = names.map((name) => ({ id: `tiny/${name}`, ms: 0.019, runs: 5 }))
+    const comparisons = compare(timings, 1, base)
+    expect(compareGroups(comparisons, base)[0]!.verdict).toBe('ok')
+  })
 })
