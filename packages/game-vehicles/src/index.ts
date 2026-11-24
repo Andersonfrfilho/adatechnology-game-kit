@@ -91,3 +91,5 @@ export type { SeatOptions, DashboardOptions, InteriorOptions, BusRowsOptions } f
 export type { Puddle, PuddleLobe, Splat } from './fluids'
 export type { ZoneDef } from './zone-derive'
 export { crackedGlassMaterial } from './glass-damage'
+export { CABIN_CATEGORIES, CABIN_MINIMUMS, CABIN_SOURCE, ENTRY_DUCK_FACTOR, cabinMinimumOf } from './cabin'
+export type { CabinCategory, CabinDoorMinimum, CabinMinimum } from './cabin'
