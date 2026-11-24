@@ -441,7 +441,7 @@ describe('electrical', () => {
     const b = build('service_mast', { points: [[0, 1.65, 0], [0, 5.85, 0], [0, 5.92, 0.03], [0, 5.93, 0.08], [0, 5.92, 0.13], [0, 5.85, 0.16]] })
     const prims = localPrims(b)
     expect(prims.length, 'five stretches of pipe and the cap').toBe(6)
-    expect(prims.every((p) => p.material === 'metal')).toBe(true)
+    expect(prims.every((p) => p.kind === 'cylinder' && p.material === 'metal')).toBe(true)
     expect(b.spec.wires ?? []).toEqual([])
     expect(b.spec.colliders!.length).toBe(1)
     const plain = localPrims(build('service_mast'))
