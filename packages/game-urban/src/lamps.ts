@@ -7,6 +7,8 @@ export type LampState = { readonly on: boolean; readonly flicker: boolean }
 export type LampStateParams = { readonly seed: number; readonly x: number; readonly z: number; readonly shares: LampShares }
 
 const UINT32 = 2 ** 32
+/** Salt of the flicker phase, so it is not the same roll as the lamp's state. */
+const PHASE_SALT = 0x5f3759df
 
 /** FNV-1a of the seed and the spot (centimetres), into [0, 1). */
 const hashLamp = (seed: number, x: number, z: number): number => {
@@ -19,6 +21,9 @@ const hashLamp = (seed: number, x: number, z: number): number => {
   }
   return (h >>> 0) / UINT32
 }
+
+/** The phase (radians, [0, 2π)) a failing lamp at `x, z` flickers on: its lens and its light share it, and two lamps rarely blink in step. */
+export const flickerPhaseOf = (x: number, z: number): number => hashLamp(PHASE_SALT, x, z) * 2 * Math.PI
 
 /** Throws when the shares are not `0 <= flicker <= lit <= 1`. */
 export function assertLampShares(shares: LampShares): void {

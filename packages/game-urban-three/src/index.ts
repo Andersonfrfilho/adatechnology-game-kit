@@ -1,5 +1,6 @@
 export { createUrbanThree } from './draw'
 export type { BudgetedLamp, DrawnLight, DrawnUrban, DrawOptions, UrbanLight, UrbanThreeOptions, UrbanThree } from './draw'
+export { flickerGroupOf, flickerGroupPhase, flickerLevel, LAMP_FLICKER, physicalIntensityOf } from './lamp-light'
 export { createPrism, createRoundedBox } from './rounded-box'
 export { createTextTexture } from './text'
 export type { CanvasFactory, TextTextureOptions } from './text'

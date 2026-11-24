@@ -3,7 +3,7 @@ import { createUrban } from '@adatechnology/game-urban'
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
-import { createUrbanThree } from '../src'
+import { createUrbanThree, LAMP_FLICKER, physicalIntensityOf } from '../src'
 import { fakeDocument } from './fake-dom'
 
 const kit = createUrban()
@@ -52,8 +52,39 @@ describe('urban lights through a LightBudget', () => {
       const lamp = lights.group.children.find((child) => (child as THREE.PointLight).isPointLight && (child as THREE.PointLight).intensity > 0) as THREE.PointLight | undefined
       seen.add(lamp?.intensity ?? 0)
     }
-    expect(seen.has(1.3)).toBe(true)
-    expect([...seen].some((value) => value > 0 && value < 1.3)).toBe(true)
+    const full = physicalIntensityOf({ intensity: 1.3, distance: 24, decay: 2, y: 8 })
+    expect([...seen].some((value) => Math.abs(value - full) < 1e-6)).toBe(true)
+    expect([...seen].some((value) => Math.abs(value - full * LAMP_FLICKER.dim) < 1e-6)).toBe(true)
+  })
+
+  it('a failing lamp blinks its lens with its light, even when it got no light', () => {
+    const scene = new THREE.Scene()
+    const lights = createLightBudget(THREE, scene, { point: 4, spot: 0, pointShadows: 0 })
+    const builder = kit.builder({ budget: 0 })
+    kit.poles.get('concrete_arm').build(builder, { x: 4, z: 0, on: true, flicker: true })
+    kit.poles.get('concrete_arm').build(builder, { x: 40, z: 0, on: true })
+    const drawn = createUrbanThree(THREE, { document: fakeDocument, lights }).draw(builder.scene())
+    const lenses: THREE.MeshBasicMaterial[] = []
+    drawn.root.traverse((node) => {
+      const material = (node as THREE.Mesh).material as THREE.MeshBasicMaterial | undefined
+      if (material?.type === 'MeshBasicMaterial' && !lenses.includes(material)) lenses.push(material)
+    })
+    expect(lenses).toHaveLength(2)
+    const levels = lenses.map(() => new Set<number>())
+    for (let t = 0; t < 10; t += 0.05) {
+      drawn.animate(t)
+      lenses.forEach((lens, index) => levels[index]!.add(Number(lens.color.r.toFixed(4))))
+    }
+    expect(levels.map((set) => set.size).sort()).toEqual([1, 2])
+    drawn.dispose()
+  })
+
+  it('lights the foot of the lamp as the r128 page did, under physically correct lights', () => {
+    const part = { intensity: 1.3, distance: 20, decay: 2, y: 7.2 }
+    const physical = physicalIntensityOf(part)
+    const atFoot = (physical / part.y ** 2) * (1 - (part.y / part.distance) ** 4) ** 2 / Math.PI
+    expect(atFoot).toBeCloseTo(part.intensity * (1 - part.y / part.distance) ** 2, 9)
+    expect(physical).toBeGreaterThan(50)
   })
 
   it('the searchlight aim circles the tower', () => {

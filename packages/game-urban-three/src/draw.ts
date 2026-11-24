@@ -5,6 +5,7 @@ import type { ItemBox, LightPart, PartStyle, SilhouetteWindow, UrbanPart, UrbanS
 import { shapeGeometries, standOutCoincident } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
+import { flickerGroupOf, flickerGroupPhase, flickerLevel, physicalIntensityOf } from './lamp-light'
 import { createPrism, createRoundedBox } from './rounded-box'
 import { createTextTexture } from './text'
 import type { CanvasFactory } from './text'
@@ -82,6 +83,25 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
     return material
   }
+  /** Lens materials of failing lamps already animated by the scene being drawn (one per colour and flicker group). */
+  let animatedLenses = new Set<string>()
+  /** The lens of a failing lamp: a glowing material of its own flicker group, dimmed with the group's light by the draw's animation. */
+  const flickeringLens = (color: number, phase: number, animators: ((t: number) => void)[]): THREE_NS.Material => {
+    const group = flickerGroupOf(phase)
+    const key = `f|${color}|${group}`
+    let material = materials.get(key) as THREE_NS.MeshBasicMaterial | undefined
+    if (!material) {
+      material = new THREE.MeshBasicMaterial({ color })
+      materials.set(key, material)
+    }
+    if (!animatedLenses.has(key)) {
+      animatedLenses.add(key)
+      const lens = material
+      const groupPhase = flickerGroupPhase(group)
+      animators.push((t) => lens.color.setHex(color).multiplyScalar(flickerLevel(t, groupPhase)))
+    }
+    return material
+  }
   const glowing = (color: number): THREE_NS.Material => {
     const key = `b|${color}`
     let material = materials.get(key)
@@ -132,9 +152,13 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     const bulb = new THREE.Object3D()
     bulb.position.set(part.x, part.y, part.z)
     if (part.kind === 'point') {
-      const source = sourceOf(part, bulb, {})
+      const intensity = physicalIntensityOf(part)
+      const source = sourceOf(part, bulb, { intensity })
       lights.push({ bulb, part, source } satisfies BudgetedLamp)
-      if (part.flicker) animators.push((t) => source.update({ intensity: part.intensity * (Math.sin(t * 23 + part.x) > 0.3 || Math.sin(t * 3.1) > 0.85 ? 0.15 : 1) }))
+      if (part.flicker) {
+        const phase = part.flickerPhase === undefined ? undefined : flickerGroupPhase(flickerGroupOf(part.flickerPhase))
+        animators.push((t) => source.update({ intensity: intensity * (phase === undefined ? (Math.sin(t * 23 + part.x) > 0.3 || Math.sin(t * 3.1) > 0.85 ? 0.15 : 1) : flickerLevel(t, phase)) }))
+      }
       return [bulb]
     }
     aimAt(bulb, part, part.target)
@@ -154,7 +178,8 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
         return [group]
       }
       case 'box': {
-        const mesh = new THREE.Mesh(roundedBox(part.width, part.height, part.depth, part.radius), part.emissive ? glowing(part.color) : standard(part.color, part.style))
+        const lens = part.emissive && part.flickerPhase !== undefined ? flickeringLens(part.color, part.flickerPhase, animators) : undefined
+        const mesh = new THREE.Mesh(roundedBox(part.width, part.height, part.depth, part.radius), lens ?? (part.emissive ? glowing(part.color) : standard(part.color, part.style)))
         mesh.position.set(part.x, part.y, part.z)
         if (part.ry) mesh.rotation.y = part.ry
         if (part.rz) mesh.rotation.z = part.rz
@@ -265,8 +290,9 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
           light.position.set(part.x, part.y, part.z)
           lights.push(light)
           if (part.flicker) {
+            const phase = part.flickerPhase === undefined ? undefined : flickerGroupPhase(flickerGroupOf(part.flickerPhase))
             animators.push((t) => {
-              light.intensity = part.intensity * (Math.sin(t * 23 + part.x) > 0.3 || Math.sin(t * 3.1) > 0.85 ? 0.15 : 1)
+              light.intensity = part.intensity * (phase === undefined ? (Math.sin(t * 23 + part.x) > 0.3 || Math.sin(t * 3.1) > 0.85 ? 0.15 : 1) : flickerLevel(t, phase))
             })
           }
           return [light]
@@ -368,6 +394,7 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     const root = markKitOrigin(drawOptions.root ?? new THREE.Group(), { owner: 'game-urban-three', kind: 'urban' })
     const animators: ((t: number) => void)[] = []
     const lights: DrawnLight[] = []
+    animatedLenses = new Set()
     const objects: Obj[][] = []
     const layer = options.standOut === false ? () => undefined : layerPlanes(scene.parts)
     for (const part of scene.parts) {

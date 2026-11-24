@@ -98,18 +98,47 @@ async function checkFlicker(page) {
   const from = { x: target.x - 10, z: target.z > 0 ? target.z - 6 : target.z + 6 }
   await page.evaluate(({ from, target }) => window.__district?.place({ x: from.x, z: from.z, yaw: Math.atan2(-(target.x - from.x), -(target.z - from.z)), pitch: 0.2 }), { from, target })
   await page.waitForTimeout(2500)
-  /** @type {Set<string>} */
-  const taken = new Set()
-  for (let index = 0; index < 200 && taken.size < 2; index++) {
-    const now = (await page.evaluate(() => window.__district?.pointLights() ?? [])).find((light) => sameLight(light, target))
-    const state = now && now.intensity > 0.6 * target.peak ? 'on' : 'off'
-    if (!taken.has(state)) {
-      await page.screenshot({ path: join(shots, `pior-flicker-${state}.png`) })
-      taken.add(state)
-    }
-    await page.waitForTimeout(15)
+  // the head is read on the prints themselves: a blink is shorter than taking a print, so the light's state read beside it does not say what the print shows
+  const head = await page.evaluate(({ x, y, z }) => {
+    const district = window.__district?.district
+    if (!district) return null
+    const at = new district.THREE.Vector3(x, y, z).project(district.world.view.camera)
+    return { x: Math.round(((at.x + 1) / 2) * window.innerWidth), y: Math.round(((1 - at.y) / 2) * window.innerHeight) }
+  }, { x: target.x, y: target.y + 0.3, z: target.z })
+  if (!head) return
+  const reader = await page.context().newPage()
+  /** @param {Buffer} image */
+  const brightnessAt = (image) =>
+    reader.evaluate(async ({ data, x, y }) => {
+      const picture = new Image()
+      picture.src = `data:image/png;base64,${data}`
+      await picture.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = picture.width
+      canvas.height = picture.height
+      const context = canvas.getContext('2d')
+      if (!context) return 0
+      context.drawImage(picture, 0, 0)
+      const pixels = context.getImageData(Math.max(0, x - 8), Math.max(0, y - 8), 16, 16).data
+      let sum = 0
+      for (let index = 0; index < pixels.length; index += 4) sum += Math.max(pixels[index] ?? 0, pixels[index + 1] ?? 0, pixels[index + 2] ?? 0)
+      return sum / (pixels.length / 4)
+    }, { data: image.toString('base64'), x: head.x, y: head.y })
+  /** @type {{ image: Buffer, level: number } | null} */
+  let bright = null
+  /** @type {{ image: Buffer, level: number } | null} */
+  let dim = null
+  for (let index = 0; index < 30; index++) {
+    const image = await page.screenshot()
+    const level = await brightnessAt(image)
+    if (!bright || level > bright.level) bright = { image, level }
+    if (!dim || level < dim.level) dim = { image, level }
   }
-  check('pior third: prints of a failing lamp bright and dim', taken.size === 2, { lamp: [Math.round(target.x), Math.round(target.z)], taken: [...taken] })
+  await reader.close()
+  if (bright) writeFileSync(join(shots, 'pior-flicker-on.png'), bright.image)
+  if (dim) writeFileSync(join(shots, 'pior-flicker-off.png'), dim.image)
+  const taken = { head, bright: Math.round(bright?.level ?? 0), dim: Math.round(dim?.level ?? 0) }
+  check('pior third: the failing lamp\'s head prints bright and dim', taken.bright > 1.4 * taken.dim, { lamp: [Math.round(target.x), Math.round(target.z)], ...taken })
 }
 
 for (const scenario of SCENARIOS) {

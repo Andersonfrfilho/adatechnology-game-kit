@@ -1,3 +1,4 @@
+import { flickerPhaseOf } from './lamps'
 import type { UrbanBuilder } from './scene'
 import type { PartStyle } from './types'
 
@@ -63,13 +64,19 @@ export type PoleDef = {
 }
 
 const on = (o: PoleOptions): boolean => o.on ?? true
+/** The lens of a lamp: glowing when on, and a failing lamp's lens flickers on the phase of its light. */
+const lensOf = (o: PoleOptions, parent?: number): { emissive: boolean; parent?: number; flickerPhase?: number } => ({
+  emissive: on(o),
+  ...(parent === undefined ? {} : { parent }),
+  ...(on(o) && o.flicker ? { flickerPhase: flickerPhaseOf(o.x, o.z) } : {}),
+})
 
 function drawMast(b: UrbanBuilder, mast: MastSpec, x: number, z: number, parent = -1): void {
   b.cylinder(x, 0, z, mast.radiusTop, mast.radiusBottom, mast.height, mast.color, parent, mast.segments, mast.style)
 }
 
 function spendLight(b: UrbanBuilder, light: LampLightSpec, x: number, z: number, o: PoleOptions): void {
-  if (on(o) && b.lights.take()) b.light({ x: x + (light.reach ?? 0), y: light.y, z: z + (light.z ?? 0), color: light.color, intensity: light.intensity, distance: light.distance, flicker: o.flicker ?? false })
+  if (on(o) && b.lights.take()) b.light({ x: x + (light.reach ?? 0), y: light.y, z: z + (light.z ?? 0), color: light.color, intensity: light.intensity, distance: light.distance, flicker: o.flicker ?? false, ...(o.flicker ? { flickerPhase: flickerPhaseOf(o.x, o.z) } : {}) })
 }
 
 const doubleArm: PoleShapeBuilder = (b, spec: DoubleArmSpec, o) => {
@@ -77,7 +84,7 @@ const doubleArm: PoleShapeBuilder = (b, spec: DoubleArmSpec, o) => {
   drawMast(b, spec.mast, 0, 0, group)
   for (const side of [-1, 1]) {
     b.box(side * spec.arm.reach, spec.arm.y, 0, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color, { parent: group })
-    b.box(side * spec.lamp.reach, spec.lamp.y, 0, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { parent: group, emissive: on(o) })
+    b.box(side * spec.lamp.reach, spec.lamp.y, 0, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o, group))
   }
   spendLight(b, spec.light, o.x, o.z, o)
 }
@@ -86,14 +93,14 @@ const singleArm: PoleShapeBuilder = (b, spec: SingleArmSpec, o) => {
   const dir = o.dir ?? 1
   drawMast(b, spec.mast, o.x, o.z)
   b.box(o.x + dir * spec.arm.reach, spec.arm.y, o.z, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color)
-  b.box(o.x + dir * spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { emissive: on(o) })
+  b.box(o.x + dir * spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
   if (o.transformer) b.cylinder(o.x - dir * spec.transformer.offset, spec.transformer.y, o.z, spec.transformer.radius, spec.transformer.radius, spec.transformer.height, spec.transformer.color, -1, spec.transformer.segments)
   spendLight(b, { ...spec.light, reach: dir * (spec.light.reach ?? spec.lamp.reach) }, o.x, o.z, o)
 }
 
 const lantern: PoleShapeBuilder = (b, spec: LanternSpec, o) => {
   drawMast(b, spec.mast, o.x, o.z)
-  b.box(o.x + spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { emissive: on(o) })
+  b.box(o.x + spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
   b.cone(o.x, spec.cap.y, o.z, spec.cap.radius, spec.cap.height, spec.cap.color, -1, spec.cap.segments)
   spendLight(b, spec.light, o.x, o.z, o)
 }
@@ -101,7 +108,7 @@ const lantern: PoleShapeBuilder = (b, spec: LanternSpec, o) => {
 const crossarm: PoleShapeBuilder = (b, spec: CrossarmSpec, o) => {
   drawMast(b, spec.mast, o.x, o.z)
   b.box(o.x + spec.arm.reach, spec.arm.y, o.z, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color)
-  b.box(o.x + spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { emissive: on(o) })
+  b.box(o.x + spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
   spendLight(b, { ...spec.light, reach: spec.light.reach ?? spec.lamp.reach }, o.x, o.z, o)
 }
 
@@ -109,7 +116,7 @@ const floodTower: PoleShapeBuilder = (b, spec: FloodTowerSpec, o) => {
   for (const a of [-1, 1]) for (const c of [-1, 1]) b.box(o.x + a * spec.legs.offset, 0, o.z + c * spec.legs.offset, spec.legs.size, spec.legs.height, spec.legs.size, spec.legs.color)
   b.box(o.x + spec.deck.reach, spec.deck.y, o.z, spec.deck.width, spec.deck.height, spec.deck.depth, spec.deck.color)
   for (let index = 0; index < spec.heads.count; index++) {
-    b.box(o.x + spec.heads.start + index * spec.heads.spacing, spec.heads.y, o.z + spec.heads.z, spec.heads.width, spec.heads.height, spec.heads.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { emissive: on(o) })
+    b.box(o.x + spec.heads.start + index * spec.heads.spacing, spec.heads.y, o.z + spec.heads.z, spec.heads.width, spec.heads.height, spec.heads.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
   }
   spendLight(b, spec.light, o.x, o.z, o)
 }

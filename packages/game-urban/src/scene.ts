@@ -11,7 +11,7 @@ const DEFAULT_FENCE_WIRE = 0x8a8c8e
 const DEFAULT_FENCE_POST = 0x6a6c6e
 const DEFAULT_LABEL_FONT = '700 56px "Arial Narrow", Arial, sans-serif'
 
-type BoxOptions = { parent?: number; ry?: number; rz?: number; emissive?: boolean; style?: PartStyle }
+type BoxOptions = { parent?: number; ry?: number; rz?: number; emissive?: boolean; style?: PartStyle; flickerPhase?: number }
 
 export type UrbanBuilderOptions = {
   /** Lights the scene may spend; omitted means no limit. */
@@ -34,6 +34,7 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
   const box = (x: number, y: number, z: number, width: number, height: number, depth: number, color: number, o: BoxOptions = {}): void => {
     const part: UrbanPart = { shape: 'box', parent: o.parent ?? ROOT, x, y: y + height / 2, z, width, height, depth, color, emissive: o.emissive ?? false, ry: o.ry ?? 0, rz: o.rz ?? 0, radius: boxRadius(width, height, depth) }
     if (o.style) part.style = o.style
+    if (o.flickerPhase !== undefined) part.flickerPhase = o.flickerPhase
     parts.push(part)
   }
   const cylinder = (x: number, y: number, z: number, radiusTop: number, radiusBottom: number, height: number, color: number, parent = ROOT, segments = DEFAULT_CYLINDER_SEGMENTS, style?: PartStyle): void => {
