@@ -31,8 +31,8 @@
       "import": "./dist/index.js"
     },
     "./world": {
-      "types": "./dist/world/index.d.ts",
-      "import": "./dist/world/index.js"
+      "types": "./dist/world.d.ts",
+      "import": "./dist/world.js"
     },
     "./kit-worker": "./dist/kit-worker.js",
     "./kit-worker.global": "./dist/kit-worker.global.js"
