@@ -650,7 +650,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     out.push(ev({ type: 'explode', part: d.id, point: toWorld(d.box.center), energy: spec.energy, radius: spec.radius, ...('effect' in spec && spec.effect !== undefined ? { effect: spec.effect } : {}) }))
     tank.liters = 0
     leaks.delete(d.id)
-    if (vis) kit.explode(c, { delay: 0.6 })
+    if (vis) kit.explode(c, { delay: 0.6, skipBlastEffect: true })
     else c.blast = c.blast ?? { phase: 'fire', t: 0, T: 0.6 }
     lose(tank, 'broken', out)
     burningBlast(centreOf(d), spec.radius, spec.energy, source, out)

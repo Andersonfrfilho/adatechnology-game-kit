@@ -439,6 +439,8 @@ export interface ExplodeOptions {
   now?: boolean
   /** Seconds of fire before the blast (default 3..8 at random). */
   delay?: number
+  /** Skip playing the 3D blast effect in `detonate` (used when the destructible layer already emitted `explode` to the host). */
+  skipBlastEffect?: boolean
 }
 
 export interface OverallHealth {
