@@ -1,10 +1,31 @@
 /** Cabin interior: seats, steering wheel, dashboard and bus rows. */
 import type { ColorRepresentation, Material, MeshStandardMaterial, Object3D } from './three-types'
 
+import type { SeatRole } from '@adatechnology/game-contracts'
+
 import type { BuildContext, Kit } from './types'
 
 /** A seat (`kit.seat`): width, seat height, length, backrest, lean, places on a bench, facing (+1 forward), material, headrest, sideways face and the parent it hangs from. */
-export type SeatOptions = { w?: number; h?: number; len?: number; back?: number; lean?: number; n?: number; dir?: number; mat?: Material; headrest?: boolean; face?: string; parent?: Object3D | null }
+export type SeatOptions = {
+  w?: number
+  h?: number
+  len?: number
+  back?: number
+  lean?: number
+  n?: number
+  dir?: number
+  mat?: Material
+  headrest?: boolean
+  face?: string
+  parent?: Object3D | null
+  id?: string
+  role?: SeatRole
+  open?: boolean
+  doorId?: string
+  headroomMetres?: number
+  legroomMetres?: number
+  widthMetres?: number
+}
 /** A dashboard (`kit.dashboard`): front edge x, top y, width, depth, height, driver z, material, top material and the screen. */
 export type DashboardOptions = { x: number; y: number; w: number; d?: number; h?: number; drv?: number | null; mat?: Material; top?: Material; screen?: boolean }
 /** A car cabin (`kit.interior`), see the comment above it. */
@@ -52,7 +73,8 @@ export function installInterior(kit: Kit) {
       gp.userData.rigid = true
       c.vehicle.add(gp)
       const n0 = c.seatTops.length
-      kit.seat(c, 0, fl, 0, Object.assign({}, o, { face: null, parent: gp, dir: 1 }))
+      const raw0 = c._rawSeats.length
+      kit.seat(c, 0, fl, 0, Object.assign({}, o, { face: undefined, parent: gp, dir: 1 }))
       const st = c.seatTops[n0]
       if (st) {
         st.x = x
@@ -60,6 +82,16 @@ export function installInterior(kit: Kit) {
         const t = st.w
         st.w = st.l
         st.l = t
+      }
+      const faceSign = o.face === '+z' ? 1 : -1
+      for (let idx = raw0; idx < c._rawSeats.length; idx++) {
+        const entry = c._rawSeats[idx]!
+        const localZ = entry.hipPoint[2]
+        c._rawSeats[idx] = {
+          ...entry,
+          hipPoint: [x - faceSign * localZ, entry.hipPoint[1], z],
+          facing: [0, 0, faceSign],
+        }
       }
       return gp
     }
@@ -100,7 +132,27 @@ export function installInterior(kit: Kit) {
         })
       }
     }
-    c.seatTops.push({ x: x, y: fl + h + 0.01, z: z, w: w, l: cl })
+    const hipY = fl + h + 0.01
+    c.seatTops.push({ x: x, y: hipY, z: z, w: w, l: cl })
+    for (let j = 0; j < n; j++) {
+      const zz = z + (j - (n - 1) / 2) * pw
+      c._rawSeats.push({
+        id: o.id ? (n > 1 ? `${o.id}_${j}` : o.id) : undefined,
+        role: o.role,
+        hipPoint: [x, hipY, zz],
+        seatWidth: pw,
+        seatLen: cl,
+        facing: [dir >= 0 ? 1 : -1, 0, 0],
+        isBench: n > 1,
+        benchIndex: j,
+        benchCount: n,
+        open: o.open,
+        doorId: o.doorId,
+        headroomMetres: o.headroomMetres,
+        legroomMetres: o.legroomMetres,
+        widthMetres: o.widthMetres,
+      })
+    }
   }
   /* 3-spoke steering wheel with column. o: { r, tilt (rad), col (column length), mat } */
   kit.steeringWheel = function (c: BuildContext, x: number, y: number, z: number, o?: { r?: number; tilt?: number; col?: number; mat?: Material } | null) {
@@ -225,15 +277,24 @@ export function installInterior(kit: Kit) {
       if (r === 0) {
         if (o.front === 'bench') {
           const wb = zi * 2 - 0.62
-          kit.seat(c, x, fl, drv * zs, { w: 0.5, mat: fab, back: back, lean: lean, h: seatH })
-          kit.seat(c, x, fl, -drv * (zi - wb / 2 - 0.03), { w: wb, n: 2, mat: fab, back: back, lean: lean, h: seatH })
+          kit.seat(c, x, fl, drv * zs, { w: 0.5, mat: fab, back: back, lean: lean, h: seatH, id: 'driver', role: 'driver' })
+          kit.seat(c, x, fl, -drv * (zi - wb / 2 - 0.03), { w: wb, n: 2, mat: fab, back: back, lean: lean, h: seatH, role: 'front_passenger' })
         } else {
           ;[-1, 1].forEach(function (s) {
-            kit.seat(c, x, fl, s * zs, { w: Math.min(0.52, zi - zs + 0.22), mat: fab, back: back, lean: lean, h: seatH })
+            const isDriver = s === drv
+            kit.seat(c, x, fl, s * zs, {
+              w: Math.min(0.52, zi - zs + 0.22),
+              mat: fab,
+              back: back,
+              lean: lean,
+              h: seatH,
+              id: isDriver ? 'driver' : undefined,
+              role: isDriver ? 'driver' : 'front_passenger',
+            })
           })
           if (!o.noConsole) consoleBox(c, x + 0.16, fl, Math.min(0.26, seatH), trim)
         }
-      } else kit.seat(c, x, fl, 0, { w: zi * 2 - 0.1, n: r === 2 ? 2 : 3, mat: fab, back: back, lean: lean, h: seatH * 0.95 })
+      } else kit.seat(c, x, fl, 0, { w: zi * 2 - 0.1, n: r === 2 ? 2 : 3, mat: fab, back: back, lean: lean, h: seatH * 0.95, role: 'rear' })
       ;[-1, 1].forEach(function (s) {
         c.roundBox(0.8, belt - fl - 0.08, 0.035, 0.015, trim, x + 0.12, (belt + fl) / 2 + 0.02, s * (zi + 0.02))
         c.roundBox(0.3, 0.05, 0.07, 0.02, fab, x + 0.16, fl + seatH + 0.16, s * (zi - 0.015))

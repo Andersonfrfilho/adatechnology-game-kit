@@ -15,6 +15,7 @@ import { installBody } from './body'
 import { installGlass } from './glass'
 import { installLights } from './lights'
 import { installInterior } from './interior'
+import { installCabinSpace } from './cabin-space'
 import { installHood } from './hood'
 import { installCar } from './car'
 import { installTrucks } from './trucks'
@@ -118,6 +119,7 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   installGlass(kit)
   installLights(kit)
   installInterior(kit)
+  installCabinSpace(kit)
   installHood(kit)
   installCar(kit)
   installTrucks(kit)

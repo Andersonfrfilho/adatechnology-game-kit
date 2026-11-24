@@ -1,6 +1,9 @@
 import type { BufferGeometry, ColorRepresentation, Group, Material, Mesh, MeshStandardMaterial, Object3D, Vector3 } from './three-types'
 
 import { markKitOrigin } from '@adatechnology/game-contracts'
+import type { DoorOpening, SeatSpace } from '@adatechnology/game-contracts'
+
+import type { RawSeatEntry } from './cabin-space'
 
 import type { MaterialOptions, TextTextureOptions } from './materials'
 import type { GlassQuad } from './glass'
@@ -56,6 +59,11 @@ export function installContext(kit: Kit) {
     declare log: unknown[]
     declare paints: Set<Material>
     declare seatTops: { x: number; y: number; z: number; w: number; l: number }[]
+    declare _seatsCache: SeatSpace[] | null
+    declare _doorsCache: DoorOpening[] | null
+    declare _rawSeats: RawSeatEntry[]
+    declare _explicitSeats: SeatSpace[]
+    declare _explicitDoors: DoorOpening[]
     declare flipped: boolean
     declare rollState: RollState | null
     declare quads: GlassQuad[]
@@ -89,6 +97,11 @@ export function installContext(kit: Kit) {
       this.particles = []
       this.emitters = []
       this.seatTops = []
+      this._seatsCache = null
+      this._doorsCache = null
+      this._rawSeats = []
+      this._explicitSeats = []
+      this._explicitDoors = []
       this.hood = null
       this.rollState = null
       this.flipped = false
@@ -295,6 +308,32 @@ export function installContext(kit: Kit) {
     }
 
 
+    /** Measured seat spaces in vehicle local coordinates (computed lazily on first read). */
+    get seats(): SeatSpace[] {
+      if (this._seatsCache === null) kit.finalizeCabinSpaces(this)
+      return this._seatsCache!
+    }
+    set seats(value: SeatSpace[]) {
+      this._seatsCache = value
+    }
+    /** Measured door and hatch openings in vehicle local coordinates (computed lazily on first read). */
+    get doors(): DoorOpening[] {
+      if (this._doorsCache === null) kit.finalizeCabinSpaces(this)
+      return this._doorsCache!
+    }
+    set doors(value: DoorOpening[]) {
+      this._doorsCache = value
+    }
+    /** Declares an explicit seat space (e.g. open motorcycle/quad saddle) preserved verbatim by cabin space finalisation. */
+    addSeat(seat: SeatSpace): SeatSpace {
+      this._explicitSeats.push(seat)
+      return seat
+    }
+    /** Declares an explicit door or hatch opening preserved verbatim by cabin space finalisation. */
+    addDoor(door: DoorOpening): DoorOpening {
+      this._explicitDoors.push(door)
+      return door
+    }
     /** Declares or refines a damage zone: `c.zone(id, label, box, parts, options)`. Pass `label === false` to remove an auto-derived zone. */
     zone(id: string, label: string | false | null | undefined, box?: ZoneBoxInput | null, parts?: Object3D | VehicleLamp | readonly (Object3D | VehicleLamp)[] | null, o?: Record<string, unknown>) {
       const d = Object.assign({ id: id }, o || {}) as ZoneDef

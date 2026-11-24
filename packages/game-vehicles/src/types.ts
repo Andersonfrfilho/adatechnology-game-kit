@@ -15,6 +15,7 @@ import type { installGlass } from './glass'
 import type { installHood } from './hood'
 import type { installImpact } from './impact'
 import type { installInterior } from './interior'
+import type { installCabinSpace } from './cabin-space'
 import type { installLights } from './lights'
 import type { installMaterials } from './materials'
 import type { installParticles } from './particles'
@@ -51,6 +52,7 @@ export type KitShared = ReturnType<typeof installContext> &
   ReturnType<typeof installHood> &
   ReturnType<typeof installImpact> &
   ReturnType<typeof installInterior> &
+  ReturnType<typeof installCabinSpace> &
   ReturnType<typeof installLights> &
   ReturnType<typeof installMaterials> &
   ReturnType<typeof installParticles> &
