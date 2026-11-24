@@ -37,8 +37,8 @@ a T3.1 e a T3.2 ficarem prontas: o clima do `caos` só aparece de verdade depois
 ## 3. O que a cena contém só com o que o SDK já tem
 
 Dono de cada peça pelo `kit_owner` (MCP `game-kit`, `tools/kit-audit/rules.json`), conferido em 2026-11-24. O `rules.json` hoje conhece
-`vehicles`, `structure`, `furniture`, `people` (zumbi incluído), `plants`, `items`, `weapons` e `physics`; para poste e rua (`game-urban`) o dono
-abaixo vem do mapa do SDK no `CLAUDE.md`, e completar o `rules.json` é a T0.3.
+`vehicles`, `structure` (com `game-urban` e `game-urban-three` entre os donos: rua, calçada), `furniture`, `people` (zumbi incluído), `plants`,
+`items`, `weapons` e `physics`; poste, semáforo e fiação ainda não são palavras de nenhum domínio, e acrescentá-las é a T0.3.
 
 | Peça | Pacote dono | Como se constrói hoje | Estado |
 |---|---|---|---|
@@ -168,7 +168,7 @@ pre-push, com `flock ~/.cache/adatechnology-game-kit/perf-measure.lock`, carga a
 | `walk` | p99 ≤ 16,7 ms, 0 quadros > 33,4 | sala parada: p99 17,6–17,8, pior 17,7–18,1, 127–143 desenhos. A cena tem dez casas, não uma |
 | `enter` | p99 ≤ 16,7 ms, 0 quadros > 33,4 | nunca medido |
 | `shoot` | p99 ≤ 20 ms, 0 quadros > 33,4 | nunca medido isolado |
-| `grenade` | 0 quadros > 33,4 | **alcançável desde a spec 018** (PRs #443 a #448): com a explosão espalhada em quadros (marca-passo), o quadro da M67 caiu de ~101–120 ms para **~20 ms** (f0, mediana 21,1) e o quadro da volta do mundo para **~18 ms** (mediana 18,1, máx. 28,9). Vale só com `blastPacing`, Jolt e chão no worker ligados (L18) |
+| `grenade` | 0 quadros > 33,4 | **alcançável desde a spec 018** (PRs #443 a #448): com a explosão espalhada em quadros (marca-passo), o quadro da M67 caiu de ~101–120 ms para **~20 ms** (f0, mediana 21,1) e o quadro da volta do mundo para **~18 ms** (mediana 18,1, máx. 28,9). Vale só com marca-passo, Jolt, D4 e chão no worker ligados (L18) |
 | `horde` | p99 ≤ 20 ms, 0 quadros > 33,4 | `dense_horde`, 2.000 pedidos: p99 17,7, pior 34,1; com explosões (`chain_horde`): p99 28,0, pior 119 (medido antes da 018) |
 | `drive` | p99 ≤ 16,7 ms, 0 quadros > 33,4 | nunca medido; não há número de quadro com frota |
 | `caos_*` | p99 ≤ 20 ms, 0 quadros > 33,4 | nunca medido; o mais perto é o `chain_horde` acima |
@@ -218,12 +218,12 @@ Levantado por leitura da `origin/main` em 2026-11-21 e conferido em 2026-11-24. 
 | L10 | Rua, poste e prédio do `game-urban` não têm colisão nem destruição | `game-urban-three` | `drive`, `grenade` |
 | L11 | A régua não mede outra página; memória absoluta e tempo de carga não são medidos por nada (§6); a M67 não tem portão | `tools/gpu/`, `examples/test-room/` | medição |
 | L12 | Item solto no chão ou gerado por cômodo não existe; só achado dentro de recipiente | `game-items/src/finds/` | — (o roteiro usa o armário) |
-| L13 | `kit_owner` não conhece poste nem rua (`game-urban`); zumbi e item já entram (`people`, `items`) | `tools/kit-audit/rules.json` | — |
+| L13 | `kit_owner` não conhece poste, semáforo nem fiação (o `game-urban` já é dono no domínio `structure`, pela rua e calçada); zumbi e item já entram (`people`, `items`) | `tools/kit-audit/rules.json` | — |
 | L14 | As 14 peças do recorte inteiro (ponte, rio, prédio de 4 a 8 andares, sobrado misto, viela, bar, semáforo e outras) | `plan.md`, "Falta" | nenhuma: caixa de aviso até a Fase 3 |
 | L15 | Fogo que fere a horda: o fogo do `game-vfx` e o do chão (`game-terrain`) não chegam ao `crowd.damage` | `game-crowd`, `game-vfx`, `game-terrain` | `caos_fire` |
 | L16 | NPC que mira e atira (policial, sobrevivente) não existe; o fardado só tem corpo | `game-characters`, `game-weapons` | `caos_fire` |
 | L17 | A horda contra a barricada: a barricada do `game-props3d` não é obstáculo na grade da horda nem alvo que a horda derruba | `game-crowd`, `game-props3d` | `caos_breach` |
-| L18 | O ganho da spec 018 foi medido na variante `jolt-d4-worker` da sala: marca-passo (`blastPacing`), Jolt (`?solver=jolt`, que a página monta em `examples/test-room/build.mjs`), política D4 dos destroços (`blastDebris`) e chão no worker (`groundWorker`, `src/main.js`). Só a página da sala liga isso, e por parâmetro; o `SDK` não tem padrão. O `createKitWorld` precisa ligar os quatro por padrão | `examples/test-room/`, `game-test-room/src/blast-pacing.ts` | `grenade`, `caos_blast` |
+| L18 | O ganho da spec 018 foi medido na variante `jolt-d4-worker` da sala: marca-passo (`blastPacing`) e chão no worker (`groundWorker`) ligados por padrão na página (`examples/test-room/src/main.js`, desligam com `=0`), Jolt (`?solver=jolt`, montado em `build.mjs`) e política D4 dos destroços (`?blastDebris=1`) só por parâmetro. Tudo isso é a página da sala, não o SDK, que não tem padrão. O `createKitWorld` precisa ligar os quatro por padrão | `examples/test-room/`, `game-test-room/src/blast-pacing.ts` | `grenade`, `caos_blast` |
 
 A L1 é a maior e já tem desenho aprovado (`design-host.md`, `createKitWorld`, Fases 1 e 1b). L15 a L17 vêm do `caos` e são ligações entre
 pacotes que já existem, não peças novas: cada uma ganha task na Fase 2 quando o `caos` for roteirizado (T2.4).

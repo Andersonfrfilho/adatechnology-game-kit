@@ -26,19 +26,20 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
   de documentação.
 - **T0.2** N8: rebasear os três commits de 2026-11-18 e abrir um PR por commit, nesta ordem: `check:layers` (subpastas de `exports`),
   oclusão (T1.2), registro de objetos (T1.6a).
-- **T0.3** `tools/kit-audit/rules.json` ganha o domínio da cidade (`game-urban`, `game-urban-three`: poste, rua, calçada, fiação) (L13).
+- **T0.3** `tools/kit-audit/rules.json`: poste, semáforo e fiação entram como palavras do `game-urban` (hoje dono no domínio `structure` só por
+  rua e calçada), ou num domínio `urban` próprio (L13).
 
 ## Fase 1 — Host do mundo no SDK
 > 🤖 Modelo: `sonnet` (T1.1 é 🧠 — `opus`, validar com `architect`)
 
 - **T1.1 🧠** Desenho do `createKitWorld` em `design-host.md`: a lista das ligações que a sala faz à mão (`room.ts` de 2026-11-24, 5.615 linhas: 323,
-  374–377, 386, 431, 466–469, 494–518, 616, 635–643, 929, 4068–4072, 4507, 4784–4823, 5555–5577), o que vira opção, o que o jogo pluga, um arquivo por ligação,
+  374–377, 386, 431, 466–469, 494–518, 616, 635–643, 929, 4079–4081, 4784–4823, 5555–5577), o que vira opção, o que o jogo pluga, um arquivo por ligação,
   e onde mora a oclusão de áudio. Inclui como ele registra as filas da spec 010.
 - **T1.2** Oclusão de áudio do mundo (`game-test-room/src/world-occlusion.ts`) vai para o `game-audio` (`createRaycastOcclusion`); a sala
   importa de lá. Feita em 2026-11-18 numa branch que não chegou à `main` (N8): rebasear sobre os testes que o PR #414 deu ao arquivo.
 - **T1.3** `createKitWorld` no `game-kit-defaults` (entrada `./world`), conforme o `design-host.md`. Pré-requisitos da spec 010 (T1.1 e T2.1)
   **feitos** (`1cb39c001`, `0ab57d2c9`…): o desenho da ordem do passo segue o `design-prazo.md` da 010. **Liga por padrão** o marca-passo da
-  explosão (`blastPacing`), o Jolt e o chão no worker, que hoje só a página da sala liga (L18), para a cena nascer com o ganho da spec 018. Inclui: mapear `/world` no tsconfig do dependency-cruiser e no `dts` do tsup;
+  explosão (`blastPacing`), o Jolt, a política D4 dos destroços e o chão no worker, que hoje só a página da sala liga (L18), para a cena nascer com o ganho da spec 018. Inclui: mapear `/world` no tsconfig do dependency-cruiser e no `dts` do tsup;
   teste de ordem dos pontos de registro; teste sem GPU (mundo montado com THREE de teste, um passo, `reset`, `dispose` sem sobra pelo
   `leak.mjs`).
 - **T1.4** Regra de camada `scene-not-testing` no `.dependency-cruiser.cjs`: `examples/reference-district` não importa `game-test-room`,
@@ -59,7 +60,7 @@ passar de 2 semanas, a Fase 2 começa com explosivos roteirizados pelo cenário 
   extração para não quebrar a sala.
 - **T1.7** Extrair explosivos, o marca-passo (`blast-pacing.ts`) e o tiro (`createExplosives` 2933, `fireShots` 2532) para o pacote dono; a sala passa a usar. Goldens e hash iguais.
 - **T1.8** Extrair golpe, item na mão e uso de item (`stepStrikes` 2796, `followHeld` 3417, `updateItemUse` 3585).
-- **T1.9** Extrair andar, empurrar e recipientes (`stepWalk` 4152, `footing` 862, `syncContainers` 4106). A sala só tira linhas (§15).
+- **T1.9** Extrair andar, empurrar e recipientes (`stepWalkPlan` 4155, de `walk-plan.ts`, chamado no `simulateFixed` 4153; `footing` 862; `syncContainers` 4106). A sala só tira linhas (§15).
 
 ## Fase 2 — Esqueleto da cena só com o que já existe
 > 🤖 Modelo: `sonnet` (T2.1 é 🧠 — `opus`)

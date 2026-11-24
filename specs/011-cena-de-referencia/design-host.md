@@ -42,7 +42,7 @@ Cada arquivo em `packages/game-kit-defaults/src/world/` com até 200 linhas:
 | `render-budget.ts` | `LightBudget`, `ProgramWarmup`, pools, sondas de aquecimento, efeitos aquecidos | 465–469, 4776–4820 |
 | `physics.ts` | motor Jolt (build, threads, recuo para single), `KIT_WORLD`, `createPhysicsLoop`; ou `'own'` | `build.mjs` 89–122 |
 | `workers.ts` | `createKitWorkers` e porta do chão | `main.js` 32–55, 117–126 |
-| `frame.ts` | agendador, pontos de registro ordenados, filas, compassador, laço, desenho | 4068–4079, 4149–4209, 5539–5595 |
+| `frame.ts` | agendador, pontos de registro ordenados, filas, compassador, laço, desenho | 4078–4081, 4149–4209, 5539–5595 |
 | `blast-pacing.ts` | o marca-passo da explosão (spec 018 D2) e o `holdFixed` do agendador, ligado por padrão | `game-test-room/src/blast-pacing.ts`; `room.ts` 4079 |
 | `reset.ts` **[A6]** | volta ao mundo e aos fluidos pristinos, registra o chão de novo, volta a semente do filme | 1739–1752 |
 | `create-kit-world.ts` | junta tudo e devolve o `KitWorld` | — |
@@ -83,8 +83,8 @@ world.dispose()
 ```
 
 - **Assíncrono** por causa do wasm do Jolt; com `physics: 'own'` resolve na hora.
-- **Padrão com o ganho da spec 018 (2026-11-24, L18):** o host liga por padrão o que a sala só liga por parâmetro na variante medida
-  (`jolt-d4-worker`): Jolt (`physics: 'jolt'`), marca-passo da explosão (`blastPacing: {}`, hoje `game-test-room/src/blast-pacing.ts` e o
+- **Padrão com o ganho da spec 018 (2026-11-24, L18):** o host liga por padrão o que a página da sala liga na variante medida
+  (`jolt-d4-worker`; a página liga marca-passo e chão no worker por padrão, Jolt e D4 só por parâmetro), e que o SDK não liga sozinho: Jolt (`physics: 'jolt'`), marca-passo da explosão (`blastPacing: {}`, hoje `game-test-room/src/blast-pacing.ts` e o
   `holdFixed` do agendador, `room.ts` 4079), política D4 dos destroços (`debris.blast`) e chão no worker (`debris.groundWorker` pela porta do
   coordenador, `createCoordinatorGroundPort`). Cada um desliga por opção (`blastPacing: false`...), para a sala manter os parâmetros de hoje.
 - **Nenhuma opção inventada:** cada campo existe hoje em `TestRoomOptions`, na página ou numa chamada interna da sala.
