@@ -2786,6 +2786,26 @@
       "triangles": 9350,
       "materials": 11
     },
+    "characters/bake:Lento": {
+      "draws": 1,
+      "triangles": 9018,
+      "materials": 0
+    },
+    "characters/bake:Corredor": {
+      "draws": 1,
+      "triangles": 9018,
+      "materials": 0
+    },
+    "characters/bake:Rastejante": {
+      "draws": 1,
+      "triangles": 8970,
+      "materials": 0
+    },
+    "characters/instanced:8": {
+      "draws": 1,
+      "triangles": 648,
+      "materials": 0
+    },
     "vegetation/mango_tree": {
       "draws": 92,
       "triangles": 3826,
@@ -2945,6 +2965,11 @@
       "draws": 168,
       "triangles": 34942,
       "materials": 13
+    },
+    "shapes/three:cylinder-cached": {
+      "draws": 1,
+      "triangles": 144,
+      "materials": 0
     },
     "vehicles/bicycle:lite": {
       "draws": 5,

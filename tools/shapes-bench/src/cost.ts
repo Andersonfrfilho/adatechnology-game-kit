@@ -72,10 +72,9 @@ const isDrawable = (node: SceneNode): boolean => node.isMesh === true || node.is
 function tallyDrawable(node: SceneNode, tally: Tally): void {
   // a mesh drawn inside a batch is off the camera layer: the batch is what costs
   if (node.layers && (node.layers.mask & 1) === 0) return
-  const materials = Array.isArray(node.material) ? (node.material as unknown[]) : [node.material]
-  const vertices = node.geometry?.index ? node.geometry.index.count : (node.geometry?.attributes?.position?.count ?? 0)
+  const materials: readonly unknown[] = Array.isArray(node.material) ? node.material : [node.material]
   tally.draws += materials.length + (node.castShadow ? 1 : 0)
-  tally.triangles += Math.floor(vertices / 3) * (node.count ?? 1)
+  tally.triangles += trianglesOf(node.geometry) * (node.count ?? 1)
   for (const material of materials) tally.materials.add(material)
 }
 
@@ -84,21 +83,41 @@ function tallyNode(node: SceneNode, tally: Tally): void {
   tally.visited.add(node)
   if (isDrawable(node)) tallyDrawable(node, tally)
   // of a LOD only the nearest level is drawn at once: the most expensive one
-  const nearest = node.isLOD ? node.levels?.[0]?.object : undefined
-  const children = nearest ? [nearest] : (node.children ?? [])
-  for (const child of children) tallyNode(child, tally)
+  const lowerLevels = new Set(node.isLOD ? (node.levels ?? []).slice(1).map((level) => level.object) : [])
+  for (const child of node.children ?? []) if (!lowerLevels.has(child)) tallyNode(child, tally)
 }
 
-/** The cost of what a builder returned, or null when it returned nothing drawn (a geometry alone, plain data). */
+type BareGeometry = NonNullable<SceneNode['geometry']> & { readonly isBufferGeometry: true }
+
+const isBareGeometry = (value: unknown): value is BareGeometry => isRecord(value) && value.isBufferGeometry === true
+
+/** The geometries a builder's result holds when it holds no object: a baked body, drawn by whoever instances it. */
+function geometriesIn(value: unknown, depth = 0, seen = new Set<unknown>()): BareGeometry[] {
+  if (!isRecord(value) || seen.has(value)) return []
+  seen.add(value)
+  if (isBareGeometry(value)) return [value]
+  if (depth >= SEARCH_DEPTH || ArrayBuffer.isView(value)) return []
+  return Object.values(value).flatMap((field) => geometriesIn(field, depth + 1, seen))
+}
+
+const trianglesOf = (geometry: SceneNode['geometry']): number => Math.floor((geometry?.index ? geometry.index.count : (geometry?.attributes?.position?.count ?? 0)) / 3)
+
+/** The cost of geometries alone: one draw each, no material of their own. */
+function geometryCost(id: string, geometries: readonly BareGeometry[]): Cost | null {
+  if (geometries.length === 0) return null
+  return { id, draws: geometries.length, triangles: geometries.reduce((sum, geometry) => sum + trianglesOf(geometry), 0), materials: 0 }
+}
+
+/** The cost of what a builder returned, or null when it returned nothing drawn (plain data). A result with geometries and no object counts one draw per geometry. */
 export function costOf(id: string, result: unknown): Cost | null {
   const nodes = sceneNodesIn(result)
-  if (nodes.length === 0) return null
+  if (nodes.length === 0) return geometryCost(id, geometriesIn(result))
   const tally: Tally = { draws: 0, triangles: 0, materials: new Set(), visited: new Set() }
   for (const node of nodes) tallyNode(node, tally)
   return { id, draws: tally.draws, triangles: tally.triangles, materials: tally.materials.size }
 }
 
-const groupOf = (id: string): string => id.split('/')[0] as string
+const groupOf = (id: string): string => id.split('/')[0] ?? id
 const countCap = (base: number, slack: number): number => Math.max(base + 1, Math.floor(base * (1 + slack)))
 
 /** Why this cost is worse than its recorded one, or '' when it is within the slack. */
@@ -134,34 +153,52 @@ function compareOne(cost: Cost, baseline: CostBaseline): CostComparison {
 /** Every builder against its recorded cost, then the recorded ones that no builder made. */
 export function compareCosts(costs: readonly Cost[], baseline: CostBaseline): CostComparison[] {
   const made = new Set(costs.map((cost) => cost.id))
-  const gone = Object.keys(baseline.entries).filter((id) => !made.has(id))
-  return [...costs.map((cost) => compareOne(cost, baseline)), ...gone.map((id): CostComparison => ({ id, verdict: 'gone', base: baseline.entries[id] as CostCounts, reason: 'recorded, no builder makes it' }))]
+  const gone = Object.entries(baseline.entries).filter(([id]) => !made.has(id))
+  const goneComparisons = gone.map(([id, base]): CostComparison => ({ id, verdict: 'gone', base, reason: 'recorded, no builder makes it' }))
+  return [...costs.map((cost) => compareOne(cost, baseline)), ...goneComparisons]
 }
 
 export const FAILING_COST_VERDICTS: readonly CostVerdict[] = ['worse', 'over', 'new', 'gone']
 
 export const DEFAULT_COST_BASELINE: CostBaseline = { drawSlack: 0.1, triangleSlack: 0.15, limits: {}, over: {}, entries: {} }
 
-export type CostBaselineResult = {
-  readonly baseline: CostBaseline
-  /** The pieces newly over the limit of their group, or worse than accepted, that were not accepted by id: with any, the baseline must not be written. */
-  readonly refused: readonly string[]
+export type CostBaselineParams = {
+  readonly costs: readonly Cost[]
+  readonly previous: CostBaseline
+  /** The ids accepted worse, over the limit of their group, or gone, in this update. */
+  readonly accepted: readonly string[]
 }
 
-/** The baseline of this run: every cost recorded; a piece over the limit of its group stays accepted only at its draws or fewer, and a new one enters only by id. */
-export function toCostBaseline(costs: readonly Cost[], previous: CostBaseline, accepted: readonly string[]): CostBaselineResult {
-  const over: Record<string, number> = {}
-  const refused: string[] = []
-  for (const cost of costs) {
-    const limit = previous.limits[groupOf(cost.id)]
-    if (limit === undefined || cost.draws <= limit) continue
-    const before = previous.over[cost.id]
-    if ((before !== undefined && cost.draws <= before) || accepted.includes(cost.id)) over[cost.id] = cost.draws
-    else refused.push(cost.id)
-  }
-  const entries = Object.fromEntries(costs.map(({ id, ...counts }) => [id, counts]))
-  return { baseline: { ...previous, over, entries }, refused }
+export type CostBaselineResult = {
+  readonly baseline: CostBaseline
+  /** What got worse, went over the limit of its group or is gone, and was not accepted by id: with any, the baseline must not be written. */
+  readonly refused: readonly CostComparison[]
+  /** Every builder whose recorded cost this update changes, new ones included: what the reviewer reads. */
+  readonly changed: readonly CostComparison[]
 }
+
+const REFUSED_COST_VERDICTS: readonly CostVerdict[] = ['worse', 'over', 'gone']
+
+const isSameCost = (a: CostCounts | undefined, b: CostCounts | undefined): boolean => a?.draws === b?.draws && a?.triangles === b?.triangles && a?.materials === b?.materials
+
+/**
+ * The baseline of this run. A new builder and a cheaper one are recorded; one that got worse past the slack, went over the limit of its group, or is gone, only when
+ * accepted by id. A piece over the limit stays in `over` at its draws. With anything refused the baseline is not to be written.
+ */
+export function toCostBaseline({ costs, previous, accepted }: CostBaselineParams): CostBaselineResult {
+  const comparisons = compareCosts(costs, previous)
+  const refused = comparisons.filter((comparison) => REFUSED_COST_VERDICTS.includes(comparison.verdict) && !accepted.includes(comparison.id))
+  const kept = comparisons.flatMap(({ id, cost }): Array<[string, CostCounts]> => (cost ? [[id, cost]] : []))
+  const over = Object.fromEntries(kept.filter(([id, cost]) => cost.draws > (previous.limits[groupOf(id)] ?? Infinity)).map(([id, cost]) => [id, cost.draws]))
+  const entries = Object.fromEntries(kept)
+  const changed = comparisons.filter((comparison) => !isSameCost(comparison.cost, comparison.base))
+  return { baseline: { ...previous, over, entries }, refused, changed }
+}
+
+const countsText = (counts: CostCounts | undefined): string => (counts ? `${counts.draws} draws, ${counts.triangles} triangles, ${counts.materials} materials` : 'none')
+
+/** One line per builder: its recorded cost and the cost of this run. */
+export const costChangeLines = (comparisons: readonly CostComparison[]): string[] => comparisons.map(({ id, verdict, base, cost }) => `  ${verdict.padEnd(6)} ${id}: ${countsText(base)} -> ${countsText(cost)}`)
 
 /** The table of the failing builders and the totals per group. */
 export function costSummary(comparisons: readonly CostComparison[]): string {

@@ -64,6 +64,7 @@ function main(): void {
       update: args.includes('--cost-update'),
       accepted: (argValue(args, '--cost-accept') ?? '').split(',').filter(Boolean),
       jsonPath: argValue(args, '--json'),
+      filter,
     })
     return
   }

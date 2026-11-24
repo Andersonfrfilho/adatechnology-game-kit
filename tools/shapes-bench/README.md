@@ -78,9 +78,15 @@ node tools/shapes-bench/dist/cli.js --cost-update     # rewrites cost-baseline.j
 - is **over the draw limit of its group** (`limits`) and not accepted in `over`, or accepted and now above the draws accepted;
 - is **gone** from the builders but still recorded.
 
-A cost that is meant is recorded with `--cost-update`: the diff of `cost-baseline.json` is what the reviewer reads. `--cost-update` refuses a
-piece newly over the limit of its group; `--cost-accept <id,id>` accepts it by id, into `over`, where it may only go down. The limits are the
-90th percentile of each group on 2026-11-23, when 47 pieces were already over them; `urban` and `houses` are compositions and have none.
+`--cost-update` records the new builders and the cheaper ones, and prints every recorded cost it changes, before and after: that list goes in
+the PR. It **refuses** to write anything when a builder got worse past the slack, went over the limit of its group or is gone; each of those
+enters only by id, with `--cost-accept <id,id>`. So a cost that is meant is accepted by name, and no regression rides in with a new piece. A
+piece accepted over the limit goes into `over`, where it may only go down. The limits are the 90th percentile of each group on 2026-11-23,
+when 47 pieces were already over them; `urban` and `houses` are compositions and have no limit (their recorded cost still holds them).
 
-What it does not see: the cost of a scene put together (how many pieces, what the batcher merges), the time of a frame, memory. Those are the
+A builder that returns geometries and no object (the baked bodies of the horde) counts one draw per geometry and its triangles. A small piece
+may gain one draw without failing (1 to 2, 3 to 4): the slack never rounds to zero.
+
+What it does not see: what a piece keeps hidden and shows later (the pipes inside a wall, shown when it breaks), the lights a piece brings (a light
+that casts a shadow draws every caster again), the cost of a scene put together (how many pieces, what the batcher merges), the time of a frame, memory. Those are the
 room's rulers (`tools/kit-audit/cost.mjs`, `tools/gpu/perf-gate.mjs`, `examples/test-room/leak.mjs`), which need a browser (CLAUDE.md §9).
