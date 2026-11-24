@@ -35,7 +35,9 @@ export type KitWorldPhysicsInfo = {
   readonly fallback?: string
 }
 
-const isJoltOptions = (choice: PhysicsChoice): choice is KitWorldJoltOptions => typeof choice === 'object' && 'engine' in choice && choice.engine === 'jolt'
+// a seam keeps the world's body calls (`createBody`); a Jolt world as a seam also says `engine: 'jolt'`, so the seam is asked first
+const isSeam = (choice: PhysicsChoice): choice is SeamWorld => typeof choice === 'object' && typeof (choice as Partial<SeamWorld>).createBody === 'function'
+const isGiven = (choice: Exclude<PhysicsChoice, 'jolt' | 'own'>): choice is PhysicsLoop | SeamWorld => isSeam(choice) || ('frame' in choice && 'add' in choice)
 
 async function loadEngine(options: JoltEngineOptions): Promise<{ readonly engine: JoltEngine; readonly fallback?: string }> {
   try {
@@ -56,7 +58,8 @@ export function givenPhysics(choice: GivenPhysicsChoice): KitWorldPhysics {
 }
 
 export async function createPhysics(choice: PhysicsChoice): Promise<KitWorldPhysics> {
-  if (choice !== 'jolt' && !isJoltOptions(choice)) return givenPhysics(choice)
+  if (choice === 'own') return givenPhysics(choice)
+  if (choice !== 'jolt' && isGiven(choice)) return givenPhysics(choice)
   const asked: Partial<KitWorldJoltOptions> = choice === 'jolt' ? {} : choice
   const { engine, fallback } = await loadEngine({ ...(asked.build !== undefined ? { build: asked.build } : {}), ...(asked.workerThreads !== undefined ? { workerThreads: asked.workerThreads } : {}), ...(asked.contactCallbacks !== undefined ? { contactCallbacks: asked.contactCallbacks } : {}), ...(asked.moduleUrl !== undefined ? { moduleUrl: asked.moduleUrl } : {}) })
   const world = engine.createWorld({ ...KIT_WORLD, ...asked.world }) as JoltWorld

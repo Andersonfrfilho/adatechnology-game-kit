@@ -56,6 +56,23 @@ describe('the world made at once', () => {
   })
 })
 
+describe('a seam of the game on the world that waits', () => {
+  it('is handed to the pieces, with no second engine loaded, although a Jolt world says engine jolt', async () => {
+    const engine = await createJoltEngine()
+    const seamWorld = engine.createWorld(KIT_WORLD)
+    try {
+      const world = await makeWorld({ physics: seamWorld })
+      expect(world.info.physics.kind).toBe('seam')
+      expect(world.physics.engine).toBeNull()
+      expect(world.physics.loop).toBeNull()
+      expect(world.physics.pieces).toBe(seamWorld)
+      world.dispose()
+    } finally {
+      seamWorld.dispose()
+    }
+  })
+})
+
 describe('the sound of a world', () => {
   it('tells the game every key even when the world is silent', () => {
     const onSound = vi.fn()
@@ -106,6 +123,10 @@ describe('what a host reads back', () => {
   it('names the film stream and whether its loop runs', () => {
     const world = makeSyncWorld()
     expect(world.liquids.filmRandom.seed).toBe(1)
+    expect(world.isLooping).toBe(false)
+    const stop = world.start({ render: false })
+    expect(world.isLooping).toBe(true)
+    stop()
     expect(world.isLooping).toBe(false)
   })
 })

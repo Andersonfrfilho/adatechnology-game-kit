@@ -1,7 +1,7 @@
 import { createScheduler } from '@adatechnology/game-runtime'
 import { describe, expect, it } from 'vitest'
 
-import { registerSimulationPhases } from '../../game-kit-defaults/src/world/simulation-phases'
+import { registerSimulationPhases } from '../src/world/simulation-phases'
 
 describe('structural events apply in the tick: queued ones before the step, emitted ones at its end (spec 018 D2)', () => {
   it('a body an event creates takes part in the step of the same tick', () => {

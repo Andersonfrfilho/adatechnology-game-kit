@@ -1,7 +1,8 @@
+// @vitest-environment happy-dom
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { createKitWorldGraphics } from '../../game-kit-defaults/src/world/graphics'
+import { createKitWorldGraphics } from '../src/world/graphics'
 
 const fakeRenderer = (): { gl: THREE.WebGLRenderer; ratios: number[] } => {
   const ratios: number[] = []
