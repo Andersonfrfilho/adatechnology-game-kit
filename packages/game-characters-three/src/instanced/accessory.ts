@@ -2,6 +2,7 @@ import { createRng } from '@adatechnology/game-characters'
 
 import { EXTRAS } from '../rich/accessories/extras'
 import { HATS } from '../rich/accessories/hats'
+import { PORT_ACCESSORY_REFERENCE } from '../rich/deviations'
 import { createPersonKit } from '../rich/person-kit'
 import type { Three, THREE_NS } from '../three'
 
@@ -28,9 +29,9 @@ export const KIT_ACCESSORIES: readonly KitAccessory[] = [
   { id: 'hood', bit: ACCESSORY_BIT.EXTRA, attach: 'head', extra: 'hood', color: 0x3a3a40 },
 ]
 
-/** Where the survivor builder puts the head and the torso (its own frame): the accessory is normalised against these. */
-const HEAD_REFERENCE = { center: [0, 1.8, 0], height: 0.363, pivot: [0, 1.64, 0] } as const
-const TORSO_REFERENCE = { center: [0, 1.23, 0], height: 0.74, pivot: [0, 0.9, 0] } as const
+/** Where the survivor builder puts the head and the torso (its own port frame): sourced from `PORT_ACCESSORY_REFERENCE` (Spec 012 T2.4). */
+const HEAD_REFERENCE = PORT_ACCESSORY_REFERENCE.head
+const TORSO_REFERENCE = PORT_ACCESSORY_REFERENCE.torso
 const ATTACH_BONE: Readonly<Record<AccessoryAttach, number>> = { head: 1, torso: 0 }
 const MATERIAL_OWN_COLOR = 6
 

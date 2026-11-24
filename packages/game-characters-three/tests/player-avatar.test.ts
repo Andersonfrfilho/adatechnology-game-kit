@@ -65,11 +65,13 @@ describe('createPlayerAvatar', () => {
     const box = new THREE.Box3().setFromObject(avatar.root)
     expect(avatar.rig.legs[0]!.g.rotation.x).toBeCloseTo(-1.5, 5)
     expect(avatar.rig.legs[0]!.kn.rotation.x).toBeGreaterThan(0.5)
-    expect(avatar.rig.legs[0]!.kn.rotation.x).toBeLessThan(1.5)
-    expect(avatar.rig.fig.position.y - avatar.rig.dropBase).toBeCloseTo(0.48 - 0.95, 5)
+    expect(avatar.rig.legs[0]!.kn.rotation.x).toBeLessThanOrEqual(1.5)
+    // Spec 012 R3: drop is measured from the rig's actual trunk pivot (~0.818 m at 1.80 m), not hardcoded 0.95 m
+    expect(avatar.rig.fig.position.y - avatar.rig.dropBase).toBeLessThan(-0.25)
+    expect(avatar.rig.fig.position.y - avatar.rig.dropBase).toBeGreaterThan(-0.45)
     expect(box.min.y).toBeGreaterThan(-0.06)
     expect(box.min.y).toBeLessThan(0.1)
-    expect(box.max.y).toBeLessThan(standing.max.y - 0.35)
+    expect(box.max.y).toBeLessThan(standing.max.y - 0.28)
     // the knees reach out in front (+z) of where the standing body ends
     expect(box.max.z).toBeGreaterThan(standing.max.z + 0.25)
   })

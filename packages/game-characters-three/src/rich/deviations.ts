@@ -18,6 +18,15 @@ export const INSTANCED_PORT_SKULL_TOP_METRES = 1.67 + 0.13 * 1.1
 /** Uniform normalisation factor applied to the instanced crowd body geometry so `heightMetres = 1.80` measures `1.80 m` at the skull top. */
 export const INSTANCED_HEIGHT_NORM = REFERENCE_HEIGHT_METRES / INSTANCED_PORT_SKULL_TOP_METRES
 
+/**
+ * Unnormalised source frame of `person-kit` hats and extras (Retratos do Vale literal port coordinates),
+ * used by `instanced/accessory.ts` to convert each accessory into a unit frame before fitting it to any baked body's measured bone bounds.
+ */
+export const PORT_ACCESSORY_REFERENCE = {
+  head: { center: [0, REFERENCE_HEIGHT_METRES, 0] as const, height: 2 * 0.165 * 1.1, pivot: [0, 1.64, 0] as const },
+  torso: { center: [0, 1.23, 0] as const, height: 0.74, pivot: [0, 0.9, 0] as const },
+} as const
+
 export type PortDeviation = {
   readonly id: string
   readonly target: 'best-builder' | 'person-builder' | 'body-geometry'
