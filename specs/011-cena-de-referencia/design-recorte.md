@@ -144,3 +144,18 @@ tradução com as funções públicas, sem desenho à mão.
 - **Escala do recorte e memória**: 400 × 250 m com 10 plantas enteráveis e dezenas de silhuetas. A régua da T2.6 mede; N4 fixa o teto.
 - **Coordenadas à mão**: o teste de sobreposição e uma folha de planta vista de cima (print de conferência da T2.2, não câmera de jogo)
   seguram erro de digitação.
+
+## 7. O que a implementação (PR #462) mudou neste desenho
+
+- **Os quatro lotes do centro levam `zone: 'zc'`**: na `zr3_zm` do tipo `mixed`, farmácia e mercado passam da taxa de ocupação (0,75 e
+  0,77 contra 0,70) e delegacia e igreja não são uso permitido (institucional).
+- **Área e frente mínimas pelo lote do recorte**: o teste de zoneamento usa todas as regras do motor, menos `min_lot` e `min_frontage`, que
+  confere contra a `rect` do lote (o lote que o motor gera para a `budget_semi_detached` tem 177,5 m² e reprovaria na `zr2`; o do recorte tem
+  300 m²).
+- **`horde_release` leva `share`** (fração da horda do cenário), não contagem, para o mesmo roteiro servir ao `tipico` (500) e ao `pior` (2.000).
+- **O arquivo de roteiros tem um mapa `scenarios`** (zumbis, clima, hora por cenário) ao lado de `scripts`; o `caos` usa 500 zumbis, nublado,
+  de dia.
+- **`pending` diz a lacuna** (`'L15' | 'L16' | 'L17'`) e tem `note`: no cruzamento, a linha de fogo é L15, o tiro dos policiais L16 e a
+  barricada que cede L17.
+- `load` vai de −1 a 0; os lotes da rua ficam contíguos de x = 50 a x = 110; a barricada do `caos` fica a oeste do cruzamento e o blindado
+  cruza de norte a sul em x = −100.
