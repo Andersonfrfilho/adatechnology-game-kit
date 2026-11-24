@@ -109,6 +109,33 @@ quadro e a T2.3 troca `step` por `stepFixed`. Por isso **a T1.3 desta spec só c
 `specs/010-quadro-com-prazo/tasks.md`), e a T1.3 reescreve esta seção com a classificação da 010 e o `stepFixed`. A vantagem continua: depois da T1.5, a 010 mexe em `world/frame.ts` (200 linhas), não
 no `room.ts`.
 
+### 4.1 A ordem de hoje, com o passo fixo da spec 010 (T1.3, 2026-11-24)
+
+A spec 010 trocou o `simulateBeforeModules` por fases do agendador do `game-runtime` (`input`, `fixedSimulate`, `lateSimulate`, `present`,
+`render`), registradas pela sala em `simulation-phases.ts` (`registerSimulationPhases`, `room.ts` 5538) e com o marca-passo segurando os
+tiques (`holdFixed`, `room.ts` 4079). Os pontos de registro do host passam a ser **ordens dentro dessas fases**, não um passo próprio: o
+`world.frame.add(system, { slot })` vira `scheduler.add(system, { phase, order })` com faixas reservadas.
+
+| Fase / ordem | Quem | Hoje (`room.ts`) |
+|---|---|---|
+| `input`, −100000 | host: pose do passo restaurada, modo estrutural no tique | `simulation-phases.ts` 39–41 |
+| `input`, 0 | jogo: entrada (teclas, mouse); no roteiro, `seating`, `player.update(0)`, empurrar, portas, item na mão | 5526–5537 |
+| `fixedSimulate`, −100000 / −1000 | host: pose restaurada; eventos estruturais antes do passo | `simulation-phases.ts` 42, 52–54 |
+| `fixedSimulate`, 1000, **`beforeWorld`** | ação do jogador: andar (`stepWalkPlan`), golpe, animações, uso de item, explosivos, recipientes | `simulateFixed` 4153–4161 |
+| `fixedSimulate`, 1000, **mundo** | host: `world.update` (×`repeat`, fogo só na primeira), fluidos, litros, `stepFixed` do Jolt, renderizador da destruição, fogo no chão, água | 4162–4174 |
+| `fixedSimulate`, 1000, **`afterWorld`** | regras de mundo e o que a sala faz depois do mundo: impactos, água, balanço do jogador, cargas, manchas, `flush` | 4175–4180 |
+| `fixedSimulate`, 2000 | host: eventos estruturais do tique | `simulation-phases.ts` 59–61 |
+| `lateSimulate`, −1000, **`frame`** | host: sol, som da destruição, terreno, efeitos, água, pegadas, fluidos, filme, ouvinte; jogo: armas na mão | `simulateFrame` 4184–4209 |
+| `lateSimulate`, 0 | módulos do jogo (os da sala) | `afterRenderer` de antes |
+| `lateSimulate`, 1000, **`frameEnd`** | traçantes e `vfx.present` | `simulateAfterModules` 4212–4228 |
+| `present`, −1000 / 0 / 10 | host: pose desenhada (alpha), luzes; sala: `updatePresent` | `simulation-phases.ts` 44–49; 5539–5545 |
+| `render`, −1000 / 0 | host: checagem de luzes e desenho (`gl.render`, camada de 1ª pessoa, vistas extras, `graphics`, compassador) | 5552–5586 |
+
+`beforeWorld`, mundo e `afterWorld` continuam **uma chamada só** (`room.simulate`, ordem 1000), como hoje: o host chama, nesta ordem, os
+sistemas do jogo registrados em `beforeWorld`, o passo do mundo e os de `afterWorld`. Separar em três registros do agendador mudaria a ordem
+relativa com outros sistemas de ordem 1000 e o hash. O teste de ordem da T1.3 compara a lista de ids e a ordem do agendador do host com a da
+sala de hoje, e o hash do `room-determinism.mjs` do passo 0 (3822996173 com marca-passo, 1819424859 sem) fecha a T1.5.
+
 ## 5. Oclusão de áudio (T1.2, feita)
 
 `createRaycastOcclusion` no `game-audio`, com o filtro do raio como tipo estrutural; o `game-audio` depende só do `game-contracts`. A função nunca
