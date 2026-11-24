@@ -98,6 +98,8 @@ na sala da área dela (gates 1 e 2, com print) e só então troca o seu `missing
 - **T3.9** Cone, cavalete, fita zebrada (`game-props3d`); semáforo, faixa de pedestre e meio-fio (`game-urban`).
 - **T3.10** Contexto `riverbank` na região `br` (`game-vegetation-species`); peixe e garça (`game-animals-species`).
 - **T3.11** História do `game-stories` num bilhete posto numa casa (`game-items-goods`, achados do floorplan).
+- **T3.13** Desenhar as linhas de um plano de cidade (`PlanLine`: rua, avenida, rio) no `game-urban`/`-three` (rio como zona de água do
+  `game-terrain`), para a cena deixar de traduzir à mão no montador (`design-recorte.md` §4).
 - **T3.12** Régua da cena de novo (gate 3) com as peças novas.
 
 ## Fase 4 — Visual nublado
