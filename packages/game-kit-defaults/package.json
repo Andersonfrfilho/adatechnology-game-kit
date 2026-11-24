@@ -30,6 +30,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./world": {
+      "types": "./dist/world.d.ts",
+      "import": "./dist/world.js"
+    },
     "./kit-worker": "./dist/kit-worker.js",
     "./kit-worker.global": "./dist/kit-worker.global.js"
   },
