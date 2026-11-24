@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { pathAt, runScript } from '../src/test/runner'
-import type { ActionResult, PhaseEdge, ScriptWorld } from '../src/test/runner'
+import type { ActionResult, BlastRecord, PhaseEdge, ScriptWorld } from '../src/test/runner'
 import type { Script, ScriptEvent } from '../src/test/scripts'
 import { scripts } from './helpers'
 
@@ -11,16 +11,21 @@ const settings = { zombies: 100, weather: 'overcast', timeOfDay: 'day' } as cons
 type Log = { world: ScriptWorld; log: string[]; steps: () => number }
 
 /** A world that only writes down what it is told, one line each, with the tick it was told at. */
-function fakeWorld(answer: (event: ScriptEvent) => ActionResult = () => ({ status: 'done' })): Log {
+function fakeWorld(answer: (event: ScriptEvent) => ActionResult = () => ({ status: 'done' }), explodes = true): Log {
   const log: string[] = []
   let steps = 0
+  const thrown: number[] = []
+  const blastsOf = (): readonly BlastRecord[] => (explodes ? thrown.map((eventIndex) => ({ eventIndex, explosive: 'm67', step: steps, killsBefore: 0, killsAfter: 3 })) : [])
   const world: ScriptWorld = {
     tick: TICK,
     step: () => void steps++,
     placePlayer: (spot) => void (steps % 60 === 0 && log.push(`${steps}:player ${spot.x.toFixed(1)},${spot.z.toFixed(1)}`)),
     setCamera: (mode) => (log.push(`${steps}:camera ${mode}`), mode === 'vehicle' ? { status: 'pending', limit: 'L7', reason: 'no driver' } : { status: 'done' }),
-    act: (event, context) => (log.push(`${steps}:${event.kind}:${context.zombies}`), answer(event)),
+    act: (event, context) => (log.push(`${steps}:${event.kind}:${context.zombies}`), (event.kind === 'throw' || event.kind === 'detonate') && thrown.push(context.index), answer(event)),
     hash: () => ({ steps }),
+    blasts: () => blastsOf(),
+    openExplosives: () => 0,
+    dispose: () => undefined,
   }
   return { world, log, steps: () => steps }
 }
@@ -51,7 +56,7 @@ describe('runScript', () => {
 
   it('hashes each phase when its time is reached, before the events of that same time', () => {
     const { world } = fakeWorld()
-    const run = runScript(world, script, settings)
+    const run = runScript(world, script, settings, { hash: true })
     expect(run.phases.map((phase) => [phase.id, phase.endTick, phase.hash])).toEqual([['load', 0, { steps: 0 }], ['a', 120, { steps: 120 }], ['b', 240, { steps: 240 }]])
   })
 
@@ -73,6 +78,26 @@ describe('runScript', () => {
 
   it('gives the same records for the same script and world', () => {
     expect(runScript(fakeWorld().world, script, settings)).toEqual(runScript(fakeWorld().world, script, settings))
+  })
+
+  it('takes no hash unless asked', () => {
+    expect(runScript(fakeWorld().world, script, settings).phases.every((phase) => phase.hash === undefined)).toBe(true)
+  })
+
+  it('counts the explosions of a throw and refuses a throw that set nothing off', () => {
+    expect(runScript(fakeWorld().world, script, settings).events.find((event) => event.kind === 'throw')).toMatchObject({ detonations: 1 })
+    expect(() => runScript(fakeWorld(undefined, false).world, script, settings)).toThrow(/set nothing off/)
+  })
+
+  it('refuses a cue after the last phase and takes cues out of order', () => {
+    expect(() => runScript(fakeWorld().world, { ...script, camera: [{ at: 9, mode: 'first' }] }, settings)).toThrow(/camera cue/)
+    const run = runScript(fakeWorld().world, { ...script, camera: [{ at: 2, mode: 'first' }, { at: 0, mode: 'shoulder' }] }, settings)
+    expect(run.cues.map((cue) => cue.mode)).toEqual(['shoulder', 'first'])
+  })
+
+  it('records a partial event with its lacuna', () => {
+    const run = runScript(fakeWorld((event) => (event.kind === 'horde_release' ? { status: 'partial', limit: 'L4', reason: 'x' } : { status: 'done' })).world, script, settings)
+    expect(run.events.find((event) => event.kind === 'horde_release')).toMatchObject({ status: 'partial', limit: 'L4', source: 'world' })
   })
 
   it('refuses an event after the last phase', () => {

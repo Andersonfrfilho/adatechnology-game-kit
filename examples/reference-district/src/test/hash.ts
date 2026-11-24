@@ -32,15 +32,20 @@ function crowdHash(district: District): number {
   return hashBytes(store.state.subarray(0, count), hash)
 }
 
+const MAX_DRAIN_FRAMES = 2000
+
 /**
- * The state of the world as three numbers: the destruction world (`serialize`, which would run an open blast to its end, so it is read as `null` while the blast pacer holds one), the horde and the
- * body. Two runs of a script are the same when every phase has the same three.
+ * The state of the world as three numbers: the destruction world (`serialize`), the horde and the body. `serialize` would run an open blast to its end outside the pacer, so a blast the pacer still
+ * holds is first let to finish with the frames the game itself would run (`frame`, held ones do not tick the world): the hash never has a hole. Two runs are the same when every phase has the same three.
  */
-export function worldHashOf(district: District): WorldHash {
+export function worldHashOf(district: District, frame: () => void): WorldHash {
   const { state } = district.player.player
-  const isHeld = district.world.blastPacing?.isHolding() === true
+  for (let drained = 0; district.world.blastPacing?.isHolding() === true; drained++) {
+    if (drained >= MAX_DRAIN_FRAMES) throw new Error(`the blast pacer still holds the world after ${MAX_DRAIN_FRAMES} frames: the hash cannot be taken`)
+    frame()
+  }
   return {
-    destruction: isHeld ? null : hashText(JSON.stringify(district.world.destruction.world.serialize())),
+    destruction: hashText(JSON.stringify(district.world.destruction.world.serialize())),
     crowd: crowdHash(district),
     player: hashText(JSON.stringify([state.x, state.y, state.z, state.vx, state.vz])),
   }

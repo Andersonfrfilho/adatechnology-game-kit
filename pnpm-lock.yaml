@@ -105,6 +105,9 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-residential
+      '@adatechnology/game-floorplan-rural':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-rural
       '@adatechnology/game-floorplan-structure':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-structure

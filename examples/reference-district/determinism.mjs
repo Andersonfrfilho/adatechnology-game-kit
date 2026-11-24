@@ -1,5 +1,7 @@
 // Runs the scripts of the district twice each, in fresh pages with no display loop, and compares the hash of the world at the end of every phase (spec 011, R10).
-// Same seed, same script, same step: the hashes must be identical. Needs a browser; never on CI (CLAUDE.md section 9). Run it under the machine's measure lock:
+// Same seed, same script, same step: the hashes must be identical, no hash may be missing, and a blast must change the world (the destruction hash of `grenade` differs from `shoot`, `caos_blast` from `caos_fire`).
+// The Hz part of R10 (60, 120 and 144 Hz give the same world) is not run here: the runner never renders, it steps `scheduler.frame(tick, { exact: true })`, so there is no display rate to vary; the scheduler's own
+// tests in packages/game-runtime cover that the display rate does not change the fixed steps. Needs a browser; never on CI (CLAUDE.md section 9). Run it under the machine's measure lock:
 //   flock ~/.cache/adatechnology-game-kit/perf-measure.lock nice node determinism.mjs      (DISTRICT_ONLY=caos runs one scenario; DISTRICT_RUNS=3 more rounds; DISTRICT_QUERY='&solver=own')
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
@@ -26,7 +28,7 @@ await new Promise((done) => server.listen(0, '127.0.0.1', () => done(undefined))
 const address = server.address()
 const base = `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}/district.html`
 
-const SCENARIOS = process.env.DISTRICT_ONLY ? [process.env.DISTRICT_ONLY] : ['tipico', 'caos']
+const SCENARIOS = process.env.DISTRICT_ONLY ? [process.env.DISTRICT_ONLY] : ['tipico', 'pior', 'caos']
 const RUNS = Number(process.env.DISTRICT_RUNS ?? 2)
 const extra = process.env.DISTRICT_QUERY ?? ''
 const args = ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox']
@@ -44,7 +46,7 @@ async function runOnce(scenario) {
   const failure = await page.evaluate(() => window.__districtError ?? null)
   if (failure) throw new Error(`${scenario}: the page did not come up: ${failure}`)
   const started = Date.now()
-  const result = await page.evaluate(() => window.__district.run())
+  const result = await page.evaluate(() => window.__district.run(undefined, { hash: true }))
   await page.context().close()
   return { result, seconds: (Date.now() - started) / 1000, errors }
 }
@@ -60,7 +62,21 @@ for (const scenario of SCENARIOS) {
     if (!same) failed++
     console.log(`  ${same ? 'SAME' : 'DIFF'}  ${phase.id.padEnd(12)} ${JSON.stringify(phase.hash)}${same ? '' : `\n        other ${JSON.stringify(others.map((other) => other.result.phases.find((candidate) => candidate.id === phase.id)?.hash))}`}`)
   }
-  const pending = first.result.events.filter((event) => event.status === 'pending').map((event) => `${event.kind}@${event.at}:${event.limit}(${event.source})`)
+  /** @param {string} id */
+  const destructionOf = (id) => first.result.phases.find((phase) => phase.id === id)?.hash?.destruction
+  for (const phase of first.result.phases) if (!phase.hash || Object.values(phase.hash).some((value) => typeof value !== 'number')) { failed++; console.log(`  FAIL  ${phase.id} has no complete hash`) }
+  for (const [after, before] of [['grenade', 'shoot'], ['caos_blast', 'caos_fire']]) {
+    if (destructionOf(after) === undefined || destructionOf(before) === undefined) continue
+    const changed = destructionOf(after) !== destructionOf(before)
+    if (!changed) failed++
+    console.log(`  ${changed ? 'OK  ' : 'FAIL'}  destruction hash of ${after} differs from ${before}`)
+  }
+  const sameBlasts = others.every((other) => JSON.stringify(other.result.blasts) === JSON.stringify(first.result.blasts))
+  if (!sameBlasts) failed++
+  console.log(`  ${sameBlasts ? 'SAME' : 'DIFF'}  blasts across runs`)
+  for (const blast of first.result.blasts) console.log(`    blast ${blast.explosive} (event ${blast.eventIndex}) at step ${blast.step}: dead ${blast.killsBefore} -> ${blast.killsAfter}`)
+  console.log(`  detonations per event: ${first.result.events.filter((event) => event.detonations !== undefined).map((event) => `${event.kind}@${event.at}=${event.detonations}`).join(' ') || 'none'}`)
+  const pending = first.result.events.filter((event) => event.status !== 'done').map((event) => `${event.kind}@${event.at}:${event.status}:${event.limit}(${event.source})`)
   console.log(`  pending: ${pending.join(' ')}`)
   console.log(`  cues: ${first.result.cues.map((cue) => `${cue.mode}@${cue.at}${cue.status === 'pending' ? `:${cue.limit}` : ''}`).join(' ')}`)
   if (runs.some((run) => run.errors.length)) console.log(`  page errors: ${runs.flatMap((run) => run.errors).slice(0, 3).join(' | ')}`)

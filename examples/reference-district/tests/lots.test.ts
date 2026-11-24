@@ -3,12 +3,13 @@ import { describe, expect, it } from 'vitest'
 import { commercialTemplateIds, interiorTemplateIds } from '@adatechnology/game-floorplan-commercial'
 import { hashString } from '@adatechnology/game-floorplan'
 import { residentialTemplateIds } from '@adatechnology/game-floorplan-residential'
+import { ruralTemplateIds } from '@adatechnology/game-floorplan-rural'
 import { createUrban } from '@adatechnology/game-urban'
 
 import { SIDEWALK_WIDTH, createTestEngine, lineBandOverlapsRect, plan, rectsOverlap, site } from './helpers'
 
 const engine = createTestEngine()
-const OWNED_TEMPLATE_IDS: readonly string[] = [...residentialTemplateIds, ...commercialTemplateIds]
+const OWNED_TEMPLATE_IDS: readonly string[] = [...residentialTemplateIds, ...commercialTemplateIds, ...ruralTemplateIds]
 
 const urban = createUrban({ packs: { cityPlans: [plan] } })
 const layout = urban.cities.layout(plan.id)

@@ -1,21 +1,21 @@
-import type { BlastOptions, HitResult, Vec3 } from '@adatechnology/game-destruction'
-import { ExplosiveBody, createArsenal } from '@adatechnology/game-weapons'
-import type { Arsenal, Detonation, SurfaceProbe } from '@adatechnology/game-weapons'
+import type { Vec3 } from '@adatechnology/game-destruction'
+import { createArsenal } from '@adatechnology/game-weapons'
+import type { Arsenal } from '@adatechnology/game-weapons'
 
 import type { District } from '../game/options'
+import { createExplosives } from './explosives'
 import { worldHashOf } from './hash'
 import type { ActionResult, PlayerSpot, ScriptWorld } from './runner'
 import type { ScriptEvent } from './scripts'
 
 const EYE_HEIGHT = 1.55
 const SHOT_TARGET_HEIGHT = 1.2
-const THROW_TARGET_HEIGHT = 0.15
-const THROW_SECONDS = 1.1
-const CHARGE_HEIGHT = 0.1
 /** A pull of the trigger: a short span, then the weapon's own time passes (a semi weapon needs the release, an automatic one gives one round per pull this way). */
 const PULL_SECONDS = 0.05
 const BETWEEN_PULLS_SECONDS = 0.2
 const MAX_PULLS_PER_SHOT = 4
+/** Metres from the line of fire within which an agent of the horde counts as aimed at. */
+const AIMED_AT_RADIUS = 1.5
 
 const DONE: ActionResult = { status: 'done' }
 const pending = (limit: string, reason: string): ActionResult => ({ status: 'pending', limit, reason })
@@ -25,43 +25,41 @@ const unit = (vector: Vec3): Vec3 => {
   return [vector[0] / length, vector[1] / length, vector[2] / length]
 }
 
+function distanceToSegment(point: readonly [number, number], from: readonly [number, number], to: readonly [number, number]): number {
+  const [dx, dz] = [to[0] - from[0], to[1] - from[1]]
+  const lengthSquared = dx * dx + dz * dz
+  const along = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((point[0] - from[0]) * dx + (point[1] - from[1]) * dz) / lengthSquared))
+  return Math.hypot(point[0] - (from[0] + along * dx), point[1] - (from[1] + along * dz))
+}
+
 type ScriptWorldParams = { readonly seed: number }
 
 /**
- * The page's world for a script: what the events do, through the SDK only (N5: no `game-test-room`). The player's shots go from the arsenal's weapon into the destruction world; a thrown explosive is an
- * `ExplosiveBody` stepped at the fixed step; a charge or a blast goes through the pacer, the renderer and the crowd's `blast`. What the SDK lacks answers `pending` with its lacuna.
+ * The page's world for a script: what the events do, through the SDK only (N5: no `game-test-room`). The player's shots go from the arsenal's weapon into the destruction world; explosives are in
+ * `./explosives`; the world steps through `scheduler.frame` (the live path, `exact`), so the host's blast pacer holds the world as it does in the game. What the SDK lacks answers `pending` with its lacuna.
  */
 export function createScriptWorld(district: District, { seed }: ScriptWorldParams): ScriptWorld {
   const { world, player: rig, horde } = district
   const arsenal: Arsenal = createArsenal({ seed, locale: 'pt-BR' })
-  const flying: ExplosiveBody[] = []
   const tick = world.frame.tick
   const handOf = (): Vec3 => [rig.player.state.x, rig.player.state.y + EYE_HEIGHT, rig.player.state.z]
   const pointOf = (to: readonly [number, number], height: number): Vec3 => [to[0], world.ground.at(to[0], to[1]) + height, to[1]]
+  const explosives = createExplosives({ district, arsenal, handOf, pointOf })
+  const frame = (): void => world.frame.scheduler.frame(tick, { exact: true, render: false })
 
-  const groundProbe: SurfaceProbe = (from, to) => {
-    const floor = world.ground.at(to[0], to[2])
-    if (to[1] > floor || from[1] <= floor) return null
-    const share = (from[1] - floor) / (from[1] - to[1])
-    return { point: [from[0] + (to[0] - from[0]) * share, floor, from[2] + (to[2] - from[2]) * share], normal: [0, 1, 0], ground: true }
-  }
-
-  function detonate(detonation: Detonation): void {
-    if (detonation.cone || detonation.smoke || detonation.energy <= 0) throw new Error(`the script runner does not run the explosive "${detonation.explosive}" (cone, smoke or no energy)`)
-    const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
-    const options: BlastOptions = { charge: { ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}), ...(detonation.casing ? { casing: detonation.casing } : {}) } }
-    const isPlayed = world.effects.world.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
-    const finish = (results: readonly HitResult[]): void => {
-      world.destruction.renderer.explode(detonation.point, detonation.energy, reach, { visual: !isPlayed, report: results, effect: detonation.explosive })
-      horde.crowd.blast({ point: detonation.point, energy: detonation.energy, radius: reach, lethalRadius: detonation.lethalRadius, source: 'player' })
+  function isAimedAtHorde(origin: Vec3, target: Vec3): boolean {
+    const { store } = horde.crowd
+    for (let agent = 0; agent < store.n; agent++) {
+      if (distanceToSegment([store.x[agent] ?? 0, store.z[agent] ?? 0], [origin[0], origin[2]], [target[0], target[2]]) < AIMED_AT_RADIUS) return true
     }
-    if (world.blastPacing && detonation.casing) world.blastPacing.begin({ point: detonation.point, energy: detonation.energy, radius: reach, source: 'player', options }, finish)
-    else finish(world.destruction.world.explode(detonation.point, detonation.energy, reach, 'player', options))
+    return false
   }
 
-  function shoot(event: Extract<ScriptEvent, { kind: 'shoot' }>): void {
+  function shoot(event: Extract<ScriptEvent, { kind: 'shoot' }>): ActionResult {
     const origin = handOf()
-    const direction = unit(pointOf(event.to, SHOT_TARGET_HEIGHT).map((value, axis) => value - origin[axis]!) as Vec3)
+    const target = pointOf(event.to, SHOT_TARGET_HEIGHT)
+    const direction = unit([target[0] - origin[0], target[1] - origin[1], target[2] - origin[2]])
+    const isAimedAtZombies = isAimedAtHorde(origin, target)
     const gun = arsenal.create(event.weapon, { reserve: event.shots })
     let fired = 0
     for (let pulls = 0; fired < event.shots && pulls < event.shots * MAX_PULLS_PER_SHOT; pulls++) {
@@ -71,45 +69,21 @@ export function createScriptWorld(district: District, { seed }: ScriptWorldParam
       for (const shot of result.shots) world.destruction.world.shoot(shot.origin, shot.direction, shot.energy, shot.caliber, 'player')
       gun.update(BETWEEN_PULLS_SECONDS)
     }
+    return isAimedAtZombies ? { status: 'partial', limit: 'L4', reason: 'the shot hit the destruction world; no ray test against the horde exists' } : DONE
   }
 
-  function throwExplosive(event: Extract<ScriptEvent, { kind: 'throw' }>): void {
-    const explosive = arsenal.explosives.get(event.explosive)
-    if (!explosive) throw new Error(`the arsenal has no explosive "${event.explosive}"`)
-    const origin = handOf()
-    const target = pointOf(event.to, THROW_TARGET_HEIGHT)
-    const gravity = arsenal.rules.explosives.gravity
-    const velocity: Vec3 = [(target[0] - origin[0]) / THROW_SECONDS, (target[1] - origin[1] + 0.5 * gravity * THROW_SECONDS ** 2) / THROW_SECONDS, (target[2] - origin[2]) / THROW_SECONDS]
-    flying.push(new ExplosiveBody({ explosive, origin, velocity, triggers: ['timer'], fuse: explosive.fuse ?? 0, rules: arsenal.rules.explosives }))
-  }
-
-  function placeCharge(event: Extract<ScriptEvent, { kind: 'detonate' }>): void {
-    const explosive = arsenal.explosives.get(event.explosive)
-    if (!explosive) throw new Error(`the arsenal has no explosive "${event.explosive}"`)
-    const result = new ExplosiveBody({ explosive, origin: pointOf(event.to, CHARGE_HEIGHT), triggers: ['remote'], rules: arsenal.rules.explosives }).trigger('remote')
-    if (result?.type === 'detonate') detonate(result.detonation)
-  }
-
-  function stepFlying(): void {
-    for (const body of [...flying]) {
-      for (const event of body.step(tick, groundProbe)) if (event.type === 'detonate') detonate(event.detonation)
-      if (body.done) flying.splice(flying.indexOf(body), 1)
-    }
-  }
-
-  function act(event: ScriptEvent, context: { readonly zombies: number }): ActionResult {
+  function act(event: ScriptEvent, context: { readonly zombies: number; readonly index: number }): ActionResult {
     switch (event.kind) {
       case 'horde_release':
         horde.release(event.zone, Math.round(context.zombies * event.share))
         return DONE
       case 'shoot':
-        shoot(event)
-        return DONE
+        return shoot(event)
       case 'throw':
-        throwExplosive(event)
+        explosives.throwFrom(event, context.index)
         return DONE
       case 'detonate':
-        placeCharge(event)
+        explosives.place(event, context.index)
         return DONE
       case 'door':
       case 'open_container':
@@ -123,10 +97,7 @@ export function createScriptWorld(district: District, { seed }: ScriptWorldParam
 
   return {
     tick,
-    step() {
-      stepFlying()
-      world.frame.scheduler.advance(tick)
-    },
+    step: frame,
     placePlayer(spot: PlayerSpot) {
       const { state } = rig.player
       state.x = spot.x
@@ -141,6 +112,9 @@ export function createScriptWorld(district: District, { seed }: ScriptWorldParam
       return DONE
     },
     act,
-    hash: () => worldHashOf(district),
+    hash: () => worldHashOf(district, frame),
+    blasts: explosives.blasts,
+    openExplosives: explosives.open,
+    dispose: explosives.dispose,
   }
 }

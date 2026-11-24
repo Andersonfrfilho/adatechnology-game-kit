@@ -16,8 +16,8 @@ export type DistrictProbe = {
   draw(): void
   /** Puts the body at a point looking along `yaw`, with the camera in `mode`; the camera eases to its place over the next frames. */
   place(spot: { readonly x: number; readonly z: number; readonly yaw: number; readonly pitch?: number; readonly mode?: 'shoulder' | 'first' }): void
-  /** Runs a script (the page scenario's by default) at the fixed step, never wall-clock, and answers the hash of the world at the end of each phase. Run it on a page opened with `?roteiro=1`, with no display loop. */
-  run(script?: Script | ScriptId): RunResult
+  /** Runs a script (the page scenario's by default) at the fixed step, never wall-clock; with `hash` it answers the hash of the world at the end of each phase. Run it on a page opened with `?roteiro=1`, with no display loop. */
+  run(script?: Script | ScriptId, options?: { readonly hash?: boolean }): RunResult
   /** The phase the last `run` is in (the gauge reads it). */
   readonly phase: string | undefined
   /** One frame from above as a PNG data URL: the plan sheet that checks the coordinates of the data files by eye. A debug print only, never a camera of the game. */
@@ -37,10 +37,15 @@ export function createProbe(district: District, choice: PageChoice, scripts: Scr
     get phase() {
       return phase
     },
-    run(chosen) {
+    run(chosen, options = {}) {
       const script = typeof chosen === 'object' ? chosen : chosen ? scripts.scripts.find((candidate) => candidate.id === chosen) : scriptOf(scripts, choice.scenario)
       if (!script) throw new Error(`the page has no script "${String(chosen)}"`)
-      return runScript(createScriptWorld(district, { seed: script.seed }), script, scripts.scenarios[choice.scenario], { onPhase: (edge) => void (phase = edge.edge === 'start' ? edge.id : undefined) })
+      const scriptWorld = createScriptWorld(district, { seed: script.seed })
+      try {
+        return runScript(scriptWorld, script, scripts.scenarios[choice.scenario], { hash: options.hash === true, onPhase: (edge) => void (phase = edge.edge === 'start' ? edge.id : undefined) })
+      } finally {
+        scriptWorld.dispose()
+      }
     },
     district,
     choice,

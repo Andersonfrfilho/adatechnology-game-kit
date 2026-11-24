@@ -2,11 +2,17 @@ import type { ScenarioSettings, Script, ScriptEvent } from './scripts'
 import type { CameraCue } from './scripts'
 import { yawToward } from './scenario'
 
-/** The numbers a world is told apart by at the end of a phase; `null` marks a part that could not be read then (a blast still open). */
-export type WorldHash = Readonly<Record<string, number | null>>
+/** The numbers a world is told apart by at the end of a phase. */
+export type WorldHash = Readonly<Record<string, number>>
 
-/** What the world did with a command: it ran it, or the SDK lacks what it needs (a lacuna of the spec, never faked). */
-export type ActionResult = { readonly status: 'done' } | { readonly status: 'pending'; readonly limit: string; readonly reason: string }
+/** What the world did with a command: it ran it all, ran what it could and lacks the rest, or the SDK lacks what it needs (a lacuna of the spec, never faked). */
+export type ActionResult =
+  | { readonly status: 'done' }
+  | { readonly status: 'partial'; readonly limit: string; readonly reason: string }
+  | { readonly status: 'pending'; readonly limit: string; readonly reason: string }
+
+/** One explosion of the world: which event set it off, at which step of the world, and how many of the horde were dead before and a second after. */
+export type BlastRecord = { readonly eventIndex: number; readonly explosive: string; readonly step: number; readonly killsBefore: number; readonly killsAfter: number }
 
 export type PlayerSpot = { readonly x: number; readonly z: number; readonly yaw: number; readonly vx: number; readonly vz: number }
 
@@ -18,13 +24,20 @@ export type ScriptWorld = {
   step(): void
   placePlayer(spot: PlayerSpot): void
   setCamera(mode: CameraCue['mode']): ActionResult
-  act(event: ScriptEvent, context: { readonly zombies: number }): ActionResult
+  act(event: ScriptEvent, context: { readonly zombies: number; readonly index: number }): ActionResult
   hash(): WorldHash
+  /** Every explosion so far. */
+  blasts(): readonly BlastRecord[]
+  /** Explosives still flying or waiting for their trigger. */
+  openExplosives(): number
+  dispose(): void
 }
 
 export type PhaseEdge = { readonly id: string; readonly edge: 'start' | 'end'; readonly time: number }
 
 export type RunOptions = {
+  /** Takes the hash of the world at the end of each phase (reads the whole destruction world: off for the gauge, on for a determinism run). */
+  readonly hash?: boolean
   /** Called at each edge of a phase, at its world time: how the gauge learns which phase a frame belongs to. */
   readonly onPhase?: (edge: PhaseEdge) => void
 }
@@ -35,15 +48,17 @@ export type EventRecord = {
   readonly at: number
   readonly tick: number
   readonly status: ActionResult['status']
-  /** The lacuna that stopped it, for a pending event. */
+  /** The lacuna that stopped it, for a pending or partial event. */
   readonly limit?: string
   /** Who marked it pending: the script file, or the world that lacks the piece. */
   readonly source?: 'script' | 'world'
+  /** Explosions this event caused (throw and detonate only). */
+  readonly detonations?: number
 }
 
 export type CueRecord = { readonly at: number; readonly mode: CameraCue['mode']; readonly status: ActionResult['status']; readonly limit?: string }
 
-export type PhaseRecord = { readonly id: string; readonly from: number; readonly to: number; readonly endTick: number; readonly hash: WorldHash }
+export type PhaseRecord = { readonly id: string; readonly from: number; readonly to: number; readonly endTick: number; readonly hash?: WorldHash }
 
 export type RunResult = {
   readonly scriptId: Script['id']
@@ -52,6 +67,7 @@ export type RunResult = {
   readonly phases: readonly PhaseRecord[]
   readonly events: readonly EventRecord[]
   readonly cues: readonly CueRecord[]
+  readonly blasts: readonly BlastRecord[]
 }
 
 type PathSample = { readonly x: number; readonly z: number; readonly vx: number; readonly vz: number }
@@ -102,12 +118,14 @@ export function runScript(world: ScriptWorld, script: Script, scenario: Scenario
       }
       if (state.isOpen && !state.isClosed && state.endTick <= at) {
         state.isClosed = true
-        phases.push({ id: state.phase.id, from: state.phase.from, to: state.phase.to, endTick: state.endTick, hash: world.hash() })
+        phases.push({ id: state.phase.id, from: state.phase.from, to: state.phase.to, endTick: state.endTick, ...(options.hash ? { hash: checkedHash(world.hash(), state.phase.id) } : {}) })
         toPhase(state, 'end', at * tick)
       }
     }
   }
-  const cueTicks = script.camera.map((cue) => tickOf(cue.at, tick))
+  const cameraCues = [...script.camera].sort((a, b) => a.at - b.at)
+  const cueTicks = cameraCues.map((cue) => tickOf(cue.at, tick))
+  if (cueTicks.some((cueTick) => cueTick >= ticks)) throw new Error(`the script "${script.id}" has a camera cue after its last phase`)
   let nextCue = 0
   let nextEvent = 0
   let yaw = 0
@@ -119,11 +137,11 @@ export function runScript(world: ScriptWorld, script: Script, scenario: Scenario
     const sample = pathAt(script.path, at * tick)
     if (sample.vx !== 0 || sample.vz !== 0) yaw = yawToward({ x: 0, z: 0 }, { x: sample.vx, z: sample.vz })
     world.placePlayer({ x: sample.x, z: sample.z, yaw, vx: sample.vx, vz: sample.vz })
-    for (; nextCue < script.camera.length && (cueTicks[nextCue] ?? Infinity) <= at; nextCue++) {
-      const cue = script.camera[nextCue]
+    for (; nextCue < cameraCues.length && (cueTicks[nextCue] ?? Infinity) <= at; nextCue++) {
+      const cue = cameraCues[nextCue]
       if (!cue) break
       const result = world.setCamera(cue.mode)
-      cues.push({ at: cue.at, mode: cue.mode, status: result.status, ...(result.status === 'pending' ? { limit: result.limit } : {}) })
+      cues.push({ at: cue.at, mode: cue.mode, status: result.status, ...(result.status === 'done' ? {} : { limit: result.limit }) })
     }
     for (; nextEvent < due.length && (due[nextEvent]?.at ?? Infinity) <= at; nextEvent++) {
       const item = due[nextEvent]
@@ -132,14 +150,34 @@ export function runScript(world: ScriptWorld, script: Script, scenario: Scenario
     world.step()
   }
   advancePhases(ticks)
-  return { scriptId: script.id, seed: script.seed, ticks, phases, events, cues }
+  const blasts = world.blasts()
+  const open = world.openExplosives()
+  if (open > 0) throw new Error(`the script "${script.id}" ended with ${open} explosive(s) not yet set off`)
+  return { scriptId: script.id, seed: script.seed, ticks, phases, events: withDetonations(events, blasts, script.id), cues, blasts }
+}
+
+const BLAST_EVENTS: readonly ScriptEvent['kind'][] = ['throw', 'detonate']
+
+/** Counts the explosions of each throw and detonate event; one that ran and set nothing off is an error: the run would prove nothing about the blast. */
+function withDetonations(events: readonly EventRecord[], blasts: readonly BlastRecord[], scriptId: string): EventRecord[] {
+  return events.map((event) => {
+    if (event.status !== 'done' || !BLAST_EVENTS.includes(event.kind)) return event
+    const detonations = blasts.filter((blast) => blast.eventIndex === event.index).length
+    if (detonations === 0) throw new Error(`the script "${scriptId}": the ${event.kind} at ${event.at} s set nothing off`)
+    return { ...event, detonations }
+  })
+}
+
+function checkedHash(hash: WorldHash, phase: string): WorldHash {
+  for (const [part, value] of Object.entries(hash)) if (!Number.isFinite(value)) throw new Error(`the hash of phase "${phase}" has no number for "${part}"`)
+  return hash
 }
 
 function runEvent(world: ScriptWorld, item: { readonly event: ScriptEvent; readonly index: number }, at: number, scenario: ScenarioSettings): EventRecord {
   const { event, index } = item
   const base = { index, kind: event.kind, at: event.at, tick: at }
   if (event.pending) return { ...base, status: 'pending', limit: event.pending, source: 'script' }
-  const result = world.act(event, { zombies: scenario.zombies })
-  if (result.status === 'pending') return { ...base, status: 'pending', limit: result.limit, source: 'world' }
-  return { ...base, status: 'done' }
+  const result = world.act(event, { zombies: scenario.zombies, index })
+  if (result.status === 'done') return { ...base, status: 'done' }
+  return { ...base, status: result.status, limit: result.limit, source: 'world' }
 }
