@@ -515,6 +515,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const frame = (dt: number): void => {
     for (const [id, entry] of placed) {
       if (!entry.root.parent) {
+        // its batches sit in the area's one LOD queue: left there, the queue would keep the whole vehicle after it left the scene
+        entry.lod?.dispose()
         placed.delete(id)
         continue
       }
