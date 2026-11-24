@@ -140,9 +140,11 @@ export function createScenarios(locale: string): ModuleScenario<VegetationContex
   const split = (room: VegetationRoom, so: Spawned) => {
     const home = room.world.snapshot(so.objectId)
     if (!home) throw new Error(`game-vegetation-three: no object ${so.objectId} in the world`)
+    // only what came off this plant: other objects of the room (furniture with a group loose at load) make their own `obj_N` too
+    const own = new Set(specOf(so).parts.map((p) => p.id))
     const loose = room.world.ids().filter((i) => /^obj_/.test(i)).flatMap((i) => {
       const st = room.world.snapshot(i)
-      return st ? [{ id: i, st }] : []
+      return st && st.parts.every((p) => own.has(p.id)) ? [{ id: i, st }] : []
     })
     const anchored: Record<string, boolean> = {}
     for (const p of specOf(so).parts) if (p.anchored) anchored[p.id] = true
