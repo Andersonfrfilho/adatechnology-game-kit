@@ -1,6 +1,7 @@
 import type { UtilityConnection } from '@adatechnology/game-contracts'
 
 import type { NetworkViolation } from './codes'
+import type { LotFrontage } from './drop-rules'
 import type { NetworkGraph } from './graph'
 import type { NetworkRules } from './rules'
 import type { NetworkBuilding, NetworkCrown, NetworkEdge, NetworkNode, NetworkSurface } from './types'
@@ -17,6 +18,8 @@ export type ValidateNetworksOptions = {
   readonly surfaceAt?: (x: number, z: number) => NetworkSurface | undefined
   /** Ground level at a point. Default: 0 under a span; along a pipe, the cover levels of its two nodes. */
   readonly groundAt?: (x: number, z: number) => number
+  /** The lots' fronts on their streets (`GeneratedNetworks.frontages`): with them the drops are held to the street's practice. */
+  readonly frontages?: readonly LotFrontage[]
 }
 
 export type ValidationContext = {

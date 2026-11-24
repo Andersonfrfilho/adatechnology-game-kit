@@ -7,11 +7,11 @@ import type { GenerateNetworksParams, NetworkNode } from '../../src/networks'
 import { LOTS, PLAN } from './district'
 
 const generate = (extra: Partial<GenerateNetworksParams> = {}) => generateNetworks({ plan: PLAN, lots: LOTS, seed: 11, ...extra })
-const validate = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt })
+const validate = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt, frontages: out.frontages })
 const bytes = (out: ReturnType<typeof generate>): string => createHash('sha256').update(JSON.stringify(out.networks)).digest('hex')
 /** The bytes of the cut's networks with seed 11: a change to the generator that moves anything shows here, and is recorded on purpose. */
 // re-recorded when the rules the output carries gained `layout.poles.minGap` (nodes and edges unchanged)
-const RECORDED = 'd92eee796471c52c6aab784e29ccea22d7eb7e6ad282c7d8808b17e0699f69be'
+const RECORDED = '36e926ebc71b730eb26b14a51f3db6afff15bab1ed81302eacf0320eb6751f6a'
 const count = (nodes: readonly NetworkNode[], kind: NetworkNode['kind']): number => nodes.filter((node) => node.kind === kind).length
 
 describe('generateNetworks', () => {

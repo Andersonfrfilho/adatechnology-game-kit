@@ -29,7 +29,9 @@ export type {
   UtilityNetworks,
 } from './types'
 export { validateNetworks } from './validate'
-export { generateNetworks, surfaceOf } from './generate'
+export { frontagesOf, generateNetworks, surfaceOf } from './generate'
+export { dropMisfitOf, lotUnderDrop } from './drop-rules'
+export type { DropMisfit, LotFrontage } from './drop-rules'
 export type { GenerateNetworksParams, GeneratedNetworks } from './generate'
 export { defaultConnectionsOf } from './connections'
 export type { GroundAt } from './connections'

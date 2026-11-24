@@ -111,3 +111,7 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
 - **Mudança dita:** os postes da cena mudaram de lugar (são os da rede, um lado da rua, na divisa dos lotes) e as lâmpadas acendem pelos nós
   `light`; os prints de `shots/` foram regravados pelo `pnpm check:district` (passou). A régua de desempenho do `pior` não foi refeita neste PR.
 - Prints antes e depois: `fios-antes-*` e `rede-depois-*` (dia, `tipico`) e `rede-depois-*-noite` (`pior`), na pasta de rascunho da sessão.
+- **Revisão do dono (teia de aranha):** MT em todo poste de rua; ramal do poste em frente ou reto através da rua, nunca sobre outro lote,
+  até 4 por poste (validador com 4 códigos novos, recorte com 0 violações e 0 avisos); o padrão é poste fino com medidor no pé e eletroduto.
+  Postes acrescentados no trecho dos lotes: o vão ali cai para 10 a 22 m. Hashes de dados das redes (`generate.test.ts` do `game-urban` e
+  `networks.test.ts` do exemplo) regravados; custo `urban/networks` 9.464 → 12.272 triângulos (aceito por nome). Prints `rede-v2-*`.

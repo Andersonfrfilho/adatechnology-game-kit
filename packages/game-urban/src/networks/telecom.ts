@@ -1,6 +1,6 @@
 import type { UtilityConnection } from '@adatechnology/game-contracts'
 
-import { poleFinder } from './aerial'
+import { poleAt, poleFinder } from './aerial'
 import type { NetworkSink, PoleHeights } from './aerial'
 import { countOf } from './frame'
 import type { NetworkPole, PoleTree } from './pole-tree'
@@ -14,6 +14,8 @@ export type TelecomParams = {
   readonly seed: number
   /** The periphery (a bundle of 3 to 5 cables) or a clean district (1 or 2), at a point. */
   readonly isPeriphery: (x: number, z: number) => boolean
+  /** The pole each lot's power drop leaves from: its telecom drop leaves the same pole. */
+  readonly feeds: ReadonlyMap<string, { readonly x: number; readonly z: number }>
   readonly sink: NetworkSink
 }
 
@@ -54,7 +56,7 @@ export function layTelecom(params: TelecomParams): void {
   }
   const find = poleFinder(tree)
   for (const connection of params.connections) {
-    const pole = find({ x: connection.at[0], z: connection.at[2], radius: rules.telecom.dropMaxLength })[0]
+    const pole = poleAt(tree, params.feeds.get(`${connection.lot}:telecom`)) ?? find({ x: connection.at[0], z: connection.at[2], radius: rules.telecom.dropMaxLength })[0]
     if (pole === undefined) continue
     const node = `lot:${connection.lot}:telecom`
     sink.nodes.push({ id: node, kind: 'connection', at: connection.at, carries: ['telecom'], lot: connection.lot })

@@ -55,7 +55,23 @@ export function wallSwitch(c: Ctx): void {
   c.spec.colliders = []
 }
 
+/** The padrão of a street with a utility network (variant `network`): a slim square concrete post and the drop's bracket on its street face (-z). */
+const NETWORK_POST = { half: 0.07, anchor: 5.7, bracket: 0.06 } as const
+
+function networkPost(c: Ctx): void {
+  const { h } = c
+  const { half, anchor, bracket } = NETWORK_POST
+  c.b('plain', -half, 0, -half, half, h, half, c.main(0xa9a9a1))
+  c.b('metal', -0.02, anchor - 0.06, -half - bracket, 0.02, anchor + 0.04, -half - 0.002, 0x4a4c50)
+  c.add('wires', { id: 'earth', kind: 'cable', radius: 0.006, points: [[0.04, 1.2, -half - 0.01], [0.04, 0.9, -half - 0.05], [0.04, 0.05, -half - 0.12]] })
+  c.cyl('metal', 0.04, 0.001, -half - 0.12, 0.01, 0.3, 0xb87333, 'cyl6') // earth rod
+  c.spec.colliders = []
+  c.collider('pole', -half, 0, -half, half, h, half)
+  c.add('damage', { target: 'self', kind: 'masonry', hp: 400 })
+}
+
 export function serviceEntrance(c: Ctx): void {
+  if (c.M.variant === 'network') return networkPost(c)
   const { hw, h } = c
   const pole = c.main(0xa9a9a1)
   const top = h - 0.1

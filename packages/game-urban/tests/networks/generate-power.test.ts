@@ -5,7 +5,7 @@ import type { GenerateNetworksParams, NetworkNode } from '../../src/networks'
 import { LOTS, PLAN } from './district'
 
 const generate = (extra: Partial<GenerateNetworksParams> = {}) => generateNetworks({ plan: PLAN, lots: LOTS, seed: 11, ...extra })
-const validate = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt })
+const validate = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt, frontages: out.frontages })
 const transformers = (out: ReturnType<typeof generate>): NetworkNode[] => out.networks.nodes.filter((node) => node.kind === 'transformer')
 
 describe('power from the generator', () => {
@@ -23,12 +23,12 @@ describe('power from the generator', () => {
     }
   })
 
-  it('runs the medium voltage only from the feed to the transformers', () => {
+  it('runs the medium voltage along every street pole of the feeder, and to each transformer', () => {
     const graph = buildNetworkGraph(out.networks)
-    for (const pole of out.networks.nodes.filter((node) => node.kind === 'pole' && node.carries.includes('power_mv'))) {
-      const below = (id: string): boolean => graph.outgoing(id, 'power_mv').some((edge) => graph.nodes.get(edge.to)?.kind === 'transformer' || below(edge.to))
-      expect(below(pole.id), pole.id).toBe(true)
-    }
+    const street = out.networks.nodes.filter((node) => node.kind === 'pole' && !node.id.includes(':lot:'))
+    expect(street.length).toBeGreaterThan(10)
+    for (const pole of street) expect(pole.carries.includes('power_mv'), pole.id).toBe(true)
+    for (const transformer of transformers(out)) expect(graph.incoming(transformer.id, 'power_mv').length, transformer.id).toBe(1)
   })
 
   it('splits a circuit longer than the limit into more transformers, still valid', () => {
@@ -41,7 +41,7 @@ describe('power from the generator', () => {
     const heavy = out.connections.filter((connection) => connection.network === 'power').map((connection) => ({ ...connection, installedKva: 12 }))
     const result = generate({ connections: heavy })
     expect(transformers(result).map((node) => node.spec)).not.toEqual(transformers(out).map((node) => node.spec))
-    expect(validateNetworks(result.networks, { connections: result.connections, surfaceAt: result.surfaceAt })).toEqual([])
+    expect(validateNetworks(result.networks, { connections: result.connections, surfaceAt: result.surfaceAt, frontages: result.frontages })).toEqual([])
   })
 })
 

@@ -3,6 +3,7 @@ import { buildNetworkGraph } from './graph'
 import type { UtilityNetworks } from './types'
 import { validateAerial } from './validate-aerial'
 import { validateBuried } from './validate-buried'
+import { validateDrops } from './validate-drops'
 import type { ValidateNetworksOptions, ValidationContext } from './validate-context'
 import { validateLoad } from './validate-load'
 import { validateIds, validateLots, validateOrphans, validateTrees } from './validate-structure'
@@ -20,6 +21,7 @@ export function validateNetworks(networks: UtilityNetworks, options: ValidateNet
   validateLots(context)
   validateOrphans(context)
   validateAerial(context)
+  validateDrops(context)
   validateBuried(context)
   validateLoad(context)
   return violations

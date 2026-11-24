@@ -15,8 +15,11 @@ const SERVICE_POLE_NO_LOT = 3
 export const SERVICE_POST_INSIDE_LOT = 0.35
 /** The least front yard (metres) that holds the entrance post clear of the facade; a house with less has its meter on the facade and no post. */
 export const SERVICE_POST_MIN_YARD = 1.2
-/** On a street with a utility network (`street: 'network'`) the meter post (padrão) is this tall over the ground, and the network's drop is anchored on it this high (metres). */
-export const NETWORK_POST = { h: 6, anchor: 5.7 } as const
+/**
+ * On a street with a utility network (`street: 'network'`) the meter post (padrão) is a slim square post this tall over the ground (`half` its
+ * half width), the network's drop anchored on its street face this high, the meter box at its foot and the conduit down its face (metres).
+ */
+export const NETWORK_POST = { h: 6, anchor: 5.7, half: 0.07, bracket: 0.06, conduitOff: 0.025 } as const
 /** The mast stands this far out of the meter's face (clear of the thickest wall's render), and rises this far over the drop's anchor to its weatherhead. */
 const MAST_OFF_WALL = 0.05
 const MAST_OVER_ANCHOR = 0.15
@@ -72,9 +75,22 @@ function streetEntrance({ plan, meter, poleU, door, network }: StreetEntrancePar
     const top: [number, number, number] = [facade.u, facade.v, 3.2]
     return { ...mode, pole: null, drop: [top], meter: facade, descent: [top, [facade.u, facade.v, 1.65]], internalRun: null }
   }
-  const size = network ? NETWORK_POST : STREET_POST
-  const post = { u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT), h: size.h }
-  return { ...mode, pole: post, drop: [[post.u, post.v, size.anchor], head], meter, descent, internalRun: null }
+  if (network) return postEntrance({ meter, u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT) })
+  const post = { u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT), h: STREET_POST.h }
+  return { ...mode, pole: post, drop: [[post.u, post.v, STREET_POST.anchor], head], meter, descent, internalRun: null }
+}
+
+/**
+ * The padrão of a house on a network: the drop anchored on the post's street face, the meter box at the post's foot on that face, and the
+ * conduit straight down the face from under the anchor into the box: no wire runs from the post to anywhere else.
+ */
+function postEntrance({ meter, u, v }: { readonly meter: ElectricMeter; readonly u: number; readonly v: number }): NonNullable<Layout['electrical']['serviceEntrance']> {
+  const face = v - NETWORK_POST.half
+  const box: ElectricMeter = { ...meter, place: 'post', u, v: Math.round((face - meter.d / 2 - 0.003) * 1000) / 1000, y: 1.4, side: 'front' } // (to the mm: its back 3 mm off the post)
+  const conduitV = round2(face - NETWORK_POST.conduitOff)
+  const anchor: [number, number, number] = [u, round2(face - NETWORK_POST.bracket), NETWORK_POST.anchor]
+  const descent: [number, number, number][] = [[u, conduitV, round2(NETWORK_POST.anchor - 0.1)], [u, conduitV, round2(box.y + box.h / 2)]]
+  return { street: 'network', pole: { u, v, h: NETWORK_POST.h }, drop: [anchor], meter: box, descent, internalRun: null }
 }
 
 /** On a network a building with no front yard takes the drop on a mast (pontalete) up its facade, clear of the wall, as high as on a post: the descent is the mast. */

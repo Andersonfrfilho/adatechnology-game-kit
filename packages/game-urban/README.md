@@ -210,9 +210,12 @@ the road, z along the line) with every fixing point read from its `slots`, the s
   stands farther back. Each street pole carries a lamp on its arm over the road (`light_feed` from its low voltage).
 - **Power**: one system per feed where a street leaves the map (no span over a river); circuits cut on the pole tree so that the line each way
   from the transformer stays within 200 m and the diversified demand (plus the lamps) within the largest rating; each transformer on its
-  circuit's centre, sized by `pickTransformer`, a circuit over the largest rating split into more; medium voltage only from the feed to the
-  transformers; a drop from the nearest pole to every lot.
+  circuit's centre, sized by `pickTransformer`, a circuit over the largest rating split into more; medium voltage on every street pole of the feeder
+  and to each transformer; a drop from the nearest pole to every lot.
   Lots of the periphery (`layout.periphery.kinds`) get a few hookups with no meter (`spec: 'unmetered'`), counted in the load.
+- **Drops** follow the street's practice: from the pole in front of the lot, or straight across the street (within `power.dropMaxSkew`, 30°, of
+  its normal), never over another lot, at most `power.dropsPerPole` (4) on a pole; a lot no pole can feed so gets an in-line pole at its station.
+  `validateNetworks(..., { frontages })` checks it (`drop_skewed`, `drop_off_frontage`, `drop_over_other_lot`, `pole_too_many_drops`).
 - **Telecom** on every pole from its own feed, 1-2 cables in the centre and 3-5 in the periphery, a splice box with its reserve coil every 4 spans.
 - **Sewer**: DN 150 under the axis, a manhole at every crossing and at most 80 m apart, a cleanout at each dry head, falling at least 0.5 %
   to the river bank, then an interceptor along the bank to a `treatment` node where the river leaves the map (with no river, from the line's

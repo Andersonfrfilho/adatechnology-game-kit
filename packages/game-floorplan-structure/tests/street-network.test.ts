@@ -18,6 +18,31 @@ describe('a house on a street with a utility network (`street: \'network\'`)', (
     }
   })
 
+  it('the padrão is a slim post with the meter box at its foot and the conduit straight down its street face: no wire from the post to anywhere else', () => {
+    let posts = 0
+    for (const template of TEMPLATES) {
+      const entrance = plan(template, 3, { street: 'network' }).utilities.electrical.serviceEntrance
+      if (!entrance?.pole || entrance.street !== 'network') continue
+      posts++
+      const { pole, drop, descent } = entrance
+      const meter = entrance.meter!
+      const face = pole.v - NETWORK_POST.half
+      expect(pole.h, template).toBe(NETWORK_POST.h)
+      expect(drop.length, `${template}: the drop ends on the post`).toBe(1)
+      expect(drop[0], template).toEqual([pole.u, Number((face - NETWORK_POST.bracket).toFixed(2)), NETWORK_POST.anchor])
+      expect(meter.place, template).toBe('post')
+      expect(meter.u, template).toBe(pole.u)
+      expect(meter.v + meter.d / 2, `${template}: the box on the street face`).toBeLessThan(face)
+      expect(meter.y - meter.h / 2, `${template}: the box at the foot`).toBeLessThan(1.5)
+      const [top, bottom] = [descent[0]!, descent[descent.length - 1]!]
+      expect([top[0], top[1]], `${template}: the conduit plumb`).toEqual([bottom[0], bottom[1]])
+      expect(top[0], template).toBe(pole.u)
+      expect(top[2]!, template).toBeGreaterThan(5)
+      expect(bottom[2], `${template}: into the box's top`).toBeCloseTo(meter.y + meter.h / 2, 2)
+    }
+    expect(posts).toBeGreaterThan(3)
+  })
+
   it('stands the meter post (padrão) of 6 m inside the lot, with the drop anchored on it, and declares the five connections in its plan', () => {
     let posts = 0
     for (const template of TEMPLATES) {
