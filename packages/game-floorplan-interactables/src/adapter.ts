@@ -708,8 +708,9 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
         const e = entry('service_entrance', 'service_entrance', item, 'service_entrance', -1)
         push(e)
         result.serviceEntrance = e.id
-        if (ee.descent && ee.descent.length > 1) conduit('conduit_descent', ee.descent, -1)
       }
+      // the descent from where the drop lands to the meter: under the post's head, or down the facade when the street's drop lands on it (no post)
+      if (ee && ee.descent && ee.descent.length > 1 && onFloor(-1, true)) conduit('conduit_descent', ee.descent, -1)
       // distribution board: one breaker per circuit of the plan (the label is the room); against the wall (u, v is the plane of it)
       const q = electrical.panel
       if (q && onFloor(q.floor, false)) {

@@ -39,6 +39,10 @@ export interface ElectricalContext {
   energy?: EnergyConfig
   /** Ids of the rooms that are outbuildings (lit by a batten). */
   outbuildingIds?: readonly string[]
+  /** The Visor de casas 3D's installation as it was (`visorSections`): a shop's pole 3 m from its facade, even on a lot. */
+  visor?: boolean
+  /** The street brings its own poles (a city draws them): the house's entrance post stands inside its lot, and the street's drop lands on it (or on the facade's meter). */
+  streetPoles?: boolean
 }
 
 /** Shared state of the steps that lay the installation out. */
@@ -48,6 +52,8 @@ export interface Layout {
   rooms: Room[]
   electrical: Electrical
   pointsOf: Map<string, WallPoint[]>
+  visor?: boolean
+  streetPoles?: boolean
 }
 
 export const keyOf = (room: Room): string => `${room.id}@${room.floor}`
@@ -72,7 +78,7 @@ export function planElectrical(context: ElectricalContext): Electrical {
   const rooms = plan.rooms.filter((room) => !NO_SOCKET_ROOMS.includes(room.type) && !room.outdoor)
   const pointsOf = new Map<string, WallPoint[]>()
   for (const room of rooms) pointsOf.set(keyOf(room), wallPointsOf(plan, room, items))
-  const layout: Layout = { plan, items, rooms, electrical, pointsOf }
+  const layout: Layout = { plan, items, rooms, electrical, pointsOf, ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}) }
   addOutlets(layout)
   placeEntrance(layout)
   placePanel(layout)

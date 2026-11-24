@@ -47,6 +47,26 @@ describe('poles', () => {
     expect(top('flood_tower')).toBeCloseTo(12.55, 6)
   })
 
+  it('a turned pole reaches its arm, lamp and light along the turned x (a pole by a street along x reaches over the road)', () => {
+    for (const id of ['concrete_arm', 'wood_crossarm']) {
+      // ry = π/2 turns +x to -z: a pole at z = 5.5 on the south sidewalk reaches toward the road at z = 0
+      const b = kit.builder()
+      kit.poles.get(id).build(b, { x: 10, z: 5.5, ry: Math.PI / 2 })
+      const lens = b.parts.find((part) => part.shape === 'box' && part.emissive)
+      const light = lights(b.parts)[0]
+      expect(lens && 'x' in lens ? [lens.x, lens.z] : [], id).toEqual([expect.closeTo(10, 6), expect.closeTo(5.5 - (id === 'concrete_arm' ? 1.35 : 0.5), 6)])
+      expect(light && 'z' in light ? light.z : 0, id).toBeLessThan(5.5)
+      expect(light && 'x' in light ? light.x : 0, id).toBeCloseTo(10, 6)
+    }
+  })
+
+  it('an unturned pole draws the same parts as before the turn existed', () => {
+    const b = kit.builder()
+    kit.poles.get('concrete_arm').build(b, { x: 3, z: 2, dir: -1, transformer: true })
+    const lens = b.parts.find((part) => part.shape === 'box' && part.emissive)
+    expect(lens?.shape === 'box' ? [lens.x, lens.z, lens.ry] : []).toEqual([3 - 1.35, 2, 0])
+  })
+
   it('a patch changes a number and keeps the rest; a pack adds a pole; remove takes one out', () => {
     const custom = createUrban({
       patch: { poles: { led_double: { spec: { light: { distance: 40 } } } } },

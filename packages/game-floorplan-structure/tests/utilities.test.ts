@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { registerContentState } from '../src/utilities/content'
+import { SERVICE_POLE_OUTSIDE_LOT, SERVICE_POST_INSIDE_LOT, SERVICE_POST_MIN_YARD } from '../src/utilities/electrical-entrance'
 import { TOWER_TEMPLATES, engine } from './support'
 import type { StructuredResult } from '../src'
 import type { FindStack } from '@adatechnology/game-floorplan'
@@ -85,6 +86,40 @@ describe('electricity', () => {
     const outletIds = e.circuits.flatMap((c) => c.outlets)
     expect(new Set(outletIds).size).toBe(outletIds.length)
     expect(e.conduits.filter((c) => c.from === 'panel')).toHaveLength(e.circuits.length)
+  })
+
+  it('the service pole of a plan with a lot stands just in front of the lot, on the sidewalk, a shop as a house: never inside the lot nor out on the road', () => {
+    for (const template of TEMPLATES) {
+      const result = plan(template, 3)
+      const pole = result.utilities.electrical.serviceEntrance?.pole
+      if (!pole || !result.lot) continue
+      expect(pole.v, template).toBeCloseTo(result.lot.rect[1] - SERVICE_POLE_OUTSIDE_LOT)
+    }
+    expect(plan('drugstore', 3).lot, 'a shop on a lot is checked').not.toBeNull()
+  })
+
+  it('with the street\'s own poles the entrance post stands inside the lot behind its front edge, or there is none and the street\'s drop lands on the facade meter', () => {
+    let posts = 0
+    let facades = 0
+    for (const template of TEMPLATES) {
+      const result = plan(template, 3, 'normal', { streetPoles: true })
+      const entrance = result.utilities.electrical.serviceEntrance
+      if (!entrance || !result.lot || entrance.tap) continue
+      const landing = entrance.drop[0]!
+      if (entrance.pole) {
+        posts++
+        expect(entrance.pole.v, template).toBeCloseTo(result.lot.rect[1] + SERVICE_POST_INSIDE_LOT)
+        expect(entrance.pole.v, `${template}: clear of the facade`).toBeLessThan(0)
+        expect([landing[0], landing[1]], template).toEqual([entrance.pole.u, entrance.pole.v])
+      } else {
+        facades++
+        expect(-result.lot.rect[1], template).toBeLessThan(SERVICE_POST_MIN_YARD)
+        expect(entrance.meter?.place, template).toBe('facade')
+        expect([landing[0], landing[1]], template).toEqual([entrance.meter?.u, entrance.meter?.v])
+      }
+    }
+    expect(posts, 'some houses have a front yard for the post').toBeGreaterThan(0)
+    expect(facades, 'some buildings stand at the lot front').toBeGreaterThan(0)
   })
 
   it('every appliance that plugs in has a socket within 1.2 m, and a shower heater its own at 1.10 m', () => {

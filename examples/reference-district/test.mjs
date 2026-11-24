@@ -66,6 +66,106 @@ async function open(query) {
   return { context, page, errors }
 }
 
+/** Frames between two samples of the lights, and how many samples: about two seconds of the lamps. */
+const FLICKER_SAMPLE_MS = 50
+const FLICKER_SAMPLES = 40
+const sameLight = (/** @type {{ x: number, z: number }} */ a, /** @type {{ x: number, z: number }} */ b) => Math.hypot(a.x - b.x, a.z - b.z) < 0.5
+
+/**
+ * The night street: the host lights its nearest lamps, some lamps fail. Samples the lit point lights over two seconds, finds one whose brightness jumps (a failing lamp), stands in front of it and
+ * prints it once bright and once dim (pior-flicker-on.png, pior-flicker-off.png). @param {import('playwright-core').Page} page
+ */
+async function checkFlicker(page) {
+  /** @type {Array<Array<{ x: number, y: number, z: number, intensity: number }>>} */
+  const samples = []
+  for (let index = 0; index < FLICKER_SAMPLES; index++) {
+    samples.push([...(await page.evaluate(() => window.__district?.pointLights() ?? []))])
+    await page.waitForTimeout(FLICKER_SAMPLE_MS)
+  }
+  const lit = Math.max(...samples.map((sample) => sample.length))
+  const all = samples.flat()
+  const flickering = all
+    .filter((light, index) => all.findIndex((other) => sameLight(light, other)) === index)
+    .map((light) => {
+      const levels = all.filter((other) => sameLight(light, other)).map((other) => other.intensity)
+      return { ...light, peak: Math.max(...levels), low: Math.min(...levels) }
+    })
+    .filter((light) => light.peak > 2 * light.low)
+  check('pior third: street lamps lit at night (host budget slots)', lit >= 4, { lit })
+  check('pior third: some lamp flickers', flickering.length > 0, { flickering: flickering.map((light) => [Math.round(light.x), Math.round(light.z)]) })
+  /** Where a lamp head stands on the screen now, or null when it is behind the camera or off the screen. @param {{ x: number, y: number, z: number }} light */
+  const headOnScreen = (light) =>
+    page.evaluate(({ x, y, z }) => {
+      const district = window.__district?.district
+      if (!district) return null
+      const at = new district.THREE.Vector3(x, y, z).project(district.world.view.camera)
+      if (at.z > 1 || Math.abs(at.x) > 0.9 || Math.abs(at.y) > 0.9) return null
+      return { x: Math.round(((at.x + 1) / 2) * window.innerWidth), y: Math.round(((1 - at.y) / 2) * window.innerHeight) }
+    }, { x: light.x, y: light.y + 0.3, z: light.z })
+  // the player stands 10 m from a failing lamp, on the road of the street the lamp lines (main street along x, crossing street along z), and looks at it; nearest the
+  // street's start first, and the next lamp when this one's head is off the screen or hidden (the horde, a building), until one prints bright and dim
+  /** @param {{ x: number, y: number }} head */
+  const sampleHead = (head) => sampleHeadOn(page, head)
+  const ordered = flickering.sort((a, b) => Math.hypot(a.x - 46, a.z) - Math.hypot(b.x - 46, b.z))
+  /** @type {{ lamp: number[], head: { x: number, y: number } | null, bright: number, dim: number } | null} */
+  let best = null
+  for (const light of ordered) {
+    const alongZ = Math.abs(light.z) > 10
+    const from = alongZ ? { x: light.x > -100 ? light.x - 6 : light.x + 6, z: light.z - 10 * Math.sign(light.z) } : { x: light.x - 10, z: light.z > 0 ? light.z - 6 : light.z + 6 }
+    await page.evaluate(({ from, light }) => window.__district?.place({ x: from.x, z: from.z, yaw: Math.atan2(-(light.x - from.x), -(light.z - from.z)), pitch: 0.2 }), { from, light })
+    await page.waitForTimeout(2500)
+    const head = await headOnScreen(light)
+    if (!head) continue
+    const taken = await sampleHead(head)
+    if (!best || taken.bright - taken.dim > best.bright - best.dim) best = { lamp: [Math.round(light.x), Math.round(light.z)], ...taken }
+    if (taken.bright > 1.4 * taken.dim) break
+  }
+  check('pior third: a failing lamp\'s head is on the screen', best !== null, { best })
+  if (!best) return
+  // the hard check of the blink is the light's own intensity above (`some lamp flickers`); the head read on a print in rain and fog is a print for people, logged, not a gate
+  console.log(`${best.bright > 1.4 * best.dim ? 'INFO' : 'WARN'}  pior third: the failing lamp's head on the prints ${JSON.stringify(best)}`)
+}
+
+/** Prints the street 30 times and keeps the brightest and the dimmest look at a lamp head (pior-flicker-on.png, pior-flicker-off.png). @param {import('playwright-core').Page} page @param {{ x: number, y: number }} head */
+async function sampleHeadOn(page, head) {
+  // the head is read on the prints themselves: a blink is shorter than taking a print, so the light's state read beside it does not say what the print shows
+  const reader = await page.context().newPage()
+  /** @param {Buffer} image */
+  const brightnessAt = (image) =>
+    reader.evaluate(async ({ data, x, y }) => {
+      const picture = new Image()
+      picture.src = `data:image/png;base64,${data}`
+      await picture.decode()
+      const canvas = document.createElement('canvas')
+      canvas.width = picture.width
+      canvas.height = picture.height
+      const context = canvas.getContext('2d')
+      if (!context) return 0
+      context.drawImage(picture, 0, 0)
+      const pixels = context.getImageData(Math.max(0, x - 8), Math.max(0, y - 8), 16, 16).data
+      let sum = 0
+      for (let index = 0; index < pixels.length; index += 4) sum += Math.max(pixels[index] ?? 0, pixels[index + 1] ?? 0, pixels[index + 2] ?? 0)
+      return sum / (pixels.length / 4)
+    }, { data: image.toString('base64'), x: head?.x ?? 0, y: head?.y ?? 0 })
+  /** @type {{ image: Buffer, level: number } | null} */
+  let bright = null
+  /** @type {{ image: Buffer, level: number } | null} */
+  let dim = null
+  for (let index = 0; index < 30; index++) {
+    const image = await page.screenshot()
+    const level = await brightnessAt(image)
+    if (!bright || level > bright.level) bright = { image, level }
+    if (!dim || level < dim.level) dim = { image, level }
+  }
+  await reader.close()
+  const taken = { head, bright: Math.round(bright?.level ?? 0), dim: Math.round(dim?.level ?? 0) }
+  if (bright && dim && taken.bright > 1.4 * taken.dim) {
+    writeFileSync(join(shots, 'pior-flicker-on.png'), bright.image)
+    writeFileSync(join(shots, 'pior-flicker-off.png'), dim.image)
+  }
+  return taken
+}
+
 for (const scenario of SCENARIOS) {
   for (const camera of CAMERAS) {
     if (only && (only[0] !== scenario || only[1] !== camera.name)) continue
@@ -90,6 +190,14 @@ for (const scenario of SCENARIOS) {
     }
     check(`${label}: no console error`, errors.length === 0, errors.slice(0, 5))
     await context.close()
+    if (scenario === 'pior' && camera.name === 'third') {
+      // the same night with the horde held back (`roteiro=1`): 2000 zombies kill the player before the lamp prints, and a dead player's camera does not turn
+      const night = await open('cena=pior&camera=third&roteiro=1')
+      await night.page.waitForTimeout(settleMs)
+      await checkFlicker(night.page)
+      check('pior third (no horde): no console error', night.errors.length === 0, night.errors.slice(0, 5))
+      await night.context.close()
+    }
   }
 }
 await browser.close()

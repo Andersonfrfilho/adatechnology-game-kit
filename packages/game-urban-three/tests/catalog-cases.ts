@@ -1,8 +1,8 @@
 import { defaultPlantSpec } from '@adatechnology/game-kit-defaults'
-import { createUrban } from '@adatechnology/game-urban'
+import { createUrban, flickerPhaseOf } from '@adatechnology/game-urban'
 import type { TerrainOptions, UrbanBuilder } from '@adatechnology/game-urban'
 import * as THREE_NS from 'three'
-import { createPrism, createRoundedBox, createUrbanTestModule, createUrbanThree } from '../src'
+import { createPrism, createRoundedBox, createUrbanTestModule, createUrbanThree, flickerGroupOf, flickerGroupPhase, flickerLevel } from '../src'
 import { fakeDocument } from './fake-dom'
 import valley from './fixtures/valley-terrain.json'
 
@@ -51,6 +51,21 @@ export const cases: Array<[string, () => Root]> = []
     return urban.draw(b.scene()).root as Root
   }
   for (const [label, run] of Object.entries(PARTS)) cases.push([`part/${label}`, () => draw(run)])
+  // a failing lamp with its own lens (flickerLenses), drawn at a moment its group is dim: the snapshot reads the blinking lens's colour
+  const flickering = createUrbanThree(THREE, { document: fakeDocument, flickerLenses: true })
+  cases.push([
+    'part/led_flicker_lens_dim',
+    () => {
+      const b = kit.builder({ seed: 7, budget: 99 })
+      PARTS.led_flicker!(b)
+      const drawn = flickering.draw(b.scene())
+      const phase = flickerGroupPhase(flickerGroupOf(flickerPhaseOf(0, 0)))
+      let t = 0
+      while (flickerLevel(t, phase) === 1) t += 0.01
+      drawn.animate(t)
+      return drawn.root as Root
+    },
+  ])
   cases.push([`patterns`, () => draw((b) => void kit.neighbourhoods.composeSampleSheet(b, { ground: { color: 0x1e2124, size: 500 } }))])
   cases.push([`terrain`, () => draw((b) => kit.drawTerrain(b, kit.terrain(valley as unknown as TerrainOptions)))])
   const module = createUrbanTestModule({ locale: 'en', document: fakeDocument, plantSpec: defaultPlantSpec })

@@ -15,6 +15,8 @@ export type PartStyle = {
 }
 
 type Styled<TPart> = TPart & { style?: PartStyle }
+/** A part of a failing lamp (its lens and its light): they flicker together on this phase (radians, `flickerPhaseOf`). Absent on everything else. */
+export type Flickering = { flickerPhase?: number }
 
 /** A cone (pointed cap of an iron pole, pine foliage); `y` is the centre. Flat shaded. */
 export type ConePart = { shape: 'cone'; parent: number; x: number; y: number; z: number; radius: number; height: number; color: number; segments: number; style?: PartStyle }
@@ -58,7 +60,7 @@ export type LabelPart = {
 }
 /** A real light. A lamp that did not get one from the budget keeps its glowing lens and has no part like this. */
 export type LightPart =
-  | { shape: 'light'; kind: 'point'; parent: number; x: number; y: number; z: number; color: number; intensity: number; distance: number; decay: number; flicker: boolean }
+  | ({ shape: 'light'; kind: 'point'; parent: number; x: number; y: number; z: number; color: number; intensity: number; distance: number; decay: number; flicker: boolean } & Flickering)
   | {
       shape: 'light'
       kind: 'spot'
@@ -99,7 +101,7 @@ export type PlacementPart = {
 }
 
 /** The parts of an urban scene: the silhouette vocabulary of game-floorplan plus what streets and poles need. */
-export type UrbanPart = Styled<SilhouettePart> | ConePart | CrownPart | PlanePart | VaultPart | TerrainPart | LabelPart | LightPart | PlacementPart
+export type UrbanPart = (Styled<SilhouettePart> & Flickering) | ConePart | CrownPart | PlanePart | VaultPart | TerrainPart | LabelPart | LightPart | PlacementPart
 
 /** One small box drawn as an instance of a single mesh (dashes of a road, sandbags). `y` is the base. */
 export type ItemBox = { x: number; y: number; z: number; width: number; height: number; depth: number; color: number; rx: number; ry: number; rz: number }

@@ -1,4 +1,4 @@
-import type { PlanPoint } from '@adatechnology/game-urban'
+import type { LampShares, PlanPoint } from '@adatechnology/game-urban'
 
 import {
   DataError,
@@ -36,9 +36,15 @@ export type ScenarioSettings = {
   readonly zombies: number
   readonly weather: 'overcast' | 'rain'
   readonly timeOfDay: 'day' | 'night'
+  /** The street lamps at night: the share that works and the share that fails (flickers), the rest burnt out (`lampStateOf` of game-urban). Default every lamp works. */
+  readonly lights?: LampShares
+  /** The fog laid over the weather's own (the zone fog of game-weather-three: colour, how far one sees, weight 0 to 1). Default the weather's fog alone. */
+  readonly fog?: ScenarioFog
   /** Marks a value the spec does not fix. */
   readonly note?: string
 }
+
+export type ScenarioFog = { readonly color?: number; readonly far: number; readonly weight: number }
 
 export type CameraCue = { readonly at: number; readonly mode: 'shoulder' | 'first' | 'vehicle' }
 export type PathPoint = { readonly at: number; readonly x: number; readonly z: number }
@@ -74,12 +80,45 @@ export type Scripts = {
   readonly scripts: readonly Script[]
 }
 
+/** A share that may be 0 (no lamp fails) or 1 (every lamp works). */
+const readFraction: Reader<number> = (value, path) => {
+  const fraction = readNumber(value, path)
+  if (fraction < 0 || fraction > 1) throw new DataError(path, `expected a share from 0 to 1, got ${fraction}`)
+  return fraction
+}
+
+const readLampShares: Reader<LampShares> = (value, path) => {
+  const record = readStrict(['lit', 'flicker'])(value, path)
+  const shares = { lit: readField(record, path, 'lit', readFraction), flicker: readField(record, path, 'flicker', readFraction) }
+  if (shares.flicker > shares.lit) throw new DataError(`${path}.flicker`, 'expected a share no larger than `lit` (the failing lamps are lamps that work)')
+  return shares
+}
+
+const HEX_COLOR = /^#[0-9a-f]{6}$/i
+
+/** A colour written `#rrggbb`, as a number. */
+const readColor: Reader<number> = (value, path) => {
+  const text = readString(value, path)
+  if (!HEX_COLOR.test(text)) throw new DataError(path, `expected a colour as #rrggbb, got ${text}`)
+  return Number.parseInt(text.slice(1), 16)
+}
+
+const readScenarioFog: Reader<ScenarioFog> = (value, path) => {
+  const record = readStrict(['color', 'far', 'weight'])(value, path)
+  const color = readOptional(record, path, 'color', readColor)
+  return { ...(color === undefined ? {} : { color }), far: readField(record, path, 'far', readPositive), weight: readField(record, path, 'weight', readShare) }
+}
+
 const readScenarioSettings: Reader<ScenarioSettings> = (value, path) => {
-  const record = readStrict(['zombies', 'weather', 'timeOfDay', 'note'])(value, path)
+  const record = readStrict(['zombies', 'weather', 'timeOfDay', 'lights', 'fog', 'note'])(value, path)
+  const lights = readOptional(record, path, 'lights', readLampShares)
+  const fog = readOptional(record, path, 'fog', readScenarioFog)
   return {
     zombies: readField(record, path, 'zombies', readPositiveInteger),
     weather: readField(record, path, 'weather', readOneOf(['overcast', 'rain'])),
     timeOfDay: readField(record, path, 'timeOfDay', readOneOf(['day', 'night'])),
+    ...(lights === undefined ? {} : { lights }),
+    ...(fog === undefined ? {} : { fog }),
     note: readOptional(record, path, 'note', readString),
   }
 }

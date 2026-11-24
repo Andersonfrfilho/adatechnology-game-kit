@@ -61,3 +61,10 @@ describe('the plan in game-urban', () => {
     expect(downtown.x).toContain(crossing.points[0]![0])
   })
 })
+
+describe('the lamps allowance', () => {
+  it('is the package cap without the host budget, and unlimited only when the host budget lights the nearest lamps', () => {
+    expect(createReferenceUrban().builder({ seed: 1 }).lights.left).toBe(16)
+    expect(createReferenceUrban({ hostLights: true }).builder({ seed: 1 }).lights.left).toBe(Number.POSITIVE_INFINITY)
+  })
+})

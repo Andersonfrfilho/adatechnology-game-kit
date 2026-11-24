@@ -53,9 +53,12 @@ export interface ElectricMeter {
   h: number
 }
 
-/** Pole, drop, meter, descent and the run to the panel; a tap has no meter and a bare connection instead. */
+/**
+ * Pole, drop, meter, descent and the run to the panel; a tap has no meter and a bare connection instead. With the street's own poles (`streetPoles`) the pole is the house's entrance post
+ * inside its lot, or `null` when the house has no front yard to stand it in (the meter is on the facade); the street's drop lands at `drop[0]` either way.
+ */
 export interface ServiceEntrance {
-  pole: { u: number; v: number; h: number }
+  pole: { u: number; v: number; h: number } | null
   drop: Point3[]
   meter: ElectricMeter | null
   descent: Point3[]
