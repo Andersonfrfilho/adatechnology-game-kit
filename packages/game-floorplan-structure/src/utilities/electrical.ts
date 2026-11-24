@@ -1,6 +1,6 @@
 import type { Plan, ResultItem, Room } from '@adatechnology/game-floorplan'
 import type { Rng } from './shared'
-import type { Circuit, Conduit, ElectricalPanel, LightSwitch, OutdoorLamp, Outlet, ServiceEntrance } from './types'
+import type { Circuit, Conduit, ElectricalPanel, LightSwitch, OutdoorLamp, Outlet, ServiceEntrance, ServiceStreet } from './types'
 import { NO_SOCKET_ROOMS } from './shared'
 import { addOutlets } from './electrical-outlets'
 import { addConduits, addSwitches } from './electrical-circuits'
@@ -43,6 +43,8 @@ export interface ElectricalContext {
   visor?: boolean
   /** The street brings its own poles (a city draws them): the house's entrance post stands inside its lot, and the street's drop lands on it (or on the facade's meter). */
   streetPoles?: boolean
+  /** `'network'`: the street's utility network brings the poles and the drop; the entrance is the meter post (padrão) inside the lot (`ServiceEntrance.street`). */
+  street?: ServiceStreet
 }
 
 /** Shared state of the steps that lay the installation out. */
@@ -54,6 +56,7 @@ export interface Layout {
   pointsOf: Map<string, WallPoint[]>
   visor?: boolean
   streetPoles?: boolean
+  street?: ServiceStreet
 }
 
 export const keyOf = (room: Room): string => `${room.id}@${room.floor}`
@@ -78,7 +81,7 @@ export function planElectrical(context: ElectricalContext): Electrical {
   const rooms = plan.rooms.filter((room) => !NO_SOCKET_ROOMS.includes(room.type) && !room.outdoor)
   const pointsOf = new Map<string, WallPoint[]>()
   for (const room of rooms) pointsOf.set(keyOf(room), wallPointsOf(plan, room, items))
-  const layout: Layout = { plan, items, rooms, electrical, pointsOf, ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}) }
+  const layout: Layout = { plan, items, rooms, electrical, pointsOf, ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}), ...(context.street === 'network' ? { street: 'network' as const } : {}) }
   addOutlets(layout)
   placeEntrance(layout)
   placePanel(layout)

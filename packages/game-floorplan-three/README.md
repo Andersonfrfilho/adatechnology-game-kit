@@ -164,3 +164,8 @@ With a `LightBudget` (`host.lights`), the room lights of `lighting({ budget })` 
 `renderer.build(plan, { serviceFrom: [u, y, v] })`, for a plan generated with `streetPoles: true`: the point of the house's frame where the service drop leaves the street's pole. The house then draws
 no grid poles of its own (no neighbouring poles 22 m away, no grid wires): one drop sags from that point to `serviceEntrance.drop[0]` (the entrance post's head, or the facade over the meter),
 held by the ground at the street's end. Without it the house draws its own pole, the two neighbours and the grid, as before.
+
+A plan generated with `street: 'network'` (`serviceEntrance.street`) is on a street whose utility network (`game-urban/networks`) brings the poles: the house never draws a
+neighbouring pole nor the grid, with or without `serviceFrom` (give it the start of the network's `service_drop` to the lot). Its entrance is the meter post (padrão, 6 m) or, with no
+front yard, a mast up the facade; with the interactables kit the kit draws the post (`service_entrance`, one object) and the house does not. In this mode `house.electrical.pole` is
+that meter post, not the utility's pole.

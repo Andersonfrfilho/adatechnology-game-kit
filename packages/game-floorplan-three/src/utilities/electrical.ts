@@ -84,7 +84,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
         streetDrop(from, [landing[0], landing[2], landing[1]]);
         const end = en.drop[en.drop.length - 1];
         if (P && end && en.drop.length > 1 && !kitDraws) { wireSpans([landing[0], landing[2], landing[1]], [end[0], end[2], end[1]], 0.009, 'wiring:drop:0', 'pole:' + P.u.toFixed(1)); cursor.pc = null; }
-      } else if (P) {
+      } else if (P && en.street !== 'network') { // (on a street with a utility network the network draws its poles and the drop, never the house)
         for (const k of [-1, 1]) pole(P.u + k * 22, P.v, P.h); // neighbouring poles and the grid that follows the street
         wiringSpans(P, en.drop && en.drop.length > 1 && !kitDraws ? en.drop : null);
       }

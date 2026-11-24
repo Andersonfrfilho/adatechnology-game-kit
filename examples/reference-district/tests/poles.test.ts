@@ -8,7 +8,8 @@ import { poleIdAt } from '../src/game/assemble/streets'
 import { lineRects } from '../src/game/geometry'
 import { createReferenceUrban } from '../src/game/plan'
 import { POLE_MIN_GAP, POLE_SPACING, polePointsOf, STREET_LIGHT_CURB_SETBACK } from '../src/game/roads'
-import { entrancePostOf, entranceRectsOf, frontOpeningsOf, keepOutOf, SERVICE_DROP_HEIGHT, SERVICE_DROP_MAX, serviceDropOf, toWorld } from '../src/game/service'
+import { buildNetworks } from '../src/game/assemble/networks'
+import { entrancePostOf, entranceRectsOf, frontOpeningsOf, keepOutOf, networkDropOf, toWorld } from '../src/game/service'
 import { plan, SIDEWALK_WIDTH, site } from './helpers'
 
 const lines = plan.lines ?? []
@@ -91,7 +92,7 @@ describe('the street poles stand on the sidewalk by the curb, the way a Brazilia
   })
 })
 
-describe('each house is fed by a drop from the nearest street pole', () => {
+describe('each house is fed by the network\'s drop', () => {
   it('the entrance post stands inside its lot, behind the lot\'s front edge, never on the sidewalk', () => {
     expect(posts.length).toBeGreaterThan(0)
     for (const post of posts) {
@@ -100,32 +101,31 @@ describe('each house is fed by a drop from the nearest street pole', () => {
     }
   })
 
-  it('the drop runs from the nearest street pole, high on it, to where the entrance takes it (the post\'s head or the facade meter), never to the ground', () => {
+  it('the drop is the network\'s: from its pole, at the low voltage on it, to where the entrance takes it (the meter post\'s head or the facade meter), never to the ground', () => {
+    const { networks } = buildNetworks({ plan, site, lots, avoid: keepOutOf(lots, POLE_MIN_GAP) })
     let fed = 0
     for (const house of lots) {
-      const drop = serviceDropOf(house, poles)
+      const drop = networkDropOf({ house, lot: house.lot.id, networks })
       const entrance = (house.plan as StructuredResult).utilities.electrical.serviceEntrance
       if (!entrance) continue
-      // a lot whose front is on the sidewalk of a street is fed; one on no street of the plan (the church, 70 m north) is out of every pole's reach
-      const [x0, z0, x1, z1] = house.lot.rect
-      const onStreet = streets.some((street) => lineRects(street, SIDEWALK_WIDTH + 0.01).some((rect) => rect[0] <= x1 && x0 <= rect[2] && rect[1] <= z1 && z0 <= rect[3]))
-      if (!onStreet) {
-        expect(drop, `${house.lot.id}: on no street`).toBeUndefined()
-        continue
-      }
+      // every lot is fed: one on no street of the plan (the church, 70 m north) by the extra pole the network stands within the drop's reach
       fed++
       expect(drop, house.lot.id).toBeDefined()
+      expect(entrance.street, house.lot.id).toBe('network')
       const landing = entrance.drop[0]!
       const [x, z] = toWorld(house.placement, landing[0], landing[1])
-      expect(drop!.to, house.lot.id).toEqual([x, landing[2], z])
+      expect(drop!.to[0], house.lot.id).toBeCloseTo(x, 3)
+      expect(drop!.to[1], house.lot.id).toBe(landing[2])
+      expect(drop!.to[2], house.lot.id).toBeCloseTo(z, 3)
       expect(drop!.to[1], `${house.lot.id}: lands high`).toBeGreaterThan(2.5)
-      const nearest = Math.min(...poles.map((pole) => Math.hypot(pole.x - x, pole.z - z)))
-      expect(Math.hypot(drop!.from[0] - x, drop!.from[2] - z), house.lot.id).toBeCloseTo(nearest)
-      expect(drop!.from[1], house.lot.id).toBe(SERVICE_DROP_HEIGHT)
-      expect(Math.hypot(drop!.from[0] - x, drop!.from[2] - z), `${house.lot.id}: a drop no longer than a utility allows`).toBeLessThanOrEqual(SERVICE_DROP_MAX)
+      const edge = networks.edges.find((item) => item.id === `drop:${house.lot.id}`)!
+      const pole = networks.nodes.find((node) => node.id === edge.from)!
+      expect(pole.kind, house.lot.id).toBe('pole')
+      expect(drop!.from, house.lot.id).toEqual([pole.at[0], edge.heights![0], pole.at[2]])
+      expect(Math.hypot(drop!.from[0] - x, drop!.from[2] - z), `${house.lot.id}: a drop no longer than a utility allows`).toBeLessThanOrEqual(30)
       if (entrance.pole) expect([landing[0], landing[1]], house.lot.id).toEqual([entrance.pole.u, entrance.pole.v])
       else expect([landing[0], landing[1]], house.lot.id).toEqual([entrance.meter?.u, entrance.meter?.v])
     }
-    expect(fed, 'the lots of the script street and downtown are fed').toBeGreaterThan(10)
+    expect(fed, 'every lot with an entrance is fed').toBe(lots.length)
   })
 })

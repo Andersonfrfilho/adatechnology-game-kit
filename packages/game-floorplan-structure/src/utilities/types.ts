@@ -2,6 +2,9 @@ import type { LotPath, PlanAxis } from '@adatechnology/game-floorplan'
 import type { Rect } from '../types'
 import type { LampType } from './lamp-types'
 
+/** Who brings the street side of the service entrance (`ServiceEntrance.street`). */
+export type ServiceStreet = 'own' | 'network'
+
 /** A point in the world: `[u, v, y]` (y is the absolute height). */
 export type Point3 = [number, number, number]
 
@@ -58,6 +61,11 @@ export interface ElectricMeter {
  * inside its lot, or `null` when the house has no front yard to stand it in (the meter is on the facade); the street's drop lands at `drop[0]` either way.
  */
 export interface ServiceEntrance {
+  /**
+   * Who brings the street side: absent (`'own'`, the default) the house draws its service pole on the sidewalk and the two neighbouring poles with the grid between them;
+   * `'network'` (`generate(..., { street: 'network' })`) the street's utility network does, and `pole` is the house's meter post (padrão), 6 m, inside the lot (`null` on a facade, where the drop lands on a mast up the facade, the descent, as high as on the post).
+   */
+  street?: ServiceStreet
   pole: { u: number; v: number; h: number } | null
   drop: Point3[]
   meter: ElectricMeter | null

@@ -2,6 +2,8 @@ import type { FindStack, FindsQuery, Plan, ResultItem } from '@adatechnology/gam
 
 import type { WaterTank } from '../types'
 import { hasContent } from './content'
+import { houseConnectionsOf } from './connections'
+import type { HouseConnection } from './connections'
 import type { EnergyConfig, Electrical } from './electrical'
 import { planElectrical } from './electrical'
 import { planGas } from './gas'
@@ -9,7 +11,7 @@ import type { Gas, GasLayout } from './gas'
 import { outbuildingCeilingLight, withOutbuildingRooms } from './outbuildings'
 import { planPlumbing } from './plumbing'
 import type { Rng } from './shared'
-import type { Outbuilding, Plumbing, Solar } from './types'
+import type { Outbuilding, Plumbing, ServiceStreet, Solar } from './types'
 import { planSolar } from './solar'
 
 export interface Utilities {
@@ -17,6 +19,8 @@ export interface Utilities {
   electrical: Electrical
   solar: Solar | null
   plumbing: Plumbing
+  /** With `street: 'network'` only: where the house takes each street network, in its plan (`connectionsInWorld` places them on the lot). */
+  connections?: HouseConnection[]
 }
 
 export interface UtilitiesContext {
@@ -31,6 +35,8 @@ export interface UtilitiesContext {
   visor?: boolean
   /** The street brings its own poles (`generate(..., { streetPoles: true })`): see `ElectricalContext.streetPoles`. */
   streetPoles?: boolean
+  /** `'network'` (`generate(..., { street: 'network' })`): the street's utility network brings poles and drop; see `ElectricalContext.street`. */
+  street?: ServiceStreet
   /** Where the cooking cylinder stands: the outdoor shelter (default) or, asked for, the kitchen beside the stove. */
   gasLayout?: GasLayout
   /** Seeded stream by name: `gas`, `electrical`, `solar`. */
@@ -43,10 +49,11 @@ export function planUtilities(context: UtilitiesContext): Utilities {
   const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}), ...(context.gasLayout ? { layout: context.gasLayout } : {}) })
   // the outbuildings are wired as rooms of the house, their ceiling lights with them
   const outbuildings = context.outbuildings ?? []
-  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}) })
+  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}), ...(context.street === 'network' ? { street: 'network' as const } : {}) })
   const solar = planSolar({ plan, rng: rngFor('solar'), ...(energy ? { energy } : {}) })
   const plumbing = planPlumbing({ plan, items, tank })
-  return { gas, electrical, solar, plumbing }
+  if (context.street !== 'network') return { gas, electrical, solar, plumbing }
+  return { gas, electrical, solar, plumbing, connections: houseConnectionsOf({ plan, electrical, items }) }
 }
 
 const OVERHEAD = 'overhead_cabinet'

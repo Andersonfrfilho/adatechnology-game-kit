@@ -15,6 +15,10 @@ const SERVICE_POLE_NO_LOT = 3
 export const SERVICE_POST_INSIDE_LOT = 0.35
 /** The least front yard (metres) that holds the entrance post clear of the facade; a house with less has its meter on the facade and no post. */
 export const SERVICE_POST_MIN_YARD = 1.2
+/** On a street with a utility network (`street: 'network'`) the meter post (padrão) is this tall over the ground, and the network's drop is anchored on it this high (metres). */
+export const NETWORK_POST = { h: 6, anchor: 5.7 } as const
+/** The post of a street that only brings its poles (`streetPoles`): as tall as the street's, the drop anchored this high. */
+const STREET_POST = { h: 7.5, anchor: 6.5 } as const
 
 export const mainDoorOf = (plan: Plan): PlanDoor | undefined => plan.doors.find((p) => p.floor === 0 && p.exterior && p.side === 'front') || plan.doors.find((p) => p.floor === 0 && p.exterior)
 
@@ -34,12 +38,12 @@ export function placeEntrance(layout: Layout): void {
       placed = { place: 'gate_pillar', u: round2(gate.u + direction * (gate.width / 2 + 0.25)), v: round2(gate.v), y: 1.4, side: 'front', ...METER_SIZE }
     } else placed = { place: 'facade', u: round2(door ? door.at + 1.2 : plan.w / 2), v: -0.1, y: 1.4, side: 'front', ...METER_SIZE }
     const meter: ElectricMeter = Object.assign(placed, { id: 'meter' })
-    if (layout.streetPoles) return void (electrical.serviceEntrance = streetEntrance({ plan, meter, poleU: round2(poleU), door }))
+    if (fromStreet(layout)) return void (electrical.serviceEntrance = streetEntrance({ plan, meter, poleU: round2(poleU), door, network: layout.street === 'network' }))
     electrical.serviceEntrance = { pole: { u: round2(poleU), v: round2(poleV), h: 7.5 }, drop: [[round2(poleU), round2(poleV), 6.5], [meter.u, meter.v, 2.6]], meter, descent: [[meter.u, meter.v, 2.6], [meter.u, meter.v, 1.65]], internalRun: null }
   } else if (lot === null || plan.style === 'commercial') {
     const front = door ? { u: round2(door.at + 1.0), v: -0.1 } : { u: round2(plan.w / 2), v: -0.1 }
     // a shop on a lot has the pole where a house has it, in front of the lot's edge: 3 m from the facade put it on the road when the lot starts at the facade (the Visor's golden keeps the 3 m)
-    if (lot && layout.streetPoles) return void (electrical.serviceEntrance = streetEntrance({ plan, meter: { id: 'meter', place: 'facade', u: front.u, v: front.v, y: 1.4, side: 'front', ...METER_SIZE }, poleU: round2(front.u + 2), door }))
+    if (lot && fromStreet(layout)) return void (electrical.serviceEntrance = streetEntrance({ plan, meter: { id: 'meter', place: 'facade', u: front.u, v: front.v, y: 1.4, side: 'front', ...METER_SIZE }, poleU: round2(front.u + 2), door, network: layout.street === 'network' }))
     const poleV = lot && !layout.visor ? round2(lot.rect[1] - SERVICE_POLE_OUTSIDE_LOT) : -SERVICE_POLE_NO_LOT
     electrical.serviceEntrance = {
       pole: { u: round2(front.u + 2), v: poleV, h: 7.5 }, drop: [[round2(front.u + 2), poleV, 6.5], [front.u, front.v, 3.2]],
@@ -52,18 +56,26 @@ export function placeEntrance(layout: Layout): void {
  * The entrance of a house on a street that brings its own poles: the post (padrão) stands inside the lot, `SERVICE_POST_INSIDE_LOT` behind its front edge, with the drop from it to the
  * meter; a house whose front yard is too shallow for it has no post, and the street's drop lands on the facade over the meter. The street's drop lands at `drop[0]` either way.
  */
-function streetEntrance({ plan, meter, poleU, door }: { readonly plan: Plan; readonly meter: ElectricMeter; readonly poleU: number; readonly door: PlanDoor | undefined }): NonNullable<Layout['electrical']['serviceEntrance']> {
+type StreetEntranceParams = { readonly plan: Plan; readonly meter: ElectricMeter; readonly poleU: number; readonly door: PlanDoor | undefined; readonly network: boolean }
+
+function streetEntrance({ plan, meter, poleU, door, network }: StreetEntranceParams): NonNullable<Layout['electrical']['serviceEntrance']> {
   const front = plan.lot?.rect[1] ?? 0
   const head: [number, number, number] = [meter.u, meter.v, meter.place === 'facade' ? 3.2 : 2.6]
   const descent: [number, number, number][] = [head, [meter.u, meter.v, 1.65]]
+  const mode = network ? { street: 'network' as const } : {}
   if (-front < SERVICE_POST_MIN_YARD) {
     const facade: ElectricMeter = meter.place === 'facade' ? meter : { ...meter, place: 'facade', u: round2(door ? door.at + 1.2 : plan.w / 2), v: -0.1 }
-    const top: [number, number, number] = [facade.u, facade.v, 3.2]
-    return { pole: null, drop: [top], meter: facade, descent: [top, [facade.u, facade.v, 1.65]], internalRun: null }
+    // on a network the drop is anchored on a mast up the facade (pontalete) as high as on a post: the descent is that mast; else on the facade over the meter
+    const top: [number, number, number] = [facade.u, facade.v, network ? NETWORK_POST.anchor : 3.2]
+    return { ...mode, pole: null, drop: [top], meter: facade, descent: [top, [facade.u, facade.v, 1.65]], internalRun: null }
   }
-  const post = { u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT), h: 7.5 }
-  return { pole: post, drop: [[post.u, post.v, 6.5], head], meter, descent, internalRun: null }
+  const size = network ? NETWORK_POST : STREET_POST
+  const post = { u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT), h: size.h }
+  return { ...mode, pole: post, drop: [[post.u, post.v, size.anchor], head], meter, descent, internalRun: null }
 }
+
+/** The street brings the poles: only the house's own entrance stands in the lot. */
+const fromStreet = (layout: Layout): boolean => layout.streetPoles === true || layout.street === 'network'
 
 /** The distribution panel in the room of the main door, on the wall nearest the meter, clear of doors and windows and of tall furniture. */
 export function placePanel(layout: Layout): void {

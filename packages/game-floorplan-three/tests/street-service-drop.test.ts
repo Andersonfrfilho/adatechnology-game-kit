@@ -1,3 +1,6 @@
+import * as GameInteractables from '@adatechnology/game-interactables'
+import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
+import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import { describe, expect, it } from 'vitest'
 
 import { houseOf, planOf } from './helpers/houses'
@@ -41,5 +44,51 @@ describe('a house on a street that brings its own poles (`serviceFrom`)', () => 
   it('without `serviceFrom` the house keeps its own grid, as before', () => {
     const { house } = houseOf(planOf('single_storey_a', 1), {}, { quality: 'game' })
     expect(partIds(house).filter((id) => id.startsWith('pole:')).length).toBe(3)
+  })
+})
+
+describe('a house on a street with a utility network (`street: \'network\'`)', () => {
+  const plan = planOf('single_storey_a', 1, 'normal', { street: 'network' })
+  const entrance = plan.utilities.electrical.serviceEntrance!
+  const kit = { GameInteractables, GameInteractablesHousehold, GameInteractablesThree }
+  const entrances = (house: ReturnType<typeof houseOf>['house']): number => [...house.interactives!.entries.values()].filter((entry) => entry.type === 'service_entrance').length
+
+  it('draws its meter post once and no pole of the street, with or without the network\'s drop', () => {
+    expect(entrance.street).toBe('network')
+    for (const build of [{ quality: 'game' as const }, { quality: 'game' as const, serviceFrom: FROM }]) {
+      const ids = partIds(houseOf(plan, {}, build).house)
+      expect(ids.filter((id) => id.startsWith('pole:')), 'only the meter post').toEqual(['pole:' + entrance.pole!.u.toFixed(1)])
+      expect(ids.some((id) => id.startsWith('wiring:grid'))).toBe(false)
+    }
+  })
+
+  it('with the interactables the kit draws the post (one entrance object) and the house none', () => {
+    for (const build of [{ quality: 'game' as const }, { quality: 'game' as const, serviceFrom: FROM }]) {
+      const { house } = houseOf(plan, { interactives: kit }, build)
+      expect(partIds(house).some((id) => id.startsWith('pole:')), 'the house draws no pole').toBe(false)
+      expect(entrances(house), 'one entrance object').toBe(1)
+      expect(house.interactives!.plane.items.filter((item) => item.type === 'service_entrance').length).toBe(1)
+    }
+  })
+
+  it('hangs the network\'s drop from where it leaves the street pole to the anchor on the post', () => {
+    const { house } = houseOf(plan, { interactives: kit }, { quality: 'game', serviceFrom: FROM })
+    const drop = house.structure.parts.filter((part) => part.id.startsWith('wiring:service:')).sort((a, b) => Number(a.id.split(':')[2]) - Number(b.id.split(':')[2]))
+    const anchor = entrance.drop[0]!
+    const first = drop[0]!.aabb
+    const last = drop[drop.length - 1]!.aabb
+    const holds = (box: readonly number[], x: number, z: number): boolean => x >= box[0]! - 0.02 && x <= box[2]! + 0.02 && z >= box[1]! - 0.02 && z <= box[3]! + 0.02
+    expect(holds(first, FROM[0], FROM[2]), 'starts at the street pole').toBe(true)
+    expect(holds(last, anchor[0], anchor[1]), 'ends on the post').toBe(true)
+    expect(Math.max(...drop.map((part) => part.y1))).toBeLessThanOrEqual(FROM[1] + 0.05)
+  })
+
+  it('each house has its own interactables world: an outage of one lot (`power.setGrid(false)`) leaves its neighbour lit', () => {
+    const one = houseOf(plan, { interactives: kit }).house
+    const other = houseOf(planOf('single_storey_a', 2, 'normal', { street: 'network' }), { interactives: kit }).house
+    expect(one.interactives!.world).not.toBe(other.interactives!.world)
+    one.interactives!.world.power.setGrid(false)
+    expect(one.interactives!.world.power.grid).toBe(false)
+    expect(other.interactives!.world.power.grid).toBe(true)
   })
 })

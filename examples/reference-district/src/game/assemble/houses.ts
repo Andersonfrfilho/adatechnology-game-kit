@@ -17,10 +17,10 @@ import * as GameVegetation from '@adatechnology/game-vegetation'
 import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
 import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import type { PlanRect } from '@adatechnology/game-urban'
+import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 
 import { lotPlacement, overflowOf } from '../placement'
-import type { PolePoint } from '../roads'
-import { serviceDropOf } from '../service'
+import { networkDropOf } from '../service'
 import type { HousePlacement, HouseSize } from '../placement'
 import { seedOf } from '../seed'
 import type { Lot, Site } from '../site'
@@ -45,6 +45,8 @@ export type PlacedHouse = {
 export type Houses = {
   readonly list: readonly PlacedHouse[]
   readonly renderer: ReturnType<typeof createHouseRenderer>
+  /** Cuts or restores the grid of one lot's house (an outage of its circuit): each house has its own interactables world. False for a lot with no house or no interactables. */
+  setLotGrid(lot: string, on: boolean): boolean
   /** Steps the doors, the wind and the level of detail; the focus is the camera. */
   update(dt: number, time: number, focus: { readonly x: number; readonly y: number; readonly z: number }): void
   dispose(): void
@@ -86,13 +88,13 @@ function footprintOf(placement: HousePlacement, size: HouseSize): PlanRect {
 export type PlannedLot = { readonly lot: Lot; readonly plan: FloorplanResult; readonly size: HouseSize; readonly placement: HousePlacement }
 
 /**
- * The plan of every lot of the site (`engine.generate`, by the lot's typology, seed and state), with the street's own poles (`streetPoles`: the entrance post stands inside the lot), placed
- * on its lot facing the street.
+ * The plan of every lot of the site (`engine.generate`, by the lot's typology, seed and state), on a street with a utility network (`street: 'network'`: the meter post stands inside
+ * the lot and the house declares its connections), placed on its lot facing the street.
  */
 export function planLots(site: Site): PlannedLot[] {
   const engine = registerPacks()
   return site.lots.map((lot): PlannedLot => {
-    const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), streetPoles: true, ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
+    const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), street: 'network', ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
     const size = houseSizeOf(plan)
     return { lot, plan, size, placement: lotPlacement(lot.rect, lot.front, size) }
   })
@@ -103,8 +105,8 @@ export type HousesParams = {
   readonly world: KitWorld
   readonly scene: THREE_NS.Object3D
   readonly lots: readonly PlannedLot[]
-  /** The street's poles: each house's service drop leaves the nearest one. */
-  readonly poles: readonly PolePoint[]
+  /** The utility networks (`buildNetworks`): each house's service drop is the network's `service_drop` to its lot. */
+  readonly networks: UtilityNetworks
 }
 
 /**
@@ -112,7 +114,7 @@ export type HousesParams = {
  * interactables and the vegetation of the kit, standing on its lot facing the street and registered in the world's destruction. The distance level of detail (`planLod`) keeps only the near houses
  * complete: the others lose their interior and, far away, vanish.
  */
-export function createHouses({ THREE, world, scene, lots, poles }: HousesParams): Houses {
+export function createHouses({ THREE, world, scene, lots, networks }: HousesParams): Houses {
   const options: HouseRendererOptions = {
     locale: 'pt-BR',
     quality: 'game',
@@ -125,7 +127,7 @@ export function createHouses({ THREE, world, scene, lots, poles }: HousesParams)
   const renderer = createHouseRenderer(THREE, options)
   const unregister = registerHouseQueues(renderer, world.frame.scheduler.budget)
   const list = lots.map(({ lot, plan, size, placement }): PlacedHouse => {
-    const drop = serviceDropOf({ plan, placement }, poles)
+    const drop = networkDropOf({ house: { plan, placement }, lot: lot.id, networks })
     const house = renderer.build(plan, { quality: 'game', terrain: false, ...(drop ? { serviceFrom: drop.fromInHouse } : {}) })
     house.group.rotation.y = placement.ry
     house.group.position.set(placement.x, 0, placement.z)
@@ -138,6 +140,12 @@ export function createHouses({ THREE, world, scene, lots, poles }: HousesParams)
   return {
     list,
     renderer,
+    setLotGrid(lotId, on) {
+      const power = list.find((placed) => placed.lot.id === lotId)?.house.interactives?.world.power
+      if (!power) return false
+      power.setGrid(on)
+      return true
+    },
     update(dt, time, focus) {
       sincePlan += dt
       if (sincePlan >= PLAN_EVERY_SECONDS) {
