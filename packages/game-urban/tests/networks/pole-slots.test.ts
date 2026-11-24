@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_POLES } from '../../src'
-import type { SingleArmSpec } from '../../src'
 import { DEFAULT_POLE_SLOTS, checkPoleSlots, slotsOfPole } from '../../src/networks'
 import type { DistributionPoleDef, PoleSlots } from '../../src/networks'
 
@@ -26,12 +25,18 @@ describe('pole slots', () => {
     expect(DEFAULT_POLE_SLOTS.bands.lighting[1]).toBeLessThan(DEFAULT_POLE_SLOTS.bands.lv[0])
   })
 
-  // The registry gets its first distribution pole in T2.8b (spec 011 §10), which turns this into a sweep of DEFAULT_POLES.
-  it('reads the slots of a distribution pole entry and none of the street lights shipped today', () => {
-    const single = DEFAULT_POLES.find((pole) => pole.id === 'concrete_arm')?.spec as SingleArmSpec
-    const distribution: DistributionPoleDef = { id: 'concrete_distribution', shape: 'distribution', spec: { ...single, slots: DEFAULT_POLE_SLOTS } }
-    expect(slotsOfPole(distribution)).toBe(DEFAULT_POLE_SLOTS)
-    expect(DEFAULT_POLES.map(slotsOfPole)).toEqual(DEFAULT_POLES.map(() => undefined))
+  it('every pole of the registry with bands fits them, and the registry ships at least one (the distribution pole)', () => {
+    const withSlots = DEFAULT_POLES.filter((pole) => slotsOfPole(pole) !== undefined)
+    expect(withSlots.map((pole) => pole.id)).toContain('concrete_distribution')
+    for (const pole of withSlots) expect(checkPoleSlots(slotsOfPole(pole) as PoleSlots), pole.id).toEqual([])
+  })
+
+  it('draws the lamp of the distribution pole in the street light band and its mast up to the top above the ground', () => {
+    const pole = DEFAULT_POLES.find((entry) => entry.id === 'concrete_distribution') as DistributionPoleDef
+    const { mast, lamp, slots } = pole.spec
+    expect(mast.height).toBeCloseTo(slots.height - slots.embedment, 6)
+    expect(lamp.y).toBeGreaterThanOrEqual(slots.bands.lighting[0])
+    expect(lamp.y + lamp.height).toBeLessThanOrEqual(slots.bands.lighting[1])
   })
 
   it('raises the bands of a 12 m pole by the extra height above the ground', () => {

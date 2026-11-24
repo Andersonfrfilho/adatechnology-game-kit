@@ -8,6 +8,7 @@ import { createDistrictGrid, createHorde } from './assemble/horde'
 import { createHouses, planLots } from './assemble/houses'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
+import { buildNetworks } from './assemble/networks'
 import { drawStreets } from './assemble/streets'
 import { createDistrictWeather } from './assemble/weather'
 import { groundLayoutOf, terrainBoundsOf } from './ground'
@@ -50,7 +51,9 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const isNight = options.hour >= NIGHT_FROM_HOUR || options.hour < NIGHT_UNTIL_HOUR
 
   const lots = planLots(site)
-  const poles = polePointsOf({ plan, spacing: POLE_SPACING, setback: STREET_LIGHT_CURB_SETBACK, avoid: keepOutOf(lots, POLE_MIN_GAP) })
+  const avoid = keepOutOf(lots, POLE_MIN_GAP)
+  const poles = polePointsOf({ plan, spacing: POLE_SPACING, setback: STREET_LIGHT_CURB_SETBACK, avoid })
+  const networks = buildNetworks({ plan, site, avoid })
   const streets = drawStreets({ THREE, urban: createReferenceUrban({ hostLights: true }), plan, site, poles, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(streets.drawn.root)
   const houses = createHouses({ THREE, world, scene, lots, poles })
@@ -86,6 +89,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
     THREE,
     world,
     site,
+    networks: networks.networks,
     houses,
     horde,
     player,

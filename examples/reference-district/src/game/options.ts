@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 
 import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
 import type { LampShares } from '@adatechnology/game-urban'
+import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 import type { ZoneFog } from '@adatechnology/game-weather-three'
 
 import type { Houses } from './assemble/houses'
@@ -43,6 +44,8 @@ export type District = {
   readonly THREE: typeof THREE_NS
   readonly world: KitWorld
   readonly site: Site
+  /** The utility networks as data (`game-urban/networks`), for the drawing of T2.8d and the outages of T2.8f. */
+  readonly networks: UtilityNetworks
   readonly houses: Houses
   readonly horde: Horde
   readonly player: PlayerRig

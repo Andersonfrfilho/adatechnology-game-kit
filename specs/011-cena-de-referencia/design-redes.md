@@ -253,10 +253,10 @@ Prints: os mesmos cinco enquadramentos dos `fios-antes-*`, antes e depois, na T2
 |---|---|---|---|
 | **T2.7 🧠** | este desenho, revisado pelo `architect` | `specs/` | `opus` |
 | T2.8a | `UtilityConnection` no `game-contracts`; tipos, `graph.ts` e `validate.ts` com fixtures à mão; `kit-audit/rules.json` com as palavras novas | contracts, urban | `sonnet` |
-| T2.8b | **depois do #470 mergeado**: `concrete_distribution` no registro de postes com `slots` (o `pole-slots.test.ts` passa a varrer o `DEFAULT_POLES` e exige ao menos um poste com faixas); gerador de energia e iluminação (postes, MT, BT, trafos, ramais como dado); o `light` herda o `lampStateOf` | urban | `sonnet` |
+| T2.8b | **depois do #470 mergeado**: `concrete_distribution` no registro de postes com `slots` (o `pole-slots.test.ts` passa a varrer o `DEFAULT_POLES` e exige ao menos um poste com faixas); `generateNetworks`: o gerador de **todas** as redes como dado — energia e iluminação (postes, MT, BT, trafos, ramais, poste a mais para o lote fora do alcance), telecom, e também esgoto (com interceptor, ETE e elevatória), drenagem (galeria, boca de lobo, sarjeta `storm_gutter`, muro de ala) e água (rede, registro, hidrante, ramal), adiantados da T2.8e; a cena gera as redes como dado (`District.networks`) | urban, exemplo | `sonnet` |
 | T2.8c | lado da casa (abaixo) | floorplan-structure, -three, -interactables | `sonnet` |
-| T2.8d | desenho de energia, iluminação e telecom; a cena troca `polePointsOf` pela rede; prints antes e depois | urban-three, exemplo | `sonnet` |
-| T2.8e | esgoto, drenagem e água (dado) e as peças de superfície (tampa, grelha, muro de ala, hidrante, registro); no `validateNetworks`, as regras que pedem o plano da rua e ficaram fora da T2.8a: PV em todo cruzamento e mudança de direção, boca de lobo a cada ≤ 60 m e na esquina a montante, ramal predial e da boca de lobo perpendiculares à rua (a T2.8a já confere coletor ≤ 80 m entre PVs, recobrimento de 1,8 m sob rua com galeria e ramal ≤ 0,85 m onde cruza a galeria) | urban, urban-three, exemplo | `sonnet` |
+| T2.8d | desenho de energia, iluminação e telecom; a cena troca `polePointsOf` pela rede e o estado da lâmpada passa a ser do nó `light` (`lampStateOf` por nó, os estados do #470 mantidos), movido da T2.8b; prints antes e depois | urban-three, exemplo | `sonnet` |
+| T2.8e | esgoto, drenagem e água (o dado já sai da T2.8b) e as peças de superfície (tampa, grelha, muro de ala, hidrante, registro); no `validateNetworks`, as regras que pedem o plano da rua e ficaram fora da T2.8a: PV em todo cruzamento e mudança de direção, boca de lobo a cada ≤ 60 m e na esquina a montante, ramal predial e da boca de lobo perpendiculares à rua (a T2.8a já confere coletor ≤ 80 m entre PVs, recobrimento de 1,8 m sob rua com galeria e ramal ≤ 0,85 m onde cruza a galeria) | urban, urban-three, exemplo | `sonnet` |
 | T2.8f | estado lógico (`supplied`, `outage`, luminárias, `setGrid`, `waterSupply`), poste e vão como peças de destruição, `EVENT_CLASS`; `cutRun` para o `game-destruction`; depende da L10 | urban, urban-three, destruction, interactables, exemplo | `sonnet` |
 
 **T2.8c, o lado da casa:**
@@ -269,8 +269,9 @@ Prints: os mesmos cinco enquadramentos dos `fios-antes-*`, antes e depois, na T2
 - `ElectricalInfo.pole` muda de sentido em `'network'`: é o poste do padrão, não o da concessionária. Fica dito no changeset e no README.
 - Sai também: caixa de inspeção, hidrômetro, buzinote, ancoragem de telecom, `connectionsInWorld`, `installedKva`.
 
-**#470** mergeia como está (estado da lâmpada por ponto); na T2.8b os pontos passam a ser os nós `light`, e a posição dos postes muda: os
-prints de noite e a régua do `pior` são regravados nesse PR, com a mudança dita no `evidence.md`.
+**#470** mergeia como está (estado da lâmpada por ponto). A T2.8b já gera um nó `light` por poste, mas a cena continua acendendo os postes
+de `polePointsOf`; na **T2.8d** os pontos passam a ser os nós `light`, a posição dos postes muda, e os prints de noite e a régua do `pior`
+são regravados nesse PR, com a mudança dita no `evidence.md`.
 
 ## 11. Perguntas ao dono — **padrão até o dono decidir**
 

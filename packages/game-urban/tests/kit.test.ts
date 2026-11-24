@@ -16,8 +16,8 @@ describe('light budget', () => {
 describe('poles', () => {
   const kit = createUrban()
 
-  it('ships the five poles of the Galeria', () => {
-    expect(kit.poles.ids()).toEqual(['led_double', 'concrete_arm', 'cast_iron', 'wood_crossarm', 'flood_tower'])
+  it('ships the five poles of the Galeria and the distribution pole of the networks', () => {
+    expect(kit.poles.ids()).toEqual(['led_double', 'concrete_arm', 'cast_iron', 'wood_crossarm', 'flood_tower', 'concrete_distribution'])
   })
 
   it('a lamp that is off draws no light and spends nothing', () => {
@@ -73,7 +73,7 @@ describe('poles', () => {
       packs: { poles: [{ id: 'tall_led', shape: 'double_arm', spec: { ...(DEFAULT_POLES[0]?.spec as object), mast: { radiusTop: 0.1, radiusBottom: 0.14, height: 12, color: 0x55595e } } }] },
       remove: { poles: ['wood_crossarm'] },
     })
-    expect(custom.poles.ids()).toEqual(['led_double', 'concrete_arm', 'cast_iron', 'flood_tower', 'tall_led'])
+    expect(custom.poles.ids()).toEqual(['led_double', 'concrete_arm', 'cast_iron', 'flood_tower', 'concrete_distribution', 'tall_led'])
     const b = custom.builder()
     custom.poles.get('led_double').build(b, { x: 0, z: 0 })
     const light = lights(b.parts)[0]

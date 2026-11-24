@@ -1,6 +1,8 @@
 import { deepMerge } from '@adatechnology/game-contracts'
 import type { DeepPartial } from '@adatechnology/game-contracts'
 
+import { DEFAULT_NETWORK_LAYOUT } from './layout-rules'
+import type { NetworkLayoutRules } from './layout-rules'
 import type { AerialClass, BuriedEdgeKind, NetworkSurface } from './types'
 
 /** Lowest point of a conductor over each surface, metres; `null` = the class does not go there. */
@@ -36,7 +38,7 @@ export type NetworkRules = {
   readonly lighting: { readonly lampKva: number }
   readonly telecom: { readonly dropMaxLength: number }
   /** Least slope of each gravity pipe, m/m. */
-  readonly minSlope: Readonly<Record<Extract<BuriedEdgeKind, 'sewer_main' | 'sewer_lateral' | 'storm_gallery' | 'storm_lateral'>, number>>
+  readonly minSlope: Readonly<Record<Extract<BuriedEdgeKind, 'sewer_main' | 'sewer_lateral' | 'storm_gallery' | 'storm_lateral' | 'storm_gutter'>, number>>
   readonly cover: Readonly<Record<BuriedEdgeKind, CoverRange>>
   readonly sewer: {
     /** Deepest invert below the ground before a pumping station is needed. */
@@ -54,6 +56,8 @@ export type NetworkRules = {
   readonly crossing: { readonly separation: number; readonly rank: Readonly<Record<BuriedEdgeKind, number>> }
   /** How far a connection node may sit from the point the lot declared, metres. */
   readonly connectionTolerance: number
+  /** What `generateNetworks` lays out: spacing, offsets, sags, diameters (the validator reads none of it). */
+  readonly layout: NetworkLayoutRules
 }
 
 const LOW_VOLTAGE: ClearanceRow = { road: 5.5, sidewalk: 4.5, lot: 3.5 }
@@ -89,7 +93,7 @@ export const DEFAULT_NETWORK_RULES: NetworkRules = {
   },
   lighting: { lampKva: 0.15 },
   telecom: { dropMaxLength: 30 },
-  minSlope: { sewer_main: 0.005, sewer_lateral: 0.01, storm_gallery: 0.005, storm_lateral: 0.005 },
+  minSlope: { sewer_main: 0.005, sewer_lateral: 0.01, storm_gallery: 0.005, storm_lateral: 0.005, storm_gutter: 0.005 },
   cover: {
     water_main: { min: 0.6, max: 0.8 },
     water_service: { min: 0.6, max: 0.8 },
@@ -97,11 +101,14 @@ export const DEFAULT_NETWORK_RULES: NetworkRules = {
     sewer_lateral: { min: 0 },
     storm_lateral: { min: 1, max: 1.2 },
     storm_gallery: { min: 1.2 },
+    // the gutter is an open channel at the kerb (diameter 0): its bottom only has to stay at or under the ground
+    storm_gutter: { min: 0 },
     sewer_main: { min: 0.9 },
   },
   sewer: { maxDepth: 4.5, coverUnderGallery: 1.8, galleryReach: 3, lateralOverGallery: 0.85, manholeSpacing: 80 },
-  crossing: { separation: 0.2, rank: { water_main: 1, water_service: 1, sewer_lateral: 2, storm_lateral: 3, storm_gallery: 3, sewer_main: 4 } },
+  crossing: { separation: 0.2, rank: { storm_gutter: 0, water_main: 1, water_service: 1, sewer_lateral: 2, storm_lateral: 3, storm_gallery: 3, sewer_main: 4 } },
   connectionTolerance: 0.01,
+  layout: DEFAULT_NETWORK_LAYOUT,
 }
 
 /** The default rules with a game's numbers over them (objects merge, arrays such as the transformers replace). */
