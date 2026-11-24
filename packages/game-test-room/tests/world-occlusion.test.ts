@@ -1,3 +1,4 @@
+// The integration test of createRaycastOcclusion (game-audio) over a real destruction world and terrain: the unit tests over a fake world live in game-audio.
 import { describe, expect, it, vi } from 'vitest'
 import type { AudioEngineOptions } from '@adatechnology/game-audio'
 import { createDestruction } from '@adatechnology/game-destruction'
