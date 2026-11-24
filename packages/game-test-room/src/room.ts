@@ -2,7 +2,7 @@ import type * as THREE_NS from 'three'
 import { JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
 import { createAudioSink } from '@adatechnology/game-audio'
-import { GROUND_ID, createKitWorldSync, probeOf } from '@adatechnology/game-kit-defaults/world'
+import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, probeOf } from '@adatechnology/game-kit-defaults/world'
 import { MIN_PIECE_MASS_KG, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
@@ -50,7 +50,7 @@ import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
-import { createFootprints, DEFAULT_PROFILE, waterLift, type TerrainLoad } from '@adatechnology/game-terrain'
+import { createFootprints, waterLift, type TerrainLoad } from '@adatechnology/game-terrain'
 import { terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import { SHOVEL, biteShareOf, digsWith, shovelful, toolConditionOf } from './shovel'
@@ -184,7 +184,6 @@ const PLAYER_FOOTPRINT = 0.25
 /** Metres per second under which a body counts as standing still. */
 const RESTING_SPEED = 0.3
 const GRAVITY_EARTH = 9.81
-const GROUND_BURST_MAX = 28
 
 /** Speed (m/s) the rounds of one trigger pull must give a free-standing object to move it: a shotgun moves a bookcase, a pistol does not. */
 const SHOVE_SPEED = 0.04
@@ -357,7 +356,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // the floor is the terrain; a top (a table, a counter, a holder's board) answers only where there is one
   kit.ground.addProvider(() => sceneryTopAt)
   kit.ground.addProvider(() => restingTopAt)
-  const defaultGround = options.ground ?? { surface: DEFAULT_PROFILE }
+  const defaultGround = options.ground ?? DEFAULT_GROUND_LAYOUT
 
   /** The scenery tops whose surface left the fluid world: the top broke or came off, and what was spilt on it went with it. */
   const fallenTops = new Set<string>()
@@ -4792,7 +4791,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const openArea = (area: string): SpawnedObject[] => {
     clear()
     const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
-    terrain.setLayout(mod?.ground ?? { surface: DEFAULT_PROFILE })
+    terrain.setLayout(mod?.ground ?? DEFAULT_GROUND_LAYOUT)
     const label = mod?.group ?? S.groups[area] ?? area
     ui?.showGroup(label)
     activeBench = mod && benches.has(mod.id) ? mod.id : lastBench()
@@ -5141,8 +5140,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       bag.element.remove()
       for (const tr of tracers) tr.line.removeFromParent()
       explosives.clear()
-      kit.dispose()
-      loading.dispose()
+      try {
+        kit.dispose()
+      } finally {
+        loading.dispose()
+      }
     },
   }
 
