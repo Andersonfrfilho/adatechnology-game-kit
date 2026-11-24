@@ -326,6 +326,11 @@ export function createVehicleKit(options: VehicleKitOptions): VehicleKit {
   }
   /** Releases the geometries of a built vehicle (shared particle geometries and materials are kept). */
   kit.dispose = function (c: BuildContext) {
+    if (Array.isArray(c.vfxHandles) && c.vfxHandles.length > 0) {
+      const effects = kit.effects?.()
+      for (const handle of c.vfxHandles) effects?.stop?.(handle)
+      c.vfxHandles = []
+    }
     const shared = Object.values(I.PARTICLE_GEOMETRIES)
     c.root.traverse(function (o: SceneNode) {
       if (o.isSprite) {
