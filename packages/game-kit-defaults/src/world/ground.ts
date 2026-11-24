@@ -14,11 +14,14 @@ import type { ThreeNamespace } from './view'
 
 /** Object id of the floor in the destruction world. */
 export const GROUND_ID = 'room_ground'
+/** What the floor is made of when the game gives no layout: a concrete slab. */
+export const DEFAULT_GROUND_LAYOUT: GroundLayout = { surface: DEFAULT_PROFILE }
 const TERRAIN_CELL = 0.1
 /** A huge arena gets coarser cells, not more memory. */
 const TERRAIN_MAX_CELLS = 1000
 const GROUND_SPLASH_MAX_LITRES = 3
-const GROUND_BURST_MAX = 28
+/** The most debris a blow or a splash on the ground throws at once. */
+export const GROUND_BURST_MAX = 28
 const GROUND_BURST_PER_METRE = 30
 const GROUND_DUST_RADIUS = 0.2
 const GROUND_FIRE_EVERY = 0.3
@@ -43,6 +46,10 @@ export type KitWorldGround = {
   register(): void
   /** Host internal: burning cells flame and smoke every `GROUND_FIRE_EVERY` seconds of the simulation. */
   showFire(dt: number): void
+  /** What a blow on the ground shows and sounds (debris, dust, a splash, the impact), as when the ground's own `onBlow` runs: for a blow the game applied itself. */
+  showBlow(result: TerrainBlowResult, hit?: Hit): void
+  /** The fire clock at zero, the layout as it is (a game that laid the ground itself). */
+  resetFire(): void
   /** Back to the layout the world started with and the fire clock at zero. */
   reset(): void
 }
@@ -64,7 +71,7 @@ export type GroundDeps = {
 export function createGround(deps: GroundDeps): KitWorldGround {
   const { world } = deps
   const [minX, minZ, maxX, maxZ] = deps.bounds
-  const layout: GroundLayout = deps.layout ?? { surface: DEFAULT_PROFILE }
+  const layout: GroundLayout = deps.layout ?? DEFAULT_GROUND_LAYOUT
   const terrain = createTerrain({
     bounds: [minX, minZ, maxX, maxZ],
     cellSize: Math.max(TERRAIN_CELL, Math.max(maxX - minX, maxZ - minZ) / TERRAIN_MAX_CELLS),
@@ -136,6 +143,10 @@ export function createGround(deps: GroundDeps): KitWorldGround {
         renderer.emit('fire', [x, y + 0.05, z], [0, 1, 0], 3, 1.6)
         if (deps.random() < SMOKE_CHANCE) renderer.emit('smoke', [x, y + 0.2, z], [0, 1, 0], 1, 1)
       }
+    },
+    showBlow,
+    resetFire() {
+      fireClock = 0
     },
     reset() {
       terrain.setLayout(layout)

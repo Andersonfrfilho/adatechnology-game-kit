@@ -11,6 +11,8 @@ export const WATER_SPLASH_SOUND = 'water_splash'
 
 /** The sound of the world, over the kit's own engine (`createAudioEngine`: no AudioContext until the first sound). */
 export type KitWorldAudioOptions = {
+  /** An engine the game made (not released here) that the kit's recordings, the owner's sounds and the fitted copies load on; default one the host makes. */
+  readonly engine?: AudioEngine
   /** Where the kit's recorded files are served (default `./sfx/`); `null` plays the recipes only. */
   readonly samplesBaseUrl?: string | null
   /** Where the owner's own sounds are served (default `./sfx-local/`); `null` leaves them out. They load after the kit's. */
@@ -35,11 +37,14 @@ export type KitWorldSound = {
   dispose(): void
 }
 
-export function createSound({ world, audio: option }: { readonly world: DestructionWorld; readonly audio: false | AudioEngine | KitWorldAudioOptions | undefined }): KitWorldSound {
+export function createSound({ world, audio: option, onSound }: { readonly world: DestructionWorld; readonly audio: false | AudioEngine | KitWorldAudioOptions | undefined; readonly onSound?: KitWorldAudioOptions['onSound'] }): KitWorldSound {
   const isEngine = option !== undefined && option !== false && 'play' in option
   const options: KitWorldAudioOptions = option === undefined || option === false || isEngine ? {} : option
-  const isOwned = !isEngine && option !== false
-  const audio: AudioEngine | null = option === false ? null : isEngine ? option : createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createRaycastOcclusion(world) } })
+  const given = isEngine ? option : options.engine
+  const isOwned = given === undefined && option !== false
+  const audio: AudioEngine | null = option === false ? null : (given ?? createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createRaycastOcclusion(world) } }))
+  // the game's listener hears every key, a silent world's too
+  const listener = onSound ?? options.onSound
   const destruction = audio ? createDestructionSound(audio) : null
   // the kit's recorded files, served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
   const preload: PreloadState = { isDisposed: false, detach: undefined }
@@ -51,8 +56,8 @@ export function createSound({ world, audio: option }: { readonly world: Destruct
     destruction,
     play(key, point, volume, detail) {
       destruction?.onSound(key, point, volume, detail)
-      if (detail) options.onSound?.(key, point, volume, detail)
-      else options.onSound?.(key, point, volume)
+      if (detail) listener?.(key, point, volume, detail)
+      else listener?.(key, point, volume)
     },
     dispose() {
       preload.isDisposed = true

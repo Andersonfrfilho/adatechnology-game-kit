@@ -1,31 +1,25 @@
 import type * as THREE_NS from 'three'
-import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
+import { JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createAudioEngine, createAudioSink, createRaycastOcclusion, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
-import type { AudioEngine } from '@adatechnology/game-audio'
-import { DEFAULT_FRAME_TARGET_MS, frameTargetOf, registerFrameQueues, workBudgetOf } from './frame-queues'
-import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
-import { createObjectRegistry, createReportPort } from '@adatechnology/game-kit-defaults/world'
-import { DESTRUCTION_SOUND_KEYS, DESTRUCTION_VOICE_GROUPS, MIN_PIECE_MASS_KG, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
-import type { SoundDetail } from '@adatechnology/game-destruction-three'
+import { createAudioSink } from '@adatechnology/game-audio'
+import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, probeOf } from '@adatechnology/game-kit-defaults/world'
+import { MIN_PIECE_MASS_KG, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
-import type { GaitId, Hit, SurfaceId } from '@adatechnology/game-contracts'
+import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
 import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
-import { createFilmLcg, createFluids, createItemUse, ITEM_USES, LIQUIDS, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
+import { createItemUse, ITEM_USES, LIQUIDS, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
-import { createFilmBridge, createFilmManager, createFluidRenderer } from '@adatechnology/game-fluids-three'
-import { SPRITE_KINDS, WATER_SHOT_BY_CALIBER, createVfx, createWaterEffects, explosionEffectIds, patchSpriteKinds, waterShotClassOf } from '@adatechnology/game-vfx'
-import { createVfxRenderer, createWaterEffectsLayer } from '@adatechnology/game-vfx-three'
-import { createFramePacer, createGeometryPool, createLightBudget, createMaterialPool, createProgramWarmup, createStaticBatchQueue, createStaticBatcher, shadowCasterProbes, spriteProbes } from '@adatechnology/game-render-three'
-import type { EffectWarmup, RenderPools, StaticBatcher, WarmupProbe } from '@adatechnology/game-render-three'
+import { WATER_SHOT_BY_CALIBER, waterShotClassOf } from '@adatechnology/game-vfx'
+import { createStaticBatcher } from '@adatechnology/game-render-three'
+import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { DEFERRED_QUEUE_ID, checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
-import { createScheduler, startLoop, type Scheduler } from '@adatechnology/game-runtime'
+import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
@@ -35,14 +29,11 @@ import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
 import { displacedVolume } from './displaced-volume'
 import { createExplosives } from './explosives'
-import { createBlastPacing } from './blast-pacing'
 import { createBlastSettings } from './blast-settings'
 import { createTestTable } from './test-table'
 import { toHostEvent } from './host-events'
 import { createDualReload } from './dual-reload'
 import { createLoading } from './loading'
-import { createRoomGraphics } from './graphics'
-import type { RoomGraphics } from './graphics'
 import { createLog } from './log'
 import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
@@ -54,14 +45,13 @@ import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
 import { stepWalkPlan } from './walk-plan'
-import { MAX_TICKS_PER_FRAME, STEPS_PER_TICK, registerSimulationPhases, resolveSimulationTick } from './simulation-phases'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
 import type { RoomLeaf } from './door-open'
 import { releaseObject3D } from '@adatechnology/game-shapes-three'
-import { createFootprints, createTerrain, createTerrainImpl, DEFAULT_PROFILE, waterLift, type TerrainBlowResult, type TerrainLoad } from '@adatechnology/game-terrain'
-import { createTerrainRenderer, terrainProfileName } from '@adatechnology/game-terrain-three'
+import { createFootprints, waterLift, type TerrainLoad } from '@adatechnology/game-terrain'
+import { terrainProfileName } from '@adatechnology/game-terrain-three'
 import { DEFAULT_HAND_STANCES, DEFAULT_STRIKE_CLIPS, THIRD_PERSON_DEFAULTS, thirdPersonPose } from './avatar'
 import { SHOVEL, biteShareOf, digsWith, shovelful, toolConditionOf } from './shovel'
 import type { ShovelMode, ToolCondition } from './shovel'
@@ -152,12 +142,8 @@ const LEFT_HAND_KEY = '#L'
 const OFF_HAND_SEED = 11
 // how the picker's button names its key: the one left of 1 shows as the quote it prints on a Brazilian (ABNT2) keyboard
 const TOOL_MENU_KEY_LABELS: Readonly<Record<string, string>> = { Backquote: "'" }
-/** The fog the scene may be in while the room runs: none, the weather's linear fog and its exponential one (the weather module comes in after the load). */
 /** The most loose bodies (casings, magazines) the room lets its modules keep alive at once: the cap the weapons viewmodel had on its own. */
 const DEFAULT_PARTICLE_LIMIT = 900
-const WARMED_FOG_STATES = ['none', 'linear', 'exp2'] as const
-/** Slots of the room's LightBudget: the default 16 point and 4 spot (perf.mjs on a real GPU: p50 and p99 of every phase the same as with 13 and 3, and the fixed cost of the light loop is lost in the noise). */
-const ROOM_LIGHT_SIZES = { point: 16, spot: 4, pointShadows: 0, hemisphere: 1 } as const
 /** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
 const SOLID_SPAN = 3
 /** Meshes an object needs before the room draws its still ones in batches (a bookcase, a shelf of books): fewer cost less than the batch check. */
@@ -178,10 +164,6 @@ const KICK_MASS = 6
 const KICK_HEIGHT = 0.6
 /** Restitution of a shoe's sole on what it kicks (rubber on a can, a bottle, a book: about 0.5): a still thing leaves at up to 1.5 times the speed of the walk. */
 const KICK_RESTITUTION = 0.5
-/** Object id of the floor in the destruction world. */
-const GROUND_ID = 'room_ground'
-const TERRAIN_CELL = 0.1
-const GROUND_SPLASH_MAX_LITRES = 3
 /** Metres per second a body has to hit the water at for a splash. */
 const WATER_ENTRY_SPEED = 1.5
 /** The recorded splash a round or a blast on water plays. */
@@ -202,12 +184,6 @@ const PLAYER_FOOTPRINT = 0.25
 /** Metres per second under which a body counts as standing still. */
 const RESTING_SPEED = 0.3
 const GRAVITY_EARTH = 9.81
-/** A huge arena gets coarser cells, not more memory. */
-const TERRAIN_MAX_CELLS = 1000
-const GROUND_BURST_MAX = 28
-const GROUND_BURST_PER_METRE = 30
-const GROUND_DUST_RADIUS = 0.2
-const GROUND_FIRE_EVERY = 0.3
 
 /** Speed (m/s) the rounds of one trigger pull must give a free-standing object to move it: a shotgun moves a bookcase, a pistol does not. */
 const SHOVE_SPEED = 0.04
@@ -260,68 +236,76 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  // Renderer, scene, camera
+  // The world: the kit's host (`createKitWorldSync`, spec 011) makes the renderer, scene, camera, sun, ground, destruction, liquids, sound, effects, the
+  // render budget and the frame. The room passes every option it has: its own physics (the page's loop, never 'jolt'), no workers of the host, and the
+  // debris switches and the blast pacing explicit, off when the page leaves them out
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  const ownRenderer = !options.renderer
-  const gl: THREE_NS.WebGLRenderer = options.renderer ?? new THREE.WebGLRenderer({ antialias: true })
+  const arenaSize = options.arenaSize ?? 14
+  const arena: Arena = createArena(THREE, arenaSize, options.scenery, options.tap)
+  const quality = options.quality ?? 'medium'
+  let simTime = 0
+  const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
+  log.setClock(() => simTime)
+  const kit = createKitWorldSync<Entry>(THREE, {
+    container: options.container,
+    renderer: options.renderer,
+    scene: options.scene,
+    camera: options.camera,
+    world: options.world,
+    worldOptions: options.worldOptions,
+    fluids: options.fluids,
+    liquids: options.liquids,
+    surfaces: [...arena.surfaces, ...(options.surfaces ?? [])],
+    locale,
+    audio:
+      options.audio === false
+        ? false
+        : {
+            engine: options.audio,
+            samplesBaseUrl: options.samplesBaseUrl,
+            userSamplesBaseUrl: options.userSamplesBaseUrl,
+            fittedSounds: options.fittedSounds,
+            // the hand's sounds (a door, an item taken) load on the first key or click with the destruction's, so even the first one is the recording
+            preloadIds: HAND_RECORDED_IDS,
+            onUserSounds: (own) => log.add({ channel: 'event', type: 'user_sounds', text: `sons do dono: ${own.playing.length} tocando, ${own.behindKit.length} atrás do SDK`, data: { playing: own.playing, behindKit: own.behindKit } }),
+          },
+    onSound: options.onSound,
+    bounds: [-arenaSize, -arenaSize, arenaSize, arenaSize],
+    ground: options.ground,
+    groundName: t('ground.name'),
+    terrainBudget: options.terrainBudget,
+    physics: options.physics ?? 'own',
+    workers: 0,
+    quality,
+    // the player's graphics settings (game-graphics): only on a renderer the room owns, and only when the page asks (the example page does; tests keep the fixed look)
+    graphics: options.graphics ? { ...(options.graphics === true ? {} : options.graphics), loading, label: t('loading.graphics'), ui: options.ui !== false } : false,
+    debris: { ...options.debris, blast: options.debris?.blast ?? false, groundWorker: options.debris?.groundWorker ?? false },
+    blastPacing: options.blastPacing ?? false,
+    blastShove: options.blastShove,
+    lightSizes: options.lightSizes,
+    framesInFlight: options.framesInFlight,
+    frame: { budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs, onError: (error, system) => reportFrameError(error, system) },
+    random: () => rnd(),
+  })
+  const { gl, scene, camera } = kit.view
   const container = options.container
-  const width = (): number => container.clientWidth || 960
-  const height = (): number => container.clientHeight || 600
-  if (ownRenderer) {
-    const r = gl as THREE_NS.WebGLRenderer
-    r.setPixelRatio(Math.min(typeof devicePixelRatio === 'number' ? devicePixelRatio : 1, 2))
-    r.shadowMap.enabled = true
-    r.shadowMap.type = THREE.PCFSoftShadowMap
-    r.toneMapping = THREE.ACESFilmicToneMapping
-    r.toneMappingExposure = 1
-    r.outputColorSpace = THREE.SRGBColorSpace
-    container.appendChild(r.domElement)
-  }
-  gl.setSize(width(), height())
+  const ownRenderer = kit.view.ownsRenderer
   const dom = gl.domElement
-  if (dom && !dom.hasAttribute?.('tabindex')) dom.setAttribute?.('tabindex', '0')
-  const scene = options.scene ?? new THREE.Scene()
-  const camera = options.camera ?? new THREE.PerspectiveCamera(72, width() / height(), 0.05, 140)
-  if (!options.camera) scene.add(camera)
-  // the first-person layer (the tool in the hands and its arms) is drawn by a pass of its own over the world (`drawFirstPersonLayer`)
-  camera.layers.disable(FIRST_PERSON_LAYER)
-  const resize = (): void => {
-    const w = width()
-    const h = height()
-    gl.setSize(w, h)
-    camera.aspect = w / h
-    camera.updateProjectionMatrix()
-  }
-  const onResize = (): void => resize()
-  window.addEventListener('resize', onResize)
+  const resize = kit.view.resize
+  const world = kit.destruction.world
+  const renderer = kit.destruction.renderer
+  const terrain = kit.ground.terrain
+  const groundAt = kit.ground.at
+  const { fluids, view: fluidView, film, water } = kit.liquids
+  const audio = kit.sound.audio
+  const playSound = kit.sound.play
+  const vfx = kit.effects
+  const { lights, pools, graphics, blastPacing } = kit
+  const scheduler = kit.frame.scheduler
+  scene.add(arena.group)
   // the extra views (mirrors, reversing cameras) and the main-view takeover that modules ask for
   const moduleViews = createModuleViews(THREE, gl)
 
-  // ---------------------------------------------------------------------------------------------------------------------------------------
-  // Worlds
-  // ---------------------------------------------------------------------------------------------------------------------------------------
-  const arenaSize = options.arenaSize ?? 14
-  const arena: Arena = createArena(THREE, arenaSize, scene, options.scenery, options.tap)
-  scene.add(arena.group)
-  // the player's graphics settings (game-graphics): only on a renderer the room owns, and only when the page asks (the example page does; tests keep the fixed look)
-  const graphics: RoomGraphics | null =
-    ownRenderer && options.graphics
-      ? createRoomGraphics({
-          gl,
-          camera,
-          sun: arena.sun,
-          container,
-          locale,
-          loading,
-          label: t('loading.graphics'),
-          ui: options.ui !== false,
-          options: options.graphics === true ? {} : options.graphics,
-        })
-      : null
-
-  const ownWorld = !options.world
-  const world = options.world ?? createDestruction({ seed: 1, ...options.worldOptions, materials: [...(options.worldOptions?.materials ?? [])] })
-  const pristineWorld = ownWorld ? world.serialize() : null
   const partStands = (object: string, part: string): boolean => {
     const p = world.part(object, part)
     return !!p && p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes' && !renderer.piece(object)
@@ -369,23 +353,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     for (const t of arena.tops) if (t.top > top && x > t.minX && x < t.maxX && z > t.minZ && z < t.maxZ && topHolds(t, x, z)) top = t.top
     return top
   }
-  // the floor is the terrain: 0 was the height of a flat floor, now a hole goes under it and a heap over it; a top (a table, a counter) answers only where there is one
-  const defaultGround = options.ground ?? { surface: DEFAULT_PROFILE }
-  const terrain = createTerrain({ bounds: [-arenaSize, -arenaSize, arenaSize, arenaSize], cellSize: Math.max(TERRAIN_CELL, (2 * arenaSize) / TERRAIN_MAX_CELLS), layout: defaultGround, ...(options.terrainBudget ? { budget: options.terrainBudget } : {}),
-    // a crater, a slab that gave way or sand that slid takes the ground from under what stands there: the world settles, cracks or drops it
-    onGroundLoss: (loss) => world.groundLoss(loss) })
-  const terrainView = createTerrainRenderer(THREE, { terrain })
-  arena.group.add(terrainView.group)
-  const groundAt = (x: number, z: number): number => {
-    const top = Math.max(sceneryTopAt(x, z), restingTopAt(x, z))
-    const floor = terrain.heightAt(x, z)
-    return top > 0 ? Math.max(top, floor) : floor
-  }
+  // the floor is the terrain; a top (a table, a counter, a holder's board) answers only where there is one
+  kit.ground.addProvider(() => sceneryTopAt)
+  kit.ground.addProvider(() => restingTopAt)
+  const defaultGround = options.ground ?? DEFAULT_GROUND_LAYOUT
 
-  const ownFluids = !options.fluids
-  const fluids = options.fluids ?? createFluids({ seed: 1, locale, liquids: options.liquids, groundAt })
-  const pristineFluids = ownFluids ? fluids.serialize() : null
-  for (const s of [...arena.surfaces, ...(options.surfaces ?? [])]) fluids.addSurface(s)
   /** The scenery tops whose surface left the fluid world: the top broke or came off, and what was spilt on it went with it. */
   const fallenTops = new Set<string>()
   /**
@@ -417,168 +389,63 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const itemUseDefs = [...ITEM_USES, ...(options.itemUses ?? [])]
 
-  const quality = options.quality ?? 'medium'
-  const pointScale = height() / (2 * Math.tan((camera.fov * Math.PI) / 360))
   const rendererPieces = new Map<string, Piece>()
-  const entries = createObjectRegistry<Entry>()
+  const entries = kit.objects
   const splitOf = new Map<string, Entry>()
-  let simTime = 0
-  const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
-  log.setClock(() => simTime)
 
-  // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
-  const ownAudio = options.audio === undefined
-  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createRaycastOcclusion(world) } }))
-  const destructionSound = audio ? createDestructionSound(audio) : null
-  // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
-  if (audio && options.samplesBaseUrl !== null) {
-    void loadKitSamples(audio, { baseUrl: options.samplesBaseUrl ?? './sfx/' }).then(async (bank) => {
-      // the owner's own sounds after the kit's, so each one the kit has keeps the kit's recording in front
-      if (options.userSamplesBaseUrl !== null) {
-        const own = await loadUserSamples(audio, { baseUrl: options.userSamplesBaseUrl ?? './sfx-local/' })
-        if (own) log.add({ channel: 'event', type: 'user_sounds', text: `sons do dono: ${own.playing.length} tocando, ${own.behindKit.length} atrás do SDK`, data: { playing: own.playing, behindKit: own.behindKit } })
-      }
-      if (!bank || typeof window === 'undefined') return
-      // the hand's sounds (a door, an item taken) load on the first key or click, when the page may make its AudioContext, so even the first one is the recording
-      const preload = (): void => {
-        window.removeEventListener('keydown', preload, true)
-        window.removeEventListener('pointerdown', preload, true)
-        // the hand's sounds and every sound of the room's destruction style (impacts, ricochets, breaks, the glass shatter): the first of each plays the recording
-        void audio.loadSamples([...HAND_RECORDED_IDS, ...impactSoundIds(DESTRUCTION_SOUND_KEYS.art_scene)]).catch(() => undefined)
-        // every explosion's boom, fire, debris and splash, decoded now: the first blast plays its recordings with no decode in its frames
-        void audio.preload([...blastSoundIds(), WATER_SPLASH_SOUND]).catch(() => undefined)
-      }
-      window.addEventListener('keydown', preload, true)
-      window.addEventListener('pointerdown', preload, true)
-    })
-  }
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
   const bodySounds = createBodySounds(audio)
-  // the fitted copies of the recordings (game-audio/fitted): what each recorded id plays while its files load, or where they are not on the machine
-  if (audio && options.fittedSounds !== false) registerFittedSounds(audio)
-  const playSound = (key: string, point: Vec3, volume: number, detail?: SoundDetail): void => {
-    destructionSound?.onSound(key, point, volume, detail)
-    if (detail) options.onSound?.(key, point, volume, detail)
-    else options.onSound?.(key, point, volume)
-  }
 
-  // the one owner of the point and spot lights: its size is what the clients of the room ask of it (T4.4 raises it client by client)
-  const lights = createLightBudget(THREE, scene, { ...ROOM_LIGHT_SIZES, ...options.lightSizes })
-  // what the effects of the room and of its modules ask for instead of making their own; the warmup's anchors keep the programs of the materials that are given back
-  const warmup = createProgramWarmup(THREE)
-  const pools: RenderPools = { geometries: createGeometryPool(), materials: createMaterialPool({ anchors: warmup.anchors, renderer: gl }) }
-  // one effects world for the whole room: the destruction and fluid renderers and every module draw into it, and the room steps it once per frame
-  const vfx = createVfxRenderer(THREE, {
-    scene,
-    lights,
-    camera,
-    overlay: container,
-    quality,
-    pointScale,
-    vfx: createVfx({
-      profile: quality,
-      ...(options.debris?.particles ? { sprites: { kinds: patchSpriteKinds(SPRITE_KINDS, options.debris.particles) } } : {}),
-      groundAt,
-      marklessAt: (x, z) => terrain.waterAt(x, z) !== null,
-      // the dirt crater of the effects only where the ground is loose; rock, asphalt and a slab keep the soot and the bowl the terrain itself dug
-      cratersAt: (x, z) => terrain.material(terrain.columnAt(x, z).material).reposeDegrees !== undefined,
-    }),
+  // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
+  kit.destruction.shoveable((objectId) => {
+    const e = entries.get(objectId)
+    return e?.free === true && !e.piece
   })
-  // what rounds and blasts do to water: a splash by calibre and by charge, rings and foam that stop at the shore, waves that push what floats
-  const water = createWaterEffects({ levelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null })
-  const waterView = createWaterEffectsLayer(THREE, water)
-  scene.add(waterView.group)
-  // the room is the host: it hands the pieces their physics (a loop it steps itself each frame, or the kit's own solver) and never leaves it to the renderer to choose
-  const physics = options.physics ?? 'own'
-  const physicsLoop = physics !== 'own' && isPhysicsLoop(physics) ? physics : null
-  const renderer = createDestructionRenderer(THREE, {
-    physics,
-    interpolate: true,
-    scene,
-    world,
-    vfx: vfx.world,
-    quality,
-    groundAt,
-    terrainAt: (x, z) => terrain.heightAt(x, z),
-    // a can or a rod rolls on as the ground under it lets it: much farther on the road than on the lawn or in the sand
-    terrainRollingAt: (x, z) => terrain.rollingAt(x, z),
-    terrainRollingDampingAt: (x, z) => terrain.rollingDampingAt(x, z),
-    terrainRangeAt: (minX, maxX, minZ, maxZ) => terrain.heightRange(minX, maxX, minZ, maxZ),
-    terrainGridAt: terrain.heightGrid,
-    terrainPatchAt: terrain.heightPatch,
-    pointScale,
-    ...(options.debris?.fragmentLife !== undefined ? { fragmentLife: options.debris.fragmentLife } : {}),
-    ...(options.debris?.maxFragments !== undefined ? { maxFragments: options.debris.maxFragments } : {}),
-    eventBudgetMs: options.debris?.eventBudgetMs ?? 8,
-    // the debris at rest is drawn in batches (its collision unchanged); the awake budget stays off unless asked for
-    ...(options.debris?.maxAwakePieces !== undefined ? { maxAwakePieces: options.debris.maxAwakePieces } : {}),
-    ...(options.debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: options.debris.maxAwakeFragments } : {}),
-    ...(options.debris?.tilesUnderParts ? { tilesUnderParts: true } : {}),
-    ...(options.debris?.groundWorker ? { groundWorker: options.debris.groundWorker } : {}),
-    ...(options.debris?.workers ? { workers: options.debris.workers } : {}),
-    ...(options.debris?.jitWarmUp !== undefined ? { jitWarmUp: options.debris.jitWarmUp } : {}),
-    ...(options.debris?.workBudget ? { workBudget: workBudgetOf(options.debris.workBudget, options.frameBudgetMs ?? 8) } : {}),
-    ...(options.debris?.settledBatches === false ? {} : { settledBatches: options.debris?.settledBatches ?? {} }),
-    ...(options.debris?.blast || options.debris?.workBudget ? { focus: (): [number, number, number] => [camera.position.x, camera.position.y, camera.position.z] } : {}),
-    ...(options.debris?.blast ? { blastDebris: options.debris.blast } : {}),
-    onSound: playSound,
-    ...(options.blastShove ? { blastShove: options.blastShove } : {}),
-    // a blast moves what is heavy but not nailed down: the renderer makes it a piece the moment the shove reaches it
-    shoveable: (objectId) => {
-      const e = entries.get(objectId)
-      return e?.free === true && !e.piece
-    },
-    onLoosened: (objectId, piece, cause) => {
-      const e = entries.get(objectId)
-      if (!e) return
-      e.piece = piece
-      leaveFootprint(objectId)
-      rendererPieces.set(objectId, piece)
-      action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
-    },
-    // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
-    onBrokenChecked: (objectId, released) => {
-      bodyBoxes.delete(objectId)
-      if (standingIds.includes(objectId)) leaveFootprint(objectId)
-      if (!released) return
-      const e = entries.get(objectId)
-      log.add({ channel: 'check', type: 'fail', text: t('check.broken_floating', { name: e?.name ?? objectId }), objectId, ...(e ? { itemId: e.so.itemId } : {}), data: { invariant: 'broken_floating' } })
-    },
-    onPiece: (piece) => {
-      rendererPieces.set(piece.objectId, piece)
-      loose.push(piece)
-      // find the entry it came from: the one whose spec holds all its parts and that is nearest
-      const st = world.state(piece.objectId)
-      if (!st) return
-      let best: Entry | null = null
-      let bestD = Infinity
-      for (const e of entries.values()) {
-        const spec = specs.get(e.so.objectId)
-        if (!spec) continue
-        const ids = new Set(spec.parts.map((p) => p.id))
-        if (!st.parts.every((p) => ids.has(p.id))) continue
-        const d = e.so.root.position.distanceTo(piece.root.position)
-        if (d < bestD) {
-          bestD = d
-          best = e
-        }
+  kit.destruction.on('loosened', (objectId, piece, cause) => {
+    const e = entries.get(objectId)
+    if (!e) return
+    e.piece = piece
+    leaveFootprint(objectId)
+    rendererPieces.set(objectId, piece)
+    action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
+  })
+  // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
+  kit.destruction.on('brokenChecked', (objectId, released) => {
+    bodyBoxes.delete(objectId)
+    if (standingIds.includes(objectId)) leaveFootprint(objectId)
+    if (!released) return
+    const e = entries.get(objectId)
+    log.add({ channel: 'check', type: 'fail', text: t('check.broken_floating', { name: e?.name ?? objectId }), objectId, ...(e ? { itemId: e.so.itemId } : {}), data: { invariant: 'broken_floating' } })
+  })
+  kit.destruction.on('piece', (piece) => {
+    rendererPieces.set(piece.objectId, piece)
+    // find the entry it came from: the one whose spec holds all its parts and that is nearest
+    const st = world.state(piece.objectId)
+    if (!st) return
+    let best: Entry | null = null
+    let bestD = Infinity
+    for (const e of entries.values()) {
+      const spec = specs.get(e.so.objectId)
+      if (!spec) continue
+      const ids = new Set(spec.parts.map((p) => p.id))
+      if (!st.parts.every((p) => ids.has(p.id))) continue
+      const d = e.so.root.position.distanceTo(piece.root.position)
+      if (d < bestD) {
+        bestD = d
+        best = e
       }
-      if (best) splitOf.set(piece.objectId, best)
-    },
-    // a module let an object go for good (a house replaced) and the renderer took its pieces out of the world: the room forgets them too
-    onReleased: (pieceIds) => {
-      const gone = new Set(pieceIds)
-      for (const id of gone) {
-        rendererPieces.delete(id)
-        splitOf.delete(id)
-        bodyBoxes.delete(id)
-        inWater.delete(id)
-        prevVy.delete(id)
-      }
-      let kept = 0
-      for (const piece of loose) if (!gone.has(piece.objectId)) loose[kept++] = piece
-      loose.length = kept
-    },
+    }
+    if (best) splitOf.set(piece.objectId, best)
+  })
+  // a module let an object go for good (a house replaced) and the renderer took its pieces out of the world: the room forgets them too
+  kit.destruction.on('released', (pieceIds) => {
+    for (const id of pieceIds) {
+      rendererPieces.delete(id)
+      splitOf.delete(id)
+      bodyBoxes.delete(id)
+      inWater.delete(id)
+      prevVy.delete(id)
+    }
   })
 
   // the ground is an object of the world: shots, blows, blasts and flames reach it like anything else
@@ -598,51 +465,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     })
     return { underwater: plan.underwater }
   }
-  const showGroundBlow = (result: TerrainBlowResult, hit?: Hit): void => {
-    const material = terrain.material(result.removed[0]?.material ?? result.exposed)
-    const def = world.materials.get(material.id)
-    const size = Math.min(GROUND_BURST_MAX, Math.ceil(result.radius * GROUND_BURST_PER_METRE))
-    renderer.emit(material.debris === 'clods' ? 'dust' : material.debris === 'blocks' ? 'chips' : material.debris, result.point as Vec3, [0, 1, 0], Math.max(2, size), Math.min(4, 1 + result.radius * 4))
-    if (result.radius > GROUND_DUST_RADIUS) renderer.emit('dust', result.point as Vec3, [0, 1, 0], size, 1.4)
-    const litres = Math.min(GROUND_SPLASH_MAX_LITRES, 0.1 + result.radius * 2)
-    // water on water leaves no stain: the terrain drew its rings
-    if (result.water) {
-      // a round splashed where it crossed the surface (`fireShots`) and a charge where it went off (`blastWater`): a blow or a body only stirs it
-      if (hit?.type !== 'ballistic' && hit?.type !== 'explosive') renderer.emit('foam', [result.point[0], result.water.level + 0.05, result.point[2]], [0, 1, 0], Math.max(6, size * 2), 2 + result.radius * 4)
-    } else if (material.splash) fluids.splash(material.splash, [result.point[0], result.point[1] + 0.05, result.point[2]], litres, [0, 1.5 + result.radius * 3, 0])
-    playSound(impactKey(def), result.point as Vec3, Math.min(1, 0.25 + result.radius), impactSoundKeys(material.id, def))
-  }
-  terrain.onDeform((region) => renderer.wakeRegion(region.x, region.z, region.radius))
-  const groundImpl = createTerrainImpl(terrain, { id: GROUND_ID, name: t('ground.name'), onBlow: showGroundBlow })
-  const registerGround = (): void => {
-    if (!world.has(GROUND_ID)) world.register(groundImpl, { id: GROUND_ID })
-  }
-  registerGround()
-  let groundFireClock = 0
-  const showGroundFire = (dt: number): void => {
-    groundFireClock += dt
-    if (groundFireClock < GROUND_FIRE_EVERY) return
-    groundFireClock = 0
-    for (const [x, z] of terrain.burningPoints()) {
-      const y = terrain.heightAt(x, z)
-      renderer.emit('fire', [x, y + 0.05, z], [0, 1, 0], 3, 1.6)
-      if (rnd() < 0.25) renderer.emit('smoke', [x, y + 0.2, z], [0, 1, 0], 1, 1)
-    }
-  }
-  const fluidView: FluidRenderer = createFluidRenderer(THREE, { scene, fluids, quality, pointScale, vfx: vfx.world })
-  // the running film of the liquids that have one (blood, fuel, oil): grids near the player, fed by the leaks of the fluid world
-  const filmRandom = createFilmLcg(1)
-  const film = createFilmManager(THREE, {
-    scene,
-    camera,
-    random: filmRandom,
-    fluids,
-    groundAt,
-    ...(typeof (gl as Partial<THREE_NS.WebGLRenderer>).copyTextureToTexture === 'function' ? { gpu: gl as THREE_NS.WebGLRenderer } : {}),
-  })
-  const filmBridge = createFilmBridge({ fluids, manager: film, random: filmRandom })
   const specs = new Map<string, DestructibleSpec>()
-  const loose: Piece[] = []
+  const loose = kit.pieces.all
 
   const arsenal = options.arsenal ?? createArsenal({ locale, weapons: options.weapons, seed: 1 })
   // the default hotbar holds the real weapons (the Beretta 92FS, the AK-47...) where the default loadout names a generic gun; a page's own loadout is kept as it is
@@ -730,7 +554,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fire('event', ev)
   })
 
-  const reports = createReportPort()
+  const reports = kit.reports
   reports.on((report) => log.add({ channel: 'action', ...report, text: report.text ?? report.type, ...(report.data ? { data: { ...report.data } } : {}) }))
   const action = (type: string, text: string, extra: Partial<{ objectId: string; itemId: string; part: string; data: Record<string, unknown>; material: string }> = {}): void => reports.emit({ type, text, ...extra })
 
@@ -1272,7 +1096,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // the still meshes of an object draw in one batch per material; a mesh that is hit, moved or swung draws on its own again (createStaticBatcher)
   const batchers = new Map<string, StaticBatcher>()
-  const staticBatchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.STATIC_BATCH })
+  const staticBatchQueue = kit.staticBatchQueue
   const batchObject = (objectId: string, root: THREE_NS.Object3D): void => {
     let meshes = 0
     let unbatched = false
@@ -1660,7 +1484,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       rendererPieces.delete(id)
       splitOf.delete(id)
     }
-    loose.length = 0
+    kit.pieces.clear()
   }
 
   const clearEverything = (): void => releasingTogether(clearEverythingNow)
@@ -1674,7 +1498,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fireZones.length = 0
     burningStains.length = 0
     // every fire sound goes with the fires (the renderer's parts are cleared below without their burn_end)
-    destructionSound?.reset()
+    kit.sound.destruction?.reset()
     terrain.setLayout(defaultGround)
     for (const id of [...entries.keys()]) if (!entries.get(id)?.arena) removeEntry(id)
     clearLoose()
@@ -1736,21 +1560,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     offTool = null
     offToolId = null
     firedHand = 'R'
-    if (pristineWorld) {
+    if (kit.destruction.pristine) {
       for (const id of world.ids()) world.remove(id)
-      world.load(pristineWorld)
-      registerGround()
+      world.load(kit.destruction.pristine)
+      kit.ground.register()
     }
-    if (pristineFluids) {
-      fluids.load(pristineFluids)
-      for (const s of [...arena.surfaces, ...(options.surfaces ?? [])]) fluids.addSurface(s)
+    if (kit.liquids.isOwned) {
+      kit.liquids.reset()
       fallenTops.clear()
     }
     pending = []
     strikes = []
     rng = 12345
-    filmRandom.seed = 1
-    groundFireClock = 0
+    kit.liquids.filmRandom.seed = 1
+    kit.ground.resetFire()
     counter = 0
     slot = 0
     prevVy.clear()
@@ -1759,6 +1582,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     standFootprints()
     scheduler.timeScale = 1
     fastForward = false
+    kit.frame.repeat = 1
     walkPlan = null
   }
 
@@ -2927,7 +2751,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // ----- the blast options of the room's explosions (the HUD toggles them), what the last blast did, and the pacer that spreads a grenade over frames (spec 018 D2)
   const blastSettings = createBlastSettings(options.blast)
-  const blastPacing = createBlastPacing(options.blastPacing, { world, renderer })
 
   // ----- projectiles (grenades, molotovs, rockets) and charges set down: the room lends the explosives its world, log and host
   const explosives = createExplosives({
@@ -3696,7 +3519,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const size = box.getSize(tmpV2)
       if (sceneryTopAt(centre.x, centre.z) > 0 || restingTopAt(centre.x, centre.z) > 0) return
       const result = terrain.strike('blunt', { x: centre.x, z: centre.z, energy, contactRadius: Math.max(size.x, size.z) / 2 })
-      if (result.radius > 0) showGroundBlow(result)
+      if (result.radius > 0) kit.ground.showBlow(result)
     }
     const land = (piece: Piece): void => {
       const vy = piece.velocity[1]
@@ -4074,9 +3897,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     headlessErrors.clear()
     throw errors.length === 1 ? errors[0] : new AggregateError(errors, `${errors.length} systems threw in one frame`)
   }
-  const simulationTick = resolveSimulationTick(physicsLoop?.world.fixedStep, FIXED_DT)
-  const scheduler = createScheduler({ fixedDt: simulationTick, maxSubsteps: MAX_TICKS_PER_FRAME, maxFrameSeconds: 0.05, budgetMs: options.frameBudgetMs ?? 8, targetMs: options.frameTargetMs ?? DEFAULT_FRAME_TARGET_MS, onError: reportFrameError, holdFixed: () => blastPacing?.isHolding() === true })
-  registerFrameQueues({ budget: scheduler.budget, destruction: renderer, audio, film, staticBatchQueue, hasWorkBudget: options.debris?.workBudget !== undefined })
   const roomMetricIds: readonly RoomMetricId[] = options.metrics === false ? [] : options.metrics ?? ROOM_METRICS
   const roomMetrics = createRoomMetrics({ gl, destruction: renderer, fluids: fluidView, effects: vfx.world, ids: roomMetricIds, blast: blastSettings.last })
   // CLAUDE.md, "Memória": after each clear the GPU counts come back to the scenery; when they keep growing clear after clear the room says so on screen
@@ -4148,49 +3968,42 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   let walkPlan: { x: number; z: number; remaining: number } | null = null
-  // fixedSimulate, once per tick (`dt` is one tick of simulated seconds): what changes the world's state
-  const simulateFixed = (dt: number, isTick: boolean): void => {
+  // inside `room.simulate` (fixedSimulate, once per tick: `dt` is one tick of simulated seconds), before the world's own step (`world.update` repeated by the
+  // fast-forward with fire only in the first, the fluids, the physics, the destruction renderer, the ground's fire, the water): the player's action
+  kit.frame.beforeWorld((dt) => {
     simTime += dt
     walkPlan = stepWalkPlan({ plan: walkPlan, dt, player, camera })
     stepStrikes(dt)
-    const reps = fastForward ? 10 : 1
     updateAnimations(dt)
     updateItemUse(dt)
     explosives.update(dt)
     syncContainers(dt)
-    for (let i = 0; i < reps; i++) {
-      world.update(dt)
-      if (i === 0) updateFires(dt)
-      fluids.update(dt)
-    }
-    syncLiters()
-    simulationStamp++
-    if (isTick) physicsLoop?.stepFixed(STEPS_PER_TICK)
-    else physicsLoop?.step(dt)
-    renderer.update(dt)
-    showGroundFire(dt)
-    water.setCamera([camera.position.x, camera.position.y, camera.position.z])
-    water.update(dt)
+  })
+  kit.rules.use({
+    fire: (dt) => updateFires(dt),
+    beforePhysics: () => {
+      syncLiters()
+      simulationStamp++
+    },
+  })
+  // the same entry, after the world's step: what reads the room's own objects
+  kit.frame.afterWorld((dt) => {
     updateImpacts()
     updateWater(dt)
     rockPlayer(dt)
     updateLoads(dt)
     dropStainsOffFallenTops()
     flush()
-  }
+  })
 
-  // lateSimulate, before the modules' frame callbacks: what only draws, sounds or follows the frame; `dt` is simulated seconds, real time only drives input
-  const simulateFrame = (dt: number): void => {
-    arena.followSun([camera.position.x, camera.position.y, camera.position.z])
-    destructionSound?.update(dt)
+  // lateSimulate, around the host's frame (sun, sound, terrain, effects, water, fluids, film, listener): what only draws or follows the frame
+  kit.frame.on('afterSound', () => {
     for (const e of entries.values()) e.follower?.update?.()
-    terrainView.sync(camera.position)
-    vfx.update(dt)
-    waterView.sync()
+  })
+  kit.frame.on('afterWaterView', () => {
     if (player.position[1] <= terrain.footAt(player.position[0], player.position[2]) + 0.15) footprints.update(player.position[0], player.position[2])
-    fluidView.update(dt)
-    filmBridge.update(dt)
-    film.update(dt)
+  })
+  kit.frame.on('afterFilm', (dt) => {
     for (const [id, s] of tools) {
       s.update(dt)
       flushEvents(id, s)
@@ -4200,15 +4013,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       flushEvents(offToolId, offTool, undefined, 'L')
       dualReload.step(dt)
     }
-    if (audio) {
-      // the listener is the camera: where it stands and which way it looks (yaw 0 faces -z)
-      const look = camera.getWorldDirection(listenerDirection)
-      audio.setListener({ position: [camera.position.x, camera.position.y, camera.position.z], yaw: Math.atan2(-look.x, -look.z) })
-    }
-  }
-
-  // lateSimulate, after the modules' frame callbacks
-  const simulateAfterModules = (dt: number): void => {
+  })
+  // lateSimulate, after the modules' frame callbacks; the host presents the effects in between
+  kit.frame.on('beforePresent', (dt) => {
     const drawn = tracers.some((tr) => tr.life > 0 && tr.follows) ? (muzzleSource?.() ?? null) : null
     for (const tr of tracers) {
       if (tr.life > 0) {
@@ -4221,10 +4028,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
       }
     }
-    // the gun is posed and the view turned for this frame: a flash that rides on a muzzle is drawn on this frame's muzzle
-    vfx.present()
-    flush()
-  }
+  })
+  kit.frame.on('afterPresent', () => flush())
 
   // input: real time, what the player does (the world is paused or slowed without touching it)
   const updateInput = (dt: number, isPaused: boolean): void => {
@@ -4512,7 +4317,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ui.metrics(metricRows())
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
-  const listenerDirection = new THREE.Vector3()
   const environment = options.environment ?? createEnvironmentBus()
   const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
@@ -4770,64 +4574,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return r.ok ? store : null
   }
 
-  const LIGHTS_CHECK_MS = 250
-
-  /** Every material a probe group draws: they go to the warmup's anchors, which keep them alive (a program is freed when the last material that uses it is disposed). */
-  const materialsOf = (group: THREE_NS.Object3D): THREE_NS.Material[] => {
-    const found = new Set<THREE_NS.Material>()
-    group.traverse((object) => {
-      const material = (object as THREE_NS.Mesh).material as THREE_NS.Material | THREE_NS.Material[] | undefined
-      for (const each of Array.isArray(material) ? material : material ? [material] : []) found.add(each)
-    })
-    return [...found]
-  }
-  // the materials that decals, effects and liquids make on demand: each adapter's probes are drawn once at load (every light count is another set of programs), and their materials stay as anchors
-  const probeOf = (id: string, adapter: { warmUpProbes(): { readonly group: unknown; dispose(): void } }): WarmupProbe => ({
-    id,
-    build() {
-      const probe = adapter.warmUpProbes()
-      const group = probe.group as THREE_NS.Object3D
-      return { group, materials: materialsOf(group), dispose: () => probe.dispose() }
-    },
-  })
-  warmup.register(probeOf('destruction', renderer))
-  warmup.register(probeOf('vfx', vfx))
-  warmup.register(probeOf('fluids', fluidView))
-  // the running film of fuel and blood: its probes keep the film's programs linked while its grids come and go (each spill frees its grid)
-  warmup.register(probeOf('film', film))
-  warmup.register(spriteProbes(THREE))
-  // a textured caster on each side: the depth program of a textured wall that first enters the sun's box in play is linked here
-  warmup.register(shadowCasterProbes(THREE))
+  // the host warms the destruction, the effects, the liquids, the film and every explosion; the room adds the probes its scenery lends
   for (const object of arena.objects) {
     const probes = object.warmUpProbes
-    if (probes) warmup.register(probeOf(`scenery:${object.id}`, { warmUpProbes: () => probes(THREE) }))
-  }
-  // a blast of every explosive and a flame, drawn a few frames at load: their programs link and their buffers reach the GPU before the first one goes off; nothing stays in the world, the log or the sound
-  const warmedEffect = (id: string): EffectWarmup => {
-    let handle: number | null = null
-    return {
-      id: `vfx:${id}`,
-      // the room was drawn in every fog state just before: each frame of a blast draws the effects alone
-      root: () => vfx.root,
-      play() {
-        handle = vfx.play({ effect: id, point: [0, 0.1, -4], direction: [0, 1, 0], normal: [0, 1, 0] })
-      },
-      step: (dt) => vfx.update(dt),
-      stop() {
-        if (handle !== null) vfx.stop(handle)
-        vfx.world.clear()
-        vfx.update(0)
-      },
-    }
-  }
-  const catalogIds = vfx.catalog?.() ?? []
-  // every explosion of the effects catalogue (the world's P13, barrel and car tank, the rockets...): a new explosive is warmed without a list here,
-  // and every impact (the spark of a bullet on metal, wood, glass...) so a shot never pays for its first streak, sprite or decal buffers in play
-  for (const id of [...explosionEffectIds(), ...catalogIds.filter((id) => /fire|flame/i.test(id)).slice(0, 1), ...catalogIds.filter((id) => /^impact_/.test(id))]) if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id))
-  let warmedUp = false
-  const warmUp = (): void => {
-    warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES, materials: pools.materials.registeredMaterials?.() ?? [] })
-    warmedUp = true
+    if (probes) kit.warmup.register(probeOf({ id: `scenery:${object.id}`, adapter: { warmUpProbes: () => probes(THREE) } }))
   }
 
   const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
@@ -4956,7 +4706,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let scenarioRunning = false
 
   // a scenario steps the world through the scheduler: input and present know they are scripted (ctx.scripted) and keep to what the step always did
-  const step = (seconds: number): void => phases.runAt(seconds > 6 ? 1 / 30 : FIXED_DT, (dt) => runHeadless(() => scheduler.advance(seconds, { dt })))
+  const step = (seconds: number): void => kit.frame.runAt(seconds > 6 ? 1 / 30 : FIXED_DT, (dt) => runHeadless(() => scheduler.advance(seconds, { dt })))
 
   const runScenarios = async (list?: TestRoomScenario[]): Promise<ScenarioReport> => {
     const all = list ?? allScenarios()
@@ -5041,7 +4791,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const openArea = (area: string): SpawnedObject[] => {
     clear()
     const mod = [...modules.values()].find((m) => m.id === area || m.group === area)
-    terrain.setLayout(mod?.ground ?? { surface: DEFAULT_PROFILE })
+    terrain.setLayout(mod?.ground ?? DEFAULT_GROUND_LAYOUT)
     const label = mod?.group ?? S.groups[area] ?? area
     ui?.showGroup(label)
     activeBench = mod && benches.has(mod.id) ? mod.id : lastBench()
@@ -5139,7 +4889,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     arsenal,
     fluids,
-    film: filmBridge,
+    film: kit.liquids.filmBridge,
     vfx: vfx.world,
     effects: vfx,
     fluidRenderer: fluidView,
@@ -5228,7 +4978,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     spawned() {
       return [...entries.values()].filter((e) => !e.arena).map((e) => e.so)
     },
-    update: (dt, options): void => phases.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true, ...(options?.frameStartMs === undefined ? {} : { frameStartMs: options.frameStartMs }) })), options?.live),
+    update: (dt, options): void => kit.frame.runAt(dt, () => runHeadless(() => scheduler.frame(dt, { render: false, exact: options?.live !== true, ...(options?.frameStartMs === undefined ? {} : { frameStartMs: options.frameStartMs }) })), options?.live),
     waitUntilReady(maxSeconds = 5) {
       let waited = 0
       while (tool.phase && waited < maxSeconds) {
@@ -5269,6 +5019,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     setFastForward(on) {
       fastForward = on
+      kit.frame.repeat = on ? 10 : 1
     },
     setStrikeCombo,
     kick,
@@ -5288,7 +5039,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     loadModule,
     warmUp: () => {
       audio?.warmUp()
-      warmUp()
+      kit.warmUp()
     },
     animations: animationsOf,
     playAnimation,
@@ -5376,39 +5127,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     frameStats: () => scheduler.stats(),
     lights,
     webgl: gl,
-    frameParts: { terrainView, water, waterView, explosives, footprints, moduleFrames, scheduler },
+    frameParts: { terrainView: kit.ground.view, water, waterView: kit.liquids.waterView, explosives, footprints, moduleFrames, scheduler },
     dispose() {
-      destructionSound?.dispose()
-      if (ownAudio) audio?.dispose()
       for (const detach of detachers.values()) detach()
       detachers.clear()
       moduleViews.dispose()
       for (const store of benches.values()) store.dispose()
       benches.clear()
-      stopLoop?.()
-      disposePacer?.()
-      scheduler.dispose()
-      window.removeEventListener('resize', onResize)
       player.dispose()
       cornerImage?.dispose()
       ui?.dispose()
       bag.element.remove()
-      graphics?.dispose()
-      loading.dispose()
-      renderer.dispose()
-      vfx.dispose()
-      waterView.dispose()
-      lights.dispose()
-      pools.materials.dispose()
-      pools.geometries.dispose()
-      fluidView.dispose()
-      filmBridge.dispose()
-      film.dispose()
       for (const tr of tracers) tr.line.removeFromParent()
       explosives.clear()
-      if (ownRenderer) {
-        gl.dispose()
-        dom.remove()
+      try {
+        kit.dispose()
+      } finally {
+        loading.dispose()
       }
     },
   }
@@ -5462,14 +5197,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       onFast: (on) => room.setFastForward(on),
       onQuality: (q) => {
         qualityName = q
-        if (ownRenderer) {
-          gl.shadowMap.enabled = q !== 'low'
-          gl.setPixelRatio(q === 'low' ? 1 : Math.min(typeof devicePixelRatio === 'number' ? devicePixelRatio : 1, 2))
-          arena.sun.shadow.mapSize.set(q === 'high' ? 2048 : 1024, q === 'high' ? 2048 : 1024)
-          arena.sun.shadow.map?.dispose()
-          arena.sun.shadow.map = null
-          resize()
-        }
+        if (ownRenderer) kit.setQuality(q)
       },
       quality: qualityName,
       ...(graphics?.screen ? { onGraphics: () => graphics.screen?.open() } : {}),
@@ -5534,70 +5262,31 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     { phase: 'input', id: 'room.input' },
   )
-  const phases = registerSimulationPhases(scheduler, simulationTick, { fixed: simulateFixed, frame: simulateFrame, frameEnd: simulateAfterModules, pose: renderer, structural: renderer, blastPacing })
   scheduler.add(
     (ctx) => {
       if (ctx.simulated && !ctx.scripted) updatePresent(ctx.realDt)
     },
     { phase: 'present', id: 'room.present' },
   )
-  scheduler.add((ctx) => lights.present([camera.position.x, camera.position.y, camera.position.z], ctx.realDt), { phase: 'present', order: 10, id: 'room.lights' })
-  let stopLoop: (() => void) | undefined
-  let disposePacer: (() => void) | undefined
+  // the host draws and runs the loop on a renderer it made; with the page's own renderer the page calls room.update and draws
   if (ownRenderer) {
-    let nextLightsCheck = 0
-    let warnedState = ''
-    // modules that add a light of their own after the load (or change the fog, the tone mapping...) change the program key of every lit material: warm again when the sealed state breaks
-    scheduler.add(
-      (ctx) => {
-        if (ctx.scripted) return
-        const now = performance.now()
-        if (now < nextLightsCheck) return
-        nextLightsCheck = now + LIGHTS_CHECK_MS
-        const state = lights.check(gl, scene)
-        if (warmedUp && (state.ok || state.actual === warnedState)) return
-        warnedState = state.actual
-        warmUp()
-        scheduler.budget.skipRenderSample()
-      },
-      { phase: 'render', order: -1000, id: 'room.lights-check' },
-    )
-    // a GPU slower than the CPU fills the driver queue and stalls the compositor for the whole queue: keep it a few frames behind at most
-    const pacer = createFramePacer(typeof gl.getContext === 'function' ? (gl.getContext() as unknown as WebGL2RenderingContext) : null, options.framesInFlight === undefined ? {} : { framesInFlight: options.framesInFlight })
-    disposePacer = () => pacer.dispose()
-    scheduler.add(
-      (ctx) => {
-        if (!ctx.scripted && !pacer.ready()) return scheduler.budget.skipRenderSample()
-        for (const batcher of batchers.values()) batcher.update()
-        const restoreCamera = room.applyCamera()
-        graphics?.beforeRender(camera)
-        const view = debugView ?? moduleViews.main(camera)
-        gl.render(scene, view)
-        if (view === camera && cameraMode === 'first') drawFirstPersonLayer()
-        moduleViews.render(scene)
-        graphics?.afterRender()
-        restoreCamera()
-        pacer.submitted()
-        roomMetrics.rendered()
-        if (!ctx.scripted) graphics?.frameEnd()
-      },
-      { phase: 'render', id: 'room.render' },
-    )
-    try {
-      stopLoop = startLoop(scheduler, {
-        onFrame: (realSeconds) => {
-          graphics?.frameStart()
-          scheduler.budget.targetMs = frameTargetOf(options.frameTargetMs, graphics?.controller.minFrameMs())
-          roomMetrics.frame(realSeconds)
+    kit.start({
+      onFrame: (realSeconds) => roomMetrics.frame(realSeconds),
+      skipSimulation: () => scenarioRunning,
+      renderHooks: {
+        beforeRender: () => {
+          for (const batcher of batchers.values()) batcher.update()
+          return room.applyCamera()
         },
-        skipSimulation: () => scenarioRunning,
-        // the player's frame cap (Gráficos → Limite de FPS)
-        ...(graphics ? { minFrameMs: () => graphics.controller.minFrameMs() } : {}),
-      })
-      ownsLoop = true
-    } catch {
-      // no display frames here (a worker): the host calls room.update
-    }
+        view: () => debugView ?? moduleViews.main(camera),
+        extraPasses: (_scene, view) => {
+          if (view === camera && cameraMode === 'first') drawFirstPersonLayer()
+          moduleViews.render(scene)
+        },
+        afterRender: () => roomMetrics.rendered(),
+      },
+    })
+    ownsLoop = kit.isLooping
   }
 
   if (options.initial) {

@@ -8,7 +8,7 @@
  * Every action and result goes to a behaviour log shown on screen in plain words and exportable as JSON / NDJSON, and scripted scenarios run
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
-import type { BlastPacingOptions } from './blast-pacing'
+import type { BlastPacingOptions, KitWorldGraphicsOptions } from '@adatechnology/game-kit-defaults/world'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
@@ -20,7 +20,6 @@ import type { RoomLoading } from './loading'
 import type { BlastDebrisOptions, DestructionRenderer, ExplosionWorkOptions, GroundWorkerPort, JitWarmUpOptions, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
-import type { RoomGraphicsOptions } from './graphics'
 import type { Arsenal, TriggerResult, WeaponDef, WeaponState } from '@adatechnology/game-weapons'
 import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
@@ -200,6 +199,9 @@ export interface RoomFirstPersonArms {
   update(dt: number, state: { camera: THREE_NS.Object3D; targets?: HandTargets | null; stance?: string; speed?: number; running?: boolean; crouch?: boolean }): void
   dispose(): void
 }
+
+/** The room's graphics settings (`TestRoomOptions.graphics`): the world host's (`KitWorldGraphicsOptions`). */
+export type RoomGraphicsOptions = KitWorldGraphicsOptions
 
 export interface TestRoomOptions {
   THREE: ThreeNamespace

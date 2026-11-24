@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createKitWorld } from '../../game-kit-defaults/src/world'
-import type { KitWorld } from '../../game-kit-defaults/src/world'
+import { createKitWorld } from '@adatechnology/game-kit-defaults/world'
+import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
 import { makeRoom, stubRenderer } from './helpers'
 import type { TestRoom } from '../src'
 

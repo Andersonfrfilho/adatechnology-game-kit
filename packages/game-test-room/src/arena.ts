@@ -3,7 +3,6 @@ import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology
 import type { SurfaceSpec } from '@adatechnology/game-fluids'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { brickWallSpec } from './items'
-import { snapSunShadow, sunOffsetOf, sunShadowFrustum } from './sun-shadow'
 import type { SceneryObject, SceneryTap } from './types'
 
 export interface ArenaObject {
@@ -36,7 +35,7 @@ export interface ArenaTop {
   top: number
 }
 
-/** The static part of the room: lights, floor, grid, ruler and the destructible scenery. */
+/** The static part of the room: floor, grid, ruler and the destructible scenery (the sun and the ambient fill are the world host's). */
 export interface Arena {
   group: THREE_NS.Group
   /** Objects to register in the world (by default the target wall, the table and the shelf). */
@@ -52,9 +51,6 @@ export interface Arena {
   tops: ArenaTop[]
   /** Where the tap pours: over the top of the `table` object; null when the room has no table with a top. */
   tapSpout: Vec3 | null
-  sun: THREE_NS.DirectionalLight
-  /** Moves the sun's shadow frustum to the camera (snapped to the shadow map's texels). */
-  followSun(focus: Vec3): void
 }
 
 /** Box of a spec in world space, ignoring the parts that lie flat on the floor (a plinth, a ground slab: the player walks over them). */
@@ -162,43 +158,10 @@ export function resolveScenery(scenery: Record<string, SceneryObject | null> | u
   return [...merged.entries()].map(([id, o]) => ({ id, spec: o.spec, position: o.position as Vec3, rotationY: o.rotationY ?? 0, colors: o.colors, build: o.build, follow: o.follow, warmUpProbes: o.warmUpProbes, label: o.label, top: o.top, spout: o.spout, free: o.free, pushable: o.pushable }))
 }
 
-/**
- * The ambient fill: sky above, bounce from the ground below (what a slab's underside and a house's shaded rooms are lit by).
- * three.js lights are not pre-multiplied by pi (a hemisphere's diffuse is albedo * colour * intensity / pi), so the ground bounce needs an intensity
- * of about 5 for light concrete to read light grey. The sky colour is scaled down by the same factor, so what the sky gives an upward face stays what it was.
- */
-export const HEMISPHERE_SKY = 0x5c6573
-export const HEMISPHERE_GROUND = 0xa8a8a8
-export const HEMISPHERE_INTENSITY = 5
-
-export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_NS.Scene, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
+export function createArena(THREE: typeof THREE_NS, size: number, scenery?: Record<string, SceneryObject | null>, tapOption?: SceneryTap | null): Arena {
   // the room's own floor, grid and ruler (not a piece: the pieces in the room come from their packages)
   const group = markKitOrigin(new THREE.Group(), { owner: 'game-test-room', kind: 'room' })
   group.name = 'test-room-arena'
-  scene.background = new THREE.Color(0x9fb4c8)
-
-  // the ground colour is what the underside of a slab reads in shade (no sun reaches it): light concrete-grey ground bounce, so it shows grey and not near black
-  group.add(new THREE.HemisphereLight(HEMISPHERE_SKY, HEMISPHERE_GROUND, HEMISPHERE_INTENSITY))
-  const sun = new THREE.DirectionalLight(0xffffff, 2.1)
-  // the sun's direction as it always was (7, 13, 8), set back far enough that the whole cascade fits between its planes
-  const SUN_OFFSET: Vec3 = sunOffsetOf([7, 13, 8])
-  sun.position.set(...SUN_OFFSET)
-  sun.castShadow = true
-  sun.shadow.mapSize.set(1024, 1024)
-  const sc = sun.shadow.camera
-  Object.assign(sc, sunShadowFrustum())
-  sc.updateProjectionMatrix()
-  sun.shadow.bias = -0.0006
-  // a texel of the map is 3 cm: a face nearly along the sun shades itself in stripes (acne) without pushing the lookup out along its normal
-  sun.shadow.normalBias = 0.03
-  group.add(sun)
-  group.add(sun.target)
-  // the frustum follows the camera, in whole texels, so shadows near the player are always inside it and never swim
-  const followSun = (focus: Vec3): void => {
-    const frame = snapSunShadow({ focus: [focus[0], 0, focus[2]], offset: SUN_OFFSET, half: sc.right, mapSize: sun.shadow.mapSize.x })
-    sun.target.position.set(...frame.target)
-    sun.position.set(...frame.position)
-  }
 
   const sceneryObjects = resolveScenery(scenery)
   const wallObject = sceneryObjects.find((o) => o.id === WALL_ID)
@@ -327,7 +290,5 @@ export function createArena(THREE: typeof THREE_NS, size: number, scene: THREE_N
     wallZ,
     tops,
     tapSpout,
-    sun,
-    followSun,
   }
 }

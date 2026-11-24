@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { snapSunShadow, sunOffsetOf, sunShadowFrustum } from '../src/sun-shadow'
+import { snapSunShadow, sunOffsetOf, sunShadowFrustum } from '../src/world/sun-shadow'
 
 const OFFSET: [number, number, number] = [7, 13, 8]
 const HALF = 16
