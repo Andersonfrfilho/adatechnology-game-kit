@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { installPortableMath } from '@adatechnology/golden-tool'
 
-import { createBestBuilder, createRigAnimator } from '../src'
+import { defaultHeightMetres } from '@adatechnology/game-characters'
+
+import { RICH_PORT_SKULL_TOP_METRES, createBestBuilder, createRigAnimator } from '../src'
 import type { RichRig } from '../src'
 import golden from './fixtures/team-golden/bestiary-gait.json'
 import undeadTypes from '../../game-characters-undead/src/data/types.json'
@@ -37,15 +39,23 @@ describe('G-gait (Chrome): the Bestiário animate0 on the rich rig', () => {
       }
       const rig = body.userData.rig as RichRig
       animator.animate0(body, data.time)
-      const actual = {
-        hipY: round4(rig.fig.position.y),
+      // Spec 012 D3: root rig is normalised so skull top matches heightMetres; joint rotations stay identical to the page,
+      // while hipY scales by the exact normalisation factor (targetHeight / (typeS * RICH_PORT_SKULL_TOP_METRES)).
+      const typeName = names.get(data.type)!
+      const typeS = best.TYPES[typeName]?.s ?? 1
+      const heightNorm = defaultHeightMetres(typeName) / (typeS * RICH_PORT_SKULL_TOP_METRES)
+      const actualRot = {
         upper: rotation(rig.upper),
         head: rotation(rig.headG),
         arms: rig.arms.map((arm) => [round4(arm.g.rotation.x), round4(arm.el.rotation.x)]),
         legs: rig.legs.map((leg) => (leg.lost ? [0, 0] : [round4(leg.g.rotation.x), round4(leg.kn.rotation.x)])),
       }
-      const { type: _type, time: _time, ...expected } = data
-      if (JSON.stringify(actual) !== JSON.stringify(expected)) mismatches.push(`${data.type}@${data.time}`)
+      const { type: _type, time: _time, hipY: rawHipY, ...expectedRot } = data
+      const rawDropBase = rig.dropBase / heightNorm
+      const expectedHipY = rawHipY - rawDropBase + rig.dropBase
+      if (Math.abs(rig.fig.position.y - expectedHipY) > 2e-4 || JSON.stringify(actualRot) !== JSON.stringify(expectedRot)) {
+        mismatches.push(`${data.type}@${data.time}`)
+      }
     }
     restore()
     expect(mismatches).toEqual([])

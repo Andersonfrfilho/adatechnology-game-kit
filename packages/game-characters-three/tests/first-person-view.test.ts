@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
-import { createPlayerAvatar, toRoomAvatar } from '../src'
+import { RICH_HEIGHT_NORM, createPlayerAvatar, toRoomAvatar } from '../src'
 import { createHeadHider } from '../src/player/head-hiding'
 import type { AvatarUpdate, PlayerAvatarOptions } from '../src'
 
@@ -13,10 +13,10 @@ const settle = (options: PlayerAvatarOptions = {}, state: AvatarUpdate = {}, sec
 const range = (values: number[]): number => Math.max(...values) - Math.min(...values)
 
 describe('eye', () => {
-  it('stands about 1.70 m above the feet', () => {
+  it('stands about 1.55 m above the feet (1.80 m normalised body)', () => {
     const eye = settle().eye()
-    expect(eye.y).toBeGreaterThan(1.68)
-    expect(eye.y).toBeLessThan(1.72)
+    expect(eye.y).toBeGreaterThan(1.53)
+    expect(eye.y).toBeLessThan(1.58)
   })
 
   it('follows the pose of the body: crouch, sit, lie, down', () => {
@@ -64,7 +64,7 @@ describe('eye', () => {
 
   it('follows eyeOffset in the head frame', () => {
     const base = settle({ eyeOffset: [0, 0, 0] }).eye()
-    expect(base.y).toBeCloseTo(settle().eye().y + 0.068, 2)
+    expect(base.y).toBeCloseTo(settle().eye().y + 0.068 * RICH_HEIGHT_NORM, 3)
     expect(settle({ eyeOffset: [0, 0, 0.1] }).eye().z).toBeGreaterThan(base.z + 0.05)
   })
 
