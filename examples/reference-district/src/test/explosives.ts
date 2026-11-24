@@ -9,7 +9,7 @@ import type { ScriptEvent } from './scripts'
 const THROW_SECONDS = 1.1
 const THROW_TARGET_HEIGHT = 0.15
 const CHARGE_HEIGHT = 0.1
-/** Steps after a blast at which the dead are counted again: the crowd resolves a blast at the start of its next step and the corpses settle in a second. */
+/** Steps after a blast at which its dead are counted: the crowd resolves a blast at the start of its next step and the corpses settle in a second. A blast that follows closes the one before, so two blasts never share kills. */
 const KILLS_SETTLE_STEPS = 60
 
 type Params = {
@@ -37,7 +37,7 @@ export function createExplosives({ district, arsenal, handOf, pointOf }: Params)
   const rules = arsenal.rules.explosives
   const flying: { readonly body: ExplosiveBody; readonly eventIndex: number }[] = []
   const charges: { readonly body: ExplosiveBody; readonly eventIndex: number }[] = []
-  const records: { readonly eventIndex: number; readonly explosive: string; readonly step: number; readonly killsBefore: number; killsAfter?: number }[] = []
+  const records: { readonly eventIndex: number; readonly explosive: string; readonly step: number; readonly killsBefore: number; readonly inReach: number; readonly inLethal: number; killsAfter?: number }[] = []
   let step = 0
 
   const groundProbe: SurfaceProbe = (from, to) => {
@@ -47,10 +47,18 @@ export function createExplosives({ district, arsenal, handOf, pointOf }: Params)
     return { point: [from[0] + (to[0] - from[0]) * share, floor, from[2] + (to[2] - from[2]) * share], normal: [0, 1, 0], ground: true }
   }
 
+  function agentsWithin(point: Vec3, reach: number): number {
+    const { store } = horde.crowd
+    let count = 0
+    for (let agent = 0; agent < store.n; agent++) if (Math.hypot((store.x[agent] ?? 0) - point[0], (store.z[agent] ?? 0) - point[2]) <= reach) count++
+    return count
+  }
+
   function detonate(detonation: Detonation, eventIndex: number): void {
     if (detonation.cone || detonation.smoke || detonation.energy <= 0) throw new Error(`the script runner does not run the explosive "${detonation.explosive}" (cone, smoke or no energy)`)
-    records.push({ eventIndex, explosive: detonation.explosive, step, killsBefore: horde.crowd.stats.kills })
     const reach = Math.max(detonation.injuryRadius, detonation.lethalRadius)
+    for (const open of records) open.killsAfter ??= horde.crowd.stats.kills
+    records.push({ eventIndex, explosive: detonation.explosive, step, killsBefore: horde.crowd.stats.kills, inReach: agentsWithin(detonation.point, reach), inLethal: agentsWithin(detonation.point, detonation.lethalRadius) })
     const options: BlastOptions = { charge: { ...(detonation.tnt !== undefined ? { tnt: detonation.tnt } : {}), ...(detonation.casing ? { casing: detonation.casing } : {}) } }
     const isPlayed = world.effects.world.explosion(detonation.explosive, detonation.point, { direction: detonation.direction }) !== null
     const finish = (results: readonly HitResult[]): void => {

@@ -1,4 +1,5 @@
 // Runs the scripts of the district twice each, in fresh pages with no display loop, and compares the hash of the world at the end of every phase (spec 011, R10).
+// A hashed run takes more frames than an unhashed one (the hash drains the blast pacer), so the T2.6 gauge must run unhashed.
 // Same seed, same script, same step: the hashes must be identical, no hash may be missing, and a blast must change the world (the destruction hash of `grenade` differs from `shoot`, `caos_blast` from `caos_fire`).
 // The Hz part of R10 (60, 120 and 144 Hz give the same world) is not run here: the runner never renders, it steps `scheduler.frame(tick, { exact: true })`, so there is no display rate to vary; the scheduler's own
 // tests in packages/game-runtime cover that the display rate does not change the fixed steps. Needs a browser; never on CI (CLAUDE.md section 9). Run it under the machine's measure lock:
@@ -71,10 +72,15 @@ for (const scenario of SCENARIOS) {
     if (!changed) failed++
     console.log(`  ${changed ? 'OK  ' : 'FAIL'}  destruction hash of ${after} differs from ${before}`)
   }
+  for (const blast of first.result.blasts.filter((candidate) => candidate.explosive === 'c4')) {
+    const hurt = blast.killsAfter > blast.killsBefore
+    if (!hurt) failed++
+    console.log(`  ${hurt ? 'OK  ' : 'FAIL'}  the c4 raised the dead count`)
+  }
   const sameBlasts = others.every((other) => JSON.stringify(other.result.blasts) === JSON.stringify(first.result.blasts))
   if (!sameBlasts) failed++
   console.log(`  ${sameBlasts ? 'SAME' : 'DIFF'}  blasts across runs`)
-  for (const blast of first.result.blasts) console.log(`    blast ${blast.explosive} (event ${blast.eventIndex}) at step ${blast.step}: dead ${blast.killsBefore} -> ${blast.killsAfter}`)
+  for (const blast of first.result.blasts) console.log(`    blast ${blast.explosive} (event ${blast.eventIndex}) at step ${blast.step}: in reach ${blast.inReach} (lethal ${blast.inLethal}), dead ${blast.killsBefore} -> ${blast.killsAfter}`)
   console.log(`  detonations per event: ${first.result.events.filter((event) => event.detonations !== undefined).map((event) => `${event.kind}@${event.at}=${event.detonations}`).join(' ') || 'none'}`)
   const pending = first.result.events.filter((event) => event.status !== 'done').map((event) => `${event.kind}@${event.at}:${event.status}:${event.limit}(${event.source})`)
   console.log(`  pending: ${pending.join(' ')}`)

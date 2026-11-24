@@ -12,7 +12,7 @@ export type ActionResult =
   | { readonly status: 'pending'; readonly limit: string; readonly reason: string }
 
 /** One explosion of the world: which event set it off, at which step of the world, and how many of the horde were dead before and a second after. */
-export type BlastRecord = { readonly eventIndex: number; readonly explosive: string; readonly step: number; readonly killsBefore: number; readonly killsAfter: number }
+export type BlastRecord = { readonly eventIndex: number; readonly explosive: string; readonly step: number; readonly killsBefore: number; readonly killsAfter: number; /** Agents of the horde inside the blast's reach when it went off. */ readonly inReach: number; /** ... and inside its lethal radius, where an unsheltered agent is killed outright. */ readonly inLethal: number }
 
 export type PlayerSpot = { readonly x: number; readonly z: number; readonly yaw: number; readonly vx: number; readonly vz: number }
 

@@ -15,7 +15,7 @@ function fakeWorld(answer: (event: ScriptEvent) => ActionResult = () => ({ statu
   const log: string[] = []
   let steps = 0
   const thrown: number[] = []
-  const blastsOf = (): readonly BlastRecord[] => (explodes ? thrown.map((eventIndex) => ({ eventIndex, explosive: 'm67', step: steps, killsBefore: 0, killsAfter: 3 })) : [])
+  const blastsOf = (): readonly BlastRecord[] => (explodes ? thrown.map((eventIndex) => ({ eventIndex, explosive: 'm67', step: steps, killsBefore: 0, killsAfter: 3, inReach: 3, inLethal: 1 })) : [])
   const world: ScriptWorld = {
     tick: TICK,
     step: () => void steps++,
