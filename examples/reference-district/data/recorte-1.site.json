@@ -1,0 +1,51 @@
+{
+  "plan": "reference_district_1",
+  "seed": 11,
+  "lots": [
+    {"id": "street_north_1", "rect": [50, -30, 62, -5], "front": "s", "typology": "budget_slab_house", "state": "draw", "enterable": "lod"},
+    {"id": "street_north_2", "rect": [62, -30, 74, -5], "front": "s", "typology": "budget_slab_house", "state": "draw", "enterable": "lod"},
+    {"id": "street_north_3", "rect": [74, -30, 86, -5], "front": "s", "typology": "pharmacy", "zone": "zc", "state": "draw", "enterable": "lod"},
+    {"id": "street_north_4", "rect": [86, -30, 98, -5], "front": "s", "typology": "budget_semi_detached", "state": "draw", "enterable": "lod"},
+    {"id": "street_north_5", "rect": [98, -30, 110, -5], "front": "s", "typology": "budget_slab_house", "state": "draw", "enterable": "lod"},
+    {"id": "street_south_1", "rect": [50, 5, 62, 30], "front": "n", "typology": "budget_slab_house", "state": "draw", "enterable": "lod"},
+    {"id": "street_south_2", "rect": [62, 5, 74, 30], "front": "n", "typology": "townhouse", "state": "draw", "enterable": "lod"},
+    {"id": "street_south_3", "rect": [74, 5, 86, 30], "front": "n", "typology": "budget_slab_house", "state": "none", "enterable": "lod"},
+    {"id": "street_south_4", "rect": [86, 5, 98, 30], "front": "n", "typology": "budget_semi_detached", "state": "draw", "enterable": "lod"},
+    {"id": "street_south_5", "rect": [98, 5, 110, 30], "front": "n", "typology": "budget_slab_house", "state": "draw", "enterable": "lod"},
+    {"id": "downtown_pharmacy", "rect": [-150, -35, -124, -5], "front": "s", "typology": "pharmacy", "zone": "zc", "state": "draw", "enterable": "lod"},
+    {"id": "downtown_market", "rect": [-150, 5, -120, 35], "front": "n", "typology": "market", "zone": "zc", "state": "draw", "enterable": "lod"},
+    {"id": "downtown_police_station", "rect": [-90, 5, -60, 30], "front": "n", "typology": "police_station", "zone": "zc", "state": "draw", "enterable": "lod"},
+    {"id": "downtown_church", "rect": [-150, 70, -120, 100], "front": "n", "typology": "church", "zone": "zc", "state": "draw", "enterable": "lod"}
+  ],
+  "props": [
+    {"id": "barricade_north", "kind": "prop", "ref": "barricade", "at": [-112, -2.5], "ry": 1.5708},
+    {"id": "barricade_south", "kind": "prop", "ref": "barricade", "at": [-112, 2.5], "ry": 1.5708},
+    {"id": "sandbags_north", "kind": "prop", "ref": "sandbags", "at": [-114.5, -4.5], "ry": 1.5708},
+    {"id": "sandbags_south", "kind": "prop", "ref": "sandbags", "at": [-114.5, 4.5], "ry": 1.5708},
+    {"id": "police_car", "kind": "vehicle", "ref": "police_sedan", "at": [-118, -3], "ry": 0.4},
+    {"id": "ambulance", "kind": "vehicle", "ref": "ambulance", "at": [-119, 3.5], "ry": -0.3},
+    {"id": "parked_hatch", "kind": "vehicle", "ref": "compact_hatch", "at": [68, 3], "ry": 0}
+  ],
+  "hordes": [
+    {"id": "street_far", "rect": [140, -4, 225, 4], "share": 0.4, "profile": "walker"},
+    {"id": "street_east", "rect": [110, -4, 140, 4], "share": 0.6, "profile": "walker"},
+    {"id": "cross_north", "rect": [-104, -60, -96, -10], "share": 0.6, "profile": "runner"},
+    {"id": "cross_east", "rect": [-96, -4, -46, 4], "share": 0.4, "profile": "walker"}
+  ],
+  "missing": [
+    {"id": "mid_rise_building", "what": "Prédio de 4 a 8 andares com planta e loja", "owner": ["game-floorplan-residential"], "task": "T3.1", "rect": [-90, -50, -50, -10], "height": 24},
+    {"id": "mixed_use_house", "what": "Sobrado de uso misto (loja e moradia)", "owner": ["game-floorplan-commercial"], "task": "T3.2", "rect": [-210, -50, -170, -10], "height": 9},
+    {"id": "bridge", "what": "Ponte de concreto destrutível", "owner": ["game-floorplan-structure", "game-urban"], "task": "T3.3", "rect": [-40, -6, 0, 6], "height": 6},
+    {"id": "river", "what": "Rio com correnteza", "owner": ["game-terrain"], "task": "T3.4", "rect": [-35, -135, -5, 135], "height": 1},
+    {"id": "alley", "what": "Viela entre casas", "owner": ["game-urban"], "task": "T3.5", "rect": [110, 5, 114, 45], "height": 3},
+    {"id": "bar", "what": "Bar de esquina", "owner": ["game-floorplan-commercial"], "task": "T3.6", "rect": [114, -30, 126, -5], "height": 6},
+    {"id": "exposed_rebar", "what": "Laje pronta com vergalhão exposto", "owner": ["game-floorplan-three"], "task": "T3.7", "rect": [114, 5, 126, 30], "height": 6},
+    {"id": "henhouse", "what": "Galinheiro de quintal", "owner": ["game-floorplan-residential", "game-floorplan-three"], "task": "T3.8", "rect": [98, 32, 104, 37], "height": 2},
+    {"id": "road_cones", "what": "Cone, cavalete e fita zebrada", "owner": ["game-props3d"], "task": "T3.9", "rect": [-128, -3, -120, 3], "height": 1},
+    {"id": "traffic_signals", "what": "Semáforo, faixa de pedestre e meio-fio", "owner": ["game-urban"], "task": "T3.9", "rect": [-96, -5, -88, 5], "height": 4},
+    {"id": "riverbank_forest", "what": "Mata de margem", "owner": ["game-vegetation-species"], "task": "T3.10", "rect": [-45, -130, -35, -60], "height": 10},
+    {"id": "fish_and_heron", "what": "Peixe e garça", "owner": ["game-animals-species"], "task": "T3.10", "rect": [-30, -20, -10, -10], "height": 2},
+    {"id": "note_story", "what": "Bilhete com história numa casa", "owner": ["game-stories", "game-items-goods"], "task": "T3.11", "rect": [80, 8, 82, 10], "height": 0.3},
+    {"id": "plan_line_drawing", "what": "Desenho das linhas do plano (rua, rio)", "owner": ["game-urban", "game-urban-three"], "task": "T3.13", "rect": [-220, -5, 225, 5], "height": 0.2}
+  ]
+}
