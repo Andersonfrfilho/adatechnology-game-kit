@@ -42,6 +42,7 @@ papiro, capim alto; varal; `garden_bed`.
 | Bar/boteco | `game-floorplan-commercial` | tipologia e móveis |
 | Galinheiro de quintal | `game-floorplan-residential` (catálogo) + builder no `game-floorplan-three` | hoje só dentro de `farm` |
 | Vergalhão exposto na laje pronta | `game-floorplan-three` | o dado `slab.exposedRebar` existe, o 3D não desenha |
+| Desenho das linhas de um plano de cidade (rua, avenida, rio) | `game-urban`, `game-urban-three` (rio pela zona de água do `game-terrain`) | T3.13; até lá o montador traduz com funções públicas |
 | História do `game-stories` num bilhete da casa | `game-stories` + `game-items-goods` (achados) | |
 | Preset de visual `overcast` | `game-render-three` (luz, céu, tone mapping, gradação) + `game-graphics` (degrau sem pós) | Fase 4 |
 | Pós-processamento (oclusão de ambiente, gradação) | `game-render-three` | Fase 4, com degraus no `tuner` |
