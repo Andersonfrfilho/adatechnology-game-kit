@@ -8,7 +8,7 @@ import { createDistrictGrid, createHorde } from './assemble/horde'
 import { createHouses, planLots } from './assemble/houses'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
-import { buildNetworks } from './assemble/networks'
+import { buildNetworks, drawDistrictNetworks } from './assemble/networks'
 import { drawStreets } from './assemble/streets'
 import { createDistrictWeather } from './assemble/weather'
 import { groundLayoutOf, terrainBoundsOf } from './ground'
@@ -16,7 +16,7 @@ import { createMissingBoxes } from './missing'
 import type { District, DistrictOptions } from './options'
 import { createReferenceUrban, referencePlan } from './plan'
 import { referenceSite } from './reference'
-import { POLE_MIN_GAP, POLE_SPACING, polePointsOf, STREET_LIGHT_CURB_SETBACK } from './roads'
+import { POLE_MIN_GAP } from './roads'
 import { keepOutOf } from './service'
 
 const DEFAULT_START = { x: 30, z: 0, yaw: -Math.PI / 2 } as const
@@ -52,11 +52,13 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
 
   const lots = planLots(site)
   const avoid = keepOutOf(lots, POLE_MIN_GAP)
-  const poles = polePointsOf({ plan, spacing: POLE_SPACING, setback: STREET_LIGHT_CURB_SETBACK, avoid })
   const networks = buildNetworks({ plan, site, lots, avoid })
-  const streets = drawStreets({ THREE, urban: createReferenceUrban({ hostLights: true }), plan, site, poles, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
+  const urban = createReferenceUrban({ hostLights: true })
+  const streets = drawStreets({ THREE, urban, plan, site, lights: world.lights, seed: site.seed })
   scene.add(streets.drawn.root)
-  const houses = createHouses({ THREE, world, scene, lots, networks: networks.networks })
+  const lines = drawDistrictNetworks({ THREE, urban, generated: networks, lights: world.lights, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
+  scene.add(lines.drawn.root)
+  const houses = createHouses({ THREE, world, scene, lots })
   const props = createProps({ THREE, world, scene, site })
   const missing = createMissingBoxes(THREE, site.missing)
   scene.add(missing.group)
@@ -78,6 +80,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
         houses.update(context.dt, context.simTime, world.view.camera.position)
         weather.update(context.dt)
         streets.drawn.animate(context.simTime)
+        lines.update(context.simTime, world.view.camera.position)
         horde.draw(context.dt, player.view.yaw)
       },
       { phase: 'lateSimulate', order: 100, id: 'district.frame' },
@@ -103,6 +106,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
       props.dispose()
       houses.dispose()
       streets.drawn.dispose()
+      lines.drawn.dispose()
       world.dispose()
     },
   }

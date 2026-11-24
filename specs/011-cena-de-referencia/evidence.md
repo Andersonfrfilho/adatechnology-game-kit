@@ -101,3 +101,13 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
 - **Fica para a página da cena (T2.2):** T1.4, a regra `scene-not-testing`, porque o `check:layers` só percorre `packages/*/src` e a cena
   ainda não tem código de página.
 - **Bloqueado em nada.** Os merges estão com o dono: a máquina barra o `gh pr merge` no modo automático.
+
+## T2.8d — desenho das redes (2026-11-24)
+
+- `drawNetworks` no `game-urban-three`; a cena desenha os postes da rede (sai o `polePointsOf`) e a casa em `street: 'network'` não desenha
+  o próprio ramal (revisão do #475, itens 1 e 3).
+- **Custo do recorte** (teste sem GPU): 9 chamadas perto, 1 de longe; o caso do banco `urban/networks` grava 17 chamadas (com sombra),
+  9.464 triângulos, 9 materiais.
+- **Mudança dita:** os postes da cena mudaram de lugar (são os da rede, um lado da rua, na divisa dos lotes) e as lâmpadas acendem pelos nós
+  `light`; os prints de `shots/` foram regravados pelo `pnpm check:district` (passou). A régua de desempenho do `pior` não foi refeita neste PR.
+- Prints antes e depois: `fios-antes-*` e `rede-depois-*` (dia, `tipico`) e `rede-depois-*-noite` (`pior`), na pasta de rascunho da sessão.

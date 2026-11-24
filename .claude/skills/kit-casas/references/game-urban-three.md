@@ -20,7 +20,7 @@ drawn.dispose()
 ## API principal
 | Export | Para que serve |
 |---|---|
-| `createUrbanThree(THREE, { document? })` | o desenhista; `draw(scene, { root? })` devolve `{ root, lights, animate, dispose }` |
+| `createUrbanThree(THREE, { document? })` | o desenhista; `draw(scene, { root? })` devolve `{ root, lights, animate, dispose }`; `drawNetworks(networks, { isNight, lamps, surfaceAt, poles })` desenha as redes aéreas (postes instanciados, vãos fundidos por classe com faixa de índice por vão, LOD de longe em `LineSegments` por `setFocus`, lâmpadas dos nós `light` pelo orçamento de luzes) |
 | `createVehicleResolver(vehiclesThree, { quality? })`, `createPlantResolver(THREE, { lod?, condition?, season?, materials? })` | resolvedores das partes `placement`: veículo `lite` do `game-vehicles-three` e planta do `game-vegetation`; passam em `createUrbanThree(THREE, { resolvers: { vehicle, plant } })` |
 | `createUrbanTestModule`, `loadUrbanTestModule`, `URBAN_AREA_ID` | o módulo de teste da sala (itens, bancada, camadas, métricas e cenários) |
 | `createRoundedBox`, `createPrism`, `createTextTexture` | as geometrias e a textura do time, soltas |

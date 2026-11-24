@@ -17,10 +17,8 @@ import * as GameVegetation from '@adatechnology/game-vegetation'
 import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
 import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import type { PlanRect } from '@adatechnology/game-urban'
-import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 
 import { lotPlacement, overflowOf } from '../placement'
-import { networkDropOf } from '../service'
 import type { HousePlacement, HouseSize } from '../placement'
 import { seedOf } from '../seed'
 import type { Lot, Site } from '../site'
@@ -116,8 +114,6 @@ export type HousesParams = {
   readonly world: KitWorld
   readonly scene: THREE_NS.Object3D
   readonly lots: readonly PlannedLot[]
-  /** The utility networks (`buildNetworks`): each house's service drop is the network's `service_drop` to its lot. */
-  readonly networks: UtilityNetworks
 }
 
 /**
@@ -125,7 +121,7 @@ export type HousesParams = {
  * interactables and the vegetation of the kit, standing on its lot facing the street and registered in the world's destruction. The distance level of detail (`planLod`) keeps only the near houses
  * complete: the others lose their interior and, far away, vanish.
  */
-export function createHouses({ THREE, world, scene, lots, networks }: HousesParams): Houses {
+export function createHouses({ THREE, world, scene, lots }: HousesParams): Houses {
   const options: HouseRendererOptions = {
     locale: 'pt-BR',
     quality: 'game',
@@ -138,8 +134,7 @@ export function createHouses({ THREE, world, scene, lots, networks }: HousesPara
   const renderer = createHouseRenderer(THREE, options)
   const unregister = registerHouseQueues(renderer, world.frame.scheduler.budget)
   const list = lots.map(({ lot, plan, size, placement }): PlacedHouse => {
-    const drop = networkDropOf({ house: { plan, placement }, lot: lot.id, networks })
-    const house = renderer.build(plan, { quality: 'game', terrain: false, ...(drop ? { serviceFrom: drop.fromInHouse } : {}) })
+    const house = renderer.build(plan, { quality: 'game', terrain: false })
     house.group.rotation.y = placement.ry
     house.group.position.set(placement.x, 0, placement.z)
     house.group.updateMatrixWorld(true)

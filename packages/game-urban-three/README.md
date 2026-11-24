@@ -28,6 +28,31 @@ scene.add(drawn.root)
 - A `placement` part (a vehicle of the fleet, a species of the pack) becomes a group at the spot, turned and scaled, holding the object a resolver made: `createUrbanThree(THREE, { resolvers: { vehicle: createVehicleResolver(vehiclesThree), plant: createPlantResolver(THREE) } })`. The vehicle resolver uses the `lite` build of `game-vehicles-three` (six fused meshes) and the plant resolver `generate` and `createPlantObject` of `game-vegetation`; each is built once for an id and paint (or seed) and cloned for every spot, sharing geometry and materials. An id the package does not know leaves the spot empty. `resolver.dispose()` frees them.
 - `draw(scene, { root })` draws into a group of yours. Works on three r160 and later.
 
+## Utility networks
+
+`drawNetworks(networks, options)` draws the aerial networks of `@adatechnology/game-urban/networks` (`generateNetworks`):
+
+```ts
+const drawn = createUrbanThree(THREE, { lights, physicalLights: true, flickerLenses: true })
+  .drawNetworks(generated.networks, { isNight, lamps: { lit: 0.8, flicker: 0.15 }, surfaceAt: generated.surfaceAt, poles: urban.poles })
+scene.add(drawn.root)
+// each frame: drawn.animate(t); when the camera moved: drawn.setFocus(x, z)
+```
+
+- Each `concrete_distribution` pole (or any registry pole with `slots`) stands at its node, turned with its arm toward its lamp: the mast
+  instanced per spec, the hardware of `distributionHardwareOf` (crossarm and pin insulators where it carries medium voltage, the low-voltage
+  clamp, one telecom clamp per cable, the arm and luminaire, the transformer's bracket and bushings) one instanced mesh of boxes, the
+  transformer tanks and reserve coils one instanced mesh of cylinders, the lenses one more.
+- The conductors hang from the pole's slots with the sag the generator laid them with (`y − 4·sag·t·(1 − t)`, 8 stretches): three bare
+  medium-voltage phases, one multiplexed low-voltage cable, the telecom bundle (a cable per clamp), the drops (power from the low-voltage clamp,
+  telecom from the top cable) to each lot's anchor, and a guy against each pull of a corner or end pole, anchored on the sidewalk (`surfaceAt`).
+  Each class is one merged tube mesh; `spans` maps every edge to its index range there and in the far lines (R8).
+- Level of detail: `setFocus(x, z)` keeps the spans within `nearDistance` (90 m) as tubes and draws the others as one `LineSegments`, by
+  rewriting each index buffer once when a span changes side. About ten draw calls near for a whole district, one far.
+- The lamps are the network's `light` nodes with `networkLampsOf` (the `lampStateOf` of #470 by the seed and the node's place); a lit one is a
+  source of the host's light budget, a failing one blinks its lens and its light on its flicker group.
+- `dispose()` removes the sources and frees every geometry and material it made.
+
 The scene hash, the lists of instances and the surface of each material (shadows, roughness, metalness, flat shading) of 34 cases are tested against the page.
 
 ## Geometry

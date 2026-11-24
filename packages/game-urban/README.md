@@ -198,6 +198,11 @@ const { networks, connections, surfaceAt, warnings } = generateNetworks({
 validateNetworks(networks, { connections, surfaceAt }) // [] for a plan the generator can lay
 ```
 
+`distributionHardwareOf(spec, { mv, transformer, lamp, cables, cableGap })` gives the hardware of a distribution pole in its own frame (x toward
+the road, z along the line) with every fixing point read from its `slots`, the same heights the generator hangs the conductors at;
+`networkLampsOf({ networks, shares, isNight })` gives every `light` node with its lamp's state (`lampStateOf` by the seed and the node's place).
+`game-urban-three`'s `drawNetworks` draws both.
+
 - **Poles** on one side of each street (the side with more lots; on a tie north or west), 0.4 m from the kerb, 30 to 40 m apart on lot
   boundaries when one is in reach, slid clear of `avoid` (else the next boundary in reach, never past 40 m); a guyed pole at each corner (the
   end of a street at another, a T, is a corner too) and each end of line, the corners of two streets joined by a span; an in-line pole at

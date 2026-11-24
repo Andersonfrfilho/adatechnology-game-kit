@@ -71,16 +71,13 @@ describe('a house on a street with a utility network (`street: \'network\'`)', (
     }
   })
 
-  it('hangs the network\'s drop from where it leaves the street pole to the anchor on the post', () => {
-    const { house } = houseOf(plan, { interactives: kit }, { quality: 'game', serviceFrom: FROM })
-    const drop = house.structure.parts.filter((part) => part.id.startsWith('wiring:service:')).sort((a, b) => Number(a.id.split(':')[2]) - Number(b.id.split(':')[2]))
-    const anchor = entrance.drop[0]!
-    const first = drop[0]!.aabb
-    const last = drop[drop.length - 1]!.aabb
-    const holds = (box: readonly number[], x: number, z: number): boolean => x >= box[0]! - 0.02 && x <= box[2]! + 0.02 && z >= box[1]! - 0.02 && z <= box[3]! + 0.02
-    expect(holds(first, FROM[0], FROM[2]), 'starts at the street pole').toBe(true)
-    expect(holds(last, anchor[0], anchor[1]), 'ends on the post').toBe(true)
-    expect(Math.max(...drop.map((part) => part.y1))).toBeLessThanOrEqual(FROM[1] + 0.05)
+  it('draws no overhead drop of its own: the network draws the drop to the anchor on the post', () => {
+    for (const build of [{ quality: 'game' as const }, { quality: 'game' as const, serviceFrom: FROM }]) {
+      for (const options of [{}, { interactives: kit }]) {
+        const ids = partIds(houseOf(plan, options, build).house)
+        expect(ids.some((id) => id.startsWith('wiring:service:')), 'no drop from the street pole').toBe(false)
+      }
+    }
   })
 
   it('draws the meter post or the facade mast (pontalete), never both and never none, with or without the interactables', () => {

@@ -29,8 +29,20 @@ export type PoleSlotBand = 'mv' | 'transformer' | 'lv' | 'lighting' | 'telecom'
  * `embedment` what is buried of it (`postEmbedment(height)` of game-destruction), so the bands fit in `height - embedment`.
  */
 export type PoleSlots = { readonly height: number; readonly embedment: number; readonly bands: Readonly<Record<PoleSlotBand, readonly [number, number]>> }
-/** A distribution pole: the single arm pole plus the bands its networks are fixed at. The crossarm, insulators and clamps come with its builder. */
-export type DistributionSpec = SingleArmSpec & { readonly slots: PoleSlots }
+/**
+ * A distribution pole: the single arm pole plus the bands its networks are fixed at and the hardware that fixes them (`distributionHardwareOf`):
+ * the crossarm (`reach` its centre toward the road) with its pin insulators (`at` along it), the transformer's bushings (`spread` apart on its lid),
+ * the low-voltage cable's clamp and the telecom clamps `out` on the field side, and the guy wire (`reach` from the mast to its anchor).
+ */
+export type DistributionSpec = SingleArmSpec & {
+  readonly slots: PoleSlots
+  readonly crossarm: { readonly reach: number; readonly width: number; readonly height: number; readonly depth: number; readonly color: number }
+  readonly insulators: { readonly at: readonly number[]; readonly radius: number; readonly color: number }
+  readonly bushings: { readonly spread: number; readonly radius: number; readonly height: number; readonly color: number }
+  readonly lowVoltage: { readonly out: number; readonly color: number }
+  readonly telecom: { readonly out: number; readonly color: number }
+  readonly guy: { readonly reach: number; readonly color: number }
+}
 /** A registry entry of a distribution pole: the `distribution` shape reads a `DistributionSpec`. */
 export type DistributionPoleDef = PoleDef & { shape: 'distribution'; spec: DistributionSpec }
 
