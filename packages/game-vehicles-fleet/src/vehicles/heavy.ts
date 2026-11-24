@@ -284,16 +284,20 @@ export function installHeavy(fx: FleetContext): void {
       x: xd - 0.07,
       y: belt + 0.02,
       w: zi * 2,
-      d: 0.48,
-      h: Math.min(0.55, belt - fl - 0.08),
+      d: 0.34,
+      h: Math.min(0.28, belt - fl - 0.16),
       drv: -zi * 0.52,
       mat: trim,
       top: fab,
     })
     kit.steeringWheel(c, xd - 0.66, belt + 0.06, -zi * 0.52, { r: 0.22, tilt: 1.12, col: 0.5, mat: trim })
     const sx = Math.max(f - len + 0.62, xd - 1.08)
-    kit.seat(c, sx, fl, -zi * 0.52, { w: 0.5, mat: fab, h: 0.44, back: 0.64, lean: 0.18 })
-    kit.seat(c, sx, fl, zi * 0.42, { w: zi * 0.98, n: 2, mat: fab, h: 0.44, back: 0.6, lean: 0.18 })
+    kit.seat(c, sx, fl, -zi * 0.52, { w: 0.52, mat: fab, h: 0.24, back: 0.64, lean: 0.18, id: 'driver', role: 'driver' })
+    kit.seat(c, sx, fl, zi * 0.42, { w: zi * 0.98, n: 2, mat: fab, h: 0.24, back: 0.6, lean: 0.18, role: 'front_passenger' })
+    const doorW = Math.max(0.75, f - 0.1 - (xr - 0.06))
+    const doorH = Math.max(1.05, ry - fl - 0.1)
+    c.addDoor({ id: 'door_front_left', widthMetres: Math.round(doorW * 1000) / 1000, heightMetres: Math.round(doorH * 1000) / 1000 })
+    c.addDoor({ id: 'door_front_right', widthMetres: Math.round(doorW * 1000) / 1000, heightMetres: Math.round(doorH * 1000) / 1000 })
     c.rod(new V3(sx + 0.55, fl, -0.05), new V3(sx + 0.5, fl + 0.48, -0.08), 0.014, MT.chrome)
     c.sphere(0.035, MT.plastic, sx + 0.5, fl + 0.5, -0.08)
     c.roundBox(0.03, ry - fl - 0.12, zi * 2, 0.01, trim, f - len + 0.07, (ry + fl) / 2, 0)
@@ -1208,7 +1212,8 @@ export function installHeavy(fx: FleetContext): void {
       kit.busRows(c, { x0: dx0 - 0.15, x1: -4.15, pitch: 0.64, floor: fl, zIn: zi, aisle: 0.46, col: '#355a7a', ceil: 2.95, seatH: 0.4 })
       kit.dashboard(c, { x: f - 0.05, y: 1.42, w: zi * 2, d: 0.42, h: 0.4, drv: -0.7, mat: CM('#202124'), top: CM('#2a2b2e') })
       kit.steeringWheel(c, f - 0.6, 1.48, -0.7, { r: 0.25, tilt: 1.1, col: 0.45 })
-      kit.seat(c, f - 1.05, fl, -0.7, { w: 0.5, mat: CM('#2c2d30', { roughness: 0.85 }), h: 0.45 })
+      kit.seat(c, f - 1.05, fl, -0.7, { w: 0.5, mat: CM('#2c2d30', { roughness: 0.85 }), h: 0.45, id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'door_front_right', widthMetres: 0.85, heightMetres: 1.95 })
       c.roundBox(0.9, 0.38, 0.5, 0.08, CM('#2a2b2d'), f - 0.6, fl + 0.19, -0.05)
       c.rod(new V3(dx0 - 0.05, fl, zi - 0.35), new V3(dx0 - 0.05, 2.95, zi - 0.35), 0.02, MT.chrome)
       c.roundBox(L - 0.5, 0.02, zi * 2, 0.01, MT.headliner, 0, 2.98, 0).castShadow = false
@@ -1583,9 +1588,11 @@ export function installHeavy(fx: FleetContext): void {
       ;[1.0, 1.5, -2.2].forEach(function (x) {
         c.rod(new V3(x, fl, 0), new V3(x, 2.95, 0), 0.018, pole)
       })
-      kit.dashboard(c, { x: fx(1.3) - 0.08, y: 1.3, w: 1.2, d: 0.5, h: 0.5, drv: -0.68, mat: CM('#1d1e20'), top: CM('#2a2b2e') })
+      kit.dashboard(c, { x: fx(1.3) - 0.08, y: 1.3, w: 1.2, d: 0.34, h: 0.28, drv: -0.68, mat: CM('#1d1e20'), top: CM('#2a2b2e') })
       kit.steeringWheel(c, f - 0.62, 1.38, -0.68, { r: 0.25, tilt: 1.15, col: 0.4 })
-      kit.seat(c, f - 1.15, 0.6, -0.68, { w: 0.5, mat: CM('#2c2d30', { roughness: 0.85 }), h: 0.46 })
+      kit.seat(c, f - 1.15, 0.6, -0.68, { w: 0.5, mat: CM('#2c2d30', { roughness: 0.85 }), h: 0.46, id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'door_front_right', widthMetres: 1.0, heightMetres: 2.05 })
+      c.addDoor({ id: 'door_rear_right', widthMetres: 1.0, heightMetres: 2.05 })
       /* turnstile and fare collector */
       c.roundBox(0.4, 0.95, 0.32, 0.05, CM('#9aa0a4', { metalness: 0.5 }), 3.95, fl + 0.48, -0.55)
       ;[0, 2.09, 4.19].forEach(function (a) {
@@ -1986,7 +1993,9 @@ export function installHeavy(fx: FleetContext): void {
       c.cylinder(0.05, 0.05, 0.012, MT.gauge, -0.165, 1.6, 0.1, 'x')
       kit.steeringWheel(c, -0.38, 1.66, 0, { r: 0.2, tilt: 1.0, col: 0.42, mat: MT.trim })
       c.roundBox(1.0, 0.05, 0.94, 0.02, CM('#5c5f62', { metalness: 0.5 }), -0.7, 1.12, 0)
-      kit.seat(c, -1.0, 1.35, 0, { w: 0.5, h: 0.16, back: 0.44, lean: 0.12, mat: MT.seat, headrest: false })
+      kit.seat(c, -1.08, 1.35, 0, { w: 0.54, h: 0.16, back: 0.44, lean: 0.12, mat: MT.seat, headrest: false, id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'cab_entry_left', widthMetres: 0.85, heightMetres: 1.15 })
+      c.addDoor({ id: 'cab_entry_right', widthMetres: 0.85, heightMetres: 1.15 })
       c.roundBox(0.3, 0.2, 0.3, 0.04, dgray, -1.0, 1.28, 0)
       ;[
         [0.25, 1],

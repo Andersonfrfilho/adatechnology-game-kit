@@ -1084,9 +1084,13 @@ export function installMotorcyclesCars(fx: FleetContext): void {
             ft: gh.ft,
             rb: gh.rb,
             rt: gh.rt,
-            roof: Math.min(gh.roof, roofR),
+            roof: gh.roof + 0.02,
             belt: gh.belt,
-            floor: s.bottomY + 0.1,
+            floor: s.bottomY + 0.02,
+            seatH: 0.12,
+            dashD: 0.32,
+            dashH: 0.24,
+            visorUp: true,
             zIn: gh.Wg / 2 - 0.09,
             zRoof: halfAt(gh.Wg, T, gh.roof) - 0.12,
             xRear: gh.rb + 0.06,
@@ -4945,7 +4949,7 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       c.part('engine', trl('labels.air_cooled_engine_rear'), null, new V3(-1.6, 0.55, 0), 1.0)
       /* simple 1970s interior */
       const fab = CM('#4b3a2e', { roughness: 0.85 }),
-        fl = 0.36
+        fl = 0.31
       c.roundBox(1.7, 0.03, 0.62, 0.01, MT.carpet, -0.15, fl, 0).castShadow = false
       c.roundBox(0.2, 0.24, 1.14, 0.04, col, 0.66, 0.92, 0)
       c.roundBox(0.16, 0.05, 1.12, 0.02, CM('#1b1c1e'), 0.6, 1.03, 0)
@@ -4956,9 +4960,18 @@ export function installMotorcyclesCars(fx: FleetContext): void {
       c.rod(new V3(0.12, fl, 0), new V3(0.02, fl + 0.42, 0), 0.01, MT.chrome)
       c.sphere(0.025, MT.plastic, 0.02, fl + 0.44, 0)
       ;[-1, 1].forEach(function (sd) {
-        kit.seat(c, -0.02, fl, sd * 0.27, { w: 0.44, mat: fab, back: 0.58, lean: 0.2, h: 0.28, headrest: false })
+        kit.seat(c, -0.08, fl, sd * 0.27, {
+          w: 0.44,
+          mat: fab,
+          back: 0.58,
+          lean: 0.2,
+          h: 0.14,
+          headrest: false,
+          id: sd < 0 ? 'driver' : 'front_right',
+          role: sd < 0 ? 'driver' : 'front_passenger',
+        })
       })
-      kit.seat(c, -0.66, fl, 0, { w: 0.94, n: 3, mat: fab, back: 0.44, lean: 0.14, h: 0.26, len: 0.42, headrest: false })
+      kit.seat(c, -0.58, fl, 0, { w: 0.94, n: 3, mat: fab, back: 0.44, lean: 0.14, h: 0.11, len: 0.42, headrest: false, role: 'rear' })
       /* door lining in slices that follow the inner curve of the shell (never crosses the bodywork) */
       ;[1, -1].forEach(function (sd) {
         for (let yk = 0.56; yk < 0.95; yk += 0.075) {

@@ -297,7 +297,11 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fab = CM('#2f3136', { roughness: 0.9 })
       GH.liner(c, ST, -0.3, 1.0, fl, MT.carpet, { h: 0.03, maxW: 0.98 })
       ;[0.26, -0.26].forEach(function (z) {
-        kit.seat(c, 0.05, fl, z, { w: 0.44, h: 0.34, back: 0.6, lean: 0.12, mat: fab })
+        kit.seat(c, 0.05, fl, z, { w: 0.48, h: 0.12, back: 0.6, lean: 0.12, mat: fab, role: 'pilot' })
+        if (z < 0) {
+          c.addDoor({ id: 'door_front_left', widthMetres: 0.68, heightMetres: 0.95 })
+          c.addDoor({ id: 'door_front_right', widthMetres: 0.68, heightMetres: 0.95 })
+        }
         EA.pedals(c, 1.15, fl, z)
       })
       c.roundBox(0.35, 0.5, 0.24, 0.05, CM('#232427'), 0.95, fl + 0.28, 0, { rot: [0, 0, 0.35] })
@@ -693,7 +697,11 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fab = CM('#4b4339', { roughness: 0.9 })
       GH.liner(c, ST, -0.6, 1.8, fl, MT.carpet, { h: 0.03, maxW: 1.15 })
       ;[0.3, -0.3].forEach(function (z) {
-        kit.seat(c, 1.05, fl, z, { w: 0.48, h: 0.36, back: 0.64, lean: 0.12, mat: fab })
+        kit.seat(c, 1.05, fl, z, { w: 0.48, h: 0.28, back: 0.64, lean: 0.12, mat: fab, role: 'pilot' })
+        if (z < 0) {
+          c.addDoor({ id: 'door_front_left', widthMetres: 0.75, heightMetres: 1.05 })
+          c.addDoor({ id: 'door_front_right', widthMetres: 0.75, heightMetres: 1.05 })
+        }
         EA.cyclic(c, 1.4, fl, z)
         EA.pedals(c, 2.1, fl, z)
       })
@@ -1128,7 +1136,11 @@ export function installHelicoptersExtra(fx: FleetContext): void {
         fab = CM('#2c3540', { roughness: 0.9 })
       GH.liner(c, ST, -2.9, 2.5, fl, MT.carpet, { h: 0.03, maxW: 1.5 })
       ;[0.42, -0.42].forEach(function (z) {
-        kit.seat(c, 1.55, fl, z, { w: 0.5, h: 0.4, back: 0.7, lean: 0.12, mat: fab })
+        kit.seat(c, 1.55, fl, z, { w: 0.5, h: 0.4, back: 0.7, lean: 0.12, mat: fab, role: 'pilot' })
+        if (z < 0) {
+          c.addDoor({ id: 'door_front_left', widthMetres: 0.78, heightMetres: 1.15 })
+          c.addDoor({ id: 'door_front_right', widthMetres: 0.78, heightMetres: 1.15 })
+        }
         EA.cyclic(c, 1.95, fl, z)
         EA.pedals(c, 2.75, fl, z)
       })
@@ -1590,10 +1602,12 @@ export function installHelicoptersExtra(fx: FleetContext): void {
       EA.colorize(fus.geometry, col) /* subdivision drops the per-vertex colour: paint again */
       /* interior: gunner (front) and pilot (behind and higher), troop cabin with 8 side seats */
       const fab = CM('#2e3328', { roughness: 0.85 })
-      kit.seat(c, 4.75, 1.55, 0, { w: 0.5, h: 0.32, back: 0.7, lean: 0.15, mat: fab })
+      kit.seat(c, 4.75, 1.55, 0, { w: 0.5, h: 0.1, back: 0.7, lean: 0.15, mat: fab, role: 'pilot' })
       c.roundBox(0.2, 0.3, 0.6, 0.04, CM('#232427'), 5.35, 1.98, 0, { rot: [0, 0, 0.3] })
       c.roundBox(0.2, 0.2, 0.15, 0.03, MT.plastic, 5.25, 2.15, 0)
-      kit.seat(c, 3.2, 2.12, 0, { w: 0.5, h: 0.32, back: 0.72, lean: 0.15, mat: fab })
+      kit.seat(c, 3.2, 2.12, 0, { w: 0.5, h: 0.1, back: 0.72, lean: 0.15, mat: fab, role: 'pilot' })
+      c.addDoor({ id: 'canopy_left', widthMetres: 0.72, heightMetres: 0.95 })
+      c.addDoor({ id: 'door_cargo_left', widthMetres: 0.9, heightMetres: 1.15 })
       EA.instPanel(c, 3.85, 2.62, 0.8, { gauges: 6, z0: -0.25, tilt: 0.3, screens: [[0.05, 0.2, 0.14, 0.18]] })
       EA.cyclic(c, 3.55, 2.12, 0)
       EA.collective(c, 3.3, 2.12, -0.38)

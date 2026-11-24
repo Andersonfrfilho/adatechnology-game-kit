@@ -852,11 +852,28 @@ export function installSuvPickupVan(fx: FleetContext): void {
     if (!c.meta.damage) c.meta.damage = crashDamage
   }
 
+  function withCabinPackaging(s: BodySpec): BodySpec {
+    if (s.interior === false) return s
+    return Object.assign({}, s, {
+      interior: Object.assign(
+        {
+          floor: s.bottomY + 0.02,
+          roof: s.gh.roof + 0.02,
+          seatH: 0.12,
+          dashD: 0.32,
+          dashH: 0.24,
+          visorUp: true,
+        },
+        s.interior || {},
+      ),
+    })
+  }
+
   /* ================= SUVs ================= */
   function suvBuild(c: VehicleContext, s: BodySpec, o?: SuvBuildOptions | null) {
     o = o || {}
     const n0 = c.deform.length
-    kit.car(c, s)
+    kit.car(c, withCabinPackaging(s))
     const low = c.deform[n0],
       m = c.meta
     let extra: Mesh[] = []
@@ -1436,7 +1453,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
   /* ================= pickups ================= */
   function pickupBuild(c: VehicleContext, s: BodySpec, o: PickupBuildOptions) {
     const n0 = c.deform.length
-    kit.car(c, s)
+    kit.car(c, withCabinPackaging(s))
     const low = c.deform[n0],
       m = c.meta
     let extra: Mesh[] = []
@@ -1914,7 +1931,7 @@ export function installSuvPickupVan(fx: FleetContext): void {
         wheels: [],
       }
       const n0 = c.deform.length
-      kit.car(c, s)
+      kit.car(c, withCabinPackaging(s))
       const low = c.deform[n0],
         m = c.meta
       cargoBed(c, { low: low, x0: m.rear! + 0.06, x1: -0.42, floor: 1.78, top: 2.25, W: W, arches: [] })
@@ -2293,6 +2310,9 @@ export function installSuvPickupVan(fx: FleetContext): void {
       xFront: P.cabBack + 0.42,
       seatH: 0.42,
       front: 'bench',
+      dashD: 0.32,
+      dashH: 0.24,
+      visorUp: true,
     })
     c.roundBox(
       0.04,

@@ -948,12 +948,13 @@ export function installCarsExtra(fx: FleetContext): void {
     m.glasshouse = gh
     m.tumble = T
     m.frontQuad = qf
-    /* trunk plug (hatch): covers the cut-out hull edge seen through the rear glass */
+    /* trunk plug (hatch): covers the cut-out hull edge seen through the rear glass, kept behind the rear seat */
     if (intr && s.shelf) {
       const sx0 = gh.rb + 0.03,
-        sx1 = gh.rb + s.shelf
-      c.roundBox(sx1 - sx0, 0.014, gh.Wg - 0.24, 0.006, CM('#1b1c1e', { roughness: 0.92 }), (sx0 + sx1) / 2, gh.belt - 0.02, 0).castShadow =
-        false
+        sx1 = Math.min(gh.rb + s.shelf, gh.rb + 0.26)
+      if (sx1 > sx0 + 0.04)
+        c.roundBox(sx1 - sx0, 0.014, gh.Wg - 0.24, 0.006, CM('#1b1c1e', { roughness: 0.92 }), (sx0 + sx1) / 2, gh.belt - 0.02, 0).castShadow =
+          false
     }
     if (intr)
       kit.interior(
@@ -964,11 +965,17 @@ export function installCarsExtra(fx: FleetContext): void {
             ft: gh.ft,
             rb: gh.rb,
             rt: gh.rt,
-            roof: Math.min(gh.roof, roofR),
+            roof: gh.roof + 0.02,
             belt: gh.belt,
-            floor: s.bottomY + 0.1,
+            floor: s.bottomY + 0.02,
+            seatH: 0.12,
+            dashD: 0.32,
+            dashH: 0.24,
+            visorUp: true,
             zIn: gh.Wg / 2 - 0.09,
             zRoof: halfAt(gh.Wg, T, gh.roof) - 0.12,
+            xFront: s.shelf ? gh.fb - 0.86 : undefined,
+            rowPitch: s.shelf ? 0.72 : undefined,
             xRear: gh.rb + 0.06,
           },
           intr,
@@ -1628,7 +1635,7 @@ export function installCarsExtra(fx: FleetContext): void {
           ])
           c.roundBox(0.03, 0.05, 0.16, 0.012, MT.trim, I.S.endX(-1, 0.84) - 0.01, 0.84, 0.0)
         },
-        interior: { rows: 2, col: '#4a4c52', trim: '#26272a' },
+        interior: { rows: 2, col: '#4a4c52', trim: '#26272a', rowPitch: 0.72 },
         hood: { motor: 'gasoline' },
         wheels: [
           [1.17, 0.2875, 0.175, wheelOpts('hubcap')],
@@ -3246,7 +3253,7 @@ export function installCarsExtra(fx: FleetContext): void {
           const lip = K.grid(-1, 0, { z1: 0.7, y0: 0.88, y1: 0.97, du: 0.03, dv: 0.02 })
           K.skin(lip, GLOSS, { u0: 0.05, u1: 0.95, yb: 0.925, yt: 0.955, off: 0.016, thick: 0.02, nv: 2 })
         },
-        interior: { rows: 2, col: '#1c1d20', trim: '#121316' },
+        interior: { rows: 2, col: '#1c1d20', trim: '#121316', xFront: -0.46, rowPitch: 0.62 },
         hood: { motor: 'v8_na' },
         wheels: [
           [1.35, 0.3435, 0.255, { rim: ALLOYD, spokeMat: ALLOY, spokes: 10, rimR: 0.72 }],

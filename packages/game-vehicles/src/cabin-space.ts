@@ -1,6 +1,7 @@
 /** Interior clearance measurement: derives `SeatSpace[]` and `DoorOpening[]` for every built vehicle (Spec 012 R5). */
 import type { DoorOpening, SeatRole, SeatSpace, Vec3 } from '@adatechnology/game-contracts'
 
+import type { Object3D } from './three-types'
 import type { DamageZone } from './api'
 import type { BuildContext, Kit } from './types'
 
@@ -20,6 +21,7 @@ export type RawSeatEntry = {
   readonly headroomMetres?: number
   readonly legroomMetres?: number
   readonly widthMetres?: number
+  readonly parent?: Object3D | null
 }
 
 const HEADROOM_RAY_OFFSETS: readonly (readonly [number, number])[] = [
@@ -236,9 +238,17 @@ export function installCabinSpace(kit: Kit) {
       pushSeat(explicit[i]!)
     }
 
-    const rawSeats: RawSeatEntry[] = ((c._rawSeats || []) as RawSeatEntry[]).slice()
+    const invVehicle = new THREE.Matrix4().copy(c.vehicle.matrixWorld).invert()
+    const tmpPoint = new V3()
+    const rawSeats: RawSeatEntry[] = ((c._rawSeats || []) as RawSeatEntry[]).map((entry) => {
+      if (!entry.parent || entry.parent === c.vehicle) return entry
+      entry.parent.updateMatrixWorld(true)
+      tmpPoint.set(entry.hipPoint[0], entry.hipPoint[1], entry.hipPoint[2]).applyMatrix4(entry.parent.matrixWorld).applyMatrix4(invVehicle)
+      return { ...entry, hipPoint: [tmpPoint.x, tmpPoint.y, tmpPoint.z] as Vec3 }
+    })
     // Vehicles that record `c.seatTops` directly (e.g. open boats) without calling `kit.seat`
     if (rawSeats.length === 0 && explicit.length === 0 && Array.isArray(c.seatTops) && c.seatTops.length > 0) {
+      const isOpenBoat = c.meta?.kind === 'boat'
       for (let i = 0; i < c.seatTops.length; i++) {
         const st = c.seatTops[i]!
         rawSeats.push({
@@ -249,6 +259,7 @@ export function installCabinSpace(kit: Kit) {
           isBench: false,
           benchIndex: 0,
           benchCount: 1,
+          open: isOpenBoat,
         })
       }
     }

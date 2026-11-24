@@ -48,7 +48,11 @@ export type InteriorOptions = {
   front?: string
   xFront?: number
   xRear?: number
+  rowPitch?: number
   noConsole?: boolean
+  dashD?: number
+  dashH?: number
+  visorUp?: boolean
 }
 /** Bus rows (`kit.busRows`), see the comment above it. */
 export type BusRowsOptions = { x0: number; x1: number; pitch?: number; floor: number; zIn: number; aisle?: number; col?: ColorRepresentation; seatH?: number; ceil?: number; poles?: boolean; rails?: boolean; mat?: Material }
@@ -91,6 +95,7 @@ export function installInterior(kit: Kit) {
           ...entry,
           hipPoint: [x - faceSign * localZ, entry.hipPoint[1], z],
           facing: [0, 0, faceSign],
+          parent: null,
         }
       }
       return gp
@@ -151,6 +156,7 @@ export function installInterior(kit: Kit) {
         headroomMetres: o.headroomMetres,
         legroomMetres: o.legroomMetres,
         widthMetres: o.widthMetres,
+        parent: PR ?? null,
       })
     }
   }
@@ -176,6 +182,9 @@ export function installInterior(kit: Kit) {
       c.rod(new V3(0.005, 0, 0), new V3(p[0], p[1] * 0.95, p[2] * 0.95), 0.016, mat, { parent: g, seg: 6 })
     })
     c.rod(new V3(0.03, 0, 0), new V3(o.col || 0.34, 0, 0), 0.032, mat, { parent: g, seg: 10 })
+    g.traverse(function (node) {
+      node.userData.noCabinRay = true
+    })
     return g
   }
   /* Aircraft control yoke. */
@@ -248,8 +257,8 @@ export function installInterior(kit: Kit) {
       x: x0 - 0.07,
       y: belt + 0.04,
       w: zi * 2,
-      d: 0.5,
-      h: Math.min(0.42, belt + 0.04 - fl - 0.1),
+      d: o.dashD ?? 0.5,
+      h: o.dashH ?? Math.min(0.42, belt + 0.04 - fl - 0.1),
       drv: drv * zs,
       mat: trim,
       top: fab,
@@ -295,12 +304,13 @@ export function installInterior(kit: Kit) {
           if (!o.noConsole) consoleBox(c, x + 0.16, fl, Math.min(0.26, seatH), trim)
         }
       } else kit.seat(c, x, fl, 0, { w: zi * 2 - 0.1, n: r === 2 ? 2 : 3, mat: fab, back: back, lean: lean, h: seatH * 0.95, role: 'rear' })
+      const trimLen = Math.min(0.8, (o.rowPitch ?? 0.88) - 0.06)
       ;[-1, 1].forEach(function (s) {
-        c.roundBox(0.8, belt - fl - 0.08, 0.035, 0.015, trim, x + 0.12, (belt + fl) / 2 + 0.02, s * (zi + 0.02))
+        c.roundBox(trimLen, belt - fl - 0.08, 0.035, 0.015, trim, x + 0.12, (belt + fl) / 2 + 0.02, s * (zi + 0.02))
         c.roundBox(0.3, 0.05, 0.07, 0.02, fab, x + 0.16, fl + seatH + 0.16, s * (zi - 0.015))
         c.roundBox(0.08, 0.025, 0.02, 0.008, MATERIALS.chrome, x + 0.36, belt - 0.11, s * (zi - 0.005))
       })
-      x -= r === 0 ? 0.88 : 0.8
+      x -= r === 0 ? (o.rowPitch ?? 0.88) : 0.8
     }
     if (o.ft != null) {
       const hx1 = o.ft - 0.04
@@ -310,7 +320,11 @@ export function installInterior(kit: Kit) {
       c.rod(new V3(o.ft - 0.1, roof - 0.02, 0), new V3(o.ft - 0.12, roof - 0.08, 0), 0.008, MATERIALS.plastic, { seg: 5 })
       c.roundBox(0.03, 0.06, 0.22, 0.02, MATERIALS.plastic, o.ft - 0.12, roof - 0.11, 0)
       ;[-1, 1].forEach(function (s) {
-        c.roundBox(0.02, 0.15, 0.34, 0.01, MATERIALS.headliner, o.ft - 0.14, roof - 0.07, s * zs, { rot: [0, 0, 0.35] })
+        if (o.visorUp) {
+          c.roundBox(0.02, 0.07, 0.34, 0.01, MATERIALS.headliner, o.ft - 0.08, roof - 0.03, s * zs, { rot: [0, 0, 1.35] })
+        } else {
+          c.roundBox(0.02, 0.15, 0.34, 0.01, MATERIALS.headliner, o.ft - 0.14, roof - 0.07, s * zs, { rot: [0, 0, 0.35] })
+        }
       })
     }
   }
