@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
+import { fleetDims } from '@adatechnology/game-vehicles-fleet'
+
 import { EVENT_KINDS } from '../src/test/scripts'
-import { scripts } from './helpers'
+import { scripts, site } from './helpers'
 
 const street = scripts.scripts.find((script) => script.id === 'street')!
 const crossing = scripts.scripts.find((script) => script.id === 'crossing')!
@@ -64,10 +66,26 @@ describe('events', () => {
     }
   })
 
-  it('release at most the whole horde of the scenario', () => {
+  it('release the horde of the scenario in shares: each at most 1, and the sum of a script is exactly 1', () => {
     for (const script of scripts.scripts) {
-      const total = script.events.reduce((sum, event) => sum + (event.kind === 'horde_release' ? event.share : 0), 0)
-      expect(total, script.id).toBeCloseTo(1, 5)
+      const shares = script.events.flatMap((event) => (event.kind === 'horde_release' ? [event.share] : []))
+      for (const share of shares) expect(share, script.id).toBeLessThanOrEqual(1)
+      expect(shares.reduce((sum, share) => sum + share, 0), script.id).toBeCloseTo(1, 9)
+    }
+  })
+
+  it('end every drive inside the phase it starts in, at the end of its path', () => {
+    for (const script of scripts.scripts) {
+      for (const event of script.events) {
+        if (event.kind !== 'vehicle_drive') continue
+        const metres = event.path.slice(1).reduce((sum, point, index) => sum + Math.hypot(point[0] - event.path[index]![0], point[1] - event.path[index]![1]), 0)
+        const end = event.at + metres / event.speed
+        const phase = script.phases.find((item) => event.at >= item.from && event.at < item.to)!
+        expect(end, `${script.id}/${phase.id}`).toBeLessThanOrEqual(phase.to)
+        // the player rides the vehicle: the last waypoint of the player path is where it stops
+        const stop = script.path.at(-1)!
+        if (script.id === 'street') expect(Math.hypot(stop.x - event.path.at(-1)![0], stop.z - event.path.at(-1)![1])).toBeLessThan(1)
+      }
     }
   })
 
@@ -90,10 +108,15 @@ describe('events', () => {
 })
 
 describe('camera and path', () => {
-  it('cues start at the first second and never use a top-down view', () => {
+  it('cues start at the first second and every cue falls inside the script, in increasing time', () => {
     for (const script of scripts.scripts) {
+      const end = script.phases.at(-1)!.to
       expect(script.camera[0]?.at).toBe(0)
-      for (const cue of script.camera) expect(['shoulder', 'first', 'vehicle']).toContain(cue.mode)
+      script.camera.forEach((cue, index) => {
+        expect(cue.at, `${script.id}[${index}]`).toBeGreaterThanOrEqual(0)
+        expect(cue.at, `${script.id}[${index}]`).toBeLessThan(end)
+        if (index > 0) expect(cue.at, `${script.id}[${index}]`).toBeGreaterThan(script.camera[index - 1]!.at)
+      })
     }
   })
 
@@ -110,5 +133,20 @@ describe('camera and path', () => {
   it('the path is in time order and the crossing path stays behind the barricade, west of x = -112', () => {
     for (const script of scripts.scripts) script.path.slice(1).forEach((point, index) => expect(point.at).toBeGreaterThan(script.path[index]!.at))
     for (const point of crossing.path) expect(point.x).toBeLessThan(-112)
+  })
+
+  it('every path point keeps 1.5 m from every prop (a vehicle is a circle of half its longest side), but the one the player drives', () => {
+    for (const script of scripts.scripts) {
+      const drive = script.events.find((event) => event.kind === 'vehicle_drive')
+      for (const point of script.path) {
+        for (const prop of site.props) {
+          const driven = prop.kind === 'vehicle' && drive?.kind === 'vehicle_drive' && drive.vehicle === prop.ref && script.id === 'street' && point.at >= drive.at - 1
+          if (driven) continue
+          const dims = prop.kind === 'vehicle' ? fleetDims(prop.ref) : undefined
+          const radius = dims ? Math.max(dims.length, dims.width) / 2 : 1
+          expect(Math.hypot(point.x - prop.at[0], point.z - prop.at[1]), `${script.id} t=${point.at} x ${prop.id}`).toBeGreaterThanOrEqual(radius + 1.5)
+        }
+      }
+    }
   })
 })

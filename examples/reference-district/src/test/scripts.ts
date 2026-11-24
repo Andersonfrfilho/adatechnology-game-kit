@@ -5,12 +5,16 @@ import {
   readBoolean,
   readField,
   readList,
+  readInteger,
   readNumber,
   readOneOf,
   readOptional,
   readPositive,
+  readPositiveInteger,
   readPoint,
   readRecord,
+  readShare,
+  readStrict,
   readString,
 } from '../game/read'
 import type { Reader } from '../game/read'
@@ -32,6 +36,8 @@ export type ScenarioSettings = {
   readonly zombies: number
   readonly weather: 'overcast' | 'rain'
   readonly timeOfDay: 'day' | 'night'
+  /** Marks a value the spec does not fix. */
+  readonly note?: string
 }
 
 export type CameraCue = { readonly at: number; readonly mode: 'shoulder' | 'first' | 'vehicle' }
@@ -68,61 +74,67 @@ export type Scripts = {
   readonly scripts: readonly Script[]
 }
 
-const readShare: Reader<number> = (value, path) => {
-  const share = readPositive(value, path)
-  if (share > 1) throw new DataError(path, `expected a share up to 1, got ${share}`)
-  return share
-}
-
 const readScenarioSettings: Reader<ScenarioSettings> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['zombies', 'weather', 'timeOfDay', 'note'])(value, path)
   return {
-    zombies: readField(record, path, 'zombies', readPositive),
+    zombies: readField(record, path, 'zombies', readPositiveInteger),
     weather: readField(record, path, 'weather', readOneOf(['overcast', 'rain'])),
     timeOfDay: readField(record, path, 'timeOfDay', readOneOf(['day', 'night'])),
+    note: readOptional(record, path, 'note', readString),
   }
 }
 
 const readCameraCue: Reader<CameraCue> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['at', 'mode'])(value, path)
   return { at: readField(record, path, 'at', readNumber), mode: readField(record, path, 'mode', readOneOf(['shoulder', 'first', 'vehicle'])) }
 }
 
 const readPathPoint: Reader<PathPoint> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['at', 'x', 'z'])(value, path)
   return { at: readField(record, path, 'at', readNumber), x: readField(record, path, 'x', readNumber), z: readField(record, path, 'z', readNumber) }
 }
 
 const readPhase: Reader<Phase> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'from', 'to'])(value, path)
   const phase = { id: readField(record, path, 'id', readString), from: readField(record, path, 'from', readNumber), to: readField(record, path, 'to', readNumber) }
   if (phase.to <= phase.from) throw new DataError(`${path}.to`, 'expected a time after `from`')
   return phase
 }
 
+const EVENT_KEYS: Readonly<Record<EventKind, readonly string[]>> = {
+  shoot: ['shooter', 'weapon', 'to', 'shots'],
+  throw: ['explosive', 'to'],
+  detonate: ['explosive', 'to'],
+  fire_line: ['points'],
+  horde_release: ['zone', 'share'],
+  vehicle_drive: ['vehicle', 'path', 'speed'],
+  door: ['door', 'open'],
+  open_container: ['container'],
+}
+
 function readEvent(value: unknown, path: string): ScriptEvent {
-  const record = readRecord(value, path)
+  const kind = readField(readRecord(value, path), path, 'kind', readOneOf(EVENT_KINDS))
+  const record = readStrict(['at', 'kind', 'pending', 'note', ...EVENT_KEYS[kind]])(value, path)
   const base: EventBase = {
     at: readField(record, path, 'at', readNumber),
     pending: readOptional(record, path, 'pending', readOneOf(['L15', 'L16', 'L17'])),
     note: readOptional(record, path, 'note', readString),
   }
-  const kind = readField(record, path, 'kind', readOneOf(EVENT_KINDS))
   const text = (key: string): string => readField(record, path, key, readString)
   const point = (key: string): PlanPoint => readField(record, path, key, readPoint)
   switch (kind) {
     case 'shoot':
-      return { ...base, kind, shooter: readField(record, path, 'shooter', readOneOf(['player', 'police'])), weapon: text('weapon'), to: point('to'), shots: readField(record, path, 'shots', readPositive) }
+      return { ...base, kind, shooter: readField(record, path, 'shooter', readOneOf(['player', 'police'])), weapon: text('weapon'), to: point('to'), shots: readField(record, path, 'shots', readPositiveInteger) }
     case 'throw':
       return { ...base, kind, explosive: text('explosive'), to: point('to') }
     case 'detonate':
       return { ...base, kind, explosive: text('explosive'), to: point('to') }
     case 'fire_line':
-      return { ...base, kind, points: readField(record, path, 'points', readList(readPoint)) }
+      return { ...base, kind, points: readField(record, path, 'points', readList(readPoint, 2)) }
     case 'horde_release':
       return { ...base, kind, zone: text('zone'), share: readField(record, path, 'share', readShare) }
     case 'vehicle_drive':
-      return { ...base, kind, vehicle: text('vehicle'), path: readField(record, path, 'path', readList(readPoint)), speed: readField(record, path, 'speed', readPositive) }
+      return { ...base, kind, vehicle: text('vehicle'), path: readField(record, path, 'path', readList(readPoint, 2)), speed: readField(record, path, 'speed', readPositive) }
     case 'door':
       return { ...base, kind, door: text('door'), open: readField(record, path, 'open', readBoolean) }
     case 'open_container':
@@ -131,11 +143,11 @@ function readEvent(value: unknown, path: string): ScriptEvent {
 }
 
 const readScript: Reader<Script> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'scenarios', 'seed', 'camera', 'path', 'phases', 'events'])(value, path)
   return {
     id: readField(record, path, 'id', readOneOf(SCRIPT_IDS)),
     scenarios: readField(record, path, 'scenarios', readList(readOneOf(SCENARIO_IDS))),
-    seed: readField(record, path, 'seed', readNumber),
+    seed: readField(record, path, 'seed', readInteger),
     camera: readField(record, path, 'camera', readList(readCameraCue)),
     path: readField(record, path, 'path', readList(readPathPoint)),
     phases: readField(record, path, 'phases', readList(readPhase)),
@@ -145,8 +157,8 @@ const readScript: Reader<Script> = (value, path) => {
 
 /** Checks the parsed JSON of a scripts file; an error names the field (`$.scripts[1].events[4].at`). */
 export function parseScripts(json: unknown): Scripts {
-  const record = readRecord(json, '$')
-  const scenarios = readField(record, '$', 'scenarios', readRecord)
+  const record = readStrict(['scenarios', 'scripts'])(json, '$')
+  const scenarios = readField(record, '$', 'scenarios', readStrict(SCENARIO_IDS))
   return {
     scenarios: {
       tipico: readField(scenarios, '$.scenarios', 'tipico', readScenarioSettings),

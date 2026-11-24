@@ -9,8 +9,6 @@ import { createTestEngine, lineBandOverlapsRect, plan, rectsOverlap, site } from
 
 const engine = createTestEngine()
 const OWNED_TEMPLATE_IDS: readonly string[] = [...residentialTemplateIds, ...commercialTemplateIds]
-/** Rules about the size of the lot: the engine measures its own default lot, so these are checked against the lot of the site below. */
-const LOT_SIZE_RULES = ['min_lot', 'min_frontage']
 
 const urban = createUrban({ packs: { cityPlans: [plan] } })
 const layout = urban.cities.layout(plan.id)
@@ -46,16 +44,14 @@ describe('lot typologies', () => {
 })
 
 describe('zoning', () => {
-  it.each(site.lots.map((lot) => [lot.id, lot] as const))('%s passes the zoning check of its zone', (_id, lot) => {
+  // the engine measures the lot its template draws; every rule is checked again on the lot of the site (same setbacks and yards, the site's area)
+  it.each(site.lots.map((lot) => [lot.id, lot] as const))('%s passes every rule of its zone on the lot of the site', (_id, lot) => {
     const zone = zoneOf(lot)
     const result = engine.generate(lot.typology, { seed: hashString(`${site.seed}:${lot.id}`), zone })
-    const violations = (result.zoning?.violations ?? []).filter((violation) => !LOT_SIZE_RULES.includes(violation.rule))
-    expect(violations, `${lot.id} in ${zone}`).toEqual([])
-    const zoneDef = engine.getZone(zone)
     const [width, depth] = [lot.rect[2] - lot.rect[0], lot.rect[3] - lot.rect[1]]
     const [frontage, deep] = lot.front === 'n' || lot.front === 's' ? [width, depth] : [depth, width]
-    expect(frontage, `${lot.id} frontage`).toBeGreaterThanOrEqual(zoneDef?.minFrontage ?? Infinity)
-    expect(frontage * deep, `${lot.id} area`).toBeGreaterThanOrEqual(zoneDef?.minLot ?? Infinity)
+    const siteLot = { ...(result.lot as NonNullable<typeof result.lot>), rect: [0, 0, frontage, deep] }
+    expect(engine.checkLot(zone, siteLot, result), `${lot.id} in ${zone}`).toEqual([])
   })
 
   it('a pharmacy in the popular quarter is zc, not zr2 (zr2 takes no commercial use)', () => {
@@ -85,8 +81,13 @@ describe('lot placement', () => {
     }
   })
 
-  it('every lot sits inside a district of the plan', () => {
-    for (const lot of site.lots) expect(layout.districtAt(lot.rect[0], lot.rect[1]), lot.id).toBeDefined()
+  it('every lot sits wholly inside one district of the plan', () => {
+    for (const lot of site.lots) {
+      const [x0, z0, x1, z1] = lot.rect
+      const districts = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]].map(([x, z]) => layout.districtAt(x as number, z as number)?.id)
+      expect(districts[0], lot.id).toBeDefined()
+      expect(new Set(districts).size, lot.id).toBe(1)
+    }
   })
 
   it('the lines of the plan themselves are checked: a lot on the road is caught', () => {

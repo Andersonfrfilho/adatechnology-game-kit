@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 import { listTypes } from '@adatechnology/game-props3d'
 import { fleetVehicleIds } from '@adatechnology/game-vehicles-fleet'
 
-import { rectsOverlap, scripts, site } from './helpers'
+import { plan, rectsOverlap, scripts, site } from './helpers'
 
 const PACKAGES_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../../packages')
 const packageFolders = new Set(readdirSync(PACKAGES_DIR).filter((name) => existsSync(join(PACKAGES_DIR, name, 'package.json'))))
@@ -53,6 +53,19 @@ describe('references of the site', () => {
     const zones = new Set(site.hordes.map((zone) => zone.id))
     const released = scripts.scripts.flatMap((script) => script.events).flatMap((event) => (event.kind === 'horde_release' ? [event.zone] : []))
     for (const zone of released) expect(zones.has(zone), zone).toBe(true)
+  })
+})
+
+describe('props', () => {
+  it('sit inside the districts of the plan and outside every lot', () => {
+    const [x0, z0, x1, z1] = [Math.min(...plan.districts!.map((d) => d.rect[0])), Math.min(...plan.districts!.map((d) => d.rect[1])), Math.max(...plan.districts!.map((d) => d.rect[2])), Math.max(...plan.districts!.map((d) => d.rect[3]))]
+    for (const prop of site.props) {
+      expect(prop.at[0], prop.id).toBeGreaterThanOrEqual(x0)
+      expect(prop.at[0], prop.id).toBeLessThanOrEqual(x1)
+      expect(prop.at[1], prop.id).toBeGreaterThanOrEqual(z0)
+      expect(prop.at[1], prop.id).toBeLessThanOrEqual(z1)
+      for (const lot of site.lots) expect(rectsOverlap([prop.at[0], prop.at[1], prop.at[0] + 0.01, prop.at[1] + 0.01], lot.rect), `${prop.id} x ${lot.id}`).toBe(false)
+    }
   })
 })
 

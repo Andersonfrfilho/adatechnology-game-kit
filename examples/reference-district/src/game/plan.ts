@@ -2,30 +2,30 @@ import { createUrban } from '@adatechnology/game-urban'
 import type { CityPlanInput, PlanDistrict, PlanLandmark, PlanLine, UrbanKit } from '@adatechnology/game-urban'
 
 import planJson from '../../data/recorte-1.plan.json'
-import { readField, readList, readPoint, readPositive, readRecord, readRect, readString } from './read'
+import { readField, readList, readPoint, readPositive, readRect, readSize, readStrict, readString } from './read'
 import type { Reader } from './read'
 
 const readLocalizedName: Reader<Record<'pt-BR' | 'en', string>> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['pt-BR', 'en'])(value, path)
   return { 'pt-BR': readField(record, path, 'pt-BR', readString), en: readField(record, path, 'en', readString) }
 }
 
 const readText: Reader<Record<'pt-BR' | 'en', { name: string; description: string }>> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['pt-BR', 'en'])(value, path)
   const readEntry: Reader<{ name: string; description: string }> = (entry, entryPath) => {
-    const fields = readRecord(entry, entryPath)
+    const fields = readStrict(['name', 'description'])(entry, entryPath)
     return { name: readField(fields, entryPath, 'name', readString), description: readField(fields, entryPath, 'description', readString) }
   }
   return { 'pt-BR': readField(record, path, 'pt-BR', readEntry), en: readField(record, path, 'en', readEntry) }
 }
 
 const readDistrict: Reader<PlanDistrict> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'kind', 'rect'])(value, path)
   return { id: readField(record, path, 'id', readString), kind: readField(record, path, 'kind', readString), rect: readField(record, path, 'rect', readRect) }
 }
 
 const readLine: Reader<PlanLine> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'kind', 'width', 'points'])(value, path)
   return {
     id: readField(record, path, 'id', readString),
     kind: readField(record, path, 'kind', readString),
@@ -35,14 +35,14 @@ const readLine: Reader<PlanLine> = (value, path) => {
 }
 
 const readLandmark: Reader<PlanLandmark> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['kind', 'at', 'name'])(value, path)
   return { kind: readField(record, path, 'kind', readString), at: readField(record, path, 'at', readPoint), name: readField(record, path, 'name', readLocalizedName) }
 }
 
 /** Checks the parsed JSON of a plan file as a `CityPlanInput` of `game-urban`; an error names the field (`$.districts[0].rect`). */
 export function parsePlan(json: unknown): CityPlanInput {
-  const record = readRecord(json, '$')
-  const [width, depth] = readField(record, '$', 'size', readPoint)
+  const record = readStrict(['id', 'scale', 'size', 'text', 'districts', 'lines', 'landmarks'])(json, '$')
+  const [width, depth] = readField(record, '$', 'size', readSize)
   return {
     id: readField(record, '$', 'id', readString),
     scale: readField(record, '$', 'scale', readString),

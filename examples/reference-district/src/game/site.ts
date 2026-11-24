@@ -3,13 +3,15 @@ import type { PlanPoint, PlanRect } from '@adatechnology/game-urban'
 import {
   readField,
   readList,
+  readInteger,
   readNumber,
   readOneOf,
   readOptional,
   readPositive,
   readPoint,
-  readRecord,
   readRect,
+  readShare,
+  readStrict,
   readString,
 } from './read'
 import type { Reader } from './read'
@@ -71,7 +73,7 @@ export type Site = {
 }
 
 const readLot: Reader<Lot> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'rect', 'front', 'typology', 'zone', 'state', 'enterable'])(value, path)
   return {
     id: readField(record, path, 'id', readString),
     rect: readField(record, path, 'rect', readRect),
@@ -84,7 +86,7 @@ const readLot: Reader<Lot> = (value, path) => {
 }
 
 const readProp: Reader<Prop> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'kind', 'ref', 'at', 'ry', 'y'])(value, path)
   return {
     id: readField(record, path, 'id', readString),
     kind: readField(record, path, 'kind', readOneOf(['vehicle', 'prop'])),
@@ -96,21 +98,21 @@ const readProp: Reader<Prop> = (value, path) => {
 }
 
 const readHordeZone: Reader<HordeZone> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'rect', 'share', 'profile'])(value, path)
   return {
     id: readField(record, path, 'id', readString),
     rect: readField(record, path, 'rect', readRect),
-    share: readField(record, path, 'share', readPositive),
+    share: readField(record, path, 'share', readShare),
     profile: readField(record, path, 'profile', readOneOf(['runner', 'walker'])),
   }
 }
 
 const readMissing: Reader<Missing> = (value, path) => {
-  const record = readRecord(value, path)
+  const record = readStrict(['id', 'what', 'owner', 'task', 'rect', 'height'])(value, path)
   return {
     id: readField(record, path, 'id', readString),
     what: readField(record, path, 'what', readString),
-    owner: readField(record, path, 'owner', readList(readString)),
+    owner: readField(record, path, 'owner', readList(readString, 1)),
     task: readField(record, path, 'task', readString),
     rect: readField(record, path, 'rect', readRect),
     height: readField(record, path, 'height', readPositive),
@@ -119,10 +121,10 @@ const readMissing: Reader<Missing> = (value, path) => {
 
 /** Checks the parsed JSON of a site file; an error names the field (`$.lots[2].rect`). */
 export function parseSite(json: unknown): Site {
-  const record = readRecord(json, '$')
+  const record = readStrict(['plan', 'seed', 'lots', 'props', 'hordes', 'missing'])(json, '$')
   return {
     plan: readField(record, '$', 'plan', readString),
-    seed: readField(record, '$', 'seed', readNumber),
+    seed: readField(record, '$', 'seed', readInteger),
     lots: readField(record, '$', 'lots', readList(readLot)),
     props: readField(record, '$', 'props', readList(readProp)),
     hordes: readField(record, '$', 'hordes', readList(readHordeZone)),

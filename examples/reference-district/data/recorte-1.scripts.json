@@ -2,7 +2,7 @@
   "scenarios": {
     "tipico": {"zombies": 500, "weather": "overcast", "timeOfDay": "day"},
     "pior": {"zombies": 2000, "weather": "rain", "timeOfDay": "night"},
-    "caos": {"zombies": 500, "weather": "overcast", "timeOfDay": "day"}
+    "caos": {"zombies": 500, "weather": "overcast", "timeOfDay": "day", "note": "Premissa: a spec 011 não fixa clima nem hora do caos; vale o mesmo do tipico."}
   },
   "scripts": [
     {
@@ -21,7 +21,7 @@
         {"at": 65, "x": 80, "z": 16},
         {"at": 70, "x": 80, "z": 3},
         {"at": 80, "x": 80, "z": 3},
-        {"at": 120, "x": 68, "z": 2},
+        {"at": 120, "x": 64, "z": 3},
         {"at": 150, "x": 218, "z": 3}
       ],
       "phases": [
@@ -49,8 +49,8 @@
         {"at": 95, "kind": "horde_release", "zone": "street_far", "share": 0.35},
         {"at": 100, "kind": "shoot", "shooter": "player", "weapon": "imbel_ia2", "to": [100, 0], "shots": 30},
         {"at": 110, "kind": "shoot", "shooter": "player", "weapon": "glock_17", "to": [90, 0], "shots": 15},
-        {"at": 121, "kind": "door", "door": "car_door", "open": true},
-        {"at": 122, "kind": "vehicle_drive", "vehicle": "compact_hatch", "path": [[68, 3], [218, 3]], "speed": 5, "note": "150 m atropelando"}
+        {"at": 120, "kind": "door", "door": "car_door", "open": true},
+        {"at": 120.5, "kind": "vehicle_drive", "vehicle": "compact_hatch", "path": [[68, 3], [218, 3]], "speed": 5.2, "note": "150 m atropelando"}
       ]
     },
     {
@@ -61,10 +61,10 @@
         {"at": 22, "mode": "shoulder"}
       ],
       "path": [
-        {"at": 0, "x": -122, "z": 2},
-        {"at": 14, "x": -120, "z": 2},
-        {"at": 22, "x": -120, "z": 2},
-        {"at": 40, "x": -122, "z": 3}
+        {"at": 0, "x": -130, "z": 0},
+        {"at": 14, "x": -128, "z": 0},
+        {"at": 22, "x": -128, "z": 0},
+        {"at": 40, "x": -130, "z": 0}
       ],
       "phases": [
         {"id": "caos_calm", "from": 0, "to": 6},

@@ -39,6 +39,25 @@ export const readPositive: Reader<number> = (value, path) => {
   return number
 }
 
+export const readInteger: Reader<number> = (value, path) => {
+  const number = readNumber(value, path)
+  if (!Number.isInteger(number)) throw new DataError(path, `expected an integer, got ${number}`)
+  return number
+}
+
+export const readPositiveInteger: Reader<number> = (value, path) => {
+  const number = readInteger(value, path)
+  if (number <= 0) throw new DataError(path, `expected an integer above 0, got ${number}`)
+  return number
+}
+
+/** A part of a whole, in (0, 1]. */
+export const readShare: Reader<number> = (value, path) => {
+  const share = readPositive(value, path)
+  if (share > 1) throw new DataError(path, `expected a share up to 1, got ${share}`)
+  return share
+}
+
 export function readOneOf<TOption extends string>(options: readonly TOption[]): Reader<TOption> {
   return (value, path) => {
     if (typeof value === 'string' && (options as readonly string[]).includes(value)) return value as TOption
@@ -46,9 +65,10 @@ export function readOneOf<TOption extends string>(options: readonly TOption[]): 
   }
 }
 
-export function readList<TItem>(readItem: Reader<TItem>): Reader<readonly TItem[]> {
+export function readList<TItem>(readItem: Reader<TItem>, minLength = 0): Reader<readonly TItem[]> {
   return (value, path) => {
     if (!Array.isArray(value)) throw new DataError(path, 'expected a list')
+    if (value.length < minLength) throw new DataError(path, `expected at least ${minLength} items, got ${value.length}`)
     return value.map((item: unknown, index) => readItem(item, `${path}[${index}]`))
   }
 }
@@ -75,4 +95,21 @@ export function readField<TValue>(record: Readonly<Record<string, unknown>>, pat
 /** Reads `record[key]` when present; a missing key is `undefined`, a wrong one is an error. */
 export function readOptional<TValue>(record: Readonly<Record<string, unknown>>, path: string, key: string, read: Reader<TValue>): TValue | undefined {
   return record[key] === undefined ? undefined : read(record[key], `${path}.${key}`)
+}
+
+/** An object that has only the `allowed` keys: a typo (`pendng`) is an error naming its path. */
+export function readStrict(allowed: readonly string[]): Reader<Readonly<Record<string, unknown>>> {
+  return (value, path) => {
+    const record = readRecord(value, path)
+    for (const key of Object.keys(record)) if (!allowed.includes(key)) throw new DataError(`${path}.${key}`, `unknown field, expected one of ${allowed.join(', ')}`)
+    return record
+  }
+}
+
+/** The `[width, depth]` of a map in metres. */
+export const readSize: Reader<readonly [number, number]> = (value, path) => {
+  const sizes = readList(readNumber)(value, path)
+  const [width, depth] = sizes
+  if (width === undefined || depth === undefined || sizes.length !== 2 || width <= 0 || depth <= 0) throw new DataError(path, 'expected [width, depth], both above 0')
+  return [width, depth]
 }
