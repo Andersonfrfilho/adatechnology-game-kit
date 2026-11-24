@@ -87,6 +87,8 @@ export type KitWorldInfo = {
 export type KitWorld<TRecord = unknown> = {
   readonly view: KitWorldView
   readonly sun: THREE_NS.DirectionalLight
+  /** The ambient fill the host lit the scene with (its intensity is the clear day's: a game that holds the hour scales it). */
+  readonly ambient: THREE_NS.HemisphereLight
   readonly destruction: KitWorldDestruction
   readonly ground: KitWorldGround
   /** The objects of the world by id, and what the player holds (the record is the game's). */

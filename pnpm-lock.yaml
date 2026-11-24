@@ -66,27 +66,117 @@ importers:
 
   examples/reference-district:
     devDependencies:
+      '@adatechnology/game-camera':
+        specifier: workspace:*
+        version: link:../../packages/game-camera
+      '@adatechnology/game-characters':
+        specifier: workspace:*
+        version: link:../../packages/game-characters
+      '@adatechnology/game-characters-three':
+        specifier: workspace:*
+        version: link:../../packages/game-characters-three
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:*
+        version: link:../../packages/game-characters-undead
+      '@adatechnology/game-contracts':
+        specifier: workspace:*
+        version: link:../../packages/game-contracts
+      '@adatechnology/game-crowd':
+        specifier: workspace:*
+        version: link:../../packages/game-crowd
+      '@adatechnology/game-crowd-three':
+        specifier: workspace:*
+        version: link:../../packages/game-crowd-three
+      '@adatechnology/game-destruction':
+        specifier: workspace:*
+        version: link:../../packages/game-destruction
       '@adatechnology/game-floorplan':
         specifier: workspace:*
         version: link:../../packages/game-floorplan
       '@adatechnology/game-floorplan-commercial':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-commercial
+      '@adatechnology/game-floorplan-interactables':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-interactables
+      '@adatechnology/game-floorplan-post-apocalyptic':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-post-apocalyptic
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-residential
+      '@adatechnology/game-floorplan-structure':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-structure
+      '@adatechnology/game-floorplan-three':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-three
+      '@adatechnology/game-interactables':
+        specifier: workspace:*
+        version: link:../../packages/game-interactables
+      '@adatechnology/game-interactables-household':
+        specifier: workspace:*
+        version: link:../../packages/game-interactables-household
+      '@adatechnology/game-interactables-three':
+        specifier: workspace:*
+        version: link:../../packages/game-interactables-three
+      '@adatechnology/game-kit-defaults':
+        specifier: workspace:*
+        version: link:../../packages/game-kit-defaults
+      '@adatechnology/game-player':
+        specifier: workspace:*
+        version: link:../../packages/game-player
       '@adatechnology/game-props3d':
         specifier: workspace:*
         version: link:../../packages/game-props3d
+      '@adatechnology/game-render-three':
+        specifier: workspace:*
+        version: link:../../packages/game-render-three
+      '@adatechnology/game-shapes-three':
+        specifier: workspace:*
+        version: link:../../packages/game-shapes-three
+      '@adatechnology/game-terrain':
+        specifier: workspace:*
+        version: link:../../packages/game-terrain
       '@adatechnology/game-urban':
         specifier: workspace:*
         version: link:../../packages/game-urban
+      '@adatechnology/game-urban-three':
+        specifier: workspace:*
+        version: link:../../packages/game-urban-three
+      '@adatechnology/game-vegetation':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation
+      '@adatechnology/game-vegetation-species':
+        specifier: workspace:*
+        version: link:../../packages/game-vegetation-species
+      '@adatechnology/game-vehicles':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:*
         version: link:../../packages/game-vehicles-fleet
+      '@adatechnology/game-vehicles-three':
+        specifier: workspace:*
+        version: link:../../packages/game-vehicles-three
+      '@adatechnology/game-weather':
+        specifier: workspace:*
+        version: link:../../packages/game-weather
+      '@adatechnology/game-weather-three':
+        specifier: workspace:*
+        version: link:../../packages/game-weather-three
+      '@adatechnology/game-workers':
+        specifier: workspace:*
+        version: link:../../packages/game-workers
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
       typescript:
         specifier: ^5.7.3
         version: 5.9.3

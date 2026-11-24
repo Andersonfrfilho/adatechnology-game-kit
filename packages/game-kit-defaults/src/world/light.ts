@@ -25,6 +25,8 @@ const SHADOW_NORMAL_BIAS = 0.03
 export type KitWorldLight = {
   readonly group: THREE_NS.Group
   readonly sun: THREE_NS.DirectionalLight
+  /** The ambient fill (sky above, bounce below): a game that holds the hour dims it with the sun. */
+  readonly ambient: THREE_NS.HemisphereLight
   /** Moves the sun's shadow frustum to the camera (snapped to the shadow map's texels). */
   followSun(focus: Vec3): void
   /** The sun's shadow map for a quality level: 2048 on high, 1024 otherwise. */
@@ -36,7 +38,8 @@ export function createLight({ THREE, scene }: { readonly THREE: ThreeNamespace; 
   const group = new THREE.Group()
   group.name = 'kit-world-light'
   scene.background = new THREE.Color(BACKGROUND_COLOR)
-  group.add(new THREE.HemisphereLight(HEMISPHERE_SKY, HEMISPHERE_GROUND, HEMISPHERE_INTENSITY))
+  const ambient = new THREE.HemisphereLight(HEMISPHERE_SKY, HEMISPHERE_GROUND, HEMISPHERE_INTENSITY)
+  group.add(ambient)
   const sun = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY)
   // set back far enough that the whole cascade fits between its planes
   const offset = sunOffsetOf(SUN_DIRECTION)
@@ -55,6 +58,7 @@ export function createLight({ THREE, scene }: { readonly THREE: ThreeNamespace; 
   return {
     group,
     sun,
+    ambient,
     followSun(focus) {
       const frame = snapSunShadow({ focus: [focus[0], 0, focus[2]], offset, half: shadowCamera.right, mapSize: sun.shadow.mapSize.x })
       sun.target.position.set(...frame.target)

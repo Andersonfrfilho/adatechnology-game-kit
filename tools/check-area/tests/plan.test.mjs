@@ -16,6 +16,7 @@ test('area names drop the -test-area and -area suffixes', () => {
   assert.equal(areaId('interactables-showroom'), 'showroom')
   assert.equal(areaId('test-room'), 'room')
   assert.equal(areaId('items-test-area'), 'items-area')
+  assert.equal(areaId('reference-district'), 'district')
 })
 
 test('every test area has a check:<area> script that runs this tool', () => {
@@ -64,4 +65,13 @@ test('the showroom is not built over the room page', () => {
   const showroom = { id: 'showroom', folder: 'interactables-showroom', name: 'x' }
   const steps = planCheck({ area: showroom, packages: ['game-interactables'], roomPackages: ['game-test-room'], roomBuilt: false, flags: all })
   assert.ok(steps.every((step) => !step.args.join(' ').includes('test-room')))
+})
+
+test('the district is a page of its own: no room page, its own unit tests, prints in its shots folder', () => {
+  const district = { id: 'district', folder: 'reference-district', name: 'x' }
+  const steps = planCheck({ area: district, packages: ['game-urban', 'game-crowd'], roomPackages: ['game-test-room'], roomBuilt: false, flags: all })
+  assert.deepEqual(steps.map((step) => step.label.split(' ')[0]), ['build', 'build', 'unit', 'open'])
+  assert.ok(!steps.some((step) => step.args.includes('examples/test-room/build.mjs')))
+  assert.deepEqual(steps[2]?.args, ['--filter', '@adatechnology/reference-district', 'run', 'test'])
+  assert.ok(steps[3]?.label.includes('examples/reference-district/shots'))
 })

@@ -83,7 +83,7 @@ function assembleKitWorld<TRecord>({ THREE, options, physics }: { readonly THREE
   const dispose = createDispose([() => render.dispose(), () => frame.scheduler.dispose(), () => sound.dispose(), () => graphics?.dispose(), () => renderer.dispose(), () => effects.dispose(), () => water.view.dispose(), () => budget.dispose(), () => liquids.view.dispose(), () => liquids.bridge.dispose(), () => liquids.film.dispose(), () => ground.view.dispose(), () => light.dispose(), () => physics.dispose(), () => workers.dispose(), () => view.dispose()])
 
   return {
-    view, sun: light.sun, destruction, ground, objects: createObjectRegistry<TRecord>(), reports, pieces,
+    view, sun: light.sun, ambient: light.ambient, destruction, ground, objects: createObjectRegistry<TRecord>(), reports, pieces,
     liquids: { ...fluids, view: liquids.view, film: liquids.film, filmBridge: liquids.bridge, filmRandom: liquids.random, water: water.water, waterView: water.view },
     sound, effects, lights: budget.lights, warmup: budget.warmup, pools: budget.pools, staticBatchQueue: budget.staticBatchQueue, physics, workers, rules, graphics, frame,
     blastPacing: frame.blastPacing,

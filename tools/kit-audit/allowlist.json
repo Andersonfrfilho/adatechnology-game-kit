@@ -75,6 +75,11 @@
       "file": "packages/game-weapons-three/src/models/revolver-python.ts",
       "domain": "items",
       "reason": "the revolver's barrel and its trigger guard: a gun barrel drawn by the weapon model, not a barrel (drum) of the goods catalogue"
+    },
+    {
+      "file": "examples/reference-district/src/game/missing.ts",
+      "domain": "structure",
+      "reason": "warning box of a piece the kit still lacks (a bridge, a building, a signal): a wire box and a label tied to an entry of the site's `missing` list with its owner and task; it is not a piece of the game, has no collision and no physics, and goes when the list is empty (design-recorte §2)"
     }
   ],
   "pending": [
