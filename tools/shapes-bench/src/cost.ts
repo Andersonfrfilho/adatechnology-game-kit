@@ -141,9 +141,10 @@ function overLimitOf(cost: Cost, baseline: CostBaseline): string {
 function compareOne(cost: Cost, baseline: CostBaseline): CostComparison {
   const { id, ...counts } = cost
   const base = baseline.entries[id]
-  if (!base) return { id, verdict: 'new', cost: counts, reason: 'no recorded cost' }
+  // before `new`: a new piece over the limit of its group is over it, and enters only accepted by id
   const over = overLimitOf(cost, baseline)
-  if (over) return { id, verdict: 'over', cost: counts, base, reason: over }
+  if (over) return { id, verdict: 'over', cost: counts, ...(base ? { base } : {}), reason: over }
+  if (!base) return { id, verdict: 'new', cost: counts, reason: 'no recorded cost' }
   const growth = growthOf(counts, base, baseline)
   if (growth) return { id, verdict: 'worse', cost: counts, base, reason: growth }
   const isBetter = counts.draws < base.draws || counts.triangles < base.triangles

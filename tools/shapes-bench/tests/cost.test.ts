@@ -129,6 +129,16 @@ describe('toCostBaseline', () => {
     expect(accepted.baseline.over).toEqual({ 'items/a': 31, 'items/b': 16 })
   })
 
+  it('refuses a new piece over the limit of its group, a renamed one too, unless accepted by id', () => {
+    const previous = baselineOf({ 'items/old': { draws: 30, triangles: 100, materials: 1 } }, { limits: { items: 15 }, over: { 'items/old': 30 } })
+    const costs = [cost('items/renamed', 40)]
+    expect(toCostBaseline({ costs, previous, accepted: ['items/old'] }).refused.map((refusal) => [refusal.id, refusal.verdict])).toEqual([['items/renamed', 'over']])
+    const accepted = toCostBaseline({ costs, previous, accepted: ['items/old', 'items/renamed'] })
+    expect(accepted.refused).toEqual([])
+    expect(accepted.baseline.over).toEqual({ 'items/renamed': 40 })
+    expect(compareCosts(costs, previous).map((comparison) => comparison.verdict)).toEqual(['over', 'gone'])
+  })
+
   it('lowers what is recorded as over and takes out what came under the limit', () => {
     const previous = baselineOf({ 'items/a': { draws: 30, triangles: 100, materials: 1 }, 'items/fixed': { draws: 20, triangles: 100, materials: 1 } }, { limits: { items: 15 }, over: { 'items/a': 30, 'items/fixed': 20 } })
     const result = toCostBaseline({ costs: [cost('items/a', 25), cost('items/fixed', 10)], previous, accepted: [] })

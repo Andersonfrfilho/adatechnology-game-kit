@@ -96,7 +96,8 @@ export function costOnlyEntries(options: EntryOptions = {}): BenchEntry[] {
   const timed = new Set<string>(BENCH_VEHICLES)
   const keys: string[] = Object.values(fleetGroups).flat()
   const entries = keys.filter((key) => !timed.has(key)).map((key): BenchEntry => ({ id: `vehicles/${key}:lite`, run: () => vehicles.build(key, { quality: 'lite', seed: 7 }) }))
-  return options.filter ? entries.filter((e) => e.id.includes(options.filter as string)) : entries
+  const { filter } = options
+  return filter ? entries.filter((e) => e.id.includes(filter)) : entries
 }
 
 /** Every builder the bench knows, in a stable order. */
@@ -241,5 +242,6 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
     },
   })
 
-  return options.filter ? entries.filter((e) => e.id.includes(options.filter as string)) : entries
+  const { filter } = options
+  return filter ? entries.filter((e) => e.id.includes(filter)) : entries
 }
