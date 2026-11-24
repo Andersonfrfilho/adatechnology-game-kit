@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createPlayer } from '../src'
-import { createDeathScreen, createPlayerHud, formatSurvived, playerHudViewOf } from '../src/hud'
+import { createDeathScreen, createPlayerHud, createPlayerHudView, formatSurvived, playerHudViewOf, writePlayerHudView } from '../src/hud'
 import type { DeathScreen, PlayerHud } from '../src/hud'
 
 let hud: PlayerHud | undefined
@@ -65,6 +65,23 @@ describe('player HUD', () => {
     expect(weapon.textContent).toBe('Pistol12 / 48')
   })
 
+  it('refills one view and writes nothing when nothing moved', () => {
+    const player = createPlayer({ seed: 3 })
+    hud = createPlayerHud({ container: box() })
+    const view = createPlayerHudView()
+    expect(writePlayerHudView(player, view)).toBe(view)
+    hud.update(view)
+    const status = document.querySelector('.gp-hud-status') as HTMLElement
+    const before = status.firstChild
+    player.state.wounds.push('scratch')
+    hud.update(writePlayerHudView(player, view))
+    expect(status.textContent).toContain('arranhão')
+    const tag = status.firstChild
+    expect(tag).not.toBe(before)
+    hud.update(writePlayerHudView(player, view))
+    expect(status.firstChild).toBe(tag)
+  })
+
   it('takes no pointer events, so the view keeps the mouse', () => {
     hud = createPlayerHud({ container: box() })
     expect(document.getElementById('gp-hud-style')?.textContent).toContain('.gp-hud{position:absolute;inset:0;pointer-events:none')
@@ -115,17 +132,60 @@ describe('death screen', () => {
     expect(hooks.onBackToStart).toHaveBeenCalledTimes(1)
   })
 
-  it('restarts with Enter or R only while it is open', () => {
+  it('restarts with R only while it is open, a focused button included; Enter is left to the focused button', () => {
     const hooks = make()
     press('KeyR')
     expect(hooks.onRestart).not.toHaveBeenCalled()
     screen?.update({ alive: false, deathTime: 2, survivedSeconds: 1 })
-    press('Enter')
+    const [restart, back] = [...document.querySelectorAll<HTMLButtonElement>('.gp-death-actions button')]
+    expect(document.activeElement).toBe(restart)
+    back?.focus()
+    back?.dispatchEvent(new KeyboardEvent('keydown', { code: 'Enter', bubbles: true }))
+    expect(hooks.onRestart).not.toHaveBeenCalled()
+    back?.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyR', bubbles: true }))
     expect(hooks.onRestart).toHaveBeenCalledTimes(1)
     screen?.update({ alive: true, deathTime: 0, survivedSeconds: 0 })
     screen?.update({ alive: false, deathTime: 2, survivedSeconds: 1 })
     press('KeyR')
     expect(hooks.onRestart).toHaveBeenCalledTimes(2)
+  })
+
+  it('is a labelled dialog, and gives the focus back when it shuts', () => {
+    const canvas = box()
+    canvas.tabIndex = -1
+    screen = createDeathScreen({ container: box(), onRestart: vi.fn(), onBackToStart: vi.fn(), returnFocus: canvas })
+    const dialog = document.querySelector('.gp-death') as HTMLElement
+    expect(document.getElementById(dialog.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Você morreu')
+    screen.update({ alive: false, deathTime: 2, survivedSeconds: 1 })
+    const back = document.querySelectorAll<HTMLButtonElement>('.gp-death-actions button')[1]
+    back?.focus()
+    back?.click()
+    screen.update({ alive: true, deathTime: 0, survivedSeconds: 0 })
+    expect(document.activeElement).toBe(canvas)
+  })
+
+  it('lets the hook be pressed again when it throws', () => {
+    let calls = 0
+    screen = createDeathScreen({ container: box(), onBackToStart: vi.fn(), onRestart: () => {
+      calls++
+      if (calls === 1) throw new Error('no')
+    } })
+    screen.update({ alive: false, deathTime: 2, survivedSeconds: 1 })
+    expect(() => press('KeyR')).toThrow('no')
+    press('KeyR')
+    expect(calls).toBe(2)
+  })
+
+  it('puts back the position it gave the container', () => {
+    const container = box()
+    screen = createDeathScreen({ container, onRestart: vi.fn(), onBackToStart: vi.fn() })
+    hud = createPlayerHud({ container })
+    expect(container.style.position).toBe('relative')
+    hud.dispose()
+    screen.dispose()
+    hud = undefined
+    screen = undefined
+    expect(container.style.position).toBe('')
   })
 
   it('writes the time survived as m:ss or h:mm:ss', () => {

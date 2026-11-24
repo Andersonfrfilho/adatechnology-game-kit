@@ -77,7 +77,7 @@ Conventions: yaw 0 looks toward -z; positive pitch looks down; the weapon group 
 | `smoothing` | `12` | Rate per second at which the boom, the shoulder side, the height and the field of view ease (`1 - exp(-smoothing * dt)`; the field of view `min(1, smoothing * dt)`). `0` is instant, as before the rig read it |
 | `aim` | `{ fov: 65, fovPower: 1, zoomPower: 0.5, sensitivity: 0.0022, fovTolerance: 0.1 }` | The field of view is `fov / zoom ** fovPower` while aiming; the look is slowed by `1 / zoom ** zoomPower`; the field of view only moves when it is farther than `fovTolerance` degrees from the wanted one |
 | `wallRecovery` | `4` | How fast the boom comes back out after a wall (per second; the push in is instant) |
-| `deathOrbit` | `{ radius: 6, height: 3.5, speed: 0.2, lookHeight: 1 }` | The camera that circles a dead target: angle `deathT * speed` |
+| `deathOrbit` | `{ radius: 6, height: 3.5, speed: 0.2, lookHeight: 1, minHeight: 1.5 }` | The camera that circles a dead target: angle `deathT * speed`, `height` and `lookHeight` over the body's `y`, never lower than `minHeight` over the target's `groundAt` (or over the body without it) |
 | `look` | `{ pitchMin: -0.55, pitchMax: 1.2 }` | Limits of the pitch in `rig.look` |
 | `shake` | `{ fever: { yawSpeed: 1.3, yaw: 0.0015, pitchSpeed: 1.7, pitch: 0.001 }, panic: { amplitude: 0.002 } }` | The look shake of fever and panic |
 | `wallClearance` | `0.3` | Gap kept from walls |

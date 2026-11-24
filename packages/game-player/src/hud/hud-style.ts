@@ -1,3 +1,4 @@
+// The death panel sits in the lower third: the death camera keeps the body at the centre of the view.
 // The same tokens as the test room's HUD (panel rgba(10,12,16,.72), accent #ffd23f, bars #2a2e36 / #66bb6a / #ffb300 / #ef5350 / #4fc3f7), so a game and its room read alike.
 export const PLAYER_HUD_CSS = `
 .gp-hud{position:absolute;inset:0;pointer-events:none;font:12px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#e8eaee;overflow:hidden;z-index:10}
@@ -22,7 +23,7 @@ export const PLAYER_HUD_CSS = `
 .gp-hud-cross:before,.gp-hud-cross:after{content:"";position:absolute;background:#fff;opacity:.85;box-shadow:0 0 2px #000}
 .gp-hud-cross:before{left:8px;top:0;width:2px;height:18px}.gp-hud-cross:after{top:8px;left:0;height:2px;width:18px}
 .gp-hud-cross i{position:absolute;left:6px;top:6px;width:6px;height:6px;background:#0b0c0e;border-radius:50%;z-index:1}
-.gp-death{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#e8eaee;z-index:20}
+.gp-death{position:absolute;inset:0;display:none;align-items:flex-end;justify-content:center;padding-bottom:12vh;background:linear-gradient(transparent 45%,rgba(0,0,0,.55));font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#e8eaee;z-index:20}
 .gp-death.open{display:flex}
 .gp-death-panel{min-width:min(320px,90vw);max-width:90vw;background:rgba(12,14,19,.92);border:1px solid #2c313b;border-radius:8px;padding:18px 22px;text-align:center;box-shadow:0 4px 18px rgba(0,0,0,.5)}
 .gp-death-panel h2{margin:0 0 6px;font-size:22px;color:#ef5350}
@@ -45,8 +46,13 @@ export function ensurePlayerHudStyle(): void {
   document.head.appendChild(style)
 }
 
-/** Makes `container` the positioning box of an overlay laid over it. */
-export function positionContainer(container: HTMLElement): void {
+/** Makes `container` the positioning box of an overlay laid over it; the answer puts back what it changed. */
+export function positionContainer(container: HTMLElement): () => void {
   const position = getComputedStyle(container).position
-  if (!position || position === 'static') container.style.position = 'relative'
+  if (position && position !== 'static') return () => undefined
+  const before = container.style.position
+  container.style.position = 'relative'
+  return () => {
+    if (container.style.position === 'relative') container.style.position = before
+  }
 }

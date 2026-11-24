@@ -36,7 +36,8 @@ describe('district HUD', () => {
     const container = document.body.appendChild(document.createElement('div'))
     const rig = fakeRig(false)
     const onRestart = vi.fn()
-    const hud = createDistrictHud({ container, rig, locale: 'pt-BR', onRestart })
+    const canvas = container.appendChild(document.createElement('canvas'))
+    const hud = createDistrictHud({ container, rig, locale: 'pt-BR', onRestart, canvas })
     hud.step(42)
     rig.player.die('killed')
     hud.frame()
@@ -50,6 +51,7 @@ describe('district HUD', () => {
     hud.frame()
     expect(rig.player.state.alive).toBe(true)
     expect(container.querySelector('.gp-death.open')).toBeNull()
+    expect(document.activeElement).toBe(canvas)
     rig.player.die('killed')
     rig.player.state.deathTime = 2
     hud.frame()
@@ -81,5 +83,51 @@ describe('restart', () => {
     expect(second).toEqual(first)
     expect(secondRestart).toBe(firstRestart)
     expect(districtOptionsOf({ scripts, choice: parsePageChoice('?cena=pior'), container })).toEqual(options)
+  })
+
+  const fakeStart = () => {
+    const disposed: number[] = []
+    const gates: Array<(district: District) => void> = []
+    let made = 0
+    const start = (): Promise<District> => {
+      const index = made++
+      const district = { dispose: () => void disposed.push(index) } as unknown as District
+      return index === 0 ? Promise.resolve(district) : new Promise((done) => gates.push(() => done(district)))
+    }
+    return { start, disposed, open: () => gates.shift()?.({} as District) }
+  }
+
+  it('dispose during a restart gives back the old district once and the new one as soon as it is built', async () => {
+    const fake = fakeStart()
+    const session = await startDistrictSession(THREE, districtOptionsOf({ scripts, choice: parsePageChoice(''), container: document.createElement('div') }), { start: fake.start })
+    const restarting = session.restart()
+    expect(session.restart()).toBe(restarting)
+    session.dispose()
+    fake.open()
+    await expect(restarting).rejects.toThrow('disposed')
+    expect(fake.disposed).toEqual([0, 1])
+    expect(session.district).toBeUndefined()
+  })
+
+  it('reports a failed restart and lets a later one run', async () => {
+    let calls = 0
+    const start = async (): Promise<District> => {
+      calls++
+      if (calls === 2) throw new Error('boom')
+      return { dispose: () => undefined } as unknown as District
+    }
+    const onError = vi.fn()
+    let restartHook: (() => void) | undefined
+    const session = await startDistrictSession(THREE, districtOptionsOf({ scripts, choice: parsePageChoice(''), container: document.createElement('div') }), {
+      start: async (_three, given) => {
+        restartHook = given.onRestart
+        return start()
+      },
+      onError,
+    })
+    restartHook?.()
+    await vi.waitFor(() => expect(onError).toHaveBeenCalledTimes(1))
+    await expect(session.restart()).resolves.toBeDefined()
+    expect(calls).toBe(3)
   })
 })

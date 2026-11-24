@@ -65,6 +65,7 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
   world.view.scene.add(avatar.root)
   const camera = createCameraRig(THREE, { locale: 'pt-BR' })
   camera.setMode(mode)
+  const groundAt = (x: number, z: number): number => world.ground.at(x, z)
   const view = { yaw: start.yaw, pitch: START_PITCH }
   const startSave = player.save()
   const held = { forward: 0, right: 0, run: false }
@@ -124,9 +125,10 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
       avatar.root.rotation.set(0, view.yaw + Math.PI, 0)
       avatar.update(dt, { speed: Math.hypot(state.vx, state.vz), running, crouch: state.crouch })
       avatar.root.updateMatrixWorld(true)
-      const isFirst = camera.isFirstPerson()
+      // dead, the camera circles the body from outside in either mode: the whole body is drawn
+      const isFirst = camera.isFirstPerson() && state.alive
       avatar.setView(isFirst ? 'first' : 'third', isFirst ? world.view.camera : null)
-      camera.update(world.view.camera, { x: state.x, y: state.y, z: state.z, yaw: view.yaw, pitch: view.pitch, crouching: state.crouch, alive: state.alive, deathT: state.deathTime }, dt)
+      camera.update(world.view.camera, { x: state.x, y: state.y, z: state.z, yaw: view.yaw, pitch: view.pitch, crouching: state.crouch, alive: state.alive, deathT: state.deathTime, groundAt }, dt)
     },
     dispose() {
       if (document.pointerLockElement === world.view.domElement) document.exitPointerLock()

@@ -74,6 +74,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
     locale: options.locale ?? DEFAULT_LOCALE,
     ...(options.title === undefined ? {} : { title: options.title }),
     onRestart: options.onRestart ?? (() => location.reload()),
+    ...(world.view.domElement ? { canvas: world.view.domElement } : {}),
   })
   const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 

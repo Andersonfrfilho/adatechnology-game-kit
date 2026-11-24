@@ -279,6 +279,22 @@ describe('smoothing, zoom, death orbit and look', () => {
     close(looked.z, -4)
   })
 
+  it('keeps the death orbit over the body and over the ground: a body on raised ground at y=5', () => {
+    const rig = create(THREE, { storageKey: null })
+    const raised = { ...stand, y: 5, alive: false, deathT: 3 }
+    const { cam, position, looked } = fakeCamera()
+    rig.update(cam, raised, 1 / 60)
+    close(position.y, 8.5)
+    close(looked.y, 6)
+    // a slope that climbs behind the body: the camera stays minHeight over the ground under it
+    rig.update(cam, { ...raised, groundAt: () => 9 }, 1 / 60)
+    close(position.y, 10.5)
+    // a low orbit with no ground given never drops under the body
+    const low = create(THREE, { storageKey: null, deathOrbit: { height: 0.2 } })
+    low.update(cam, raised, 1 / 60)
+    close(position.y, 6.5)
+  })
+
   it('the look: sensitivity 0.0022, slower aiming by the square root of the zoom, pitch kept in range', () => {
     const rig = create(THREE, { storageKey: null })
     close(rig.lookSensitivity(), 0.0022)
@@ -315,7 +331,7 @@ describe('smoothing, zoom, death orbit and look', () => {
 
   it('the numbers are options: a game changes the orbit, the aim and the wall recovery', () => {
     const rig = create(THREE, { storageKey: null, deathOrbit: { radius: 10, height: 5 }, aim: { sensitivity: 0.001 }, wallRecovery: 1 })
-    expect(rig.config.deathOrbit).toEqual({ radius: 10, height: 5, speed: 0.2, lookHeight: 1 })
+    expect(rig.config.deathOrbit).toEqual({ radius: 10, height: 5, speed: 0.2, lookHeight: 1, minHeight: 1.5 })
     close(rig.lookSensitivity(), 0.001)
     expect(rig.config.wallRecovery).toBe(1)
   })

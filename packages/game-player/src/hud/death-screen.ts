@@ -12,6 +12,8 @@ export type DeathScreenOptions = {
   readonly onRestart: () => void
   /** Puts the body back at the start with the world as it is. */
   readonly onBackToStart: () => void
+  /** What takes the focus back when the panel shuts (the game's canvas); absent, what had it before the panel opened. */
+  readonly returnFocus?: HTMLElement
 }
 
 /** The body as the death screen reads it: `game-player`'s `state.alive`, `state.deathTime` and `state.cause`, and the seconds the game ran before the death. */
@@ -32,16 +34,18 @@ export type DeathScreen = {
 }
 
 export const DEATH_SCREEN_DELAY_SECONDS = 1.5
-const RESTART_KEYS = new Set(['Enter', 'NumpadEnter', 'KeyR'])
+const RESTART_KEY = 'KeyR'
+let nextHeadingId = 0
 
 /**
- * The death screen (DOM, no three.js): a centred panel with "you died", the cause, the time survived and two buttons, restart the scene (also Enter or R) and back to the start.
- * It opens once the death camera has settled, frees the mouse from the pointer lock so the buttons can be clicked, and calls each hook once until the body lives again.
+ * The death screen (DOM, no three.js): a panel in the lower third (the death camera keeps the body at the centre) with "you died", the cause, the time survived and two buttons,
+ * restart the scene and back to the start. It opens once the death camera has settled, frees the mouse from the pointer lock and focuses the restart button (Enter presses the focused
+ * button, R restarts from anywhere), calls each hook once until the body lives again, and gives the focus back when it shuts.
  */
-export function createDeathScreen({ container, locale = 'pt-BR', delaySeconds = DEATH_SCREEN_DELAY_SECONDS, onRestart, onBackToStart }: DeathScreenOptions): DeathScreen {
+export function createDeathScreen({ container, locale = 'pt-BR', delaySeconds = DEATH_SCREEN_DELAY_SECONDS, onRestart, onBackToStart, returnFocus }: DeathScreenOptions): DeathScreen {
   const text = playerHudTextOf(locale)
   ensurePlayerHudStyle()
-  positionContainer(container)
+  const restorePosition = positionContainer(container)
   const root = document.createElement('div')
   root.className = 'gp-death'
   root.setAttribute('role', 'dialog')
@@ -49,7 +53,9 @@ export function createDeathScreen({ container, locale = 'pt-BR', delaySeconds = 
   const panel = document.createElement('div')
   panel.className = 'gp-death-panel'
   const heading = document.createElement('h2')
+  heading.id = `gp-death-title-${nextHeadingId++}`
   heading.textContent = text.died
+  root.setAttribute('aria-labelledby', heading.id)
   const cause = document.createElement('p')
   const survived = document.createElement('p')
   const actions = document.createElement('div')
@@ -74,17 +80,28 @@ export function createDeathScreen({ container, locale = 'pt-BR', delaySeconds = 
 
   let isOpen = false
   let isSpent = false
+  let focusBefore: Element | null = null
+  const setEnabled = (enabled: boolean): void => {
+    restartButton.disabled = !enabled
+    backButton.disabled = !enabled
+  }
   const choose = (hook: () => void): void => {
     if (!isOpen || isSpent) return
     isSpent = true
-    restartButton.disabled = true
-    backButton.disabled = true
-    hook()
+    setEnabled(false)
+    try {
+      hook()
+    } catch (error) {
+      isSpent = false
+      setEnabled(true)
+      throw error
+    }
   }
   restartButton.onclick = () => choose(onRestart)
   backButton.onclick = () => choose(onBackToStart)
+  // Enter is left to the focused button (the browser presses it): only R is caught here, and it restarts from anywhere, a focused button included
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (!isOpen || !RESTART_KEYS.has(event.code)) return
+    if (!isOpen || event.code !== RESTART_KEY) return
     event.preventDefault()
     choose(onRestart)
   }
@@ -100,11 +117,16 @@ export function createDeathScreen({ container, locale = 'pt-BR', delaySeconds = 
     survived.textContent = text.survived.replace('{time}', formatSurvived(state.survivedSeconds))
     root.classList.add('open')
     if (document.pointerLockElement) document.exitPointerLock()
+    focusBefore = document.activeElement
     restartButton.focus()
   }
   const close = (): void => {
     isOpen = false
+    if (root.contains(document.activeElement) && document.activeElement instanceof HTMLElement) document.activeElement.blur()
     root.classList.remove('open')
+    const target = returnFocus ?? (focusBefore instanceof HTMLElement && focusBefore.isConnected && focusBefore !== document.body ? focusBefore : null)
+    focusBefore = null
+    target?.focus({ preventScroll: true })
   }
 
   return {
@@ -121,6 +143,7 @@ export function createDeathScreen({ container, locale = 'pt-BR', delaySeconds = 
     dispose() {
       window.removeEventListener('keydown', onKeyDown)
       root.remove()
+      restorePosition()
     },
   }
 }

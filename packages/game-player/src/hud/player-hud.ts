@@ -48,16 +48,19 @@ function createGauge(label: string, tone: 'hp' | 'stamina'): Gauge {
   const value = element('output')
   bar.appendChild(fill)
   row.append(element('span', undefined, label), bar, value)
-  let last = ''
+  let lastValue = Number.NaN
+  let lastPercent = Number.NaN
   return {
     row,
     set(current, max) {
       const share = max > 0 ? Math.max(0, Math.min(1, current / max)) : 0
-      const shown = `${Math.round(current)}|${Math.round(share * 100)}`
-      if (shown === last) return
-      last = shown
-      fill.style.width = `${Math.round(share * 100)}%`
-      value.textContent = String(Math.max(0, Math.round(current)))
+      const shownValue = Math.max(0, Math.round(current))
+      const percent = Math.round(share * 100)
+      if (shownValue === lastValue && percent === lastPercent) return
+      lastValue = shownValue
+      lastPercent = percent
+      fill.style.width = `${percent}%`
+      value.textContent = String(shownValue)
       if (tone === 'hp') bar.className = share <= LOW_SHARE ? 'gp-hud-bar bad' : share <= WARN_SHARE ? 'gp-hud-bar warn' : 'gp-hud-bar hp'
     },
   }
@@ -84,7 +87,7 @@ function statusTags(view: PlayerHudView, text: PlayerHudText): Array<{ readonly 
 export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHudOptions): PlayerHud {
   const text = playerHudTextOf(locale)
   ensurePlayerHudStyle()
-  positionContainer(container)
+  const restorePosition = positionContainer(container)
   const root = element('div', 'gp-hud')
   root.dataset.hud = 'player'
   const titleBox = element('div', 'gp-hud-pill gp-hud-title')
@@ -100,7 +103,13 @@ export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHu
   root.append(titleBox, messageBox, vitals, weaponBox, cross)
   container.appendChild(root)
 
-  let lastStatus = ''
+  // the status line is rebuilt only when one of these scalars moves: the frame allocates nothing
+  let lastBleeding: boolean | null = null
+  let lastInfection = ''
+  let lastWounds: readonly string[] | null = null
+  let lastWoundCount = -1
+  let lastAlive: boolean | null = null
+  let lastView: 'first' | 'third' | null = null
   let messageTimer: ReturnType<typeof setTimeout> | null = null
   const setTitle = (next: string | null): void => {
     titleBox.textContent = next ?? ''
@@ -110,13 +119,18 @@ export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHu
 
   return {
     update(view) {
-      vitals.style.display = view.alive ? 'flex' : 'none'
+      if (view.alive !== lastAlive) {
+        lastAlive = view.alive
+        vitals.style.display = view.alive ? 'flex' : 'none'
+      }
       health.set(view.health, view.maxHealth)
       stamina.set(view.stamina, view.maxStamina)
+      if (view.bleeding === lastBleeding && view.infection === lastInfection && view.wounds === lastWounds && view.wounds.length === lastWoundCount) return
+      lastBleeding = view.bleeding
+      lastInfection = view.infection
+      lastWounds = view.wounds
+      lastWoundCount = view.wounds.length
       const tags = statusTags(view, text)
-      const key = tags.map((tag) => `${tag.tone}:${tag.label}`).join('|')
-      if (key === lastStatus) return
-      lastStatus = key
       status.replaceChildren(...tags.map((tag) => element('span', tag.tone ? `gp-hud-tag ${tag.tone}` : 'gp-hud-tag', tag.label)))
     },
     setTitle,
@@ -128,6 +142,8 @@ export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHu
       if (weapon.ammo) weaponBox.append(element('small', undefined, weapon.ammo))
     },
     setView(view) {
+      if (view === lastView) return
+      lastView = view
       cross.style.display = view === 'first' ? 'block' : 'none'
     },
     message(line, seconds) {
@@ -142,6 +158,7 @@ export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHu
     dispose() {
       if (messageTimer) clearTimeout(messageTimer)
       root.remove()
+      restorePosition()
     },
   }
 }
