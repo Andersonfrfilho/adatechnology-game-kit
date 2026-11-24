@@ -1,11 +1,10 @@
-import { createAudioEngine, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
+import { createAudioEngine, createRaycastOcclusion, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
 import type { DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
 import { DESTRUCTION_SOUND_KEYS, DESTRUCTION_VOICE_GROUPS, blastSoundIds, createDestructionSound, impactSoundIds } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 
-import { createWorldOcclusion } from './occlusion'
 
 /** The recorded splash a round or a blast on water plays. */
 export const WATER_SPLASH_SOUND = 'water_splash'
@@ -40,7 +39,7 @@ export function createSound(world: DestructionWorld, option: false | AudioEngine
   const isEngine = option !== undefined && option !== false && 'play' in option
   const options: KitWorldAudioOptions = option === undefined || option === false || isEngine ? {} : option
   const isOwned = !isEngine && option !== false
-  const audio: AudioEngine | null = option === false ? null : isEngine ? option : createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createWorldOcclusion(world) } })
+  const audio: AudioEngine | null = option === false ? null : isEngine ? option : createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createRaycastOcclusion(world) } })
   const destruction = audio ? createDestructionSound(audio) : null
   // the kit's recorded files, served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
   if (audio && options.samplesBaseUrl !== null) void loadRecordings(audio, options)
