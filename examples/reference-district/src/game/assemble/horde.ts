@@ -39,6 +39,8 @@ export type HordeParams = {
   readonly site: Site
   readonly zombies: number
   readonly zones: readonly string[]
+  /** Room for agents released after the start (default none). */
+  readonly reserve?: number
   readonly grid: NavGrid
   /** What the horde hunts: the player's body. */
   readonly target: Player
@@ -63,12 +65,12 @@ export function createDistrictGrid(solids: DistrictSolids): NavGrid {
  * The horde of the district: the crowd of `game-crowd` with the undead pack of `game-characters-undead` on the district's grid, its bodies baked by the Bestiary builder of
  * `game-characters-three` and drawn in a few draw calls by `game-crowd-three`. Each zone of the site gets its share of the zombies, from the crowd's own seeded stream: same seed, same horde.
  */
-export function createHorde({ THREE, world, site, zombies, zones, grid, target }: HordeParams): Horde {
+export function createHorde({ THREE, world, site, zombies, zones, grid, target, reserve = 0 }: HordeParams): Horde {
   const crowd = createCrowd({
     pack: undeadCrowdPack(),
     seed: site.seed,
     grid,
-    capacity: zombies + CROWD_CAPACITY_MARGIN,
+    capacity: zombies + reserve + CROWD_CAPACITY_MARGIN,
     water: (x, z) => world.ground.terrain.waterAt(x, z) !== null,
     physics: { ...CROWD_PHYSICS_DEFAULTS, ...(world.workers.coordinator ? { workers: world.workers.coordinator } : { worker: 'off' as const }) },
   })

@@ -42,6 +42,7 @@
     "@adatechnology/game-vehicles": "workspace:*",
     "@adatechnology/game-vehicles-fleet": "workspace:*",
     "@adatechnology/game-vehicles-three": "workspace:*",
+    "@adatechnology/game-weapons": "workspace:*",
     "@adatechnology/game-weather": "workspace:*",
     "@adatechnology/game-weather-three": "workspace:*",
     "@adatechnology/game-workers": "workspace:*",

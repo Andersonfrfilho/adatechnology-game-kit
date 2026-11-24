@@ -7,6 +7,8 @@ export type PageChoice = {
   readonly scenario: ScenarioId
   readonly camera: CameraChoice
   readonly physics: 'jolt' | 'own'
+  /** `?roteiro=1`: the page starts with an empty street and the script releases the horde (the determinism run). */
+  readonly isScripted: boolean
 }
 
 export const DEFAULT_SCENARIO: ScenarioId = 'tipico'
@@ -23,6 +25,7 @@ export function parsePageChoice(search: string): PageChoice {
     scenario: isScenario(scenario) ? scenario : DEFAULT_SCENARIO,
     camera: query.get('camera') === 'first' ? 'first' : 'shoulder',
     physics: query.get('solver') === 'own' ? 'own' : 'jolt',
+    isScripted: query.get('roteiro') === '1',
   }
 }
 
@@ -50,7 +53,8 @@ export function districtOptionsOf({ scripts, choice, container }: { readonly scr
   if (!first || !second) throw new Error(`the script "${script.id}" has no path to start on`)
   return {
     container,
-    zombies: settings.zombies,
+    zombies: choice.isScripted ? 0 : settings.zombies,
+    hordeReserve: choice.isScripted ? settings.zombies : 0,
     hordeZones: zonesOfScript(script),
     weather: WEATHER_OF[settings.weather],
     hour: HOUR_OF[settings.timeOfDay],

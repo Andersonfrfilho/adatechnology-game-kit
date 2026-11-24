@@ -159,6 +159,9 @@ importers:
       '@adatechnology/game-vehicles-three':
         specifier: workspace:*
         version: link:../../packages/game-vehicles-three
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../../packages/game-weapons
       '@adatechnology/game-weather':
         specifier: workspace:*
         version: link:../../packages/game-weather

@@ -14,6 +14,8 @@ export type DistrictOptions = {
   readonly container: HTMLElement
   /** The zombies of the horde, spread over the zones the district names. */
   readonly zombies: number
+  /** Agents the crowd has room for beyond `zombies`: the ones a scripted run releases later (default none). */
+  readonly hordeReserve?: number
   /** Ids of the horde zones of the site to fill (default all of them). */
   readonly hordeZones?: readonly string[]
   /** A state of `game-weather` held for the whole run (`overcast`, `heavy_rain`...). */
