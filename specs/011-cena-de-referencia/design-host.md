@@ -81,6 +81,8 @@ world.blastPacing                              // marca-passo da explosão (`beg
 world.warmUp()
 world.render({ beforeRender?, afterRender?, view?, extraPasses? })   // [A5] ou `render: false` no `start` e o host não desenha
 world.start({ skipSimulation?, minFrameMs?, onFrame?, render?: boolean })   // [A5] devolve stop
+world.random                                   // fluxo com semente do host (12345); o `reset` volta a semente, um fluxo dado pelo jogo fica como está
+world.frame.on(slot, system)                   // dentro de `room.simulate-frame` e `room.simulate-end`: beforeFrame, afterSound, afterWaterView, afterFilm, afterFrame, beforePresent, afterPresent
 world.reset()                                  // [A6] inclui `blastPacing.clear()`
 world.dispose()
 ```
