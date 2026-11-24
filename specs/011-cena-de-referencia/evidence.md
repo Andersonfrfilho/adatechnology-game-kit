@@ -59,12 +59,13 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
   página da sala (`nightly/2026-11-23/browser-checks.log`). Log: `check-room.log`.
 - **Hash do `tools/gpu/room-determinism.mjs`** (M67, `floorplan`, 2 rodadas, 90 quadros, `jolt-d4-worker`), a referência das Fases 1 e 1b:
 
-  | Variante | Consulta | Tique 90 `stateHash` | Eventos | Rodadas |
+  | Variante | Consulta | `stateHash` do último quadro (90) | Eventos | Rodadas |
   |---|---|---|---|---|
   | com marca-passo (padrão da página) | `&solver=jolt&blastDebris=1&groundWorker=1` | **3822996173** | 1702 | idênticas em todo tique |
   | sem marca-passo | `…&blastPacing=0` | **1819424859** | 1702 | idênticas em todo tique |
 
-  O hash de partida (`pre`) é 3406260990 nas quatro rodadas. A espera pela máquina quieta (carga < 1,5) desistiu nas duas: carga 2,7 a
+  Com marca-passo, os 90 quadros são 75 tiques (15 segurados): o hash é o do tique 75, e a comparação entre os dois caminhos é pelo tempo do
+  mundo (`detcmp.cjs` da spec 018). O hash de partida (`pre`) é 3406260990 nas quatro rodadas. A espera pela máquina quieta (carga < 1,5) desistiu nas duas: carga 2,7 a
   5,4 durante as rodadas (outra sessão usava o navegador); o hash não depende de tempo. O sem marca-passo bate com o da spec 018 depois do #446.
 - **Rodada diária de 2026-11-23** (`d94089d0d`; vermelha desde 2026-11-20): reprova `browser-checks` (abrir a sala, origem de toda peça
   desenhada, memória entre ciclos, Jolt entre ciclos; nas áreas, `floorplan`, `glass`, `shots`, `explosions`, `veg_hedge_cut_pieces`,
