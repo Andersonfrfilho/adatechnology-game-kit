@@ -3,8 +3,10 @@ import type * as THREE_NS from 'three'
 import { engine } from '@adatechnology/game-floorplan'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
+import { create as createFloorplanInteractables } from '@adatechnology/game-floorplan-interactables'
 import { register as registerPostApocalyptic } from '@adatechnology/game-floorplan-post-apocalyptic'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
+import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import { register as registerStructure } from '@adatechnology/game-floorplan-structure'
 import { create as createHouseRenderer, planLod, registerHouseQueues } from '@adatechnology/game-floorplan-three'
 import type { House, HouseRendererOptions } from '@adatechnology/game-floorplan-three'
@@ -52,6 +54,7 @@ export function registerPacks(): typeof engine {
   if (isRegistered) return engine
   registerResidential(engine, { region: 'br' })
   registerCommercial(engine, { region: 'br' })
+  registerRural(engine, { region: 'br' })
   registerStructure(engine)
   registerPostApocalyptic(engine)
   isRegistered = true
@@ -96,7 +99,7 @@ export function createHouses({ THREE, world, scene, site }: HousesParams): House
     lod: HOUSE_LOD_DISTANCE,
     destruction: world.destruction.world,
     destructionRenderer: world.destruction.renderer,
-    interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree, effectSink: () => world.effects },
+    interactives: { adapter: { create: createFloorplanInteractables }, GameInteractables, GameInteractablesHousehold, GameInteractablesThree, effectSink: () => world.effects },
     vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
   }
   const renderer = createHouseRenderer(THREE, options)

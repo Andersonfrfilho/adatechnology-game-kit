@@ -19,9 +19,10 @@ declare global {
 const container = document.getElementById('app')
 if (!container) throw new Error('the page has no #app')
 const choice = parsePageChoice(location.search)
-startDistrict(THREE, districtOptionsOf({ scripts: parseScripts(scriptsJson), choice, container }))
+const scripts = parseScripts(scriptsJson)
+startDistrict(THREE, districtOptionsOf({ scripts, choice, container }))
   .then((district) => {
-    window.__district = createProbe(district, choice)
+    window.__district = createProbe(district, choice, scripts)
   })
   .catch((error: unknown) => {
     window.__districtError = error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error)

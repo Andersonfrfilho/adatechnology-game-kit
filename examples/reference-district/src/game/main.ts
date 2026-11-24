@@ -57,7 +57,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const grid = createDistrictGrid({ houses: houses.list.map((placed) => placed.footprint), buildings: streets.buildings, vehicles: props.footprints })
   const player = createPlayerRig({ THREE, world, grid, start: options.start ?? DEFAULT_START, mode: options.camera, seed: site.seed })
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
-  const horde = createHorde({ THREE, world, site, zombies: options.zombies, zones, grid, target: player.player })
+  const horde = createHorde({ THREE, world, site, zombies: options.zombies, reserve: options.hordeReserve ?? 0, zones, grid, target: player.player })
   player.bindCrowd(horde.crowd.asPlayerCrowd())
   const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed })
 

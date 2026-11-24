@@ -1,5 +1,10 @@
 import type { District } from '../game/options'
+import { createScriptWorld } from './actions'
 import type { PageChoice } from './scenario'
+import { scriptOf } from './scenario'
+import { runScript } from './runner'
+import type { RunResult } from './runner'
+import type { Script, ScriptId, Scripts } from './scripts'
 
 /** What a probe of the page can do (`window.__district`): look at the world, move the body, run steps of the simulation and draw one. Nothing here is in `src/game`. */
 export type DistrictProbe = {
@@ -11,6 +16,10 @@ export type DistrictProbe = {
   draw(): void
   /** Puts the body at a point looking along `yaw`, with the camera in `mode`; the camera eases to its place over the next frames. */
   place(spot: { readonly x: number; readonly z: number; readonly yaw: number; readonly pitch?: number; readonly mode?: 'shoulder' | 'first' }): void
+  /** Runs a script (the page scenario's by default) at the fixed step, never wall-clock; with `hash` it answers the hash of the world at the end of each phase. Run it on a page opened with `?roteiro=1`, with no display loop. */
+  run(script?: Script | ScriptId, options?: { readonly hash?: boolean }): RunResult
+  /** The phase the last `run` is in (the gauge reads it). */
+  readonly phase: string | undefined
   /** One frame from above as a PNG data URL: the plan sheet that checks the coordinates of the data files by eye. A debug print only, never a camera of the game. */
   planSheet(): string
   /** Counts of what stands in the scene, for a check. */
@@ -21,9 +30,23 @@ const PLAN_CENTRE = [0, 0] as const
 const PLAN_HEIGHT = 330
 const PLAN_FOV = 60
 
-export function createProbe(district: District, choice: PageChoice): DistrictProbe {
+export function createProbe(district: District, choice: PageChoice, scripts: Scripts): DistrictProbe {
   const { world, player } = district
+  let phase: string | undefined
   return {
+    get phase() {
+      return phase
+    },
+    run(chosen, options = {}) {
+      const script = typeof chosen === 'object' ? chosen : chosen ? scripts.scripts.find((candidate) => candidate.id === chosen) : scriptOf(scripts, choice.scenario)
+      if (!script) throw new Error(`the page has no script "${String(chosen)}"`)
+      const scriptWorld = createScriptWorld(district, { seed: script.seed })
+      try {
+        return runScript(scriptWorld, script, scripts.scenarios[choice.scenario], { hash: options.hash === true, onPhase: (edge) => void (phase = edge.edge === 'start' ? edge.id : undefined) })
+      } finally {
+        scriptWorld.dispose()
+      }
+    },
     district,
     choice,
     advance: (seconds) => world.frame.scheduler.advance(seconds),

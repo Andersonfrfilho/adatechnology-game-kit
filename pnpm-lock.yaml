@@ -105,6 +105,9 @@ importers:
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-residential
+      '@adatechnology/game-floorplan-rural':
+        specifier: workspace:*
+        version: link:../../packages/game-floorplan-rural
       '@adatechnology/game-floorplan-structure':
         specifier: workspace:*
         version: link:../../packages/game-floorplan-structure
@@ -159,6 +162,9 @@ importers:
       '@adatechnology/game-vehicles-three':
         specifier: workspace:*
         version: link:../../packages/game-vehicles-three
+      '@adatechnology/game-weapons':
+        specifier: workspace:*
+        version: link:../../packages/game-weapons
       '@adatechnology/game-weather':
         specifier: workspace:*
         version: link:../../packages/game-weather

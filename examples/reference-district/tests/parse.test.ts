@@ -24,7 +24,7 @@ describe('the three files of recorte 1', () => {
   it('parse into typed values', () => {
     expect(plan.districts?.map((district) => district.kind)).toEqual(['mixed', 'residential_popular'])
     expect(site.plan).toBe(plan.id)
-    expect(site.lots).toHaveLength(14)
+    expect(site.lots).toHaveLength(15)
     expect(scripts.scripts.map((script) => script.id)).toEqual(['street', 'crossing'])
   })
 

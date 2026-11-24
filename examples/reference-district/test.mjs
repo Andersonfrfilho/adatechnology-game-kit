@@ -76,7 +76,7 @@ for (const scenario of SCENARIOS) {
     if (failure === null) {
       await page.waitForTimeout(settleMs)
       const info = await page.evaluate(() => window.__district?.info())
-      check(`${label}: the district is there`, info?.houses === 14 && info.missing === 14 && info.zombies === ZOMBIES[scenario] && info.physics === 'jolt', info)
+      check(`${label}: the district is there`, info?.houses === 15 && info.missing === 14 && info.zombies === ZOMBIES[scenario] && info.physics === 'jolt', info)
       // the street's walk starts before the first lot (x = 50): the print is taken at the first houses, looking along the street
       if (scenario !== 'caos') {
         await page.evaluate(() => window.__district?.place({ x: 46, z: 0, yaw: -Math.PI / 2 }))

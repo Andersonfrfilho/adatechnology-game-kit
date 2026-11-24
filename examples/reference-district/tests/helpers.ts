@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { engine } from '@adatechnology/game-floorplan'
 import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
+import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import type { PlanLine, PlanPoint, PlanRect } from '@adatechnology/game-urban'
 
 import { parsePlan } from '../src/game/plan'
@@ -23,6 +24,7 @@ export const scripts = parseScripts(readJson('recorte-1.scripts.json'))
 export function createTestEngine(): typeof engine {
   registerResidential(engine, { region: 'br' })
   registerCommercial(engine, { region: 'br' })
+  registerRural(engine, { region: 'br' })
   return engine
 }
 
