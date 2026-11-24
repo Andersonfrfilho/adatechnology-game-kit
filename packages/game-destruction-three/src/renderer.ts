@@ -29,7 +29,7 @@ import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { surfaceOf } from './friction'
-import { kitOriginOf } from '@adatechnology/game-contracts'
+import { kitOriginOf, markKitOrigin } from '@adatechnology/game-contracts'
 import { debrisColor, debrisLook, fragmentTone } from '@adatechnology/game-destruction'
 import { familyPlay, HitPoints } from './debris-events'
 import type { FamilyPlay } from './debris-events'
@@ -2704,6 +2704,8 @@ class Renderer implements DestructionRenderer {
     root.updateWorldMatrix(true, false)
     const group = new this.THREE.Group()
     group.name = `destruction-piece-${newId}`
+    // a piece is drawn by this renderer from the meshes of the object it came off (CLAUDE.md, "where every drawn piece comes from"); its kind stays out of the source's checks
+    markKitOrigin(group, { owner: 'game-destruction-three', kind: 'piece', id: kitOriginOf(root)?.id ?? from.id })
     root.getWorldPosition(group.position)
     root.getWorldQuaternion(group.quaternion)
     this.scene.add(group)
