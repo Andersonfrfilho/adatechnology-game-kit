@@ -46,20 +46,40 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@adatechnology/game-audio": "workspace:^",
     "@adatechnology/game-characters-people": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-crowd": "workspace:^",
+    "@adatechnology/game-destruction": "workspace:^",
     "@adatechnology/game-destruction-three": "workspace:^",
     "@adatechnology/game-floorplan-residential": "workspace:^",
+    "@adatechnology/game-fluids": "workspace:^",
+    "@adatechnology/game-fluids-three": "workspace:^",
+    "@adatechnology/game-graphics": "workspace:^",
+    "@adatechnology/game-graphics-three": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
+    "@adatechnology/game-render-three": "workspace:^",
+    "@adatechnology/game-runtime": "workspace:^",
     "@adatechnology/game-shapes": "workspace:^",
+    "@adatechnology/game-terrain": "workspace:^",
+    "@adatechnology/game-terrain-three": "workspace:^",
     "@adatechnology/game-urban": "workspace:^",
     "@adatechnology/game-vegetation-species": "workspace:^",
     "@adatechnology/game-vehicles-fleet": "workspace:^",
+    "@adatechnology/game-vfx": "workspace:^",
+    "@adatechnology/game-vfx-three": "workspace:^",
     "@adatechnology/game-workers": "workspace:^"
+  },
+  "peerDependencies": {
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "@adatechnology/game-stories": "workspace:^",
     "@types/node": "^22.10.7",
+    "@types/three": "^0.160.0",
+    "happy-dom": "^17.4.4",
+    "three": "^0.160.1",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4"

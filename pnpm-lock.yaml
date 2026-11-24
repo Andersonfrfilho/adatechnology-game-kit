@@ -1212,6 +1212,9 @@ importers:
 
   packages/game-kit-defaults:
     dependencies:
+      '@adatechnology/game-audio':
+        specifier: workspace:^
+        version: link:../game-audio
       '@adatechnology/game-characters-people':
         specifier: workspace:^
         version: link:../game-characters-people
@@ -1221,15 +1224,48 @@ importers:
       '@adatechnology/game-crowd':
         specifier: workspace:^
         version: link:../game-crowd
+      '@adatechnology/game-destruction':
+        specifier: workspace:^
+        version: link:../game-destruction
       '@adatechnology/game-destruction-three':
         specifier: workspace:^
         version: link:../game-destruction-three
       '@adatechnology/game-floorplan-residential':
         specifier: workspace:^
         version: link:../game-floorplan-residential
+      '@adatechnology/game-fluids':
+        specifier: workspace:^
+        version: link:../game-fluids
+      '@adatechnology/game-fluids-three':
+        specifier: workspace:^
+        version: link:../game-fluids-three
+      '@adatechnology/game-graphics':
+        specifier: workspace:^
+        version: link:../game-graphics
+      '@adatechnology/game-graphics-three':
+        specifier: workspace:^
+        version: link:../game-graphics-three
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
+      '@adatechnology/game-render-three':
+        specifier: workspace:^
+        version: link:../game-render-three
+      '@adatechnology/game-runtime':
+        specifier: workspace:^
+        version: link:../game-runtime
       '@adatechnology/game-shapes':
         specifier: workspace:^
         version: link:../game-shapes
+      '@adatechnology/game-terrain':
+        specifier: workspace:^
+        version: link:../game-terrain
+      '@adatechnology/game-terrain-three':
+        specifier: workspace:^
+        version: link:../game-terrain-three
       '@adatechnology/game-urban':
         specifier: workspace:^
         version: link:../game-urban
@@ -1239,6 +1275,12 @@ importers:
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:^
         version: link:../game-vehicles-fleet
+      '@adatechnology/game-vfx':
+        specifier: workspace:^
+        version: link:../game-vfx
+      '@adatechnology/game-vfx-three':
+        specifier: workspace:^
+        version: link:../game-vfx-three
       '@adatechnology/game-workers':
         specifier: workspace:^
         version: link:../game-workers
@@ -1249,6 +1291,15 @@ importers:
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
+      '@types/three':
+        specifier: ^0.160.0
+        version: 0.160.0
+      happy-dom:
+        specifier: ^17.4.4
+        version: 17.6.3
+      three:
+        specifier: ^0.160.1
+        version: 0.160.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.31)(typescript@5.9.3)
