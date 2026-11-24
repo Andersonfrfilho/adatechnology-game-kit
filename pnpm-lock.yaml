@@ -1745,9 +1745,6 @@ importers:
       '@adatechnology/game-graphics':
         specifier: workspace:^
         version: link:../game-graphics
-      '@adatechnology/game-graphics-three':
-        specifier: workspace:^
-        version: link:../game-graphics-three
       '@adatechnology/game-items':
         specifier: workspace:^
         version: link:../game-items
@@ -1775,9 +1772,6 @@ importers:
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx
-      '@adatechnology/game-vfx-three':
-        specifier: workspace:^
-        version: link:../game-vfx-three
       '@adatechnology/game-weapons':
         specifier: workspace:^
         version: link:../game-weapons
