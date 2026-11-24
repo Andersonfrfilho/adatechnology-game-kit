@@ -135,6 +135,11 @@ export interface BuildOptions {
   state?: SavedHouseState
   /** `false`: the app already has ground, street and lawn. */
   terrain?: boolean
+  /**
+   * The street brings its own poles (a city draws them; plan generated with `streetPoles: true`): the point `[u, y, v]` of the house's frame where the service drop leaves the nearest
+   * street pole. The house then draws no grid poles of its own: one drop sags from there to where the plan's entrance takes it (`serviceEntrance.drop[0]`, the post or the facade meter).
+   */
+  serviceFrom?: readonly [number, number, number]
   /** `true`: no lot wall, fence or gates (the game has its own). */
   noPerimeter?: boolean
   /** `'meshes'`: one mesh per structural piece instead of one per group and material. */

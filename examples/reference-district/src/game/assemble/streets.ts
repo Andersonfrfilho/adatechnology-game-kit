@@ -1,28 +1,40 @@
 import type * as THREE_NS from 'three'
 
 import type { LightBudget } from '@adatechnology/game-render-three'
-import type { CityPlanInput, PlanRect, UrbanKit } from '@adatechnology/game-urban'
+import { lampStateOf } from '@adatechnology/game-urban'
+import type { CityPlanInput, LampShares, PlanRect, UrbanKit } from '@adatechnology/game-urban'
 import { createUrbanThree } from '@adatechnology/game-urban-three'
 import type { DrawnUrban } from '@adatechnology/game-urban-three'
 
 import { blocksToFill } from '../blocks'
-import { SIDEWALK_WIDTH } from '../ground'
-import { polePointsOf, roadStretchesOf } from '../roads'
+import { roadStretchesOf } from '../roads'
+import type { PolePoint } from '../roads'
 import type { Site } from '../site'
 
 const STREET_MARGIN = 10
-const POLE_SPACING = 32
 /** The pole of a street that crosses districts of two patterns: the pattern of the district the pole stands in decides it. */
 const FALLBACK_POLE = 'concrete_arm'
+/** Every lamp works unless the scenario says otherwise. */
+const ALL_LAMPS_WORK: LampShares = { lit: 1, flicker: 0 }
+
+/** The pole that stands at a point: the one of the pattern of the district it stands in. */
+export function poleIdAt(urban: UrbanKit, plan: CityPlanInput, point: { readonly x: number; readonly z: number }): string {
+  const district = urban.cities.layout(plan).districtAt(point.x, point.z)
+  return (district?.pattern ? urban.neighbourhoods.get(district.pattern).pattern.pole : undefined) ?? FALLBACK_POLE
+}
 
 export type StreetsParams = {
   readonly THREE: typeof THREE_NS
   readonly urban: UrbanKit
   readonly plan: CityPlanInput
   readonly site: Site
+  /** Where the street poles stand (`polePointsOf`, clear of the doors and gates of the planned houses). */
+  readonly poles: readonly PolePoint[]
   readonly lights: LightBudget
   readonly seed: number
   readonly isNight: boolean
+  /** At night, the share of lamps that work and the share that flicker (the rest are burnt out). */
+  readonly lamps?: LampShares
 }
 
 export type Streets = {
@@ -36,18 +48,16 @@ export type Streets = {
  * each district along them, and every block of a district the site leaves free filled with the district's buildings (`cities.fillBlock`). The terrain zones under the roads come from the
  * same lines (`groundLayoutOf`); nothing here is a shape of the game.
  */
-export function drawStreets({ THREE, urban, plan, site, lights, seed, isNight }: StreetsParams): Streets {
+export function drawStreets({ THREE, urban, plan, site, poles, lights, seed, isNight, lamps = ALL_LAMPS_WORK }: StreetsParams): Streets {
   const b = urban.builder({ seed })
   const layout = urban.cities.layout(plan)
   const streets = (plan.lines ?? []).filter((line) => line.kind === 'street')
   if (streets.length === 0) throw new Error(`the plan "${plan.id}" has no street to draw`)
-  const streetWidth = Math.max(...streets.map((line) => line.width))
-  for (const road of roadStretchesOf(plan)) urban.streets.road(b, road.x, road.z, streetWidth, road.length, road.along)
-  for (const point of polePointsOf({ plan, spacing: POLE_SPACING, offset: streetWidth / 2 + SIDEWALK_WIDTH / 2 })) {
-    const district = layout.districtAt(point.x, point.z)
-    const pattern = district?.pattern ? urban.neighbourhoods.get(district.pattern).pattern : undefined
-    const pole = urban.poles.get(pattern?.pole ?? FALLBACK_POLE)
-    pole.build(b, { x: point.x, z: point.z, on: isNight, dir: -point.side })
+  for (const road of roadStretchesOf(plan)) urban.streets.road(b, road.x, road.z, road.width, road.length, road.along)
+  for (const point of poles) {
+    const pole = urban.poles.get(poleIdAt(urban, plan, point))
+    const lamp = isNight ? lampStateOf({ seed, x: point.x, z: point.z, shares: lamps }) : { on: false, flicker: false }
+    pole.build(b, { x: point.x, z: point.z, on: lamp.on, flicker: lamp.flicker, ry: point.ry })
   }
   const buildings: Array<{ rect: PlanRect; height: number }> = []
   for (const district of layout.districts) {
@@ -55,6 +65,6 @@ export function drawStreets({ THREE, urban, plan, site, lights, seed, isNight }:
       for (const building of urban.cities.fillBlock(b, block)) buildings.push({ rect: [building.x - building.width / 2, building.z - building.depth / 2, building.x + building.width / 2, building.z + building.depth / 2], height: building.height })
     }
   }
-  const drawn = createUrbanThree(THREE, { document, lights }).draw(b.scene())
+  const drawn = createUrbanThree(THREE, { document, lights, physicalLights: true, flickerLenses: true }).draw(b.scene())
   return { drawn, buildings }
 }

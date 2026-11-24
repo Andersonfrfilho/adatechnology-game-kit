@@ -5,7 +5,7 @@ import { createKitWorld } from '@adatechnology/game-kit-defaults/world'
 import { sourceSpawn } from '@adatechnology/game-workers'
 
 import { createDistrictGrid, createHorde } from './assemble/horde'
-import { createHouses } from './assemble/houses'
+import { createHouses, planLots } from './assemble/houses'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
 import { drawStreets } from './assemble/streets'
@@ -15,6 +15,8 @@ import { createMissingBoxes } from './missing'
 import type { District, DistrictOptions } from './options'
 import { createReferenceUrban, referencePlan } from './plan'
 import { referenceSite } from './reference'
+import { POLE_MIN_GAP, POLE_SPACING, polePointsOf, STREET_LIGHT_CURB_SETBACK } from './roads'
+import { keepOutOf } from './service'
 
 const DEFAULT_START = { x: 30, z: 0, yaw: -Math.PI / 2 } as const
 const NIGHT_FROM_HOUR = 18
@@ -47,9 +49,11 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const scene = world.view.scene
   const isNight = options.hour >= NIGHT_FROM_HOUR || options.hour < NIGHT_UNTIL_HOUR
 
-  const streets = drawStreets({ THREE, urban: createReferenceUrban(), plan, site, lights: world.lights, seed: site.seed, isNight })
+  const lots = planLots(site)
+  const poles = polePointsOf({ plan, spacing: POLE_SPACING, setback: STREET_LIGHT_CURB_SETBACK, avoid: keepOutOf(lots, POLE_MIN_GAP) })
+  const streets = drawStreets({ THREE, urban: createReferenceUrban({ hostLights: true }), plan, site, poles, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(streets.drawn.root)
-  const houses = createHouses({ THREE, world, scene, site })
+  const houses = createHouses({ THREE, world, scene, lots, poles })
   const props = createProps({ THREE, world, scene, site })
   const missing = createMissingBoxes(THREE, site.missing)
   scene.add(missing.group)
@@ -59,7 +63,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
   const horde = createHorde({ THREE, world, site, zombies: options.zombies, reserve: options.hordeReserve ?? 0, zones, grid, target: player.player })
   player.bindCrowd(horde.crowd.asPlayerCrowd())
-  const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed })
+  const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 
   const nightFactor = isNight ? 1 : 0
   const stops = [

@@ -58,6 +58,8 @@ export function districtOptionsOf({ scripts, choice, container }: { readonly scr
     hordeZones: zonesOfScript(script),
     weather: WEATHER_OF[settings.weather],
     hour: HOUR_OF[settings.timeOfDay],
+    ...(settings.lights === undefined ? {} : { lights: settings.lights }),
+    ...(settings.fog === undefined ? {} : { fog: settings.fog }),
     camera: choice.camera,
     start: { x: first.x, z: first.z, yaw: yawToward(first, second) },
     physics: choice.physics,

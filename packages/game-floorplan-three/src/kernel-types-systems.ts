@@ -644,6 +644,8 @@ export interface BuildContext {
   wallColliders: number
   stairs: StairRecord[]
   noTerrain: boolean
+  /** Where the street's drop leaves its pole, in the house's frame (`BuildOptions.serviceFrom`); `null` draws the house's own grid poles. */
+  serviceFrom: readonly [number, number, number] | null
   roomById: Record<string, HouseRoom>
   pieces: Map<string, PieceRecord>
   pieceObjects: Map<string, THREE_NS.Object3D[]>

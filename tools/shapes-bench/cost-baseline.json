@@ -2931,6 +2931,11 @@
       "triangles": 124724,
       "materials": 151
     },
+    "urban/pole:concrete-failing": {
+      "draws": 6,
+      "triangles": 400,
+      "materials": 3
+    },
     "houses/single_storey_a": {
       "draws": 253,
       "triangles": 72374,

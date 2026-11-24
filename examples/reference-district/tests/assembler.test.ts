@@ -41,7 +41,7 @@ describe('roads', () => {
   })
 
   it('puts no pole in the river', () => {
-    for (const point of polePointsOf({ plan, spacing: 32, offset: 6.25 })) expect(point.x > -35 && point.x < -5 && Math.abs(point.z) < 140).toBe(false)
+    for (const point of polePointsOf({ plan, spacing: 32, setback: 0.5 })) expect(point.x > -35 && point.x < -5 && Math.abs(point.z) < 140).toBe(false)
   })
 })
 
@@ -139,6 +139,16 @@ describe('scenario', () => {
     const tipico = districtOptionsOf({ scripts, choice: parsePageChoice('?cena=tipico&camera=first'), container })
     expect(tipico).toMatchObject({ zombies: 500, weather: 'overcast', hour: 14, camera: 'first' })
     expect(tipico.start?.x).toBe(20)
+  })
+
+  it('takes the lamps and the fog of the night from the scripts file, and leaves the day without them', () => {
+    const container = {} as HTMLElement
+    const pior = districtOptionsOf({ scripts, choice: parsePageChoice('?cena=pior'), container })
+    expect(pior.lights).toEqual({ lit: 0.8, flicker: 0.15 })
+    expect(pior.fog).toEqual({ color: 0x5a6878, far: 45, weight: 0.75 })
+    const tipico = districtOptionsOf({ scripts, choice: parsePageChoice('?cena=tipico'), container })
+    expect(tipico.lights).toBeUndefined()
+    expect(tipico.fog).toBeUndefined()
   })
 
   it('looks along the path: east is yaw -pi/2', () => {

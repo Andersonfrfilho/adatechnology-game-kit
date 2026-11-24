@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { fleetDims } from '@adatechnology/game-vehicles-fleet'
 
-import { EVENT_KINDS } from '../src/test/scripts'
+import { EVENT_KINDS, parseScripts } from '../src/test/scripts'
+import { readJson } from './helpers'
 import { scripts, site } from './helpers'
 
 const street = scripts.scripts.find((script) => script.id === 'street')!
@@ -49,6 +50,35 @@ describe('scripts of recorte 1', () => {
     expect(scripts.scenarios.tipico).toMatchObject({ zombies: 500, weather: 'overcast', timeOfDay: 'day' })
     expect(scripts.scenarios.pior).toMatchObject({ zombies: 2000, weather: 'rain', timeOfDay: 'night' })
     expect(scripts.scenarios.caos.zombies).toBeGreaterThan(0)
+  })
+})
+
+describe('scenario lamps and fog', () => {
+  const withPior = (pior: Record<string, unknown>): unknown => {
+    const json = readJson('recorte-1.scripts.json') as { scenarios: Record<string, unknown> }
+    return { ...json, scenarios: { ...json.scenarios, pior: { zombies: 10, weather: 'rain', timeOfDay: 'night', ...pior } } }
+  }
+
+  it('reads the night of pior: 80 % of lamps work, 15 % flicker, and a fog over the rain', () => {
+    expect(scripts.scenarios.pior.lights).toEqual({ lit: 0.8, flicker: 0.15 })
+    expect(scripts.scenarios.pior.fog).toEqual({ color: 0x5a6878, far: 45, weight: 0.75 })
+    expect(scripts.scenarios.tipico.lights).toBeUndefined()
+    expect(scripts.scenarios.tipico.fog).toBeUndefined()
+  })
+
+  it('accepts no failing lamp and a fog without colour', () => {
+    const parsed = parseScripts(withPior({ lights: { lit: 1, flicker: 0 }, fog: { far: 60, weight: 1 } }))
+    expect(parsed.scenarios.pior.lights).toEqual({ lit: 1, flicker: 0 })
+    expect(parsed.scenarios.pior.fog).toEqual({ far: 60, weight: 1 })
+  })
+
+  it('refuses more failing lamps than working ones, shares out of 0..1, a bad colour and unknown keys', () => {
+    expect(() => parseScripts(withPior({ lights: { lit: 0.5, flicker: 0.6 } }))).toThrow(/flicker/)
+    expect(() => parseScripts(withPior({ lights: { lit: 1.2, flicker: 0 } }))).toThrow(/lit/)
+    expect(() => parseScripts(withPior({ lights: { lit: 0.8 } }))).toThrow(/flicker/)
+    expect(() => parseScripts(withPior({ fog: { color: 'grey', far: 40, weight: 0.5 } }))).toThrow(/colour/)
+    expect(() => parseScripts(withPior({ fog: { far: 40, weight: 0 } }))).toThrow(/weight/)
+    expect(() => parseScripts(withPior({ lamps: { lit: 1, flicker: 0 } }))).toThrow(/lamps/)
   })
 })
 

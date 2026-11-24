@@ -23,12 +23,14 @@ const scene = b.scene()                            // { parts, items, windows: {
 | id | shape | what it is |
 |---|---|---|
 | `led_double` | `double_arm` | 9 m mast, two arms with white LED heads (avenue) |
-| `concrete_arm` | `single_arm` | 8 m concrete mast, one arm, sodium lamp, optional transformer drum (`dir` -1 mirrors the arm) |
+| `concrete_arm` | `single_arm` | 8 m concrete mast, one arm, sodium lamp, optional transformer drum (`dir` -1 mirrors the arm; `ry` turns the pole, so a pole by a street along x reaches over the road with `ry = ±π/2`; the crossarm and the lantern turn too) |
 | `cast_iron` | `lantern` | 4 m iron post, lantern box and pointed cap |
 | `wood_crossarm` | `crossarm` | 7 m wooden pole with a crossarm and a hanging lamp |
 | `flood_tower` | `flood_tower` | 12 m four-legged tower with three floodlights |
 
 A pole that is `on` has a glowing lens and, while the **light budget** lasts, a real point light (white LED 1.3 / 24 m, sodium 1.3 / 20 m, lantern 1 / 14 m, crossarm 0.9 / 16 m, floodlight 1.6 / 34 m). The budget is the Galeria's counter: 16 by default, `take()` is `left-- > 0`, so `left` keeps falling below zero when more lamps ask than the budget had, and the lamps that did not get a light keep their lens. `flicker: true` marks the light of a failing lamp; the drawer animates it.
+
+`lampStateOf({ seed, x, z, shares: { lit, flicker } })` says whether the lamp at a spot works, flickers or is burnt out (`{ on, flicker }`, for the pole's options): `lit` is the share of lamps that work, `flicker` the share of all lamps that fail (a part of `lit`, so `0 <= flicker <= lit <= 1`). The choice is a hash of the seed and the spot, not a draw from `b.random`: the same street with the same seed keeps the same dark and failing lamps, and the rest of the scene keeps its draw order. A pole built with `flicker: true` gives its lens and its light the same `flickerPhase` (`flickerPhaseOf(x, z)`), so a drawer blinks them together.
 
 Every number of a pole is data. A game patches one by id, adds a pole or takes one out, and a pole of a new shape brings its builder:
 
