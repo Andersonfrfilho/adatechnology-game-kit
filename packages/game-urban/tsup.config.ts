@@ -1,9 +1,9 @@
 import { defineConfig } from 'tsup'
 
-// ESM + d.ts for bundlers, and an IIFE (dist/index.global.js) exposing the `GameUrban` global with the engine bundled in.
+// ESM + d.ts for bundlers (index and the ./networks entry), and an IIFE (dist/index.global.js) exposing the `GameUrban` global with the engine bundled in.
 export default defineConfig([
   {
-    entry: ['src/index.ts'],
+    entry: { index: 'src/index.ts', 'networks/index': 'src/networks/index.ts' },
     format: ['esm'],
     dts: true,
     splitting: false,

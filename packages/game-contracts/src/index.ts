@@ -132,6 +132,7 @@ export type { CategorizedOptions, CategorizedReport, CategoryDef, CategoryOption
 export { KIT_ORIGIN_KEY, kitOriginOf, markKitOrigin, unmarkedDrawings } from './origin'
 export type { KitOrigin, UnmarkedDrawing } from './origin'
 export { footprintBlocker } from './footprint'
+export type { UtilityConnection, UtilityNetwork } from './utility'
 export type { Footprint, FootprintObject } from './footprint'
 export {
   BLOW_IDS,

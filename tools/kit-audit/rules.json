@@ -6,6 +6,11 @@
       "use": "createVehicleKit + installFleet + createVehiclesThree(THREE, { kit }).build(key) (game-vehicles-three)",
       "words": ["car", "cars", "carro", "vehicle", "vehicles", "veiculo", "sedan", "truck", "headlight", "headlights", "farol", "garage"]
     },
+    "networks": {
+      "owners": ["game-urban", "game-urban-three", "game-floorplan-structure", "game-floorplan-three", "game-floorplan-interactables", "game-interactables", "game-interactables-three"],
+      "use": "the utility networks of game-urban/networks (poles, transformers, spans, drops, manholes, inlets, hydrants as data, drawn by game-urban-three) and the house side of game-floorplan-structure/utilities (meter post, inspection box, water meter)",
+      "words": ["pole", "poles", "poste", "postes", "transformer", "transformers", "trafo", "crossarm", "cruzeta", "insulator", "insulators", "isolador", "manhole", "manholes", "hydrant", "hydrants", "hidrante", "sewer", "esgoto", "bueiro"]
+    },
     "structure": {
       "owners": ["game-floorplan", "game-floorplan-structure", "game-floorplan-three", "game-floorplan-residential", "game-floorplan-commercial", "game-floorplan-rural", "game-floorplan-post-apocalyptic", "game-floorplan-interactables", "game-urban", "game-urban-three"],
       "use": "every wall as the houses: wallPiece of game-floorplan-three (the houses' structure, drawn by the house renderer) or a whole house; the street pieces of game-urban",

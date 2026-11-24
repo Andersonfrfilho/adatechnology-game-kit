@@ -138,6 +138,48 @@ createUrban({
 })
 ```
 
+## Utility networks (`@adatechnology/game-urban/networks`)
+
+The networks of a district as data, with no three.js: medium and low voltage, street lighting, telecom, sewer, drainage and water. A network is
+`nodes` (feed, pole, transformer, light, manhole, inlet, outfall, valve, hydrant, reservoir, treatment, connection...) and `edges` in the direction
+of the flow (spans and drops in the air with their `sag` and fixing `heights`; pipes under the ground with their `diameter` and `inverts`), plus
+the `rules`, every number of which a game patches. The lot side is the `UtilityConnection` of `@adatechnology/game-contracts`: the house says
+where it takes each network, the network links it, and neither imports the other.
+
+```ts
+import { DEFAULT_NETWORK_RULES, resolveNetworkRules, validateNetworks } from '@adatechnology/game-urban/networks'
+
+const networks = { nodes, edges, seed: 7, rules: resolveNetworkRules({ power: { maxLoading: 0.9 } }) }
+const violations = validateNetworks(networks, {
+  connections,                                   // UtilityConnection[], frame 'world' only
+  buildings,                                     // { id, lot?, outline, height }: no span crosses one
+  obstacles: { crowns },                         // { x, z, radius, bottom, top } from the scene's plant provider
+  surfaceAt: (x, z) => 'road' | 'sidewalk' | 'lot',
+  groundAt: (x, z) => height,
+})
+// [{ code: 'clearance', id: 'lv:1', detail: 'sidewalk', value: 4.3, limit: 4.5 }, ...]
+```
+
+- **Graph** (`buildNetworkGraph`, `connectedNodes`, `circuitOf`): edges in and out of each node per network; each network reached from its source
+  (feed, reservoir) or back from its destination (treatment, outfall). The low voltage starts only at a transformer the medium voltage reaches, and
+  the lighting at the low voltage; a lot's `power` connection is low voltage, never medium.
+- **Violations** (`NETWORK_VIOLATION`, stable codes): duplicate ids, missing nodes, edge on a node that does not carry its network, a node fed twice
+  or flowing two ways, a node cut from its source, a loop through a source or a destination, a lot in the plan frame, declaring a network twice,
+  unlinked, linked twice or moved, a connection node no lot declared; a drop longer than 30 m; a span with no
+  sag, under the clearance of its class (medium voltage 7 / 6 m and never over a lot; low voltage and drops 5.5 / 4.5 / 3.5; telecom 5 / 4.5 / 3
+  over road, sidewalk, lot), lower than the roof of a building it passes over (a drop may end over the house of its own lot, never cross it) or
+  through a crown; a pipe without inverts or diameter, flatter than its least slope (sewer main
+  0.5 %, lateral 1 %, drainage 0.5 %), out of its cover range (a sewer main 1.8 m under a street with a storm gallery), a sewer deeper than 4.5 m, a
+  sewer main longer than 80 m between manholes, a lateral deeper than 0.85 m where it crosses the gallery, two pipes crossing closer than 0.2 m or in the wrong
+  order (water, sewer lateral, drainage, sewer main from the top); a transformer of an unknown rating, loaded over 80 % by the diversified demand
+  of its consumers (`diversifiedDemand`, by count of consumers and installed load; an unknown load counts in the lower column) plus its lamps, or
+  with more than 200 m of low voltage line from it (service drops not counted).
+- **Pole slots** (`DEFAULT_POLE_SLOTS`, `checkPoleSlots`): the bands of a distribution pole over the ground, top down: medium voltage 9-9.25 m,
+  transformer 7.7-8.7, low voltage 7.1-7.4, lamp 6.5-6.8, telecom 5.7-6.1, on the 11 m pole with 1.7 m buried. A registry pole whose spec has
+  `slots` (`DistributionPoleDef`, `DistributionSpec`) is read by `slotsOfPole`; the first one enters the registry in T2.8b.
+
+The generator that lays the networks out from a city plan comes next (spec 011, T2.8b); this entry is the model it fills.
+
 ## Terrain
 
 `urban.terrain(options)` is a ground made of layers, as the Galeria's Vale: a rolling base (waves), masked relief (mountains, hills: `mask · (level + waves)`), cities levelled flat, rivers carved to a bed, lakes carved to a level, a forest density, and a colour for every point by ordered rules (low ground, ellipses such as a bog, city rectangles, high rock, forest, then open fields picked by a hash of the map cell). It answers `heightAt(px, py)`, `forestAt`, `colorAt`, `nearRiver` and `toWorld`/`fromWorld` (the frame maps the plan to metres: `world = plan · scale + origin`), and hands a drawer `grid(segments)`: the 32-bit coordinates, heights and colours of the square mesh, rows along z. `urban.drawTerrain(b, terrain)` adds the mesh part and the water plane. `custom(px, py, h)` has the last word on a height.

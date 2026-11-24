@@ -2,6 +2,16 @@
   "$comment": "`allowed`: findings that are not a piece of another SDK (the word matched something else: a car's roof, a gun barrel, a fluid's container shape), each with its reason. `pending`: real findings already listed in docs/pecas-fora-do-sdk.md, each with the fix; --check fails only on a finding that is in neither list, so a new hand-drawn piece stops CI. Take an entry out of `pending` when it is fixed.",
   "allowed": [
     {
+      "file": "packages/game-vehicles-fleet/src/vehicles/boats-extra.ts",
+      "domain": "networks",
+      "reason": "the stern light pole of a boat, not a utility pole"
+    },
+    {
+      "file": "packages/game-vehicles-fleet/src/vehicles/heavy.ts",
+      "domain": "networks",
+      "reason": "the manholes on top of a tanker's barrel and the grab poles of a bus, not street pieces"
+    },
+    {
       "file": "packages/game-contracts/src/fluids.ts",
       "domain": "items",
       "reason": "the contract's container shape (box or cylinder), not a drawn bottle"

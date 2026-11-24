@@ -24,6 +24,17 @@ export type SingleArmSpec = {
   light: LampLightSpec
   transformer: { offset: number; y: number; radius: number; height: number; color: number; segments: number }
 }
+/** The bands of a distribution pole, top down: medium voltage, transformer, low voltage, street light, telecom. */
+export type PoleSlotBand = 'mv' | 'transformer' | 'lv' | 'lighting' | 'telecom'
+/**
+ * Where each network is fixed on a distribution pole: `[bottom, top]` in metres over the ground. `height` is the whole pole and
+ * `embedment` what is buried of it (`postEmbedment(height)` of game-destruction), so the bands fit in `height - embedment`.
+ */
+export type PoleSlots = { readonly height: number; readonly embedment: number; readonly bands: Readonly<Record<PoleSlotBand, readonly [number, number]>> }
+/** A distribution pole: the single arm pole plus the bands its networks are fixed at. The crossarm, insulators and clamps come with its builder. */
+export type DistributionSpec = SingleArmSpec & { readonly slots: PoleSlots }
+/** A registry entry of a distribution pole: the `distribution` shape reads a `DistributionSpec`. */
+export type DistributionPoleDef = PoleDef & { shape: 'distribution'; spec: DistributionSpec }
 /** Short iron post with a lantern box and a pointed cap. */
 export type LanternSpec = { mast: MastSpec; lamp: LampSpec; cap: { y: number; radius: number; height: number; color: number; segments: number }; lens: LensSpec; light: LampLightSpec }
 /** Wooden pole with a crossarm and a hanging lamp. */

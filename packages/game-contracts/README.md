@@ -36,6 +36,7 @@ Browser without a bundler (the global is `GameContracts`):
 | Fluids | `ContainerSpec`, `LiquidId`, `ItemUseDef` | what an item says about the liquid it holds and how it is used |
 | Animation | `AnimationClipSpec`, `ItemAnimationContract`, `checkAnimation(clip, partIds)` | use animations an item brings (a door `open`, a pistol `reload`) |
 | Module | `TestableModule`, `TestableItem`, `ModuleScenario` | what a module hands the test room |
+| Utility connection | `UtilityConnection`, `UtilityNetwork` | where a lot takes a street network (power, telecom, sewer, storm, water): the house produces it, the street network of `game-urban/networks` consumes it in `frame: 'world'` |
 
 ### Destruction: a module owns its object
 

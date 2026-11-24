@@ -33,6 +33,12 @@ const scene = b.scene()   // { parts, items, windows: { lit, dark } }
 ## Padrões de bairro
 `urban.neighbourhoods`: `downtown`, `suburb`, `working_class`, `historic_street`, `industrial_port`, `railway_village`, `mountain_resort`, `stilt_village`, `military`, `rural`. Cada padrão é dado (`streetWidth`, `walkWidth`, `typologies`, `pole`, `lightColor`, `spacing`, `lit`, `marker`, `text` em pt-BR e en, `params` do compositor) mais a chave `compose` no registro de compositores. `get(id).compose(b, { x, z }, { locale?, providers? })` desenha a rua e o letreiro e devolve o plano (`houses`, `buildings`, `poles`, `vehicles`, `plants`). Provedores: `house` (padrão: silhuetas do `game-floorplan`), `vehicle` (padrão: nenhum; `createVehicleProvider()` estaciona veículos da frota do `game-vehicles-fleet`), `plant` (padrão: pinheiro e árvore dos adereços; `createPlantProvider()` sorteia espécies do `game-vegetation-species` pela tabela da região). Os dois provedores só acrescentam uma parte `placement` (`b.place`); quem desenha é o `game-urban-three` com resolvedores. A escolha vem do lugar, não de `b.random`. `composeSampleSheet(b)` desenha as dez células na ordem da página. `packs`, `patch`, `remove` e `composers` mudam o catálogo.
 
+## Redes do bairro (`@adatechnology/game-urban/networks`)
+Energia (MT, BT), iluminação, telecom, esgoto, drenagem e água como dado: `nodes`/`edges` no sentido do fluxo, `rules` com `resolveNetworkRules`.
+`validateNetworks(networks, { connections, buildings, obstacles, surfaceAt, groundAt })` devolve violações com código estável (`NETWORK_VIOLATION`);
+`buildNetworkGraph`/`connectedNodes`/`circuitOf` dão o grafo; `checkPoleSlots` confere as faixas do poste de distribuição. O lote entra pelo
+`UtilityConnection` do `game-contracts` (só `frame: 'world'`; `power` liga na BT). O gerador vem na T2.8b da spec 011.
+
 ## Terreno
 `urban.terrain(options)`: relevo por camadas (base ondulada, serra e mata funda com máscara, cidades niveladas, rios e lagos escavados), densidade de floresta e cor por regras em ordem. Responde `heightAt(px, py)`, `forestAt`, `colorAt`, `nearRiver`, `toWorld`/`fromWorld` e `grid(segmentos)` (coordenadas, alturas e cores da malha quadrada). `urban.drawTerrain(b, terrain)` põe a malha e o plano d'água. Os números do Vale Cinzento ficam em `game-slice/urban/valley-terrain.json` (repositório do jogo); o SDK só os usa como fixture de teste.
 
