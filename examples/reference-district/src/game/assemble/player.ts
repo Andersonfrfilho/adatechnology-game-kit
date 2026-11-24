@@ -123,7 +123,7 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
       const running = isRunning()
       avatar.root.position.set(state.x, state.y, state.z)
       avatar.root.rotation.set(0, view.yaw + Math.PI, 0)
-      avatar.update(dt, { speed: Math.hypot(state.vx, state.vz), running, crouch: state.crouch })
+      avatar.update(dt, { speed: Math.hypot(state.vx, state.vz), running, crouch: state.crouch, down: state.downTimer > 0 || !state.alive })
       avatar.root.updateMatrixWorld(true)
       // dead, the camera circles the body from outside in either mode: the whole body is drawn
       const isFirst = camera.isFirstPerson() && state.alive
