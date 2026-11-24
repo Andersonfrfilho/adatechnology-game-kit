@@ -16,7 +16,10 @@ export type UtilityConnection = {
   readonly lot: string
   readonly network: UtilityNetwork
   readonly frame: 'plan' | 'world'
-  /** Metres. Anchor, outlet or stand, as the network says. */
+  /**
+   * Metres. Anchor, outlet or stand, as the network says. For the buried networks (sewer, storm, water) `at[1]` is the ground level at
+   * that point, never the pipe: the depth of a sewer is `at[1] - invert`.
+   */
   readonly at: readonly [number, number, number]
   /** Sewer: level of the bottom of the pipe at the inspection box outlet (metres, same axis as `at[1]`). */
   readonly invert?: number
