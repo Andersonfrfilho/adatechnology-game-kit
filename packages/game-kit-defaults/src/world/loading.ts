@@ -116,6 +116,8 @@ export function createLoading(options: LoadingOptions): KitLoading {
     for (const listener of listeners) listener(now)
     if (!now) for (const wake of idlers.splice(0)) wake()
     if (!draw) return
+    // assistive technology hears that what the card covers is loading, and when it is done
+    options.container.setAttribute('aria-busy', String(now !== undefined))
     if (!now) {
       if (element) {
         element.classList.add('tr-loading-hidden')

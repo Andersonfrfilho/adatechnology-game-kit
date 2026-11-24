@@ -18,6 +18,7 @@ describe('the loading indicator', () => {
     const task = loading.begin('Building the house', { total: 4 })
     const card = container.querySelector('.tr-loading') as HTMLElement
     expect(loading.active).toBe(true)
+    expect(container.getAttribute('aria-busy')).toBe('true')
     expect(card.classList.contains('tr-loading-hidden')).toBe(false)
     expect(card.querySelector('.tr-loading-label')!.textContent).toBe('Building the house')
     expect(card.querySelector('.tr-loading-step')!.textContent).toBe('Working…')
@@ -35,6 +36,7 @@ describe('the loading indicator', () => {
     expect(loading.active).toBe(false)
     expect(loading.state()).toBeUndefined()
     expect(card.classList.contains('tr-loading-hidden')).toBe(true)
+    expect(container.getAttribute('aria-busy')).toBe('false')
     loading.dispose()
     expect(container.querySelector('.tr-loading')).toBeNull()
   })
