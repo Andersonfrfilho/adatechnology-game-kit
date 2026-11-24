@@ -211,6 +211,10 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
     patterns: urbanScene((b) => void urbanKit.neighbourhoods.composeSampleSheet(b, { ground: { color: 0x1e2124, size: 500 } })),
   }
   for (const [name, scene] of Object.entries(urbanScenes)) entries.push({ id: `urban/${name}`, run: () => urbanThree.draw(scene) })
+  // a failing lamp drawn with its own blinking lens (flickerLenses), the way a night street draws it
+  const urbanFlickering = createUrbanThree(THREE, { document: stubDocument(), flickerLenses: true })
+  const failingPole = urbanScene((b) => urbanKit.poles.get('concrete_arm').build(b, { x: 0, z: 0, dir: 1, on: true, flicker: true }))
+  entries.push({ id: 'urban/pole:concrete-failing', run: () => urbanFlickering.draw(failingPole) })
 
   // houses: the seven typologies of the Visor (seed 3, full quality), the plan drawn once; the bench is the house renderer
   registerResidential(floorplanEngine)

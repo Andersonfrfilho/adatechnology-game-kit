@@ -21,11 +21,11 @@ export const flickerLevel = (t: number, phase: number): number =>
 /**
  * The team's lamps were tuned on three.js r128 without physically correct lights: the light reached the ground as `intensity · (1 − d / distance)^decay`, with no inverse square and a
  * diffuse term without the 1/π. Today's renderer (r155+) lights by `intensity / d^decay · (1 − (d / distance)^4)^2` and a Lambert of albedo/π, so the same numbers light almost nothing
- * (a 1.3 sodium lamp 7 m up gave the street ~0.5 and now gives ~0.01). This is the intensity that lights the ground at the foot of the lamp (d = its height `y`) exactly as the page did;
+ * (a 1.3 sodium lamp 7 m up gave the street ~0.5 and now gives ~0.01). This is the intensity that lights the ground at `reference` metres exactly as the page did (default the foot of the lamp, d = its height `y`; a searchlight passes the length of its beam to where it lands);
  * nearer it is brighter and farther it falls off faster than the page, as a real lamp does.
  */
-export function physicalIntensityOf(part: Pick<LightPart, 'intensity' | 'distance' | 'decay' | 'y'>): number {
-  const foot = Math.max(part.y, 0.5)
+export function physicalIntensityOf(part: Pick<LightPart, 'intensity' | 'distance' | 'decay' | 'y'>, reference: number = part.y): number {
+  const foot = Math.max(reference, 0.5)
   const legacyFalloff = part.distance > 0 ? Math.max(0, 1 - foot / part.distance) ** part.decay : 1
   const window = part.distance > 0 ? Math.max(1e-6, 1 - (foot / part.distance) ** 4) ** 2 : 1
   return (part.intensity * Math.PI * legacyFalloff * foot ** part.decay) / window

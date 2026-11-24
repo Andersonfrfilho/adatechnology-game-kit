@@ -10,10 +10,14 @@ const UINT32 = 2 ** 32
 /** Salt of the flicker phase, so it is not the same roll as the lamp's state. */
 const PHASE_SALT = 0x5f3759df
 
+/** The seed's 64 bits, as two 32-bit words: a large or fractional seed keeps every bit (no `| 0` truncation). */
+const SEED_BITS = new DataView(new ArrayBuffer(8))
+
 /** FNV-1a of the seed and the spot (centimetres), into [0, 1). */
 const hashLamp = (seed: number, x: number, z: number): number => {
+  SEED_BITS.setFloat64(0, seed)
   let h = 2166136261
-  for (const value of [seed | 0, Math.round(x * 100), Math.round(z * 100)]) {
+  for (const value of [SEED_BITS.getUint32(0), SEED_BITS.getUint32(4), Math.round(x * 100), Math.round(z * 100)]) {
     h ^= value & 0xffff
     h = Math.imul(h, 16777619)
     h ^= (value >>> 16) & 0xffff
@@ -22,7 +26,7 @@ const hashLamp = (seed: number, x: number, z: number): number => {
   return (h >>> 0) / UINT32
 }
 
-/** The phase (radians, [0, 2π)) a failing lamp at `x, z` flickers on: its lens and its light share it, and two lamps rarely blink in step. */
+/** The phase (radians, [0, 2π)) a failing lamp at `x, z` flickers on: its lens and its light share it. A drawer may round it: game-urban-three rounds it to 4 groups, so about a quarter of the failing lamps blink in step. */
 export const flickerPhaseOf = (x: number, z: number): number => hashLamp(PHASE_SALT, x, z) * 2 * Math.PI
 
 /** Throws when the shares are not `0 <= flicker <= lit <= 1`. */

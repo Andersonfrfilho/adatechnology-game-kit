@@ -61,6 +61,6 @@ export function drawStreets({ THREE, urban, plan, site, lights, seed, isNight, l
       for (const building of urban.cities.fillBlock(b, block)) buildings.push({ rect: [building.x - building.width / 2, building.z - building.depth / 2, building.x + building.width / 2, building.z + building.depth / 2], height: building.height })
     }
   }
-  const drawn = createUrbanThree(THREE, { document, lights }).draw(b.scene())
+  const drawn = createUrbanThree(THREE, { document, lights, physicalLights: true, flickerLenses: true }).draw(b.scene())
   return { drawn, buildings }
 }

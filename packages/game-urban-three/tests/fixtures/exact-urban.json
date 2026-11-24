@@ -26,6 +26,7 @@
 "part/sandbags_z":{"hash":"797d466f","objects":2},
 "part/label":{"hash":"6334f68f","objects":2},
 "part/wires":{"hash":"dc9d4e1a","objects":2},
+"part/led_flicker_lens_dim":{"hash":"bca8b6d4","objects":8},
 "patterns":{"hash":"b3191372","objects":1032},
 "terrain":{"hash":"e9df0d6d","objects":3},
 "item/pole_led_double":{"hash":"c40978e1","objects":8},

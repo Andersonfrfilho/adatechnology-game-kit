@@ -93,19 +93,30 @@ async function checkFlicker(page) {
     .filter((light) => light.peak > 2 * light.low)
   check('pior third: street lamps lit at night (host budget slots)', lit >= 4, { lit })
   check('pior third: some lamp flickers', flickering.length > 0, { flickering: flickering.map((light) => [Math.round(light.x), Math.round(light.z)]) })
-  const target = flickering.sort((a, b) => Math.hypot(a.x - 46, a.z) - Math.hypot(b.x - 46, b.z))[0]
+  /** Where a lamp head stands on the screen now, or null when it is behind the camera or off the screen. @param {{ x: number, y: number, z: number }} light */
+  const headOnScreen = (light) =>
+    page.evaluate(({ x, y, z }) => {
+      const district = window.__district?.district
+      if (!district) return null
+      const at = new district.THREE.Vector3(x, y, z).project(district.world.view.camera)
+      if (at.z > 1 || Math.abs(at.x) > 0.9 || Math.abs(at.y) > 0.9) return null
+      return { x: Math.round(((at.x + 1) / 2) * window.innerWidth), y: Math.round(((1 - at.y) / 2) * window.innerHeight) }
+    }, { x: light.x, y: light.y + 0.3, z: light.z })
+  // the player walks 10 m from a failing lamp and looks at it, nearest the street's start first, until a head is on the screen (the horde may be in the way of one)
+  let target = null
+  let head = null
+  for (const light of flickering.sort((a, b) => Math.hypot(a.x - 46, a.z) - Math.hypot(b.x - 46, b.z))) {
+    const from = { x: light.x - 10, z: light.z > 0 ? light.z - 6 : light.z + 6 }
+    await page.evaluate(({ from, light }) => window.__district?.place({ x: from.x, z: from.z, yaw: Math.atan2(-(light.x - from.x), -(light.z - from.z)), pitch: 0.2 }), { from, light })
+    await page.waitForTimeout(2500)
+    target = light
+    head = await headOnScreen(light)
+    if (head) break
+  }
   if (!target) return
-  const from = { x: target.x - 10, z: target.z > 0 ? target.z - 6 : target.z + 6 }
-  await page.evaluate(({ from, target }) => window.__district?.place({ x: from.x, z: from.z, yaw: Math.atan2(-(target.x - from.x), -(target.z - from.z)), pitch: 0.2 }), { from, target })
-  await page.waitForTimeout(2500)
-  // the head is read on the prints themselves: a blink is shorter than taking a print, so the light's state read beside it does not say what the print shows
-  const head = await page.evaluate(({ x, y, z }) => {
-    const district = window.__district?.district
-    if (!district) return null
-    const at = new district.THREE.Vector3(x, y, z).project(district.world.view.camera)
-    return { x: Math.round(((at.x + 1) / 2) * window.innerWidth), y: Math.round(((1 - at.y) / 2) * window.innerHeight) }
-  }, { x: target.x, y: target.y + 0.3, z: target.z })
+  check('pior third: a failing lamp\'s head is on the screen', head !== null, { lamp: [Math.round(target.x), Math.round(target.z)], head })
   if (!head) return
+  // the head is read on the prints themselves: a blink is shorter than taking a print, so the light's state read beside it does not say what the print shows
   const reader = await page.context().newPage()
   /** @param {Buffer} image */
   const brightnessAt = (image) =>
@@ -123,7 +134,7 @@ async function checkFlicker(page) {
       let sum = 0
       for (let index = 0; index < pixels.length; index += 4) sum += Math.max(pixels[index] ?? 0, pixels[index + 1] ?? 0, pixels[index + 2] ?? 0)
       return sum / (pixels.length / 4)
-    }, { data: image.toString('base64'), x: head.x, y: head.y })
+    }, { data: image.toString('base64'), x: head?.x ?? 0, y: head?.y ?? 0 })
   /** @type {{ image: Buffer, level: number } | null} */
   let bright = null
   /** @type {{ image: Buffer, level: number } | null} */
@@ -158,7 +169,6 @@ for (const scenario of SCENARIOS) {
         await page.waitForTimeout(2500)
       }
       await page.screenshot({ path: join(shots, `${scenario}-${camera.name}.png`) })
-      if (scenario === 'pior' && camera.name === 'third') await checkFlicker(page)
       if (scenario === 'tipico' && camera.name === 'third') {
         const url = await page.evaluate(() => window.__district?.planSheet() ?? '')
         writeFileSync(join(shots, 'plan-sheet-debug.png'), Buffer.from(url.split(',')[1] ?? '', 'base64'))
@@ -166,6 +176,14 @@ for (const scenario of SCENARIOS) {
     }
     check(`${label}: no console error`, errors.length === 0, errors.slice(0, 5))
     await context.close()
+    if (scenario === 'pior' && camera.name === 'third') {
+      // the same night with the horde held back (`roteiro=1`): 2000 zombies kill the player before the lamp prints, and a dead player's camera does not turn
+      const night = await open('cena=pior&camera=third&roteiro=1')
+      await night.page.waitForTimeout(settleMs)
+      await checkFlicker(night.page)
+      check('pior third (no horde): no console error', night.errors.length === 0, night.errors.slice(0, 5))
+      await night.context.close()
+    }
   }
 }
 await browser.close()

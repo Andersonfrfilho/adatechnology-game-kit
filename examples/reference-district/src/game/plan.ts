@@ -57,8 +57,10 @@ export function parsePlan(json: unknown): CityPlanInput {
 /** The plan of the reference district, read from `data/recorte-1.plan.json`. */
 export const referencePlan: CityPlanInput = parsePlan(planJson)
 
-/** A `game-urban` kit that knows the reference plan (`urban.cities.layout(referencePlan.id)`). */
-export function createReferenceUrban(): UrbanKit {
-  // every lamp that is on becomes a source of the host's LightBudget, which lights only the nearest ones (its fixed slots): the urban allowance (the first 16 in draw order) would pick far ones
-  return createUrban({ lights: { budget: Number.POSITIVE_INFINITY }, packs: { cityPlans: [referencePlan] } })
+/**
+ * A `game-urban` kit that knows the reference plan (`urban.cities.layout(referencePlan.id)`). With `hostLights` (the scene is drawn through the host's LightBudget) every lamp that is on becomes a
+ * source, and the budget's fixed slots light only the nearest ones; without it the package's own allowance (the first 16 in draw order) stays the cap.
+ */
+export function createReferenceUrban({ hostLights = false }: { readonly hostLights?: boolean } = {}): UrbanKit {
+  return createUrban({ ...(hostLights ? { lights: { budget: Number.POSITIVE_INFINITY } } : {}), packs: { cityPlans: [referencePlan] } })
 }

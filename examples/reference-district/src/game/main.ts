@@ -47,7 +47,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const scene = world.view.scene
   const isNight = options.hour >= NIGHT_FROM_HOUR || options.hour < NIGHT_UNTIL_HOUR
 
-  const streets = drawStreets({ THREE, urban: createReferenceUrban(), plan, site, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
+  const streets = drawStreets({ THREE, urban: createReferenceUrban({ hostLights: true }), plan, site, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(streets.drawn.root)
   const houses = createHouses({ THREE, world, scene, site })
   const props = createProps({ THREE, world, scene, site })

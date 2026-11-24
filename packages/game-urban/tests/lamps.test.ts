@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { lampStateOf } from '../src'
+import { flickerPhaseOf, lampStateOf } from '../src'
 
 const spots = Array.from({ length: 2000 }, (_, index) => ({ x: (index % 50) * 32.5, z: Math.floor(index / 50) * 17.25 }))
 
@@ -20,6 +20,19 @@ describe('lampStateOf', () => {
     const of = (seed: number) => spots.map((spot) => lampStateOf({ seed, ...spot, shares: { lit: 0.7, flicker: 0.2 } }))
     expect(of(11)).toEqual(of(11))
     expect(of(11)).not.toEqual(of(12))
+  })
+
+  it('uses every bit of a large or fractional seed', () => {
+    const of = (seed: number) => spots.map((spot) => lampStateOf({ seed, ...spot, shares: { lit: 0.5, flicker: 0.2 } }))
+    expect(of(2 ** 40 + 7)).not.toEqual(of(7))
+    expect(of(7.5)).not.toEqual(of(7))
+    expect(of(2 ** 40 + 7)).toEqual(of(2 ** 40 + 7))
+  })
+
+  it('gives a failing lamp a phase in [0, 2π) that depends on the spot', () => {
+    const phases = spots.slice(0, 200).map((spot) => flickerPhaseOf(spot.x, spot.z))
+    expect(phases.every((phase) => phase >= 0 && phase < 2 * Math.PI)).toBe(true)
+    expect(new Set(phases.map((phase) => Math.floor(phase * 2))).size).toBeGreaterThan(8)
   })
 
   it('lights every lamp at lit 1 and none at lit 0', () => {
