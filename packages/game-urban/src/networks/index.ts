@@ -4,6 +4,8 @@
  * validator. The lot side is the `UtilityConnection` of game-contracts.
  */
 export { CONNECTION_NETWORK, EDGE_CLASS, EDGE_NETWORK, NETWORK_ENDS, NETWORK_FLOW, isAerialEdgeKind } from './classes'
+export { NETWORK_VIOLATION } from './codes'
+export type { NetworkViolation, NetworkViolationCode } from './codes'
 export { buildNetworkGraph, circuitOf, connectedNodes, edgeLength } from './graph'
 export type { NetworkGraph } from './graph'
 export { DEFAULT_NETWORK_RULES, diversifiedDemand, pickTransformer, resolveNetworkRules } from './rules'
@@ -26,3 +28,5 @@ export type {
   NetworkSurface,
   UtilityNetworks,
 } from './types'
+export { validateNetworks } from './validate'
+export type { ValidateNetworksOptions } from './validate-context'
