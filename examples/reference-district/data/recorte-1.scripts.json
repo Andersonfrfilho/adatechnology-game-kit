@@ -1,0 +1,88 @@
+{
+  "scenarios": {
+    "tipico": {"zombies": 500, "weather": "overcast", "timeOfDay": "day"},
+    "pior": {"zombies": 2000, "weather": "rain", "timeOfDay": "night"},
+    "caos": {"zombies": 500, "weather": "overcast", "timeOfDay": "day", "note": "Premissa: a spec 011 não fixa clima nem hora do caos; vale o mesmo do tipico."}
+  },
+  "scripts": [
+    {
+      "id": "street", "scenarios": ["tipico", "pior"], "seed": 21,
+      "camera": [
+        {"at": 0, "mode": "shoulder"},
+        {"at": 35, "mode": "first"},
+        {"at": 65, "mode": "shoulder"},
+        {"at": 120, "mode": "vehicle"}
+      ],
+      "path": [
+        {"at": 0, "x": 20, "z": 0},
+        {"at": 25, "x": 80, "z": 0},
+        {"at": 30, "x": 80, "z": 6},
+        {"at": 45, "x": 80, "z": 16},
+        {"at": 65, "x": 80, "z": 16},
+        {"at": 70, "x": 80, "z": 3},
+        {"at": 80, "x": 80, "z": 3},
+        {"at": 120, "x": 64, "z": 3},
+        {"at": 150, "x": 218, "z": 3}
+      ],
+      "phases": [
+        {"id": "load", "from": -1, "to": 0},
+        {"id": "walk", "from": 0, "to": 25},
+        {"id": "enter", "from": 25, "to": 45},
+        {"id": "shoot", "from": 45, "to": 65},
+        {"id": "grenade", "from": 65, "to": 80},
+        {"id": "horde", "from": 80, "to": 120},
+        {"id": "drive", "from": 120, "to": 150}
+      ],
+      "events": [
+        {"at": 2, "kind": "horde_release", "zone": "street_far", "share": 0.05},
+        {"at": 26, "kind": "door", "door": "front_gate", "open": true},
+        {"at": 32, "kind": "door", "door": "front_door", "open": true},
+        {"at": 41, "kind": "open_container", "container": "wardrobe"},
+        {"at": 47, "kind": "shoot", "shooter": "player", "weapon": "glock_17", "to": [110, 2], "shots": 8, "note": "da janela, nos zumbis"},
+        {"at": 52, "kind": "shoot", "shooter": "player", "weapon": "glock_17", "to": [62, -7.5], "shots": 4, "note": "no vidro da casa em frente"},
+        {"at": 55, "kind": "shoot", "shooter": "player", "weapon": "glock_17", "to": [86, 32.5], "shots": 3, "note": "no muro"},
+        {"at": 58, "kind": "shoot", "shooter": "player", "weapon": "imbel_ia2", "to": [110, 0], "shots": 30, "note": "rajada de fuzil"},
+        {"at": 66, "kind": "door", "door": "front_door", "open": true},
+        {"at": 72, "kind": "throw", "explosive": "m67", "to": [70, 3], "note": "junto ao muro e ao carro parado"},
+        {"at": 80, "kind": "horde_release", "zone": "street_east", "share": 0.6},
+        {"at": 85, "kind": "shoot", "shooter": "player", "weapon": "imbel_ia2", "to": [110, 0], "shots": 30},
+        {"at": 95, "kind": "horde_release", "zone": "street_far", "share": 0.35},
+        {"at": 100, "kind": "shoot", "shooter": "player", "weapon": "imbel_ia2", "to": [100, 0], "shots": 30},
+        {"at": 110, "kind": "shoot", "shooter": "player", "weapon": "glock_17", "to": [90, 0], "shots": 15},
+        {"at": 120, "kind": "door", "door": "car_door", "open": true},
+        {"at": 120.5, "kind": "vehicle_drive", "vehicle": "compact_hatch", "path": [[68, 3], [218, 3]], "speed": 5.2, "note": "150 m atropelando"}
+      ]
+    },
+    {
+      "id": "crossing", "scenarios": ["caos"], "seed": 31,
+      "camera": [
+        {"at": 0, "mode": "shoulder"},
+        {"at": 14, "mode": "first"},
+        {"at": 22, "mode": "shoulder"}
+      ],
+      "path": [
+        {"at": 0, "x": -130, "z": 0},
+        {"at": 14, "x": -128, "z": 0},
+        {"at": 22, "x": -128, "z": 0},
+        {"at": 40, "x": -130, "z": 0}
+      ],
+      "phases": [
+        {"id": "caos_calm", "from": 0, "to": 6},
+        {"id": "caos_breach", "from": 6, "to": 14},
+        {"id": "caos_fire", "from": 14, "to": 22},
+        {"id": "caos_blast", "from": 22, "to": 30},
+        {"id": "caos_armor", "from": 30, "to": 40}
+      ],
+      "events": [
+        {"at": 6, "kind": "horde_release", "zone": "cross_north", "share": 0.6},
+        {"at": 9, "kind": "horde_release", "zone": "cross_east", "share": 0.4, "pending": "L17", "note": "a barricada cede"},
+        {"at": 14, "kind": "fire_line", "points": [[-92, -4], [-92, 4]], "pending": "L15", "note": "fogo no chão que fere a horda"},
+        {"at": 15, "kind": "shoot", "shooter": "police", "weapon": "glock_17", "to": [-92, 0], "shots": 10, "pending": "L16", "note": "policiais atiram"},
+        {"at": 16, "kind": "shoot", "shooter": "player", "weapon": "imbel_ia2", "to": [-92, 0], "shots": 30},
+        {"at": 22, "kind": "throw", "explosive": "m67", "to": [-112, -3], "note": "junto à viatura"},
+        {"at": 25, "kind": "detonate", "explosive": "c4", "to": [-108, 3]},
+        {"at": 30, "kind": "vehicle_drive", "vehicle": "armored_truck", "path": [[-100, -90], [-100, 0], [-100, 90]], "speed": 18, "note": "atropela a horda"}
+      ]
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 import type * as THREE_NS from 'three'
 import { createDestruction, JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
-import { createAudioEngine, createAudioSink, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
+import { createAudioEngine, createAudioSink, createRaycastOcclusion, loadKitSamples, loadUserSamples } from '@adatechnology/game-audio'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import { DEFAULT_FRAME_TARGET_MS, frameTargetOf, registerFrameQueues, workBudgetOf } from './frame-queues'
-import { createWorldOcclusion } from './world-occlusion'
 import { registerFittedSounds } from '@adatechnology/game-audio/fitted'
+import { createObjectRegistry, createReportPort } from '@adatechnology/game-kit-defaults/world'
 import { DESTRUCTION_SOUND_KEYS, DESTRUCTION_VOICE_GROUPS, MIN_PIECE_MASS_KG, blastSoundIds, createDestructionRenderer, createDestructionSound, dragSoundKey, impactKey, impactSoundIds, impactSoundKeys, isPhysicsLoop, specFromObject3D } from '@adatechnology/game-destruction-three'
 import type { SoundDetail } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
@@ -420,7 +420,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const quality = options.quality ?? 'medium'
   const pointScale = height() / (2 * Math.tan((camera.fov * Math.PI) / 360))
   const rendererPieces = new Map<string, Piece>()
-  const entries = new Map<string, Entry>()
+  const entries = createObjectRegistry<Entry>()
   const splitOf = new Map<string, Entry>()
   let simTime = 0
   const log = createLog({ exportCancelled: () => t('log.export_cancelled') })
@@ -428,7 +428,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   // sound: one engine for the room (no AudioContext until the first sound), and the destruction renderer's sound keys play on it
   const ownAudio = options.audio === undefined
-  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createWorldOcclusion(world) } }))
+  const audio: AudioEngine | null = options.audio === false ? null : (options.audio ?? createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createRaycastOcclusion(world) } }))
   const destructionSound = audio ? createDestructionSound(audio) : null
   // the kit's recorded files (game-audio assets/sfx), served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
   if (audio && options.samplesBaseUrl !== null) {
@@ -730,9 +730,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fire('event', ev)
   })
 
-  const action = (type: string, text: string, extra: Partial<{ objectId: string; itemId: string; part: string; data: Record<string, unknown>; material: string }> = {}): void => {
-    log.add({ channel: 'action', type, text, ...extra })
-  }
+  const reports = createReportPort()
+  reports.on((report) => log.add({ channel: 'action', ...report, text: report.text ?? report.type, ...(report.data ? { data: { ...report.data } } : {}) }))
+  const action = (type: string, text: string, extra: Partial<{ objectId: string; itemId: string; part: string; data: Record<string, unknown>; material: string }> = {}): void => reports.emit({ type, text, ...extra })
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Flush: events of the frame -> log, fluids glue, fire glue
@@ -957,12 +957,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       secondary: () => {
         // with a tool in each hand the right button is the left hand's trigger
-        if (offTool && !heldEntry) {
+        if (offTool && !entries.held) {
           offHeld = true
           offFirst = true
           return
         }
-        if (heldEntry || carriedTool) throwHeld()
+        if (entries.held || carriedTool) throwHeld()
         else grab()
       },
       secondaryUp: () => {
@@ -1618,7 +1618,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const removeEntry = (id: string): void => {
     const e = entries.get(id)
     if (!e) return
-    if (heldEntry === e) releaseHeld()
+    if (entries.held === e) releaseHeld()
     for (let i = playing.length - 1; i >= 0; i--) if (playing[i].entry === e) playing.splice(i, 1)
     if (e.containerId) {
       fluidView.unbindContainer(e.containerId)
@@ -1665,7 +1665,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const clearEverything = (): void => releasingTogether(clearEverythingNow)
   const clearEverythingNow = (): void => {
-    if (heldEntry || heldPiece) releaseHeld()
+    if (entries.held || heldPiece) releaseHeld()
     carriedTool = null
     bag.releaseHand()
     useItemPlayer = null
@@ -1704,7 +1704,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const resetAll = (): void => {
     for (const e of entries.values()) {
-      if (heldEntry === e) continue
+      if (entries.held === e) continue
       world.reset(e.so.objectId)
       renderer.restore(e.so.objectId)
       e.follower?.restore?.()
@@ -2157,7 +2157,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const FAR: Quat = [0, 0, 0, 1]
   /** Run `fn` with the held object moved away, so that rays and bullets do not hit what the player carries. */
   const withoutHeld = <T,>(fn: () => T): T => {
-    const e = heldEntry
+    const e = entries.held
     if (!e || !world.has(e.so.objectId)) return fn()
     const p = e.so.root.position
     const q = e.so.root.quaternion
@@ -3171,7 +3171,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Grabbing, carrying, throwing
   // ---------------------------------------------------------------------------------------------------------------------------------------
-  let heldEntry: Entry | null = null
   let heldPiece: Piece | null = null
   let heldName = ''
   let heldYaw = 0
@@ -3200,7 +3199,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     afterOpening = null
     twisting = null
     twistHand = null
-    heldEntry = null
+    entries.release()
     heldPiece = null
     heldTilt = 0
   }
@@ -3349,7 +3348,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return picked
     }
     heldPiece = piece
-    heldEntry = entries.get(r.object) ?? null
+    entries.hold(r.object)
     heldName = nameOf(r.object)
     piece.held = true
     piece.sleeping = false
@@ -3365,7 +3364,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
-    playSound(pickupSoundOf(heldEntry?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
+    playSound(pickupSoundOf(entries.held?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
     fire('grab', { held: true, objectId: r.object })
     return true
@@ -3482,7 +3481,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const here = player.position
     const near: string[] = [...loadout]
     for (const other of entries.values()) {
-      if (other === heldEntry || other.arena) continue
+      if (other === entries.held || other.arena) continue
       const p = other.so.root.position
       if (Math.hypot(p.x - here[0], p.z - here[2]) <= TOOL_REACH) near.push(other.so.itemId)
     }
@@ -3528,7 +3527,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const crouchOnC = (options.crouch?.keys ?? ['KeyC']).includes('KeyC')
 
   const useItem = (useId: string): boolean => {
-    const e = heldEntry
+    const e = entries.held
     if (!e?.containerId) return false
     const def = itemUseDefs.find((u) => u.id === useId)
     if (!def) return false
@@ -3584,7 +3583,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const updateItemUse = (dt: number): void => {
     if (!useItemPlayer) return
-    const e = heldEntry
+    const e = entries.held
     const c = e?.containerId ? fluids.container(e.containerId) : undefined
     const before = c?.liters
     useItemPlayer.update(dt)
@@ -3861,15 +3860,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         break
       case 'KeyF': {
         // Shift+F is the second use while C crouches
-        const use = heldEntry?.uses[e.shiftKey && crouchOnC ? 1 : 0]
+        const use = entries.held?.uses[e.shiftKey && crouchOnC ? 1 : 0]
         if (use) useItem(use)
         break
       }
       case 'KeyC':
-        if (heldEntry?.uses[1] && !crouchOnC) useItem(heldEntry.uses[1])
+        if (entries.held?.uses[1] && !crouchOnC) useItem(entries.held.uses[1])
         break
       case 'KeyV':
-        if (heldEntry?.uses[2]) useItem(heldEntry.uses[2])
+        if (entries.held?.uses[2]) useItem(entries.held.uses[2])
         else if (avatar && !e.shiftKey) setCameraMode(cameraMode === 'first' ? 'third' : 'first')
         else kick()
         break
@@ -3894,7 +3893,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         }
         break
       case 'KeyH': {
-        const w = (heldEntry ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
+        const w = (entries.held ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
         if (w) equip(w)
         break
       }
@@ -4114,7 +4113,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const vel: Vec3 | undefined = sdt > 0 ? [(p.x - e.last[0]) / sdt, (p.y - e.last[1]) / sdt, (p.z - e.last[2]) / sdt] : undefined
       e.last = [p.x, p.y, p.z]
       // while the player's mouth covers the opening to drink, keep the fluid simulation upright so the drink does not spill onto the floor
-      const rot: Quat = drinkingHeld && e === heldEntry ? [0, 0, 0, 1] : [q.x, q.y, q.z, q.w]
+      const rot: Quat = drinkingHeld && e === entries.held ? [0, 0, 0, 1] : [q.x, q.y, q.z, q.w]
       fluids.setTransform(e.containerId, [p.x, p.y, p.z], rot, vel)
     }
   }
@@ -4311,7 +4310,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       pages: Math.max(1, Math.ceil(loadout.length / 10)),
       status: simTime - statusAt < 2 ? statusLine : '',
       progress: progress ? { label: progress.label, value: progress.value } : null,
-      held: heldEntry || heldPiece ? { name: heldName, uses: (heldEntry?.uses ?? []).map((u, i) => ({ key: ['F', crouchOnC ? 'Shift+F' : 'C', 'V'][i] ?? '', label: S.text[`use.${u}`] ?? u })), weapon: heldEntry?.item?.weapon ? arsenal.name(heldEntry.item.weapon) : undefined, using: useItemName } : null,
+      held: entries.held || heldPiece ? { name: heldName, uses: (entries.held?.uses ?? []).map((u, i) => ({ key: ['F', crouchOnC ? 'Shift+F' : 'C', 'V'][i] ?? '', label: S.text[`use.${u}`] ?? u })), weapon: entries.held?.item?.weapon ? arsenal.name(entries.held.item.weapon) : undefined, using: useItemName } : null,
       inspect: inspectInfo(),
       animations: animationsOf(),
       locked: player.locked,
@@ -4340,7 +4339,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const restPose = new WeakMap<THREE_NS.Object3D, { p: Vec3; r: Vec3 }>()
   const ZERO: Vec3 = [0, 0, 0]
   const animTarget = (): Entry | undefined => {
-    if (heldEntry) return heldEntry
+    if (entries.held) return entries.held
     const r = inspectTarget()
     return r ? entryOf(r.object) : undefined
   }
@@ -5099,7 +5098,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       },
       equip: (weapon) => {
         if (!arsenal.weapons.has(weapon)) return false
-        if (heldEntry) releaseHeld()
+        if (entries.held) releaseHeld()
         equip(weapon)
         room.waitUntilReady()
         return true

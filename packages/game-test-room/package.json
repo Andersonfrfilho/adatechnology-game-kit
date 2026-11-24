@@ -54,6 +54,7 @@
     "@adatechnology/game-graphics": "workspace:^",
     "@adatechnology/game-graphics-three": "workspace:^",
     "@adatechnology/game-items": "workspace:^",
+    "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-player": "workspace:^",
     "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-runtime": "workspace:^",

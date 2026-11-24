@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
   - 'tools/*'
+  - 'examples/reference-district'
   - 'apps/*'
 
 onlyBuiltDependencies:

@@ -1,10 +1,11 @@
+// The integration test of createRaycastOcclusion (game-audio) over a real destruction world and terrain: the unit tests over a fake world live in game-audio.
 import { describe, expect, it, vi } from 'vitest'
 import type { AudioEngineOptions } from '@adatechnology/game-audio'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createTerrain, createTerrainImpl } from '@adatechnology/game-terrain'
 import type { SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
 import type { DestructibleImpl, DestructibleSpec, ObjectState, PartSpec, RaycastOptions } from '@adatechnology/game-destruction'
-import { OCCLUDER_MIN_RADIUS } from '../src/world-occlusion'
+import { OCCLUDER_MIN_RADIUS } from '@adatechnology/game-audio'
 import { makeRoom } from './helpers'
 
 /** Where two parts overlap, each end of the path places the face between them within the default step of 1 mm. */
@@ -65,7 +66,7 @@ describe('the room hears through its walls', () => {
   })
 })
 
-describe('createWorldOcclusion over a plain slab', () => {
+describe('createRaycastOcclusion over a plain slab', () => {
   const slab = { minZ: -5.12, maxZ: -5 }
   const world = {
     raycast(origin: [number, number, number], direction: [number, number, number], maxDistance = Infinity) {
@@ -79,8 +80,8 @@ describe('createWorldOcclusion over a plain slab', () => {
   }
 
   it('measures the thickness from the way in and the way out, and counts nothing when the path is clear', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
-    const query = createWorldOcclusion(world)
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
+    const query = createRaycastOcclusion(world)
     const hits = query([0, 1, 0], [0, 1, -10])
     expect(hits).toHaveLength(1)
     expect(hits[0]?.material).toBe('brick')
@@ -90,7 +91,7 @@ describe('createWorldOcclusion over a plain slab', () => {
   })
 })
 
-describe('createWorldOcclusion with layers side by side', () => {
+describe('createRaycastOcclusion with layers side by side', () => {
   type Layer = { readonly part: string; readonly material: string; readonly near: number; readonly far: number }
   const layers: readonly Layer[] = [
     { part: 'brick', material: 'brick', near: -5, far: -5.12 },
@@ -111,14 +112,14 @@ describe('createWorldOcclusion with layers side by side', () => {
   }
 
   it('does not step over a thin layer right behind the one before it', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
-    const hits = createWorldOcclusion(world)([0, 1, 0], [0, 1, -10])
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
+    const hits = createRaycastOcclusion(world)([0, 1, 0], [0, 1, -10])
     expect(hits.map((hit) => hit.material)).toEqual(['brick', 'glass'])
     expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
   })
 })
 
-describe('createWorldOcclusion from a source buried in the ground', () => {
+describe('createRaycastOcclusion from a source buried in the ground', () => {
   type Vec = [number, number, number]
   // the terrain answers a point inside it with a hit on its own surface at distance 0, as the ground impl does
   const GROUND = { near: -10, far: 3 }
@@ -148,15 +149,15 @@ describe('createWorldOcclusion from a source buried in the ground', () => {
   }
 
   it('leaves the ground in a few rays, not one per millimetre, and still finds the glass right behind it', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     rays = 0
-    const hits = createWorldOcclusion(world)([0, -0.5, -9], [0, -0.5, 8])
+    const hits = createRaycastOcclusion(world)([0, -0.5, -9], [0, -0.5, 8])
     expect(hits.map((hit) => hit.material)).toEqual(['dirt', 'glass'])
     expect(rays).toBeLessThan(200)
   })
 })
 
-describe('createWorldOcclusion over a destruction world after a blast', () => {
+describe('createRaycastOcclusion over a destruction world after a blast', () => {
   const wallSpec = (): DestructibleSpec => ({ name: 'wall', parts: [{ id: 'bricks', material: 'brick', shape: { kind: 'box', size: [4, 2.6, 0.12] }, position: [0, 0, 0] }] })
   const brickSpec = (): DestructibleSpec => ({ name: 'brick', parts: [{ id: 'unit', material: 'brick', shape: { kind: 'box', size: [0.19, 0.09, 0.057] }, position: [0, 0, 0] }] })
   const boards = (): DestructibleSpec => ({
@@ -171,11 +172,11 @@ describe('createWorldOcclusion over a destruction world after a blast', () => {
   const EAR: [number, number, number] = [0, 1.2, 8]
 
   it('counts the wall with the same loss as before, and neither the debris nor the loose piece lying on the path', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const { totalLossDb } = await import('@adatechnology/game-audio')
     const bare = createDestruction()
     bare.add(wallSpec(), { position: [0, 1.3, 0] })
-    const before = createWorldOcclusion(bare)(SOURCE, EAR)
+    const before = createRaycastOcclusion(bare)(SOURCE, EAR)
     expect(before.map((hit) => hit.material)).toEqual(['brick'])
 
     const after = createDestruction()
@@ -189,7 +190,7 @@ describe('createWorldOcclusion over a destruction world after a blast', () => {
     expect(bricks).toContain(after.raycast(SOURCE, [0, 0, 1])?.object)
     expect(after.raycast([0, 1.2, 3.5], [0, 0, 1])?.object).toBe(loose)
 
-    const through = createWorldOcclusion(after)(SOURCE, EAR)
+    const through = createRaycastOcclusion(after)(SOURCE, EAR)
     // the board left standing still occludes; the bricks on the floor and the loose board do not
     expect(through.map((hit) => hit.material)).toEqual(['brick', 'wood_hard'])
     expect(through[0]).toEqual(before[0])
@@ -197,7 +198,7 @@ describe('createWorldOcclusion over a destruction world after a blast', () => {
   })
 })
 
-describe('createWorldOcclusion walking out of a solid matches the walk of one millimetre at a time', () => {
+describe('createRaycastOcclusion walking out of a solid matches the walk of one millimetre at a time', () => {
   type Vec = [number, number, number]
   /** `ordinary`: answers only at its entry face, never from inside (a plain object, unlike an impl's surface). */
   type Layer = { part: string; near: number; far: number; ordinary?: true }
@@ -250,9 +251,9 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
   ]
   for (const scene of CASES) {
     it(scene.name, async () => {
-      const { createWorldOcclusion } = await import('../src/world-occlusion')
+      const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
       const { world, counter } = worldOf(scene.layers)
-      const hits = createWorldOcclusion(world)([0, 0, scene.from], [0, 0, scene.to])
+      const hits = createRaycastOcclusion(world)([0, 0, scene.from], [0, 0, scene.to])
       expect(hits.map((hit) => hit.material)).toEqual(millimetreWalk(scene.layers, scene.from, scene.to))
       expect(counter.rays).toBeLessThan(scene.maxRays ?? 400)
     })
@@ -282,7 +283,7 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
   const hasBuriedOrdinary = (layers: readonly Layer[]): boolean => layers.some((a) => a.ordinary && layers.some((b) => !b.ordinary && b.near < a.near && a.far < b.far))
 
   it('counts the same layers as the walk of one millimetre over 300 seeded random scenes, each read both ways', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const random = seeded(20261120)
     let solidOverlaps = 0
     let buriedOrdinary = 0
@@ -293,7 +294,7 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
       if (hasBuriedOrdinary(scene)) buriedOrdinary++
       for (const layers of [scene, mirrored(scene)]) {
         const { world, counter } = worldOf(layers)
-        const hits = createWorldOcclusion(world)([0, 0, SCENE.from], [0, 0, SCENE.to])
+        const hits = createRaycastOcclusion(world)([0, 0, SCENE.from], [0, 0, SCENE.to])
         expect(hits.map((hit) => hit.material), `scene ${index}: ${JSON.stringify(layers)}`).toEqual(millimetreWalk(layers, SCENE.from, SCENE.to))
         mostRays = Math.max(mostRays, counter.rays)
       }
@@ -306,9 +307,9 @@ describe('createWorldOcclusion walking out of a solid matches the walk of one mi
   })
 })
 
-describe('createWorldOcclusion from a source buried deep in the ground', () => {
+describe('createRaycastOcclusion from a source buried deep in the ground', () => {
   it('leaves 100 m of ground in tens of rays and still finds the glass past it', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     let rays = 0
     const layers = [{ part: 'ground', near: -100, far: 3 }, { part: 'glass', near: 3.002, far: 3.006 }]
     const world = {
@@ -326,18 +327,18 @@ describe('createWorldOcclusion from a source buried deep in the ground', () => {
       },
       part: (_object: string, part: string) => ({ material: part }),
     }
-    const hits = createWorldOcclusion(world)([0, 0, -99], [0, 0, 8])
+    const hits = createRaycastOcclusion(world)([0, 0, -99], [0, 0, 8])
     expect(hits.map((hit) => hit.material)).toEqual(['ground', 'glass'])
     expect(rays).toBeLessThan(40)
   })
 })
 
-describe('createWorldOcclusion over air narrower than the old stride between two stretches of the same ground', () => {
+describe('createRaycastOcclusion over air narrower than the old stride between two stretches of the same ground', () => {
   type Vec = [number, number, number]
   // wherever the walk out of the ground happens to land, the wall in the gap is counted: the 1 mm walk always sees it
   for (const gap of [0.05, 0.2]) {
     it(`a gap of ${gap * 100} cm with a wall in it, from any source offset`, async () => {
-      const { createWorldOcclusion } = await import('../src/world-occlusion')
+      const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
       const layers = [{ part: 'ground', near: -10, far: 0 }, { part: 'wall', near: gap / 2 - 0.004, far: gap / 2 + 0.004 }, { part: 'ground', near: gap, far: 6 }]
       const world = {
         raycast(origin: Vec, direction: Vec, maxDistance = Infinity, options?: RaycastOptions) {
@@ -353,7 +354,7 @@ describe('createWorldOcclusion over air narrower than the old stride between two
         },
         part: (_object: string, part: string) => ({ material: part }),
       }
-      const query = createWorldOcclusion(world, { maxHits: 6 })
+      const query = createRaycastOcclusion(world, { maxHits: 6 })
       for (let offset = 0; offset < 0.3; offset += 0.0071) {
         const materials = query([0, 0, -9 - offset], [0, 0, 8]).map((hit) => hit.material)
         expect(materials, `offset ${offset}`).toEqual(['ground', 'wall', 'ground'])
@@ -362,7 +363,7 @@ describe('createWorldOcclusion over air narrower than the old stride between two
   }
 })
 
-describe('createWorldOcclusion over a destruction world with the real terrain', () => {
+describe('createRaycastOcclusion over a destruction world with the real terrain', () => {
   type Vec = [number, number, number]
   const wallSpec = (height: number): DestructibleSpec => ({ name: 'wall', parts: [{ id: 'bricks', material: 'brick', shape: { kind: 'box', size: [0.2, height, 4] }, position: [0, 0, 0] }] })
   const sceneWith = (walls: readonly Vec[], heights: readonly number[]) => {
@@ -378,18 +379,18 @@ describe('createWorldOcclusion over a destruction world with the real terrain', 
   ]
   for (const scene of CASES) {
     it(scene.name, async () => {
-      const { createWorldOcclusion } = await import('../src/world-occlusion')
+      const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
       const world = sceneWith(scene.walls, scene.heights ?? [])
-      const counted = createWorldOcclusion(world)(scene.from, scene.to).length
+      const counted = createRaycastOcclusion(world)(scene.from, scene.to).length
       const reference = worldMillimetreWalk(world, scene.from, scene.to).keys
       expect(counted, JSON.stringify(reference)).toBe(reference.length)
     })
   }
 })
 
-describe('createWorldOcclusion cost over overlapping solids', () => {
+describe('createRaycastOcclusion cost over overlapping solids', () => {
   const countRays = async (layers: readonly { part: string; near: number; far: number; ordinary?: true }[]): Promise<number> => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     let rays = 0
     const world = {
       raycast(origin: [number, number, number], direction: [number, number, number], maxDistance = Infinity, options?: RaycastOptions) {
@@ -406,7 +407,7 @@ describe('createWorldOcclusion cost over overlapping solids', () => {
       },
       part: (_object: string, part: string) => ({ material: part }),
     }
-    createWorldOcclusion(world)([0, 0, -99], [0, 0, 8])
+    createRaycastOcclusion(world)([0, 0, -99], [0, 0, 8])
     return rays
   }
 
@@ -419,15 +420,15 @@ describe('createWorldOcclusion cost over overlapping solids', () => {
   })
 })
 
-describe('createWorldOcclusion step', () => {
+describe('createRaycastOcclusion step', () => {
   it('refuses a step that would never advance', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const world = { raycast: () => null, part: () => null }
-    for (const step of [0, -0.001, Number.NaN, Number.POSITIVE_INFINITY]) expect(() => createWorldOcclusion(world, { step })).toThrow(RangeError)
+    for (const step of [0, -0.001, Number.NaN, Number.POSITIVE_INFINITY]) expect(() => createRaycastOcclusion(world, { step })).toThrow(RangeError)
   })
 })
 
-describe('createWorldOcclusion ignoring one part of one object at a time', () => {
+describe('createRaycastOcclusion ignoring one part of one object at a time', () => {
   type Vec = [number, number, number]
   /** `ordinary`: answers only at its entry face. Two layers may share a part name under different objects. */
   type Layer = { object: string; part: string; near: number; far: number; ordinary?: true }
@@ -455,10 +456,10 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
   const TO: Vec = [0, 0, 8]
 
   it('ignores the object and the part of the layer it stands in, never a part of the same name in another object', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     // the ground and the wall past it both call their part `body`: a world that compared the part alone would lose the wall with the ground
     const { world, ignoredLists } = sceneOf([{ object: 'ground', part: 'body', near: -10, far: 0 }, { object: 'wall', part: 'body', near: 0.5, far: 0.62, ordinary: true }])
-    const hits = createWorldOcclusion(world)(FROM, TO)
+    const hits = createRaycastOcclusion(world)(FROM, TO)
     expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'wall/body'])
     expect(hits[1]?.thickness).toBeCloseTo(0.12, 6)
     expect(ignoredLists.length).toBeGreaterThan(0)
@@ -466,7 +467,7 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
   })
 
   it('stops at maxHits, the last one counted found by the ray that ignores the part it is in (2) or by a plain ray (3 and up)', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const layers: Layer[] = [
       { object: 'ground', part: 'body', near: -10, far: 0 },
       { object: 'first', part: 'slab', near: 0.5, far: 0.6, ordinary: true },
@@ -476,7 +477,7 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
     const all = ['ground/body', 'first/slab', 'second/slab', 'third/slab']
     for (const maxHits of [1, 2, 3, 4, 6]) {
       const { world, ignoredLists } = sceneOf(layers)
-      const hits = createWorldOcclusion(world, { maxHits })(FROM, TO)
+      const hits = createRaycastOcclusion(world, { maxHits })(FROM, TO)
       expect(hits.map((hit) => hit.material), `maxHits ${maxHits}`).toEqual(all.slice(0, maxHits))
       // with one hit allowed the walk ends on the ground and never asks what is past it
       expect(ignoredLists.length > 0, `maxHits ${maxHits}`).toBe(maxHits > 1)
@@ -484,25 +485,25 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
   })
 
   it('cut short by maxHits, the way in and the way out count different layers and no thickness is paired', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const { world } = sceneOf([
       { object: 'ground', part: 'body', near: -10, far: 0 },
       { object: 'first', part: 'slab', near: 0.5, far: 0.6, ordinary: true },
       { object: 'second', part: 'slab', near: 1, far: 1.1, ordinary: true },
     ])
     // in: ground, first. Out, in the order of the way in: first, second. The lists are as long as each other but no place holds the same layer
-    const hits = createWorldOcclusion(world, { maxHits: 2 })(FROM, TO)
+    const hits = createRaycastOcclusion(world, { maxHits: 2 })(FROM, TO)
     expect(hits).toEqual([{ material: 'ground/body' }, { material: 'first/slab' }])
   })
 
   it('an ordinary part buried in the ground is counted from neither end, and the ground and the glass are paired with their thickness', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const { world } = sceneOf([
       { object: 'ground', part: 'body', near: -10, far: 6 },
       { object: 'pipe', part: 'shell', near: 1, far: 1.2, ordinary: true },
       { object: 'pane', part: 'glass', near: 6.002, far: 6.006, ordinary: true },
     ])
-    const hits = createWorldOcclusion(world)(FROM, TO)
+    const hits = createRaycastOcclusion(world)(FROM, TO)
     expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'pane/glass'])
     // the source is inside the ground: its way in is the source itself
     expect(hits[0]?.thickness).toBeCloseTo(15, 6)
@@ -510,29 +511,29 @@ describe('createWorldOcclusion ignoring one part of one object at a time', () =>
   })
 
   it('a part that answers from inside, buried in the ground, is counted from neither end, and the thickness is paired past it', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const { world } = sceneOf([
       { object: 'ground', part: 'body', near: -10, far: 6 },
       { object: 'rock', part: 'body', near: 1, far: 1.2 },
       { object: 'pane', part: 'glass', near: 6.002, far: 6.006, ordinary: true },
     ])
-    const hits = createWorldOcclusion(world)(FROM, TO)
+    const hits = createRaycastOcclusion(world)(FROM, TO)
     expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'pane/glass'])
     expect(hits[0]?.thickness).toBeCloseTo(15, 6)
     expect(hits[1]?.thickness).toBeCloseTo(0.004, 6)
   })
 
   it('a part half buried in the ground is paired from both ends: the overlap goes to the ground, the rest to the part', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const { world } = sceneOf([{ object: 'ground', part: 'body', near: -10, far: 2 }, { object: 'rock', part: 'body', near: 1, far: 2.5 }])
-    const hits = createWorldOcclusion(world)(FROM, TO)
+    const hits = createRaycastOcclusion(world)(FROM, TO)
     expect(hits.map((hit) => hit.material)).toEqual(['ground/body', 'rock/body'])
     expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 11)).toBeLessThan(WITHIN_ONE_STEP)
     expect(Math.abs((hits[1]?.thickness ?? Number.NaN) - 0.5)).toBeLessThan(WITHIN_ONE_STEP)
   })
 })
 
-describe('createWorldOcclusion over a destruction world with an impl of several parts', () => {
+describe('createRaycastOcclusion over a destruction world with an impl of several parts', () => {
   type Vec = [number, number, number]
   const SPANS = [
     { part: 'soil', near: -5, far: 2 },
@@ -587,10 +588,10 @@ describe('createWorldOcclusion over a destruction world with an impl of several 
   })
 
   it('the occlusion counts both parts once each and pairs their thickness from both ends', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const world = createDestruction()
     world.register(strata())
-    const hits = createWorldOcclusion(world)([0, 0, -8], [0, 0, 9])
+    const hits = createRaycastOcclusion(world)([0, 0, -8], [0, 0, 9])
     expect(hits.map((hit) => hit.material)).toEqual(['dirt', 'concrete'])
     // the overlap is the soil's from both ends (it answers first), within one step
     expect(Math.abs((hits[0]?.thickness ?? Number.NaN) - 7)).toBeLessThan(WITHIN_ONE_STEP)
@@ -599,7 +600,7 @@ describe('createWorldOcclusion over a destruction world with an impl of several 
 })
 
 // What the occlusion reads today where a pillar is cast in a wall, next to the walk of one millimetre. Reported as found: nothing here says it is what it should read.
-describe('createWorldOcclusion over a destruction world with a pillar cast in a wall', () => {
+describe('createRaycastOcclusion over a destruction world with a pillar cast in a wall', () => {
   const REBAR = { material: 'steel', spacing: 0.15, diameter: 0.01, residualCapacity: 0.15 } as const
   const wall: PartSpec = {
     id: 'wall', material: 'brick', shape: { kind: 'box', size: [3, 2.4, 0.13] }, position: [0, 1.2, 0], thickness: 0.13, mass: 1400,
@@ -643,9 +644,9 @@ describe('createWorldOcclusion over a destruction world with a pillar cast in a 
     for (const { where, x } of ACROSS) {
       for (const path of PATHS) {
         it(`${label} wall, across ${where}, ${path.how}: the parts the walk of one millimetre counts, in a handful of rays`, async () => {
-          const { createWorldOcclusion } = await import('../src/world-occlusion')
+          const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
           const { world, counted, counter } = sceneOf(parts, path.sunk)
-          const hits = createWorldOcclusion(counted)(path.from(x), path.to(x))
+          const hits = createRaycastOcclusion(counted)(path.from(x), path.to(x))
           const reference = worldMillimetreWalk(world, path.from(x), path.to(x))
           const materials = reference.keys.map((key) => world.part(...(key.split('/') as [string, string]))?.material)
           expect(hits.map((hit) => hit.material), JSON.stringify(reference.keys)).toEqual(materials)
@@ -655,20 +656,20 @@ describe('createWorldOcclusion over a destruction world with a pillar cast in a 
     }
   }
   it('reads the pillar under the plaster as bare concrete 13 cm thick: the 2 cm of plaster on each side is not counted there, and is counted over the bricks', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const { counted } = sceneOf([coated, pillar])
-    expect(createWorldOcclusion(counted)([1.35, 1.2, 5], [1.35, 1.2, -5])).toEqual([{ material: 'concrete', thickness: expect.closeTo(0.13, 6) }])
-    expect(createWorldOcclusion(counted)([0.5, 1.2, 5], [0.5, 1.2, -5])).toEqual([{ material: 'brick', thickness: expect.closeTo(0.17, 6) }])
+    expect(createRaycastOcclusion(counted)([1.35, 1.2, 5], [1.35, 1.2, -5])).toEqual([{ material: 'concrete', thickness: expect.closeTo(0.13, 6) }])
+    expect(createRaycastOcclusion(counted)([0.5, 1.2, 5], [0.5, 1.2, -5])).toEqual([{ material: 'brick', thickness: expect.closeTo(0.17, 6) }])
   })
 
   it('along the wall the bricks and the pillar are both counted and neither gets a thickness: the way back meets the pillar alone, the wall never answers from inside', async () => {
-    const { createWorldOcclusion } = await import('../src/world-occlusion')
+    const { createRaycastOcclusion } = await import('@adatechnology/game-audio')
     const FROM: Point = [-4, 1.2, 0.01]
     const TO: Point = [4, 1.2, 0.01]
     const cast = sceneOf([wall, pillar])
-    expect(createWorldOcclusion(cast.counted)(FROM, TO)).toEqual([{ material: 'brick' }, { material: 'concrete' }])
+    expect(createRaycastOcclusion(cast.counted)(FROM, TO)).toEqual([{ material: 'brick' }, { material: 'concrete' }])
     expect(worldMillimetreWalk(cast.world, FROM, TO).keys).toEqual(['w/wall', 'w/pillar'])
     // the wall alone, end to end, is paired
-    expect(createWorldOcclusion(sceneOf([wall]).counted)(FROM, TO)).toEqual([{ material: 'brick', thickness: expect.closeTo(3, 6) }])
+    expect(createRaycastOcclusion(sceneOf([wall]).counted)(FROM, TO)).toEqual([{ material: 'brick', thickness: expect.closeTo(3, 6) }])
   })
 })

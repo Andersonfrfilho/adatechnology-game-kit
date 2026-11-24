@@ -1,0 +1,22 @@
+{
+  "id": "reference_district_1",
+  "scale": "town",
+  "size": [445, 270],
+  "text": {
+    "pt-BR": { "name": "Recorte 1", "description": "Borda do centro, rio e bairro popular: o recorte de referência do kit." },
+    "en": { "name": "Cut 1", "description": "Edge of downtown, river and a popular quarter: the kit's reference cut." }
+  },
+  "districts": [
+    { "id": "downtown_edge", "kind": "mixed", "rect": [-220, -120, -40, 120] },
+    { "id": "popular_quarter", "kind": "residential_popular", "rect": [0, -135, 225, 135] }
+  ],
+  "lines": [
+    { "id": "main_street", "kind": "street", "width": 10, "points": [[-220, 0], [225, 0]] },
+    { "id": "crossing_street", "kind": "street", "width": 10, "points": [[-100, -120], [-100, 120]] },
+    { "id": "river", "kind": "river", "width": 30, "points": [[-20, -135], [-20, 135]] }
+  ],
+  "landmarks": [
+    { "kind": "police", "at": [-75, 17], "name": { "pt-BR": "Delegacia", "en": "Police station" } },
+    { "kind": "church", "at": [-135, 85], "name": { "pt-BR": "Igreja", "en": "Church" } }
+  ]
+}

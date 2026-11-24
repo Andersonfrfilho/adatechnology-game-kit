@@ -51,6 +51,9 @@ async function bundleMain(full) {
     minify: process.env.ROOM_MINIFY !== '0',
     legalComments: 'none',
     define: { __ROOM_FULL__: String(full), 'globalThis.__KIT_WORKER_SOURCE__': JSON.stringify(kitWorkerSource) },
+    // the world host (game-kit-defaults/world) imports Jolt for its async `createKitWorld`; the room takes the page's loop through `createKitWorldSync`, so Jolt is
+    // tree-shaken out, but its Node build's `node:module` must still resolve (the Jolt boot below bundles the engine itself)
+    external: ['node:module'],
     // the graphics screen is a subpath of game-graphics (`/screen`), named before its package
     alias: { three: threeDir, ...Object.fromEntries(Object.entries(DIST_SUBPATHS).flatMap(([p, subpaths]) => subpaths.map((subpath) => [`@adatechnology/${p}/${subpath}`, join(pkg(p), `dist/${subpath}.js`)]))), ...Object.fromEntries(names.map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])) },
   })
