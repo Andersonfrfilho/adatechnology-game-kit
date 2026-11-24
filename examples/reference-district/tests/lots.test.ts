@@ -5,7 +5,7 @@ import { hashString } from '@adatechnology/game-floorplan'
 import { residentialTemplateIds } from '@adatechnology/game-floorplan-residential'
 import { createUrban } from '@adatechnology/game-urban'
 
-import { createTestEngine, lineBandOverlapsRect, plan, rectsOverlap, site } from './helpers'
+import { SIDEWALK_WIDTH, createTestEngine, lineBandOverlapsRect, plan, rectsOverlap, site } from './helpers'
 
 const engine = createTestEngine()
 const OWNED_TEMPLATE_IDS: readonly string[] = [...residentialTemplateIds, ...commercialTemplateIds]
@@ -68,16 +68,19 @@ describe('lot placement', () => {
     }
   })
 
-  it('no lot covers the band of a plan line', () => {
+  it('no lot covers the road of a plan line, nor the sidewalk on each side of a street', () => {
     for (const lot of site.lots) {
-      for (const line of layout.lines) expect(lineBandOverlapsRect(line, lot.rect), `${lot.id} x ${line.id}`).toBe(false)
+      for (const line of layout.lines) {
+        const band = line.kind === 'river' ? line : { ...line, width: line.width + 2 * SIDEWALK_WIDTH }
+        expect(lineBandOverlapsRect(band, lot.rect), `${lot.id} x ${line.id}`).toBe(false)
+      }
     }
   })
 
-  it('the lots on the script street front the street: z -5 for the north side, z 5 for the south side', () => {
+  it('the lots on the script street start past the road and the sidewalk: z -7.5 for the north side, z 7.5 for the south side', () => {
     for (const lot of site.lots.filter((item) => item.id.startsWith('street_'))) {
       expect(lot.front).toBe(lot.rect[3] <= 0 ? 's' : 'n')
-      expect(lot.rect[3] <= 0 ? lot.rect[3] : lot.rect[1]).toBe(lot.rect[3] <= 0 ? -5 : 5)
+      expect(lot.rect[3] <= 0 ? lot.rect[3] : lot.rect[1]).toBe(lot.rect[3] <= 0 ? -7.5 : 7.5)
     }
   })
 
@@ -94,5 +97,6 @@ describe('lot placement', () => {
     const main = layout.lines.find((line) => line.id === 'main_street')!
     expect(lineBandOverlapsRect(main, [60, -2, 70, 2])).toBe(true)
     expect(lineBandOverlapsRect(main, [60, -30, 70, -5])).toBe(false)
+    expect(lineBandOverlapsRect({ ...main, width: main.width + 2 * SIDEWALK_WIDTH }, [60, -30, 70, -5])).toBe(true)
   })
 })

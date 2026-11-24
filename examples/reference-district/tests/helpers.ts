@@ -26,6 +26,9 @@ export function createTestEngine(): typeof engine {
   return engine
 }
 
+/** Width of the sidewalk on each side of a street, as the scene draws it (`SIDEWALK_WIDTH` of the assembler). */
+export const SIDEWALK_WIDTH = 2.5
+
 export const rectsOverlap = (a: PlanRect, b: PlanRect): boolean => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
 
 function distanceToSegment(point: PlanPoint, from: PlanPoint, to: PlanPoint): number {
