@@ -4,8 +4,7 @@ import { createKitWorkers } from '@adatechnology/game-kit-defaults'
 import { createKitWorld } from '@adatechnology/game-kit-defaults/world'
 import { sourceSpawn } from '@adatechnology/game-workers'
 
-import { createDistrictGrid } from './assemble/horde'
-import { createHorde } from './assemble/horde'
+import { createDistrictGrid, createHorde } from './assemble/horde'
 import { createHouses } from './assemble/houses'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
@@ -55,7 +54,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const missing = createMissingBoxes(THREE, site.missing)
   scene.add(missing.group)
 
-  const grid = createDistrictGrid({ houses: houses.list.map((placed) => placed.footprint), blocks: streets.filledBlocks, vehicles: props.footprints })
+  const grid = createDistrictGrid({ houses: houses.list.map((placed) => placed.footprint), buildings: streets.buildings, vehicles: props.footprints })
   const player = createPlayerRig({ THREE, world, grid, start: options.start ?? DEFAULT_START, mode: options.camera, seed: site.seed })
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
   const horde = createHorde({ THREE, world, site, zombies: options.zombies, zones, grid, target: player.player })

@@ -4,6 +4,7 @@ import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { listTypes } from '@adatechnology/game-props3d'
+import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
 import { installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
@@ -44,6 +45,7 @@ export function createProps({ THREE, world, scene, site }: { readonly THREE: typ
   const built: BuiltVehicle[] = []
   const footprints: PlanRect[] = []
   const bound: string[] = []
+  const meshes: THREE_NS.Object3D[] = []
   const place = (prop: Prop): void => {
     const ry = prop.ry ?? 0
     if (prop.kind === 'vehicle') {
@@ -51,6 +53,7 @@ export function createProps({ THREE, world, scene, site }: { readonly THREE: typ
       vehicle.group.position.set(prop.at[0], prop.y ?? 0, prop.at[1])
       vehicle.group.rotation.y = ry
       scene.add(vehicle.group)
+      meshes.push(vehicle.group)
       built.push(vehicle)
       footprints.push(footprintOf({ x: prop.at[0], z: prop.at[1], width: vehicle.width, depth: vehicle.length, ry }))
       return
@@ -62,6 +65,7 @@ export function createProps({ THREE, world, scene, site }: { readonly THREE: typ
     mesh.position.set(prop.at[0], prop.y ?? 0, prop.at[1])
     mesh.rotation.y = ry
     scene.add(mesh)
+    meshes.push(mesh)
     world.destruction.world.add(piece.spec, { id: prop.id, position: [prop.at[0], prop.y ?? 0, prop.at[1]], rotation: turnOf(ry) })
     world.destruction.renderer.bind(prop.id, mesh)
     bound.push(prop.id)
@@ -71,7 +75,11 @@ export function createProps({ THREE, world, scene, site }: { readonly THREE: typ
   return {
     footprints,
     dispose() {
-      for (const id of bound) world.destruction.renderer.unbind(id)
+      for (const id of bound) {
+        world.destruction.renderer.unbind(id)
+        world.destruction.world.remove(id)
+      }
+      discardObject3D(meshes)
       for (const vehicle of built) vehicle.dispose()
     },
   }

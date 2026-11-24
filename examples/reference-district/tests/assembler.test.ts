@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { engine } from '@adatechnology/game-floorplan'
 
-import { blocksToFill } from '../src/game/blocks'
+import { blocksToFill, LOT_CLEARANCE } from '../src/game/blocks'
 import { groundLayoutOf, terrainBoundsOf } from '../src/game/ground'
 import { lotPlacement, overflowOf } from '../src/game/placement'
 import { pointsIn, zoneCounts } from '../src/game/horde-plan'
@@ -88,7 +88,7 @@ describe('blocks', () => {
     for (const lot of site.lots) {
       for (const block of kept) {
         const [x0, z0, x1, z1] = [block.x - block.size[0] / 2, block.z - block.size[1] / 2, block.x + block.size[0] / 2, block.z + block.size[1] / 2]
-        expect(x0 < lot.rect[2] && lot.rect[0] < x1 && z0 < lot.rect[3] && lot.rect[1] < z1, `${lot.id}`).toBe(false)
+        expect(x0 < lot.rect[2] + LOT_CLEARANCE && lot.rect[0] - LOT_CLEARANCE < x1 && z0 < lot.rect[3] + LOT_CLEARANCE && lot.rect[1] - LOT_CLEARANCE < z1, `${lot.id}`).toBe(false)
       }
     }
   })

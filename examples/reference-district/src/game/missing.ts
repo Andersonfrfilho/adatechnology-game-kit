@@ -48,8 +48,10 @@ export function createMissingBoxes(THREE: typeof THREE_NS, missing: readonly Mis
   group.name = 'missing-pieces'
   for (const entry of missing) {
     const [x0, z0, x1, z1] = entry.rect
-    const wire = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(x1 - x0, entry.height, z1 - z0)), new THREE.LineBasicMaterial({ color: WARNING_COLOR }))
+    const box = new THREE.BoxGeometry(x1 - x0, entry.height, z1 - z0)
+    const wire = new THREE.LineSegments(new THREE.EdgesGeometry(box), new THREE.LineBasicMaterial({ color: WARNING_COLOR }))
     wire.position.set((x0 + x1) / 2, entry.height / 2, (z0 + z1) / 2)
+    box.dispose()
     wire.userData.missing = entry.id
     const label = labelOf(THREE, entry)
     label.position.set((x0 + x1) / 2, entry.height + (label.scale.y / 2) + 0.3, (z0 + z1) / 2)

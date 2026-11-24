@@ -27,8 +27,8 @@ export type StreetsParams = {
 
 export type Streets = {
   readonly drawn: DrawnUrban
-  /** The blocks the city filled with its own buildings (the ones a lot or a missing building does not stand on). */
-  readonly filledBlocks: readonly PlanRect[]
+  /** The footprint of every building the city placed (what `fillBlock` returns), with its height: the gaps between them are open ground. */
+  readonly buildings: ReadonlyArray<{ readonly rect: PlanRect; readonly height: number }>
 }
 
 /**
@@ -39,21 +39,22 @@ export type Streets = {
 export function drawStreets({ THREE, urban, plan, site, lights, seed, isNight }: StreetsParams): Streets {
   const b = urban.builder({ seed })
   const layout = urban.cities.layout(plan)
-  const streetWidth = Math.max(...(plan.lines ?? []).filter((line) => line.kind === 'street').map((line) => line.width))
+  const streets = (plan.lines ?? []).filter((line) => line.kind === 'street')
+  if (streets.length === 0) throw new Error(`the plan "${plan.id}" has no street to draw`)
+  const streetWidth = Math.max(...streets.map((line) => line.width))
   for (const road of roadStretchesOf(plan)) urban.streets.road(b, road.x, road.z, streetWidth, road.length, road.along)
   for (const point of polePointsOf({ plan, spacing: POLE_SPACING, offset: streetWidth / 2 + SIDEWALK_WIDTH / 2 })) {
     const district = layout.districtAt(point.x, point.z)
     const pattern = district?.pattern ? urban.neighbourhoods.get(district.pattern).pattern : undefined
-    const pole = urban.poles.get(pattern?.pole || FALLBACK_POLE)
+    const pole = urban.poles.get(pattern?.pole ?? FALLBACK_POLE)
     pole.build(b, { x: point.x, z: point.z, on: isNight, dir: -point.side })
   }
-  const filled: PlanRect[] = []
+  const buildings: Array<{ rect: PlanRect; height: number }> = []
   for (const district of layout.districts) {
     for (const block of blocksToFill(layout.blocks(district.id, { street: STREET_MARGIN }), site)) {
-      urban.cities.fillBlock(b, block)
-      filled.push([block.x - block.size[0] / 2, block.z - block.size[1] / 2, block.x + block.size[0] / 2, block.z + block.size[1] / 2])
+      for (const building of urban.cities.fillBlock(b, block)) buildings.push({ rect: [building.x - building.width / 2, building.z - building.depth / 2, building.x + building.width / 2, building.z + building.depth / 2], height: building.height })
     }
   }
   const drawn = createUrbanThree(THREE, { document, lights }).draw(b.scene())
-  return { drawn, filledBlocks: filled }
+  return { drawn, buildings }
 }

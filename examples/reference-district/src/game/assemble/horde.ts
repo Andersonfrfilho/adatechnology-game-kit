@@ -16,7 +16,6 @@ import type { Site } from '../site'
 /** The nav grid is as big as the district: a cell is half a metre, and the horde's physics copies its occupancy every step. */
 const NAV_GRID_SIZE = 480
 const CROWD_CAPACITY_MARGIN = 64
-const BUILDING_HEIGHT = 12
 const HOUSE_HEIGHT = 3
 const VEHICLE_HEIGHT = 1.6
 const BODY_BAKE_SEED = 11
@@ -46,14 +45,15 @@ export type HordeParams = {
 }
 
 /**
- * The nav grid of the district: the houses, the filled blocks and the vehicles as solid cells, the same grid the player walks on. A wall is a rectangle here; the horde walks round it and
- * the doors of the houses are not in the grid yet (the houses keep their own colliders).
+ * The nav grid of the district: the buildings the city placed (each at its own footprint, so the gaps between them are open), the house footprints and the vehicles as solid cells, the same grid the player walks on. A wall is a rectangle here; the horde walks round it and
+ * a house is solid as a whole: its interior cannot be walked into through the grid (that needs the house colliders and doors, L1/L6; see the README).
  */
-export type DistrictSolids = { readonly houses: readonly PlanRect[]; readonly blocks: readonly PlanRect[]; readonly vehicles: readonly PlanRect[] }
+export type DistrictSolids = { readonly houses: readonly PlanRect[]; readonly buildings: ReadonlyArray<{ readonly rect: PlanRect; readonly height: number }>; readonly vehicles: readonly PlanRect[] }
 
 export function createDistrictGrid(solids: DistrictSolids): NavGrid {
   const grid = createNavGrid({ size: NAV_GRID_SIZE })
-  for (const [rects, height] of [[solids.blocks, BUILDING_HEIGHT], [solids.houses, HOUSE_HEIGHT], [solids.vehicles, VEHICLE_HEIGHT]] as const) {
+  for (const { rect, height } of solids.buildings) grid.fillRect(rect[0], rect[1], rect[2], rect[3], CELL.SOLID, height)
+  for (const [rects, height] of [[solids.houses, HOUSE_HEIGHT], [solids.vehicles, VEHICLE_HEIGHT]] as const) {
     for (const rect of rects) grid.fillRect(rect[0], rect[1], rect[2], rect[3], CELL.SOLID, height)
   }
   return grid

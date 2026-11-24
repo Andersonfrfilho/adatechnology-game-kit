@@ -192,14 +192,14 @@ module.exports = {
       to: { path: '^packages/game-test-room/' },
     },
     {
-      name: 'scene-not-testing',
-      comment: 'The reference district is the example a game copies (spec 011, D7): it imports no test room, no test area and no bench; and its game code (src/game) imports nothing of its test code (src/test).',
+      name: 'scene-not-testing-packages',
+      comment: 'The reference district is the example a game copies (spec 011, D7): it imports no test room, no test area and no bench.',
       severity: 'error',
       from: { path: '^examples/reference-district/src/' },
       to: { path: '^packages/(game-test-room/|[^/]+/src/(testing\\.ts$|(test-area|bench)/))' },
     },
     {
-      name: 'scene-not-testing',
+      name: 'scene-not-testing-src-test',
       comment: 'src/game of the reference district imports nothing of src/test.',
       severity: 'error',
       from: { path: '^examples/reference-district/src/game/' },

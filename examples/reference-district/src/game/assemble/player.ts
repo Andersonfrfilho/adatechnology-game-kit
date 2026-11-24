@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 
 import { create as createCameraRig } from '@adatechnology/game-camera'
-import type { CameraMode, CameraRig } from '@adatechnology/game-camera'
+import type { CameraRig } from '@adatechnology/game-camera'
 import { createPlayerAvatar } from '@adatechnology/game-characters-three'
 import type { PlayerAvatar } from '@adatechnology/game-characters-three'
 import type { NavGrid, PlayerCrowdLike } from '@adatechnology/game-crowd'
@@ -68,7 +68,7 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
   const onKeyDown = (event: KeyboardEvent): void => {
     if (event.repeat) return
     keys.add(event.code)
-    if (event.code === CYCLE_KEY) camera.cycle()
+    if (event.code === CYCLE_KEY) camera.setMode(camera.mode === 'first' ? 'shoulder' : 'first')
   }
   const onKeyUp = (event: KeyboardEvent): void => void keys.delete(event.code)
   const onMouseMove = (event: MouseEvent): void => {
@@ -98,7 +98,7 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
     camera,
     view,
     held,
-    setMode: (next: CameraChoice) => camera.setMode(next as CameraMode),
+    setMode: (next: CameraChoice) => camera.setMode(next),
     bindCrowd: (crowd) => player.setWorld({ solidAt: grid.solidAt, cellKind: grid.cellKind, inWater, crowd }),
     step(dt) {
       const walk = walkOf()
@@ -117,6 +117,8 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
       camera.update(world.view.camera, { x: state.x, y: state.y, z: state.z, yaw: view.yaw, pitch: view.pitch, crouching: state.crouch, alive: state.alive, deathT: state.deathTime }, dt)
     },
     dispose() {
+      if (document.pointerLockElement === world.view.domElement) document.exitPointerLock()
+      avatar.root.removeFromParent()
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       window.removeEventListener('mousemove', onMouseMove)

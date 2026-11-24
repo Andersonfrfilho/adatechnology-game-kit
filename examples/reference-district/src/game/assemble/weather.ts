@@ -27,8 +27,7 @@ export type DistrictWeather = {
 export function createDistrictWeather({ THREE, world, state, hour, seed }: { readonly THREE: typeof THREE_NS; readonly world: KitWorld; readonly state: string; readonly hour: number; readonly seed: number }): DistrictWeather {
   const weather = createWeather({ seed, start: state, startHour: hour, timeScale: HELD_TIME_SCALE, autoSchedule: false })
   const renderer = createWeatherRenderer(THREE, { scene: world.view.scene, camera: world.view.camera, weather, vfx: world.effects.world, lights: world.lights, random: world.random })
-  const ambient = world.view.scene.getObjectByName('kit-world-light')?.children.find((child): child is THREE_NS.HemisphereLight => (child as THREE_NS.HemisphereLight).isHemisphereLight === true)
-  const ambientDay = ambient?.intensity ?? 0
+  const ambientDay = world.ambient.intensity
   return {
     weather,
     renderer,
@@ -37,7 +36,7 @@ export function createDistrictWeather({ THREE, world, state, hour, seed }: { rea
       renderer.update(dt)
       const daylight = Math.max(MIN_SUN_SHARE, weather.sample().sun)
       world.sun.intensity = SUN_INTENSITY_DAY * daylight
-      if (ambient) ambient.intensity = ambientDay * daylight
+      world.ambient.intensity = ambientDay * daylight
     },
     dispose() {
       renderer.dispose()

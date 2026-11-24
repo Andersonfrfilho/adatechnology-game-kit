@@ -1,14 +1,13 @@
 import type * as THREE_NS from 'three'
 
-import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID } from '@adatechnology/game-contracts'
 import { engine } from '@adatechnology/game-floorplan'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import { register as registerCommercial } from '@adatechnology/game-floorplan-commercial'
 import { register as registerPostApocalyptic } from '@adatechnology/game-floorplan-post-apocalyptic'
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
 import { register as registerStructure } from '@adatechnology/game-floorplan-structure'
-import { create as createHouseRenderer, planLod } from '@adatechnology/game-floorplan-three'
-import type { House, HouseRenderer, HouseRendererOptions } from '@adatechnology/game-floorplan-three'
+import { create as createHouseRenderer, planLod, registerHouseQueues } from '@adatechnology/game-floorplan-three'
+import type { House, HouseRendererOptions } from '@adatechnology/game-floorplan-three'
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
@@ -41,7 +40,7 @@ export type PlacedHouse = {
 
 export type Houses = {
   readonly list: readonly PlacedHouse[]
-  readonly renderer: HouseRenderer
+  readonly renderer: ReturnType<typeof createHouseRenderer>
   /** Steps the doors, the wind and the level of detail; the focus is the camera. */
   update(dt: number, time: number, focus: { readonly x: number; readonly y: number; readonly z: number }): void
   dispose(): void
@@ -77,16 +76,6 @@ function footprintOf(placement: HousePlacement, size: { readonly width: number; 
   return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])]
 }
 
-/** The queues of the house renderer (repainting damaged walls, cutting the holes) join the world's frame budget at the priority the contract gives them (the cut queue is not `mustDrain` here: that class is the floorplan package's own to register). */
-function registerQueues(renderer: HouseRenderer, world: KitWorld): () => void {
-  const budget = world.frame.scheduler.budget
-  const stops: Array<() => void> = []
-  for (const [queue, id] of [[renderer.deferredQueue?.(), DEFERRED_QUEUE_ID.BREACH_PAINT], [renderer.cutQueue?.(), DEFERRED_QUEUE_ID.BREACH_CUT]] as const) {
-    if (queue) stops.push(budget.register(queue, DEFERRED_PRIORITY[id]))
-  }
-  return () => stops.forEach((stop) => stop())
-}
-
 export type HousesParams = {
   readonly THREE: typeof THREE_NS
   readonly world: KitWorld
@@ -111,7 +100,7 @@ export function createHouses({ THREE, world, scene, site }: HousesParams): House
     vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
   }
   const renderer = createHouseRenderer(THREE, options)
-  const unregister = registerQueues(renderer, world)
+  const unregister = registerHouseQueues(renderer, world.frame.scheduler.budget)
   const list = site.lots.map((lot): PlacedHouse => {
     const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
     const house = renderer.build(plan, { quality: 'game', terrain: false })
