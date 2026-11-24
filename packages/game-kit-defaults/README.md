@@ -54,3 +54,7 @@ const stop = world.start() // draws when the host made the renderer; `world.rend
 ```
 
 On by default: Jolt (`physics: 'jolt'`; `'own'` or a `PhysicsLoop` of the game instead), the blast pacing (`blastPacing: false` turns it off), the D4 debris policy (`debris: { blast: false }`) and the ground tiles in workers, only with a coordinator that has real workers (`debris: { groundWorker: false }`); `world.info` says what is on. The host releases only what it made: a renderer, audio engine, coordinator or physics loop of the game is left alone. The order of the step is `design-host.md` §4.1: `world.frame.systems()` lists what is registered; the rules of the world that read the game's own object lists plug in with `world.rules.use({ fire, beforePhysics })`.
+
+### Loading indicator
+
+`createLoading({ container, working })` is the kit's loading card (a spinner or a bar and a line of text over the container; the test room shows the same one): `begin(label, { total, opaque })` shows it at once and returns a task (`step(text, done)`, `await paint()` between heavy synchronous steps so the bar moves, `end()`), `busy(label, work)` runs one job behind it, the last task to end takes it down. It knows no locale: the texts come translated. A page that must show it before its script runs writes the same card from `loadingMarkup({ title, solid: true, fixed: true })` and `LOADING_CSS`, then removes that markup once `begin` drew the live one. The reference district (`examples/reference-district`) shows it from page open until its world is assembled and warmed up.
