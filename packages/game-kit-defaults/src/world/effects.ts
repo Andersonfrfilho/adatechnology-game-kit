@@ -7,13 +7,13 @@ import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type { Terrain } from '@adatechnology/game-terrain'
 
-import type { KitWorldQuality } from './light'
-import type { ThreeNamespace } from './view'
+import type { KitWorldQuality, ThreeNamespace } from './view'
 
 export type KitWorldEffects = VfxRenderer
 
 /** One effects world for the whole world: the destruction and fluid renderers and every module draw into it, and the host steps it once per frame. */
-export function createEffects(THREE: ThreeNamespace, options: {
+export function createEffects(options: {
+  readonly THREE: ThreeNamespace
   readonly scene: THREE_NS.Scene
   readonly lights: LightBudget
   readonly camera: THREE_NS.Camera
@@ -24,7 +24,7 @@ export function createEffects(THREE: ThreeNamespace, options: {
   readonly groundAt: (x: number, z: number) => number
   readonly particles?: Readonly<Record<string, Partial<SpriteKindDef> | null>>
 }): KitWorldEffects {
-  const { terrain } = options
+  const { THREE, terrain } = options
   return createVfxRenderer(THREE, {
     scene: options.scene,
     lights: options.lights,

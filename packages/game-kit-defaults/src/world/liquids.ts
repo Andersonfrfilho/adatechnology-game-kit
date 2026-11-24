@@ -10,8 +10,7 @@ import { createWaterEffectsLayer } from '@adatechnology/game-vfx-three'
 import type { WaterLayer } from '@adatechnology/game-vfx-three'
 import type { Terrain } from '@adatechnology/game-terrain'
 
-import type { KitWorldQuality } from './light'
-import type { ThreeNamespace } from './view'
+import type { KitWorldQuality, ThreeNamespace } from './view'
 
 export type KitWorldFluids = {
   readonly fluids: FluidWorld
@@ -50,7 +49,8 @@ export type KitWorldFilm = {
   readonly random: { seed: number }
 }
 
-export function createLiquidViews(THREE: ThreeNamespace, options: {
+export function createLiquidViews(options: {
+  readonly THREE: ThreeNamespace
   readonly scene: THREE_NS.Scene
   readonly camera: THREE_NS.Camera
   readonly gl: THREE_NS.WebGLRenderer
@@ -60,7 +60,7 @@ export function createLiquidViews(THREE: ThreeNamespace, options: {
   readonly pointScale: number
   readonly vfx: VfxWorld
 }): KitWorldFilm {
-  const { scene, camera, gl, fluids, groundAt } = options
+  const { THREE, scene, camera, gl, fluids, groundAt } = options
   const view = createFluidRenderer(THREE, { scene, fluids, quality: options.quality, pointScale: options.pointScale, vfx: options.vfx })
   const random = createFilmLcg(1)
   const film = createFilmManager(THREE, {
@@ -77,7 +77,7 @@ export function createLiquidViews(THREE: ThreeNamespace, options: {
 export type KitWorldWater = { readonly water: WaterEffects; readonly view: WaterLayer }
 
 /** What rounds and blasts do to water: a splash by calibre and by charge, rings and foam that stop at the shore, waves that push what floats. */
-export function createWater(THREE: ThreeNamespace, scene: THREE_NS.Scene, terrain: Terrain): KitWorldWater {
+export function createWater({ THREE, scene, terrain }: { readonly THREE: ThreeNamespace; readonly scene: THREE_NS.Scene; readonly terrain: Terrain }): KitWorldWater {
   const water = createWaterEffects({ levelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null })
   const view = createWaterEffectsLayer(THREE, water)
   scene.add(view.group)

@@ -14,7 +14,7 @@ export type KitWorldWorkers = {
 }
 
 /** A coordinator of the kit's kinds by default (the automatic count by the cores), the game's own, or none. */
-export function createWorkers(option: WorkerCoordinator | 0 | undefined, isGroundWorkerAllowed: boolean): KitWorldWorkers {
+export function createWorkers({ workers: option, isGroundWorkerAllowed }: { readonly workers: WorkerCoordinator | 0 | undefined; readonly isGroundWorkerAllowed: boolean }): KitWorldWorkers {
   const coordinator = option === 0 ? null : (option ?? createKitWorkers())
   const isOwned = option === undefined
   const hasWorkers = coordinator !== null && coordinator.stats().workers > 0

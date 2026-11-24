@@ -171,3 +171,15 @@ export const SILENT_LOADING: BusySink & { readonly active: boolean } = {
   begin: () => SILENT_TASK,
   busy: async (_label, work) => work(SILENT_TASK),
 }
+
+/** The graphics of a world: only on a renderer the host made, and only when the game asks. */
+export function createGraphicsFor({ gl, camera, sun, container, locale, setup }: {
+  readonly gl: THREE_NS.WebGLRenderer
+  readonly camera: THREE_NS.PerspectiveCamera
+  readonly sun: THREE_NS.DirectionalLight
+  readonly container: HTMLElement
+  readonly locale: string
+  readonly setup: KitWorldGraphicsSetup | undefined
+}): KitWorldGraphics {
+  return createKitWorldGraphics({ gl, camera, sun, container, locale, loading: setup?.loading ?? SILENT_LOADING, label: setup?.label ?? 'Graphics', ui: setup?.ui ?? true, options: setup ?? {} })
+}

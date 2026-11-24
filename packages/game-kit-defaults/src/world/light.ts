@@ -3,7 +3,7 @@ import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-contracts'
 
 import { snapSunShadow, sunOffsetOf, sunShadowFrustum } from './sun-shadow'
-import type { ThreeNamespace } from './view'
+import type { KitWorldQuality, ThreeNamespace } from './view'
 
 /**
  * The ambient fill: sky above, bounce from the ground below (what a slab's underside and a house's shaded rooms are lit by).
@@ -22,8 +22,6 @@ const SHADOW_MAP_SIZE_HIGH = 2048
 const SHADOW_BIAS = -0.0006
 const SHADOW_NORMAL_BIAS = 0.03
 
-export type KitWorldQuality = 'low' | 'medium' | 'high'
-
 export type KitWorldLight = {
   readonly group: THREE_NS.Group
   readonly sun: THREE_NS.DirectionalLight
@@ -34,7 +32,7 @@ export type KitWorldLight = {
   dispose(): void
 }
 
-export function createLight(THREE: ThreeNamespace, scene: THREE_NS.Scene): KitWorldLight {
+export function createLight({ THREE, scene }: { readonly THREE: ThreeNamespace; readonly scene: THREE_NS.Scene }): KitWorldLight {
   const group = new THREE.Group()
   group.name = 'kit-world-light'
   scene.background = new THREE.Color(BACKGROUND_COLOR)

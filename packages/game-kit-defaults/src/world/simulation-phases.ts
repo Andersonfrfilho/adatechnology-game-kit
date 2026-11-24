@@ -27,14 +27,14 @@ export type SimulationPhases = {
 }
 
 /** The tick the room's rules advance by: `STEPS_PER_TICK` steps of the physics loop, or `nominalTick` with no loop; throws when the loop's step does not fit it. */
-export function resolveSimulationTick(loopStep: number | undefined, nominalTick: number): number {
+export function resolveSimulationTick({ loopStep, nominalTick }: { readonly loopStep: number | undefined; readonly nominalTick: number }): number {
   if (loopStep === undefined) return nominalTick
   if (Math.abs(STEPS_PER_TICK * loopStep - nominalTick) > 1e-9) throw new Error(`world: ${STEPS_PER_TICK} physics steps of ${loopStep} s are not the world tick of ${nominalTick} s`)
   return STEPS_PER_TICK * loopStep
 }
 
 // the ids keep the `room.` prefix: the per-module tables, the order test and the error handler of the room read them
-export function registerSimulationPhases(scheduler: SystemRegistry, tick: number, hooks: SimulationHooks): SimulationPhases {
+export function registerSimulationPhases({ scheduler, tick, hooks }: { readonly scheduler: SystemRegistry; readonly tick: number; readonly hooks: SimulationHooks }): SimulationPhases {
   hooks.blastPacing?.attach(scheduler)
   let isLegacyStep = false
   let isSynchronousFrame = false

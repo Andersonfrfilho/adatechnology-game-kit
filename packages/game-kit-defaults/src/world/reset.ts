@@ -24,6 +24,8 @@ export type ResetDeps = {
   readonly sound: KitWorldSound
   readonly pieces: KitWorldPieces
   readonly frame: KitWorldFrame
+  /** Takes the host's own random stream back to its seed (undefined when the game gave its stream). */
+  readonly resetRandom: (() => void) | undefined
 }
 
 /** The worlds back to their seeded start, so a run after it does what the same run does on a new host. What the game spawned in them is the game's to take out first. */
@@ -33,6 +35,7 @@ export function createReset(deps: ResetDeps): () => void {
     deps.frame.blastPacing?.clear()
     deps.sound.destruction?.reset()
     ground.reset()
+    deps.resetRandom?.()
     deps.pieces.clear()
     deps.effects.world.clear()
     deps.water.clear()

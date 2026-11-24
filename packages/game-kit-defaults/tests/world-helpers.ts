@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { afterEach } from 'vitest'
 
 import { createKitWorld } from '../src/world'
 import type { KitWorld, KitWorldOptions } from '../src/world'
@@ -15,11 +16,17 @@ export function stubRenderer(): THREE.WebGLRenderer {
   } as unknown as THREE.WebGLRenderer
 }
 
+const made: KitWorld[] = []
+// a world a failed test left standing is freed here (`dispose` runs once)
+afterEach(() => {
+  for (const world of made.splice(0)) world.dispose()
+})
+
 /** A world with no GPU: the kit's own solver, no workers and no recorded sounds (nothing to fetch). */
-export function makeWorld(extra: Partial<KitWorldOptions> = {}): Promise<KitWorld> {
+export async function makeWorld(extra: Partial<KitWorldOptions> = {}): Promise<KitWorld> {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createKitWorld(THREE, {
+  const world = await createKitWorld(THREE, {
     container,
     renderer: stubRenderer(),
     bounds: [-8, -8, 8, 8],
@@ -28,4 +35,6 @@ export function makeWorld(extra: Partial<KitWorldOptions> = {}): Promise<KitWorl
     audio: { samplesBaseUrl: null, userSamplesBaseUrl: null },
     ...extra,
   })
+  made.push(world)
+  return world
 }

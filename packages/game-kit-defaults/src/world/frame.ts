@@ -12,7 +12,7 @@ import type { FrameQueuesParams } from './frame-queues'
 import type { KitWorldRenderBudget } from './render-budget'
 import { MAX_TICKS_PER_FRAME, registerSimulationPhases, resolveSimulationTick } from './simulation-phases'
 import type { SimulationPhases } from './simulation-phases'
-import type { StepSystem, WorldStep } from './world-step'
+import type { FrameSlot, FrameSlotSystem, StepSystem, WorldStep } from './world-step'
 
 /** The step the room has always run: 1/60 s, which is two steps of the 1/120 s physics world. */
 const FIXED_DT = 1 / 60
@@ -47,6 +47,8 @@ export type KitWorldFrame = {
   beforeWorld(system: StepSystem): () => void
   /** The same entry, after the world's own step. */
   afterWorld(system: StepSystem): () => void
+  /** Inside `room.simulate-frame` or `room.simulate-end`, at the named place (`FRAME_SLOTS`), in the order they came. */
+  on(slot: FrameSlot, system: FrameSlotSystem): () => void
   /** Every system registered on the scheduler so far, in registration order. */
   systems(): readonly SystemRecord[]
   /** Runs a synchronous frame; a live one (the display loop's clock) always takes the tick path, a `dt` that is not a tick keeps the legacy one. */
@@ -56,7 +58,7 @@ export type KitWorldFrame = {
 export type FrameDeps = {
   readonly options: KitWorldFrameOptions | undefined
   readonly blastPacing: BlastPacingOptions | false | undefined
-  readonly world: Parameters<typeof createBlastPacing>[1]['world']
+  readonly world: Parameters<typeof createBlastPacing>[0]['world']
   readonly renderer: KitWorldRenderer
   readonly physicsStep: number | undefined
   readonly queues: Omit<FrameQueuesParams, 'budget' | 'destruction' | 'hasWorkBudget'>
@@ -68,8 +70,8 @@ export type FrameDeps = {
 
 export function createFrame(deps: FrameDeps): KitWorldFrame {
   const { renderer, step, camera } = deps
-  const blastPacing = deps.blastPacing === false ? undefined : createBlastPacing(deps.blastPacing ?? {}, { world: deps.world, renderer })
-  const tick = resolveSimulationTick(deps.physicsStep, FIXED_DT)
+  const blastPacing = deps.blastPacing === false ? undefined : createBlastPacing({ options: deps.blastPacing ?? {}, world: deps.world, renderer })
+  const tick = resolveSimulationTick({ loopStep: deps.physicsStep, nominalTick: FIXED_DT })
   const scheduler = createScheduler({
     fixedDt: tick,
     maxSubsteps: MAX_TICKS_PER_FRAME,
@@ -82,10 +84,16 @@ export function createFrame(deps: FrameDeps): KitWorldFrame {
   registerFrameQueues({ ...deps.queues, budget: scheduler.budget, destruction: renderer, hasWorkBudget: deps.hasWorkBudget })
   const records: SystemRecord[] = []
   const add: KitWorldFrame['add'] = (system, options) => {
-    records.push({ id: options.id, phase: options.phase, order: options.order ?? 0 })
-    return scheduler.add(system, options)
+    const record: SystemRecord = { id: options.id, phase: options.phase, order: options.order ?? 0 }
+    records.push(record)
+    const remove = scheduler.add(system, options)
+    return () => {
+      remove()
+      const index = records.indexOf(record)
+      if (index >= 0) records.splice(index, 1)
+    }
   }
-  const phases = registerSimulationPhases({ add }, tick, { fixed: step.fixed, frame: step.frame, frameEnd: step.frameEnd, pose: renderer, structural: renderer, blastPacing })
+  const phases = registerSimulationPhases({ scheduler: { add }, tick, hooks: { fixed: step.fixed, frame: step.frame, frameEnd: step.frameEnd, pose: renderer, structural: renderer, blastPacing } })
   add((ctx) => deps.budget.lights.present([camera.position.x, camera.position.y, camera.position.z], ctx.realDt), { phase: 'present', order: 10, id: 'room.lights' })
   const frame: KitWorldFrame = {
     scheduler,
@@ -106,6 +114,7 @@ export function createFrame(deps: FrameDeps): KitWorldFrame {
       step.afterWorld.add(system)
       return () => step.afterWorld.delete(system)
     },
+    on: step.onSlot,
     systems: () => records,
     runAt: phases.runAt,
   }

@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
-import { createJoltEngine } from '@adatechnology/game-physics-jolt'
+import { JoltWorld, createJoltEngine } from '@adatechnology/game-physics-jolt'
 import type { WorkerCoordinator } from '@adatechnology/game-contracts'
 
 import type { KitWorld } from '../src/world'
@@ -54,29 +54,40 @@ describe('what the host turns on by default (design-host 3, "Padrão")', () => {
     expect(world.info.blastPacing).toBe(true)
   })
 
-  it('defaults the physics to Jolt', async () => {
-    const world = await track(makeWorld({ physics: undefined }))
-    expect(world.info.physics.kind).toBe('jolt')
-    expect(world.physics.loop?.world.fixedStep).toBe(KIT_WORLD.fixedStep)
-    expect(world.frame.tick).toBeCloseTo(1 / 60, 12)
+  it('defaults the physics to Jolt and disposes the Jolt world it made, once', async () => {
+    const disposeJolt = vi.spyOn(JoltWorld.prototype, 'dispose')
+    try {
+      const world = await track(makeWorld({ physics: undefined }))
+      expect(world.info.physics.kind).toBe('jolt')
+      expect(world.physics.loop?.world.fixedStep).toBe(KIT_WORLD.fixedStep)
+      expect(world.frame.tick).toBeCloseTo(1 / 60, 12)
+      const joltWorld = world.physics.loop?.world
+      world.dispose()
+      // the renderer's warm-up makes and frees a throwaway world of its own: the one of the host is freed exactly once
+      expect(disposeJolt.mock.contexts.filter((context) => context === joltWorld)).toHaveLength(1)
+    } finally {
+      disposeJolt.mockRestore()
+    }
   })
 
   it('releases only what it made: a physics loop of the game is left standing', async () => {
     const engine = await createJoltEngine()
     const joltWorld = engine.createWorld(KIT_WORLD)
-    const loop = createPhysicsLoop(joltWorld)
-    const world = await makeWorld({ physics: loop })
-    expect(world.info.physics.kind).toBe('loop')
-    world.dispose()
-    // the world the game made still answers: the host did not dispose it
-    expect(() => joltWorld.stepFixed(KIT_WORLD.fixedStep ?? 1 / 120)).not.toThrow()
-    joltWorld.dispose()
+    const disposeJolt = vi.spyOn(joltWorld, 'dispose')
+    try {
+      const world = await track(makeWorld({ physics: createPhysicsLoop(joltWorld) }))
+      expect(world.info.physics.kind).toBe('loop')
+      world.dispose()
+      expect(disposeJolt).not.toHaveBeenCalled()
+    } finally {
+      joltWorld.dispose()
+    }
   })
 
   it('does not dispose a coordinator the game handed in', async () => {
     let disposed = 0
     const coordinator = { stats: () => ({ workers: 0 }), dispose: () => void disposed++ } as unknown as WorkerCoordinator
-    const world = await makeWorld({ workers: coordinator })
+    const world = await track(makeWorld({ workers: coordinator }))
     world.dispose()
     expect(disposed).toBe(0)
   })

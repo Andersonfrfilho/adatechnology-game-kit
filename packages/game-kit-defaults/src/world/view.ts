@@ -4,7 +4,10 @@ import { FIRST_PERSON_LAYER } from '@adatechnology/game-contracts'
 
 export type ThreeNamespace = typeof THREE_NS
 
+export type KitWorldQuality = 'low' | 'medium' | 'high'
+
 export type KitWorldViewOptions = {
+  readonly THREE: ThreeNamespace
   readonly container: HTMLElement
   readonly renderer?: THREE_NS.WebGLRenderer
   readonly scene?: THREE_NS.Scene
@@ -25,21 +28,27 @@ export type KitWorldView = {
   width(): number
   height(): number
   resize(): void
+  /** Shadows and pixel ratio for a quality level, on a renderer the host made. */
+  setQuality(quality: KitWorldQuality): void
   dispose(): void
 }
 
 const DEFAULT_WIDTH = 960
 const DEFAULT_HEIGHT = 600
 const MAX_PIXEL_RATIO = 2
+const LOW_QUALITY_PIXEL_RATIO = 1
 
-export function createView(THREE: ThreeNamespace, options: KitWorldViewOptions): KitWorldView {
+const devicePixelRatioOf = (): number => Math.min(typeof devicePixelRatio === 'number' ? devicePixelRatio : 1, MAX_PIXEL_RATIO)
+
+export function createView(options: KitWorldViewOptions): KitWorldView {
+  const { THREE } = options
   const container = options.container
   const ownsRenderer = !options.renderer
   const gl: THREE_NS.WebGLRenderer = options.renderer ?? new THREE.WebGLRenderer({ antialias: true })
   const width = (): number => container.clientWidth || DEFAULT_WIDTH
   const height = (): number => container.clientHeight || DEFAULT_HEIGHT
   if (ownsRenderer) {
-    gl.setPixelRatio(Math.min(typeof devicePixelRatio === 'number' ? devicePixelRatio : 1, MAX_PIXEL_RATIO))
+    gl.setPixelRatio(devicePixelRatioOf())
     gl.shadowMap.enabled = true
     gl.shadowMap.type = THREE.PCFSoftShadowMap
     gl.toneMapping = THREE.ACESFilmicToneMapping
@@ -72,6 +81,12 @@ export function createView(THREE: ThreeNamespace, options: KitWorldViewOptions):
     width,
     height,
     resize,
+    setQuality(quality) {
+      if (!ownsRenderer) return
+      gl.shadowMap.enabled = quality !== 'low'
+      gl.setPixelRatio(quality === 'low' ? LOW_QUALITY_PIXEL_RATIO : devicePixelRatioOf())
+      resize()
+    },
     dispose() {
       window.removeEventListener('resize', resize)
       if (!options.camera) camera.removeFromParent()

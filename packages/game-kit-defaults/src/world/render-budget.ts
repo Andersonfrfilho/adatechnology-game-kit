@@ -12,6 +12,7 @@ import {
 } from '@adatechnology/game-render-three'
 import type { EffectWarmup, LightBudget, ProgramWarmup, RenderPools, StaticBatchQueue, WarmupProbe } from '@adatechnology/game-render-three'
 import { explosionEffectIds } from '@adatechnology/game-vfx'
+import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 
 import type { ThreeNamespace } from './view'
 
@@ -47,7 +48,7 @@ const materialsOf = (group: THREE_NS.Object3D): THREE_NS.Material[] => {
   return [...found]
 }
 
-export const probeOf = (id: string, adapter: ProbeAdapter): WarmupProbe => ({
+export const probeOf = ({ id, adapter }: { readonly id: string; readonly adapter: ProbeAdapter }): WarmupProbe => ({
   id,
   build() {
     const probe = adapter.warmUpProbes()
@@ -56,13 +57,14 @@ export const probeOf = (id: string, adapter: ProbeAdapter): WarmupProbe => ({
   },
 })
 
-export function createRenderBudget(THREE: ThreeNamespace, options: {
+export function createRenderBudget(options: {
+  readonly THREE: ThreeNamespace
   readonly scene: THREE_NS.Scene
   readonly camera: THREE_NS.Camera
   readonly gl: THREE_NS.WebGLRenderer
   readonly lightSizes?: { readonly point?: number; readonly spot?: number }
 }): KitWorldRenderBudget {
-  const { scene, camera, gl } = options
+  const { THREE, scene, camera, gl } = options
   const lights = createLightBudget(THREE, scene, { ...DEFAULT_LIGHT_SIZES, ...options.lightSizes })
   const warmup = createProgramWarmup(THREE)
   const pools: RenderPools = { geometries: createGeometryPool(), materials: createMaterialPool({ anchors: warmup.anchors, renderer: gl }) }
@@ -86,30 +88,23 @@ export function createRenderBudget(THREE: ThreeNamespace, options: {
   }
 }
 
-type WarmedEffects = {
-  readonly root: THREE_NS.Object3D
-  readonly play: (query: { effect: string; point: [number, number, number]; direction: [number, number, number]; normal: [number, number, number] }) => number | null
-  readonly stop: (handle: number) => void
-  readonly update: (dt: number) => void
-  readonly world: { clear(): void }
-  readonly catalog?: () => readonly string[]
-}
+type WarmedEffects = VfxRenderer
 
 /** The adapters whose materials the world makes on demand: each one's probes are drawn once at load, and a blast of every explosive and a flame are drawn a few frames, so nothing links in play. */
-export function registerWarmupProbes(THREE: ThreeNamespace, budget: KitWorldRenderBudget, adapters: Readonly<Record<string, ProbeAdapter>>, effects: WarmedEffects): void {
+export function registerWarmupProbes({ THREE, budget, adapters, effects }: { readonly THREE: ThreeNamespace; readonly budget: KitWorldRenderBudget; readonly adapters: Readonly<Record<string, ProbeAdapter>>; readonly effects: WarmedEffects }): void {
   const { warmup } = budget
-  for (const [id, adapter] of Object.entries(adapters)) warmup.register(probeOf(id, adapter))
+  for (const [id, adapter] of Object.entries(adapters)) warmup.register(probeOf({ id, adapter }))
   warmup.register(spriteProbes(THREE))
   // a textured caster on each side: the depth program of a textured wall that first enters the sun's box in play is linked here
   warmup.register(shadowCasterProbes(THREE))
   const catalogIds = effects.catalog?.() ?? []
   // every explosion of the effects catalogue, one flame, and every impact (the spark of a bullet on metal, wood, glass...) so a shot never pays for its first buffers in play
   for (const id of [...explosionEffectIds(), ...catalogIds.filter((each) => /fire|flame/i.test(each)).slice(0, WARMED_FIRE_EFFECTS), ...catalogIds.filter((each) => /^impact_/.test(each))]) {
-    if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect(id, effects))
+    if (catalogIds.includes(id)) warmup.registerEffect(warmedEffect({ id, effects }))
   }
 }
 
-function warmedEffect(id: string, effects: WarmedEffects): EffectWarmup {
+function warmedEffect({ id, effects }: { readonly id: string; readonly effects: WarmedEffects }): EffectWarmup {
   let handle: number | null = null
   return {
     id: `vfx:${id}`,

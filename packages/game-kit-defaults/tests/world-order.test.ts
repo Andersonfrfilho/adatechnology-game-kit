@@ -1,10 +1,9 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { FRAME_SLOTS } from '../src/world'
 import type { KitWorld } from '../src/world'
 import { makeWorld } from './world-helpers'
-
-const PHASE_ORDER = ['input', 'fixedSimulate', 'lateSimulate', 'present', 'render'] as const
 
 /** `design-host.md` §4.1, row by row, in the order the scheduler runs them (the blast pacing rows are the ones the table lists apart). */
 const EXPECTED_SYSTEMS = [
@@ -27,13 +26,6 @@ const EXPECTED_SYSTEMS = [
   ['render', 0, 'room.render'],
 ] as const
 
-const inSchedulerOrder = (world: KitWorld): Array<readonly [string, number, string]> =>
-  world.frame
-    .systems()
-    .map((system, index) => ({ ...system, index }))
-    .sort((a, b) => PHASE_ORDER.indexOf(a.phase as (typeof PHASE_ORDER)[number]) - PHASE_ORDER.indexOf(b.phase as (typeof PHASE_ORDER)[number]) || a.order - b.order || a.index - b.index)
-    .map((system) => [system.phase, system.order, system.id] as const)
-
 let world: KitWorld | undefined
 afterEach(() => {
   world?.dispose()
@@ -43,9 +35,18 @@ afterEach(() => {
 describe('the order of the host step', () => {
   it('registers the systems, phases and orders of the table in design-host 4.1', async () => {
     world = await makeWorld()
-    const stop = world.start({ render: true })
-    stop()
-    expect(inSchedulerOrder(world)).toEqual(EXPECTED_SYSTEMS)
+    world.start({ render: true })()
+    const byId = (list: ReadonlyArray<readonly [string, number, string]>): Array<readonly [string, number, string]> => [...list].sort((a, b) => a[2].localeCompare(b[2]))
+    expect(byId(world.frame.systems().map((system) => [system.phase, system.order, system.id] as const))).toEqual(byId(EXPECTED_SYSTEMS))
+  })
+
+  it('runs a live frame through the systems in the order of the table (what the scheduler really does)', async () => {
+    world = await makeWorld({ frame: { onError: () => undefined } })
+    world.start({ render: true })()
+    const ran: string[] = []
+    world.frame.scheduler.systemProbe = { enter: (id) => void ran.push(id), leave: () => undefined }
+    world.frame.scheduler.frame(world.frame.tick, { exact: true })
+    expect(ran.filter((id) => id.startsWith('room.'))).toEqual(EXPECTED_SYSTEMS.map((system) => system[2]))
   })
 
   it('leaves the render phase to the game when the host does not draw', async () => {
@@ -95,6 +96,49 @@ describe('the order of the host step', () => {
     world.rules.use({ fire: () => void events.push('fire'), beforePhysics: () => void events.push('beforePhysics') })
     world.frame.scheduler.advance(world.frame.tick)
     expect(events).toEqual(['enter simulate', 'beforeWorld', 'fire', 'beforePhysics', 'afterWorld', 'leave simulate'])
+  })
+
+  it('runs the frame slots at their places inside room.simulate-frame and room.simulate-end', async () => {
+    world = await makeWorld()
+    const events: string[] = []
+    world.frame.scheduler.systemProbe = {
+      enter: (id) => {
+        if (id === 'room.simulate-frame' || id === 'room.simulate-end') events.push(`enter ${id}`)
+      },
+      leave: (id) => {
+        if (id === 'room.simulate-frame' || id === 'room.simulate-end') events.push(`leave ${id}`)
+      },
+    }
+    const note = <TTarget extends object, TKey extends keyof TTarget & string>(target: TTarget, key: TKey, label: string): void => {
+      const original = (target[key] as unknown as (...args: unknown[]) => unknown).bind(target)
+      ;(target as Record<string, unknown>)[key] = (...args: unknown[]) => {
+        events.push(label)
+        return original(...args)
+      }
+    }
+    note(world.ground.view, 'sync', 'terrain sync')
+    note(world.liquids.waterView, 'sync', 'water view sync')
+    note(world.liquids.film, 'update', 'film update')
+    note(world.effects, 'present', 'vfx present')
+    for (const slot of FRAME_SLOTS) world.frame.on(slot, () => void events.push(slot))
+    world.frame.scheduler.advance(world.frame.tick)
+    expect(events).toEqual([
+      'enter room.simulate-frame',
+      'beforeFrame',
+      'afterSound',
+      'terrain sync',
+      'water view sync',
+      'afterWaterView',
+      'film update',
+      'afterFilm',
+      'afterFrame',
+      'leave room.simulate-frame',
+      'enter room.simulate-end',
+      'beforePresent',
+      'vfx present',
+      'afterPresent',
+      'leave room.simulate-end',
+    ])
   })
 
   it('repeats the world step by `repeat` and the fire only in the first repetition', async () => {

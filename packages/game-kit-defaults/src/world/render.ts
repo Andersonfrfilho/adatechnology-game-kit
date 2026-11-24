@@ -60,6 +60,7 @@ export function createRender(deps: RenderDeps): KitWorldRender {
   let stopLoop: (() => void) | undefined
   let disposePacer: (() => void) | undefined
   let isLooping = false
+  let isDrawRegistered = false
 
   const draw = (hooks: KitWorldRenderHooks | undefined, scripted: boolean): void => {
     const context = { scripted }
@@ -109,12 +110,16 @@ export function createRender(deps: RenderDeps): KitWorldRender {
     render: (hooks) => draw(hooks, false),
     start(options = {}) {
       if (stopLoop) return stopLoop
-      if (options.render ?? view.ownsRenderer) registerDrawSystems(options.renderHooks)
+      if ((options.render ?? view.ownsRenderer) && !isDrawRegistered) {
+        isDrawRegistered = true
+        registerDrawSystems(options.renderHooks)
+      }
+      let stop: () => void
       try {
-        stopLoop = startLoop(scheduler, {
+        stop = startLoop(scheduler, {
           onFrame: (realSeconds) => {
             graphics?.frameStart()
-            scheduler.budget.targetMs = frameTargetOf(deps.targetMs, graphics?.controller.minFrameMs())
+            scheduler.budget.targetMs = frameTargetOf({ hostTargetMs: deps.targetMs, ...(graphics ? { capGapMs: graphics.controller.minFrameMs() } : {}) })
             options.onFrame?.(realSeconds)
           },
           ...(options.skipSimulation ? { skipSimulation: options.skipSimulation } : {}),
@@ -124,12 +129,12 @@ export function createRender(deps: RenderDeps): KitWorldRender {
         isLooping = true
       } catch {
         // no display frames here (a worker): the host calls the frame itself
-        stopLoop = () => undefined
+        stop = () => undefined
       }
-      const stop = stopLoop
       stopLoop = () => {
         stop()
         isLooping = false
+        stopLoop = undefined
       }
       return stopLoop
     },

@@ -33,11 +33,11 @@ export function registerFrameQueues({ budget, destruction, audio, film, staticBa
 }
 
 /** D4: the tier comes from the host (default 1) and the work step never passes the ceiling of the frame. */
-export function workBudgetOf(workBudget: ExplosionWorkOptions, ceilingMs: number): ExplosionWorkOptions {
+export function workBudgetOf({ workBudget, ceilingMs }: { readonly workBudget: ExplosionWorkOptions; readonly ceilingMs: number }): ExplosionWorkOptions {
   return { tier: 1, ...workBudget, budgetMs: Math.min(workBudget.budgetMs ?? DEFAULT_WORK_BUDGET_MS, ceilingMs) }
 }
 
 /** The deadline of a frame: the host's own, else the player's FPS cap (the loop's gap is one ms under it), else 60 Hz. */
-export function frameTargetOf(hostTargetMs: number | undefined, capGapMs = 0): number {
+export function frameTargetOf({ hostTargetMs, capGapMs = 0 }: { readonly hostTargetMs: number | undefined; readonly capGapMs?: number }): number {
   return hostTargetMs ?? (capGapMs > 0 ? capGapMs + 1 : DEFAULT_FRAME_TARGET_MS)
 }

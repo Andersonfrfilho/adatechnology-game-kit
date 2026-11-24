@@ -131,7 +131,7 @@ export function createDestructionHost(deps: DestructionDeps): KitWorldDestructio
     ...(groundWorker ? { groundWorker } : {}),
     ...(debris?.workers ? { workers: debris.workers } : {}),
     ...(debris?.jitWarmUp !== undefined ? { jitWarmUp: debris.jitWarmUp } : {}),
-    ...(debris?.workBudget ? { workBudget: workBudgetOf(debris.workBudget, deps.frameBudgetMs) } : {}),
+    ...(debris?.workBudget ? { workBudget: workBudgetOf({ workBudget: debris.workBudget, ceilingMs: deps.frameBudgetMs }) } : {}),
     ...(debris?.settledBatches === false ? {} : { settledBatches: debris?.settledBatches ?? {} }),
     ...(blast || debris?.workBudget ? { focus: (): Vec3 => [camera.position.x, camera.position.y, camera.position.z] } : {}),
     ...(blast ? { blastDebris: blast } : {}),
@@ -167,4 +167,9 @@ export function createDestructionHost(deps: DestructionDeps): KitWorldDestructio
     shoveable: (test) => void (isShoveable = test),
     pristine: deps.pristine,
   }
+}
+
+/** The renderer's JIT warm-up heats the engine the host loaded, unless the game said otherwise. */
+export function withEngineWarmUp(debris: KitWorldDebrisOptions | undefined, engine: JitWarmUpOptions['engine'] | null): KitWorldDebrisOptions {
+  return { ...debris, ...(debris?.jitWarmUp === undefined && engine ? { jitWarmUp: { engine } } : {}) }
 }

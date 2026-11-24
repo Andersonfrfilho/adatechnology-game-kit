@@ -13,7 +13,6 @@ import type { KitWorldEffects } from './effects'
 import type { KitWorldFrame, KitWorldFrameOptions } from './frame'
 import type { KitWorldGraphics, KitWorldGraphicsSetup } from './graphics'
 import type { KitWorldGround } from './ground'
-import type { KitWorldQuality } from './light'
 import type { KitWorldFilm, KitWorldFluids, KitWorldWater } from './liquids'
 import type { ObjectRegistry } from './objects'
 import type { KitWorldPhysics, KitWorldPhysicsInfo, PhysicsChoice } from './physics'
@@ -21,7 +20,7 @@ import type { KitWorldPieces } from './pieces'
 import type { KitWorldRender } from './render'
 import type { ReportPort, WorldReport } from './reports'
 import type { KitWorldAudioOptions, KitWorldSound } from './sound'
-import type { KitWorldView } from './view'
+import type { KitWorldQuality, KitWorldView } from './view'
 import type { KitWorldWorkers } from './workers'
 import type { KitWorldRules } from './world-rules'
 
@@ -103,6 +102,8 @@ export type KitWorld<TRecord = unknown> = {
   readonly frame: KitWorldFrame
   readonly blastPacing: KitWorldFrame['blastPacing']
   readonly info: KitWorldInfo
+  /** The stream the host draws from (the ground's fire and smoke): the game's own, or the host's seeded one that `reset` takes back to its seed. */
+  readonly random: () => number
   /** The sun's shadow map and the renderer's pixel ratio for a quality level, on a renderer the host made. */
   setQuality(quality: KitWorldQuality): void
   warmUp(): void

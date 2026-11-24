@@ -27,7 +27,7 @@ type Pending = { readonly blast: PacedBlast; readonly onDone: (results: HitResul
  * the same bytes as without the pacer. One slice per frame in `lateSimulate`. A scenario's `advance` (scripted, never held; its legacy step runs the simulation in
  * `lateSimulate`) sets its blasts off whole, as without the pacer.
  */
-export function createBlastPacing(options: BlastPacingOptions | false | undefined, deps: { readonly world: BlastPacerOptions['world'] & Pick<DestructionWorld, 'explode'>; readonly renderer: BlastPacerOptions['renderer'] }): BlastPacing | undefined {
+export function createBlastPacing({ options, ...deps }: { readonly options: BlastPacingOptions | false | undefined; readonly world: BlastPacerOptions['world'] & Pick<DestructionWorld, 'explode'>; readonly renderer: BlastPacerOptions['renderer'] }): BlastPacing | undefined {
   if (!options) return undefined
   const pacer: BlastPacer = createBlastPacer({ ...deps, ...options })
   const pending: Pending[] = []

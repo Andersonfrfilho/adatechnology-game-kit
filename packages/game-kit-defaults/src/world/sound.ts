@@ -35,14 +35,15 @@ export type KitWorldSound = {
   dispose(): void
 }
 
-export function createSound(world: DestructionWorld, option: false | AudioEngine | KitWorldAudioOptions | undefined): KitWorldSound {
+export function createSound({ world, audio: option }: { readonly world: DestructionWorld; readonly audio: false | AudioEngine | KitWorldAudioOptions | undefined }): KitWorldSound {
   const isEngine = option !== undefined && option !== false && 'play' in option
   const options: KitWorldAudioOptions = option === undefined || option === false || isEngine ? {} : option
   const isOwned = !isEngine && option !== false
   const audio: AudioEngine | null = option === false ? null : isEngine ? option : createAudioEngine({ deferredStart: {}, groups: DESTRUCTION_VOICE_GROUPS, occlusion: { query: createRaycastOcclusion(world) } })
   const destruction = audio ? createDestructionSound(audio) : null
   // the kit's recorded files, served next to the page: each recipe of the same id plays until its takes load, and stays where they cannot be fetched
-  if (audio && options.samplesBaseUrl !== null) void loadRecordings(audio, options)
+  const preload: PreloadState = { isDisposed: false, detach: undefined }
+  if (audio && options.samplesBaseUrl !== null) void loadRecordings({ audio, options, preload })
   // the fitted copies of the recordings: what each recorded id plays while its files load, or where they are not on the machine
   if (audio && options.fittedSounds !== false) registerFittedSounds(audio)
   return {
@@ -54,28 +55,37 @@ export function createSound(world: DestructionWorld, option: false | AudioEngine
       else options.onSound?.(key, point, volume)
     },
     dispose() {
+      preload.isDisposed = true
+      preload.detach?.()
       destruction?.dispose()
       if (isOwned) audio?.dispose()
     },
   }
 }
 
-async function loadRecordings(audio: AudioEngine, options: KitWorldAudioOptions): Promise<void> {
+/** The first-key-or-click preload: it must not outlive the world, nor start after it. */
+type PreloadState = { isDisposed: boolean; detach: (() => void) | undefined }
+
+async function loadRecordings({ audio, options, preload: state }: { readonly audio: AudioEngine; readonly options: KitWorldAudioOptions; readonly preload: PreloadState }): Promise<void> {
   const bank = await loadKitSamples(audio, { baseUrl: options.samplesBaseUrl ?? './sfx/' })
   // the owner's own sounds after the kit's, so each one the kit has keeps the kit's recording in front
   if (options.userSamplesBaseUrl !== null) {
     const own = await loadUserSamples(audio, { baseUrl: options.userSamplesBaseUrl ?? './sfx-local/' })
     if (own) options.onUserSounds?.(own)
   }
-  if (!bank || typeof window === 'undefined') return
+  if (!bank || typeof window === 'undefined' || state.isDisposed) return
   // the sounds of the hand and of the destruction style load on the first key or click, when the page may make its AudioContext, so even the first one is the recording
   const preload = (): void => {
-    window.removeEventListener('keydown', preload, true)
-    window.removeEventListener('pointerdown', preload, true)
+    state.detach?.()
     void audio.loadSamples([...(options.preloadIds ?? []), ...impactSoundIds(DESTRUCTION_SOUND_KEYS.art_scene)]).catch(() => undefined)
     // every explosion's boom, fire, debris and splash, decoded now: the first blast plays its recordings with no decode in its frames
     void audio.preload([...blastSoundIds(), WATER_SPLASH_SOUND]).catch(() => undefined)
   }
   window.addEventListener('keydown', preload, true)
   window.addEventListener('pointerdown', preload, true)
+  state.detach = () => {
+    window.removeEventListener('keydown', preload, true)
+    window.removeEventListener('pointerdown', preload, true)
+    state.detach = undefined
+  }
 }
