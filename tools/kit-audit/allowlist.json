@@ -9,7 +9,7 @@
     {
       "file": "packages/game-vehicles-fleet/src/vehicles/heavy.ts",
       "domain": "networks",
-      "reason": "the manholes on top of a tanker's barrel, not a street manhole"
+      "reason": "the manholes on top of a tanker's barrel and the grab poles of a bus, not street pieces"
     },
     {
       "file": "packages/game-contracts/src/fluids.ts",
