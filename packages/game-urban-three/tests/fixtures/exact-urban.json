@@ -34,6 +34,7 @@
 "item/pole_cast_iron":{"hash":"1cbce30d","objects":5},
 "item/pole_wood_crossarm":{"hash":"17b8cf7b","objects":5},
 "item/pole_flood_tower":{"hash":"e5dd7cca","objects":10},
+"item/pole_concrete_distribution":{"hash":"41ae4218","objects":5},
 "item/street_grid":{"hash":"a9dcc70f","objects":45},
 "item/terrain_patch":{"hash":"6376a133","objects":3},
 "item/downtown":{"hash":"eb5f6505","objects":48},

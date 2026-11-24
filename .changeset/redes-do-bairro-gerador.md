@@ -1,0 +1,5 @@
+---
+'@adatechnology/game-urban': minor
+---
+
+`generateNetworks` em `@adatechnology/game-urban/networks`: as redes do bairro geradas do plano de cidade e dos lotes do site, como dado. Postes de um lado da rua a 0,4 m do meio-fio, vãos de 30 a 40 m na divisa dos lotes, longe de portão (`avoid`), poste de esquina e de fim de linha com estai, intermediário a 5 m da pista transversal; trafos pela demanda diversificada no centro de carga, MT só até eles, BT até 200 m para cada lado, ramal do poste mais próximo; luminária em todo poste; telecom com feixe de 3 a 5 cabos e alguns gatos sem medidor na periferia (pela semente); esgoto no eixo com PV em todo cruzamento e a cada 80 m até o interceptor da margem e a ETE na borda; galeria de drenagem com bocas de lobo nas esquinas e a cada 60 m até o muro de ala; água sob a calçada oposta com registro e hidrante no cruzamento. Regras de traçado em `rules.layout` (`DEFAULT_NETWORK_LAYOUT`), aresta nova `storm_gutter` (sarjeta, canal aberto) e poste `concrete_distribution` no registro com as faixas (`slots`). Mesma entrada, mesmos bytes (spec 011, T2.8b).

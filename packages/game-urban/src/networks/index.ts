@@ -12,7 +12,7 @@ export { DEFAULT_NETWORK_RULES, diversifiedDemand, pickTransformer, resolveNetwo
 export type { ClearanceRow, CoverRange, DiversityBand, NetworkRules, PowerRules, TransformerRating } from './rules'
 export { DEFAULT_POLE_SLOTS, POLE_SLOT_GAPS, POLE_SLOT_ORDER, checkPoleSlots, slotsOfPole } from './slots'
 export type { PoleSlotViolation } from './slots'
-export type { DistributionPoleDef, DistributionSpec, PoleSlotBand, PoleSlots } from '../poles'
+export type { DistributionPoleDef, DistributionSpec, PoleSlotBand, PoleSlots } from '../pole-specs'
 export type {
   AerialClass,
   AerialEdgeKind,
@@ -29,4 +29,11 @@ export type {
   UtilityNetworks,
 } from './types'
 export { validateNetworks } from './validate'
+export { generateNetworks, surfaceOf } from './generate'
+export type { GenerateNetworksParams, GeneratedNetworks } from './generate'
+export { defaultConnectionsOf } from './connections'
+export type { GroundAt } from './connections'
+export { DEFAULT_NETWORK_LAYOUT } from './layout-rules'
+export type { DefaultConnectionRules, NetworkLayoutRules } from './layout-rules'
+export type { NetworkLot, RunEnd, ServedLot, StreetRun } from './runs'
 export type { ValidateNetworksOptions } from './validate-context'

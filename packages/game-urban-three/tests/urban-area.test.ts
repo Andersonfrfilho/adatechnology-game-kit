@@ -30,12 +30,12 @@ describe('urban test area', () => {
     expect(report.problems).toEqual([])
     expect(report.ok).toBe(true)
     expect(report.items).toEqual([...module.itemIds])
-    expect(report.items).toHaveLength(17)
+    expect(report.items).toHaveLength(18)
     expect(report.scenarios).toHaveLength(8)
     const laid = room.openArea(URBAN_AREA_ID)
     expect(laid.map((object) => object.itemId).sort()).toEqual([...module.itemIds].sort())
     for (let i = 0; i < 3; i++) room.update(1 / 60)
-    expect(module.placed.size).toBe(17)
+    expect(module.placed.size).toBe(18)
   })
 
   it('loads through loadUrbanTestModule and names the items in the room language', () => {
@@ -107,7 +107,7 @@ describe('urban test area', () => {
     })
     expect(left).toBe(0)
     const metrics = room.metrics().module
-    expect(Number(metrics.samples)).toBe(17)
+    expect(Number(metrics.samples)).toBe(18)
     expect(Number(metrics.draw_calls)).toBeGreaterThan(100)
     expect(Number(metrics.triangles)).toBeGreaterThan(1000)
     expect(Number(metrics.instances)).toBeGreaterThan(0)
@@ -115,7 +115,7 @@ describe('urban test area', () => {
 
   it('shows the items a game adds to the catalogues', () => {
     const module = createUrbanTestModule({ ...options(), urban: { remove: { neighbourhoods: ['military'], poles: ['flood_tower'] } } })
-    expect(module.itemIds).toHaveLength(15)
+    expect(module.itemIds).toHaveLength(16)
     expect(module.itemIds).not.toContain('military')
     expect(module.itemIds).not.toContain('pole_flood_tower')
   })
