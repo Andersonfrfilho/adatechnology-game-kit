@@ -35,19 +35,29 @@ const extra = process.env.DISTRICT_QUERY ?? ''
 const args = ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox']
 const browser = await playwright.chromium.launch({ args })
 
+/**
+ * What `window.__district.run` hands back, as far as this script reads it.
+ * @typedef {{ destruction: number, crowd: number, player: number }} PhaseHash
+ * @typedef {{ id: string, hash?: PhaseHash }} PhaseResult
+ * @typedef {{ eventIndex: number, explosive: string, step: number, inReach: number, inLethal: number, killsBefore: number, killsAfter: number }} BlastResult
+ * @typedef {{ kind: string, at: number, status: string, limit?: string, source?: string, detonations?: number }} EventResult
+ * @typedef {{ mode: string, at: number, status?: string, limit?: string }} CueResult
+ * @typedef {{ scriptId: string, seed: number, ticks: number, phases: PhaseResult[], blasts: BlastResult[], events: EventResult[], cues: CueResult[] }} RunResult
+ */
+
 /** One fresh page: no animation frames (the display loop never runs, so what the page did before the run cannot depend on how long it took to load), then the whole script. @param {string} scenario */
 async function runOnce(scenario) {
   const page = await (await browser.newContext({ viewport: { width: 960, height: 540 } })).newPage()
   await page.addInitScript(() => { window.requestAnimationFrame = () => 0 })
   /** @type {string[]} */
   const errors = []
-  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('pageerror', (/** @type {Error} */ error) => errors.push(error.message))
   await page.goto(`${base}?cena=${scenario}&roteiro=1${extra}`, { timeout: 120000 })
   await page.waitForFunction(() => window.__district || window.__districtError, null, { timeout: 300000, polling: 500 })
   const failure = await page.evaluate(() => window.__districtError ?? null)
   if (failure) throw new Error(`${scenario}: the page did not come up: ${failure}`)
   const started = Date.now()
-  const result = await page.evaluate(() => window.__district.run(undefined, { hash: true }))
+  const result = /** @type {RunResult} */ (await page.evaluate(() => window.__district?.run(undefined, { hash: true })))
   await page.context().close()
   return { result, seconds: (Date.now() - started) / 1000, errors }
 }
