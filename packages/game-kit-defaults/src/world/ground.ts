@@ -43,6 +43,10 @@ export type KitWorldGround = {
   register(): void
   /** Host internal: burning cells flame and smoke every `GROUND_FIRE_EVERY` seconds of the simulation. */
   showFire(dt: number): void
+  /** What a blow on the ground shows and sounds (debris, dust, a splash, the impact), as when the ground's own `onBlow` runs: for a blow the game applied itself. */
+  showBlow(result: TerrainBlowResult, hit?: Hit): void
+  /** The fire clock at zero, the layout as it is (a game that laid the ground itself). */
+  resetFire(): void
   /** Back to the layout the world started with and the fire clock at zero. */
   reset(): void
 }
@@ -136,6 +140,10 @@ export function createGround(deps: GroundDeps): KitWorldGround {
         renderer.emit('fire', [x, y + 0.05, z], [0, 1, 0], 3, 1.6)
         if (deps.random() < SMOKE_CHANCE) renderer.emit('smoke', [x, y + 0.2, z], [0, 1, 0], 1, 1)
       }
+    },
+    showBlow,
+    resetFire() {
+      fireClock = 0
     },
     reset() {
       terrain.setLayout(layout)

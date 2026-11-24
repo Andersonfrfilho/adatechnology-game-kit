@@ -15,7 +15,7 @@ import type { KitWorldGraphics, KitWorldGraphicsSetup } from './graphics'
 import type { KitWorldGround } from './ground'
 import type { KitWorldFilm, KitWorldFluids, KitWorldWater } from './liquids'
 import type { ObjectRegistry } from './objects'
-import type { KitWorldPhysics, KitWorldPhysicsInfo, PhysicsChoice } from './physics'
+import type { GivenPhysicsChoice, KitWorldPhysics, KitWorldPhysicsInfo, PhysicsChoice } from './physics'
 import type { KitWorldPieces } from './pieces'
 import type { KitWorldRender } from './render'
 import type { ReportPort, WorldReport } from './reports'
@@ -40,6 +40,8 @@ export type KitWorldOptions = {
   readonly locale?: string
   /** `false` for a silent world, an engine the game made (not released here), or the options of the engine the host makes. */
   readonly audio?: false | AudioEngine | KitWorldAudioOptions
+  /** Every sound key the world plays, with its detail, a silent world's too (default the `onSound` of the audio options). */
+  readonly onSound?: KitWorldAudioOptions['onSound']
   /** `[minX, minZ, maxX, maxZ]` of the terrain, metres. */
   readonly bounds: readonly [number, number, number, number]
   /** What the floor is made of (default a concrete slab). */
@@ -68,6 +70,9 @@ export type KitWorldOptions = {
   readonly onEvent?: (report: WorldReport) => void
 }
 
+/** The options of a world whose physics needs no engine loaded (`createKitWorldSync`). */
+export type KitWorldSyncOptions = Omit<KitWorldOptions, 'physics'> & { readonly physics: GivenPhysicsChoice }
+
 /** What the host turned on and what it could not, for a log line or a test. */
 export type KitWorldInfo = {
   readonly physics: KitWorldPhysicsInfo
@@ -88,7 +93,7 @@ export type KitWorld<TRecord = unknown> = {
   readonly objects: ObjectRegistry<TRecord>
   readonly reports: ReportPort
   readonly pieces: KitWorldPieces
-  readonly liquids: KitWorldFluids & { readonly view: KitWorldFilm['view']; readonly film: KitWorldFilm['film']; readonly filmBridge: KitWorldFilm['bridge']; readonly water: KitWorldWater['water']; readonly waterView: KitWorldWater['view'] }
+  readonly liquids: KitWorldFluids & { readonly view: KitWorldFilm['view']; readonly film: KitWorldFilm['film']; readonly filmBridge: KitWorldFilm['bridge']; readonly filmRandom: KitWorldFilm['random']; readonly water: KitWorldWater['water']; readonly waterView: KitWorldWater['view'] }
   readonly sound: KitWorldSound
   readonly effects: KitWorldEffects
   readonly lights: LightBudget
@@ -109,6 +114,8 @@ export type KitWorld<TRecord = unknown> = {
   warmUp(): void
   render: KitWorldRender['render']
   start: KitWorldRender['start']
+  /** The display loop of `start` runs (false before it, after its stop, and where there are no display frames). */
+  readonly isLooping: boolean
   /** The worlds back to their seeded start (`blastPacing.clear()` included). */
   reset(): void
   dispose(): void

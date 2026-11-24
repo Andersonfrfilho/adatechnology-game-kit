@@ -8,7 +8,8 @@ import { createInfo } from './info'
 import { createLight } from './light'
 import { createFluidWorld, createLiquidViews, createWater } from './liquids'
 import { createObjectRegistry } from './objects'
-import { createPhysics } from './physics'
+import { createPhysics, givenPhysics } from './physics'
+import type { KitWorldPhysics } from './physics'
 import { createPieces } from './pieces'
 import { createSeededRandom } from './random'
 import { createRender } from './render'
@@ -21,7 +22,7 @@ import type { ThreeNamespace } from './view'
 import { createWorkers } from './workers'
 import { createWorldRules } from './world-rules'
 import { createWorldStep } from './world-step'
-import type { KitWorld, KitWorldOptions } from './types'
+import type { KitWorld, KitWorldOptions, KitWorldSyncOptions } from './types'
 
 const DEFAULT_QUALITY = 'medium'
 const DEFAULT_GROUND_NAME = 'Ground'
@@ -34,6 +35,18 @@ const DEFAULT_LOCALE = 'en'
  * it made: a renderer, audio engine, coordinator or physics loop the game handed in is the game's.
  */
 export async function createKitWorld<TRecord = unknown>(THREE: ThreeNamespace, options: KitWorldOptions): Promise<KitWorld<TRecord>> {
+  return assembleKitWorld<TRecord>({ THREE, options, physics: await createPhysics(options.physics ?? 'jolt') })
+}
+
+/**
+ * The same world at once, for a host that cannot wait (the test room's `createTestRoom` returns its room synchronously): the physics is one that needs no engine
+ * loaded, the kit's own solver or what the game made (a loop the page loaded Jolt into, a seam).
+ */
+export function createKitWorldSync<TRecord = unknown>(THREE: ThreeNamespace, options: KitWorldSyncOptions): KitWorld<TRecord> {
+  return assembleKitWorld<TRecord>({ THREE, options, physics: givenPhysics(options.physics) })
+}
+
+function assembleKitWorld<TRecord>({ THREE, options, physics }: { readonly THREE: ThreeNamespace; readonly options: Omit<KitWorldOptions, 'physics'>; readonly physics: KitWorldPhysics }): KitWorld<TRecord> {
   const view = createView({ THREE, ...options })
   const { scene, camera, gl } = view
   const locale = options.locale ?? DEFAULT_LOCALE
@@ -43,11 +56,10 @@ export async function createKitWorld<TRecord = unknown>(THREE: ThreeNamespace, o
   const { world, isOwned: isWorldOwned, pristine } = createWorld(options)
   const seeded = createSeededRandom()
   const workers = createWorkers({ workers: options.workers, isGroundWorkerAllowed: options.debris?.groundWorker !== false })
-  const physics = await createPhysics(options.physics ?? 'jolt')
   const reports = createReportPort()
   if (options.onEvent) reports.on(options.onEvent)
   const pieces = createPieces()
-  const sound = createSound({ world, audio: options.audio })
+  const sound = createSound({ world, audio: options.audio, onSound: options.onSound })
   const lazy: { renderer?: ReturnType<typeof createDestructionHost>['renderer']; fluids?: ReturnType<typeof createFluidWorld>['fluids'] } = {}
   const ground = createGround({ THREE, scene, world, bounds: options.bounds, layout: options.ground, budget: options.terrainBudget, name: options.groundName ?? DEFAULT_GROUND_NAME, random: options.random ?? seeded.next, renderer: () => lazy.renderer as NonNullable<typeof lazy.renderer>, fluids: () => lazy.fluids as NonNullable<typeof lazy.fluids>, playSound: sound.play })
   const fluids = createFluidWorld({ fluids: options.fluids, locale, liquids: options.liquids, groundAt: ground.at, surfaces: options.surfaces ?? [] })
@@ -56,7 +68,7 @@ export async function createKitWorld<TRecord = unknown>(THREE: ThreeNamespace, o
   const effects = createEffects({ THREE, scene, lights: budget.lights, camera, container: view.container, quality, pointScale: view.pointScale, terrain: ground.terrain, groundAt: ground.at, particles: options.debris?.particles })
   const water = createWater({ THREE, scene, terrain: ground.terrain })
   const debris = withEngineWarmUp(options.debris, physics.engine)
-  const destruction = createDestructionHost({ THREE, scene, camera, world, isWorldOwned, pristine, physics: physics.loop ?? 'own', quality, pointScale: view.pointScale, ground, pieces, effects, debris, groundWorker: workers.groundPort, blastShove: options.blastShove, frameBudgetMs: options.frame?.budgetMs ?? 8, playSound: sound.play })
+  const destruction = createDestructionHost({ THREE, scene, camera, world, isWorldOwned, pristine, physics: physics.pieces, quality, pointScale: view.pointScale, ground, pieces, effects, debris, groundWorker: workers.groundPort, blastShove: options.blastShove, frameBudgetMs: options.frame?.budgetMs ?? 8, playSound: sound.play })
   const renderer = destruction.renderer
   lazy.renderer = renderer
   ground.attach(renderer)
@@ -72,7 +84,7 @@ export async function createKitWorld<TRecord = unknown>(THREE: ThreeNamespace, o
 
   return {
     view, sun: light.sun, destruction, ground, objects: createObjectRegistry<TRecord>(), reports, pieces,
-    liquids: { ...fluids, view: liquids.view, film: liquids.film, filmBridge: liquids.bridge, water: water.water, waterView: water.view },
+    liquids: { ...fluids, view: liquids.view, film: liquids.film, filmBridge: liquids.bridge, filmRandom: liquids.random, water: water.water, waterView: water.view },
     sound, effects, lights: budget.lights, warmup: budget.warmup, pools: budget.pools, staticBatchQueue: budget.staticBatchQueue, physics, workers, rules, graphics, frame,
     blastPacing: frame.blastPacing,
     info: createInfo({ physics, frame, debris, workers }),
@@ -84,6 +96,9 @@ export async function createKitWorld<TRecord = unknown>(THREE: ThreeNamespace, o
     warmUp: budget.warmUp,
     render: render.render,
     start: render.start,
+    get isLooping() {
+      return render.isLooping
+    },
     reset,
     dispose,
   }
