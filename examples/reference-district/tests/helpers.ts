@@ -69,3 +69,6 @@ export function lineBandOverlapsRect(line: PlanLine, rect: PlanRect): boolean {
   }
   return false
 }
+
+/** The urban kit that knows the reference plan. */
+export { createReferenceUrban as createUrbanForTest } from '../src/game/plan'

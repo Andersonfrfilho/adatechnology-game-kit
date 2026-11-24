@@ -7,7 +7,8 @@ import { join } from 'node:path'
 
 /** The test room itself and the pages that are not built over the room page. */
 const ROOM_FOLDER = 'test-room'
-const STANDALONE = new Set([ROOM_FOLDER, 'interactables-showroom'])
+const DISTRICT_FOLDER = 'reference-district'
+const STANDALONE = new Set([ROOM_FOLDER, 'interactables-showroom', DISTRICT_FOLDER])
 /** The room page embeds the furniture area's entry (examples/test-room/build.mjs), so building the room builds that area's packages first. */
 const ROOM_ENTRY_FOLDER = 'interactables-test-area'
 
@@ -21,6 +22,7 @@ export function areaId(folder) {
   if (folder === 'interactables-showroom') return 'showroom'
   // `check:items` is the item catalogue's own check (packages/game-items-goods/scripts/check-items.mjs), so the items area is `check:items-area`
   if (folder === 'items-test-area') return 'items-area'
+  if (folder === DISTRICT_FOLDER) return 'district'
   return folder.replace(/-test-area$/, '').replace(/-area$/, '')
 }
 
@@ -74,7 +76,10 @@ export function planCheck({ area, packages, roomPackages, roomBuilt, flags }) {
   if (toBuild.length) steps.push({ label: `build ${toBuild.length} packages and their dependencies`, command: 'pnpm', args: [...withDependencies(toBuild), 'run', 'build'] })
   if (needsRoom && area.folder !== ROOM_FOLDER) steps.push({ label: 'build the test room page', command: 'node', args: [`examples/${ROOM_FOLDER}/build.mjs`] })
   steps.push({ label: `build ${area.folder}`, command: 'node', args: [`examples/${area.folder}/build.mjs`] })
-  if (flags.unit && packages.length) {
+  // the district's own page is the example of how a game uses the kit: its unit tests are the example's (the packages it loads have their own areas)
+  if (flags.unit && area.folder === DISTRICT_FOLDER) {
+    steps.push({ label: 'unit tests of the district example', command: 'pnpm', args: ['--filter', `@adatechnology/${DISTRICT_FOLDER}`, 'run', 'test'] })
+  } else if (flags.unit && packages.length) {
     steps.push({ label: `unit tests of ${packages.join(', ')}`, command: 'pnpm', args: [...packages.flatMap((folder) => ['--filter', `@adatechnology/${folder}`]), 'run', 'test'] })
   }
   if (flags.browser) steps.push({ label: `open ${area.folder} in the browser (prints in examples/${area.folder}/shots)`, command: 'node', args: [`examples/${area.folder}/test.mjs`], env: { EXAMPLE_PART: '' } })
