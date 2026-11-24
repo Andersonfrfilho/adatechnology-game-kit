@@ -79,8 +79,8 @@
         {"at": 14, "kind": "fire_line", "points": [[-92, -4], [-92, 4]], "pending": "L15", "note": "fogo no chão que fere a horda"},
         {"at": 15, "kind": "shoot", "shooter": "police", "weapon": "glock_17", "to": [-92, 0], "shots": 10, "pending": "L16", "note": "policiais atiram"},
         {"at": 16, "kind": "shoot", "shooter": "player", "weapon": "imbel_ia2", "to": [-92, 0], "shots": 30},
-        {"at": 22, "kind": "throw", "explosive": "m67", "to": [-112, -3], "note": "junto à viatura"},
-        {"at": 25, "kind": "detonate", "explosive": "c4", "to": [-108, 3]},
+        {"at": 23, "kind": "throw", "explosive": "m67", "to": [-112, -3], "note": "na frente da horda, junto à viatura"},
+        {"at": 28, "kind": "detonate", "explosive": "c4", "to": [-108, 3], "note": "junto à viatura, depois da M67"},
         {"at": 30, "kind": "vehicle_drive", "vehicle": "armored_truck", "path": [[-100, -90], [-100, 0], [-100, 90]], "speed": 18, "note": "atropela a horda"}
       ]
     }

@@ -72,10 +72,10 @@ for (const scenario of SCENARIOS) {
     if (!changed) failed++
     console.log(`  ${changed ? 'OK  ' : 'FAIL'}  destruction hash of ${after} differs from ${before}`)
   }
-  for (const blast of first.result.blasts.filter((candidate) => candidate.explosive === 'c4')) {
+  for (const blast of (scenario === 'caos' ? first.result.blasts : [])) {
     const hurt = blast.killsAfter > blast.killsBefore
     if (!hurt) failed++
-    console.log(`  ${hurt ? 'OK  ' : 'FAIL'}  the c4 raised the dead count`)
+    console.log(`  ${hurt ? 'OK  ' : 'FAIL'}  the ${blast.explosive} raised the dead count`)
   }
   const sameBlasts = others.every((other) => JSON.stringify(other.result.blasts) === JSON.stringify(first.result.blasts))
   if (!sameBlasts) failed++
