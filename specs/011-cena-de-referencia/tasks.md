@@ -63,7 +63,7 @@ passar de 2 semanas, a Fase 2 começa com explosivos roteirizados pelo cenário 
 - **T1.9** Extrair andar, empurrar e recipientes (`stepWalkPlan` 4155, de `walk-plan.ts`, chamado no `simulateFixed` 4153; `footing` 862; `syncContainers` 4106). A sala só tira linhas (§15).
 
 ## Fase 2 — Esqueleto da cena só com o que já existe
-> 🤖 Modelo: `sonnet` (T2.1 é 🧠 — `opus`)
+> 🤖 Modelo: `sonnet` (T2.1 e T2.7 são 🧠 — `opus`)
 
 - **T2.1 🧠** Formato do JSON do recorte (D2) e o recorte 1 **inteiro** desenhado nele (N1): ruas, lotes com tipologia e semente, rio, ponte,
   zonas de horda, o cruzamento do `caos` com a barricada, os pontos e horários dos eventos dos roteiros. Onde falta peça (tabela do `plan.md`), um marcador `missing` com o dono, desenhado como caixa de aviso.
@@ -80,6 +80,13 @@ passar de 2 semanas, a Fase 2 começa com explosivos roteirizados pelo cenário 
 - **T2.5** Sonda da cena (`examples/reference-district/perf.mjs`) no formato do `perf.mjs` e alvo `district` no `tools/gpu/perf-gate.mjs`
   (§6). Não é mecânica: as ferramentas de hoje leem `__testRoom`.
 - **T2.6** Primeira régua da cena (R5) nos três cenários, a 1x e a 4x, com a trava; prints em 3ª e 1ª pessoa (R4). Entrega à spec 010.
+- **T2.7 🧠** Desenho das redes do bairro em `design-redes.md` (pedido do dono, 2026-11-24): energia (MT, trafos, BT, iluminação,
+  ramais), telecom, esgoto, drenagem e água como grafo de dado no `game-urban` (`./networks`), ponto de ligação `UtilityConnection` no
+  `game-contracts`, regras da prática brasileira, testes de grafo, declividade e folga. `opus`, revisão do `architect`. Nenhum fio remendado antes.
+- **T2.8** Implementação por pacote, em seis PRs na ordem do `design-redes.md` §10: (a) contrato, tipos, grafo e validador; (b) gerador de
+  energia e iluminação (o `light` herda o estado da lâmpada do #470); (c) lado da casa (`street: 'network'`, padrão de entrada, caixa de
+  inspeção, hidrômetro); (d) desenho de energia e telecom e a troca na cena, com prints antes e depois; (e) esgoto, drenagem, água e peças de
+  superfície; (f) estado lógico e destruição (depende da L10). `sonnet`; cada uma com os gates 1 a 4.
 
 ## Fase 3 — Peças que faltam, cada uma no pacote dono
 > 🤖 Modelo: `sonnet` (T3.1 e T3.3 são 🧠 — `opus`, validar com `engenheiro-estrutural`; T3.9 e T3.10 → `haiku` se o padrão do catálogo bastar)
