@@ -1,4 +1,4 @@
-import { ordinal, worldOf } from './frame'
+import { worldOf } from './frame'
 import type { PoleStation } from './pole-layout'
 import type { StreetRun } from './runs'
 
@@ -23,41 +23,71 @@ export type PoleSystem = {
 
 export type PoleTree = { readonly poles: ReadonlyMap<string, NetworkPole>; readonly systems: readonly PoleSystem[] }
 
-const planDistance = (a: NetworkPole, b: NetworkPole): number => Math.hypot(a.station.x - b.station.x, a.station.z - b.station.z)
+export type PoleTreeParams = {
+  /** Stations of each run in order, and service chains from their street pole: consecutive stations are spans. */
+  readonly chains: ReadonlyArray<readonly PoleStation[]>
+  readonly sides: ReadonlyMap<string, 1 | -1>
+  readonly setback: number
+}
 
-/** Poles by id (`pole:<run>:NN`), a corner two runs share kept once, and the spans between consecutive poles of each run. */
-function polesAndSpans(stations: ReadonlyArray<readonly PoleStation[]>): { poles: Map<string, NetworkPole>; spans: Map<string, Set<string>> } {
+const planDistance = (a: PoleStation, b: PoleStation): number => Math.hypot(a.x - b.x, a.z - b.z)
+const spotOf = (station: PoleStation): string => `${Math.round(station.x * 20)},${Math.round(station.z * 20)}`
+
+/** Poles by id (a station two runs share at the same spot kept once) and the spans between consecutive stations of each chain. */
+function polesAndSpans(chains: ReadonlyArray<readonly PoleStation[]>): { poles: Map<string, NetworkPole>; spans: Map<string, Set<string>> } {
   const poles = new Map<string, NetworkPole>()
+  const bySpot = new Map<string, string>()
   const spans = new Map<string, Set<string>>()
   const link = (a: string, b: string): void => {
     if (a === b) return
     spans.set(a, (spans.get(a) ?? new Set()).add(b))
     spans.set(b, (spans.get(b) ?? new Set()).add(a))
   }
-  for (const run of stations) {
+  for (const chain of chains) {
     let previous: string | undefined
-    run.forEach((station, index) => {
-      const same = [...poles.values()].find((pole) => Math.hypot(pole.station.x - station.x, pole.station.z - station.z) < 0.05)
-      const id = same?.id ?? `pole:${station.run.id}:${ordinal(index)}`
-      if (same === undefined) poles.set(id, { id, station })
+    for (const station of chain) {
+      const id = bySpot.get(spotOf(station)) ?? station.id
+      if (!poles.has(id)) {
+        poles.set(id, { id, station })
+        bySpot.set(spotOf(station), id)
+      }
       if (previous !== undefined) link(previous, id)
       previous = id
-    })
+    }
   }
+  linkCorners(poles, link)
   return { poles, spans }
 }
 
-function feedOf(runs: readonly StreetRun[], sides: ReadonlyMap<string, 1 | -1>, setback: number, fallback: NetworkPole): readonly [number, number] {
+/** At every crossing, the corner poles of the two streets that do not share a spot are joined by a span across the corner (the nearest pair). */
+function linkCorners(poles: ReadonlyMap<string, NetworkPole>, link: (a: string, b: string) => void): void {
+  const corners = [...poles.values()].filter((pole) => pole.station.role === 'corner')
+  const runs = new Map(corners.map((pole) => [pole.station.run.id, pole.station.run]))
+  for (const run of runs.values()) {
+    for (const crossing of run.crossings) {
+      const near = (pole: NetworkPole, of: StreetRun, at: number, half: number): boolean => pole.station.run.id === of.id && Math.abs(pole.station.u - at) <= half + 2
+      const other = runs.get(crossing.run)
+      if (other === undefined || other.id < run.id) continue
+      const mine = corners.filter((pole) => near(pole, run, crossing.at, crossing.half))
+      const theirs = corners.filter((pole) => near(pole, other, run.axis, run.width / 2))
+      const pairs = mine.flatMap((a) => theirs.map((b) => [a, b] as const)).sort((p, q) => planDistance(p[0].station, p[1].station) - planDistance(q[0].station, q[1].station) || (p[0].id + p[1].id < q[0].id + q[1].id ? -1 : 1))
+      const best = pairs[0]
+      if (best !== undefined) link(best[0].id, best[1].id)
+    }
+  }
+}
+
+function feedOf({ runs, sides, setback, fallback }: { readonly runs: readonly StreetRun[]; readonly sides: ReadonlyMap<string, 1 | -1>; readonly setback: number; readonly fallback: NetworkPole }): readonly [number, number] {
   for (const run of runs) {
-    const lateral = (sides.get(run.id) ?? -1) * (run.width / 2 + setback)
-    if (run.ends[0] === 'edge') return worldOf(run.along, run.axis, run.from, lateral)
-    if (run.ends[1] === 'edge') return worldOf(run.along, run.axis, run.to, lateral)
+    const v = (sides.get(run.id) ?? -1) * (run.width / 2 + setback)
+    if (run.ends[0] === 'edge') return worldOf({ frame: run, u: run.from, v })
+    if (run.ends[1] === 'edge') return worldOf({ frame: run, u: run.to, v })
   }
   return [fallback.station.x, fallback.station.z]
 }
 
-/** Shortest-line tree from the root over the spans (ties by id), so the same poles always give the same tree. */
-function treeFrom(root: string, poles: ReadonlyMap<string, NetworkPole>, spans: ReadonlyMap<string, ReadonlySet<string>>): Omit<PoleSystem, 'feed'> {
+/** Shortest-line tree from the root over the spans (ties by id), so the same poles always give the same tree. Plain O(n²) Dijkstra: a system has tens of poles. */
+function treeFrom({ root, poles, spans }: { readonly root: string; readonly poles: ReadonlyMap<string, NetworkPole>; readonly spans: ReadonlyMap<string, ReadonlySet<string>> }): Omit<PoleSystem, 'feed'> {
   const distance = new Map([[root, 0]])
   const parent = new Map<string, string>()
   const done = new Set<string>()
@@ -69,7 +99,7 @@ function treeFrom(root: string, poles: ReadonlyMap<string, NetworkPole>, spans: 
     done.add(id)
     order.push(id)
     for (const next of [...(spans.get(id) ?? [])].sort()) {
-      const length = base + planDistance(poles.get(id) as NetworkPole, poles.get(next) as NetworkPole)
+      const length = base + planDistance((poles.get(id) as NetworkPole).station, (poles.get(next) as NetworkPole).station)
       if (done.has(next) || length >= (distance.get(next) ?? Number.POSITIVE_INFINITY)) continue
       distance.set(next, length)
       parent.set(next, id)
@@ -85,22 +115,24 @@ function treeFrom(root: string, poles: ReadonlyMap<string, NetworkPole>, spans: 
   return { root, poles: order, parent, children, distance, depth }
 }
 
-/** The poles of every run and the systems they make: each fed from the border where its first run leaves the map (one per side of a river). */
-export function poleTreeOf(stations: ReadonlyArray<readonly PoleStation[]>, sides: ReadonlyMap<string, 1 | -1>, setback: number): PoleTree {
-  const { poles, spans } = polesAndSpans(stations)
+/** The poles of every run and the systems they make: each fed from the border where one of its runs leaves the map (one per side of a river). */
+export function poleTreeOf({ chains, sides, setback }: PoleTreeParams): PoleTree {
+  const { poles, spans } = polesAndSpans(chains)
   const systems: PoleSystem[] = []
   const seen = new Set<string>()
   for (const pole of poles.values()) {
     if (seen.has(pole.id)) continue
-    const members = treeFrom(pole.id, poles, spans).poles
+    const members = treeFrom({ root: pole.id, poles, spans }).poles
     for (const id of members) seen.add(id)
     const runs = [...new Map(members.map((id) => (poles.get(id) as NetworkPole).station.run).map((run) => [run.id, run])).values()]
-    const feed = feedOf(runs, sides, setback, pole)
-    const root = [...members].sort((a, b) => Math.hypot((poles.get(a) as NetworkPole).station.x - feed[0], (poles.get(a) as NetworkPole).station.z - feed[1]) - Math.hypot((poles.get(b) as NetworkPole).station.x - feed[0], (poles.get(b) as NetworkPole).station.z - feed[1]))[0] as string
-    systems.push({ ...treeFrom(root, poles, spans), feed })
+    const feed = feedOf({ runs, sides, setback, fallback: pole })
+    const along = (id: string): number => Math.hypot((poles.get(id) as NetworkPole).station.x - feed[0], (poles.get(id) as NetworkPole).station.z - feed[1])
+    const root = [...members].filter((id) => (poles.get(id) as NetworkPole).station.role !== 'service').sort((a, b) => along(a) - along(b))[0] ?? pole.id
+    systems.push({ ...treeFrom({ root, poles, spans }), feed })
   }
   return { poles, systems }
 }
 
 /** Length of the span between two poles, metres in plan. */
-export const spanLength = (tree: PoleTree, a: string, b: string): number => planDistance(tree.poles.get(a) as NetworkPole, tree.poles.get(b) as NetworkPole)
+export const spanLength = ({ tree, from, to }: { readonly tree: PoleTree; readonly from: string; readonly to: string }): number =>
+  planDistance((tree.poles.get(from) as NetworkPole).station, (tree.poles.get(to) as NetworkPole).station)

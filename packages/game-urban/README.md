@@ -184,35 +184,43 @@ const violations = validateNetworks(networks, {
 ```ts
 import { generateNetworks, validateNetworks } from '@adatechnology/game-urban/networks'
 
-const { networks, connections, surfaceAt } = generateNetworks({
+const { networks, connections, surfaceAt, warnings } = generateNetworks({
   plan,                      // CityPlanInput: streets along x or z, rivers, districts
   lots: site.lots,           // { id, rect }: each takes the networks from the street it faces
   connections,               // optional UtilityConnection[] the houses declared (frame 'world'); the rest get the default point of the lot
   seed: site.seed,           // hookups and telecom bundles: hash of the seed and an id, never the scene's random
   avoid,                     // optional PlanRect[]: no pole in front of a gate, a door or by a meter post
   rules,                     // optional DeepPartial<NetworkRules>; the layout numbers live in `rules.layout` (DEFAULT_NETWORK_LAYOUT)
+  pole,                      // optional { id, spec: DistributionSpec }: the bands and the lamp's reach come from the pole's spec
 })
+// warnings: what it laid against its own rules because nothing else fit (a pole with no free ground but in front of a gate,
+// a pole whose own consumers no transformer takes); [] for a plan it can lay
 validateNetworks(networks, { connections, surfaceAt }) // [] for a plan the generator can lay
 ```
 
 - **Poles** on one side of each street (the side with more lots; on a tie north or west), 0.4 m from the kerb, 30 to 40 m apart on lot
-  boundaries when one is in reach, slid clear of `avoid`; a guyed pole at each corner (shared by the two streets) and each end of line; an in-line
-  pole at least 5 m from a cross street's roadway. Each pole carries a lamp on its arm over the road (`light_feed` from its low voltage).
+  boundaries when one is in reach, slid clear of `avoid` (else the next boundary in reach, never past 40 m); a guyed pole at each corner (the
+  end of a street at another, a T, is a corner too) and each end of line, the corners of two streets joined by a span; an in-line pole at
+  least 5 m from a cross street's roadway. A lot out of a drop's reach gets an in-line pole at its station, and service poles into it when it
+  stands farther back. Each street pole carries a lamp on its arm over the road (`light_feed` from its low voltage).
 - **Power**: one system per feed where a street leaves the map (no span over a river); circuits cut on the pole tree so that the line each way
   from the transformer stays within 200 m and the diversified demand (plus the lamps) within the largest rating; each transformer on its
-  circuit's centre, sized by `pickTransformer`; medium voltage only from the feed to the transformers; a drop from the nearest pole to every lot.
+  circuit's centre, sized by `pickTransformer`, a circuit over the largest rating split into more; medium voltage only from the feed to the
+  transformers; a drop from the nearest pole to every lot.
   Lots of the periphery (`layout.periphery.kinds`) get a few hookups with no meter (`spec: 'unmetered'`), counted in the load.
 - **Telecom** on every pole from its own feed, 1-2 cables in the centre and 3-5 in the periphery, a splice box with its reserve coil every 4 spans.
 - **Sewer**: DN 150 under the axis, a manhole at every crossing and at most 80 m apart, a cleanout at each dry head, falling at least 0.5 %
-  to the river bank, then an interceptor along the bank to a `treatment` node where the river leaves the map; each lateral perpendicular, from
+  to the river bank, then an interceptor along the bank to a `treatment` node where the river leaves the map (with no river, from the line's
+  end to the border); a `pumping_station` where a main would go deeper than 4.5 m; each lateral perpendicular, from
   the inspection box over the gallery (or under the water main) to a drop and a saddle on the main; mains laid under every drainage pipe they cross.
-- **Drainage**: a DN 600 gallery 2 m off the axis on the side of the poles, to a headwall on the bank above the river's level; inlets on both
+- **Drainage**: a DN 600 gallery 2 m off the axis on the side of the poles, to a headwall on the bank above the river's level (a lift where it
+  would reach under it, or deeper than a sewer could pass under); inlets on both
   kerbs at each corner and at most 60 m apart, each with a lateral; the downspout of every lot down the gutter (`storm_gutter`, an open channel of
   diameter 0) to the nearest inlet of its kerb.
 - **Water**: DN 75 under the sidewalk opposite the poles from a reservoir at the border, a valve and a pillar hydrant at every crossing, a
   DN 20 service from a tee to every lot.
-- Limits: straight streets along x or z only (another stretch throws); the ground defaults to flat (`groundAt` for terrain); a lot farther
-  than 30 m from every pole gets a drop the validator reports.
+- Limits: straight streets along x or z only (another stretch throws); the ground defaults to flat (`groundAt` for terrain). The pole tree
+  and the line trees are plain Dijkstra (tens of nodes a system); the nearest pole and the crossings are found by 20-40 m cells.
 
 ## Terrain
 

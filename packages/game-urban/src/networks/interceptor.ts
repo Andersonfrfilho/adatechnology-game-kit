@@ -11,7 +11,7 @@ export type Interceptor = {
 }
 
 /** The river segment nearest a point, along x or z, and where it ends downstream (its last point). */
-function riverOf(rivers: readonly PlanLine[], x: number, z: number): { along: 'x' | 'z'; end: number } | undefined {
+function riverOf({ rivers, x, z }: { readonly rivers: readonly PlanLine[]; readonly x: number; readonly z: number }): { along: 'x' | 'z'; end: number } | undefined {
   let best: { along: 'x' | 'z'; end: number; distance: number } | undefined
   for (const river of rivers) {
     const last = river.points[river.points.length - 1]
@@ -29,11 +29,27 @@ function riverOf(rivers: readonly PlanLine[], x: number, z: number): { along: 'x
  * bank line runs from the farthest upstream of them along the river to where it leaves the map, at a treatment node; manholes at most
  * `spacing` apart. Outlets on the same bank line join the same interceptor.
  */
-export function interceptorsOf(outlets: readonly LineVertex[], rivers: readonly PlanLine[], spacing: number): Interceptor {
+export type InterceptorParams = {
+  /** Where the mains leave their streets: the river ends, else the one end of a line with no river. */
+  readonly outlets: readonly LineVertex[]
+  readonly rivers: readonly PlanLine[]
+  readonly spacing: number
+  /** Half the map's width and depth. */
+  readonly border: readonly [number, number]
+}
+
+export function interceptorsOf({ outlets, rivers, spacing, border }: InterceptorParams): Interceptor {
   const lines = new Map<string, { along: 'x' | 'z'; at: number; end: number; outlets: LineVertex[] }>()
   for (const outlet of outlets) {
-    const river = riverOf(rivers, outlet.x, outlet.z)
-    if (river === undefined) continue
+    const river = outlet.end === 'river' ? riverOf({ rivers, x: outlet.x, z: outlet.z }) : undefined
+    if (river === undefined) {
+      const way = outlet.outward ?? [1, 0]
+      const along = way[0] !== 0 ? 'x' : 'z'
+      const end = way[0] !== 0 ? Math.max(Math.abs(outlet.x) + 1, border[0]) * Math.sign(way[0]) : Math.max(Math.abs(outlet.z) + 1, border[1]) * Math.sign(way[1])
+      const at = along === 'x' ? outlet.z : outlet.x
+      lines.set(`${along}:${at.toFixed(3)}:${outlet.id}`, { along: along === 'x' ? 'x' : 'z', at, end, outlets: [outlet] })
+      continue
+    }
     const at = river.along === 'z' ? outlet.x : outlet.z
     const key = `${river.along}:${at.toFixed(3)}`
     const line = lines.get(key) ?? { along: river.along, at, end: river.end, outlets: [] }

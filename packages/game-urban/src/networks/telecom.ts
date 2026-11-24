@@ -1,6 +1,6 @@
 import type { UtilityConnection } from '@adatechnology/game-contracts'
 
-import { nearestPole } from './aerial'
+import { poleFinder } from './aerial'
 import type { NetworkSink, PoleHeights } from './aerial'
 import { countOf } from './frame'
 import type { NetworkPole, PoleTree } from './pole-tree'
@@ -18,9 +18,9 @@ export type TelecomParams = {
 }
 
 /** Cables of the bundle that reaches a pole: one draw per run, by the hash of the seed and the run (the same street keeps its bundle). */
-export function cablesAt(pole: NetworkPole, params: Pick<TelecomParams, 'rules' | 'seed' | 'isPeriphery'>): number {
-  const { cables } = params.rules.layout.telecom
-  return countOf(params.seed, `telecom:${pole.station.run.id}`, params.isPeriphery(pole.station.x, pole.station.z) ? cables.periphery : cables.clean)
+export function cablesAt({ pole, rules, seed, isPeriphery }: Pick<TelecomParams, 'rules' | 'seed' | 'isPeriphery'> & { readonly pole: NetworkPole }): number {
+  const { cables } = rules.layout.telecom
+  return countOf({ seed, id: `telecom:${pole.station.run.id}`, range: isPeriphery(pole.station.x, pole.station.z) ? cables.periphery : cables.clean })
 }
 
 /**
@@ -36,7 +36,7 @@ export function layTelecom(params: TelecomParams): void {
     for (const id of system.poles) {
       const pole = tree.poles.get(id) as NetworkPole
       const up = system.parent.get(id)
-      const conductors = cablesAt(pole, params)
+      const conductors = cablesAt({ pole, rules, seed: params.seed, isPeriphery: params.isPeriphery })
       const depth = system.depth.get(id) ?? 0
       if (up === undefined || depth % telecom.spliceEvery !== 0) {
         sink.edges.push({ id: `telecom:${id}`, kind: 'telecom_span', from: up ?? feed, to: id, sag: sag.telecom, heights: [heights.telecom, heights.telecom], conductors })
@@ -52,8 +52,9 @@ export function layTelecom(params: TelecomParams): void {
       sink.edges.push({ id: `telecom:${id}`, kind: 'telecom_span', from: splice, to: id, sag: 0, heights: [heights.telecom, heights.telecom], conductors })
     }
   }
+  const find = poleFinder(tree)
   for (const connection of params.connections) {
-    const pole = nearestPole(tree, connection.at[0], connection.at[2])
+    const pole = find({ x: connection.at[0], z: connection.at[2], radius: rules.telecom.dropMaxLength })[0]
     if (pole === undefined) continue
     const node = `lot:${connection.lot}:telecom`
     sink.nodes.push({ id: node, kind: 'connection', at: connection.at, carries: ['telecom'], lot: connection.lot })

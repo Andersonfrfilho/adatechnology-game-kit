@@ -12,8 +12,9 @@ export type DefaultConnectionRules = {
   /** Anchor of the service drop on the meter post over the ground, and of the telecom drop under it. */
   readonly powerHeight: number
   readonly telecomBelowPower: number
-  /** Invert of the inspection box outlet under the ground. */
+  /** Invert of the inspection box outlet under the ground; a lot set back from its street gets a shallower one, never under the least. */
   readonly sewerDepth: number
+  readonly sewerLeastDepth: number
 }
 
 /** How the generator lays the networks out: the numbers of a street, not checked by the validator but by the generator's own tests. */
@@ -38,8 +39,6 @@ export type NetworkLayoutRules = {
   }
   /** Sag at mid span of each class, metres. */
   readonly sag: { readonly mv: number; readonly lv: number; readonly telecom: number; readonly drop: number; readonly telecomDrop: number }
-  /** The lamp hangs this far over the road from the pole's axis. */
-  readonly lampReach: number
   readonly telecom: {
     /** A splice box with its reserve coil every this many spans. */
     readonly spliceEvery: number
@@ -91,7 +90,6 @@ export const DEFAULT_NETWORK_LAYOUT: NetworkLayoutRules = {
   edgeReach: 5,
   poles: { spacing: [30, 40], curbSetback: 0.4, endInset: 1, crossingClearance: 5, snap: 5, slide: 6, slideStep: 0.25 },
   sag: { mv: 0.5, lv: 0.6, telecom: 0.6, drop: 0.2, telecomDrop: 0.15 },
-  lampReach: 2,
   telecom: { spliceEvery: 4, cableGap: 0.1, cables: { clean: [1, 2], periphery: [3, 5] } },
   periphery: { kinds: ['residential_popular'], hookupShare: 0.1 },
   slopeMargin: 0.0005,
@@ -99,5 +97,5 @@ export const DEFAULT_NETWORK_LAYOUT: NetworkLayoutRules = {
   sewer: { mainDiameter: 0.15, lateralDiameter: 0.1, dropOffset: 1, interceptorOffset: 2 },
   storm: { galleryOffset: 2, galleryDiameter: 0.6, lateralDiameter: 0.4, inletSpacing: 60, inletSetback: 0.3, inletFromCorner: 1, riverLevel: -4 },
   water: { mainDiameter: 0.075, serviceDiameter: 0.02, sidewalkShare: 1 / 3, hydrantOffset: 0.6 },
-  connection: { frontInset: 0.3, sewerInset: 1, meterFromSide: 1, waterFromSide: 1.6, downspoutFromSide: 1, powerHeight: 5.7, telecomBelowPower: 0.6, sewerDepth: 0.6 },
+  connection: { frontInset: 0.3, sewerInset: 1, meterFromSide: 1, waterFromSide: 1.6, downspoutFromSide: 1, powerHeight: 5.7, telecomBelowPower: 0.6, sewerDepth: 0.6, sewerLeastDepth: 0.3 },
 }

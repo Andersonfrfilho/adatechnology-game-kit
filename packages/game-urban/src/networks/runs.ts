@@ -45,7 +45,7 @@ function segmentsOf(line: PlanLine): Segment[] {
 }
 
 /** The river bands a road band of `segment` meets, as intervals along it. */
-function riverCuts(segment: Segment, rivers: readonly Segment[]): Array<readonly [number, number]> {
+function riverCuts({ segment, rivers }: { readonly segment: Segment; readonly rivers: readonly Segment[] }): Array<readonly [number, number]> {
   const half = segment.line.width / 2
   return rivers.flatMap((river) => {
     const riverHalf = river.line.width / 2
@@ -56,15 +56,18 @@ function riverCuts(segment: Segment, rivers: readonly Segment[]): Array<readonly
   })
 }
 
-/** The runs of every street of the plan, cut at the rivers, with their crossings. Ids are the line's, with `_<n>` when a line makes more than one. */
-export function streetRunsOf(plan: CityPlanInput, edgeReach: number): StreetRun[] {
+/**
+ * The runs of every street of the plan, cut at the rivers, with their crossings. Ids are the line's, with `_<n>` when a line makes more
+ * than one. A run end within `edgeReach` of the map border is where the line leaves the map.
+ */
+export function streetRunsOf({ plan, edgeReach }: { readonly plan: CityPlanInput; readonly edgeReach: number }): StreetRun[] {
   const lines = plan.lines ?? []
   const [width, depth] = plan.size ?? [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY]
   const rivers = lines.filter((line) => line.kind === 'river').flatMap(segmentsOf)
   const isEdge = (along: RunAxis, at: number): boolean => Math.abs(at) >= (along === 'x' ? width : depth) / 2 - edgeReach
   const bare = lines.filter(isStreet).flatMap((line) => {
     const pieces = segmentsOf(line).flatMap((segment) => {
-      const cuts = riverCuts(segment, rivers).sort((a, b) => a[0] - b[0])
+      const cuts = riverCuts({ segment, rivers }).sort((a, b) => a[0] - b[0])
       const out: Array<Omit<StreetRun, 'id' | 'crossings'>> = []
       let start = segment.from
       let startEnd: RunEnd = isEdge(segment.along, segment.from) ? 'edge' : 'line_end'
@@ -78,22 +81,26 @@ export function streetRunsOf(plan: CityPlanInput, edgeReach: number): StreetRun[
     })
     return pieces.map((piece, index) => ({ ...piece, id: pieces.length > 1 ? `${line.id}_${index}` : line.id }))
   })
-  return bare.map((run) => ({ ...run, crossings: crossingsOf(run, bare) }))
+  return bare.map((run) => ({ ...run, crossings: crossingsOf({ run, runs: bare }) }))
 }
 
-function crossingsOf(run: Omit<StreetRun, 'crossings'>, runs: ReadonlyArray<Omit<StreetRun, 'crossings'>>): RunCrossing[] {
+/**
+ * The runs whose roadway this run meets: a street that crosses it, and a street it ends at or that ends at it (a T junction), so no pole
+ * stands inside another street's roadway and the end at a T is a corner.
+ */
+function crossingsOf({ run, runs }: { readonly run: Omit<StreetRun, 'crossings'>; readonly runs: ReadonlyArray<Omit<StreetRun, 'crossings'>> }): RunCrossing[] {
   return runs
-    .filter((other) => other.along !== run.along && other.axis > run.from && other.axis < run.to)
+    .filter((other) => other.along !== run.along && other.axis + other.width / 2 > run.from && other.axis - other.width / 2 < run.to)
     .filter((other) => other.from <= run.axis + run.width / 2 && other.to >= run.axis - run.width / 2)
     .map((other) => ({ run: other.id, at: other.axis, half: other.width / 2 }))
     .sort((a, b) => a.at - b.at)
 }
 
 /** Distance from a lot's rectangle to a run's axis segment, and the lot in the run's frame. */
-function servedBy(lot: NetworkLot, run: StreetRun): ServedLot & { readonly distance: number } {
+function servedBy({ lot, run }: { readonly lot: NetworkLot; readonly run: StreetRun }): ServedLot & { readonly distance: number } {
   const [x0, z0, x1, z1] = lot.rect
-  const [ua, va] = frameOf(run.along, run.axis, x0, z0)
-  const [ub, vb] = frameOf(run.along, run.axis, x1, z1)
+  const [ua, va] = frameOf({ frame: run, x: x0, z: z0 })
+  const [ub, vb] = frameOf({ frame: run, x: x1, z: z1 })
   const [u0, u1, v0, v1] = [Math.min(ua, ub), Math.max(ua, ub), Math.min(va, vb), Math.max(va, vb)]
   const side: 1 | -1 = v0 + v1 >= 0 ? 1 : -1
   const front = side > 0 ? Math.max(0, v0) : Math.max(0, -v1)
@@ -102,11 +109,11 @@ function servedBy(lot: NetworkLot, run: StreetRun): ServedLot & { readonly dista
 }
 
 /** Each lot and the run it faces: the nearest (the first of the plan on a tie). */
-export function servedLotsOf(lots: readonly NetworkLot[], runs: readonly StreetRun[]): ServedLot[] {
+export function servedLotsOf({ lots, runs }: { readonly lots: readonly NetworkLot[]; readonly runs: readonly StreetRun[] }): ServedLot[] {
   return lots.flatMap((lot) => {
     let best: (ServedLot & { readonly distance: number }) | undefined
     for (const run of runs) {
-      const candidate = servedBy(lot, run)
+      const candidate = servedBy({ lot, run })
       if (best === undefined || candidate.distance < best.distance - 1e-9) best = candidate
     }
     if (best === undefined) return []
@@ -116,7 +123,7 @@ export function servedLotsOf(lots: readonly NetworkLot[], runs: readonly StreetR
 }
 
 /** The side of each run its poles stand on: the one with more lots; on a tie the north (−z) or west (−x) side. */
-export function poleSidesOf(runs: readonly StreetRun[], served: readonly ServedLot[]): ReadonlyMap<string, 1 | -1> {
+export function poleSidesOf({ runs, served }: { readonly runs: readonly StreetRun[]; readonly served: readonly ServedLot[] }): ReadonlyMap<string, 1 | -1> {
   return new Map(
     runs.map((run) => {
       const own = served.filter((entry) => entry.run.id === run.id)

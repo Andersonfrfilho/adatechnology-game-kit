@@ -9,13 +9,16 @@ import { LOTS, PLAN } from './district'
 const generate = (extra: Partial<GenerateNetworksParams> = {}) => generateNetworks({ plan: PLAN, lots: LOTS, seed: 11, ...extra })
 const validate = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt })
 const bytes = (out: ReturnType<typeof generate>): string => createHash('sha256').update(JSON.stringify(out.networks)).digest('hex')
+/** The bytes of the cut's networks with seed 11: a change to the generator that moves anything shows here, and is recorded on purpose. */
+const RECORDED = 'cbc2c203094f4373713cc053d845bcabcdaa05d232713e668defd1343854a5fa'
 const count = (nodes: readonly NetworkNode[], kind: NetworkNode['kind']): number => nodes.filter((node) => node.kind === kind).length
 
 describe('generateNetworks', () => {
   const out = generate()
 
-  it('lays networks that pass every rule of the validator', () => {
+  it('lays networks that pass every rule of the validator, with no warning', () => {
     expect(validate(out)).toEqual([])
+    expect(out.warnings).toEqual([])
   })
 
   it('links every lot to the five networks once, power to the low voltage', () => {
@@ -40,8 +43,9 @@ describe('generateNetworks', () => {
     }
   })
 
-  it('gives the same bytes for the same input and seed', () => {
+  it('gives the same bytes for the same input and seed, the bytes recorded', () => {
     expect(bytes(generate())).toBe(bytes(out))
+    expect(bytes(out)).toBe(RECORDED)
   })
 
   it('draws the hookups and the telecom bundles from the seed only: another seed keeps the layout', () => {

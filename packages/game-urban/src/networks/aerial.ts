@@ -2,15 +2,16 @@ import type { UtilityConnection } from '@adatechnology/game-contracts'
 
 import type { PoleSlots } from '../pole-specs'
 import { circuitsOf, distancesWithin } from './circuits'
-import type { Circuit } from './circuits'
-import { worldOf } from './frame'
+import type { Circuit, SpanOf } from './circuits'
+import { planBins, worldOf } from './frame'
 import { spanLength } from './pole-tree'
 import type { NetworkPole, PoleSystem, PoleTree } from './pole-tree'
 import type { NetworkRules } from './rules'
 import type { NetworkEdge, NetworkKind, NetworkNode } from './types'
+import type { NetworkWarning } from './warnings'
 
 /** What the layers of the generator add to. */
-export type NetworkSink = { readonly nodes: NetworkNode[]; readonly edges: NetworkEdge[] }
+export type NetworkSink = { readonly nodes: NetworkNode[]; readonly edges: NetworkEdge[]; readonly warnings: NetworkWarning[] }
 
 /** The fixing heights over the ground, read from the pole's bands. */
 export type PoleHeights = { readonly mv: number; readonly transformer: number; readonly transformerBottom: number; readonly lv: number; readonly lamp: number; readonly telecom: number }
@@ -25,31 +26,68 @@ export type AerialParams = {
   readonly connections: readonly UtilityConnection[]
   readonly rules: NetworkRules
   readonly heights: PoleHeights
-  readonly poleSpec: string
+  /** The distribution pole of the registry: its id and how far its arm hangs the lamp from the mast. */
+  readonly pole: { readonly id: string; readonly lampReach: number }
   /** Lots with a drop and no meter (illegal hookups): linked as any other, counted in the load. */
   readonly unmetered: ReadonlySet<string>
   readonly sink: NetworkSink
 }
 
-/** The nearest pole to a point in plan. */
-export function nearestPole(tree: PoleTree, x: number, z: number): NetworkPole | undefined {
-  let best: NetworkPole | undefined
-  for (const pole of tree.poles.values()) if (best === undefined || Math.hypot(pole.station.x - x, pole.station.z - z) < Math.hypot(best.station.x - x, best.station.z - z) - 1e-9) best = pole
-  return best
+/** The poles of a tree in cells, to find the nearest ones to a point. */
+export function poleFinder(tree: PoleTree): (point: { readonly x: number; readonly z: number; readonly radius: number }) => NetworkPole[] {
+  const bins = planBins<NetworkPole>(40)
+  for (const pole of tree.poles.values()) bins.add(pole.station.x, pole.station.z, pole)
+  const all = [...tree.poles.values()]
+  return ({ x, z, radius }) => {
+    const near = bins.near(x, z, radius)
+    const pool = near.length > 0 ? near : all
+    return pool.sort((a, b) => Math.hypot(a.station.x - x, a.station.z - z) - Math.hypot(b.station.x - x, b.station.z - z) || (a.id < b.id ? -1 : 1))
+  }
 }
 
-/** The lamp of a pole: on its arm over the road, `lampReach` from the axis toward the street. */
-export function lampOf(pole: NetworkPole, rules: NetworkRules): readonly [number, number] {
-  const { run, side, u } = pole.station
-  return worldOf(run.along, run.axis, u, side * (run.width / 2 + rules.layout.poles.curbSetback - rules.layout.lampReach))
+/** The lamp of a pole: on its arm over the road, `lampReach` from the mast toward the street. A service pole inside a lot has none. */
+export function lampOf({ pole, rules, lampReach }: { readonly pole: NetworkPole; readonly rules: NetworkRules; readonly lampReach: number }): readonly [number, number] | undefined {
+  const { run, side, u, role } = pole.station
+  if (role === 'service') return undefined
+  return worldOf({ frame: run, u, v: side * (run.width / 2 + rules.layout.poles.curbSetback - lampReach) })
+}
+
+/** Each lot's drop from its nearest pole; a pole whose own consumers no transformer takes hands its farthest ones to their next pole in reach. */
+function dropsOf(params: AerialParams): Map<string, UtilityConnection[]> {
+  const find = poleFinder(params.tree)
+  const choices = new Map(params.connections.map((connection) => [connection, find({ x: connection.at[0], z: connection.at[2], radius: params.rules.power.dropMaxLength })]))
+  const pick = new Map(params.connections.map((connection) => [connection, 0]))
+  const drops = (): Map<string, UtilityConnection[]> => {
+    const out = new Map<string, UtilityConnection[]>()
+    for (const [connection, index] of pick) {
+      const pole = choices.get(connection)?.[index]
+      if (pole !== undefined) out.set(pole.id, [...(out.get(pole.id) ?? []), connection])
+    }
+    return out
+  }
+  for (let round = 0; round < params.connections.length; round++) {
+    const over = powerPlanOf({ params, drops: drops() }).flatMap((plan) => plan.circuits.filter((circuit) => circuit.over && circuit.poles.length === 1))
+    const pole = over[0]?.poles[0]
+    const moving = (drops().get(pole ?? '') ?? []).filter((connection) => {
+      const next = choices.get(connection)?.[(pick.get(connection) ?? 0) + 1]
+      return next !== undefined && Math.hypot(next.station.x - connection.at[0], next.station.z - connection.at[2]) <= params.rules.power.dropMaxLength
+    })
+    const at = params.tree.poles.get(pole ?? '')?.station
+    const away = (connection: UtilityConnection): number => (at === undefined ? 0 : Math.hypot(connection.at[0] - at.x, connection.at[2] - at.z))
+    const farthest = moving.sort((a, b) => away(b) - away(a))[0]
+    if (farthest === undefined) break
+    pick.set(farthest, (pick.get(farthest) ?? 0) + 1)
+  }
+  return drops()
 }
 
 /** The circuits of every system, with the poles the medium voltage must reach (the path from the feed to each transformer). */
-export function powerPlanOf(params: AerialParams, drops: ReadonlyMap<string, readonly UtilityConnection[]>): Array<{ system: PoleSystem; circuits: Circuit[]; medium: Set<string> }> {
-  const span = (a: string, b: string): number => spanLength(params.tree, a, b)
+export function powerPlanOf({ params, drops }: { readonly params: AerialParams; readonly drops: ReadonlyMap<string, readonly UtilityConnection[]> }): Array<{ system: PoleSystem; circuits: Circuit[]; medium: Set<string> }> {
+  const span: SpanOf = ({ from, to }) => spanLength({ tree: params.tree, from, to })
+  const isService = (pole: string): boolean => params.tree.poles.get(pole)?.station.role === 'service'
   return params.tree.systems.map((system) => {
     const consumers = new Map(system.poles.map((pole) => [pole, (drops.get(pole) ?? []).map((connection) => connection.installedKva ?? 0)]))
-    const circuits = circuitsOf({ system, consumers, span, rules: params.rules })
+    const circuits = circuitsOf({ system, consumers, span, rules: params.rules, isService })
     const medium = new Set<string>()
     for (const circuit of circuits) {
       for (let pole: string | undefined = circuit.transformer; pole !== undefined && !medium.has(pole); pole = system.parent.get(pole)) medium.add(pole)
@@ -58,29 +96,28 @@ export function powerPlanOf(params: AerialParams, drops: ReadonlyMap<string, rea
   })
 }
 
-/** Medium voltage from each feed to the transformers, each circuit's low voltage from its transformer, a lamp on every pole and a drop to every lot. */
+/** Medium voltage from each feed to the transformers, each circuit's low voltage from its transformer, a lamp on every street pole and a drop to every lot. */
 export function layPower(params: AerialParams): void {
   const { tree, heights, rules, sink } = params
   const sag = rules.layout.sag
-  const drops = new Map<string, UtilityConnection[]>()
-  for (const connection of params.connections) {
-    const pole = nearestPole(tree, connection.at[0], connection.at[2])
-    if (pole !== undefined) drops.set(pole.id, [...(drops.get(pole.id) ?? []), connection])
-  }
-  for (const { system, circuits, medium } of powerPlanOf(params, drops)) {
+  const drops = dropsOf(params)
+  for (const { system, circuits, medium } of powerPlanOf({ params, drops })) {
     const feed = `feed:${system.root}`
     sink.nodes.push({ id: feed, kind: 'feed', at: [system.feed[0], heights.mv, system.feed[1]], carries: ['power_mv'] })
     for (const id of system.poles) {
       const pole = tree.poles.get(id) as NetworkPole
-      const carries: NetworkKind[] = [...(medium.has(id) ? (['power_mv'] as const) : []), 'power_lv', 'lighting', 'telecom']
-      sink.nodes.push({ id, kind: 'pole', at: [pole.station.x, 0, pole.station.z], carries, spec: params.poleSpec, ...(pole.station.role === 'line' ? {} : { guyed: true }) })
-      const up = system.parent.get(id)
-      if (medium.has(id)) sink.edges.push({ id: `mv:${id}`, kind: 'mv_span', from: up ?? feed, to: id, sag: sag.mv, heights: [heights.mv, heights.mv], conductors: 3 })
-      const lamp = lampOf(pole, rules)
+      const lamp = lampOf({ pole, rules, lampReach: params.pole.lampReach })
+      const carries: NetworkKind[] = [...(medium.has(id) ? (['power_mv'] as const) : []), 'power_lv', ...(lamp === undefined ? [] : (['lighting'] as const)), 'telecom']
+      sink.nodes.push({ id, kind: 'pole', at: [pole.station.x, 0, pole.station.z], carries, spec: params.pole.id, ...(pole.station.role === 'line' || pole.station.role === 'service' ? {} : { guyed: true }) })
+      if (medium.has(id)) sink.edges.push({ id: `mv:${id}`, kind: 'mv_span', from: system.parent.get(id) ?? feed, to: id, sag: sag.mv, heights: [heights.mv, heights.mv], conductors: 3 })
+      if (lamp === undefined) continue
       sink.nodes.push({ id: `light:${id}`, kind: 'light', at: [lamp[0], heights.lamp, lamp[1]], carries: ['lighting'], spec: 'street_light' })
       sink.edges.push({ id: `light_feed:${id}`, kind: 'light_feed', from: id, to: `light:${id}`, sag: 0, heights: [heights.lv, heights.lamp] })
     }
-    for (const circuit of circuits) layCircuit(params, system, circuit)
+    for (const circuit of circuits) {
+      if (circuit.over) sink.warnings.push({ code: 'transformer_over_capacity', id: `transformer:${circuit.transformer}`, detail: `${circuit.demand.toFixed(1)} kVA` })
+      layCircuit({ params, system, circuit })
+    }
   }
   for (const [poleId, connections] of drops) {
     for (const connection of connections) {
@@ -92,14 +129,15 @@ export function layPower(params: AerialParams): void {
 }
 
 /** The transformer on its pole, fed by the medium voltage, and the low voltage spans out from it over the circuit's poles. */
-function layCircuit(params: AerialParams, system: PoleSystem, circuit: Circuit): void {
+function layCircuit({ params, system, circuit }: { readonly params: AerialParams; readonly system: PoleSystem; readonly circuit: Circuit }): void {
   const { tree, heights, sink } = params
   const pole = tree.poles.get(circuit.transformer) as NetworkPole
   const id = `transformer:${circuit.transformer}`
   sink.nodes.push({ id, kind: 'transformer', at: [pole.station.x, heights.transformer, pole.station.z], carries: ['power_mv', 'power_lv'], spec: circuit.rating })
   sink.edges.push({ id: `mv:${id}`, kind: 'mv_span', from: circuit.transformer, to: id, sag: 0, heights: [heights.mv, heights.transformer] })
   sink.edges.push({ id: `lv:${circuit.transformer}`, kind: 'lv_span', from: id, to: circuit.transformer, sag: 0, heights: [heights.transformerBottom, heights.lv] })
-  const order = [...distancesWithin(circuit.poles, circuit.transformer, system, (a, b) => spanLength(tree, a, b)).entries()].sort((a, b) => a[1] - b[1])
+  const span: SpanOf = ({ from, to }) => spanLength({ tree, from, to })
+  const order = [...distancesWithin({ poles: circuit.poles, from: circuit.transformer, system, span }).entries()].sort((a, b) => a[1] - b[1])
   const members = new Set(circuit.poles)
   const reached = new Set([circuit.transformer])
   for (const [from] of order) {

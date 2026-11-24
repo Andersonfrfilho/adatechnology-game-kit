@@ -8,9 +8,10 @@ import { frameOf, ordinal, worldOf } from './frame'
 import { solveDrainInverts } from './inverts'
 import { lineNetworkOf } from './line-network'
 import { piecesOf } from './pole-layout'
+import type { StreetRun } from './runs'
 import type { NetworkEdge, NetworkNode } from './types'
 
-type Inlet = { readonly id: string; readonly run: string; readonly curb: 1 | -1; readonly u: number; readonly node: NetworkNode }
+type Inlet = { readonly id: string; readonly key: string; readonly run: StreetRun; readonly curb: 1 | -1; readonly u: number; readonly node: NetworkNode }
 
 /** Inlets on both kerbs of every stretch: one at each corner (or end) and at most `inletSpacing` apart between. */
 function inletsOf(context: BuriedContext): Inlet[] {
@@ -23,10 +24,10 @@ function inletsOf(context: BuriedContext): Inlet[] {
         const gaps = Math.max(1, Math.ceil((to - from) / storm.inletSpacing - 1e-9))
         return Array.from({ length: gaps + 1 }, (_, index): Inlet => {
           const u = from + ((to - from) * index) / gaps
-          const [x, z] = worldOf(run.along, run.axis, u, curb * (run.width / 2 - storm.inletSetback))
-          const id = `storm:inlet:${run.id}:${curb > 0 ? 'plus' : 'minus'}:${ordinal(pieceIndex)}:${ordinal(index)}`
+          const [x, z] = worldOf({ frame: run, u, v: curb * (run.width / 2 - storm.inletSetback) })
+          const key = `inlet:${run.id}:${curb > 0 ? 'plus' : 'minus'}:${ordinal(pieceIndex)}:${ordinal(index)}`
           const ground = context.groundAt(x, z)
-          return { id, run: run.id, curb, u, node: { id, kind: 'inlet', at: [x, ground, z], invert: ground - depth, carries: ['storm'], spec: 'grated_inlet' } }
+          return { id: `storm:${key}`, key, run, curb, u, node: { id: `storm:${key}`, kind: 'inlet', at: [x, ground, z], invert: ground - depth, carries: ['storm'], spec: 'grated_inlet' } }
         })
       }),
     ),
@@ -34,54 +35,62 @@ function inletsOf(context: BuriedContext): Inlet[] {
 }
 
 /**
- * The drainage: a gallery beside the axis of every street on the side of the poles, to a headwall on the river bank (else the border);
- * inlets on both kerbs with a lateral each to the gallery, and every lot's downspout outlet down the gutter to the nearest inlet of its kerb.
- * Returns the edges laid, for the sewer that passes under them.
+ * The drainage: a gallery beside the axis of every street on the side of the poles, to a headwall on the river bank (else the border), its
+ * bottom above the river (a lift where the gallery would reach under it); inlets on both kerbs with a lateral each to the gallery, and every
+ * lot's downspout outlet down the gutter to the nearest inlet of its kerb. Returns the edges laid, for the sewer that passes under them.
  */
-export function layStorm(context: BuriedContext, connections: readonly UtilityConnection[]): NetworkEdge[] {
+export function layStorm({ context, connections }: { readonly context: BuriedContext; readonly connections: readonly UtilityConnection[] }): NetworkEdge[] {
   const { rules, sink } = context
-  const { storm, slopeMargin } = rules.layout
-  const offset = (run: Parameters<typeof galleryOffset>[1]): number => galleryOffset(context, run)
+  const { storm, slopeMargin, coverMargin } = rules.layout
+  const offset = (run: StreetRun): number => galleryOffset({ context, run })
   const line = lineNetworkOf({ prefix: 'storm', runs: context.runs, offset, riverInset: 0, reach: reachOf(context), flow: 'drain' })
   const inlets = inletsOf(context)
-  const runs = new Map(context.runs.map((run) => [run.id, run]))
-  const stops: ChainStop[] = inlets.map((inlet) => ({ key: inlet.id.slice('storm:'.length), run: runs.get(inlet.run) as (typeof context.runs)[number], u: inlet.u }))
+  const stops: ChainStop[] = inlets.map((inlet) => ({ key: inlet.key, run: inlet.run, u: inlet.u }))
   const { chains, joints } = chainsOf({ line, prefix: 'storm:gallery', offset, stops, spacing: rules.sewer.manholeSpacing })
   const nodes = chainNodes(chains)
-  const top = new Map(nodes.map((node) => [node.id, topOf(context, node.x, node.z, rules.cover.storm_gallery.min, storm.galleryDiameter)]))
+  const where = new Map(nodes.map((node) => [node.id, node]))
+  const top = new Map(nodes.map((node) => [node.id, topOf({ context, x: node.x, z: node.z, cover: rules.cover.storm_gallery.min, diameter: storm.galleryDiameter })]))
+  const roots = new Set(line.roots)
+  // a gallery no deeper than a sewer main can pass under it and still run to its next manhole within the deepest a sewer goes; an outfall above the river
+  const sewerRun = (rules.minSlope.sewer_main + slopeMargin) * rules.sewer.manholeSpacing
+  const deepest = rules.sewer.maxDepth - rules.layout.sewer.mainDiameter - rules.crossing.separation - 3 * coverMargin - sewerRun
+  const floor = new Map(nodes.map((node) => [node.id, Math.max(context.groundAt(node.x, node.z) - deepest, roots.has(node.id) ? storm.riverLevel + coverMargin : Number.NEGATIVE_INFINITY)]))
   const laterals = inlets.map((inlet) => {
-    const joint = joints.get(inlet.id.slice('storm:'.length)) as string
-    const target = nodes.find((node) => node.id === joint)
+    const joint = joints.get(inlet.key) as string
+    const target = where.get(joint)
     const length = target === undefined ? 0 : Math.hypot(target.x - inlet.node.at[0], target.z - inlet.node.at[2])
     const end = (inlet.node.invert ?? 0) - (rules.minSlope.storm_lateral + slopeMargin) * length
     top.set(joint, Math.min(top.get(joint) ?? Number.POSITIVE_INFINITY, end))
     return { inlet, joint, end }
   })
-  const invert = solveDrainInverts({ pipes: pipesOf(chains, storm.galleryDiameter, rules.minSlope.storm_gallery + slopeMargin), top })
-  const roots = new Set(line.roots)
+  const pipes = pipesOf({ chains, diameter: storm.galleryDiameter, slope: rules.minSlope.storm_gallery + slopeMargin })
+  const { inverts, lifts } = solveDrainInverts({ pipes, top, floor })
   for (const node of nodes) {
     const ground = context.groundAt(node.x, node.z)
-    const isOutfall = roots.has(node.id)
-    sink.nodes.push({ id: node.id, kind: isOutfall ? 'outfall' : 'manhole', at: [node.x, ground, node.z], invert: invert.get(node.id) ?? ground, carries: ['storm'], spec: isOutfall ? 'headwall' : 'gallery_box' })
+    const kind = roots.has(node.id) ? ({ kind: 'outfall', spec: 'headwall' } as const) : lifts.has(node.id) ? ({ kind: 'pumping_station', spec: 'storm_lift' } as const) : ({ kind: 'manhole', spec: 'gallery_box' } as const)
+    sink.nodes.push({ id: node.id, ...kind, at: [node.x, ground, node.z], invert: inverts.get(node.id) ?? ground, carries: ['storm'] })
   }
-  const edges: NetworkEdge[] = pipesOf(chains, storm.galleryDiameter, 0).map((pipe) => ({ id: `${pipe.from}>${pipe.to}`, kind: 'storm_gallery', from: pipe.from, to: pipe.to, diameter: storm.galleryDiameter }))
+  const edges: NetworkEdge[] = pipes.map((pipe) => {
+    const lift = lifts.get(pipe.from)
+    return { id: `${pipe.from}>${pipe.to}`, kind: 'storm_gallery', from: pipe.from, to: pipe.to, diameter: storm.galleryDiameter, ...(lift === undefined ? {} : { inverts: [lift, inverts.get(pipe.to) ?? 0] as const }) }
+  })
   for (const { inlet, joint, end } of laterals) {
     sink.nodes.push(inlet.node)
-    edges.push({ id: `storm:lateral:${inlet.id}`, kind: 'storm_lateral', from: inlet.id, to: joint, diameter: storm.lateralDiameter, inverts: [inlet.node.invert ?? 0, end] })
+    edges.push({ id: `storm:lateral:${inlet.key}`, kind: 'storm_lateral', from: inlet.id, to: joint, diameter: storm.lateralDiameter, inverts: [inlet.node.invert ?? 0, end] })
   }
-  edges.push(...gutters(context, connections, inlets))
+  edges.push(...gutters({ context, connections, inlets }))
   sink.edges.push(...edges)
   return edges
 }
 
 /** Each lot's downspout outlet at the kerb, down the gutter to the nearest inlet of the same kerb of its street. */
-function gutters(context: BuriedContext, connections: readonly UtilityConnection[], inlets: readonly Inlet[]): NetworkEdge[] {
+function gutters({ context, connections, inlets }: { readonly context: BuriedContext; readonly connections: readonly UtilityConnection[]; readonly inlets: readonly Inlet[] }): NetworkEdge[] {
   const slope = context.rules.minSlope.storm_gutter + context.rules.layout.slopeMargin
   return connections.flatMap((connection) => {
     const served = context.served.get(connection.lot)
     if (served === undefined) return []
-    const [u] = frameOf(served.run.along, served.run.axis, connection.at[0], connection.at[2])
-    const own = inlets.filter((inlet) => inlet.run === served.run.id && inlet.curb === served.side)
+    const [u] = frameOf({ frame: served.run, x: connection.at[0], z: connection.at[2] })
+    const own = inlets.filter((inlet) => inlet.run.id === served.run.id && inlet.curb === served.side)
     const inlet = [...own].sort((a, b) => Math.abs(a.u - u) - Math.abs(b.u - u))[0]
     if (inlet === undefined) return []
     const node = `lot:${connection.lot}:storm`

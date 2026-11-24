@@ -23,14 +23,14 @@ export type ChainParams = {
  */
 export function chainsOf(params: ChainParams): { chains: ChainNode[][]; joints: Map<string, string> } {
   const joints = new Map<string, string>()
-  const chains = params.line.segments.map((segment, index) => chainOf(segment, index, params, joints))
+  const chains = params.line.segments.map((segment, index) => chainOf({ segment, index, params, joints }))
   return { chains, joints }
 }
 
-function chainOf(segment: LineSegment, index: number, params: ChainParams, joints: Map<string, string>): ChainNode[] {
+function chainOf({ segment, index, params, joints }: { readonly segment: LineSegment; readonly index: number; readonly params: ChainParams; readonly joints: Map<string, string> }): ChainNode[] {
   const { run, ua, ub } = segment
   const [low, high] = [Math.min(ua, ub), Math.max(ua, ub)]
-  const place = (u: number): readonly [number, number] => worldOf(run.along, run.axis, u, params.offset(run))
+  const place = (u: number): readonly [number, number] => worldOf({ frame: run, u, v: params.offset(run) })
   const vertex = (id: string): ChainNode => {
     const found = params.line.vertices.get(id)
     return { id, x: found?.x ?? 0, z: found?.z ?? 0, role: 'vertex' }

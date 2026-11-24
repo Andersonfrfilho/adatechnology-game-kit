@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import { describe, expect, it } from 'vitest'
 
 import { generateNetworks, validateNetworks } from '@adatechnology/game-urban/networks'
@@ -12,10 +14,13 @@ const lots = planLots(site)
 const avoid = keepOutOf(lots, POLE_MIN_GAP)
 const generated = buildNetworks({ plan, site, avoid })
 const { nodes, edges } = generated.networks
+/** The bytes of the recorte's networks: a change that moves anything shows here, and is recorded on purpose. */
+const RECORDED = '8e2a69c24c6cdfdb4e14bb08f5a8e12576375794525c9ec74a740a72868b42cd'
 
 describe('the networks of the recorte', () => {
-  it('pass every rule of validateNetworks', () => {
+  it('pass every rule of validateNetworks, laid with no warning', () => {
     expect(validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt })).toEqual([])
+    expect(generated.warnings).toEqual([])
   })
 
   it('link each of the 15 lots to the five networks once', () => {
@@ -33,6 +38,7 @@ describe('the networks of the recorte', () => {
 
   it('come out the same for the same plan, lots and seed, and lay a lamp on every pole', () => {
     expect(JSON.stringify(generateNetworks({ plan, lots: site.lots, seed: site.seed, avoid }).networks)).toBe(JSON.stringify(generated.networks))
+    expect(createHash('sha256').update(JSON.stringify(generated.networks)).digest('hex')).toBe(RECORDED)
     const poles = nodes.filter((node) => node.kind === 'pole')
     expect(nodes.filter((node) => node.kind === 'light').length).toBe(poles.length)
     expect(edges.filter((edge) => edge.kind === 'light_feed').length).toBe(poles.length)
