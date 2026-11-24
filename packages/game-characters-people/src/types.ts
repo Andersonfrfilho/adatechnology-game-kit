@@ -29,11 +29,12 @@ export type Profession = {
 
 export type AgeGroupId = 'child' | 'young' | 'adult' | 'elder'
 
-/** Ranges read from the named people of the portraits page; height and build are relative to the adult body. */
+/** Ranges read from the named people of the portraits page; `heightMetres` is stature in metres, `height` is kept as relative factor. */
 export type AgePreset = {
   readonly id: AgeGroupId
   readonly count: number
   readonly height: readonly [number, number]
+  readonly heightMetres: readonly [number, number]
   readonly build: readonly [number, number]
   readonly hunch: readonly [number, number]
 }

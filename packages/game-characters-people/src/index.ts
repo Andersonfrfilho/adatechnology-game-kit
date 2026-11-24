@@ -2,6 +2,7 @@
  * @adatechnology/game-characters-people: generic people for `game-characters`, as data and one pack. 12 professions, 4 age presets, the appearance
  * pools and the accessory ids the portraits builder knows, the name pools and the character sheet ruleset. Named people and their stories belong to the game.
  */
+import { assertHeight, createRng } from '@adatechnology/game-characters'
 import type { CharacterPack, FirstPersonClip, PoseClip } from '@adatechnology/game-characters'
 
 import accessoriesData from './data/accessories.json'
@@ -76,6 +77,14 @@ export const SHEET_RULESET = sheetData as unknown as SheetRuleset
 
 export const getProfession = (id: string): Profession | undefined => PROFESSIONS.find((profession) => profession.id === id)
 export const getAgePreset = (id: string): AgePreset | undefined => AGE_PRESETS.find((preset) => preset.id === id)
+
+/** Deterministically draws a standing height in metres within the age preset's `heightMetres` range (Spec 012 R2 / T2.2). */
+export const drawHeightMetres = (age: AgePreset['id'], seed: number): number => {
+  const preset = getAgePreset(age) ?? getAgePreset('adult')!
+  const [min, max] = preset.heightMetres
+  const t = createRng(seed)()
+  return assertHeight(min + (max - min) * t)
+}
 
 /** The professions as presets of `createCharacters({ packs: [createPeoplePack()] })`: `kit.create({ seed, kind: 'nurse' })`. */
 export const createPeoplePack = (): CharacterPack => ({
