@@ -23,6 +23,7 @@ const WALK_KEYS: Readonly<Record<string, readonly [forward: number, right: numbe
 }
 const RUN_KEYS = ['ShiftLeft', 'ShiftRight']
 const CYCLE_KEY = 'KeyV'
+const START_PITCH = 0.1
 
 export type PlayerRig = {
   readonly player: Player
@@ -33,6 +34,8 @@ export type PlayerRig = {
   /** What the scripted run holds down in place of the keys: `forward` and `right` in -1..1. */
   readonly held: { forward: number; right: number; run: boolean }
   setMode(mode: CameraChoice): void
+  /** Puts the body back as it began (where it stood, its vitals, alive) looking the way it looked; the world stays as it is. */
+  backToStart(): void
   /** Hands the body the crowd it fights and is held by (the crowd is made after the body, which it hunts). */
   bindCrowd(crowd: PlayerCrowdLike): void
   /** One fixed step: reads the keys and moves the body on the nav grid. */
@@ -62,7 +65,8 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
   world.view.scene.add(avatar.root)
   const camera = createCameraRig(THREE, { locale: 'pt-BR' })
   camera.setMode(mode)
-  const view = { yaw: start.yaw, pitch: 0.1 }
+  const view = { yaw: start.yaw, pitch: START_PITCH }
+  const startSave = player.save()
   const held = { forward: 0, right: 0, run: false }
   const keys = new Set<string>()
   const onKeyDown = (event: KeyboardEvent): void => {
@@ -99,6 +103,14 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
     view,
     held,
     setMode: (next: CameraChoice) => camera.setMode(next),
+    backToStart() {
+      player.load(startSave)
+      view.yaw = start.yaw
+      view.pitch = START_PITCH
+      held.forward = 0
+      held.right = 0
+      held.run = false
+    },
     bindCrowd: (crowd) => player.setWorld({ solidAt: grid.solidAt, cellKind: grid.cellKind, inWater, crowd }),
     step(dt) {
       const walk = walkOf()
