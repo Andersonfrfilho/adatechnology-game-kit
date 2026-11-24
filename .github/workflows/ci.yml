@@ -237,6 +237,9 @@ jobs:
 
       - run: pnpm --filter @adatechnology/shapes-bench-tool test
 
+      # what each builder's result costs to draw (draws, triangles, materials): counts, the same on every machine, so it runs before the timing and fails on any piece past its recorded cost
+      - run: node tools/shapes-bench/dist/cli.js --cost-check
+
       - run: node --expose-gc tools/shapes-bench/dist/cli.js --check --json shapes-bench-run.json
 
       - if: always()

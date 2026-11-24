@@ -20,7 +20,7 @@ import { buildPrimitive, clearTemplateCache, generate } from '@adatechnology/gam
 import type { PrimitiveNode, ShapeSchema } from '@adatechnology/game-shapes'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
 import { createVehicleKit } from '@adatechnology/game-vehicles'
-import { installFleet } from '@adatechnology/game-vehicles-fleet'
+import { fleetGroups, installFleet } from '@adatechnology/game-vehicles-fleet'
 import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
 import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { createUrban } from '@adatechnology/game-urban'
@@ -82,6 +82,21 @@ const CABINET: ShapeSchema = {
 export interface EntryOptions {
   /** Keep only the entries whose id contains this. */
   readonly filter?: string
+}
+
+/**
+ * The builders only the cost census builds (`--cost`): too slow to time, built once to be counted. The rest of the fleet at the quality the bench times its three
+ * (`BENCH_VEHICLES`).
+ */
+export function costOnlyEntries(options: EntryOptions = {}): BenchEntry[] {
+  const document = stubDocument()
+  const vehicleKit = createVehicleKit({ THREE, document, locale: 'en' })
+  installFleet(vehicleKit)
+  const vehicles = createVehiclesThree(THREE, { kit: vehicleKit, fleet: defaultVehicleFleet() })
+  const timed = new Set<string>(BENCH_VEHICLES)
+  const keys: string[] = Object.values(fleetGroups).flat()
+  const entries = keys.filter((key) => !timed.has(key)).map((key): BenchEntry => ({ id: `vehicles/${key}:lite`, run: () => vehicles.build(key, { quality: 'lite', seed: 7 }) }))
+  return options.filter ? entries.filter((e) => e.id.includes(options.filter as string)) : entries
 }
 
 /** Every builder the bench knows, in a stable order. */

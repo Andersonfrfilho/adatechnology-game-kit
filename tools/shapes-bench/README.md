@@ -56,3 +56,31 @@ Why it moved: the houses are about 15% slower than on 2026-11-13 (local A/B of `
 What it does to the gate: the fail line (twice the baseline) moves from 74.8 to 86.7 for `apartment_basic` and from 52.7 to 68.6 for `pharmacy`, so a real slowdown of up to about 16% and 30% over the old baseline now passes there. Replayed over the 20 runs: the old baseline fails 2 runs and warns 13 times, this one fails 1 (`apartment_modern` at 139, which the old one failed too) and warns 7 times. `apartment_modern` goes down (68.2 to 59.2): its old value was a slow sample.
 
 Known small waste left as a follow-up: `solidsOf` is rebuilt per run in `drains.ts`, `water.ts` and `electrical.ts`. Every other entry is unchanged.
+
+## Cost of what is built (`--cost`)
+
+Timing says how long a builder takes; the cost census says what its result costs to draw, every frame, for as long as it is on screen. Each
+builder is run once and its result counted as `tools/kit-audit/cost.mjs` counts a piece in the room: one draw per mesh and material, one more
+when the mesh casts a shadow, the triangles (times the copies of an instanced mesh) and the distinct materials. Hidden objects, meshes off the
+camera layer (drawn inside a batch) and the lower levels of a `LOD` are left out. These are counts, the same on every machine, so there is no
+noise and no calibration: the whole kit takes a few seconds. Besides the builders timed, it builds the rest of the fleet (`costOnlyEntries`).
+
+```sh
+node tools/shapes-bench/dist/cli.js --cost            # totals per group
+node tools/shapes-bench/dist/cli.js --cost-check      # fails on a builder past its recorded cost (the CI job runs this)
+node tools/shapes-bench/dist/cli.js --cost-update     # rewrites cost-baseline.json
+```
+
+`cost-baseline.json` holds the cost of every builder. `--cost-check` fails when a builder:
+
+- has **no recorded cost** (a new piece): run `--cost-update` and commit the file, so the review sees what the piece costs;
+- is **worse**: more draws or materials than recorded past `drawSlack` (10%, at least one more), or more triangles past `triangleSlack` (15%);
+- is **over the draw limit of its group** (`limits`) and not accepted in `over`, or accepted and now above the draws accepted;
+- is **gone** from the builders but still recorded.
+
+A cost that is meant is recorded with `--cost-update`: the diff of `cost-baseline.json` is what the reviewer reads. `--cost-update` refuses a
+piece newly over the limit of its group; `--cost-accept <id,id>` accepts it by id, into `over`, where it may only go down. The limits are the
+90th percentile of each group on 2026-11-23, when 47 pieces were already over them; `urban` and `houses` are compositions and have none.
+
+What it does not see: the cost of a scene put together (how many pieces, what the batcher merges), the time of a frame, memory. Those are the
+room's rulers (`tools/kit-audit/cost.mjs`, `tools/gpu/perf-gate.mjs`, `examples/test-room/leak.mjs`), which need a browser (CLAUDE.md §9).

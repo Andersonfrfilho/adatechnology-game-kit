@@ -2,7 +2,8 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { benchEntries } from './entries'
+import { runCost } from './cost-cli'
+import { benchEntries, costOnlyEntries } from './entries'
 import { best, CALIBRATION, compare, compareGroups, summary, timeEntry, toBaseline } from './timing'
 import type { Baseline, BenchEntry, Timing, TimingOptions } from './timing'
 
@@ -17,6 +18,12 @@ const HELP = `shapes-bench: times the kit's 3D builders.
   --baseline-from <json>  write the baseline from a run saved with --json (another machine's, the CI job's artifact) and stop
   --baseline  the baseline file (default tools/shapes-bench/baseline.json)
   --rounds    passes over the list (default 3; each builder keeps its best)
+
+  --cost          no timing: what each builder's result costs to draw (draws, triangles, materials), the same on every machine
+  --cost-check    fail (exit 1) on a builder past its recorded cost, over the draw limit of its group, or with no recorded cost
+  --cost-update   rewrite cost-baseline.json with this run (refuses a piece newly over the limit of its group)
+  --cost-accept <id,id>  with --cost-update: accept these pieces over the limit
+  --cost-baseline <file>  the cost baseline (default tools/shapes-bench/cost-baseline.json)
 
 The table goes to stdout, and to $GITHUB_STEP_SUMMARY when it is set.`
 
@@ -48,6 +55,18 @@ function main(): void {
   const check = args.includes('--check')
   const update = args.includes('--update')
   if (update && filter) throw new Error('--update rewrites the whole baseline: run it without --filter')
+  if (args.some((arg) => arg === '--cost' || arg === '--cost-check' || arg === '--cost-update')) {
+    if (args.includes('--cost-update') && filter) throw new Error('--cost-update rewrites the whole baseline: run it without --filter')
+    process.exitCode = runCost({
+      entries: [...benchEntries({ filter }), ...costOnlyEntries({ filter })],
+      baselinePath: argValue(args, '--cost-baseline') ?? join(root, 'cost-baseline.json'),
+      check: args.includes('--cost-check'),
+      update: args.includes('--cost-update'),
+      accepted: (argValue(args, '--cost-accept') ?? '').split(',').filter(Boolean),
+      jsonPath: argValue(args, '--json'),
+    })
+    return
+  }
   const baseline: Baseline | null = existsSync(baselinePath) ? (JSON.parse(readFileSync(baselinePath, 'utf8')) as Baseline) : null
 
   const from = argValue(args, '--baseline-from')

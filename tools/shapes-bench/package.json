@@ -11,7 +11,10 @@
     "test": "vitest run",
     "bench": "node --expose-gc dist/cli.js",
     "bench:check": "node --expose-gc dist/cli.js --check",
-    "bench:update": "node --expose-gc dist/cli.js --update"
+    "bench:update": "node --expose-gc dist/cli.js --update",
+    "cost": "node dist/cli.js --cost",
+    "cost:check": "node dist/cli.js --cost-check",
+    "cost:update": "node dist/cli.js --cost-update"
   },
   "devDependencies": {
     "@adatechnology/game-animals-species": "workspace:*",
