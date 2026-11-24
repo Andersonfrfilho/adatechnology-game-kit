@@ -23,7 +23,7 @@ const scene = b.scene()                            // { parts, items, windows: {
 | id | shape | what it is |
 |---|---|---|
 | `led_double` | `double_arm` | 9 m mast, two arms with white LED heads (avenue) |
-| `concrete_arm` | `single_arm` | 8 m concrete mast, one arm, sodium lamp, optional transformer drum (`dir` -1 mirrors the arm) |
+| `concrete_arm` | `single_arm` | 8 m concrete mast, one arm, sodium lamp, optional transformer drum (`dir` -1 mirrors the arm; `ry` turns the pole, so a pole by a street along x reaches over the road with `ry = ±π/2`; the crossarm and the lantern turn too) |
 | `cast_iron` | `lantern` | 4 m iron post, lantern box and pointed cap |
 | `wood_crossarm` | `crossarm` | 7 m wooden pole with a crossarm and a hanging lamp |
 | `flood_tower` | `flood_tower` | 12 m four-legged tower with three floodlights |

@@ -77,3 +77,9 @@ The contract of **structural** masonry exists (`MASONRY_SYSTEM.STRUCTURAL`, the 
 4. A validator of its own (NBR 16868): prism strength from `fbk`, wall slenderness, minimum grout and bonding, and the destruction world carrying the load through
    the walls (a sealing wall carries nothing today).
 5. Only units graded `structural` (concrete 14 and 19, solid brick), with an `fbk` that suits the number of storeys.
+
+### A street that brings its own poles (`streetPoles`)
+
+`engine.generate(id, { streetPoles: true })` is for a city that draws its own street poles: the service entrance's post (`serviceEntrance.pole`, the padrão) stands inside the lot,
+`SERVICE_POST_INSIDE_LOT` behind its front edge, or is `null` when the front yard is shallower than `SERVICE_POST_MIN_YARD` (the meter is then on the facade). The street's drop lands at
+`serviceEntrance.drop[0]` either way. Without the option the pole stands on the sidewalk, `SERVICE_POLE_OUTSIDE_LOT` in front of the lot, as the house's own grid pole.

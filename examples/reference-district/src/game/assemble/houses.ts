@@ -19,6 +19,8 @@ import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import type { PlanRect } from '@adatechnology/game-urban'
 
 import { lotPlacement, overflowOf } from '../placement'
+import type { PolePoint } from '../roads'
+import { serviceDropOf } from '../service'
 import type { HousePlacement, HouseSize } from '../placement'
 import { seedOf } from '../seed'
 import type { Lot, Site } from '../site'
@@ -80,20 +82,37 @@ function footprintOf(placement: HousePlacement, size: HouseSize): PlanRect {
   return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])]
 }
 
+/** A lot's plan, generated and placed before anything is drawn: the streets read its doors, gates and entrance to stand their poles and run its drop. */
+export type PlannedLot = { readonly lot: Lot; readonly plan: FloorplanResult; readonly size: HouseSize; readonly placement: HousePlacement }
+
+/**
+ * The plan of every lot of the site (`engine.generate`, by the lot's typology, seed and state), with the street's own poles (`streetPoles`: the entrance post stands inside the lot), placed
+ * on its lot facing the street.
+ */
+export function planLots(site: Site): PlannedLot[] {
+  const engine = registerPacks()
+  return site.lots.map((lot): PlannedLot => {
+    const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), streetPoles: true, ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
+    const size = houseSizeOf(plan)
+    return { lot, plan, size, placement: lotPlacement(lot.rect, lot.front, size) }
+  })
+}
+
 export type HousesParams = {
   readonly THREE: typeof THREE_NS
   readonly world: KitWorld
   readonly scene: THREE_NS.Object3D
-  readonly site: Site
+  readonly lots: readonly PlannedLot[]
+  /** The street's poles: each house's service drop leaves the nearest one. */
+  readonly poles: readonly PolePoint[]
 }
 
 /**
- * The houses of the site: a plan of the floorplan engine for every lot (`engine.generate`, by the lot's typology, seed and state), drawn by `game-floorplan-three` with the
+ * The houses of the site: the plan of every lot (`planLots`), drawn by `game-floorplan-three` with the
  * interactables and the vegetation of the kit, standing on its lot facing the street and registered in the world's destruction. The distance level of detail (`planLod`) keeps only the near houses
  * complete: the others lose their interior and, far away, vanish.
  */
-export function createHouses({ THREE, world, scene, site }: HousesParams): Houses {
-  registerPacks()
+export function createHouses({ THREE, world, scene, lots, poles }: HousesParams): Houses {
   const options: HouseRendererOptions = {
     locale: 'pt-BR',
     quality: 'game',
@@ -105,11 +124,9 @@ export function createHouses({ THREE, world, scene, site }: HousesParams): House
   }
   const renderer = createHouseRenderer(THREE, options)
   const unregister = registerHouseQueues(renderer, world.frame.scheduler.budget)
-  const list = site.lots.map((lot): PlacedHouse => {
-    const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
-    const house = renderer.build(plan, { quality: 'game', terrain: false })
-    const size = houseSizeOf(plan)
-    const placement = lotPlacement(lot.rect, lot.front, size)
+  const list = lots.map(({ lot, plan, size, placement }): PlacedHouse => {
+    const drop = serviceDropOf({ plan, placement }, poles)
+    const house = renderer.build(plan, { quality: 'game', terrain: false, ...(drop ? { serviceFrom: drop.fromInHouse } : {}) })
     house.group.rotation.y = placement.ry
     house.group.position.set(placement.x, 0, placement.z)
     house.group.updateMatrixWorld(true)

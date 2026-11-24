@@ -11,6 +11,10 @@ const METER_SIZE = { w: 0.35, d: 0.2, h: 0.5 }
 export const SERVICE_POLE_OUTSIDE_LOT = 0.6
 /** Without a lot the street is unknown: the pole stands this far in front of the facade. */
 const SERVICE_POLE_NO_LOT = 3
+/** With the street's own poles, the entrance post stands this far inside the lot's front edge (metres): behind the front wall, never on the sidewalk. */
+export const SERVICE_POST_INSIDE_LOT = 0.35
+/** The least front yard (metres) that holds the entrance post clear of the facade; a house with less has its meter on the facade and no post. */
+export const SERVICE_POST_MIN_YARD = 1.2
 
 export const mainDoorOf = (plan: Plan): PlanDoor | undefined => plan.doors.find((p) => p.floor === 0 && p.exterior && p.side === 'front') || plan.doors.find((p) => p.floor === 0 && p.exterior)
 
@@ -30,16 +34,35 @@ export function placeEntrance(layout: Layout): void {
       placed = { place: 'gate_pillar', u: round2(gate.u + direction * (gate.width / 2 + 0.25)), v: round2(gate.v), y: 1.4, side: 'front', ...METER_SIZE }
     } else placed = { place: 'facade', u: round2(door ? door.at + 1.2 : plan.w / 2), v: -0.1, y: 1.4, side: 'front', ...METER_SIZE }
     const meter: ElectricMeter = Object.assign(placed, { id: 'meter' })
+    if (layout.streetPoles) return void (electrical.serviceEntrance = streetEntrance({ plan, meter, poleU: round2(poleU), door }))
     electrical.serviceEntrance = { pole: { u: round2(poleU), v: round2(poleV), h: 7.5 }, drop: [[round2(poleU), round2(poleV), 6.5], [meter.u, meter.v, 2.6]], meter, descent: [[meter.u, meter.v, 2.6], [meter.u, meter.v, 1.65]], internalRun: null }
   } else if (lot === null || plan.style === 'commercial') {
     const front = door ? { u: round2(door.at + 1.0), v: -0.1 } : { u: round2(plan.w / 2), v: -0.1 }
     // a shop on a lot has the pole where a house has it, in front of the lot's edge: 3 m from the facade put it on the road when the lot starts at the facade (the Visor's golden keeps the 3 m)
+    if (lot && layout.streetPoles) return void (electrical.serviceEntrance = streetEntrance({ plan, meter: { id: 'meter', place: 'facade', u: front.u, v: front.v, y: 1.4, side: 'front', ...METER_SIZE }, poleU: round2(front.u + 2), door }))
     const poleV = lot && !layout.visor ? round2(lot.rect[1] - SERVICE_POLE_OUTSIDE_LOT) : -SERVICE_POLE_NO_LOT
     electrical.serviceEntrance = {
       pole: { u: round2(front.u + 2), v: poleV, h: 7.5 }, drop: [[round2(front.u + 2), poleV, 6.5], [front.u, front.v, 3.2]],
       meter: { id: 'meter', place: 'facade', u: front.u, v: front.v, y: 1.4, side: 'front', ...METER_SIZE }, descent: [[front.u, front.v, 3.2], [front.u, front.v, 1.65]], internalRun: null,
     }
   }
+}
+
+/**
+ * The entrance of a house on a street that brings its own poles: the post (padrão) stands inside the lot, `SERVICE_POST_INSIDE_LOT` behind its front edge, with the drop from it to the
+ * meter; a house whose front yard is too shallow for it has no post, and the street's drop lands on the facade over the meter. The street's drop lands at `drop[0]` either way.
+ */
+function streetEntrance({ plan, meter, poleU, door }: { readonly plan: Plan; readonly meter: ElectricMeter; readonly poleU: number; readonly door: PlanDoor | undefined }): NonNullable<Layout['electrical']['serviceEntrance']> {
+  const front = plan.lot?.rect[1] ?? 0
+  const head: [number, number, number] = [meter.u, meter.v, meter.place === 'facade' ? 3.2 : 2.6]
+  const descent: [number, number, number][] = [head, [meter.u, meter.v, 1.65]]
+  if (-front < SERVICE_POST_MIN_YARD) {
+    const facade: ElectricMeter = meter.place === 'facade' ? meter : { ...meter, place: 'facade', u: round2(door ? door.at + 1.2 : plan.w / 2), v: -0.1 }
+    const top: [number, number, number] = [facade.u, facade.v, 3.2]
+    return { pole: null, drop: [top], meter: facade, descent: [top, [facade.u, facade.v, 1.65]], internalRun: null }
+  }
+  const post = { u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT), h: 7.5 }
+  return { pole: post, drop: [[post.u, post.v, 6.5], head], meter, descent, internalRun: null }
 }
 
 /** The distribution panel in the room of the main door, on the wall nearest the meter, clear of doors and windows and of tall furniture. */

@@ -70,11 +70,25 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       const r0 = drop[0], r1 = drop[drop.length - 1], head: Vec3 = [r0[0], r0[2], r0[1]];
       wireSpans(head, [r1[0], r1[2], r1[1]], 0.009, 'wiring:drop:0', poleId(P.u)); wireSpans([head[0], head[1], head[2] + (shared.ctx.visorScene ? 0 : 0.04)], [r1[0], r1[2], r1[1] + 0.04], 0.009, 'wiring:drop:1', poleId(P.u)); wireSpans([P.u - 0.2, P.h - 0.5, P.v], head, 0.008, 'wiring:drop:2', poleId(P.u)); cursor.pc = null;
     };
-    if (en && en.pole) {
-      const P = en.pole; if (!(KV && KV.serviceEntrance)) pole(P.u, P.v, P.h); info.pole = { pos: [P.u, 0, P.v], h: P.h };
-      for (const k of [-1, 1]) pole(P.u + k * 22, P.v, P.h); // neighbouring poles and the grid that follows the street
-      wiringSpans(P, en.drop && en.drop.length > 1 && !(KV && KV.serviceEntrance) ? en.drop : null);
-      if (en.descent && en.descent.length > 1 && !(KV && KV.serviceEntrance)) { // drop: steel conduit from the head to the meter box
+    // the street brings its own poles (`serviceFrom`): one drop sags from the street pole to where the plan's entrance takes it, held by the street (the ground) and by the house's solids
+    const streetDrop = (from: Vec3, to: Vec3): void => {
+      const n = 8, sag = Math.min(0.8, 0.03 * Math.hypot(to[0] - from[0], to[2] - from[2])), at = (t: number): Vec3 => [from[0] + (to[0] - from[0]) * t, from[1] + (to[1] - from[1]) * t - sag * 4 * t * (1 - t), from[2] + (to[2] - from[2]) * t];
+      for (let i = 0; i < n; i++) wireSpans(at(i / n), at((i + 1) / n), 0.009, 'wiring:service:' + i, 'ground');
+      cursor.pc = null;
+    };
+    if (en) {
+      const P = en.pole, from = shared.ctx.serviceFrom, kitDraws = !!(KV && KV.serviceEntrance);
+      if (P) { if (!kitDraws) pole(P.u, P.v, P.h); info.pole = { pos: [P.u, 0, P.v], h: P.h }; }
+      const landing = en.drop[0];
+      if (from && landing) {
+        streetDrop(from, [landing[0], landing[2], landing[1]]);
+        const end = en.drop[en.drop.length - 1];
+        if (P && end && en.drop.length > 1 && !kitDraws) { wireSpans([landing[0], landing[2], landing[1]], [end[0], end[2], end[1]], 0.009, 'wiring:drop:0', 'pole:' + P.u.toFixed(1)); cursor.pc = null; }
+      } else if (P) {
+        for (const k of [-1, 1]) pole(P.u + k * 22, P.v, P.h); // neighbouring poles and the grid that follows the street
+        wiringSpans(P, en.drop && en.drop.length > 1 && !kitDraws ? en.drop : null);
+      }
+      if (en.descent && en.descent.length > 1 && !(KV && (KV.serviceEntrance || !P))) { // drop: steel conduit from the head to the meter box
         const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hw = shared.ctx.visorScene ? 0.05 : 0.047; /* (the head 3 mm narrower each side outside the Visor's scene: its sides lay on a pillar's and a wall's faces) */ const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls); /* (a head on the lot's wall is laid round the railing's bars standing there) */ try { bx('metal', d0[0] - hw, d0[2] - 0.03, d0[1] - hw, d0[0] + hw, d0[2] + 0.08, d0[1] + hw, 0x7a7e84); } finally { shared.ctx.keepOut = kept; }
       }
       const M = en.meter;

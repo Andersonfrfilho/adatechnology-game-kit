@@ -29,6 +29,8 @@ export interface UtilitiesContext {
   energy?: EnergyConfig
   /** The Visor de casas 3D's installations as they were (`visorSections`): its gas, no shelter. */
   visor?: boolean
+  /** The street brings its own poles (`generate(..., { streetPoles: true })`): see `ElectricalContext.streetPoles`. */
+  streetPoles?: boolean
   /** Where the cooking cylinder stands: the outdoor shelter (default) or, asked for, the kitchen beside the stove. */
   gasLayout?: GasLayout
   /** Seeded stream by name: `gas`, `electrical`, `solar`. */
@@ -41,7 +43,7 @@ export function planUtilities(context: UtilitiesContext): Utilities {
   const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}), ...(context.gasLayout ? { layout: context.gasLayout } : {}) })
   // the outbuildings are wired as rooms of the house, their ceiling lights with them
   const outbuildings = context.outbuildings ?? []
-  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}) })
+  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}) })
   const solar = planSolar({ plan, rng: rngFor('solar'), ...(energy ? { energy } : {}) })
   const plumbing = planPlumbing({ plan, items, tank })
   return { gas, electrical, solar, plumbing }

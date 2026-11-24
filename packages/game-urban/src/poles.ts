@@ -43,11 +43,14 @@ export type PoleOptions = {
   z: number
   /** Lit lamp (glowing lens and, while the budget lasts, a real light). Default true. */
   on?: boolean
-  /** Turns the whole pole (the double arm only; the others are placed by their arm direction). */
+  /**
+   * Turns the whole pole about y (radians, as three.js turns an object): its arm, lamp and light leave the mast along the turned +x, so a pole by a street running along x reaches over
+   * the road with `ry = ±π/2`. Default 0 (the arm along +x).
+   */
   ry?: number
   /** The real light flickers (a failing lamp). */
   flicker?: boolean
-  /** Which way the arm points, 1 or -1 (single arm). Default 1. */
+  /** Which way the arm points along the turned x, 1 or -1 (single arm). Default 1. */
   dir?: number
   /** Adds the transformer drum (single arm). */
   transformer?: boolean
@@ -71,12 +74,17 @@ const lensOf = (o: PoleOptions, parent?: number): { emissive: boolean; parent?: 
   ...(on(o) && o.flicker ? { flickerPhase: flickerPhaseOf(o.x, o.z) } : {}),
 })
 
+/** A point `reach` metres from the mast along the pole's turned +x (`ry` about y, as three.js turns an object: +x goes to (cos ry, -sin ry)). */
+const along = (o: PoleOptions, reach: number): { x: number; z: number } => ({ x: o.x + reach * Math.cos(o.ry ?? 0), z: o.z - reach * Math.sin(o.ry ?? 0) })
+
 function drawMast(b: UrbanBuilder, mast: MastSpec, x: number, z: number, parent = -1): void {
   b.cylinder(x, 0, z, mast.radiusTop, mast.radiusBottom, mast.height, mast.color, parent, mast.segments, mast.style)
 }
 
 function spendLight(b: UrbanBuilder, light: LampLightSpec, x: number, z: number, o: PoleOptions): void {
-  if (on(o) && b.lights.take()) b.light({ x: x + (light.reach ?? 0), y: light.y, z: z + (light.z ?? 0), color: light.color, intensity: light.intensity, distance: light.distance, flicker: o.flicker ?? false, ...(o.flicker ? { flickerPhase: flickerPhaseOf(o.x, o.z) } : {}) })
+  const ry = o.ry ?? 0
+  const [reach, side] = [light.reach ?? 0, light.z ?? 0]
+  if (on(o) && b.lights.take()) b.light({ x: x + reach * Math.cos(ry) + side * Math.sin(ry), y: light.y, z: z - reach * Math.sin(ry) + side * Math.cos(ry), color: light.color, intensity: light.intensity, distance: light.distance, flicker: o.flicker ?? false, ...(o.flicker ? { flickerPhase: flickerPhaseOf(o.x, o.z) } : {}) })
 }
 
 const doubleArm: PoleShapeBuilder = (b, spec: DoubleArmSpec, o) => {
@@ -86,29 +94,37 @@ const doubleArm: PoleShapeBuilder = (b, spec: DoubleArmSpec, o) => {
     b.box(side * spec.arm.reach, spec.arm.y, 0, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color, { parent: group })
     b.box(side * spec.lamp.reach, spec.lamp.y, 0, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o, group))
   }
-  spendLight(b, spec.light, o.x, o.z, o)
+  spendLight(b, spec.light, o.x, o.z, { ...o, ry: 0 })
 }
 
 const singleArm: PoleShapeBuilder = (b, spec: SingleArmSpec, o) => {
   const dir = o.dir ?? 1
+  const ry = o.ry ?? 0
+  const arm = along(o, dir * spec.arm.reach)
+  const lamp = along(o, dir * spec.lamp.reach)
+  const drum = along(o, -dir * spec.transformer.offset)
   drawMast(b, spec.mast, o.x, o.z)
-  b.box(o.x + dir * spec.arm.reach, spec.arm.y, o.z, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color)
-  b.box(o.x + dir * spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
-  if (o.transformer) b.cylinder(o.x - dir * spec.transformer.offset, spec.transformer.y, o.z, spec.transformer.radius, spec.transformer.radius, spec.transformer.height, spec.transformer.color, -1, spec.transformer.segments)
+  b.box(arm.x, spec.arm.y, arm.z, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color, { ry })
+  b.box(lamp.x, spec.lamp.y, lamp.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { ...lensOf(o), ry })
+  if (o.transformer) b.cylinder(drum.x, spec.transformer.y, drum.z, spec.transformer.radius, spec.transformer.radius, spec.transformer.height, spec.transformer.color, -1, spec.transformer.segments)
   spendLight(b, { ...spec.light, reach: dir * (spec.light.reach ?? spec.lamp.reach) }, o.x, o.z, o)
 }
 
 const lantern: PoleShapeBuilder = (b, spec: LanternSpec, o) => {
+  const lamp = along(o, spec.lamp.reach)
   drawMast(b, spec.mast, o.x, o.z)
-  b.box(o.x + spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
+  b.box(lamp.x, spec.lamp.y, lamp.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { ...lensOf(o), ry: o.ry ?? 0 })
   b.cone(o.x, spec.cap.y, o.z, spec.cap.radius, spec.cap.height, spec.cap.color, -1, spec.cap.segments)
   spendLight(b, spec.light, o.x, o.z, o)
 }
 
 const crossarm: PoleShapeBuilder = (b, spec: CrossarmSpec, o) => {
+  const ry = o.ry ?? 0
+  const arm = along(o, spec.arm.reach)
+  const lamp = along(o, spec.lamp.reach)
   drawMast(b, spec.mast, o.x, o.z)
-  b.box(o.x + spec.arm.reach, spec.arm.y, o.z, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color)
-  b.box(o.x + spec.lamp.reach, spec.lamp.y, o.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, lensOf(o))
+  b.box(arm.x, spec.arm.y, arm.z, spec.arm.width, spec.arm.height, spec.arm.depth, spec.arm.color, { ry })
+  b.box(lamp.x, spec.lamp.y, lamp.z, spec.lamp.width, spec.lamp.height, spec.lamp.depth, on(o) ? spec.lens.lit : spec.lens.unlit, { ...lensOf(o), ry })
   spendLight(b, { ...spec.light, reach: spec.light.reach ?? spec.lamp.reach }, o.x, o.z, o)
 }
 
