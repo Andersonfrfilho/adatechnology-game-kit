@@ -81,7 +81,7 @@ describe('createPlayerAvatar', () => {
     const box = new THREE.Box3().setFromObject(avatar.root)
     expect(box.max.y - box.min.y).toBeLessThan(0.5)
     expect(box.min.y).toBeGreaterThan(0.6 - 0.35)
-    expect(box.min.z).toBeLessThan(-1)
+    expect(box.min.z).toBeLessThan(-0.85)
     expect(box.max.z - box.min.z).toBeGreaterThan(1.5)
     run(avatar, 0.2, { seat: null })
     const up = new THREE.Box3().setFromObject(avatar.root)

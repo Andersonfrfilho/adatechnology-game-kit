@@ -4,10 +4,11 @@
 // parameters; the random look comes from the engine's `drawAppearance` (the same `VR` draws in the same order), the blood stream from `createBloodStream`.
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
-import { createBloodStream, createRng, drawAppearance } from '@adatechnology/game-characters'
+import { assertHeight, createBloodStream, createRng, defaultHeightMetres, drawAppearance } from '@adatechnology/game-characters'
 
 import type { Three, THREE_NS } from '../three'
 
+import { RICH_PORT_SKULL_TOP_METRES } from './deviations'
 import type { BestCuts, BestPose, BestSpec } from './types'
 
 type Obj = THREE_NS.Object3D
@@ -125,7 +126,9 @@ export const createBestBuilder = (host: Three, { types, random = Math.random }: 
   function build(spec: BestSpec): THREE_NS.Group {
     const ti=Math.max(0,BCARDS.findIndex(x=>x.n===spec.type)), z=BCARDS[ti]!;
     const P: typeof BASE & BestPose=Object.assign({},BASE,TYPES[spec.type ?? '']||{},spec.pose||{}), d=spec.decay??0, life=spec.life??1, cut: BestCuts=spec.cut||{};
-    P.s*=spec.h??1;P.bulk*=spec.bulk??1;
+    if(spec.heightMetres!=null){P.s=assertHeight(spec.heightMetres)/RICH_PORT_SKULL_TOP_METRES}
+    else{const typeS=TYPES[spec.type ?? '']?.s??1;const targetH=defaultHeightMetres(spec.human?'human':spec.type);P.s=(P.s/typeS)*(targetH/RICH_PORT_SKULL_TOP_METRES)*(spec.h??1)}
+    P.bulk*=spec.bulk??1;
     if(life===0){P.s*=.94;P.bulk*=.9}
     if(life===2){P.lean+=.28;P.headX-=.18;P.armL*=.8;P.armR*=.8;P.kneeL+=.1;P.kneeR+=.1}
     if(spec.lying)Object.assign(P,{armL:.2,armR:-.15,elbL:-.15,elbR:-.3,legL:-.05,legR:.12,kneeL:.05,kneeR:.2,lean:0,drop:0,headX:0,headZ:.35});

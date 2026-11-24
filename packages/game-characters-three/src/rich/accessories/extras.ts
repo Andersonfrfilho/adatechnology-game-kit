@@ -76,7 +76,7 @@ export const EXTRAS: Record<string, (context: ExtraContext) => void> = {
   tq: ({ Bx, THREE, add, arms, cmat }: ExtraContext) => {add(arms[1].g,new THREE.CylinderGeometry(.09,.087,.055,16),cmat(0xd8262a),0,-.05,0);add(arms[1].g,Bx(.03,.05,.04),cmat(0x1a1a1a),0,-.05,.09);return;},
   cuia: ({ THREE, U, add, cmat }: ExtraContext) => {add(U,new THREE.SphereGeometry(.055,12,10),cmat(0x6a7a3a),-.21,.9,.12);add(U,new THREE.CylinderGeometry(.006,.006,.13,6),cmat(0xc0c4c8,{metalness:.9,roughness:.2}),-.21,.99,.12,0,0,.3);add(U,new THREE.CylinderGeometry(.04,.04,.015,12),cmat(0xb8a070),-.21,.95,.12);return;},
   card: ({ Bx, U, add, cmat }: ExtraContext) => {for(const s of[-1,1])add(U,Bx(.012,.22,.01),cmat(0x2a2a2a),s*.05,1.5,.2,0,0,-s*.3);add(U,Bx(.08,.11,.01),cmat(0xd82020),0,1.36,.235);add(U,Bx(.05,.012,.012),cmat(0xf0f0f0),0,1.34,.24);return;},
-  mapfold: ({ Bx, U, add, cmat }: ExtraContext) => {add(U,Bx(.1,.13,.025),cmat(0xe8dcb0),-.13,1.33,.215,0,0,.1);add(U,Bx(.1,.012,.027),cmat(0x8a6a3a),-.13,1.35,.215);return;},
+  mapfold: ({ Bx, U, add, cmat }: ExtraContext) => {add(U,Bx(.1,.13,.025),cmat(0xe8dcb0),-.13,1.33,.215,0,0,.1);add(U,Bx(.1,.012,.031),cmat(0x8a6a3a),-.13,1.35,.215);return;},
   motoband: ({ Hd, THREE, add, cmat }: ExtraContext) => {add(Hd,new THREE.CylinderGeometry(.238,.238,.045,20),cmat(0xe0c020),0,1.84,-.01);return;},
   rifle_sup: ({ Bx, THREE, U, add, arms, cmat }: ExtraContext) => {{const g=new THREE.Group();g.position.set(.02,1.15,.27);g.rotation.z=.95;U.add(g);const dk=cmat(0x1c1d1f,{metalness:.6,roughness:.45});
       add(g,Bx(.07,.26,.064),cmat(0x3a3a34),0,-.36,0);add(g,Bx(.06,.5,.06),dk,0,0,0);add(g,Bx(.07,.14,.09),dk,0,-.06,.05);add(g,Bx(.05,.08,.07),cmat(0x2a2a2a),0,.12,.06);
