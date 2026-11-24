@@ -74,11 +74,14 @@ world.ground.at(x, z)
 world.objects                                  // [A2/A8] registro de objetos do mundo (seção 6)
 world.pieces                                   // [A2]
 world.liquids; world.sound; world.effects; world.lights; world.physics; world.workers
-world.frame.add(system, { slot: 'beforeWorld' | 'afterWorld' | 'afterRenderer' | 'present', order? })   // [A4]
+world.frame.add(system, { phase: 'input' | 'fixedSimulate' | 'lateSimulate' | 'present' | 'render', order?, id })   // [A4] §4.1: faixas reservadas ao host
+world.frame.beforeWorld(system); world.frame.afterWorld(system)   // §4.1: dentro da entrada única `room.simulate` (ordem 1000)
+world.frame.repeat = 10                        // `fastForward`: muda em tempo de jogo, fogo só na primeira repetição
+world.blastPacing                              // marca-passo da explosão (`begin`, `clear`, `isHolding`) ou `undefined` desligado; os explosivos recebem este
 world.warmUp()
 world.render({ beforeRender?, afterRender?, view?, extraPasses? })   // [A5] ou `render: false` no `start` e o host não desenha
 world.start({ skipSimulation?, minFrameMs?, onFrame?, render?: boolean })   // [A5] devolve stop
-world.reset()                                  // [A6]
+world.reset()                                  // [A6] inclui `blastPacing.clear()`
 world.dispose()
 ```
 
@@ -87,6 +90,12 @@ world.dispose()
   (`jolt-d4-worker`; a página liga marca-passo e chão no worker por padrão, Jolt e D4 só por parâmetro), e que o SDK não liga sozinho: Jolt (`physics: 'jolt'`), marca-passo da explosão (`blastPacing: {}`, hoje `game-test-room/src/blast-pacing.ts` e o
   `holdFixed` do agendador, `room.ts` 4079), política D4 dos destroços (`debris.blast`) e chão no worker (`debris.groundWorker` pela porta do
   coordenador, `createCoordinatorGroundPort`). Cada um desliga por opção (`blastPacing: false`...), para a sala manter os parâmetros de hoje.
+  Regras (revisão do architect, 2026-11-24): **desligado é explícito** (`debris: { blast: false, groundWorker: false }`: hoje campo ausente
+  é desligado, com o host passa a ser ligado; a T1.5 passa todos os campos); **chão no worker só com workers de verdade** (coordenador com
+  `plan.total > 0`, como `main.js` 121; com `workers: 0` ou sem `Worker` no teste sem GPU fica desligado e o host diz isso em `world.info`);
+  **o host só libera o que criou** (coordenador ou laço de física passado pelo jogo não é liberado no `dispose`); **o marca-passo nasce antes
+  do agendador** (o `holdFixed` o lê, `room.ts` 4079). A sala passa o próprio `PhysicsLoop` da página (`window.__roomPhysics`), nunca
+  `'jolt'`, para não montar outro motor com outra rosca e outro wasm.
 - **Nenhuma opção inventada:** cada campo existe hoje em `TestRoomOptions`, na página ou numa chamada interna da sala.
 
 ## 4. Ordem do passo **[A4]**
@@ -104,9 +113,9 @@ eventos. O host publica pontos de registro com ordem fixa e um teste de ordem na
 
 A repetição do passo (`fastForward`, 10×) é opção do host (`repeat`), com a mesma regra de hoje: o fogo só na primeira repetição.
 
-**[A9] Coordenação com a spec 010.** A T1.1 da 010 muda a assinatura de `createFrameBudget`, a T2.1 classifica cada chamada do passo em fixo ou
-quadro e a T2.3 troca `step` por `stepFixed`. Por isso **a T1.3 desta spec só começa depois da T1.1 e da T2.1 da 010**: as duas estão **feitas** (`1cb39c001`, `0ab57d2c9`…,
-`specs/010-quadro-com-prazo/tasks.md`), e a T1.3 reescreve esta seção com a classificação da 010 e o `stepFixed`. A vantagem continua: depois da T1.5, a 010 mexe em `world/frame.ts` (200 linhas), não
+**[A9] Coordenação com a spec 010.** A T1.1 da 010 mudou a assinatura de `createFrameBudget`, a T3.3 trouxe o `stepFixed` (`e6ae1e950`) e a
+T3.4 registrou a simulação da sala em `fixedSimulate` e o resto em `lateSimulate` (`7109f1cfa`). As três estão **feitas**
+(`specs/010-quadro-com-prazo/tasks.md`), e a §4.1 é a ordem de hoje sobre elas. A vantagem continua: depois da T1.5, a 010 mexe em `world/frame.ts` (200 linhas), não
 no `room.ts`.
 
 ### 4.1 A ordem de hoje, com o passo fixo da spec 010 (T1.3, 2026-11-24)
@@ -131,10 +140,24 @@ tiques (`holdFixed`, `room.ts` 4079). Os pontos de registro do host passam a ser
 | `present`, −1000 / 0 / 10 | host: pose desenhada (alpha), luzes; sala: `updatePresent` | `simulation-phases.ts` 44–49; 5539–5545 |
 | `render`, −1000 / 0 | host: checagem de luzes e desenho (`gl.render`, camada de 1ª pessoa, vistas extras, `graphics`, compassador) | 5552–5586 |
 
-`beforeWorld`, mundo e `afterWorld` continuam **uma chamada só** (`room.simulate`, ordem 1000), como hoje: o host chama, nesta ordem, os
-sistemas do jogo registrados em `beforeWorld`, o passo do mundo e os de `afterWorld`. Separar em três registros do agendador mudaria a ordem
-relativa com outros sistemas de ordem 1000 e o hash. O teste de ordem da T1.3 compara a lista de ids e a ordem do agendador do host com a da
-sala de hoje, e o hash do `room-determinism.mjs` do passo 0 (3822996173 com marca-passo, 1819424859 sem) fecha a T1.5.
+Linhas que a tabela acima não mostra e que vão junto: o marca-passo (`blast-pacing.ts` 49–67: `input` −1.000.000 `room.blast-pacing-scripted`,
+`fixedSimulate` −1.000.000 `step-start` e 1999 `blast-pacing-begin`, `lateSimulate` −2000 `slice`), a pose restaurada no `lateSimulate` −100000
+(`simulation-phases.ts` 43) e os sistemas dos módulos (`onFrame`, `room.ts` 4687–4697), que escolhem fase e ordem; no empate vale a ordem de
+registro (`game-runtime/src/phases.ts`), e um módulo em `fixedSimulate` 1000 roda depois do `room.simulate`.
+
+`beforeWorld`, mundo e `afterWorld` continuam **uma entrada só** (`room.simulate`, ordem 1000), como hoje, por três motivos: (a) o caminho
+antigo, em que um `dt` que não é tique roda `hooks.fixed(dt, false)` no `lateSimulate` −1000 e chama `physicsLoop.step(dt)` em vez de
+`stepFixed` (`simulation-phases.ts` 62–65, `room.ts` 4169–4170): três entradas precisariam desse desvio cada uma; (b) hoje um erro para o resto
+do passo, e entradas separadas continuariam depois de uma falhar; (c) módulos em ordem 1000 precisam ficar depois do `afterWorld`.
+
+**O que a T1.3 move sem mudar** (senão o hash muda): `STEPS_PER_TICK` e `MAX_TICKS_PER_FRAME` (`simulation-phases.ts` 4–6),
+`maxFrameSeconds: 0.05`, `resolveSimulationTick`, a chamada `registerFrameQueues` (`room.ts` 4080; a ordem de registro das filas decide o empate
+de prioridade) e **os ids `room.*`** dos sistemas, que o teste de ordem, as tabelas por módulo (§15) e o `onError` usam. O teste de ordem da
+T1.3 compara a lista de ids e ordens do agendador do host com a da sala de hoje.
+
+**Hash de referência** (passo 0, `evidence.md`): 1819424859 sem marca-passo no tique 90; com marca-passo, 3822996173 é o último tique de 90
+quadros (75 tiques, 15 quadros segurados), não o tique 90. A comparação entre caminhos é pelo tempo do mundo, com o comparador da spec 018
+(`detcmp.cjs`) e a consulta `&solver=jolt&blastDebris=1&groundWorker=1`. A T1.5 grava também uma referência da página padrão (`own`, sem D4).
 
 ## 5. Oclusão de áudio (T1.2, feita)
 

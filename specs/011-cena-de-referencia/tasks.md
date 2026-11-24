@@ -37,8 +37,8 @@ Cada task responde **Mecânica?** e **Aceite por comando?**; duas vezes "sim" �
   e onde mora a oclusão de áudio. Inclui como ele registra as filas da spec 010.
 - **T1.2** Oclusão de áudio do mundo (`game-test-room/src/world-occlusion.ts`) vai para o `game-audio` (`createRaycastOcclusion`); a sala
   importa de lá. Feita em 2026-11-18 numa branch que não chegou à `main` (N8): rebasear sobre os testes que o PR #414 deu ao arquivo.
-- **T1.3** `createKitWorld` no `game-kit-defaults` (entrada `./world`), conforme o `design-host.md`. Pré-requisitos da spec 010 (T1.1 e T2.1)
-  **feitos** (`1cb39c001`, `0ab57d2c9`…): o desenho da ordem do passo segue o `design-prazo.md` da 010. **Liga por padrão** o marca-passo da
+- **T1.3** `createKitWorld` no `game-kit-defaults` (entrada `./world`), conforme o `design-host.md`. Pré-requisitos da spec 010 (T1.1, T3.3
+  `stepFixed` e T3.4 fases da sala) **feitos**: a ordem do passo é a do `design-host.md` §4.1, revisada pelo architect em 2026-11-24. **Liga por padrão** o marca-passo da
   explosão (`blastPacing`), o Jolt, a política D4 dos destroços e o chão no worker, que hoje só a página da sala liga (L18), para a cena nascer com o ganho da spec 018. Inclui: mapear `/world` no tsconfig do dependency-cruiser e no `dts` do tsup;
   teste de ordem dos pontos de registro; teste sem GPU (mundo montado com THREE de teste, um passo, `reset`, `dispose` sem sobra pelo
   `leak.mjs`).
