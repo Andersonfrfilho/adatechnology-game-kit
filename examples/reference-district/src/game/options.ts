@@ -1,6 +1,8 @@
 import type * as THREE_NS from 'three'
 
 import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
+import type { LampShares } from '@adatechnology/game-urban'
+import type { ZoneFog } from '@adatechnology/game-weather-three'
 
 import type { Houses } from './assemble/houses'
 import type { PlayerRig } from './assemble/player'
@@ -22,6 +24,10 @@ export type DistrictOptions = {
   readonly weather: string
   /** Hour of the day the world is held at, 0 to 24. */
   readonly hour: number
+  /** The street lamps at night: the share that works and the share that flickers, chosen by the site's seed; the rest are burnt out. Default every lamp works. */
+  readonly lights?: LampShares
+  /** Fog laid over the weather's own (the zone fog of `game-weather-three`). Default the weather's fog alone. */
+  readonly fog?: ZoneFog
   readonly camera: CameraChoice
   /** Where the player stands and which way the view looks (yaw 0 looks toward -z). Default: the main street, looking east. */
   readonly start?: { readonly x: number; readonly z: number; readonly yaw: number }

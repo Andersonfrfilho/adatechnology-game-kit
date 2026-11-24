@@ -47,7 +47,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const scene = world.view.scene
   const isNight = options.hour >= NIGHT_FROM_HOUR || options.hour < NIGHT_UNTIL_HOUR
 
-  const streets = drawStreets({ THREE, urban: createReferenceUrban(), plan, site, lights: world.lights, seed: site.seed, isNight })
+  const streets = drawStreets({ THREE, urban: createReferenceUrban(), plan, site, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(streets.drawn.root)
   const houses = createHouses({ THREE, world, scene, site })
   const props = createProps({ THREE, world, scene, site })
@@ -59,7 +59,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
   const horde = createHorde({ THREE, world, site, zombies: options.zombies, reserve: options.hordeReserve ?? 0, zones, grid, target: player.player })
   player.bindCrowd(horde.crowd.asPlayerCrowd())
-  const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed })
+  const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 
   const nightFactor = isNight ? 1 : 0
   const stops = [

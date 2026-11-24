@@ -66,6 +66,52 @@ async function open(query) {
   return { context, page, errors }
 }
 
+/** Frames between two samples of the lights, and how many samples: about two seconds of the lamps. */
+const FLICKER_SAMPLE_MS = 50
+const FLICKER_SAMPLES = 40
+const sameLight = (/** @type {{ x: number, z: number }} */ a, /** @type {{ x: number, z: number }} */ b) => Math.hypot(a.x - b.x, a.z - b.z) < 0.5
+
+/**
+ * The night street: the host lights its nearest lamps, some lamps fail. Samples the lit point lights over two seconds, finds one whose brightness jumps (a failing lamp), stands in front of it and
+ * prints it once bright and once dim (pior-flicker-on.png, pior-flicker-off.png). @param {import('playwright-core').Page} page
+ */
+async function checkFlicker(page) {
+  /** @type {Array<Array<{ x: number, y: number, z: number, intensity: number }>>} */
+  const samples = []
+  for (let index = 0; index < FLICKER_SAMPLES; index++) {
+    samples.push(await page.evaluate(() => window.__district?.pointLights() ?? []))
+    await page.waitForTimeout(FLICKER_SAMPLE_MS)
+  }
+  const lit = Math.max(...samples.map((sample) => sample.length))
+  const all = samples.flat()
+  const flickering = all
+    .filter((light, index) => all.findIndex((other) => sameLight(light, other)) === index)
+    .map((light) => {
+      const levels = all.filter((other) => sameLight(light, other)).map((other) => other.intensity)
+      return { ...light, peak: Math.max(...levels), low: Math.min(...levels) }
+    })
+    .filter((light) => light.peak > 2 * light.low)
+  check('pior third: street lamps lit at night (host budget slots)', lit >= 4, { lit })
+  check('pior third: some lamp flickers', flickering.length > 0, { flickering: flickering.map((light) => [Math.round(light.x), Math.round(light.z)]) })
+  const target = flickering.sort((a, b) => Math.hypot(a.x - 46, a.z) - Math.hypot(b.x - 46, b.z))[0]
+  if (!target) return
+  const from = { x: target.x - 10, z: target.z > 0 ? target.z - 6 : target.z + 6 }
+  await page.evaluate(({ from, target }) => window.__district?.place({ x: from.x, z: from.z, yaw: Math.atan2(-(target.x - from.x), -(target.z - from.z)), pitch: 0.2 }), { from, target })
+  await page.waitForTimeout(2500)
+  /** @type {Set<string>} */
+  const taken = new Set()
+  for (let index = 0; index < 200 && taken.size < 2; index++) {
+    const now = (await page.evaluate(() => window.__district?.pointLights() ?? [])).find((light) => sameLight(light, target))
+    const state = now && now.intensity > 0.6 * target.peak ? 'on' : 'off'
+    if (!taken.has(state)) {
+      await page.screenshot({ path: join(shots, `pior-flicker-${state}.png`) })
+      taken.add(state)
+    }
+    await page.waitForTimeout(15)
+  }
+  check('pior third: prints of a failing lamp bright and dim', taken.size === 2, { lamp: [Math.round(target.x), Math.round(target.z)], taken: [...taken] })
+}
+
 for (const scenario of SCENARIOS) {
   for (const camera of CAMERAS) {
     if (only && (only[0] !== scenario || only[1] !== camera.name)) continue
@@ -83,6 +129,7 @@ for (const scenario of SCENARIOS) {
         await page.waitForTimeout(2500)
       }
       await page.screenshot({ path: join(shots, `${scenario}-${camera.name}.png`) })
+      if (scenario === 'pior' && camera.name === 'third') await checkFlicker(page)
       if (scenario === 'tipico' && camera.name === 'third') {
         const url = await page.evaluate(() => window.__district?.planSheet() ?? '')
         writeFileSync(join(shots, 'plan-sheet-debug.png'), Buffer.from(url.split(',')[1] ?? '', 'base64'))

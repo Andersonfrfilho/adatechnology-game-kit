@@ -141,6 +141,16 @@ describe('scenario', () => {
     expect(tipico.start?.x).toBe(20)
   })
 
+  it('takes the lamps and the fog of the night from the scripts file, and leaves the day without them', () => {
+    const container = {} as HTMLElement
+    const pior = districtOptionsOf({ scripts, choice: parsePageChoice('?cena=pior'), container })
+    expect(pior.lights).toEqual({ lit: 0.8, flicker: 0.15 })
+    expect(pior.fog).toEqual({ color: 0x5a6878, far: 45, weight: 0.75 })
+    const tipico = districtOptionsOf({ scripts, choice: parsePageChoice('?cena=tipico'), container })
+    expect(tipico.lights).toBeUndefined()
+    expect(tipico.fog).toBeUndefined()
+  })
+
   it('looks along the path: east is yaw -pi/2', () => {
     expect(yawToward({ x: 0, z: 0 }, { x: 10, z: 0 })).toBeCloseTo(-Math.PI / 2)
     expect(yawToward({ x: 0, z: 0 }, { x: 0, z: -10 })).toBeCloseTo(0)

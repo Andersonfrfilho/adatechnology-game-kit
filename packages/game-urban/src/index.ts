@@ -1,4 +1,6 @@
 export { createLightAllowance, createLightBudget } from './budget'
+export { assertLampShares, lampStateOf } from './lamps'
+export type { LampShares, LampState, LampStateParams } from './lamps'
 export { createUrbanBuilder } from './scene'
 export type { UrbanBuilder, UrbanBuilderOptions } from './scene'
 export { DEFAULT_POLES, POLE_SHAPES } from './poles'

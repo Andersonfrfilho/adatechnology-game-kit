@@ -1,3 +1,5 @@
+import type * as THREE_NS from 'three'
+
 import type { District } from '../game/options'
 import { createScriptWorld } from './actions'
 import type { PageChoice } from './scenario'
@@ -24,6 +26,8 @@ export type DistrictProbe = {
   planSheet(): string
   /** Counts of what stands in the scene, for a check. */
   info(): { readonly houses: number; readonly zombies: number; readonly missing: number; readonly physics: string; readonly drawCalls: number; readonly triangles: number }
+  /** The point lights the host's budget lights now (its slots), where they stand and how bright: a check samples them over frames to see the failing lamps flicker. */
+  pointLights(): ReadonlyArray<{ readonly x: number; readonly y: number; readonly z: number; readonly intensity: number }>
 }
 
 const PLAN_CENTRE = [0, 0] as const
@@ -87,5 +91,15 @@ export function createProbe(district: District, choice: PageChoice, scripts: Scr
       drawCalls: world.view.gl.info.render.calls,
       triangles: world.view.gl.info.render.triangles,
     }),
+    pointLights() {
+      const lights: Array<{ x: number; y: number; z: number; intensity: number }> = []
+      world.view.scene.traverse((node) => {
+        const light = node as THREE_NS.PointLight
+        if (!light.isPointLight || light.intensity <= 0) return
+        const at = light.getWorldPosition(new district.THREE.Vector3())
+        lights.push({ x: at.x, y: at.y, z: at.z, intensity: light.intensity })
+      })
+      return lights
+    },
   }
 }

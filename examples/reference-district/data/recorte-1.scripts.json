@@ -1,7 +1,7 @@
 {
   "scenarios": {
     "tipico": {"zombies": 500, "weather": "overcast", "timeOfDay": "day"},
-    "pior": {"zombies": 2000, "weather": "rain", "timeOfDay": "night"},
+    "pior": {"zombies": 2000, "weather": "rain", "timeOfDay": "night", "lights": {"lit": 0.8, "flicker": 0.15}, "fog": {"color": "#5a6878", "far": 45, "weight": 0.75}},
     "caos": {"zombies": 500, "weather": "overcast", "timeOfDay": "day", "note": "Premissa: a spec 011 não fixa clima nem hora do caos; vale o mesmo do tipico."}
   },
   "scripts": [

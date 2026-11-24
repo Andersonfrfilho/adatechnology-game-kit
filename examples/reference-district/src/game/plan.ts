@@ -59,5 +59,6 @@ export const referencePlan: CityPlanInput = parsePlan(planJson)
 
 /** A `game-urban` kit that knows the reference plan (`urban.cities.layout(referencePlan.id)`). */
 export function createReferenceUrban(): UrbanKit {
-  return createUrban({ packs: { cityPlans: [referencePlan] } })
+  // every lamp that is on becomes a source of the host's LightBudget, which lights only the nearest ones (its fixed slots): the urban allowance (the first 16 in draw order) would pick far ones
+  return createUrban({ lights: { budget: Number.POSITIVE_INFINITY }, packs: { cityPlans: [referencePlan] } })
 }
