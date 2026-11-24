@@ -19,6 +19,8 @@ export {
   heightFactor,
 } from './body/height'
 export type { BodyTypeId } from './body/height'
+export { ANTHROPOMETRY_RATIOS, ANTHROPOMETRY_SOURCE, bodyMeasures } from './body/measures'
+export type { BodyMeasuresParams } from './body/measures'
 export { createRig, GAME_BONES, JOINT_PARENTS } from './body/rig'
 export type { CreateRigParams, Rig } from './body/rig'
 export { SEGMENT_TREE, SEGMENT_IDS, SEGMENT_NUMBERS, segmentNode, segmentsBelow, isSegmentId } from './body/segment-tree'
