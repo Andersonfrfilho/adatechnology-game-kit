@@ -71,3 +71,33 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
   desenhada, memória entre ciclos, Jolt entre ciclos; nas áreas, `floorplan`, `glass`, `shots`, `explosions`, `veg_hedge_cut_pieces`,
   `veg_shot_cannot_fell`) e o `perf-gate`; passam a instalação, o build e o `room-explosion` (C4). Toda falha nova depois daqui é
   comparada com a `origin/main` do dia.
+
+## N8 — os três commits de 2026-11-18 (2026-11-24)
+
+- `check:layers` com subpastas de `exports`: PR #458, sem conflito; `check:layers` 0 novas.
+- Oclusão por raios no `game-audio` (T1.2): PR #459; conflito com o #414 resolvido sobre o código de hoje; `game-audio` 307 testes, sala 553;
+  **hash igual ao passo 0** (3822996173 / 1819424859).
+- Registro de objetos e porto de relato (T1.6a): PR #460; a página da sala não montava com a entrada `/world` (alias do esbuild), corrigido
+  com `dist/world.js`; `game-kit-defaults` 16 testes, sala 553; **hash igual ao passo 0**.
+
+## T1.3 — `createKitWorld` (PR #463)
+
+- 24 arquivos em `packages/game-kit-defaults/src/world/` (≤ 200 linhas), padrão com Jolt, marca-passo, D4 e chão no worker, cada um
+  desligável. 39 testes no pacote (ordem do passo num quadro de verdade, encaixes do quadro, `reset` igual a host novo, `dispose` sem sobra),
+  teste na sala que compara fase e ordem com as do host. ESLint 0, `check:layers` e `kit-audit --check` 0 novos.
+- Revisão independente: 10 correções, aprovada na segunda passagem. O build da página da sala quebrava com o Jolt importado pelo host
+  (`node:module`): corrigido no `build.mjs` (`e804eaff3`).
+
+## T1.5 — a sala monta o mundo pelo host (PR #464)
+
+- `room.ts` 5.614 → 5.303 linhas; saem da sala `blast-pacing.ts`, `simulation-phases.ts`, `frame-queues.ts`, `sun-shadow.ts`, `graphics.ts`.
+- **Hash igual ao passo 0** (página `7648db3b828b`): 3822996173 com marca-passo, 1819424859 sem, 1702 eventos.
+- **`pnpm check:room`**: 175 passam, 3 reprovam, as mesmas três da `main` do passo 0. Brutos em `medicoes/2026-11-24-spec011-t1.5/`.
+- Sala 540 testes (14 do código do host foram para o `game-kit-defaults`, que tem 61). Revisão independente: 6 ajustes feitos.
+
+## Fase 1 — fechamento parcial (2026-11-24)
+
+- **Fechou:** T1.1 (desenho), T1.2 (#459), T1.3 (#463), T1.5 (#464).
+- **Fica para a página da cena (T2.2):** T1.4, a regra `scene-not-testing`, porque o `check:layers` só percorre `packages/*/src` e a cena
+  ainda não tem código de página.
+- **Bloqueado em nada.** Os merges estão com o dono: a máquina barra o `gh pr merge` no modo automático.

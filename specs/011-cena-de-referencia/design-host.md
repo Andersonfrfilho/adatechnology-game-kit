@@ -35,7 +35,7 @@ Cada arquivo em `packages/game-kit-defaults/src/world/` com até 200 linhas:
 | `ground.ts` | terreno e desenho, impl do chão, `onDeform` → acordar região, chão composto (seção 3) | 373–383, 614–619 |
 | `destruction.ts` | `createDestruction` e o renderizador da destruição com física, efeitos, chão e workers; os ganchos viram eventos (seção 3) | 322–323, 491–590 |
 | `pieces.ts` **[A2]** | a lista das peças soltas do mundo, mantida pelos eventos `piece`/`released` do renderizador | `loose`, `onPiece`, `onReleased` 539–590 |
-| `world-rules.ts` **[A2]** | impacto do arremessado, flutuação, peso no solo, fogo e manchas queimando, golpe e fogo no chão, pegadas; sobre a lista de `pieces.ts` e os objetos registrados (seção 6) | 2302, 566–612, 3664, 3722–3779, 3768, 396 |
+| `world-rules.ts` **[A2]** | **na T1.3, só os ganchos** `world.rules.use({ fire, beforePhysics })` (fogo na primeira repetição depois do `world.update`; antes do passo da física, depois dos fluidos). As regras em si (`updateFires`, `syncLiters`/`syncPieceMass` e o `simulationStamp`, `updateImpacts`, `updateWater`, `updateLoads`, `rockPlayer`, `dropStainsOffFallenTops`, `flush`, `syncContainers`, pegadas e seguidores) leem `entries` e `loose` da sala e ficam nela até a Fase 1b dar o registro de objetos a elas (seção 6) | 2302, 566–612, 3664, 3722–3779, 3768, 396 |
 | `liquids.ts` | fluidos, desenho, filme e ponte do filme, efeitos de água | 385–388, 488–490, 629–641 |
 | `sound.ts` | motor de áudio com `createRaycastOcclusion`, som da destruição, amostras do kit e do jogo | 429–463 |
 | `effects.ts` | `createVfxRenderer` com `groundAt`, `marklessAt`, `cratersAt` | 471–486 |
@@ -81,6 +81,8 @@ world.blastPacing                              // marca-passo da explosão (`beg
 world.warmUp()
 world.render({ beforeRender?, afterRender?, view?, extraPasses? })   // [A5] ou `render: false` no `start` e o host não desenha
 world.start({ skipSimulation?, minFrameMs?, onFrame?, render?: boolean })   // [A5] devolve stop
+world.random                                   // fluxo com semente do host (12345); o `reset` volta a semente, um fluxo dado pelo jogo fica como está
+world.frame.on(slot, system)                   // dentro de `room.simulate-frame` e `room.simulate-end`: beforeFrame, afterSound, afterWaterView, afterFilm, afterFrame, beforePresent, afterPresent
 world.reset()                                  // [A6] inclui `blastPacing.clear()`
 world.dispose()
 ```

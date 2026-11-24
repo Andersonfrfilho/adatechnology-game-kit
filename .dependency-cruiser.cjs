@@ -88,10 +88,18 @@ const isCore = (name) =>
   ![...L0_CONTRACTS, ...L1_BASE, ...SHARED_BUILDERS, ...L4B_BRIDGES, ...L5_COMPOSITION].includes(name)
 
 // depcruise reads tsconfig `paths`, so a generated tsconfig maps every workspace package name to its source entry.
+// an exports subpath (`./world`, `./testing`) maps to `src/<subpath>.ts` or `src/<subpath>/index.ts`, so it is checked from source, never from dist
+const sourceOfSubpath = (name, subpath) =>
+  [path.join(__dirname, 'packages', name, 'src', `${subpath}.ts`), path.join(__dirname, 'packages', name, 'src', subpath, 'index.ts')].find((file) => fs.existsSync(file))
 const workspacePaths = Object.fromEntries(
-  packageNames.map((name) => {
+  packageNames.flatMap((name) => {
     const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'packages', name, 'package.json'), 'utf8'))
-    return [manifest.name, [path.join(__dirname, 'packages', name, 'src', 'index.ts')]]
+    const subpaths = Object.keys(manifest.exports ?? {})
+      .filter((key) => key.startsWith('./') && !key.includes('*'))
+      .map((key) => [key.slice(2), sourceOfSubpath(name, key.slice(2))])
+      .filter(([, file]) => file !== undefined)
+      .map(([subpath, file]) => [`${manifest.name}/${subpath}`, [file]])
+    return [[manifest.name, [path.join(__dirname, 'packages', name, 'src', 'index.ts')]], ...subpaths]
   }),
 )
 const generatedTsConfigDirectory = path.join(__dirname, 'node_modules', '.cache', 'dependency-cruiser')

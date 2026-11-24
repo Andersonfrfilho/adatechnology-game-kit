@@ -100,6 +100,8 @@ na sala da área dela (gates 1 e 2, com print) e só então troca o seu `missing
 - **T3.11** História do `game-stories` num bilhete posto numa casa (`game-items-goods`, achados do floorplan).
 - **T3.13** Desenhar as linhas de um plano de cidade (`PlanLine`: rua, avenida, rio) no `game-urban`/`-three` (rio como zona de água do
   `game-terrain`), para a cena deixar de traduzir à mão no montador (`design-recorte.md` §4).
+- **T3.14** Infecção por mordida na horda da cena: `bindInfection` (`game-infection`) ligado à horda do `game-crowd`; muda como a horda nasce,
+  por isso é peça com desenho curto e revisão, não só fiação (achado da T2.3).
 - **T3.12** Régua da cena de novo (gate 3) com as peças novas.
 
 ## Fase 4 — Visual nublado

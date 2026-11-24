@@ -24,7 +24,8 @@ export default tseslint.config(
   },  {
     // lights have one owner (spec 005 D4): every other package asks the LightBudget of game-render-three instead of creating a light
     files: ['packages/*/src/**/*.{ts,tsx}'],
-    ignores: ['packages/game-render-three/**', 'packages/game-test-room/**'],
+    // the world host owns the sun and the ambient fill, as the test room's arena did (`world/light.ts`)
+    ignores: ['packages/game-render-three/**', 'packages/game-test-room/**', 'packages/game-kit-defaults/src/world/light.ts'],
     rules: {
       'no-restricted-syntax': [
         'error',

@@ -95,7 +95,7 @@ jobs:
       # every JS script (examples, tools, site), typed with JSDoc and checked strict: docs/migracao-typescript.md
       - run: pnpm typecheck:scripts
 
-  # Builds the test matrix from packages/*/package.json (packages with a "test" script). Most packages test in a few seconds, so a job per package
+  # Builds the test matrix from packages/*/package.json and examples/reference-district/package.json (packages with a "test" script). Most packages test in a few seconds, so a job per package
   # spent more time in setup and in the queue (the account runs about 20 jobs at once) than in the tests: they are packed into GROUPS jobs,
   # balanced by WEIGHTS (seconds of `vitest run` on CI; 10 for a package not listed). Slow packages are split with vitest --shard instead: add
   # them to SHARDS as package -> shard count, and each shard is a job of its own.
@@ -118,8 +118,9 @@ jobs:
             const weights = JSON.parse(process.env.WEIGHTS);
             const include = [];
             const single = [];
-            for (const dir of fs.readdirSync("packages").sort()) {
-              const file = `packages/${dir}/package.json`;
+            // the reference district is an example with unit tests, so it is listed next to the packages
+            const files = fs.readdirSync("packages").sort().map((dir) => `packages/${dir}/package.json`).concat("examples/reference-district/package.json");
+            for (const file of files) {
               if (!fs.existsSync(file)) continue;
               const pkg = JSON.parse(fs.readFileSync(file, "utf8"));
               if (!pkg.scripts || !pkg.scripts.test) continue;
