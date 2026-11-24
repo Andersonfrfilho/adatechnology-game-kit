@@ -11,7 +11,7 @@ export function circuitDemand(context: ValidationContext, transformerId: string)
   let lights = 0
   for (const id of circuit.keys()) {
     const node = context.graph.nodes.get(id)
-    if (node?.kind === 'connection' && node.lot !== undefined) consumers.push(installed.get(node.lot) ?? context.rules.power.defaultInstalledKva)
+    if (node?.kind === 'connection' && node.lot !== undefined) consumers.push(installed.get(node.lot) ?? 0)
     lights += context.graph.outgoing(id, 'lighting').length
   }
   return diversifiedDemand(consumers, context.rules.power) + lights * context.rules.lighting.lampKva

@@ -12,7 +12,7 @@ export { DEFAULT_NETWORK_RULES, diversifiedDemand, pickTransformer, resolveNetwo
 export type { ClearanceRow, CoverRange, DiversityBand, NetworkRules, PowerRules, TransformerRating } from './rules'
 export { DEFAULT_POLE_SLOTS, POLE_SLOT_GAPS, POLE_SLOT_ORDER, checkPoleSlots, slotsOfPole } from './slots'
 export type { PoleSlotViolation } from './slots'
-export type { DistributionSpec, PoleSlotBand, PoleSlots } from '../poles'
+export type { DistributionPoleDef, DistributionSpec, PoleSlotBand, PoleSlots } from '../poles'
 export type {
   AerialClass,
   AerialEdgeKind,

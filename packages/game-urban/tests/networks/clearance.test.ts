@@ -38,9 +38,25 @@ describe('spans in the air', () => {
   it('finds a span over a building, but lets a drop end over the house of its own lot', () => {
     const over = streetNetworks({ nodes: replaceNode('lot:a:power', { at: [40, 5.7, 18] }) })
     const found = validateNetworks(over, streetOptions({ connections: [] }))
-    expect(only(found, 'span_over_building')).toEqual([{ code: 'span_over_building', id: 'drop:a', detail: 'house:b' }])
+    expect(only(found, 'span_over_building')).toMatchObject([{ code: 'span_over_building', id: 'drop:a', detail: 'house:b', limit: 6 }])
     const own = streetNetworks({ nodes: replaceNode('lot:a:power', { at: [10, 5.7, 16] }) })
     expect(only(validateNetworks(own, streetOptions({ connections: [] })), 'span_over_building')).toEqual([])
+  })
+
+  it('finds a sag that dips into a crown away from the point nearest the trunk', () => {
+    const crown = { x: 10, z: 5.6, radius: 7, bottom: 5.95, top: 6.55 }
+    expect(validateNetworks(streetNetworks(), streetOptions({ obstacles: { crowns: [crown] } })).map((violation) => violation.id)).toEqual(['lv:1'])
+  })
+
+  it('lets a span pass above a building lower than it', () => {
+    const over = streetNetworks({ nodes: replaceNode('lot:a:power', { at: [40, 5.7, 18] }) })
+    const low = streetOptions({ connections: [], buildings: [{ id: 'shed', height: 2, outline: [[35, 14], [45, 14], [45, 22], [35, 22]] }] })
+    expect(only(validateNetworks(over, low), 'span_over_building')).toEqual([])
+  })
+
+  it('refuses a drop to its own lot that crosses the whole house', () => {
+    const across = streetNetworks({ nodes: replaceNode('lot:a:power', { at: [10, 5.7, 24] }) })
+    expect(only(validateNetworks(across, streetOptions({ connections: [] })), 'span_over_building')).toMatchObject([{ id: 'drop:a', detail: 'house:a' }])
   })
 
   it('finds a span through a tree crown and passes one above it', () => {

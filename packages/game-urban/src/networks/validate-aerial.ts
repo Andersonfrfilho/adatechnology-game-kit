@@ -1,9 +1,9 @@
 import { EDGE_CLASS, isAerialEdgeKind } from './classes'
 import { NETWORK_VIOLATION } from './codes'
-import { catenaryHeight, nearestShare, segmentEntersPolygon } from './geometry'
+import { catenaryHeight, circleShares, pointInPolygon, polygonCrossings, segmentEntersPolygon } from './geometry'
 import type { PlanPoint } from './geometry'
 import { edgeLength } from './graph'
-import type { AerialClass, NetworkEdge, NetworkNode } from './types'
+import type { AerialClass, NetworkBuilding, NetworkEdge, NetworkNode } from './types'
 import { edgeEnds } from './validate-context'
 import type { ValidationContext } from './validate-context'
 
@@ -39,24 +39,53 @@ function validateClearance(context: ValidationContext, span: Span): void {
   }
 }
 
-/** No span crosses a building in plan; a drop may end over the building of the lot it serves. */
+const pointAt = (span: Span, t: number): PlanPoint => [span.from.at[0] + (span.to.at[0] - span.from.at[0]) * t, span.from.at[2] + (span.to.at[2] - span.from.at[2]) * t]
+
+/** Lowest and highest conductor over the shares `[start, end]` of a span, sampled. */
+function heightRange(context: ValidationContext, span: Span, start: number, end: number): readonly [number, number] {
+  const samples = Math.max(1, context.rules.catenarySamples)
+  let low = Number.POSITIVE_INFINITY
+  let high = Number.NEGATIVE_INFINITY
+  for (let index = 0; index <= samples; index++) {
+    const y = catenaryHeight(span.heights[0], span.heights[1], span.sag, start + ((end - start) * index) / samples)
+    low = Math.min(low, y)
+    high = Math.max(high, y)
+  }
+  return [low, high]
+}
+
+/** The part of a span over a building, as shares, or none: a drop to its own lot may end over the house, but not cross the whole body. */
+function overBuilding(span: Span, building: NetworkBuilding): readonly [number, number] | undefined {
+  const a = planOf(span.from)
+  const b = planOf(span.to)
+  const crossings = polygonCrossings(a, b, building.outline)
+  const ownLot = span.to.kind === 'connection' && span.to.lot !== undefined && building.lot === span.to.lot
+  if (ownLot) return crossings.length >= 2 ? [crossings[0] as number, crossings[crossings.length - 1] as number] : undefined
+  if (!segmentEntersPolygon(a, b, building.outline)) return undefined
+  const start = pointInPolygon(a, building.outline) ? 0 : (crossings[0] ?? 0)
+  const end = pointInPolygon(b, building.outline) ? 1 : (crossings[crossings.length - 1] ?? 1)
+  return [start, end]
+}
+
+/** No span passes over a building lower than its roof. */
 function validateBuildings(context: ValidationContext, span: Span): void {
-  const lot = span.to.kind === 'connection' ? span.to.lot : undefined
   for (const building of context.options.buildings ?? []) {
-    if (lot !== undefined && building.lot === lot) continue
-    if (segmentEntersPolygon(planOf(span.from), planOf(span.to), building.outline)) context.report({ code: NETWORK_VIOLATION.SPAN_OVER_BUILDING, id: span.edge.id, detail: building.id })
+    const over = overBuilding(span, building)
+    if (over === undefined) continue
+    const middle = pointAt(span, (over[0] + over[1]) / 2)
+    const roof = (context.options.groundAt?.(middle[0], middle[1]) ?? 0) + building.height
+    const [low] = heightRange(context, span, over[0], over[1])
+    if (low < roof) context.report({ code: NETWORK_VIOLATION.SPAN_OVER_BUILDING, id: span.edge.id, detail: building.id, value: low, limit: roof })
   }
 }
 
-/** No span goes through a crown: at the point of the span nearest the trunk, inside the radius, between the crown's bottom and top. */
+/** No span goes through a crown: the conductor over the part of the span inside the crown's radius stays out of `[bottom, top]`. */
 function validateCrowns(context: ValidationContext, span: Span): void {
   for (const crown of context.options.obstacles?.crowns ?? []) {
-    const t = nearestShare(planOf(span.from), planOf(span.to), [crown.x, crown.z])
-    const x = span.from.at[0] + (span.to.at[0] - span.from.at[0]) * t
-    const z = span.from.at[2] + (span.to.at[2] - span.from.at[2]) * t
-    if (Math.hypot(x - crown.x, z - crown.z) > crown.radius) continue
-    const y = catenaryHeight(span.heights[0], span.heights[1], span.sag, t)
-    if (y >= crown.bottom && y <= crown.top) context.report({ code: NETWORK_VIOLATION.SPAN_THROUGH_CROWN, id: span.edge.id, detail: `${crown.x},${crown.z}` })
+    const inside = circleShares(planOf(span.from), planOf(span.to), [crown.x, crown.z], crown.radius)
+    if (inside === undefined) continue
+    const [low, high] = heightRange(context, span, inside[0], inside[1])
+    if (low <= crown.top && high >= crown.bottom) context.report({ code: NETWORK_VIOLATION.SPAN_THROUGH_CROWN, id: span.edge.id, detail: `${crown.x},${crown.z}` })
   }
 }
 

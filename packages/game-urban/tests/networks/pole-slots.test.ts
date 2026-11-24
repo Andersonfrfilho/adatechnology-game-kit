@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { DEFAULT_POLES } from '../../src'
+import type { SingleArmSpec } from '../../src'
 import { DEFAULT_POLE_SLOTS, checkPoleSlots, slotsOfPole } from '../../src/networks'
-import type { PoleSlots } from '../../src/networks'
+import type { DistributionPoleDef, PoleSlots } from '../../src/networks'
 
 const shift = (band: readonly [number, number], by: number): readonly [number, number] => [band[0] + by, band[1] + by]
 
@@ -25,13 +26,12 @@ describe('pole slots', () => {
     expect(DEFAULT_POLE_SLOTS.bands.lighting[1]).toBeLessThan(DEFAULT_POLE_SLOTS.bands.lv[0])
   })
 
-  it('checks every pole of the registry that declares slots', () => {
-    for (const pole of DEFAULT_POLES) {
-      const slots = slotsOfPole(pole)
-      if (slots !== undefined) expect(checkPoleSlots(slots), pole.id).toEqual([])
-    }
-    expect(slotsOfPole({ id: 'distribution', shape: 'distribution', spec: { slots: DEFAULT_POLE_SLOTS } })).toBe(DEFAULT_POLE_SLOTS)
-    expect(slotsOfPole({ id: 'plain', shape: 'single_arm', spec: {} })).toBeUndefined()
+  // The registry gets its first distribution pole in T2.8b (spec 011 §10), which turns this into a sweep of DEFAULT_POLES.
+  it('reads the slots of a distribution pole entry and none of the street lights shipped today', () => {
+    const single = DEFAULT_POLES.find((pole) => pole.id === 'concrete_arm')?.spec as SingleArmSpec
+    const distribution: DistributionPoleDef = { id: 'concrete_distribution', shape: 'distribution', spec: { ...single, slots: DEFAULT_POLE_SLOTS } }
+    expect(slotsOfPole(distribution)).toBe(DEFAULT_POLE_SLOTS)
+    expect(DEFAULT_POLES.map(slotsOfPole)).toEqual(DEFAULT_POLES.map(() => undefined))
   })
 
   it('raises the bands of a 12 m pole by the extra height above the ground', () => {

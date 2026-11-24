@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { validateNetworks } from '../../src/networks'
-import { replaceEdge, replaceNode, streetNetworks, streetOptions } from './fixture'
+import { CONNECTIONS, replaceEdge, replaceNode, streetNetworks, streetOptions } from './fixture'
 
 const codesOf = (networks: ReturnType<typeof streetNetworks>): string[] => validateNetworks(networks, streetOptions()).map((violation) => `${violation.code} ${violation.id}`)
 
@@ -25,6 +25,29 @@ describe('pipes under the street', () => {
     expect(codesOf(streetNetworks({ nodes: (nodes) => replaceNode('valve:1', { invert: -0.5 })(replaceNode('reservoir', { invert: -0.5 })(nodes)) }))).toContain('cover water:1')
     expect(codesOf(streetNetworks({ nodes: (nodes) => replaceNode('valve:1', { invert: -1.2 })(replaceNode('reservoir', { invert: -1.2 })(nodes)) }))).toContain('cover water:1')
     expect(codesOf(streetNetworks({ nodes: replaceNode('gallery:1', { invert: -1.6 }) }))).toContain('cover storm:1')
+  })
+
+  it('puts a sewer main under a street with a storm gallery at 1.8 m of cover, and at 0.9 m without', () => {
+    const shallow = streetNetworks({ nodes: replaceNode('pv:1', { invert: -1.8 }) })
+    expect(validateNetworks(shallow, streetOptions())).toContainEqual({ code: 'cover', id: 'sewer:1', detail: 'min', value: expect.closeTo(1.65, 6) as number, limit: 1.8 })
+    const noGallery = streetNetworks({ nodes: replaceNode('pv:1', { invert: -1.8 }), edges: (edges) => edges.filter((edge) => edge.kind !== 'storm_gallery' && edge.kind !== 'storm_lateral') })
+    expect(validateNetworks(noGallery, streetOptions()).filter((violation) => violation.code === 'cover')).toEqual([])
+  })
+
+  it('keeps a sewer lateral no deeper than 0.85 m where it crosses the gallery', () => {
+    const lot = (inverts: readonly [number, number]) =>
+      streetNetworks({
+        nodes: (nodes) => [...nodes, { id: 'lot:c:sewer', kind: 'connection', at: [30, 0, 9], invert: -0.5, carries: ['sewer'], lot: 'c' }],
+        edges: (edges) => [...edges, { id: 'sewer:c', kind: 'sewer_lateral', from: 'lot:c:sewer', to: 'pv:2', diameter: 0.1, inverts }],
+      })
+    const options = streetOptions({ connections: [...CONNECTIONS, { lot: 'c', network: 'sewer', frame: 'world', at: [30, 0, 9], invert: -0.5 }] })
+    expect(validateNetworks(lot([-0.5, -0.9]), options)).toEqual([])
+    const deep = validateNetworks(lot([-0.5, -1.3]), options)
+    expect(deep).toEqual([{ code: 'lateral_too_deep', id: 'storm:2xsewer:c', value: expect.closeTo(0.5 + 0.8 * (7 / 9), 6) as number, limit: 0.85 }])
+  })
+
+  it('wants a manhole at most every 80 m of sewer main', () => {
+    expect(codesOf(streetNetworks({ nodes: (nodes) => replaceNode('treatment', { at: [150, 0, 0], invert: -3 })(nodes) }))).toEqual(['manhole_spacing sewer:2'])
   })
 
   it('finds a sewer deeper than the pumping limit', () => {

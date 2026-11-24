@@ -1,6 +1,7 @@
 import { isAerialEdgeKind } from './classes'
 import { NETWORK_VIOLATION } from './codes'
-import { segmentCrossing } from './geometry'
+import { nearestShare, segmentCrossing } from './geometry'
+import type { PlanPoint } from './geometry'
 import { edgeLength } from './graph'
 import type { BuriedEdgeKind, NetworkEdge, NetworkNode } from './types'
 import { edgeEnds } from './validate-context'
@@ -41,9 +42,29 @@ function validateSlope(context: ValidationContext, pipe: Pipe): void {
   if (pipe.edge.slope !== undefined && Math.abs(pipe.edge.slope - slope) > SLOPE_TOLERANCE) context.report({ code: NETWORK_VIOLATION.SLOPE_MISMATCH, id: pipe.edge.id, value: pipe.edge.slope, limit: slope })
 }
 
+const planAt = (pipe: Pipe, t: number): PlanPoint => [lerp(pipe.from.at[0], pipe.to.at[0], t), lerp(pipe.from.at[2], pipe.to.at[2], t)]
+
+/** A storm gallery runs within reach of a sewer main (the same street), at any sampled point of the main. */
+function besideGallery(context: ValidationContext, main: Pipe, pipes: readonly Pipe[]): boolean {
+  const samples = Math.max(1, context.rules.catenarySamples)
+  const reach = context.rules.sewer.galleryReach
+  return pipes.some((gallery) => {
+    if (gallery.kind !== 'storm_gallery') return false
+    const a = planAt(gallery, 0)
+    const b = planAt(gallery, 1)
+    for (let index = 0; index <= samples; index++) {
+      const point = planAt(main, index / samples)
+      const nearest = planAt(gallery, nearestShare(a, b, point))
+      if (Math.hypot(point[0] - nearest[0], point[1] - nearest[1]) <= reach) return true
+    }
+    return false
+  })
+}
+
 /** Cover from the ground to the top of the pipe within its range, sampled along it; a sewer no deeper than the pumping limit. */
-function validateCover(context: ValidationContext, pipe: Pipe): void {
-  const range = context.rules.cover[pipe.kind]
+function validateCover(context: ValidationContext, pipe: Pipe, pipes: readonly Pipe[]): void {
+  const base = context.rules.cover[pipe.kind]
+  const range = pipe.kind === 'sewer_main' && besideGallery(context, pipe, pipes) ? { ...base, min: Math.max(base.min, context.rules.sewer.coverUnderGallery) } : base
   const samples = Math.max(1, context.rules.catenarySamples)
   let least = Number.POSITIVE_INFINITY
   let most = Number.NEGATIVE_INFINITY
@@ -78,6 +99,18 @@ function validateCrossing(context: ValidationContext, a: Pipe, b: Pipe): void {
   if (gap < separation) context.report({ code: NETWORK_VIOLATION.CROSSING_TOO_CLOSE, id, value: gap, limit: separation })
   const rank = context.rules.crossing.rank
   if (rank[upper.kind] > rank[lower.kind]) context.report({ code: NETWORK_VIOLATION.CROSSING_ORDER, id, detail: `${upper.edge.id} above ${lower.edge.id}` })
+  const lateral = a.kind === 'sewer_lateral' && b.kind === 'storm_gallery' ? { pipe: a, t: crossing[0], bottom: bottomA } : b.kind === 'sewer_lateral' && a.kind === 'storm_gallery' ? { pipe: b, t: crossing[1], bottom: bottomB } : undefined
+  if (lateral === undefined) return
+  const depth = groundAt(context, lateral.pipe, lateral.t) - lateral.bottom
+  const limit = context.rules.sewer.lateralOverGallery
+  if (depth > limit) context.report({ code: NETWORK_VIOLATION.LATERAL_TOO_DEEP, id, value: depth, limit })
+}
+
+/** A sewer main has a manhole at most every `manholeSpacing` metres: its nodes are manholes, so no edge is longer. */
+function validateSpacing(context: ValidationContext, pipe: Pipe): void {
+  if (pipe.kind !== 'sewer_main') return
+  const length = edgeLength(context.graph, pipe.edge)
+  if (length > context.rules.sewer.manholeSpacing) context.report({ code: NETWORK_VIOLATION.MANHOLE_SPACING, id: pipe.edge.id, value: length, limit: context.rules.sewer.manholeSpacing })
 }
 
 /** Inverts and diameters known, slopes, covers and depths, and every crossing between two pipes. */
@@ -85,10 +118,12 @@ export function validateBuried(context: ValidationContext): void {
   const pipes: Pipe[] = []
   for (const edge of context.graph.edges.values()) {
     const pipe = pipeOf(context, edge)
-    if (pipe === undefined) continue
+    if (pipe !== undefined) pipes.push(pipe)
+  }
+  for (const pipe of pipes) {
     validateSlope(context, pipe)
-    validateCover(context, pipe)
-    pipes.push(pipe)
+    validateCover(context, pipe, pipes)
+    validateSpacing(context, pipe)
   }
   for (let first = 0; first < pipes.length; first++) {
     for (let second = first + 1; second < pipes.length; second++) validateCrossing(context, pipes[first] as Pipe, pipes[second] as Pipe)

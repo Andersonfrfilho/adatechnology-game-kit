@@ -5,6 +5,7 @@ export { DEFAULT_POLES, POLE_SHAPES } from './poles'
 export type {
   BarSpec,
   CrossarmSpec,
+  DistributionPoleDef,
   DistributionSpec,
   DoubleArmSpec,
   FloodTowerSpec,

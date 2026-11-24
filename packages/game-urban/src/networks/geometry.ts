@@ -54,3 +54,31 @@ export function nearestShare(a: PlanPoint, b: PlanPoint, point: PlanPoint): numb
 export function catenaryHeight(fromY: number, toY: number, sag: number, t: number): number {
   return fromY + (toY - fromY) * t - 4 * sag * t * (1 - t)
 }
+
+/** Shares along a segment where it crosses the sides of a polygon, ascending. */
+export function polygonCrossings(a: PlanPoint, b: PlanPoint, outline: readonly PlanPoint[]): number[] {
+  const shares: number[] = []
+  for (let index = 0, previous = outline.length - 1; index < outline.length; previous = index++) {
+    const crossing = segmentCrossing(a, b, outline[previous] as PlanPoint, outline[index] as PlanPoint)
+    if (crossing !== undefined) shares.push(crossing[0])
+  }
+  return shares.sort((first, second) => first - second)
+}
+
+/** The range of shares along a segment that lies inside a circle, or none. */
+export function circleShares(a: PlanPoint, b: PlanPoint, centre: PlanPoint, radius: number): readonly [number, number] | undefined {
+  const dx = b[0] - a[0]
+  const dz = b[1] - a[1]
+  const fx = a[0] - centre[0]
+  const fz = a[1] - centre[1]
+  const qa = dx * dx + dz * dz
+  const qb = 2 * (fx * dx + fz * dz)
+  const qc = fx * fx + fz * fz - radius * radius
+  if (qa === 0) return qc <= 0 ? [0, 1] : undefined
+  const discriminant = qb * qb - 4 * qa * qc
+  if (discriminant < 0) return undefined
+  const root = Math.sqrt(discriminant)
+  const start = Math.max(0, (-qb - root) / (2 * qa))
+  const end = Math.min(1, (-qb + root) / (2 * qa))
+  return start <= end ? [start, end] : undefined
+}

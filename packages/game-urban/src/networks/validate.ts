@@ -5,7 +5,7 @@ import { validateAerial } from './validate-aerial'
 import { validateBuried } from './validate-buried'
 import type { ValidateNetworksOptions, ValidationContext } from './validate-context'
 import { validateLoad } from './validate-load'
-import { validateLots, validateIds, validateTrees } from './validate-structure'
+import { validateIds, validateLots, validateOrphans, validateTrees } from './validate-structure'
 
 /**
  * Everything wrong with the networks, by the rules they carry: ids and links, each network a tree tied to its source, every lot linked once,
@@ -18,6 +18,7 @@ export function validateNetworks(networks: UtilityNetworks, options: ValidateNet
   validateIds(context, networks)
   validateTrees(context)
   validateLots(context)
+  validateOrphans(context)
   validateAerial(context)
   validateBuried(context)
   validateLoad(context)

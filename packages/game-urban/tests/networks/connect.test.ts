@@ -39,8 +39,25 @@ describe('ids, trees and lots', () => {
     expect(codes(validateNetworks(dark, streetOptions()))).toEqual(expect.arrayContaining(['disconnected trafo:1', 'disconnected light:1', 'lot_unconnected a:power']))
   })
 
+  it('finds a loop through the source of a supply network and through the destination of a drain network', () => {
+    const loop = streetNetworks({ edges: (edges) => [...edges, { id: 'mv:back', kind: 'mv_span', from: 'pole:1', to: 'feed:mv', sag: 0.4, heights: [9.25, 9.25] }] })
+    expect(codes(validateNetworks(loop, streetOptions()))).toEqual(['loop_at_end feed:mv'])
+    const water = streetNetworks({ edges: (edges) => [...edges, { id: 'water:back', kind: 'water_main', from: 'valve:1', to: 'reservoir', diameter: 0.075 }] })
+    expect(codes(validateNetworks(water, streetOptions()))).toEqual(expect.arrayContaining(['loop_at_end reservoir']))
+    const drain = streetNetworks({ edges: (edges) => [...edges, { id: 'sewer:back', kind: 'sewer_main', from: 'treatment', to: 'pv:2', diameter: 0.15 }] })
+    expect(codes(validateNetworks(drain, streetOptions()))).toContain('loop_at_end treatment')
+  })
+
+  it('finds a lot that declares a network twice and a connection node no lot declared', () => {
+    const twice = streetOptions({ connections: [...CONNECTIONS, { lot: 'a', network: 'water', frame: 'world', at: [12, 0, 10] }] })
+    expect(codes(validateNetworks(streetNetworks(), twice))).toEqual(['lot_declared_twice a:water'])
+    const orphan = streetOptions({ connections: CONNECTIONS.filter((connection) => connection.network !== 'telecom') })
+    expect(codes(validateNetworks(streetNetworks(), orphan))).toEqual(['orphan_connection lot:a:telecom'])
+    expect(validateNetworks(streetNetworks(), streetOptions({ connections: undefined }))).toEqual([])
+  })
+
   it('refuses a connection in the plan frame', () => {
-    const options = streetOptions({ connections: [{ ...(CONNECTIONS[0] as (typeof CONNECTIONS)[number]), frame: 'plan' }] })
+    const options = streetOptions({ connections: CONNECTIONS.map((connection) => (connection.network === 'power' ? { ...connection, frame: 'plan' as const } : connection)) })
     expect(codes(validateNetworks(streetNetworks(), options))).toEqual(['connection_in_plan_frame a:power'])
   })
 

@@ -40,10 +40,10 @@ describe('network graph', () => {
     expect(connectedNodes(broken, 'power_lv').has('lot:a:power')).toBe(false)
   })
 
-  it('measures the low voltage circuit of a transformer along its spans', () => {
+  it('measures the low voltage circuit of a transformer along its line, without the service drops', () => {
     const circuit = circuitOf(graph, 'trafo:1')
     expect(circuit.get('pole:2')).toBeCloseTo(30)
-    expect(circuit.get('lot:a:power')).toBeCloseTo(30 + Math.hypot(20, 6.4))
+    expect(circuit.get('lot:a:power')).toBeCloseTo(30)
     const sewer = graph.edges.get('sewer:1')
     expect(sewer === undefined ? 0 : edgeLength(graph, sewer)).toBeCloseTo(50)
   })

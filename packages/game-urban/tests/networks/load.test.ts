@@ -29,7 +29,7 @@ describe('transformers', () => {
   })
 
   it('finds a low voltage circuit longer than the limit', () => {
-    const networks = { ...streetNetworks(), rules: resolveNetworkRules({ power: { lvCircuitMaxLength: 40 } }) }
-    expect(validateNetworks(networks, streetOptions())).toEqual([{ code: 'lv_circuit_too_long', id: 'trafo:1', value: expect.closeTo(30 + Math.hypot(20, 6.4), 6) as number, limit: 40 }])
+    const networks = { ...streetNetworks(), rules: resolveNetworkRules({ power: { lvCircuitMaxLength: 20 } }) }
+    expect(validateNetworks(networks, streetOptions())).toEqual([{ code: 'lv_circuit_too_long', id: 'trafo:1', value: expect.closeTo(30, 6) as number, limit: 20 }])
   })
 })
