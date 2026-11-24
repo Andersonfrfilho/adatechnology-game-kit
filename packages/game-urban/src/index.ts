@@ -5,6 +5,7 @@ export { DEFAULT_POLES, POLE_SHAPES } from './poles'
 export type {
   BarSpec,
   CrossarmSpec,
+  DistributionSpec,
   DoubleArmSpec,
   FloodTowerSpec,
   LampLightSpec,
@@ -15,6 +16,8 @@ export type {
   PoleDef,
   PoleOptions,
   PoleShapeBuilder,
+  PoleSlotBand,
+  PoleSlots,
   SingleArmSpec,
 } from './poles'
 export { DEFAULT_ROAD_STYLE, DEFAULT_WALK_STYLE, drawGround, drawRoad, drawStreetGrid, drawWalk } from './streets'
