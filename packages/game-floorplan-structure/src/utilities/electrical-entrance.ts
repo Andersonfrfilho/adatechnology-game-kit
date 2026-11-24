@@ -17,6 +17,9 @@ export const SERVICE_POST_INSIDE_LOT = 0.35
 export const SERVICE_POST_MIN_YARD = 1.2
 /** On a street with a utility network (`street: 'network'`) the meter post (padrão) is this tall over the ground, and the network's drop is anchored on it this high (metres). */
 export const NETWORK_POST = { h: 6, anchor: 5.7 } as const
+/** The mast stands this far out of the meter's face (clear of the thickest wall's render), and rises this far over the drop's anchor to its weatherhead. */
+const MAST_OFF_WALL = 0.05
+const MAST_OVER_ANCHOR = 0.15
 /** The post of a street that only brings its poles (`streetPoles`): as tall as the street's, the drop anchored this high. */
 const STREET_POST = { h: 7.5, anchor: 6.5 } as const
 
@@ -65,13 +68,20 @@ function streetEntrance({ plan, meter, poleU, door, network }: StreetEntrancePar
   const mode = network ? { street: 'network' as const } : {}
   if (-front < SERVICE_POST_MIN_YARD) {
     const facade: ElectricMeter = meter.place === 'facade' ? meter : { ...meter, place: 'facade', u: round2(door ? door.at + 1.2 : plan.w / 2), v: -0.1 }
-    // on a network the drop is anchored on a mast up the facade (pontalete) as high as on a post: the descent is that mast; else on the facade over the meter
-    const top: [number, number, number] = [facade.u, facade.v, network ? NETWORK_POST.anchor : 3.2]
+    if (network) return mastEntrance(facade)
+    const top: [number, number, number] = [facade.u, facade.v, 3.2]
     return { ...mode, pole: null, drop: [top], meter: facade, descent: [top, [facade.u, facade.v, 1.65]], internalRun: null }
   }
   const size = network ? NETWORK_POST : STREET_POST
   const post = { u: poleU, v: round2(front + SERVICE_POST_INSIDE_LOT), h: size.h }
   return { ...mode, pole: post, drop: [[post.u, post.v, size.anchor], head], meter, descent, internalRun: null }
+}
+
+/** On a network a building with no front yard takes the drop on a mast (pontalete) up its facade, clear of the wall, as high as on a post: the descent is the mast. */
+function mastEntrance(meter: ElectricMeter): NonNullable<Layout['electrical']['serviceEntrance']> {
+  const mast = { u: meter.u, v: round2(meter.v - MAST_OFF_WALL), y0: round2(meter.y + meter.h / 2), y1: round2(NETWORK_POST.anchor + MAST_OVER_ANCHOR) }
+  const top: [number, number, number] = [mast.u, mast.v, NETWORK_POST.anchor]
+  return { street: 'network', pole: null, mast, drop: [top], meter, descent: [[mast.u, mast.v, mast.y1], [mast.u, mast.v, mast.y0]], internalRun: null }
 }
 
 /** The street brings the poles: only the house's own entrance stands in the lot. */

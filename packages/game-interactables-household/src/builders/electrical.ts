@@ -135,6 +135,44 @@ export function conduitRun(c: Ctx): void {
   c.spec.colliders = []
 }
 
+/** The mast's galvanised pipe (outer radius) and its weatherhead: the half circle over the top and the cap on its open end (metres). */
+const MAST = { radius: 0.021, bend: 0.08, capRadius: 0.032, capLength: 0.06, color: 0xa9aeb3 } as const
+
+/** The default axis of a mast centred on the origin: up the item's height, then half a circle toward +z with its open end pointing down. */
+function mastAxis(h: number): Vec3[] {
+  const top = h - MAST.bend - MAST.radius * 1.2
+  const arc = Array.from({ length: 8 }, (_, index): Vec3 => {
+    const angle = (Math.PI * (index + 1)) / 8
+    return [0, round3(top + MAST.bend * Math.sin(angle)), round3(-MAST.bend * Math.cos(angle))]
+  })
+  return [[0, 0, -MAST.bend], [0, top, -MAST.bend], ...arc]
+}
+
+/** One straight stretch of the mast's pipe in its vertical plane (x fixed), each end reaching a little past the point so the bends close. */
+function pipeSegment(c: Ctx, a: Vec3, b: Vec3): void {
+  const dy = b[1] - a[1]
+  const dz = b[2] - a[2]
+  const length = Math.hypot(dy, dz)
+  if (length < 1e-4) return
+  if (Math.abs(dz) < 1e-6 && dy > 0) return void c.cyl('metal', a[0], a[1], a[2], MAST.radius, length, MAST.color, 'cyl')
+  const reach = length + MAST.radius * 0.4
+  c.cyl('metal', a[0], (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, MAST.radius, reach, MAST.color, 'cyl', Math.atan2(dz, dy), 0)
+}
+
+/**
+ * A service mast (pontalete): a galvanised pipe up a facade that takes the drop of a street network, crowned by a weatherhead (the pipe bent over toward the street and a cap
+ * on its open end, pointing down) so the rain does not run into it. The pipe runs along `points` (from the plan, in one vertical plane) or the default axis.
+ */
+export function serviceMast(c: Ctx): void {
+  const points: Vec3[] = c.M.points && c.M.points.length >= 2 ? c.M.points.map((p) => [...p] as Vec3) : mastAxis(c.h)
+  for (let index = 0; index + 1 < points.length; index++) pipeSegment(c, points[index]!, points[index + 1]!)
+  const end = points[points.length - 1]!
+  c.cyl('metal', end[0], end[1] - MAST.capLength, end[2], MAST.capRadius, MAST.capLength, MAST.color, 'cyl')
+  c.spec.colliders = []
+  const foot = points[0]!
+  c.collider('mast', foot[0] - MAST.radius, foot[1], foot[2] - MAST.radius, foot[0] + MAST.radius, end[1], foot[2] + MAST.radius)
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Appliances
 // ---------------------------------------------------------------------------------------------------------------------------------

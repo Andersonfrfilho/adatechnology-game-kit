@@ -48,6 +48,7 @@ export const DESTRUCTION: Record<string, TypeDestruction> = {
   wall_switch: { body: { material: 'plastic', joint: 'screw' }, parts: [['rocker', { material: 'plastic', joint: 'clip', piece: 'rocker' }]] },
   service_entrance: { body: { material: 'steel', joint: 'bolt' }, parts: [['meter_door', door('steel')]] },
   conduit_run: { body: { material: 'plastic', joint: 'clip' }, parts: [] },
+  service_mast: { body: { material: 'steel', joint: 'clip' }, parts: [] },
   electrical_panel: {
     body: { material: 'steel', joint: 'screw' },
     parts: [[/^breaker/, { material: 'plastic', joint: 'clip', piece: 'breaker' }], ['door', door('steel')]],

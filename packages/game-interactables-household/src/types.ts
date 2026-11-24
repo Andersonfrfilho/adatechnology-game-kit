@@ -31,7 +31,7 @@ export interface HouseholdItem extends PropItem {
   requires?: { object: string; part: string }
   /** `electrical_panel`: the circuits, one breaker each. Default: a single circuit `main`. */
   circuits?: Array<{ id: string; label?: string }>
-  /** `conduit_run`: polyline in object-local coordinates. */
+  /** `conduit_run`: polyline in object-local coordinates. `service_mast`: the axis of the mast's pipe, foot to the weatherhead's open end (default: a straight mast of the item's height bent over the top). */
   points?: Vec3[]
   /** `service_entrance`: where the drop wire ends (the house attachment point), object-local. */
   house?: Vec3

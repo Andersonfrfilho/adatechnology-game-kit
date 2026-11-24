@@ -43,6 +43,7 @@ export type { PlateOptions, PlateRect, PlateStrip, StoreyContext, StoreyKind, St
 export type * from './utilities/types'
 export type { Utilities } from './utilities'
 export { NETWORK_POST } from './utilities/electrical-entrance'
+export { MAST_PIPE_RADIUS, WEATHERHEAD, mastPathOf } from './utilities/service-mast'
 export { connectionsInWorld, houseConnectionsOf, installedKvaOf } from './utilities/connections'
 export type { ConnectionPlacement, ConnectionsInWorldParams, HouseConnection } from './utilities/connections'
 export type { Electrical, EnergyConfig, EnergyMode } from './utilities/electrical'

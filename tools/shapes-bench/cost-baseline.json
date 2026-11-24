@@ -441,6 +441,11 @@
       "triangles": 1022,
       "materials": 4
     },
+    "household/service_mast": {
+      "draws": 2,
+      "triangles": 480,
+      "materials": 1
+    },
     "household/electrical_panel": {
       "draws": 8,
       "triangles": 288,

@@ -83,6 +83,27 @@ describe('a house on a street with a utility network (`street: \'network\'`)', (
     expect(Math.max(...drop.map((part) => part.y1))).toBeLessThanOrEqual(FROM[1] + 0.05)
   })
 
+  it('draws the meter post or the facade mast (pontalete), never both and never none, with or without the interactables', () => {
+    let mastsSeen = 0
+    for (const template of ['single_storey_a', 'drugstore', 'pharmacy', 'townhouse']) {
+      const network = planOf(template, 3, 'normal', { street: 'network' })
+      const own = network.utilities.electrical.serviceEntrance!
+      const plain = partIds(houseOf(network, {}, { quality: 'game', serviceFrom: FROM }).house)
+      const posts = plain.filter((id) => id.startsWith('pole:')).length
+      const masts = plain.filter((id) => id.startsWith('mast:')).length
+      expect(posts + masts, `${template}: one entrance drawn by the house`).toBe(1)
+      expect(masts, template).toBe(own.mast ? 1 : 0)
+      mastsSeen += masts
+      const { house } = houseOf(network, { interactives: kit }, { quality: 'game', serviceFrom: FROM })
+      const ids = partIds(house)
+      expect(ids.some((id) => id.startsWith('pole:') || id.startsWith('mast:')), `${template}: the kit draws it, not the house`).toBe(false)
+      const types = [...house.interactives!.entries.values()].map((entry) => entry.type)
+      expect(types.filter((type) => type === 'service_entrance' || type === 'service_mast').length, `${template}: one entrance object`).toBe(1)
+      if (own.mast) expect(types.includes('conduit_run') && [...house.interactives!.entries.keys()].includes('conduit_descent'), `${template}: the mast is the descent`).toBe(false)
+    }
+    expect(mastsSeen, 'a building at the lot front has a mast').toBeGreaterThan(0)
+  })
+
   it('each house has its own interactables world: an outage of one lot (`power.setGrid(false)`) leaves its neighbour lit', () => {
     const one = houseOf(plan, { interactives: kit }).house
     const other = houseOf(planOf('single_storey_a', 2, 'normal', { street: 'network' }), { interactives: kit }).house

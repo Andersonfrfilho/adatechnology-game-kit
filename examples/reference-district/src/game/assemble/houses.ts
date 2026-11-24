@@ -52,6 +52,17 @@ export type Houses = {
   dispose(): void
 }
 
+/** What `setLotGrid` reads of a placed house: its lot and its own interactables world. */
+export type LotPower = { readonly lot: { readonly id: string }; readonly house: { readonly interactives: { readonly world: { readonly power: { setGrid(on: boolean): void } } } | null } }
+
+/** Cuts or restores the grid of one lot's house, in that house's own interactables world; false for a lot with no house or no interactables. */
+export function setLotGrid({ list, lot, on }: { readonly list: readonly LotPower[]; readonly lot: string; readonly on: boolean }): boolean {
+  const power = list.find((placed) => placed.lot.id === lot)?.house.interactives?.world.power
+  if (!power) return false
+  power.setGrid(on)
+  return true
+}
+
 let isRegistered = false
 /** Puts the content packs in the shared engine, once: the residential pack first, the structure pack gives every plan its pillars, beams and roof, the post-apocalyptic one the states. */
 export function registerPacks(): typeof engine {
@@ -140,11 +151,8 @@ export function createHouses({ THREE, world, scene, lots, networks }: HousesPara
   return {
     list,
     renderer,
-    setLotGrid(lotId, on) {
-      const power = list.find((placed) => placed.lot.id === lotId)?.house.interactives?.world.power
-      if (!power) return false
-      power.setGrid(on)
-      return true
+    setLotGrid(lot, on) {
+      return setLotGrid({ list, lot, on })
     },
     update(dt, time, focus) {
       sincePlan += dt

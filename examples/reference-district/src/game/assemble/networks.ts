@@ -1,5 +1,4 @@
 import { connectionsInWorld } from '@adatechnology/game-floorplan-structure'
-import type { StructuredResult } from '@adatechnology/game-floorplan-structure'
 import type { CityPlanInput, PlanRect } from '@adatechnology/game-urban'
 import { generateNetworks, validateNetworks } from '@adatechnology/game-urban/networks'
 import type { GeneratedNetworks } from '@adatechnology/game-urban/networks'
@@ -24,7 +23,7 @@ export type NetworksParams = {
  * (`connectionsInWorld`: the anchor on its meter post, the inspection box, the downspout carried out to the kerb, the water meter); the drawing comes in T2.8d.
  */
 export function buildNetworks({ plan, site, lots, avoid }: NetworksParams): GeneratedNetworks {
-  const connections = lots.flatMap(({ lot, plan: house, placement }) => connectionsInWorld({ plan: house as StructuredResult, lot: lot.id, placement, kerb: SIDEWALK_WIDTH }))
+  const connections = lots.flatMap(({ lot, plan: house, placement }) => connectionsInWorld({ plan: house, lot: lot.id, placement, kerb: SIDEWALK_WIDTH }))
   const generated = generateNetworks({ plan, lots: site.lots, seed: site.seed, avoid, connections })
   const violations = validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt })
   if (violations.length > 0) console.error(`the networks of "${plan.id}" break ${violations.length} rule(s)`, violations)
