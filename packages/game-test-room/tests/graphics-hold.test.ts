@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { createRoomGraphics } from '../src/graphics'
+import { createKitWorldGraphics } from '../../game-kit-defaults/src/world/graphics'
 
 const fakeRenderer = (): { gl: THREE.WebGLRenderer; ratios: number[] } => {
   const ratios: number[] = []
@@ -24,7 +24,7 @@ describe('the room graphics and the canvas', () => {
     const camera = new THREE.PerspectiveCamera()
     const sun = new THREE.DirectionalLight()
     const loading = { active: false, begin: () => ({ step: () => undefined, end: () => undefined }) } as never
-    const graphics = createRoomGraphics({ gl, camera, sun, container: {} as HTMLElement, loading, locale: 'en', label: 'x', ui: false, options: { storage: null, calibrationSeconds: 0, calibrate: 'manual' } })
+    const graphics = createKitWorldGraphics({ gl, camera, sun, container: {} as HTMLElement, loading, locale: 'en', label: 'x', ui: false, options: { storage: null, calibrationSeconds: 0, calibrate: 'manual' } })
     graphics.beforeRender(camera)
     graphics.afterRender()
     const drawn = ratios.length

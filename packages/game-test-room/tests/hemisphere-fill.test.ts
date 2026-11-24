@@ -1,7 +1,7 @@
 import { Color } from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { HEMISPHERE_GROUND, HEMISPHERE_INTENSITY, HEMISPHERE_SKY } from '../src/arena'
+import { HEMISPHERE_GROUND, HEMISPHERE_INTENSITY, HEMISPHERE_SKY } from '../../game-kit-defaults/src/world/light'
 
 const CONCRETE = 0x9c9890
 const PREVIOUS_SKY = { color: 0xcfe3ff, intensity: 0.85 }

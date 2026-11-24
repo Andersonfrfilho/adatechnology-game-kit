@@ -2,7 +2,7 @@ import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 import { describe, expect, it, vi } from 'vitest'
 
-import { MAX_TICKS_PER_FRAME, STEPS_PER_TICK, resolveSimulationTick } from '../src/simulation-phases'
+import { MAX_TICKS_PER_FRAME, STEPS_PER_TICK, resolveSimulationTick } from '../../game-kit-defaults/src/world/simulation-phases'
 import { makeRoom } from './helpers'
 
 // Spec 010 T3.4 (C4): the room's simulation is a `fixedSimulate` system driven by the scheduler, and its physics loop steps by the tick, not by its own accumulator.
@@ -66,8 +66,8 @@ describe('the room simulation runs in the scheduler fixed step (spec 010 T3.4)',
   })
 
   it('the tick is two physics steps and a world with another fixed step is refused at boot', () => {
-    expect(resolveSimulationTick(1 / 120, 1 / 60)).toBe(1 / 60)
-    expect(resolveSimulationTick(undefined, 1 / 60)).toBe(1 / 60)
-    expect(() => resolveSimulationTick(1 / 60, 1 / 60)).toThrow()
+    expect(resolveSimulationTick({ loopStep: 1 / 120, nominalTick: 1 / 60 })).toBe(1 / 60)
+    expect(resolveSimulationTick({ loopStep: undefined, nominalTick: 1 / 60 })).toBe(1 / 60)
+    expect(() => resolveSimulationTick({ loopStep: 1 / 60, nominalTick: 1 / 60 })).toThrow()
   })
 })
