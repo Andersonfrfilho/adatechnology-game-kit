@@ -1,9 +1,12 @@
 import {
   POSE_CLIPS,
+  REFERENCE_HEIGHT_METRES,
+  assertHeight,
   clipEventsBetween,
   createPoseClipRegistry,
   createRng,
   filterPoseChannels,
+  heightFactor,
   samplePoseClip,
   walkCadence,
   stepCascade,
@@ -35,7 +38,7 @@ const EYE_OFFSET = [0, -0.068, 0] as const // brings the measured standing eye (
 const EYE_BOB = 0.5
 
 // Constants carried from the team game's GPU pose code, `BODY_CHUNK` (src/instanced/body-chunk.ts), whose line numbers are quoted below.
-const HIP_HEIGHT = 0.95 // :68, :74 the trunk pivot
+// Trunk pivot height, shoulder height and arm length are measured directly from the built rig (Spec 012 R3).
 const WALK_ARM = 0.28 // arms swing naturally beside the hips, staying below the waist
 const WALK_BOB = 0.035 // :71 `abs(sin(ph))*0.035*gait`
 const WALK_LEAN = 0.04 // :64 `0.04*gait`
@@ -48,9 +51,6 @@ const SIT = { thigh: -1.5, lean: -0.08, arm: -0.45, armZ: 0.12, elbow: -0.75 }
 const LIE = { knee: 0.08, armZ: 0.12, elbow: -0.1 }
 const DOWN = { thighWalk: 0.5, shinSwing: 0.85, shinBend: 1.3, armHigh: -2.8, armLow: -0.35, armWave: 0.3, armZ: 0.5, armZWave: 0.3, tilt: 1.5, roll: 0.3, hipY: 0.16, hipZ: 0.6, hipZFlip: 1.2 } // :29-:47, :74
 /** `playerHand()`: the elbow-to-hand offset of the weapon hand (the weapon hand is the puppet's right, at -x). */
-/** A hand on a handle: the shoulder over the feet and the length of the arm to the palm, metres. */
-const DOOR_SHOULDER = 1.42
-const DOOR_ARM = 0.62
 const HAND_OFFSET = { x: 0, y: -0.33, z: 0.04 }
 
 export type PlayerAvatarSpec = Record<string, unknown>
@@ -58,6 +58,8 @@ export type PlayerAvatarSpec = Record<string, unknown>
 export type PlayerAvatarOptions = {
   /** The body spec for the rich builder (`createBestBuilder.build`). Default: the team game's player (`player-avatar.json`). Merged over the default. */
   readonly spec?: PlayerAvatarSpec
+  /** Standing skull-top height in metres (validated by `assertHeight`). Default `REFERENCE_HEIGHT_METRES` (1.80 m). */
+  readonly heightMetres?: number
   /** Shirt colour, 0xRRGGBB. Default the team game's `PLAYER_COR`. */
   readonly shirtColor?: number
   /** The clips `play(id)` finds. Default: a registry with `POSE_CLIPS`. */
@@ -142,6 +144,8 @@ export type PlayerAvatarColors = { skin: number; shirt: number; trousers: number
 export type PlayerAvatar = {
   root: THREE_NS.Object3D
   rig: RichRig
+  /** Declared standing skull-top height in metres (Spec 012 R2/R3). */
+  readonly heightMetres: number
   /** What the body wears, read from the body itself. */
   readonly colors: PlayerAvatarColors
   /** The three.js namespace the body was made with, so what is made to fit it (the first-person arms) uses the same one. */
@@ -195,6 +199,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     ...(options.spec?.pose as Record<string, number> | undefined),
   }
   const spec = { ...preset.spec, ...options.spec, pose } as Record<string, unknown>
+  const heightMetres = assertHeight(options.heightMetres ?? (typeof spec.heightMetres === 'number' ? spec.heightMetres : REFERENCE_HEIGHT_METRES))
+  const heightScale = heightFactor(heightMetres)
+  spec.heightMetres = heightMetres
   for (const key of ['skin', 'hair']) if (typeof spec[key] === 'string') spec[key] = hexOf(spec[key])
   const best = createBestBuilder(THREE, { types: [{ name: String(spec.type), eye: 0 }], random: createRng(Number(spec.seed ?? 1)) })
   const body = best.build(spec) as THREE_NS.Object3D
@@ -302,15 +309,32 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   let hipWithoutBob: number | null = null // the hips' cascade run again on the target with no bob, so the bob left after smoothing can be told apart
 
   const legRestX = rig.legs.map((leg) => leg.g.position.x)
-  /** Measured once with the leg straight: how far below the trunk pivot the leg hangs from, the thigh, and the knee to the sole. */
-  const legLengths = (() => {
+  /** Measured once with the body upright: trunk pivot height, leg segments, shoulder height and arm reach to the palm (Spec 012 R3). */
+  const rigMeasures = (() => {
+    const upper = rig.upper as unknown as THREE_NS.Object3D
     const thigh = rig.legs[0]!.g as unknown as THREE_NS.Object3D
     const shin = rig.legs[0]!.kn as unknown as THREE_NS.Object3D
+    const shoulder = armOf.R.g as unknown as THREE_NS.Object3D
+    const elbow = armOf.R.el as unknown as THREE_NS.Object3D
+    const rightHand = hands.find((hand) => hand.side < 0)!.hg
     root.updateMatrixWorld(true)
+    const hipHeight = upper.getWorldPosition(new THREE.Vector3()).y
     const hipY = thigh.getWorldPosition(new THREE.Vector3()).y
     const kneeY = shin.getWorldPosition(new THREE.Vector3()).y
-    return { hipBelowTrunk: HIP_HEIGHT - hipY, thigh: hipY - kneeY, shin: kneeY - new THREE.Box3().setFromObject(shin).min.y }
+    const shoulderPos = shoulder.getWorldPosition(new THREE.Vector3())
+    const elbowPos = elbow.getWorldPosition(new THREE.Vector3())
+    const palmPos = rightHand.localToWorld(new THREE.Vector3(0, -0.042, 0))
+    return {
+      hipHeight,
+      hipBelowTrunk: hipHeight - hipY,
+      thigh: hipY - kneeY,
+      shin: kneeY - new THREE.Box3().setFromObject(shin).min.y,
+      doorShoulder: shoulderPos.y,
+      doorArm: shoulderPos.distanceTo(elbowPos) + elbowPos.distanceTo(palmPos),
+    }
   })()
+  const hipHeight = rigMeasures.hipHeight
+  const legLengths = rigMeasures
   const legSide = (index: number): number => (index === 0 ? 1 : -1) // the shader's `legS`: +1 for the leg at -x (legs[0])
   let cycles = 0 // the game's `player.ph`: gait cycles
   let time = 0
@@ -386,9 +410,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     const on = phase === 'reach' ? progress : phase === 'release' ? 1 - progress : 1
     const swing = phase === 'swing' ? progress : phase === 'push' ? 0.7 + 0.3 * progress : phase === 'release' ? 1 : 0
     const shake = phase === 'rattle' ? Math.sin(time * 55) * 0.06 * (1 - progress) : 0
-    // the shoulder about 1.42 m over the feet, the arm 0.62 m: the angle down from the shoulder to the handle, a low handle bends the body
-    const drop = clamp((DOOR_SHOULDER - door.height) / DOOR_ARM, -0.9, 1)
-    const low = clamp((0.75 - door.height) / 0.5, 0, 1)
+    // Shoulder height and arm reach measured from this person's rig (Spec 012 R3).
+    const drop = clamp((rigMeasures.doorShoulder - door.height) / rigMeasures.doorArm, -0.9, 1)
+    const low = clamp((hipHeight * 0.85 - door.height) / (rigMeasures.doorArm * 0.8), 0, 1)
     const raise = -Math.acos(clamp(drop, -1, 1)) * on - 0.35 * low * on
     const elbow = door.pull ? -0.35 - 0.75 * swing : -0.95 + 0.75 * swing
     return {
@@ -487,7 +511,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       kneeL: CROUCH.shin,
       kneeR: CROUCH.shin,
       lean: WALK_LEAN * gait + CROUCH.lean,
-      drop: Math.abs(Math.sin(cycles * TWO_PI)) * WALK_BOB * gait + CROUCH.drop,
+      drop: (Math.abs(Math.sin(cycles * TWO_PI)) * WALK_BOB * gait + CROUCH.drop) * heightScale,
     }
   }
 
@@ -536,7 +560,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     kneeL: bend,
     kneeR: bend,
     lean: SIT.lean,
-    drop: hip - HIP_HEIGHT,
+    drop: hip - hipHeight,
     armR: SIT.arm,
     armL: SIT.arm,
     armRz: SIT.armZ,
@@ -549,7 +573,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   /** Face up, the pelvis `hip` metres above the feet: a quarter turn about the hip, head toward -z. */
   const layBody = (hip: number): void => {
     tilt.rotation.set(-Math.PI / 2, 0, 0, 'XYZ')
-    const pivot = new THREE.Vector3(0, HIP_HEIGHT, 0).applyEuler(tilt.rotation)
+    const pivot = new THREE.Vector3(0, hipHeight, 0).applyEuler(tilt.rotation)
     tilt.position.set(0, hip, 0).sub(pivot)
   }
 
@@ -559,9 +583,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     // flip 0 turns the head to -z, behind the facing (on the back); 1 to +z (face down)
     const flip = forward === undefined ? (fract(cycles * 1.7) >= 0.5 ? 1 : 0) : forward ? 1 : 0
     tilt.rotation.set((-DOWN.tilt + flip * 2 * DOWN.tilt) * fk, 0, Math.sin(cycles * 7) * DOWN.roll * fk, 'XYZ')
-    const hip = new THREE.Vector3(0, HIP_HEIGHT, 0)
-    const target = new THREE.Vector3(0, DOWN.hipY, -DOWN.hipZ + flip * DOWN.hipZFlip)
-    const place = new THREE.Vector3(0, HIP_HEIGHT * (1 - fk), 0).addScaledVector(target, fk)
+    const hip = new THREE.Vector3(0, hipHeight, 0)
+    const target = new THREE.Vector3(0, DOWN.hipY * heightScale, (-DOWN.hipZ + flip * DOWN.hipZFlip) * heightScale)
+    const place = new THREE.Vector3(0, hipHeight * (1 - fk), 0).addScaledVector(target, fk)
     tilt.position.copy(place.sub(hip.applyEuler(tilt.rotation)))
   }
 
@@ -602,6 +626,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   return {
     root,
     rig,
+    heightMetres,
     colors,
     three: THREE,
     get playing() {
@@ -614,11 +639,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       const down = !!state.down
       const running = Boolean(state.running && moving && !down && !state.crouch)
       if (moving) cycles += dt * (running ? walkCadence(speed) * 1.3 : walkCadence(speed))
-      const gait = Math.min(MAX_GAIT, walkGait(speed))
+      const gait = Math.min(MAX_GAIT, walkGait(speed, heightScale))
       profile.arm = (running ? 0.55 : WALK_ARM) * gait
-      profile.bob = (running ? RUN_BOB : WALK_BOB) * gait
+      profile.bob = (running ? RUN_BOB : WALK_BOB) * gait * heightScale
       time = cycles / (walkCadence(Math.max(speed, 0)) * (running ? 1.3 : 1))
-      animator.animate(body, time, { speed })
+      animator.animate(body, time, { speed, height: heightScale })
       bob = rig.fig.position.y - rig.dropBase
       fall = fallSeconds <= 0 ? (down ? 1 : 0) : clamp(fall + (down ? dt : -dt) / fallSeconds, 0, 1)
       resetLegYaw()
@@ -637,7 +662,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         }
         if (state.crouch) {
           animator.setPose(rig, crouchPose(gait))
-          bob = rig.fig.position.y - rig.dropBase - CROUCH.drop
+          bob = rig.fig.position.y - rig.dropBase - CROUCH.drop * heightScale
         }
         if (state.push) animator.setPose(rig, pushingPose(state.push))
         else if (state.door) animator.setPose(rig, doorPose(state.door))
