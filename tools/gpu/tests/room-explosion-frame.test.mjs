@@ -151,6 +151,16 @@ test('a run with another explosive than c4 is never compared, and a base with an
   assert.equal(gate(now, { budgetMode: 'deadline', explosive: 'dynamite', frameMetrics: [metric(65, 25)] }).status, 'other-explosive')
 })
 
+test('the m67 is compared with an m67 base, never with a c4 one', () => {
+  const now = [metric(200, 90)]
+  const m67 = frameGate({ measure: measureOf(now), base: { budgetMode: 'deadline', explosive: 'm67', frameMetrics: [metric(65, 25)] }, mode: 'deadline', variant: VARIANT, gated: GATED, explosive: 'm67' })
+  assert.equal(m67.compared, true)
+  assert.equal(m67.regressions.length, 2)
+  assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'm67' }, 'deadline', 'm67'), true)
+  assert.equal(isBaseComparable({ budgetMode: 'deadline' }, 'deadline', 'm67'), false)
+  assert.equal(isBaseComparable({ budgetMode: 'deadline', explosive: 'm67' }, 'deadline', 'c4'), false)
+})
+
 test('the default explosive is c4: a base without the field, or with it, compares as before', () => {
   const now = [metric(200, 90)]
   assert.equal(isBaseComparable({ budgetMode: 'deadline' }, 'deadline'), true)
