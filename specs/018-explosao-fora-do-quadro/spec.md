@@ -104,7 +104,7 @@ A tabela completa e as condições estão em `relatorio-fase-0.md`, seção "Dep
 O C1 vale só no caso medido. Antes de dar a spec por fechada:
 
 1. **Portão diário só do C4.** A régua da rodada diária (`room-explosion`) compara o C4; uma regressão no quadro da M67 passa sem aviso. A M67 entra no portão (T2.1).
-2. **Só a M67 foi medida com a explosão espalhada.** Faltam a bomba de cano (a pior: ~67 ms depois do #427), o C4 e o M79 (T2.2).
+2. **Medido em 2026-11-24 (T2.2, `evidence.md`):** bomba de cano 23,2 ms, M79 21,8 ms e M67 20,1 ms no quadro da explosão. **O C4 não é espalhado** (sem raios, cabe numa fatia) e fica em 74–83 ms: é o caso que hoje passa da meta.
 3. **O kit não liga o marca-passo.** `blastPacing` vem desligado no `game-test-room` e não está no `game-kit-defaults`; só a página
    `examples/test-room` liga. Um jogo que usa o kit não recebe o ganho sem ligar à mão (T2.4, decisão do dono).
 4. **Orçamentos por contagem fixa, ajustados nesta máquina.** 64 raios, 128 peças da onda e 1000 unidades de eventos por quadro; os quadros
