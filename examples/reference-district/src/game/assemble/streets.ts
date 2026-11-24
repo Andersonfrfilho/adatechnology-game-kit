@@ -7,8 +7,7 @@ import { createUrbanThree } from '@adatechnology/game-urban-three'
 import type { DrawnUrban } from '@adatechnology/game-urban-three'
 
 import { blocksToFill } from '../blocks'
-import { SIDEWALK_WIDTH } from '../ground'
-import { polePointsOf, roadStretchesOf } from '../roads'
+import { polePointsOf, roadStretchesOf, STREET_LIGHT_CURB_SETBACK } from '../roads'
 import type { Site } from '../site'
 
 const STREET_MARGIN = 10
@@ -46,9 +45,8 @@ export function drawStreets({ THREE, urban, plan, site, lights, seed, isNight, l
   const layout = urban.cities.layout(plan)
   const streets = (plan.lines ?? []).filter((line) => line.kind === 'street')
   if (streets.length === 0) throw new Error(`the plan "${plan.id}" has no street to draw`)
-  const streetWidth = Math.max(...streets.map((line) => line.width))
-  for (const road of roadStretchesOf(plan)) urban.streets.road(b, road.x, road.z, streetWidth, road.length, road.along)
-  for (const point of polePointsOf({ plan, spacing: POLE_SPACING, offset: streetWidth / 2 + SIDEWALK_WIDTH / 2 })) {
+  for (const road of roadStretchesOf(plan)) urban.streets.road(b, road.x, road.z, road.width, road.length, road.along)
+  for (const point of polePointsOf({ plan, spacing: POLE_SPACING, setback: STREET_LIGHT_CURB_SETBACK })) {
     const district = layout.districtAt(point.x, point.z)
     const pattern = district?.pattern ? urban.neighbourhoods.get(district.pattern).pattern : undefined
     const pole = urban.poles.get(pattern?.pole ?? FALLBACK_POLE)

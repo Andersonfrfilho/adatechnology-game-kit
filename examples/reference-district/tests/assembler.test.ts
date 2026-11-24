@@ -41,7 +41,7 @@ describe('roads', () => {
   })
 
   it('puts no pole in the river', () => {
-    for (const point of polePointsOf({ plan, spacing: 32, offset: 6.25 })) expect(point.x > -35 && point.x < -5 && Math.abs(point.z) < 140).toBe(false)
+    for (const point of polePointsOf({ plan, spacing: 32, setback: 0.5 })) expect(point.x > -35 && point.x < -5 && Math.abs(point.z) < 140).toBe(false)
   })
 })
 

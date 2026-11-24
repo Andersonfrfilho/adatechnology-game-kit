@@ -19,7 +19,7 @@ import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import type { PlanRect } from '@adatechnology/game-urban'
 
 import { lotPlacement, overflowOf } from '../placement'
-import type { HousePlacement } from '../placement'
+import type { HousePlacement, HouseSize } from '../placement'
 import { seedOf } from '../seed'
 import type { Lot, Site } from '../site'
 import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
@@ -67,10 +67,11 @@ export function stateOfLot(lot: Lot): string | undefined {
   return lot.state === 'draw' || lot.state === undefined ? undefined : lot.state
 }
 
-const sizeOf = (plan: FloorplanResult): { readonly width: number; readonly depth: number } => ({ width: Number(plan.w) || 10, depth: Number(plan.d) || 10 })
+/** The plan's size, with the depth of its own lot in front of the facade (`lot.rect[1]` is negative when the lot has a front yard). */
+export const houseSizeOf = (plan: FloorplanResult): HouseSize => ({ width: Number(plan.w) || 10, depth: Number(plan.d) || 10, yard: Math.max(0, -(plan.lot?.rect[1] ?? 0)) })
 
 /** The footprint of a placed house: its width along the street and its depth into the lot, turned as the front says. */
-function footprintOf(placement: HousePlacement, size: { readonly width: number; readonly depth: number }): PlanRect {
+function footprintOf(placement: HousePlacement, size: HouseSize): PlanRect {
   const a = [placement.x, placement.z] as const
   const cos = Math.round(Math.cos(placement.ry))
   const sin = Math.round(Math.sin(placement.ry))
@@ -107,7 +108,7 @@ export function createHouses({ THREE, world, scene, site }: HousesParams): House
   const list = site.lots.map((lot): PlacedHouse => {
     const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
     const house = renderer.build(plan, { quality: 'game', terrain: false })
-    const size = sizeOf(plan)
+    const size = houseSizeOf(plan)
     const placement = lotPlacement(lot.rect, lot.front, size)
     house.group.rotation.y = placement.ry
     house.group.position.set(placement.x, 0, placement.z)
