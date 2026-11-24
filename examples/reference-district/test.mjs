@@ -77,6 +77,11 @@ for (const scenario of SCENARIOS) {
       await page.waitForTimeout(settleMs)
       const info = await page.evaluate(() => window.__district?.info())
       check(`${label}: the district is there`, info?.houses === 14 && info.missing === 14 && info.zombies === ZOMBIES[scenario] && info.physics === 'jolt', info)
+      // the street's walk starts before the first lot (x = 50): the print is taken at the first houses, looking along the street
+      if (scenario !== 'caos') {
+        await page.evaluate(() => window.__district?.place({ x: 46, z: 0, yaw: -Math.PI / 2 }))
+        await page.waitForTimeout(2500)
+      }
       await page.screenshot({ path: join(shots, `${scenario}-${camera.name}.png`) })
       if (scenario === 'tipico' && camera.name === 'third') {
         const url = await page.evaluate(() => window.__district?.planSheet() ?? '')
