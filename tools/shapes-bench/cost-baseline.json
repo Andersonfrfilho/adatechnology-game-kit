@@ -1,0 +1,3305 @@
+{
+  "drawSlack": 0.1,
+  "triangleSlack": 0.15,
+  "limits": {
+    "props3d": 8,
+    "household": 20,
+    "items": 12,
+    "weapons": 240,
+    "animals": 106,
+    "vehicles": 10,
+    "characters": 194,
+    "vegetation": 92
+  },
+  "over": {
+    "props3d/sauna": 10,
+    "household/kitchen_cabinet_base": 22,
+    "household/wardrobe": 46,
+    "household/dresser": 28,
+    "household/blinds": 76,
+    "household/clothesline": 54,
+    "items/model:banana_bunch": 16,
+    "items/model:ceftriaxone": 13,
+    "items/model:car_jack": 14,
+    "items/model:electronic_components": 17,
+    "items/model:army_camouflage_uniform": 14,
+    "items/model:cell_key": 13,
+    "items/model:combat_boots": 14,
+    "items/model:denim_jacket": 13,
+    "items/model:firefighter_suit": 17,
+    "items/model:fishing_net": 22,
+    "items/model:generator_key": 15,
+    "items/model:janitor_keys": 30,
+    "items/model:leather_motorcycle_jacket": 13,
+    "items/model:magazine_arm_guard": 15,
+    "items/model:master_key": 16,
+    "items/model:mechanic_coveralls": 13,
+    "items/model:portable_generator": 20,
+    "items/model:safe_key": 16,
+    "items/model:sheet_metal_forearm_guard": 23,
+    "items/model:shopping_cart": 30,
+    "items/model:wheelbarrow": 14,
+    "items/model:windup_alarm_clock": 13,
+    "items/model:katana": 13,
+    "weapons/taurus_smt9": 250,
+    "weapons/cz_scorpion_evo_3": 250,
+    "weapons/ak_12": 310,
+    "weapons/taurus_t4": 336,
+    "weapons/colt_m4a1": 316,
+    "weapons/hk416": 362,
+    "weapons/m14_ebr": 398,
+    "weapons/fn_scar_h": 354,
+    "weapons/knights_sr_25_mk11": 470,
+    "weapons/barrett_mrad": 450,
+    "weapons/taurus_t4_civil": 358,
+    "weapons/fn_scar_l": 322,
+    "weapons/colt_python": 258,
+    "animals/horse": 116,
+    "animals/wild_boar": 124,
+    "characters/person:zilda": 199,
+    "characters/person:criancas": 503,
+    "characters/person:rosa": 205
+  },
+  "entries": {
+    "props3d/ceiling_light": {
+      "draws": 2,
+      "triangles": 144,
+      "materials": 1
+    },
+    "props3d/pendant": {
+      "draws": 4,
+      "triangles": 396,
+      "materials": 2
+    },
+    "props3d/track_spot": {
+      "draws": 4,
+      "triangles": 336,
+      "materials": 2
+    },
+    "props3d/chandelier": {
+      "draws": 6,
+      "triangles": 1632,
+      "materials": 3
+    },
+    "props3d/wall_ac": {
+      "draws": 2,
+      "triangles": 72,
+      "materials": 1
+    },
+    "props3d/picture_small": {
+      "draws": 6,
+      "triangles": 26,
+      "materials": 3
+    },
+    "props3d/picture_large": {
+      "draws": 6,
+      "triangles": 26,
+      "materials": 3
+    },
+    "props3d/mirror": {
+      "draws": 4,
+      "triangles": 14,
+      "materials": 2
+    },
+    "props3d/curtain": {
+      "draws": 4,
+      "triangles": 516,
+      "materials": 2
+    },
+    "props3d/blinds": {
+      "draws": 2,
+      "triangles": 288,
+      "materials": 1
+    },
+    "props3d/flat_tv": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 2
+    },
+    "props3d/floor_plant": {
+      "draws": 4,
+      "triangles": 188,
+      "materials": 2
+    },
+    "props3d/table_plant": {
+      "draws": 4,
+      "triangles": 124,
+      "materials": 2
+    },
+    "props3d/hanging_plant": {
+      "draws": 8,
+      "triangles": 188,
+      "materials": 4
+    },
+    "props3d/tv_stand": {
+      "draws": 8,
+      "triangles": 204,
+      "materials": 4
+    },
+    "props3d/breakfast_bar": {
+      "draws": 6,
+      "triangles": 1368,
+      "materials": 3
+    },
+    "props3d/sofa_l": {
+      "draws": 4,
+      "triangles": 204,
+      "materials": 2
+    },
+    "props3d/double_bed_modern": {
+      "draws": 6,
+      "triangles": 648,
+      "materials": 3
+    },
+    "props3d/home_office": {
+      "draws": 8,
+      "triangles": 720,
+      "materials": 4
+    },
+    "props3d/closet": {
+      "draws": 8,
+      "triangles": 612,
+      "materials": 4
+    },
+    "props3d/vanity": {
+      "draws": 8,
+      "triangles": 290,
+      "materials": 4
+    },
+    "props3d/ac_condenser": {
+      "draws": 4,
+      "triangles": 492,
+      "materials": 2
+    },
+    "props3d/lawn": {
+      "draws": 2,
+      "triangles": 8,
+      "materials": 1
+    },
+    "props3d/tile_floor": {
+      "draws": 2,
+      "triangles": 24,
+      "materials": 1
+    },
+    "props3d/concrete": {
+      "draws": 2,
+      "triangles": 8,
+      "materials": 1
+    },
+    "props3d/deck_floor": {
+      "draws": 2,
+      "triangles": 24,
+      "materials": 1
+    },
+    "props3d/dirt": {
+      "draws": 2,
+      "triangles": 8,
+      "materials": 1
+    },
+    "props3d/gourmet_counter": {
+      "draws": 6,
+      "triangles": 936,
+      "materials": 3
+    },
+    "props3d/sauna": {
+      "draws": 10,
+      "triangles": 1236,
+      "materials": 5
+    },
+    "props3d/soaking_tub": {
+      "draws": 8,
+      "triangles": 420,
+      "materials": 4
+    },
+    "props3d/pool": {
+      "draws": 8,
+      "triangles": 224,
+      "materials": 4
+    },
+    "props3d/deck": {
+      "draws": 4,
+      "triangles": 102,
+      "materials": 2
+    },
+    "props3d/sun_lounger": {
+      "draws": 6,
+      "triangles": 264,
+      "materials": 3
+    },
+    "props3d/garden_bed": {
+      "draws": 6,
+      "triangles": 3700,
+      "materials": 3
+    },
+    "props3d/fruit_tree": {
+      "draws": 6,
+      "triangles": 3600,
+      "materials": 3
+    },
+    "props3d/palm_tree": {
+      "draws": 4,
+      "triangles": 1016,
+      "materials": 2
+    },
+    "props3d/pergola": {
+      "draws": 4,
+      "triangles": 256,
+      "materials": 2
+    },
+    "props3d/slide": {
+      "draws": 4,
+      "triangles": 228,
+      "materials": 2
+    },
+    "props3d/swing": {
+      "draws": 4,
+      "triangles": 132,
+      "materials": 2
+    },
+    "props3d/bbq_simple": {
+      "draws": 6,
+      "triangles": 1056,
+      "materials": 3
+    },
+    "props3d/garage_car": {
+      "draws": 6,
+      "triangles": 672,
+      "materials": 3
+    },
+    "props3d/window_boards": {
+      "draws": 4,
+      "triangles": 756,
+      "materials": 2
+    },
+    "props3d/barricade": {
+      "draws": 8,
+      "triangles": 528,
+      "materials": 4
+    },
+    "props3d/sandbags": {
+      "draws": 2,
+      "triangles": 240,
+      "materials": 1
+    },
+    "props3d/barbed_wire": {
+      "draws": 4,
+      "triangles": 1872,
+      "materials": 2
+    },
+    "props3d/razor_wire": {
+      "draws": 2,
+      "triangles": 1752,
+      "materials": 1
+    },
+    "props3d/water_bottle_crates": {
+      "draws": 4,
+      "triangles": 1356,
+      "materials": 2
+    },
+    "props3d/canned_food": {
+      "draws": 4,
+      "triangles": 1392,
+      "materials": 2
+    },
+    "props3d/water_jug": {
+      "draws": 2,
+      "triangles": 252,
+      "materials": 1
+    },
+    "props3d/floor_mattress": {
+      "draws": 2,
+      "triangles": 108,
+      "materials": 1
+    },
+    "props3d/lantern": {
+      "draws": 4,
+      "triangles": 228,
+      "materials": 2
+    },
+    "props3d/candles": {
+      "draws": 4,
+      "triangles": 960,
+      "materials": 2
+    },
+    "props3d/open_suitcases": {
+      "draws": 6,
+      "triangles": 216,
+      "materials": 3
+    },
+    "props3d/clothes_on_floor": {
+      "draws": 4,
+      "triangles": 240,
+      "materials": 2
+    },
+    "props3d/fallen_chair": {
+      "draws": 2,
+      "triangles": 72,
+      "materials": 1
+    },
+    "props3d/blood_stains": {
+      "draws": 2,
+      "triangles": 780,
+      "materials": 1
+    },
+    "props3d/open_door": {
+      "draws": 4,
+      "triangles": 132,
+      "materials": 2
+    },
+    "household/fridge": {
+      "draws": 14,
+      "triangles": 888,
+      "materials": 3
+    },
+    "household/fridge_compact": {
+      "draws": 12,
+      "triangles": 444,
+      "materials": 3
+    },
+    "household/kitchen_cabinet_base": {
+      "draws": 22,
+      "triangles": 648,
+      "materials": 3
+    },
+    "household/kitchen_cabinet_wall": {
+      "draws": 16,
+      "triangles": 528,
+      "materials": 3
+    },
+    "household/pantry": {
+      "draws": 16,
+      "triangles": 612,
+      "materials": 3
+    },
+    "household/wardrobe": {
+      "draws": 46,
+      "triangles": 3866,
+      "materials": 5
+    },
+    "household/dresser": {
+      "draws": 28,
+      "triangles": 900,
+      "materials": 3
+    },
+    "household/nightstand": {
+      "draws": 16,
+      "triangles": 600,
+      "materials": 3
+    },
+    "household/bathroom_cabinet": {
+      "draws": 10,
+      "triangles": 398,
+      "materials": 3
+    },
+    "household/stove": {
+      "draws": 20,
+      "triangles": 1706,
+      "materials": 3
+    },
+    "household/gas_bottle": {
+      "draws": 4,
+      "triangles": 708,
+      "materials": 1
+    },
+    "household/sink_kitchen": {
+      "draws": 20,
+      "triangles": 1020,
+      "materials": 3
+    },
+    "household/sink_bathroom": {
+      "draws": 12,
+      "triangles": 840,
+      "materials": 3
+    },
+    "household/shower": {
+      "draws": 12,
+      "triangles": 552,
+      "materials": 3
+    },
+    "household/toilet": {
+      "draws": 6,
+      "triangles": 672,
+      "materials": 2
+    },
+    "household/utility_sink": {
+      "draws": 6,
+      "triangles": 432,
+      "materials": 2
+    },
+    "household/wall_socket": {
+      "draws": 4,
+      "triangles": 168,
+      "materials": 2
+    },
+    "household/wall_switch": {
+      "draws": 4,
+      "triangles": 60,
+      "materials": 1
+    },
+    "household/service_entrance": {
+      "draws": 10,
+      "triangles": 1022,
+      "materials": 4
+    },
+    "household/electrical_panel": {
+      "draws": 8,
+      "triangles": 288,
+      "materials": 2
+    },
+    "household/power_meter": {
+      "draws": 10,
+      "triangles": 458,
+      "materials": 3
+    },
+    "household/conduit_run": {
+      "draws": 0,
+      "triangles": 0,
+      "materials": 0
+    },
+    "household/tv": {
+      "draws": 6,
+      "triangles": 98,
+      "materials": 2
+    },
+    "household/microwave": {
+      "draws": 12,
+      "triangles": 506,
+      "materials": 3
+    },
+    "household/washing_machine": {
+      "draws": 10,
+      "triangles": 504,
+      "materials": 3
+    },
+    "household/sofa": {
+      "draws": 4,
+      "triangles": 420,
+      "materials": 2
+    },
+    "household/armchair": {
+      "draws": 4,
+      "triangles": 324,
+      "materials": 2
+    },
+    "household/dining_chair": {
+      "draws": 4,
+      "triangles": 180,
+      "materials": 2
+    },
+    "household/bed_double": {
+      "draws": 4,
+      "triangles": 252,
+      "materials": 2
+    },
+    "household/bed_single": {
+      "draws": 4,
+      "triangles": 240,
+      "materials": 2
+    },
+    "household/bench": {
+      "draws": 4,
+      "triangles": 240,
+      "materials": 2
+    },
+    "household/blinds": {
+      "draws": 76,
+      "triangles": 576,
+      "materials": 1
+    },
+    "household/curtain": {
+      "draws": 10,
+      "triangles": 912,
+      "materials": 2
+    },
+    "household/trash_bin": {
+      "draws": 4,
+      "triangles": 228,
+      "materials": 1
+    },
+    "household/wheelie_bin": {
+      "draws": 6,
+      "triangles": 528,
+      "materials": 2
+    },
+    "household/mailbox": {
+      "draws": 8,
+      "triangles": 276,
+      "materials": 2
+    },
+    "household/dog_house": {
+      "draws": 8,
+      "triangles": 708,
+      "materials": 4
+    },
+    "household/bbq": {
+      "draws": 8,
+      "triangles": 1788,
+      "materials": 2
+    },
+    "household/clothesline": {
+      "draws": 54,
+      "triangles": 2676,
+      "materials": 3
+    },
+    "household/bunk_bed": {
+      "draws": 4,
+      "triangles": 372,
+      "materials": 2
+    },
+    "household/wood_stove": {
+      "draws": 8,
+      "triangles": 818,
+      "materials": 3
+    },
+    "household/fireplace": {
+      "draws": 6,
+      "triangles": 1044,
+      "materials": 3
+    },
+    "household/outhouse": {
+      "draws": 12,
+      "triangles": 1380,
+      "materials": 3
+    },
+    "household/well": {
+      "draws": 16,
+      "triangles": 1104,
+      "materials": 5
+    },
+    "household/cooler": {
+      "draws": 4,
+      "triangles": 264,
+      "materials": 1
+    },
+    "household/campfire": {
+      "draws": 4,
+      "triangles": 552,
+      "materials": 2
+    },
+    "household/camp_stove": {
+      "draws": 4,
+      "triangles": 396,
+      "materials": 2
+    },
+    "household/gas_canister": {
+      "draws": 4,
+      "triangles": 420,
+      "materials": 1
+    },
+    "household/lantern_lamp": {
+      "draws": 8,
+      "triangles": 816,
+      "materials": 3
+    },
+    "household/camp_chair": {
+      "draws": 6,
+      "triangles": 576,
+      "materials": 3
+    },
+    "household/camp_table": {
+      "draws": 4,
+      "triangles": 228,
+      "materials": 2
+    },
+    "items/model:canned_beans": {
+      "draws": 5,
+      "triangles": 744,
+      "materials": 3
+    },
+    "items/model:water_bottle": {
+      "draws": 4,
+      "triangles": 400,
+      "materials": 4
+    },
+    "items/model:rice": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 4
+    },
+    "items/model:military_ration": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 4
+    },
+    "items/model:cachaca": {
+      "draws": 4,
+      "triangles": 392,
+      "materials": 4
+    },
+    "items/model:first_aid_kit": {
+      "draws": 5,
+      "triangles": 336,
+      "materials": 4
+    },
+    "items/model:bandage": {
+      "draws": 4,
+      "triangles": 144,
+      "materials": 2
+    },
+    "items/model:amoxicillin": {
+      "draws": 7,
+      "triangles": 596,
+      "materials": 7
+    },
+    "items/model:crowbar": {
+      "draws": 4,
+      "triangles": 452,
+      "materials": 2
+    },
+    "items/model:hammer": {
+      "draws": 6,
+      "triangles": 176,
+      "materials": 6
+    },
+    "items/model:machete": {
+      "draws": 4,
+      "triangles": 132,
+      "materials": 4
+    },
+    "items/model:axe": {
+      "draws": 4,
+      "triangles": 132,
+      "materials": 4
+    },
+    "items/model:nail_bat": {
+      "draws": 10,
+      "triangles": 440,
+      "materials": 2
+    },
+    "items/model:hiking_backpack_40l": {
+      "draws": 7,
+      "triangles": 282,
+      "materials": 5
+    },
+    "items/model:flashlight": {
+      "draws": 7,
+      "triangles": 1060,
+      "materials": 7
+    },
+    "items/model:portable_radio": {
+      "draws": 7,
+      "triangles": 504,
+      "materials": 7
+    },
+    "items/model:house_key": {
+      "draws": 4,
+      "triangles": 472,
+      "materials": 3
+    },
+    "items/model:survivor_diary": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 6
+    },
+    "items/model:motorcycle_helmet": {
+      "draws": 4,
+      "triangles": 840,
+      "materials": 4
+    },
+    "items/model:lpg_cylinder_13kg": {
+      "draws": 6,
+      "triangles": 712,
+      "materials": 6
+    },
+    "items/model:fuel_jerrycan": {
+      "draws": 5,
+      "triangles": 88,
+      "materials": 5
+    },
+    "items/model:walkie_talkies": {
+      "draws": 6,
+      "triangles": 120,
+      "materials": 6
+    },
+    "items/model:batteries": {
+      "draws": 6,
+      "triangles": 336,
+      "materials": 6
+    },
+    "items/model:wooden_plank": {
+      "draws": 6,
+      "triangles": 108,
+      "materials": 4
+    },
+    "items/model:sugar": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 6
+    },
+    "items/model:chocolate_bar": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 4
+    },
+    "items/model:potatoes": {
+      "draws": 6,
+      "triangles": 228,
+      "materials": 4
+    },
+    "items/model:biscuits": {
+      "draws": 9,
+      "triangles": 324,
+      "materials": 5
+    },
+    "items/model:coffee": {
+      "draws": 5,
+      "triangles": 96,
+      "materials": 5
+    },
+    "items/model:raw_beef": {
+      "draws": 8,
+      "triangles": 300,
+      "materials": 8
+    },
+    "items/model:game_meat": {
+      "draws": 7,
+      "triangles": 376,
+      "materials": 5
+    },
+    "items/model:jerked_beef": {
+      "draws": 7,
+      "triangles": 96,
+      "materials": 4
+    },
+    "items/model:home_preserves": {
+      "draws": 7,
+      "triangles": 336,
+      "materials": 7
+    },
+    "items/model:eggs": {
+      "draws": 10,
+      "triangles": 336,
+      "materials": 7
+    },
+    "items/model:cassava_flour": {
+      "draws": 6,
+      "triangles": 108,
+      "materials": 6
+    },
+    "items/model:beans": {
+      "draws": 7,
+      "triangles": 156,
+      "materials": 5
+    },
+    "items/model:frozen_chicken": {
+      "draws": 10,
+      "triangles": 332,
+      "materials": 6
+    },
+    "items/model:orange": {
+      "draws": 4,
+      "triangles": 236,
+      "materials": 4
+    },
+    "items/model:condensed_milk": {
+      "draws": 7,
+      "triangles": 320,
+      "materials": 7
+    },
+    "items/model:pasta": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 5
+    },
+    "items/model:instant_noodles": {
+      "draws": 6,
+      "triangles": 144,
+      "materials": 6
+    },
+    "items/model:cassava_root": {
+      "draws": 6,
+      "triangles": 184,
+      "materials": 5
+    },
+    "items/model:canned_corn_and_peas": {
+      "draws": 7,
+      "triangles": 320,
+      "materials": 7
+    },
+    "items/model:mortadella": {
+      "draws": 7,
+      "triangles": 228,
+      "materials": 4
+    },
+    "items/model:fresh_fish": {
+      "draws": 5,
+      "triangles": 212,
+      "materials": 5
+    },
+    "items/model:salted_fish": {
+      "draws": 5,
+      "triangles": 152,
+      "materials": 3
+    },
+    "items/model:banana_bunch": {
+      "draws": 16,
+      "triangles": 372,
+      "materials": 3
+    },
+    "items/model:honey_jar": {
+      "draws": 7,
+      "triangles": 336,
+      "materials": 7
+    },
+    "items/model:bread": {
+      "draws": 4,
+      "triangles": 156,
+      "materials": 2
+    },
+    "items/model:cheese": {
+      "draws": 5,
+      "triangles": 188,
+      "materials": 3
+    },
+    "items/model:rapadura": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 6
+    },
+    "items/model:dog_food": {
+      "draws": 10,
+      "triangles": 228,
+      "materials": 6
+    },
+    "items/model:salt": {
+      "draws": 6,
+      "triangles": 288,
+      "materials": 6
+    },
+    "items/model:snack_chips": {
+      "draws": 6,
+      "triangles": 108,
+      "materials": 6
+    },
+    "items/model:canned_sausages": {
+      "draws": 8,
+      "triangles": 312,
+      "materials": 8
+    },
+    "items/model:canned_sardines": {
+      "draws": 6,
+      "triangles": 128,
+      "materials": 6
+    },
+    "items/model:cooking_oil": {
+      "draws": 6,
+      "triangles": 288,
+      "materials": 6
+    },
+    "items/model:beer_can": {
+      "draws": 7,
+      "triangles": 396,
+      "materials": 5
+    },
+    "items/model:energy_drink": {
+      "draws": 8,
+      "triangles": 348,
+      "materials": 6
+    },
+    "items/model:water_jug_5l": {
+      "draws": 9,
+      "triangles": 180,
+      "materials": 5
+    },
+    "items/model:sports_drink": {
+      "draws": 5,
+      "triangles": 360,
+      "materials": 5
+    },
+    "items/model:milk_carton": {
+      "draws": 7,
+      "triangles": 136,
+      "materials": 6
+    },
+    "items/model:soda_can": {
+      "draws": 6,
+      "triangles": 332,
+      "materials": 4
+    },
+    "items/model:juice_box": {
+      "draws": 6,
+      "triangles": 112,
+      "materials": 6
+    },
+    "items/model:communion_wine": {
+      "draws": 6,
+      "triangles": 360,
+      "materials": 6
+    },
+    "items/model:coconut_water": {
+      "draws": 6,
+      "triangles": 328,
+      "materials": 6
+    },
+    "items/model:dirty_water": {
+      "draws": 5,
+      "triangles": 376,
+      "materials": 5
+    },
+    "items/model:painkillers": {
+      "draws": 8,
+      "triangles": 216,
+      "materials": 3
+    },
+    "items/model:tramadol": {
+      "draws": 5,
+      "triangles": 88,
+      "materials": 5
+    },
+    "items/model:ibuprofen": {
+      "draws": 5,
+      "triangles": 88,
+      "materials": 5
+    },
+    "items/model:antihistamine": {
+      "draws": 5,
+      "triangles": 88,
+      "materials": 5
+    },
+    "items/model:ceftriaxone": {
+      "draws": 13,
+      "triangles": 396,
+      "materials": 13
+    },
+    "items/model:clonazepam": {
+      "draws": 5,
+      "triangles": 88,
+      "materials": 5
+    },
+    "items/model:activated_charcoal": {
+      "draws": 6,
+      "triangles": 128,
+      "materials": 4
+    },
+    "items/model:adhesive_bandages": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:medical_tape": {
+      "draws": 4,
+      "triangles": 288,
+      "materials": 4
+    },
+    "items/model:sterile_gauze": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 6
+    },
+    "items/model:povidone_iodine": {
+      "draws": 5,
+      "triangles": 336,
+      "materials": 5
+    },
+    "items/model:suture_kit": {
+      "draws": 6,
+      "triangles": 348,
+      "materials": 6
+    },
+    "items/model:exam_gloves": {
+      "draws": 8,
+      "triangles": 96,
+      "materials": 3
+    },
+    "items/model:n95_mask": {
+      "draws": 7,
+      "triangles": 152,
+      "materials": 4
+    },
+    "items/model:multivitamin": {
+      "draws": 5,
+      "triangles": 336,
+      "materials": 5
+    },
+    "items/model:maintenance_medication": {
+      "draws": 6,
+      "triangles": 264,
+      "materials": 6
+    },
+    "items/model:rehydration_salts": {
+      "draws": 7,
+      "triangles": 104,
+      "materials": 6
+    },
+    "items/model:syringe": {
+      "draws": 10,
+      "triangles": 276,
+      "materials": 10
+    },
+    "items/model:antivenom": {
+      "draws": 10,
+      "triangles": 120,
+      "materials": 10
+    },
+    "items/model:saline_iv_bag": {
+      "draws": 7,
+      "triangles": 204,
+      "materials": 7
+    },
+    "items/model:splint": {
+      "draws": 4,
+      "triangles": 80,
+      "materials": 4
+    },
+    "items/model:thermometer": {
+      "draws": 5,
+      "triangles": 144,
+      "materials": 5
+    },
+    "items/model:alcohol_70": {
+      "draws": 5,
+      "triangles": 336,
+      "materials": 5
+    },
+    "items/model:can_opener": {
+      "draws": 7,
+      "triangles": 124,
+      "materials": 3
+    },
+    "items/model:pliers": {
+      "draws": 8,
+      "triangles": 116,
+      "materials": 3
+    },
+    "items/model:bolt_cutters": {
+      "draws": 9,
+      "triangles": 208,
+      "materials": 5
+    },
+    "items/model:bucket": {
+      "draws": 6,
+      "triangles": 228,
+      "materials": 4
+    },
+    "items/model:binoculars": {
+      "draws": 10,
+      "triangles": 396,
+      "materials": 4
+    },
+    "items/model:matches": {
+      "draws": 9,
+      "triangles": 144,
+      "materials": 5
+    },
+    "items/model:pocket_knife": {
+      "draws": 6,
+      "triangles": 92,
+      "materials": 4
+    },
+    "items/model:screwdriver": {
+      "draws": 7,
+      "triangles": 204,
+      "materials": 5
+    },
+    "items/model:adjustable_wrench": {
+      "draws": 6,
+      "triangles": 112,
+      "materials": 3
+    },
+    "items/model:hoe": {
+      "draws": 6,
+      "triangles": 92,
+      "materials": 4
+    },
+    "items/model:fire_extinguisher": {
+      "draws": 11,
+      "triangles": 368,
+      "materials": 6
+    },
+    "items/model:duct_tape": {
+      "draws": 3,
+      "triangles": 268,
+      "materials": 3
+    },
+    "items/model:camp_stove": {
+      "draws": 12,
+      "triangles": 236,
+      "materials": 5
+    },
+    "items/model:lighter": {
+      "draws": 5,
+      "triangles": 80,
+      "materials": 5
+    },
+    "items/model:lockpick_kit": {
+      "draws": 6,
+      "triangles": 92,
+      "materials": 4
+    },
+    "items/model:sewing_kit": {
+      "draws": 9,
+      "triangles": 228,
+      "materials": 9
+    },
+    "items/model:car_jack": {
+      "draws": 14,
+      "triangles": 188,
+      "materials": 4
+    },
+    "items/model:mechanic_toolbox": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 7
+    },
+    "items/model:gas_torch": {
+      "draws": 8,
+      "triangles": 320,
+      "materials": 7
+    },
+    "items/model:inverter_welder": {
+      "draws": 10,
+      "triangles": 200,
+      "materials": 7
+    },
+    "items/model:pot": {
+      "draws": 7,
+      "triangles": 312,
+      "materials": 6
+    },
+    "items/model:cordless_drill": {
+      "draws": 8,
+      "triangles": 260,
+      "materials": 5
+    },
+    "items/model:flint_striker": {
+      "draws": 5,
+      "triangles": 140,
+      "materials": 5
+    },
+    "items/model:sharpening_stone": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:shovel": {
+      "draws": 6,
+      "triangles": 112,
+      "materials": 4
+    },
+    "items/model:hacksaw": {
+      "draws": 6,
+      "triangles": 92,
+      "materials": 4
+    },
+    "items/model:handsaw": {
+      "draws": 5,
+      "triangles": 92,
+      "materials": 2
+    },
+    "items/model:scissors": {
+      "draws": 9,
+      "triangles": 232,
+      "materials": 3
+    },
+    "items/model:recurve_bow": {
+      "draws": 12,
+      "triangles": 144,
+      "materials": 4
+    },
+    "items/model:crossbow": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 6
+    },
+    "items/model:iron_pipe": {
+      "draws": 7,
+      "triangles": 224,
+      "materials": 4
+    },
+    "items/model:meat_cleaver": {
+      "draws": 8,
+      "triangles": 156,
+      "materials": 7
+    },
+    "items/model:slingshot": {
+      "draws": 7,
+      "triangles": 204,
+      "materials": 4
+    },
+    "items/model:knife": {
+      "draws": 6,
+      "triangles": 156,
+      "materials": 5
+    },
+    "items/model:tactical_knife": {
+      "draws": 7,
+      "triangles": 180,
+      "materials": 5
+    },
+    "items/model:arrows_and_bolts": {
+      "draws": 7,
+      "triangles": 164,
+      "materials": 6
+    },
+    "items/model:sickle": {
+      "draws": 9,
+      "triangles": 168,
+      "materials": 4
+    },
+    "items/model:cast_iron_skillet": {
+      "draws": 5,
+      "triangles": 320,
+      "materials": 3
+    },
+    "items/model:improvised_spear": {
+      "draws": 6,
+      "triangles": 172,
+      "materials": 5
+    },
+    "items/model:hatchet": {
+      "draws": 6,
+      "triangles": 164,
+      "materials": 5
+    },
+    "items/model:sledgehammer": {
+      "draws": 6,
+      "triangles": 172,
+      "materials": 6
+    },
+    "items/model:chainsaw": {
+      "draws": 10,
+      "triangles": 140,
+      "materials": 5
+    },
+    "items/model:pickaxe": {
+      "draws": 9,
+      "triangles": 252,
+      "materials": 7
+    },
+    "items/model:baseball_bat": {
+      "draws": 4,
+      "triangles": 544,
+      "materials": 3
+    },
+    "items/model:police_baton": {
+      "draws": 8,
+      "triangles": 256,
+      "materials": 7
+    },
+    "items/model:wire_roll": {
+      "draws": 4,
+      "triangles": 336,
+      "materials": 4
+    },
+    "items/model:barbed_wire": {
+      "draws": 9,
+      "triangles": 264,
+      "materials": 5
+    },
+    "items/model:glass_shards": {
+      "draws": 5,
+      "triangles": 103,
+      "materials": 2
+    },
+    "items/model:sheet_metal": {
+      "draws": 10,
+      "triangles": 200,
+      "materials": 4
+    },
+    "items/model:cement_bag": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 6
+    },
+    "items/model:epoxy_glue": {
+      "draws": 9,
+      "triangles": 240,
+      "materials": 8
+    },
+    "items/model:electronic_components": {
+      "draws": 17,
+      "triangles": 288,
+      "materials": 9
+    },
+    "items/model:rope": {
+      "draws": 7,
+      "triangles": 336,
+      "materials": 4
+    },
+    "items/model:copper_wire": {
+      "draws": 4,
+      "triangles": 280,
+      "materials": 4
+    },
+    "items/model:pet_bottle": {
+      "draws": 4,
+      "triangles": 288,
+      "materials": 4
+    },
+    "items/model:glass_bottle": {
+      "draws": 4,
+      "triangles": 296,
+      "materials": 4
+    },
+    "items/model:empty_can": {
+      "draws": 4,
+      "triangles": 252,
+      "materials": 4
+    },
+    "items/model:firewood": {
+      "draws": 9,
+      "triangles": 288,
+      "materials": 9
+    },
+    "items/model:tarp": {
+      "draws": 10,
+      "triangles": 200,
+      "materials": 7
+    },
+    "items/model:screws": {
+      "draws": 8,
+      "triangles": 208,
+      "materials": 5
+    },
+    "items/model:nails": {
+      "draws": 12,
+      "triangles": 296,
+      "materials": 1
+    },
+    "items/model:raffia_sack": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:scrap_metal": {
+      "draws": 6,
+      "triangles": 132,
+      "materials": 6
+    },
+    "items/model:bricks": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 4
+    },
+    "items/model:rag": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 5
+    },
+    "items/model:rebar": {
+      "draws": 4,
+      "triangles": 892,
+      "materials": 4
+    },
+    "items/model:lubricant_spray": {
+      "draws": 6,
+      "triangles": 308,
+      "materials": 5
+    },
+    "items/model:army_camouflage_uniform": {
+      "draws": 14,
+      "triangles": 168,
+      "materials": 3
+    },
+    "items/model:backpack": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 3
+    },
+    "items/model:ballistic_vest": {
+      "draws": 11,
+      "triangles": 132,
+      "materials": 4
+    },
+    "items/model:battery_9v": {
+      "draws": 4,
+      "triangles": 88,
+      "materials": 4
+    },
+    "items/model:bean_seeds": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:beekeeper_suit": {
+      "draws": 11,
+      "triangles": 248,
+      "materials": 5
+    },
+    "items/model:candles": {
+      "draws": 3,
+      "triangles": 144,
+      "materials": 3
+    },
+    "items/model:car_alarm_remote": {
+      "draws": 5,
+      "triangles": 336,
+      "materials": 4
+    },
+    "items/model:car_battery_12v": {
+      "draws": 6,
+      "triangles": 112,
+      "materials": 5
+    },
+    "items/model:car_key": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 4
+    },
+    "items/model:cash": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 2
+    },
+    "items/model:cassava_cuttings": {
+      "draws": 8,
+      "triangles": 256,
+      "materials": 1
+    },
+    "items/model:cb_radio": {
+      "draws": 9,
+      "triangles": 184,
+      "materials": 9
+    },
+    "items/model:cell_key": {
+      "draws": 13,
+      "triangles": 196,
+      "materials": 1
+    },
+    "items/model:charcoal_bag": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 2
+    },
+    "items/model:cigarettes": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 3
+    },
+    "items/model:city_map": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 4
+    },
+    "items/model:combat_boots": {
+      "draws": 14,
+      "triangles": 248,
+      "materials": 3
+    },
+    "items/model:cooler_box": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 2
+    },
+    "items/model:corn_seeds": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:crossbody_bag": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 3
+    },
+    "items/model:delivery_bag": {
+      "draws": 7,
+      "triangles": 84,
+      "materials": 3
+    },
+    "items/model:denim_jacket": {
+      "draws": 13,
+      "triangles": 156,
+      "materials": 4
+    },
+    "items/model:diesel": {
+      "draws": 5,
+      "triangles": 208,
+      "materials": 3
+    },
+    "items/model:diy_magazine": {
+      "draws": 7,
+      "triangles": 84,
+      "materials": 7
+    },
+    "items/model:dog_tag": {
+      "draws": 4,
+      "triangles": 364,
+      "materials": 2
+    },
+    "items/model:electric_fence_energizer": {
+      "draws": 11,
+      "triangles": 248,
+      "materials": 10
+    },
+    "items/model:extension_cord": {
+      "draws": 5,
+      "triangles": 192,
+      "materials": 3
+    },
+    "items/model:fanny_pack": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 3
+    },
+    "items/model:farmers_almanac": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 4
+    },
+    "items/model:fertilizer_bag": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 4
+    },
+    "items/model:firefighter_suit": {
+      "draws": 17,
+      "triangles": 204,
+      "materials": 3
+    },
+    "items/model:fishing_net": {
+      "draws": 22,
+      "triangles": 264,
+      "materials": 1
+    },
+    "items/model:fishing_rod": {
+      "draws": 8,
+      "triangles": 172,
+      "materials": 8
+    },
+    "items/model:fishing_tackle_box": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:flip_flops": {
+      "draws": 12,
+      "triangles": 312,
+      "materials": 2
+    },
+    "items/model:folding_solar_panel": {
+      "draws": 10,
+      "triangles": 168,
+      "materials": 10
+    },
+    "items/model:gas_cartridge": {
+      "draws": 4,
+      "triangles": 176,
+      "materials": 3
+    },
+    "items/model:gasoline": {
+      "draws": 5,
+      "triangles": 208,
+      "materials": 3
+    },
+    "items/model:generator_key": {
+      "draws": 15,
+      "triangles": 180,
+      "materials": 3
+    },
+    "items/model:hard_hat": {
+      "draws": 5,
+      "triangles": 260,
+      "materials": 2
+    },
+    "items/model:headlamp": {
+      "draws": 7,
+      "triangles": 120,
+      "materials": 3
+    },
+    "items/model:hoodie": {
+      "draws": 10,
+      "triangles": 156,
+      "materials": 3
+    },
+    "items/model:janitor_keys": {
+      "draws": 30,
+      "triangles": 360,
+      "materials": 3
+    },
+    "items/model:jeans": {
+      "draws": 7,
+      "triangles": 84,
+      "materials": 4
+    },
+    "items/model:kale_and_lettuce_seeds": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:kerosene": {
+      "draws": 5,
+      "triangles": 208,
+      "materials": 3
+    },
+    "items/model:laptop": {
+      "draws": 4,
+      "triangles": 68,
+      "materials": 4
+    },
+    "items/model:leather_motorcycle_jacket": {
+      "draws": 13,
+      "triangles": 156,
+      "materials": 4
+    },
+    "items/model:leather_motorcycle_pants": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 3
+    },
+    "items/model:leather_work_gloves": {
+      "draws": 8,
+      "triangles": 96,
+      "materials": 2
+    },
+    "items/model:led_camp_lantern": {
+      "draws": 6,
+      "triangles": 228,
+      "materials": 5
+    },
+    "items/model:magazine_arm_guard": {
+      "draws": 15,
+      "triangles": 180,
+      "materials": 6
+    },
+    "items/model:magazines_and_comics": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 6
+    },
+    "items/model:master_key": {
+      "draws": 16,
+      "triangles": 192,
+      "materials": 1
+    },
+    "items/model:mechanic_coveralls": {
+      "draws": 13,
+      "triangles": 156,
+      "materials": 3
+    },
+    "items/model:military_backpack": {
+      "draws": 8,
+      "triangles": 116,
+      "materials": 4
+    },
+    "items/model:military_radio": {
+      "draws": 12,
+      "triangles": 300,
+      "materials": 11
+    },
+    "items/model:mobile_phone": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 4
+    },
+    "items/model:motor_oil": {
+      "draws": 5,
+      "triangles": 100,
+      "materials": 3
+    },
+    "items/model:night_vision_goggles": {
+      "draws": 9,
+      "triangles": 292,
+      "materials": 5
+    },
+    "items/model:note": {
+      "draws": 2,
+      "triangles": 24,
+      "materials": 2
+    },
+    "items/model:padded_coat": {
+      "draws": 11,
+      "triangles": 168,
+      "materials": 3
+    },
+    "items/model:padlock_key": {
+      "draws": 11,
+      "triangles": 132,
+      "materials": 3
+    },
+    "items/model:photo": {
+      "draws": 2,
+      "triangles": 24,
+      "materials": 2
+    },
+    "items/model:portable_generator": {
+      "draws": 20,
+      "triangles": 332,
+      "materials": 9
+    },
+    "items/model:power_bank": {
+      "draws": 6,
+      "triangles": 72,
+      "materials": 4
+    },
+    "items/model:pumpkin_seeds": {
+      "draws": 5,
+      "triangles": 60,
+      "materials": 5
+    },
+    "items/model:raincoat": {
+      "draws": 9,
+      "triangles": 168,
+      "materials": 4
+    },
+    "items/model:road_map": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 4
+    },
+    "items/model:rolling_suitcase": {
+      "draws": 11,
+      "triangles": 212,
+      "materials": 2
+    },
+    "items/model:rubber_boots": {
+      "draws": 12,
+      "triangles": 296,
+      "materials": 3
+    },
+    "items/model:safe_key": {
+      "draws": 16,
+      "triangles": 192,
+      "materials": 1
+    },
+    "items/model:safety_goggles": {
+      "draws": 8,
+      "triangles": 208,
+      "materials": 3
+    },
+    "items/model:sheet_metal_forearm_guard": {
+      "draws": 23,
+      "triangles": 276,
+      "materials": 3
+    },
+    "items/model:shopping_bag": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 2
+    },
+    "items/model:shopping_cart": {
+      "draws": 30,
+      "triangles": 440,
+      "materials": 2
+    },
+    "items/model:skill_book": {
+      "draws": 8,
+      "triangles": 96,
+      "materials": 3
+    },
+    "items/model:snare_trap": {
+      "draws": 4,
+      "triangles": 324,
+      "materials": 4
+    },
+    "items/model:sneakers": {
+      "draws": 11,
+      "triangles": 188,
+      "materials": 4
+    },
+    "items/model:tactical_vest": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 3
+    },
+    "items/model:technical_manual": {
+      "draws": 7,
+      "triangles": 84,
+      "materials": 4
+    },
+    "items/model:tool_belt": {
+      "draws": 9,
+      "triangles": 108,
+      "materials": 3
+    },
+    "items/model:trash_bag": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 1
+    },
+    "items/model:trekking_backpack_70l": {
+      "draws": 8,
+      "triangles": 96,
+      "materials": 3
+    },
+    "items/model:tshirt": {
+      "draws": 7,
+      "triangles": 84,
+      "materials": 3
+    },
+    "items/model:watering_can": {
+      "draws": 7,
+      "triangles": 244,
+      "materials": 2
+    },
+    "items/model:wheelbarrow": {
+      "draws": 14,
+      "triangles": 228,
+      "materials": 5
+    },
+    "items/model:windup_alarm_clock": {
+      "draws": 13,
+      "triangles": 392,
+      "materials": 6
+    },
+    "items/model:kabar": {
+      "draws": 11,
+      "triangles": 340,
+      "materials": 4
+    },
+    "items/model:katana": {
+      "draws": 13,
+      "triangles": 676,
+      "materials": 13
+    },
+    "items/model:brass_knuckles": {
+      "draws": 7,
+      "triangles": 296,
+      "materials": 1
+    },
+    "items/shape:can": {
+      "draws": 4,
+      "triangles": 224,
+      "materials": 2
+    },
+    "items/shape:bag": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 3
+    },
+    "items/shape:box": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 3
+    },
+    "items/shape:bottle": {
+      "draws": 2,
+      "triangles": 180,
+      "materials": 2
+    },
+    "items/shape:tool": {
+      "draws": 2,
+      "triangles": 52,
+      "materials": 2
+    },
+    "items/shape:roll": {
+      "draws": 2,
+      "triangles": 120,
+      "materials": 2
+    },
+    "items/shape:dish": {
+      "draws": 1,
+      "triangles": 64,
+      "materials": 1
+    },
+    "items/shape:cloth": {
+      "draws": 2,
+      "triangles": 24,
+      "materials": 2
+    },
+    "items/shape:shoe": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 2
+    },
+    "items/shape:jar": {
+      "draws": 2,
+      "triangles": 112,
+      "materials": 2
+    },
+    "items/shape:paper": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 2
+    },
+    "items/shape:fruit": {
+      "draws": 2,
+      "triangles": 192,
+      "materials": 2
+    },
+    "items/shape:cup": {
+      "draws": 1,
+      "triangles": 140,
+      "materials": 1
+    },
+    "items/shape:tube": {
+      "draws": 3,
+      "triangles": 108,
+      "materials": 2
+    },
+    "items/shape:blade": {
+      "draws": 2,
+      "triangles": 56,
+      "materials": 2
+    },
+    "items/shape:long_tool": {
+      "draws": 2,
+      "triangles": 52,
+      "materials": 2
+    },
+    "items/shape:garment": {
+      "draws": 3,
+      "triangles": 36,
+      "materials": 1
+    },
+    "items/shape:backpack": {
+      "draws": 5,
+      "triangles": 180,
+      "materials": 3
+    },
+    "items/shape:jerrycan": {
+      "draws": 3,
+      "triangles": 64,
+      "materials": 2
+    },
+    "items/shape:tank": {
+      "draws": 3,
+      "triangles": 256,
+      "materials": 2
+    },
+    "items/shape:book": {
+      "draws": 4,
+      "triangles": 48,
+      "materials": 3
+    },
+    "items/shape:key": {
+      "draws": 4,
+      "triangles": 136,
+      "materials": 2
+    },
+    "items/shape:battery": {
+      "draws": 2,
+      "triangles": 88,
+      "materials": 2
+    },
+    "items/shape:plank": {
+      "draws": 3,
+      "triangles": 60,
+      "materials": 2
+    },
+    "items/shape:device": {
+      "draws": 3,
+      "triangles": 56,
+      "materials": 3
+    },
+    "weapons/glock_17": {
+      "draws": 102,
+      "triangles": 10500,
+      "materials": 7
+    },
+    "weapons/glock_18": {
+      "draws": 104,
+      "triangles": 10800,
+      "materials": 7
+    },
+    "weapons/glock_19": {
+      "draws": 102,
+      "triangles": 10500,
+      "materials": 7
+    },
+    "weapons/taurus_g2c": {
+      "draws": 64,
+      "triangles": 9012,
+      "materials": 8
+    },
+    "weapons/taurus_ts9": {
+      "draws": 82,
+      "triangles": 11820,
+      "materials": 8
+    },
+    "weapons/beretta_92fs": {
+      "draws": 90,
+      "triangles": 12164,
+      "materials": 10
+    },
+    "weapons/sig_sauer_p226": {
+      "draws": 78,
+      "triangles": 11220,
+      "materials": 8
+    },
+    "weapons/cz_75": {
+      "draws": 72,
+      "triangles": 10212,
+      "materials": 8
+    },
+    "weapons/taurus_pt100": {
+      "draws": 68,
+      "triangles": 9612,
+      "materials": 7
+    },
+    "weapons/colt_m1911": {
+      "draws": 92,
+      "triangles": 11836,
+      "materials": 10
+    },
+    "weapons/makarov_pm": {
+      "draws": 64,
+      "triangles": 8420,
+      "materials": 7
+    },
+    "weapons/fn_five_seven": {
+      "draws": 80,
+      "triangles": 11520,
+      "materials": 8
+    },
+    "weapons/desert_eagle_mark_xix": {
+      "draws": 96,
+      "triangles": 13620,
+      "materials": 6
+    },
+    "weapons/taurus_82": {
+      "draws": 52,
+      "triangles": 5604,
+      "materials": 6
+    },
+    "weapons/sw_686": {
+      "draws": 64,
+      "triangles": 7152,
+      "materials": 6
+    },
+    "weapons/sw_model_29": {
+      "draws": 52,
+      "triangles": 5604,
+      "materials": 6
+    },
+    "weapons/hk_mp5a3": {
+      "draws": 110,
+      "triangles": 15044,
+      "materials": 8
+    },
+    "weapons/taurus_smt9": {
+      "draws": 250,
+      "triangles": 36540,
+      "materials": 8
+    },
+    "weapons/hk_ump_45": {
+      "draws": 164,
+      "triangles": 23876,
+      "materials": 8
+    },
+    "weapons/uzi": {
+      "draws": 68,
+      "triangles": 9476,
+      "materials": 7
+    },
+    "weapons/fn_p90": {
+      "draws": 50,
+      "triangles": 3236,
+      "materials": 7
+    },
+    "weapons/kriss_vector": {
+      "draws": 236,
+      "triangles": 33724,
+      "materials": 9
+    },
+    "weapons/thompson_m1a1": {
+      "draws": 80,
+      "triangles": 9248,
+      "materials": 8
+    },
+    "weapons/cz_scorpion_evo_3": {
+      "draws": 250,
+      "triangles": 36060,
+      "materials": 8
+    },
+    "weapons/mac_10": {
+      "draws": 48,
+      "triangles": 6444,
+      "materials": 6
+    },
+    "weapons/remington_870": {
+      "draws": 62,
+      "triangles": 8184,
+      "materials": 7
+    },
+    "weapons/mossberg_500": {
+      "draws": 60,
+      "triangles": 7884,
+      "materials": 7
+    },
+    "weapons/cbc_pump_military_3_0": {
+      "draws": 128,
+      "triangles": 18084,
+      "materials": 7
+    },
+    "weapons/benelli_m4": {
+      "draws": 178,
+      "triangles": 24568,
+      "materials": 8
+    },
+    "weapons/franchi_spas_12": {
+      "draws": 80,
+      "triangles": 10788,
+      "materials": 6
+    },
+    "weapons/kel_tec_ksg": {
+      "draws": 94,
+      "triangles": 13124,
+      "materials": 7
+    },
+    "weapons/saiga_12": {
+      "draws": 92,
+      "triangles": 12456,
+      "materials": 8
+    },
+    "weapons/aa_12": {
+      "draws": 102,
+      "triangles": 13980,
+      "materials": 8
+    },
+    "weapons/boito_double_barrel": {
+      "draws": 42,
+      "triangles": 5120,
+      "materials": 9
+    },
+    "weapons/ak_47": {
+      "draws": 110,
+      "triangles": 18632,
+      "materials": 8
+    },
+    "weapons/akm": {
+      "draws": 108,
+      "triangles": 18332,
+      "materials": 9
+    },
+    "weapons/ak_74": {
+      "draws": 106,
+      "triangles": 18020,
+      "materials": 9
+    },
+    "weapons/ak_12": {
+      "draws": 310,
+      "triangles": 44604,
+      "materials": 10
+    },
+    "weapons/imbel_ia2": {
+      "draws": 170,
+      "triangles": 24556,
+      "materials": 7
+    },
+    "weapons/taurus_t4": {
+      "draws": 336,
+      "triangles": 48472,
+      "materials": 9
+    },
+    "weapons/colt_m4a1": {
+      "draws": 316,
+      "triangles": 45252,
+      "materials": 9
+    },
+    "weapons/colt_m16a2": {
+      "draws": 124,
+      "triangles": 17468,
+      "materials": 8
+    },
+    "weapons/hk416": {
+      "draws": 362,
+      "triangles": 52372,
+      "materials": 9
+    },
+    "weapons/steyr_aug_a1": {
+      "draws": 50,
+      "triangles": 4420,
+      "materials": 10
+    },
+    "weapons/fn_fal": {
+      "draws": 108,
+      "triangles": 15100,
+      "materials": 8
+    },
+    "weapons/hk_g3a3": {
+      "draws": 106,
+      "triangles": 14524,
+      "materials": 8
+    },
+    "weapons/sks": {
+      "draws": 56,
+      "triangles": 6900,
+      "materials": 8
+    },
+    "weapons/m14_ebr": {
+      "draws": 398,
+      "triangles": 56232,
+      "materials": 9
+    },
+    "weapons/svd_dragunov": {
+      "draws": 118,
+      "triangles": 19480,
+      "materials": 9
+    },
+    "weapons/fn_scar_h": {
+      "draws": 354,
+      "triangles": 51220,
+      "materials": 8
+    },
+    "weapons/knights_sr_25_mk11": {
+      "draws": 470,
+      "triangles": 66828,
+      "materials": 9
+    },
+    "weapons/hk_psg_1": {
+      "draws": 146,
+      "triangles": 18236,
+      "materials": 9
+    },
+    "weapons/steyr_ssg_69": {
+      "draws": 78,
+      "triangles": 10288,
+      "materials": 10
+    },
+    "weapons/barrett_mrad": {
+      "draws": 450,
+      "triangles": 63080,
+      "materials": 10
+    },
+    "weapons/cheytac_m200": {
+      "draws": 174,
+      "triangles": 21444,
+      "materials": 10
+    },
+    "weapons/remington_700": {
+      "draws": 78,
+      "triangles": 10288,
+      "materials": 10
+    },
+    "weapons/m24_sws": {
+      "draws": 88,
+      "triangles": 11536,
+      "materials": 10
+    },
+    "weapons/mosin_nagant_91_30": {
+      "draws": 60,
+      "triangles": 6336,
+      "materials": 9
+    },
+    "weapons/accuracy_awm": {
+      "draws": 136,
+      "triangles": 15980,
+      "materials": 10
+    },
+    "weapons/sako_trg_42": {
+      "draws": 136,
+      "triangles": 15824,
+      "materials": 10
+    },
+    "weapons/barrett_m82a1": {
+      "draws": 166,
+      "triangles": 21228,
+      "materials": 9
+    },
+    "weapons/ruger_10_22": {
+      "draws": 52,
+      "triangles": 6544,
+      "materials": 8
+    },
+    "weapons/cbc_7022": {
+      "draws": 52,
+      "triangles": 6544,
+      "materials": 8
+    },
+    "weapons/cbc_122": {
+      "draws": 56,
+      "triangles": 6208,
+      "materials": 9
+    },
+    "weapons/winchester_1894": {
+      "draws": 66,
+      "triangles": 7920,
+      "materials": 8
+    },
+    "weapons/rossi_puma": {
+      "draws": 62,
+      "triangles": 7792,
+      "materials": 8
+    },
+    "weapons/hunting_rifle_30_06": {
+      "draws": 78,
+      "triangles": 10288,
+      "materials": 10
+    },
+    "weapons/fn_minimi": {
+      "draws": 130,
+      "triangles": 16328,
+      "materials": 10
+    },
+    "weapons/pkm": {
+      "draws": 98,
+      "triangles": 11684,
+      "materials": 10
+    },
+    "weapons/m60": {
+      "draws": 124,
+      "triangles": 15428,
+      "materials": 10
+    },
+    "weapons/rpg_7": {
+      "draws": 52,
+      "triangles": 4308,
+      "materials": 7
+    },
+    "weapons/m72_law": {
+      "draws": 28,
+      "triangles": 2612,
+      "materials": 7
+    },
+    "weapons/at4": {
+      "draws": 24,
+      "triangles": 2784,
+      "materials": 5
+    },
+    "weapons/carl_gustaf_m4": {
+      "draws": 34,
+      "triangles": 3796,
+      "materials": 5
+    },
+    "weapons/m2_flamethrower": {
+      "draws": 50,
+      "triangles": 3992,
+      "materials": 10
+    },
+    "weapons/improvised_flamethrower": {
+      "draws": 38,
+      "triangles": 2852,
+      "materials": 11
+    },
+    "weapons/browning_m2": {
+      "draws": 68,
+      "triangles": 4632,
+      "materials": 6
+    },
+    "weapons/remington_700_300wm": {
+      "draws": 78,
+      "triangles": 10288,
+      "materials": 10
+    },
+    "weapons/hk_mp5sd3": {
+      "draws": 106,
+      "triangles": 13028,
+      "materials": 7
+    },
+    "weapons/fn_parafal": {
+      "draws": 98,
+      "triangles": 13756,
+      "materials": 7
+    },
+    "weapons/taurus_t4_civil": {
+      "draws": 358,
+      "triangles": 51772,
+      "materials": 9
+    },
+    "weapons/taurus_th380": {
+      "draws": 64,
+      "triangles": 9012,
+      "materials": 8
+    },
+    "weapons/mossberg_500_cruiser": {
+      "draws": 52,
+      "triangles": 6840,
+      "materials": 6
+    },
+    "weapons/hk_mp5k": {
+      "draws": 72,
+      "triangles": 9580,
+      "materials": 7
+    },
+    "weapons/hk_ump9": {
+      "draws": 164,
+      "triangles": 23876,
+      "materials": 8
+    },
+    "weapons/mini_uzi": {
+      "draws": 64,
+      "triangles": 8876,
+      "materials": 7
+    },
+    "weapons/hk_mp7a1": {
+      "draws": 176,
+      "triangles": 25440,
+      "materials": 8
+    },
+    "weapons/hk_g36": {
+      "draws": 158,
+      "triangles": 18856,
+      "materials": 11
+    },
+    "weapons/hk_g36k": {
+      "draws": 150,
+      "triangles": 17656,
+      "materials": 11
+    },
+    "weapons/hk_g36c": {
+      "draws": 230,
+      "triangles": 30584,
+      "materials": 10
+    },
+    "weapons/fn_m249": {
+      "draws": 130,
+      "triangles": 16328,
+      "materials": 10
+    },
+    "weapons/fn_minimi_para": {
+      "draws": 132,
+      "triangles": 16548,
+      "materials": 10
+    },
+    "weapons/fn_mag": {
+      "draws": 138,
+      "triangles": 17528,
+      "materials": 10
+    },
+    "weapons/rpk": {
+      "draws": 118,
+      "triangles": 19580,
+      "materials": 9
+    },
+    "weapons/sig_mpx": {
+      "draws": 228,
+      "triangles": 33020,
+      "materials": 8
+    },
+    "weapons/mg3": {
+      "draws": 130,
+      "triangles": 16328,
+      "materials": 10
+    },
+    "weapons/pp19_bizon": {
+      "draws": 104,
+      "triangles": 13996,
+      "materials": 7
+    },
+    "weapons/vz61": {
+      "draws": 62,
+      "triangles": 8576,
+      "materials": 7
+    },
+    "weapons/m134": {
+      "draws": 94,
+      "triangles": 6160,
+      "materials": 9
+    },
+    "weapons/aks_74u": {
+      "draws": 106,
+      "triangles": 17132,
+      "materials": 9
+    },
+    "weapons/fn_scar_l": {
+      "draws": 322,
+      "triangles": 46420,
+      "materials": 8
+    },
+    "weapons/m1_garand": {
+      "draws": 56,
+      "triangles": 6900,
+      "materials": 8
+    },
+    "weapons/accuracy_l96a1": {
+      "draws": 132,
+      "triangles": 15380,
+      "materials": 10
+    },
+    "weapons/mossberg_590": {
+      "draws": 84,
+      "triangles": 11232,
+      "materials": 7
+    },
+    "weapons/fn_m240b": {
+      "draws": 240,
+      "triangles": 32576,
+      "materials": 10
+    },
+    "weapons/sig_sauer_p320": {
+      "draws": 82,
+      "triangles": 11820,
+      "materials": 9
+    },
+    "weapons/hk_usp": {
+      "draws": 104,
+      "triangles": 14832,
+      "materials": 8
+    },
+    "weapons/walther_p99": {
+      "draws": 176,
+      "triangles": 15552,
+      "materials": 8
+    },
+    "weapons/colt_python": {
+      "draws": 258,
+      "triangles": 9732,
+      "materials": 9
+    },
+    "weapons/fn_ps90": {
+      "draws": 56,
+      "triangles": 4652,
+      "materials": 8
+    },
+    "weapons/bt_mp9": {
+      "draws": 116,
+      "triangles": 16928,
+      "materials": 6
+    },
+    "weapons/mp40": {
+      "draws": 112,
+      "triangles": 12900,
+      "materials": 7
+    },
+    "weapons/famas": {
+      "draws": 90,
+      "triangles": 10452,
+      "materials": 10
+    },
+    "weapons/iwi_tavor": {
+      "draws": 184,
+      "triangles": 26616,
+      "materials": 10
+    },
+    "weapons/l85a2": {
+      "draws": 224,
+      "triangles": 29452,
+      "materials": 12
+    },
+    "weapons/winchester_1887": {
+      "draws": 34,
+      "triangles": 3368,
+      "materials": 9
+    },
+    "weapons/ppsh_41": {
+      "draws": 118,
+      "triangles": 16168,
+      "materials": 7
+    },
+    "weapons/mauser_kar98k": {
+      "draws": 142,
+      "triangles": 18964,
+      "materials": 7
+    },
+    "weapons/mg42": {
+      "draws": 134,
+      "triangles": 16016,
+      "materials": 9
+    },
+    "weapons/vss_vintorez": {
+      "draws": 60,
+      "triangles": 7916,
+      "materials": 8
+    },
+    "weapons/m79": {
+      "draws": 70,
+      "triangles": 9620,
+      "materials": 8
+    },
+    "weapons/m32_mgl": {
+      "draws": 116,
+      "triangles": 12280,
+      "materials": 8
+    },
+    "animals/cow": {
+      "draws": 104,
+      "triangles": 14392,
+      "materials": 8
+    },
+    "animals/horse": {
+      "draws": 116,
+      "triangles": 13104,
+      "materials": 5
+    },
+    "animals/pig": {
+      "draws": 98,
+      "triangles": 13040,
+      "materials": 5
+    },
+    "animals/wild_boar": {
+      "draws": 124,
+      "triangles": 13164,
+      "materials": 7
+    },
+    "animals/capybara": {
+      "draws": 82,
+      "triangles": 13280,
+      "materials": 5
+    },
+    "animals/jaguar": {
+      "draws": 106,
+      "triangles": 15728,
+      "materials": 5
+    },
+    "animals/dog": {
+      "draws": 94,
+      "triangles": 13848,
+      "materials": 4
+    },
+    "animals/cat": {
+      "draws": 102,
+      "triangles": 14664,
+      "materials": 4
+    },
+    "animals/chicken": {
+      "draws": 78,
+      "triangles": 8524,
+      "materials": 8
+    },
+    "animals/southern_lapwing": {
+      "draws": 78,
+      "triangles": 7510,
+      "materials": 11
+    },
+    "animals/vulture": {
+      "draws": 84,
+      "triangles": 6860,
+      "materials": 9
+    },
+    "animals/lancehead": {
+      "draws": 82,
+      "triangles": 14092,
+      "materials": 5
+    },
+    "animals/rat": {
+      "draws": 106,
+      "triangles": 15728,
+      "materials": 4
+    },
+    "vehicles/compact_hatch:lite": {
+      "draws": 10,
+      "triangles": 19181,
+      "materials": 6
+    },
+    "vehicles/midsize_pickup:lite": {
+      "draws": 10,
+      "triangles": 16931,
+      "materials": 6
+    },
+    "vehicles/sport_bike:lite": {
+      "draws": 8,
+      "triangles": 4614,
+      "materials": 5
+    },
+    "characters/person:zilda": {
+      "draws": 199,
+      "triangles": 20040,
+      "materials": 18
+    },
+    "characters/person:arnaldo": {
+      "draws": 181,
+      "triangles": 19748,
+      "materials": 13
+    },
+    "characters/person:val": {
+      "draws": 171,
+      "triangles": 19336,
+      "materials": 13
+    },
+    "characters/person:mariana": {
+      "draws": 177,
+      "triangles": 19375,
+      "materials": 14
+    },
+    "characters/person:criancas": {
+      "draws": 503,
+      "triangles": 58548,
+      "materials": 27
+    },
+    "characters/person:brasa": {
+      "draws": 194,
+      "triangles": 19704,
+      "materials": 20
+    },
+    "characters/person:bigode": {
+      "draws": 193,
+      "triangles": 19644,
+      "materials": 15
+    },
+    "characters/person:italo": {
+      "draws": 171,
+      "triangles": 19016,
+      "materials": 12
+    },
+    "characters/person:rafa": {
+      "draws": 171,
+      "triangles": 19672,
+      "materials": 13
+    },
+    "characters/person:jessica": {
+      "draws": 177,
+      "triangles": 19220,
+      "materials": 16
+    },
+    "characters/person:nelson": {
+      "draws": 181,
+      "triangles": 20816,
+      "materials": 16
+    },
+    "characters/person:rosa": {
+      "draws": 205,
+      "triangles": 20524,
+      "materials": 17
+    },
+    "characters/best:Lento": {
+      "draws": 46,
+      "triangles": 8574,
+      "materials": 12
+    },
+    "characters/best:Corredor": {
+      "draws": 46,
+      "triangles": 8574,
+      "materials": 12
+    },
+    "characters/best:Rastejante": {
+      "draws": 46,
+      "triangles": 8526,
+      "materials": 13
+    },
+    "characters/best:Brutamonte": {
+      "draws": 52,
+      "triangles": 10426,
+      "materials": 12
+    },
+    "characters/best:Farejador": {
+      "draws": 46,
+      "triangles": 8574,
+      "materials": 12
+    },
+    "characters/best:Saltador": {
+      "draws": 46,
+      "triangles": 8574,
+      "materials": 12
+    },
+    "characters/best:Inchado": {
+      "draws": 68,
+      "triangles": 11322,
+      "materials": 26
+    },
+    "characters/best:Espreitador": {
+      "draws": 46,
+      "triangles": 8574,
+      "materials": 12
+    },
+    "characters/best:Cego": {
+      "draws": 45,
+      "triangles": 8838,
+      "materials": 10
+    },
+    "characters/best:Gritador": {
+      "draws": 47,
+      "triangles": 8586,
+      "materials": 13
+    },
+    "characters/best:Carbonizado": {
+      "draws": 61,
+      "triangles": 9500,
+      "materials": 26
+    },
+    "characters/best:Afogado": {
+      "draws": 49,
+      "triangles": 9370,
+      "materials": 12
+    },
+    "characters/best:Devorador": {
+      "draws": 64,
+      "triangles": 9350,
+      "materials": 11
+    },
+    "characters/bake:Lento": {
+      "draws": 1,
+      "triangles": 9018,
+      "materials": 0
+    },
+    "characters/bake:Corredor": {
+      "draws": 1,
+      "triangles": 9018,
+      "materials": 0
+    },
+    "characters/bake:Rastejante": {
+      "draws": 1,
+      "triangles": 8970,
+      "materials": 0
+    },
+    "characters/instanced:8": {
+      "draws": 1,
+      "triangles": 648,
+      "materials": 0
+    },
+    "vegetation/mango_tree": {
+      "draws": 92,
+      "triangles": 3826,
+      "materials": 3
+    },
+    "vegetation/mango_young_15": {
+      "draws": 92,
+      "triangles": 3714,
+      "materials": 3
+    },
+    "vegetation/mango_young_30": {
+      "draws": 92,
+      "triangles": 3714,
+      "materials": 3
+    },
+    "vegetation/yellow_ipe": {
+      "draws": 42,
+      "triangles": 3894,
+      "materials": 3
+    },
+    "vegetation/coconut_palm": {
+      "draws": 22,
+      "triangles": 3152,
+      "materials": 3
+    },
+    "vegetation/banana_with_bunch": {
+      "draws": 10,
+      "triangles": 1517,
+      "materials": 4
+    },
+    "vegetation/araucaria": {
+      "draws": 6,
+      "triangles": 4775,
+      "materials": 2
+    },
+    "vegetation/dead_tree": {
+      "draws": 12,
+      "triangles": 1491,
+      "materials": 1
+    },
+    "vegetation/hibiscus_shrub": {
+      "draws": 6,
+      "triangles": 2410,
+      "materials": 3
+    },
+    "vegetation/boxwood_hedge": {
+      "draws": 8,
+      "triangles": 3168,
+      "materials": 1
+    },
+    "vegetation/rose_bush_red": {
+      "draws": 6,
+      "triangles": 1220,
+      "materials": 3
+    },
+    "vegetation/sunflower": {
+      "draws": 4,
+      "triangles": 828,
+      "materials": 2
+    },
+    "vegetation/mandacaru": {
+      "draws": 30,
+      "triangles": 2148,
+      "materials": 3
+    },
+    "vegetation/prickly_pear": {
+      "draws": 38,
+      "triangles": 756,
+      "materials": 4
+    },
+    "vegetation/crown_cactus": {
+      "draws": 8,
+      "triangles": 906,
+      "materials": 4
+    },
+    "vegetation/potted_fern": {
+      "draws": 6,
+      "triangles": 804,
+      "materials": 2
+    },
+    "vegetation/potted_cactus": {
+      "draws": 10,
+      "triangles": 900,
+      "materials": 4
+    },
+    "vegetation/lawn_tuft": {
+      "draws": 2,
+      "triangles": 230,
+      "materials": 1
+    },
+    "vegetation/nursery:1": {
+      "draws": 50,
+      "triangles": 118140,
+      "materials": 27
+    },
+    "urban/pole:concrete": {
+      "draws": 8,
+      "triangles": 432,
+      "materials": 4
+    },
+    "urban/pole:flood": {
+      "draws": 16,
+      "triangles": 1536,
+      "materials": 2
+    },
+    "urban/block": {
+      "draws": 24,
+      "triangles": 2520,
+      "materials": 8
+    },
+    "urban/watchtower": {
+      "draws": 16,
+      "triangles": 1536,
+      "materials": 3
+    },
+    "urban/tent": {
+      "draws": 2,
+      "triangles": 8,
+      "materials": 1
+    },
+    "urban/patterns": {
+      "draws": 1774,
+      "triangles": 124724,
+      "materials": 151
+    },
+    "houses/single_storey_a": {
+      "draws": 253,
+      "triangles": 72374,
+      "materials": 18
+    },
+    "houses/apartment_basic": {
+      "draws": 268,
+      "triangles": 51926,
+      "materials": 14
+    },
+    "houses/townhouse": {
+      "draws": 453,
+      "triangles": 99474,
+      "materials": 18
+    },
+    "houses/mid_modern_single_storey": {
+      "draws": 377,
+      "triangles": 96030,
+      "materials": 17
+    },
+    "houses/apartment_modern": {
+      "draws": 307,
+      "triangles": 53608,
+      "materials": 16
+    },
+    "houses/market": {
+      "draws": 218,
+      "triangles": 48458,
+      "materials": 14
+    },
+    "houses/pharmacy": {
+      "draws": 168,
+      "triangles": 34942,
+      "materials": 13
+    },
+    "shapes/three:cylinder-cached": {
+      "draws": 1,
+      "triangles": 144,
+      "materials": 0
+    },
+    "vehicles/bicycle:lite": {
+      "draws": 5,
+      "triangles": 4541,
+      "materials": 3
+    },
+    "vehicles/scooter:lite": {
+      "draws": 7,
+      "triangles": 4090,
+      "materials": 4
+    },
+    "vehicles/commuter_motorcycle:lite": {
+      "draws": 7,
+      "triangles": 4422,
+      "materials": 4
+    },
+    "vehicles/trail_bike:lite": {
+      "draws": 7,
+      "triangles": 6430,
+      "materials": 4
+    },
+    "vehicles/adventure_bike:lite": {
+      "draws": 8,
+      "triangles": 7367,
+      "materials": 5
+    },
+    "vehicles/highway_police_bike:lite": {
+      "draws": 8,
+      "triangles": 7479,
+      "materials": 5
+    },
+    "vehicles/quad_bike:lite": {
+      "draws": 7,
+      "triangles": 7592,
+      "materials": 4
+    },
+    "vehicles/step_through_scooter:lite": {
+      "draws": 7,
+      "triangles": 4082,
+      "materials": 4
+    },
+    "vehicles/naked_bike:lite": {
+      "draws": 8,
+      "triangles": 4960,
+      "materials": 5
+    },
+    "vehicles/cruiser:lite": {
+      "draws": 7,
+      "triangles": 9175,
+      "materials": 4
+    },
+    "vehicles/delivery_bike:lite": {
+      "draws": 7,
+      "triangles": 6476,
+      "materials": 4
+    },
+    "vehicles/taxi:lite": {
+      "draws": 10,
+      "triangles": 19299,
+      "materials": 6
+    },
+    "vehicles/entry_hatch:lite": {
+      "draws": 10,
+      "triangles": 16036,
+      "materials": 6
+    },
+    "vehicles/electric_hatch:lite": {
+      "draws": 10,
+      "triangles": 17960,
+      "materials": 6
+    },
+    "vehicles/midsize_sedan:lite": {
+      "draws": 10,
+      "triangles": 19286,
+      "materials": 6
+    },
+    "vehicles/police_sedan:lite": {
+      "draws": 10,
+      "triangles": 20161,
+      "materials": 6
+    },
+    "vehicles/highway_police_sedan:lite": {
+      "draws": 10,
+      "triangles": 20001,
+      "materials": 6
+    },
+    "vehicles/beetle:lite": {
+      "draws": 10,
+      "triangles": 11538,
+      "materials": 6
+    },
+    "vehicles/boxy_hatch:lite": {
+      "draws": 10,
+      "triangles": 15869,
+      "materials": 6
+    },
+    "vehicles/family_hatch:lite": {
+      "draws": 10,
+      "triangles": 18603,
+      "materials": 6
+    },
+    "vehicles/rideshare_hatch:lite": {
+      "draws": 10,
+      "triangles": 18710,
+      "materials": 6
+    },
+    "vehicles/turbo_hatch:lite": {
+      "draws": 10,
+      "triangles": 19105,
+      "materials": 6
+    },
+    "vehicles/fastback_sedan:lite": {
+      "draws": 10,
+      "triangles": 21672,
+      "materials": 6
+    },
+    "vehicles/classic_six_sedan:lite": {
+      "draws": 10,
+      "triangles": 17032,
+      "materials": 6
+    },
+    "vehicles/v8_coupe:lite": {
+      "draws": 10,
+      "triangles": 24136,
+      "materials": 6
+    },
+    "vehicles/compact_suv:lite": {
+      "draws": 10,
+      "triangles": 16751,
+      "materials": 6
+    },
+    "vehicles/hybrid_suv:lite": {
+      "draws": 10,
+      "triangles": 16705,
+      "materials": 6
+    },
+    "vehicles/midsize_suv:lite": {
+      "draws": 10,
+      "triangles": 16338,
+      "materials": 6
+    },
+    "vehicles/large_suv:lite": {
+      "draws": 10,
+      "triangles": 17490,
+      "materials": 6
+    },
+    "vehicles/compact_pickup:lite": {
+      "draws": 10,
+      "triangles": 15215,
+      "materials": 6
+    },
+    "vehicles/crossover_pickup:lite": {
+      "draws": 10,
+      "triangles": 16049,
+      "materials": 6
+    },
+    "vehicles/monster_truck:lite": {
+      "draws": 10,
+      "triangles": 27441,
+      "materials": 6
+    },
+    "vehicles/cargo_van:lite": {
+      "draws": 10,
+      "triangles": 15324,
+      "materials": 6
+    },
+    "vehicles/ambulance:lite": {
+      "draws": 10,
+      "triangles": 19346,
+      "materials": 6
+    },
+    "vehicles/box_truck:lite": {
+      "draws": 10,
+      "triangles": 18352,
+      "materials": 6
+    },
+    "vehicles/tanker_truck:lite": {
+      "draws": 10,
+      "triangles": 21360,
+      "materials": 6
+    },
+    "vehicles/school_bus:lite": {
+      "draws": 10,
+      "triangles": 17682,
+      "materials": 6
+    },
+    "vehicles/city_bus:lite": {
+      "draws": 10,
+      "triangles": 18914,
+      "materials": 6
+    },
+    "vehicles/armored_truck:lite": {
+      "draws": 10,
+      "triangles": 26426,
+      "materials": 6
+    },
+    "vehicles/tractor:lite": {
+      "draws": 7,
+      "triangles": 7904,
+      "materials": 4
+    },
+    "vehicles/light_4x4:lite": {
+      "draws": 10,
+      "triangles": 17058,
+      "materials": 6
+    },
+    "vehicles/troop_truck:lite": {
+      "draws": 6,
+      "triangles": 21335,
+      "materials": 4
+    },
+    "vehicles/apc_6x6:lite": {
+      "draws": 6,
+      "triangles": 23660,
+      "materials": 4
+    },
+    "vehicles/armored_car_6x6:lite": {
+      "draws": 6,
+      "triangles": 18788,
+      "materials": 4
+    },
+    "vehicles/battle_tank:lite": {
+      "draws": 6,
+      "triangles": 26628,
+      "materials": 4
+    },
+    "vehicles/transport_helicopter:lite": {
+      "draws": 6,
+      "triangles": 21517,
+      "materials": 4
+    },
+    "vehicles/light_attack_turboprop:lite": {
+      "draws": 8,
+      "triangles": 8633,
+      "materials": 5
+    },
+    "vehicles/attack_helicopter:lite": {
+      "draws": 8,
+      "triangles": 20762,
+      "materials": 5
+    },
+    "vehicles/river_skiff:lite": {
+      "draws": 5,
+      "triangles": 4186,
+      "materials": 3
+    },
+    "vehicles/speedboat:lite": {
+      "draws": 8,
+      "triangles": 9860,
+      "materials": 5
+    },
+    "vehicles/fishing_boat:lite": {
+      "draws": 8,
+      "triangles": 13173,
+      "materials": 5
+    },
+    "vehicles/jet_ski:lite": {
+      "draws": 7,
+      "triangles": 6115,
+      "materials": 4
+    },
+    "vehicles/sailboat:lite": {
+      "draws": 7,
+      "triangles": 11219,
+      "materials": 4
+    },
+    "vehicles/rescue_dinghy:lite": {
+      "draws": 7,
+      "triangles": 11532,
+      "materials": 4
+    },
+    "vehicles/patrol_boat:lite": {
+      "draws": 8,
+      "triangles": 14289,
+      "materials": 5
+    },
+    "vehicles/single_engine_plane:lite": {
+      "draws": 8,
+      "triangles": 5692,
+      "materials": 5
+    },
+    "vehicles/crop_duster:lite": {
+      "draws": 8,
+      "triangles": 6573,
+      "materials": 5
+    },
+    "vehicles/piston_helicopter:lite": {
+      "draws": 8,
+      "triangles": 5145,
+      "materials": 5
+    },
+    "vehicles/rescue_helicopter:lite": {
+      "draws": 8,
+      "triangles": 6299,
+      "materials": 5
+    },
+    "vehicles/tandem_trainer:lite": {
+      "draws": 8,
+      "triangles": 7742,
+      "materials": 5
+    },
+    "vehicles/regional_turboprop:lite": {
+      "draws": 8,
+      "triangles": 20410,
+      "materials": 5
+    },
+    "vehicles/amphibian_turboprop:lite": {
+      "draws": 8,
+      "triangles": 19972,
+      "materials": 5
+    },
+    "vehicles/light_jet:lite": {
+      "draws": 8,
+      "triangles": 28128,
+      "materials": 5
+    },
+    "vehicles/trainer_helicopter:lite": {
+      "draws": 8,
+      "triangles": 7460,
+      "materials": 5
+    },
+    "vehicles/turbine_helicopter:lite": {
+      "draws": 8,
+      "triangles": 8549,
+      "materials": 5
+    },
+    "vehicles/police_helicopter:lite": {
+      "draws": 8,
+      "triangles": 16572,
+      "materials": 5
+    }
+  }
+}

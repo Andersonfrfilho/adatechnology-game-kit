@@ -65,6 +65,8 @@ de peça: `tools/kit-audit/rules.json` (MCP `game-kit`: `kit_owner`, `kit_origin
 - **Uma sala de teste de ponta a ponta**: `pnpm check:<área>` builda o que a página carrega, roda os testes unitários desses pacotes e abre a
   página no navegador, que grava os prints em `examples/<pasta>/shots/` (lista os novos no fim; só `vehicles-proving` não grava; as folhas do catálogo de `animals`, `characters`, `urban`, `vegetation`, `vehicles` e `weapons` ficam fora do git, só o `shots/index.json` entra). Áreas: `pnpm check:area --list`
   (`floorplan`, `interactables`, `room`, `vehicles`, `weapons`, ...). `--no-browser` pula o navegador, `--no-unit` os testes, `--room` refaz a página da sala.
+- **Custo de desenho de uma peça nova ou alterada** (CI, sem navegador): `node tools/shapes-bench/dist/cli.js --cost-check` reprova a peça sem custo gravado, mais cara que o gravado ou acima do limite do grupo;
+  peça nova se grava com `--cost-update`, que recusa piora e só a aceita por nome (`--cost-accept <id>`); a lista que ele imprime vai no PR (`tools/shapes-bench/README.md`).
 - Suítes de navegador da branch: `node tools/gpu/browser-checks.mjs`; desempenho: `node tools/gpu/perf-gate.mjs` (§9).
 - **4280 e app de desktop**: `pnpm serve:room [--isolate]` serve a sala (com `--isolate`, COOP/COEP e `crossOriginIsolated`); `pnpm desktop [--area=<id>]`
   abre as salas no app Electron (`apps/desktop`, AppImage com `pnpm desktop:package`); `pnpm check:desktop` e `pnpm check:<área> --target=desktop` testam no app (fora do CI, §9).
