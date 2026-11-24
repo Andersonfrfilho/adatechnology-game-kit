@@ -41,7 +41,7 @@ export function planUtilities(context: UtilitiesContext): Utilities {
   const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}), ...(context.gasLayout ? { layout: context.gasLayout } : {}) })
   // the outbuildings are wired as rooms of the house, their ceiling lights with them
   const outbuildings = context.outbuildings ?? []
-  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}) })
+  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}) })
   const solar = planSolar({ plan, rng: rngFor('solar'), ...(energy ? { energy } : {}) })
   const plumbing = planPlumbing({ plan, items, tank })
   return { gas, electrical, solar, plumbing }

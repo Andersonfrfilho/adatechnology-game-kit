@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { registerContentState } from '../src/utilities/content'
+import { SERVICE_POLE_OUTSIDE_LOT } from '../src/utilities/electrical-entrance'
 import { TOWER_TEMPLATES, engine } from './support'
 import type { StructuredResult } from '../src'
 import type { FindStack } from '@adatechnology/game-floorplan'
@@ -85,6 +86,16 @@ describe('electricity', () => {
     const outletIds = e.circuits.flatMap((c) => c.outlets)
     expect(new Set(outletIds).size).toBe(outletIds.length)
     expect(e.conduits.filter((c) => c.from === 'panel')).toHaveLength(e.circuits.length)
+  })
+
+  it('the service pole of a plan with a lot stands just in front of the lot, on the sidewalk, a shop as a house: never inside the lot nor out on the road', () => {
+    for (const template of TEMPLATES) {
+      const result = plan(template, 3)
+      const pole = result.utilities.electrical.serviceEntrance?.pole
+      if (!pole || !result.lot) continue
+      expect(pole.v, template).toBeCloseTo(result.lot.rect[1] - SERVICE_POLE_OUTSIDE_LOT)
+    }
+    expect(plan('drugstore', 3).lot, 'a shop on a lot is checked').not.toBeNull()
   })
 
   it('every appliance that plugs in has a socket within 1.2 m, and a shower heater its own at 1.10 m', () => {

@@ -7,6 +7,10 @@ import type { WallPoint } from './wall-points'
 import type { ElectricMeter } from './types'
 
 const METER_SIZE = { w: 0.35, d: 0.2, h: 0.5 }
+/** The service pole stands on the sidewalk this far in front of the lot's front edge (metres), never inside the lot nor past the sidewalk onto the road. */
+export const SERVICE_POLE_OUTSIDE_LOT = 0.6
+/** Without a lot the street is unknown: the pole stands this far in front of the facade. */
+const SERVICE_POLE_NO_LOT = 3
 
 export const mainDoorOf = (plan: Plan): PlanDoor | undefined => plan.doors.find((p) => p.floor === 0 && p.exterior && p.side === 'front') || plan.doors.find((p) => p.floor === 0 && p.exterior)
 
@@ -19,7 +23,7 @@ export function placeEntrance(layout: Layout): void {
   if (lot && plan.style !== 'commercial') {
     const rect = lot.rect
     const poleU = clamp(gate ? gate.u + 3 : plan.w / 2, rect[0] + 0.5, rect[2] - 0.5)
-    const poleV = rect[1] - 0.6
+    const poleV = rect[1] - SERVICE_POLE_OUTSIDE_LOT
     let placed: Omit<ElectricMeter, 'id'>
     if (gate) {
       const direction = gate.u - gate.width / 2 - 0.4 >= rect[0] + 0.3 ? -1 : 1
@@ -29,8 +33,10 @@ export function placeEntrance(layout: Layout): void {
     electrical.serviceEntrance = { pole: { u: round2(poleU), v: round2(poleV), h: 7.5 }, drop: [[round2(poleU), round2(poleV), 6.5], [meter.u, meter.v, 2.6]], meter, descent: [[meter.u, meter.v, 2.6], [meter.u, meter.v, 1.65]], internalRun: null }
   } else if (lot === null || plan.style === 'commercial') {
     const front = door ? { u: round2(door.at + 1.0), v: -0.1 } : { u: round2(plan.w / 2), v: -0.1 }
+    // a shop on a lot has the pole where a house has it, in front of the lot's edge: 3 m from the facade put it on the road when the lot starts at the facade (the Visor's golden keeps the 3 m)
+    const poleV = lot && !layout.visor ? round2(lot.rect[1] - SERVICE_POLE_OUTSIDE_LOT) : -SERVICE_POLE_NO_LOT
     electrical.serviceEntrance = {
-      pole: { u: round2(front.u + 2), v: -3, h: 7.5 }, drop: [[round2(front.u + 2), -3, 6.5], [front.u, front.v, 3.2]],
+      pole: { u: round2(front.u + 2), v: poleV, h: 7.5 }, drop: [[round2(front.u + 2), poleV, 6.5], [front.u, front.v, 3.2]],
       meter: { id: 'meter', place: 'facade', u: front.u, v: front.v, y: 1.4, side: 'front', ...METER_SIZE }, descent: [[front.u, front.v, 3.2], [front.u, front.v, 1.65]], internalRun: null,
     }
   }
