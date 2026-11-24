@@ -15,7 +15,8 @@ const avoid = keepOutOf(lots, POLE_MIN_GAP)
 const generated = buildNetworks({ plan, site, avoid })
 const { nodes, edges } = generated.networks
 /** The bytes of the recorte's networks: a change that moves anything shows here, and is recorded on purpose. */
-const RECORDED = '8e2a69c24c6cdfdb4e14bb08f5a8e12576375794525c9ec74a740a72868b42cd'
+// re-recorded when the rules the output carries gained `layout.poles.minGap` (nodes and edges unchanged)
+const RECORDED = '4b9a41f4fb94fa552ac0261e7e4316318bdab038c749b273b1b8c69ac10605cd'
 
 describe('the networks of the recorte', () => {
   it('pass every rule of validateNetworks, laid with no warning', () => {

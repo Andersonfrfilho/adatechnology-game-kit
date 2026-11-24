@@ -30,6 +30,8 @@ export type NetworkLayoutRules = {
     readonly curbSetback: number
     /** An end-of-line pole this far inside the end of its run. */
     readonly endInset: number
+    /** No two poles closer than this (a pole added to reach a lot keeps it). */
+    readonly minGap: number
     /** An intermediate pole at least this far from the edge of a cross street's roadway. */
     readonly crossingClearance: number
     /** A pole looks this far either way (in steps) for a lot boundary near its target, and slides as far to clear a gate. */
@@ -88,7 +90,7 @@ export type NetworkLayoutRules = {
 export const DEFAULT_NETWORK_LAYOUT: NetworkLayoutRules = {
   sidewalk: 2.5,
   edgeReach: 5,
-  poles: { spacing: [30, 40], curbSetback: 0.4, endInset: 1, crossingClearance: 5, snap: 5, slide: 6, slideStep: 0.25 },
+  poles: { spacing: [30, 40], curbSetback: 0.4, endInset: 1, minGap: 3, crossingClearance: 5, snap: 5, slide: 6, slideStep: 0.25 },
   sag: { mv: 0.5, lv: 0.6, telecom: 0.6, drop: 0.2, telecomDrop: 0.15 },
   telecom: { spliceEvery: 4, cableGap: 0.1, cables: { clean: [1, 2], periphery: [3, 5] } },
   periphery: { kinds: ['residential_popular'], hookupShare: 0.1 },

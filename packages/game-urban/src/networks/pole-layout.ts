@@ -89,8 +89,18 @@ function nextStation({ at, last, bounds, boundaries, params }: { readonly at: nu
 /** The stations of one stretch: a corner or end pole at each end, and in-line poles every 30 to 40 m on lot boundaries, clear of gates. */
 function piecePoles({ piece, params, boundaries }: { readonly piece: Piece; readonly params: PoleLayoutParams; readonly boundaries: readonly number[] }): Placed[] {
   const { poles } = params.rules
-  const endAt = (end: PieceEnd, at: number, inward: 1 | -1): Placed =>
-    end === 'crossing' ? { u: at + inward * poles.curbSetback, role: 'corner' } : { u: at + inward * poles.endInset, role: 'end' }
+  const { isFree } = lineOf(params)
+  // a corner or end pole slides inward off a gate (up to the slide), and warns when it finds no free ground
+  const endAt = (end: PieceEnd, at: number, inward: 1 | -1): Placed => {
+    const u = at + inward * (end === 'crossing' ? poles.curbSetback : poles.endInset)
+    const role = end === 'crossing' ? 'corner' : 'end'
+    for (let step = 0; step <= poles.slide / poles.slideStep; step++) {
+      const candidate = u + inward * step * poles.slideStep
+      if (isFree(candidate)) return { u: candidate, role }
+    }
+    params.warn({ code: 'pole_on_avoid', id: `${params.run.id}@${u.toFixed(2)}` })
+    return { u, role }
+  }
   const first = endAt(piece.ends[0], piece.from, 1)
   const last = endAt(piece.ends[1], piece.to, -1)
   if (last.u - first.u < poles.spacing[0] / 4) return [{ u: (first.u + last.u) / 2, role: first.role }]

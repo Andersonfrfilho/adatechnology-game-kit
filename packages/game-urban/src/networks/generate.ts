@@ -84,7 +84,12 @@ function polesOf({ params, layout, sink }: { readonly params: GenerateNetworksPa
   const stations = runs.map((run) => poleStationsOf({ run, side: sides.get(run.id) ?? -1, served, avoid, rules: rules.layout, warn }))
   const anchors = layout.connections.filter((connection) => connection.network === 'power' || connection.network === 'telecom')
   const isFree = (x: number, z: number): boolean => !avoid.some((rect) => x > rect[0] && x < rect[2] && z > rect[1] && z < rect[3])
-  const reached = reachLots({ runs: stations, anchors, served: new Map(served.map((entry) => [entry.lot.id, entry])), reach: Math.min(rules.power.dropMaxLength, rules.telecom.dropMaxLength), rules: rules.layout, isFree })
+  const surface = surfaceOf({ runs, sidewalk: rules.layout.sidewalk })
+  const inside = (x: number, z: number, rect: PlanRect): boolean => x > rect[0] && x < rect[2] && z > rect[1] && z < rect[3]
+  const canServe = ({ x, z, lot }: { readonly x: number; readonly z: number; readonly lot: string }): boolean =>
+    surface(x, z) !== 'road' && !params.lots.some((other) => other.id !== lot && inside(x, z, other.rect))
+  const reach = Math.min(rules.power.dropMaxLength, rules.telecom.dropMaxLength)
+  const reached = reachLots({ runs: stations, anchors, served: new Map(served.map((entry) => [entry.lot.id, entry])), reach, rules: rules.layout, isFree, canServe, warn })
   return poleTreeOf({ chains: [...reached.runs, ...reached.chains], sides, setback: rules.layout.poles.curbSetback })
 }
 
