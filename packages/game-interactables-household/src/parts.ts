@@ -26,8 +26,9 @@ export function handle(c: Ctx, kind: HandleKind, x: number, y: number, zf: numbe
     const oy = vertical ? s * (len / 2 - 0.025) : 0
     c.b('metal', x + ox - 0.006, y + oy - 0.006, zf, x + ox + 0.006, y + oy + 0.006, zf + 0.02, dark)
   }
-  c.b('metal', x - gx / 2, y - gy / 2, zf + 0.018, x + gx / 2, y + gy / 2, zf + HANDLE, color)
-  c.b('metal', x - gx / 2 + (vertical ? 0.003 : 0), y - gy / 2 + (vertical ? 0 : 0.003), zf + HANDLE, x + gx / 2 - (vertical ? 0.003 : 0), y + gy / 2 - (vertical ? 0 : 0.003), zf + HANDLE + 0.0005, shade(color, 1.2))
+  // the grip stops 2 mm short of the lighter cap strip, so the two fronts never share a plane
+  c.b('metal', x - gx / 2, y - gy / 2, zf + 0.018, x + gx / 2, y + gy / 2, zf + HANDLE - 0.002, color)
+  c.b('metal', x - gx / 2 + (vertical ? 0.003 : 0), y - gy / 2 + (vertical ? 0 : 0.003), zf + HANDLE - 0.002, x + gx / 2 - (vertical ? 0.003 : 0), y + gy / 2 - (vertical ? 0 : 0.003), zf + HANDLE, shade(color, 1.2))
 }
 
 export interface DoorOptions {
@@ -84,12 +85,13 @@ export function hingedDoor(c: Ctx, o: DoorOptions): string {
         c.b(mat, o.x0, o.y0 + r, o.zf - 0.003, o.x0 + r, o.y1 - r, o.zf, shade(o.color, 1.06))
         c.b(mat, o.x1 - r, o.y0 + r, o.zf - 0.003, o.x1, o.y1 - r, o.zf, shade(o.color, 1.06))
       } else {
-        c.b(mat, o.x0, o.y0, zIn, o.x1, o.y1, o.zf, o.color)
-        c.b(mat, o.x0 + 0.006, o.y0 + 0.006, o.zf - 0.002, o.x1 - 0.006, o.y1 - 0.006, o.zf, shade(o.color, 1.04))
+        // the slab stops 2 mm behind the inset front panel, so the two fronts never share a plane
+        c.b(mat, o.x0, o.y0, zIn, o.x1, o.y1, o.zf - 0.002, o.color)
+        c.b(mat, o.x0 + 0.006, o.y0 + 0.006, o.zf - 0.004, o.x1 - 0.006, o.y1 - 0.006, o.zf, shade(o.color, 1.04))
       }
       // inner lining, lighter, with a thin gasket frame around it
       const inner = o.inner ?? mix(o.color, 0xffffff, 0.55)
-      c.b('plain', o.x0 + 0.014, o.y0 + 0.014, zIn - 0.004, o.x1 - 0.014, o.y1 - 0.014, zIn, inner)
+      c.b('plain', o.x0 + 0.014, o.y0 + 0.014, zIn - 0.003, o.x1 - 0.014, o.y1 - 0.014, zIn, inner) // 3 mm: stops at the carcass front, never inside it
       c.b('plain', o.x0 + 0.006, o.y0 + 0.006, zIn - 0.002, o.x1 - 0.006, o.y0 + 0.014, zIn, 0x3a3a3c)
       c.b('plain', o.x0 + 0.006, o.y1 - 0.014, zIn - 0.002, o.x1 - 0.006, o.y1 - 0.006, zIn, 0x3a3a3c)
       c.b('plain', o.x0 + 0.006, o.y0 + 0.014, zIn - 0.002, o.x0 + 0.014, o.y1 - 0.014, zIn, 0x3a3a3c)
@@ -161,8 +163,8 @@ export function drawer(c: Ctx, o: DrawerOptions): DrawerInfo {
       const m = Math.min(0.04, (o.y1 - o.y0) / 4)
       c.b('wood', o.x0 + m, o.y0 + m, o.zf - 0.005, o.x1 - m, o.y1 - m, o.zf - 0.001, shade(o.color, 0.94))
       c.b('wood', o.x0 + m + 0.01, o.y0 + m + 0.01, o.zf - 0.001, o.x1 - m - 0.01, o.y1 - m - 0.01, o.zf, mix(o.color, 0xffffff, 0.08))
-      // box: bottom, sides, back
-      c.b('wood', bx0, yb, zBack, bx1, yb + 0.008, zFront, shade(o.color, 0.85))
+      // box: bottom, sides, back, each in its own volume so no two share a face
+      c.b('wood', bx0 + th, yb, zBack + th, bx1 - th, yb + 0.008, zFront, shade(o.color, 0.85))
       c.b('wood', bx0, yb, zBack, bx0 + th, yt, zFront, shade(o.color, 0.88))
       c.b('wood', bx1 - th, yb, zBack, bx1, yt, zFront, shade(o.color, 0.88))
       c.b('wood', bx0 + th, yb, zBack, bx1 - th, yt, zBack + th, shade(o.color, 0.82))
@@ -242,10 +244,11 @@ export function shell(c: Ctx, o: ShellOptions): ShellInfo {
 /** Horizontal shelf board across [x0, x1] x [z0, z1] with its top at y. */
 export function shelf(c: Ctx, x0: number, x1: number, y: number, z0: number, z1: number, color: number, t = 0.016, glass = false): void {
   if (glass) {
-    c.b('glass', x0, y - 0.006, z0, x1, y, z1, 0xcfe6ea)
+    // glass and front trim split the depth between them: no face of one lies on a face of the other
+    c.b('glass', x0, y - 0.006, z0, x1, y, z1 - 0.012, 0xcfe6ea)
     c.b('plain', x0, y - 0.008, z1 - 0.012, x1, y + 0.012, z1, 0xe4eef0)
   } else {
-    c.b('wood', x0, y - t, z0, x1, y, z1, color)
+    c.b('wood', x0, y - t, z0, x1, y, z1 - 0.003, color)
     c.b('wood', x0, y - t, z1 - 0.003, x1, y, z1, shade(color, 1.12))
   }
 }
@@ -293,6 +296,7 @@ export function plugged(
     id: `${id}_cord`,
     kind: 'cord',
     radius: 0.004,
-    points: [plug, [plug[0], Math.max(floor, plug[1] - 0.08), plug[2] - 0.04], [plug[0] + 0.05, floor, plug[2] - 0.2]],
+    // (down the back from the plug, never behind it: behind the back is the wall the device stands against)
+    points: [plug, [plug[0], Math.max(floor, plug[1] - 0.08), plug[2]], [plug[0] + 0.05, floor, plug[2]]],
   })
 }

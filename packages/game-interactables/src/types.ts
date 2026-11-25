@@ -486,6 +486,8 @@ export interface WorldOptions {
   onEvent?: (event: WorldEvent) => void
   /** Return false to cancel an interaction (locked, needs a tool, tutorial...). */
   canInteract?: (interaction: Interactable, actor: string) => boolean | void
+  /** Each stack in an open container offers a `take` of its own at its slot (`interactables()`, `target`, `act`). Default true; false leaves only the declared interactions. */
+  takeContents?: boolean
 }
 
 export type WorldEvent =
@@ -519,6 +521,8 @@ export interface Interactable {
   /** Localized thing the verb applies to, e.g. "the fridge" / "a geladeira" (falls back to the object type name). Named `noun` because `object` is the owning object's id. */
   noun: string
   /** False when the interaction cannot be used right now (see `reason`). `world.target` skips these unless `includeUnavailable`. */
+  /** Hands the thing taken needs (an item inside a piece of furniture: 1, the other hand stays free); the same 1 | 2 as `CarryHands` of the destruction parts. Only on `take` of a contained item. */
+  hands?: 1 | 2
   available: boolean
   /** Locale key explaining why it is unavailable (`requires_open`, `no_power`, `locked`, `already_lit`, `needs_ignition`, `turn_on_first`); `world.t(reason)` is the text. */
   reason?: string

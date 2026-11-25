@@ -2,7 +2,9 @@
 import type { TankPlatform, WaterTank } from '@adatechnology/game-floorplan-structure';
 import { FLOOR_OVER_GROUND } from '../house/floors.js';
 import type { Aabb } from '../house/solids.js';
-import type { FurnitureApi, Hex, HouseItem, Kernel, KernelFurniturePlaceItems, Mount, Rect, Shared } from '../kernel-types.js';
+import type { Accumulator, FurnitureApi, Hex, HouseItem, Kernel, KernelFurniturePlaceItems, Mount, Rect, Shared } from '../kernel-types.js';
+import { freeReachOf, PLANT_MIN_REACH, POTTED_PLANT_TYPES } from './plant-room.js';
+import { boundsSince, vertexMark } from './item-bounds.js';
 
 /** How far over an earlier ground cover a later one that overlaps it is laid, metres. */
 const COVER_STEP = 0.003;
@@ -49,6 +51,12 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
         M.base += COVER_STEP * under;
         covers.push(own);
       }
+      // (outside the Visor's scene) a potted plant spreads its crown only as far as the walls and the furniture round it leave free, and is left out where there is no room
+      if (!shared.ctx.visorScene && POTTED_PLANT_TYPES.has(m.type)) {
+        const reach = freeReachOf({ x: M.x, z: M.z, y: M.base + (M.y ?? 0), boxes: (exterior ? shared.ctx.occupied : keepOut).concat((drawn.get(cursor.group) ?? []).flat()), items: list, self: m, base: M.base });
+        if (reach < PLANT_MIN_REACH) continue;
+        M.reach = reach;
+      }
       if (shared.ctx.veg && vegItem(m, M, exterior ? 'lot' : 'f' + f)) continue;
       // the outdoor shelter of a gas cylinder (NBR 13523) and its copper line are the house's, whoever draws the cylinder in it
       if (m.type === 'cooking_gas_cylinder' && m.shelter && T.gas_shelter) { const st = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations'; try { buildItem(m, M, T.gas_shelter, api, cursor.group); } finally { cursor.stage = st; } }
@@ -71,13 +79,19 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       if (onWall(m) && !shared.ctx.visorScene && (list.some((o) => /shower/.test(o.type) && o.floor === m.floor && overlapsInPlan({ ...m, w: 0, d: 0 }, o)) || hungOver(M, (drawn.get(cursor.group) ?? []).flat()) || overPanel(m, M))) { cursor.stage = st0; continue; }
       const mine = shared.ctx.itemBoxes;
       if (mine) drawn.set(cursor.group, (drawn.get(cursor.group) ?? []).concat([mine]));
-      try { buildItem(m, M, ent, api, cursor.group); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
+      const mark = shared.ctx.itemBounds ? vertexMark(cursor.accs) : null;
+      try { buildItem(m, M, ent, api, cursor.group); if (mark) recordBounds(m, mark); } catch (e) { cursor.group = exterior ? 'lot' : 'f' + f; console.warn('builder', m.type, e); labeledBox(m, M, exterior ? 'lot' : 'f' + f); noModel.set(m.type, (noModel.get(m.type) || 0) + 1); } finally { cursor.stage = st0; }
     }
     shared.ctx.restOn = undefined; shared.ctx.keepOut = undefined; shared.ctx.itemBoxes = undefined;
     const stTank = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations';
     try { waterTankOfHouse(api); } catch (e) { console.warn('water tank', e); } finally { cursor.stage = stTank; }
     try { decorLights(api); } catch (e) { console.warn('decorLights', e); }
     return noModel;
+  }
+  /** Notes what the item just drawn laid (`BuildOptions.itemBounds`). */
+  function recordBounds(m: HouseItem, mark: ReadonlyMap<Accumulator, number>): void {
+    const box = boundsSince(cursor.accs, mark, K.PARTS);
+    if (box) shared.ctx.itemBounds?.push({ id: m.id, type: m.type, category: m.category ?? null, room: m.room ?? null, floor: m.floor, by: 'furniture', box });
   }
   /** Metres a piece hung outside an upper storey keeps over the tiles of the roof under it. */
   const ROOF_CLEAR = 0.06;

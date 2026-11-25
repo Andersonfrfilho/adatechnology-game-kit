@@ -169,7 +169,7 @@ export function fireplace(c: Ctx): void {
   c.b('plain', -ow, hearthY, zw + 0.1, -ow + 0.04, openTop, zs, lin) // inner side faces
   c.b('plain', ow - 0.04, hearthY, zw + 0.1, ow, openTop, zs, lin)
   c.b('plain', -ow + 0.04, hearthY, zw + 0.1, ow - 0.04, hearthY + 0.03, zs, shade(lin, 0.75)) // firebox floor, raised
-  c.b('plain', -ow, openTop - 0.02, zw + 0.1, ow, openTop, zs, shade(lin, 0.8))
+  c.b('plain', -ow + 0.04, openTop - 0.02, zw + 0.1, ow - 0.04, openTop, zs, shade(lin, 0.8)) // smoke shelf, between the side linings
   // steel lintel and the masonry above it
   c.b('metal', -ow - 0.02, openTop, zs - 0.03, ow + 0.02, openTop + 0.04, zs + 0.005, 0x3a3c40)
   masonry(-ow, openTop, zw, ow, mantelY, zs - 0.03)
@@ -183,17 +183,17 @@ export function fireplace(c: Ctx): void {
   masonry(-bw, mantelY + 0.07, zw, bw, breastTop, zw + 0.45)
   masonry(-stackHalf, breastTop, zw, stackHalf, chimneyTop - 0.08, zw + 0.4)
   c.b('plain', -stackHalf - 0.04, chimneyTop - 0.08, zw, stackHalf + 0.04, chimneyTop - 0.04, zw + 0.44, 0xcfc9bc) // cap slab
-  c.b('plain', -0.13, chimneyTop - 0.04, zw + 0.07, 0.13, chimneyTop, zw + 0.33, 0x9a948a) // flue liner
-  c.b('plain', -0.1, chimneyTop - 0.002, zw + 0.1, 0.1, chimneyTop, zw + 0.3, 0x4a403a) // dark flue opening
+  c.b('plain', -0.13, chimneyTop - 0.04, zw + 0.07, 0.13, chimneyTop - 0.002, zw + 0.33, 0x9a948a) // flue liner
+  c.b('plain', -0.1, chimneyTop - 0.004, zw + 0.1, 0.1, chimneyTop, zw + 0.3, 0x4a403a) // dark flue opening, 2 mm above the liner
   // grate with andirons and logs
   const fz = zw + 0.1 + (sd - 0.1) * 0.5
   const gy = hearthY + 0.03
   for (const s of [-1, 1]) {
     c.b('metal', s * 0.27 - 0.02, gy, fz - 0.17, s * 0.27 + 0.02, gy + 0.2, fz - 0.15, IRON)
     c.b('metal', s * 0.27 - 0.02, gy, fz + 0.15, s * 0.27 + 0.02, gy + 0.2, fz + 0.17, IRON)
-    c.b('metal', s * 0.27 - 0.02, gy + 0.08, fz - 0.17, s * 0.27 + 0.02, gy + 0.1, fz + 0.17, IRON)
+    c.b('metal', s * 0.27 - 0.015, gy + 0.08, fz - 0.15, s * 0.27 + 0.015, gy + 0.1, fz + 0.15, IRON) // side bar, between and inside the uprights
   }
-  for (let i = 0; i < 5; i++) c.b('metal', -0.28, gy + 0.08, fz - 0.14 + i * 0.07, 0.28, gy + 0.095, fz - 0.128 + i * 0.07, shade(IRON, 1.3))
+  for (let i = 0; i < 5; i++) c.b('metal', -0.28, gy + 0.083, fz - 0.14 + i * 0.07, 0.28, gy + 0.097, fz - 0.128 + i * 0.07, shade(IRON, 1.3))
   const log = 0x5a3e2a
   c.rod('wood', 'x', 0, gy + 0.17, fz - 0.09, 0.06, 0.56, log)
   c.rod('wood', 'x', 0.02, gy + 0.17, fz + 0.09, 0.055, 0.5, shade(log, 1.1))

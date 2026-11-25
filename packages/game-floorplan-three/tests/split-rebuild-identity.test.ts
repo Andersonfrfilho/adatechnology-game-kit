@@ -48,8 +48,8 @@ const rays = (world: DestructionWorld, at: readonly number[]): unknown[] => {
 
 describe('split rebuild: the same world as measuring everything again', () => {
   it.each([
-    ['single_storey_a', 1, '21fb94c5e3f381ced77ffbd1a9451265eacf12f7d6e2602fb7d11074735c789f'],
-    ['sobrado', 2, 'a09f417deaf454e446fe3081be77dd5ab97bb6c4fe7239670014678c0033428f'],
+    ['single_storey_a', 1, 'e4789453939cf4d7ef9d0e6169b71dfc308b6628b80e916aefedc08f742594dd'],
+    ['sobrado', 2, 'f7162ddade3fc8fe9a277756cb5f3c51ff5ed1b59db0ff3b83f937e9f7df6511'],
   ])('%s:%s', (template, seed, hash) => {
     const got = scenario(template, seed)
     if (process.env.PRINT_SPLIT_HASH) console.log(`[HASH] ${template}:${seed} ${got}`)

@@ -14,7 +14,8 @@ import * as GameInteractablesThree from '@adatechnology/game-interactables-three
 import * as GameVegetation from '@adatechnology/game-vegetation'
 import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
 import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
-import { itemModels } from '@adatechnology/game-items-three'
+import { GOODS_ITEMS } from '@adatechnology/game-items-goods'
+import { createContainedItemModel, itemModels } from '@adatechnology/game-items-three'
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
 import { FLOORPLAN_AREA_ID, createFloorplanTestModule, floorplanAreaParams } from '@adatechnology/game-floorplan-three/testing'
 
@@ -65,17 +66,21 @@ export const TEST_ROOM_FURNITURE = [
 export function createModule(options = {}) {
   registerPacks()
   // the houses are drawn with the interactables kit and vegetation kit: the adapter that turns the plan into doors, drawers, appliances, sockets and lamps is the package's default (game-floorplan-interactables)
-  return createFloorplanTestModule({
+  // the console reaches the houses through `__floorplanArea.houses[i].house` (its `interactives`: world, entries, drawers and contents) for scripted checks and screenshots
+  const area = createFloorplanTestModule({
     engine,
     groups: GROUPS,
     furniture: options.furniture ?? TEST_ROOM_FURNITURE,
     ...options,
     house: {
-      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree },
+      // what the furniture holds is drawn as the catalogue's real items (game-items-three), riding the drawer or door from its first frame
+      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree, itemModel: createContainedItemModel(GOODS_ITEMS) },
       vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
       ...options.house,
     },
   })
+  Object.assign(globalThis, { __floorplanArea: area })
+  return area
 }
 
 /**

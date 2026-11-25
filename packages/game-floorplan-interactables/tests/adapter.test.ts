@@ -117,7 +117,7 @@ describe('plan options', () => {
   it('moves the house to an origin and mirrors the depth with inw like the team\'s adapter', () => {
     const Team = loadTeamAdapter()
     const teamAdapter = Team.criar({ ...kit })
-    const adapter = create({ ...kit, seedKey: teamSeedKey })
+    const adapter = create({ ...kit, seedKey: teamSeedKey, visor: true })
     for (const [popts, tpopts] of [[{ originX: 12, originZ: -7 }, { origemX: 12, origemZ: -7 }], [{ originX: 4, originZ: 30, inw: -1 }, { origemX: 4, origemZ: 30, inw: -1 }], [{ base: 0.5 }, { base: 0.5 }]] as const) {
       const r = planOf('townhouse', 2)
       const res = teamShape(r)

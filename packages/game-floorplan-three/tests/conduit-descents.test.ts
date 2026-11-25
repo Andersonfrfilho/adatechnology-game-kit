@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import { houseOf, planOf } from './helpers/houses'
 
-interface PlanWall { readonly u0: number; readonly v0: number; readonly u1: number; readonly v1: number; readonly axis: 'u' | 'v'; readonly thickness?: number; readonly exterior?: boolean; readonly floor: number; readonly type?: string }
+interface PlanWall { readonly u0: number; readonly v0: number; readonly u1: number; readonly v1: number; readonly axis: 'u' | 'v'; readonly thickness?: number; readonly exterior?: boolean; readonly floor: number; readonly type?: string; readonly sides?: readonly string[] }
 interface Outbuilding { readonly aabb: readonly number[]; readonly walls: readonly Omit<PlanWall, 'floor'>[] }
-interface Plan { readonly walls: readonly PlanWall[]; readonly floors: readonly { readonly y0: number; readonly ceiling: number }[]; readonly outbuildings?: readonly Outbuilding[] }
+interface Plan { readonly rooms?: readonly { readonly id: string; readonly floor: number; readonly parts: readonly (readonly number[])[] }[]; readonly walls: readonly PlanWall[]; readonly floors: readonly { readonly y0: number; readonly ceiling: number }[]; readonly outbuildings?: readonly Outbuilding[] }
 /** A wall and the middle of the building it closes (its inside is towards it). */
 interface Host extends PlanWall { readonly centre: readonly [number, number] }
 
@@ -29,10 +29,18 @@ describe('every conduit that goes down a wall goes down inside it, on the room s
       const { house } = houseOf(plan as never, {}, { quality: 'game', constructionStages: true, constructionLevel: 4 })
       const houseWalls = plan.walls.filter((w) => w.type === undefined || w.type === 'wall')
       const exterior = houseWalls.filter((w) => w.exterior)
-      const centre: [number, number] = [(Math.min(...exterior.map((w) => Math.min(w.u0, w.u1))) + Math.max(...exterior.map((w) => Math.max(w.u0, w.u1)))) / 2, (Math.min(...exterior.map((w) => Math.min(w.v0, w.v1))) + Math.max(...exterior.map((w) => Math.max(w.v0, w.v1)))) / 2]
+      // the middle of each storey's own outline: an exterior wall of an L or of a set-back storey has its inside towards its room, not the house's middle
+      const centreOf = (w: PlanWall): [number, number] => {
+        // the room the wall closes, when the plan names it: its inside is towards that room
+        const room = plan.rooms?.find((r) => r.floor === w.floor && w.sides?.includes(r.id))
+        const part = room?.parts.find((q) => (w.axis === 'u' ? Math.min(w.u0, w.u1) < q[2]! && Math.max(w.u0, w.u1) > q[0]! : Math.min(w.v0, w.v1) < q[3]! && Math.max(w.v0, w.v1) > q[1]!))
+        if (part) return [(part[0]! + part[2]!) / 2, (part[1]! + part[3]!) / 2]
+        const own = exterior.filter((x) => x.floor === w.floor)
+        return [(Math.min(...own.map((w) => Math.min(w.u0, w.u1))) + Math.max(...own.map((w) => Math.max(w.u0, w.u1)))) / 2, (Math.min(...own.map((w) => Math.min(w.v0, w.v1))) + Math.max(...own.map((w) => Math.max(w.v0, w.v1)))) / 2]
+      }
       // the outbuilding's walls are all outer walls of their own building
       const walls: Host[] = [
-        ...houseWalls.map((w) => ({ ...w, centre })),
+        ...houseWalls.map((w) => ({ ...w, centre: centreOf(w) })),
         ...(plan.outbuildings ?? []).flatMap((o) => o.walls.map((w): Host => ({ ...w, floor: 0, exterior: true, centre: [(o.aabb[0]! + o.aabb[2]!) / 2, (o.aabb[1]! + o.aabb[3]!) / 2] }))),
       ]
       const problems: string[] = []

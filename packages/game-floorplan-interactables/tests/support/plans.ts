@@ -26,6 +26,8 @@ export { engine, GameInteractables, GameInteractablesHousehold }
 
 /** A plan of the engine with every pack registered. */
 export const planOf = (template: string, seed: number, state = 'normal', extra: Record<string, unknown> = {}): TestPlan => engine.generate(template, { seed, state, ...extra }) as TestPlan
+/** A plan laid out as the Visor de casas 3D did (`visorLayout`): what the team's adapter golden was recorded from. */
+export const visorPlanOf = (template: string, seed: number, state = 'normal', extra: Record<string, unknown> = {}): TestPlan => planOf(template, seed, state, { visorLayout: true, ...extra })
 
 /** Templates of the residential, commercial and rural packs the tests walk through. */
 export const TEMPLATES = [

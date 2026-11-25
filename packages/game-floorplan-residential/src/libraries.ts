@@ -1,10 +1,11 @@
+import { visorLayout } from '@adatechnology/game-floorplan'
 import type { SlotDef, SlotKit, SlotLibrary } from '@adatechnology/game-floorplan'
 
 type LibFn = (room: { w: number; d: number }) => SlotDef[]
 
 /** Slot libraries by room type, built with the engine's slot kit. */
 export function createResidentialLibraries(kit: SlotKit): Record<string, SlotLibrary> {
-  const { wall, corner, center, windowSlot, on } = kit
+  const { wall, corner, center, windowSlot, on, beside } = kit
   const libs: Record<string, SlotLibrary> = {
     living: r => [
     wall('tv_unit_right', 'right', 0.5, [1.9, 0.5], { tv_unit: 3, tv_unit_small: 1, tv_unit_large: 2 }, { required: true, group: 'tv', clearance: 0.6 }),
@@ -37,8 +38,11 @@ export function createResidentialLibraries(kit: SlotKit): Record<string, SlotLib
   ],
     bedroom: _r => [
     wall('bed', 'any', 0.5, [1.9, 2.2], { bed: 3 }, { required: true, clearance: 0.5 }),
-    corner('nightstand_left', 'back-left', [0.5, 0.45], { nightstand: 1 }, { chance: 0.8, clearance: 0 }),
-    corner('nightstand_right', 'back-right', [0.5, 0.45], { nightstand: 1 }, { chance: 0.5, clearance: 0 }),
+    // beside the head of the bed, backed on its wall and facing the room as the bed does: the drawer opens to the free side
+    // (the Visor de casas 3D's golden keeps them in the room's back corners)
+    ...(visorLayout()
+      ? [corner('nightstand_left', 'back-left', [0.5, 0.45], { nightstand: 1 }, { chance: 0.8, clearance: 0 }), corner('nightstand_right', 'back-right', [0.5, 0.45], { nightstand: 1 }, { chance: 0.5, clearance: 0 })]
+      : [beside('nightstand_left', 'bed', 'left', { nightstand: 1 }, { chance: 0.8, clearance: 0 }), beside('nightstand_right', 'bed', 'right', { nightstand: 1 }, { chance: 0.5, clearance: 0 })]),
     wall('wardrobe', 'any', 0.35, [1.7, 0.7], { wardrobe: 4 }, { required: true, clearance: 0.5 }),
     wall('dresser', 'left', 0.55, [1.1, 0.5], { dresser: 1 }, { chance: 0.5, clearance: 0.5 }),
     wall('desk', 'left', 0.9, [1.2, 0.65], { desk: 1 }, { chance: 0.3, clearance: 0.6 }),

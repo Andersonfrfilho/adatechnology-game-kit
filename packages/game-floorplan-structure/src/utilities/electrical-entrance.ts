@@ -5,6 +5,7 @@ import { clamp, round2 } from './shared'
 import { atDoor, hasWindowAt } from './wall-points'
 import type { WallPoint } from './wall-points'
 import type { ElectricMeter } from './types'
+import { clashes, panelBox, plateBox, spotOf, wallItemBoxesOf } from './wall-reservations'
 
 const METER_SIZE = { w: 0.35, d: 0.2, h: 0.5 }
 /** The service pole stands on the sidewalk this far in front of the lot's front edge (metres), never inside the lot nor past the sidewalk onto the road. */
@@ -103,6 +104,13 @@ function mastEntrance(meter: ElectricMeter): NonNullable<Layout['electrical']['s
 /** The street brings the poles: only the house's own entrance stands in the lot. */
 const fromStreet = (layout: Layout): boolean => layout.streetPoles === true || layout.street === 'network'
 
+/** Height of the panel over the floor, metres. */
+const PANEL_HEIGHT = 1.5
+/** How far the panel's centre keeps from a window's side: its envelope with the door open, the 15 cm a curtain or blind hangs past the window, and a gap. */
+const PANEL_WINDOW_CLEARANCE = 0.7
+/** The clearance from a window the Visor de casas 3D kept (`visor`, the team's golden only). */
+const VISOR_PANEL_WINDOW_CLEARANCE = 0.3
+
 /** The distribution panel in the room of the main door, on the wall nearest the meter, clear of doors and windows and of tall furniture. */
 export function placePanel(layout: Layout): void {
   const { plan, rooms, electrical, pointsOf } = layout
@@ -112,16 +120,21 @@ export function placePanel(layout: Layout): void {
   const meter = electrical.serviceEntrance?.meter
   const targetU = meter ? meter.u : plan.w / 2
   const targetV = meter ? Math.max(0, meter.v) : 0
+  // the panel and the sweep of its door keep clear of what hangs on the wall (pictures, curtains past the window's sides) and of the sockets
+  const taken = wallItemBoxesOf(layout.items, room.floor).concat(electrical.outlets.filter((t) => t.floor === room.floor).map((t) => plateBox(t, t.y)))
+  // (the Visor de casas 3D kept only 30 cm from a window and looked at nothing else on the wall: its golden keeps that)
+  const free = (point: WallPoint): boolean => !!layout.visor || !taken.some((box) => clashes(box, panelBox(spotOf(point), PANEL_HEIGHT)))
+  const windowClearance = layout.visor ? VISOR_PANEL_WINDOW_CLEARANCE : PANEL_WINDOW_CLEARANCE
   let best: { point: WallPoint | undefined; score: number } | null = null
   for (const point of pointsOf.get(keyOf(room)) ?? []) {
-    if (point.blocked(1.5) || hasWindowAt(point, 1.5, 0.3) || atDoor(plan, room, point, 0.8)) continue
+    if (point.blocked(1.5) || hasWindowAt(point, PANEL_HEIGHT, windowClearance) || atDoor(plan, room, point, 0.8) || !free(point)) continue
     const score = Math.hypot(point.u - targetU, point.v - targetV) + (point.exterior ? 0 : 3)
     if (!best || score < best.score) best = { point, score }
   }
   if (!best) best = { point: (pointsOf.get(keyOf(room)) ?? [])[0], score: 0 }
   if (best.point) {
     const p = best.point
-    electrical.panel = { id: 'panel', room: room.id, floor: room.floor, u: p.u, v: p.v, y: 1.5, c: p.c, axis: p.axis, pos: p.pos, frontU: p.nu, frontV: p.nv, w: 0.3, h: 0.4, breakers: 0 }
+    electrical.panel = { id: 'panel', room: room.id, floor: room.floor, u: p.u, v: p.v, y: PANEL_HEIGHT, c: p.c, axis: p.axis, pos: p.pos, frontU: p.nu, frontV: p.nv, w: 0.3, h: 0.4, breakers: 0 }
   }
   if (electrical.serviceEntrance && electrical.panel) {
     const entrance = electrical.serviceEntrance

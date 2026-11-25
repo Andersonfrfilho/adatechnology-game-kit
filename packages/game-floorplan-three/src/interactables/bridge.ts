@@ -4,7 +4,8 @@ import { isMesh } from '@adatechnology/game-shapes-three';
 import type * as THREE_NS from 'three';
 import type { ObjectSpec, Transform, Vec3, WorldEvent } from '@adatechnology/game-interactables';
 import type { PlanEntry, SourcePlan, WaterNetwork } from '@adatechnology/game-floorplan-interactables';
-import type { Eye, HouseInstance, HouseInteractives, Hex, InteractablesRefs, InteractablesState, InteractiveState, Accumulator, Kernel, KernelInteractablesBridge, KitEntry, KitInteractionTarget, KitRoomState, KitSeat, KitTarget, KitTargetOptions, MaterialTable, Shared } from '../kernel-types.js';
+import type { InteractablesContentsView } from '../adapter-shapes.js';
+import type { Eye, HouseInstance, HouseInteractives, Hex, InteractablesRefs, InteractablesState, InteractiveState, Kernel, KernelInteractablesBridge, KitEntry, KitInteractionTarget, KitRoomState, KitSeat, KitTarget, KitTargetOptions, MaterialTable, Shared } from '../kernel-types.js';
 
 /** What the lamp plan reads of a furniture item. */
 type HouseItemLike = { id: string; type: string; room?: string | null };
@@ -14,11 +15,9 @@ type SavedObject = { devices?: Record<string, { on?: boolean }>; parts?: Record<
 type WorldObjectLike = { transform: Transform; spec: ObjectSpec };
 /** A seat of a kit object. */
 type SeatLike = NonNullable<ObjectSpec['seats']>[number];
-/** An item of the household catalogue as the open containers draw it. */
-type ItemDef = { shape: string; size: Vec3; color?: Hex | null };
 
 export function installInteractablesBridge(K: Kernel, shared: Shared): void {
-  const { t, THREE, invalidate, invalidateShadow, cfg, DOC, LIGHT_TYPES, _Y, _q, _v3, accFor, applyLight, cursor, hashString, hudMessage, lightBase, pieceRecord, put, rgbOf, sh, wallBlocks } = K;
+  const { t, THREE, invalidate, invalidateShadow, cfg, DOC, LIGHT_TYPES, _Y, _q, _v3, accFor, applyLight, cursor, hashString, hudMessage, lightBase, pieceRecord, rgbOf, wallBlocks } = K;
   const enter = (...a: Parameters<Kernel['enter']>): ReturnType<Kernel['enter']> => K.enter(...a);
   const roomLightMask = (...a: Parameters<Kernel['roomLightMask']>): ReturnType<Kernel['roomLightMask']> => K.roomLightMask(...a);
   // ---------------- 75 interactables (cfg.interactives) ----------------
@@ -50,7 +49,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const ik = K.IVK as InteractablesRefs, r = shared.ctx.r, A = ik.A, world0 = null; void world0;
     const source = r as unknown as SourcePlan; /* the house's record is the plan's result (plus the decor items it added) */
     const plane = A.plan(source, { seed: r.seed });
-    const IV = { k: ik, plane, world: null as unknown as InteractablesState['world'], water, entries: new Map(), roots: [], replace: new Set(), roomStates: new Map(), lampRoom: new Map(), anim: new Map(), screens: new Map(), efx: null, items: null, itemsDirty: true, itemsT: 0, dirty: true, list: null, listT: 0, t: 0, circuits: [], switchRooms: new Set(), warnings: [], tBuild: 0 } as unknown as InteractablesState; /* the world and the materials come next */
+    const IV = { k: ik, plane, world: null as unknown as InteractablesState['world'], water, entries: new Map(), roots: [], replace: new Set(), roomStates: new Map(), lampRoom: new Map(), anim: new Map(), screens: new Map(), efx: null, contents: new Map(), itemsDirty: true, itemsT: 0, dirty: true, list: null, listT: 0, t: 0, circuits: [], switchRooms: new Set(), warnings: [], tBuild: 0 } as unknown as InteractablesState; /* the world and the materials come next */
     h.IV = IV; const t0 = performance.now();
     const lamps = new Set(plane.items.filter(e => e.type === 'lamp').map(e => e.id));
     for (const id of plane.mapped) if (!lamps.has(id)) IV.replace.add(id);
@@ -151,16 +150,14 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
           if (!d.plug) continue;
           const wire = (spec.wires || []).find(x => x.id === d.id + '_cord'), pts = (wire ? wire.points : [d.plug]).map(p => wl(o, p as Vec3));
           const sid = w.power.pluggedInto(E.id, d.id);
-          if (sid) {
-            const cut = sid.indexOf(':'), so = w.get(sid.slice(0, cut)), sk = so && (so.spec.sockets || []).find(s => s.id === sid.slice(cut + 1));
-            if (so && sk) {
-              const sp = wl(so, sk.pos), dir = [Math.sin(so.transform.ry), Math.cos(so.transform.ry)] as const, last = pts[pts.length - 1] as Vec3;
-              if (last[1] < 0.3 + E.pos[1]) {
-                const foot: Vec3 = [sp[0] + dir[0] * 0.035, E.pos[1] + 0.012, sp[2] + dir[1] * 0.035];
-                pts.push([last[0] + (foot[0] - last[0]) * 0.4, E.pos[1] + 0.012, last[2] + (foot[2] - last[2]) * 0.4], [last[0] + (foot[0] - last[0]) * 0.75, E.pos[1] + 0.012, last[2] + (foot[2] - last[2]) * 0.75], foot, [foot[0], Math.max(E.pos[1] + 0.1, sp[1] - 0.04), foot[2]], [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012]);
-              } else { const hang = ik.gfx.catenary(last, [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012], 0.1, 8); hang.shift(); for (const p of hang) pts.push(p); }
-            }
-          }
+          const cut = sid ? sid.indexOf(':') : -1, so = sid ? w.get(sid.slice(0, cut)) : undefined, sk = sid && so ? (so.spec.sockets || []).find(s => s.id === sid.slice(cut + 1)) : undefined;
+          if (!so || !sk) continue; // (a device plugged into no socket has no cord: its stub lay loose on the floor)
+          const sp = wl(so, sk.pos), dir = [Math.sin(so.transform.ry), Math.cos(so.transform.ry)] as const, last = pts[pts.length - 1] as Vec3;
+          if (last[1] < 0.3 + E.pos[1]) {
+            const foot: Vec3 = [sp[0] + dir[0] * 0.035, E.pos[1] + 0.012, sp[2] + dir[1] * 0.035];
+            pts.push([last[0] + (foot[0] - last[0]) * 0.4, E.pos[1] + 0.012, last[2] + (foot[2] - last[2]) * 0.4], [last[0] + (foot[0] - last[0]) * 0.75, E.pos[1] + 0.012, last[2] + (foot[2] - last[2]) * 0.75], foot, [foot[0], Math.max(E.pos[1] + 0.1, sp[1] - 0.04), foot[2]], [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012]);
+          } else { const hang = ik.gfx.catenary(last, [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012], 0.1, 8); hang.shift(); for (const p of hang) pts.push(p); }
+          shared.ctx.cordPaths?.push({ object: E.id, device: d.id, points: pts.map((p) => [p[0], p[1], p[2]] as const) });
           tube(pts, 0.006, IV_WIRE.cord as Hex, 0, 0, 0, 0);
         }
       }
@@ -183,10 +180,10 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const IV = h.IV; if (!IV) { if (e.type === 'message') hudMessage(e.text); return; }
     IV.dirty = true;
     switch (e.type) {
-      case 'part': if (e.part === '_x') break; IV.anim.set(e.object + '|' + e.part, { object: e.object, part: e.part, target: e.target, t0: IV.t }); IV.itemsDirty = true; invalidate(); break;
+      case 'part': { if (e.part === '_x') break; IV.anim.set(e.object + '|' + e.part, { object: e.object, part: e.part, target: e.target, t0: IV.t }); IV.itemsDirty = true; const E = e.target > 0 ? IV.entries.get(e.object) : undefined; if (E) ivContents(IV, E)?.sync(); invalidate(); break; } // the contents are drawn before the part moves, so they ride it from its first frame
       case 'device': { const roomId = IV.lampRoom.get(e.object); if (roomId) shared.partState.set('light:' + roomId, !!e.on); invalidate(); break; }
       case 'message': hudMessage(e.text); break;
-      case 'pickup': IV.itemsDirty = true; if (e.actor === 'player' && e.stack) { const d = IV.world.t('item.' + e.stack.type); hudMessage(t('message.pickedUp', { name: d, qty: e.stack.qty > 1 ? ' x' + e.stack.qty : '' })); } break;
+      case 'pickup': IV.contents.get(e.object)?.sync(); IV.itemsDirty = true; if (e.actor === 'player' && e.stack) { const d = IV.world.t('item.' + e.stack.type); hudMessage(t('message.pickedUp', { name: d, qty: e.stack.qty > 1 ? ' x' + e.stack.qty : '' })); } break;
       case 'seat': IV.itemsDirty = true; break;
     }
     const ik = K.IVK as InteractablesRefs;
@@ -207,6 +204,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     if (IV.anim.size) {
       for (const [k, a] of IV.anim) {
         const E = IV.entries.get(a.object); if (E && E.parts) ik.gfx.syncObject(w, a.object, E.parts, { time: IV.t });
+        IV.contents.get(a.object)?.sync();
         if (w.partT(a.object, a.part) === a.target || IV.t - a.t0 > 4) IV.anim.delete(k);
       }
       invalidateShadow(); if (!IV.anim.size) IV.itemsDirty = true;
@@ -217,45 +215,30 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const ivk = K.IVK as InteractablesRefs;
     if (em.length && !IV.efx && ivk.effects) { const g = h.houseGroup; IV.efx = ik.gfx.createEffects(g, { maxParticles: 1400, seed: 11, document: DOC, ...(ivk.effectSink ? { effects: ivk.effectSink } : {}) } as Record<string, unknown>); }
     if (IV.efx) { const alive = IV.efx.stats().alive; if (em.length || alive) { IV.efx.update(dt, em, (ivk.camera ? (typeof ivk.camera === 'function' ? ivk.camera() : ivk.camera) : undefined) as never); invalidate(); } }
-    if (ivk.items && IV.itemsDirty && IV.t - IV.itemsT > 0.1 && !IV.anim.size) ivItems(IV, h);
+    if (ivk.items && IV.itemsDirty && IV.t - IV.itemsT > 0.1) ivItems(IV, h);
   }
-  // items inside open containers (a single mesh per house, rebuilt when something opens, closes or is picked up)
-  const IV_SHAPE: KernelInteractablesBridge['IV_SHAPE'] = {
-    can: [['cyl', 1, 1, 1, 0, 1]], bottle: [['cyl', 0.9, 0.72, 0.9, 0, 1], ['cyl', 0.36, 0.3, 0.36, 0.7, 0.55]], jar: [['cyl', 1, 0.86, 1, 0, 1], ['cyl', 1.02, 0.14, 1.02, 0.86, 0.6]], cup: [['cyl', 1, 1, 1, 0, 1]],
-    dish: [['cyl', 1, 0.3, 1, 0, 1]], roll: [['cyl', 1, 1, 1, 0, 1]], tube: [['cyl', 0.6, 1, 0.6, 0, 1]], fruit: [['sphere', 1, 1, 1, 0, 1]], bag: [['box', 1, 0.9, 1, 0, 1], ['box', 0.9, 0.1, 0.5, 0.9, 0.7]],
-    box: [['box', 1, 1, 1, 0, 1]], cloth: [['box', 1, 1, 1, 0, 1]], paper: [['box', 1, 1, 1, 0, 1]], tool: [['box', 1, 1, 1, 0, 1]], shoe: [['box', 1, 0.7, 1, 0, 1]],
-  };
+  // items inside containers: the real model of each stack (injected `itemModel`), one view per object, hanging on the part its slot rides on
+  function ivContents(IV: InteractablesState, E: KitEntry): InteractablesContentsView | null {
+    const had = IV.contents.get(E.id); if (had) return had;
+    const ik = IV.k, make = ik.GT.createContentsView;
+    if (!ik.items || !ik.itemModel || !make || !(E.spec.containers || []).length) return null;
+    const view = make(THREE, { world: IV.world, objectId: E.id, root: E.root, buildItem: ik.itemModel });
+    IV.contents.set(E.id, view); view.sync(); invalidateShadow();
+    return view;
+  }
+  // open shelves near the focus and containers left open (a restored state) get their view; views already made catch up with pickups and puts
   function ivItems(IV: InteractablesState, h: HouseInstance): void {
     IV.itemsDirty = false; IV.itemsT = IV.t;
-    const w = IV.world, items = IV.k.A.household.items, f = IV.focus, g0 = cursor.group, list: [KitEntry, string, number, ItemDef][] = []; let fl: THREE_NS.Vector3 | null = null;
+    const w = IV.world, f = IV.focus; let fl: THREE_NS.Vector3 | null = null;
     if (f) { h.houseGroup.updateWorldMatrix(true, false); fl = _v3.set(f.x, f.y, f.z); h.houseGroup.worldToLocal(fl); }
     for (const E of IV.entries.values()) {
+      const view = IV.contents.get(E.id); if (view) { view.sync(); continue; }
       if (fl && E.floor >= 0 && Math.hypot(E.pos[0] - fl.x, E.pos[2] - fl.z) > 14) continue;
       for (const c of E.spec.containers || []) {
-        if (!w.accessible(E.id, c.id)) continue; if (c.access && w.partT(E.id, c.access) < 0.02) continue;
-        const st = w.contents(E.id, c.id);
-        for (let i = 0; i < st.length; i++) { const stack = st[i]; if (stack && items[stack.type]) list.push([E, c.id, i, items[stack.type] as ItemDef]); }
+        if (c.access && w.partT(E.id, c.access) <= 0) continue;
+        if (w.contents(E.id, c.id).some(st => st !== null)) { ivContents(IV, E); break; }
       }
     }
-    if (!list.length) { if (IV.items) IV.items.visible = false; return; }
-    cursor.group = 'iv-items';
-    try {
-      for (const [E, cid, slot, def] of list) {
-        const p = w.slotPosition(E.id, cid, slot), form = IV_SHAPE[def.shape] || (IV_SHAPE.box as NonNullable<typeof IV_SHAPE['box']>);
-        for (const [geo, fx, fy, fz, y0, tone] of form) {
-          const sx = def.size[0] * fx, sy = def.size[1] * fy, sz = def.size[2] * fz; _q.setFromAxisAngle(_Y, E.ry);
-          const color = def.color == null ? 0xcccccc : def.color; put('plain', geo, p[0], p[1] + def.size[1] * y0 + sy / 2, p[2], _q, sx, sy, sz, tone === 1 ? color : sh(color, tone));
-        }
-      }
-      const A = cursor.accs.get('iv-items|plain') as Accumulator; cursor.accs.delete('iv-items|plain');
-      const gm = new THREE.BufferGeometry();
-      gm.setAttribute('position', new THREE.BufferAttribute(A.p.slice(0, A.nv * 3), 3)); gm.setAttribute('normal', new THREE.BufferAttribute(A.n.slice(0, A.nv * 3), 3));
-      gm.setAttribute('color', new THREE.BufferAttribute(A.c.slice(0, A.nv * 3), 3)); gm.setAttribute('uv', new THREE.BufferAttribute(A.u.slice(0, A.nv * 2), 2));
-      gm.setIndex(new THREE.BufferAttribute(A.i.slice(0, A.ni), 1)); gm.computeBoundingSphere();
-      if (!IV.items) { const mesh = new THREE.Mesh(gm, (shared.mats as MaterialTable).plain); IV.items = mesh; mesh.name = 'iv-items'; mesh.castShadow = false; mesh.receiveShadow = true; mesh.frustumCulled = false; h.houseGroup.add(mesh); }
-      else { IV.items.geometry.dispose(); IV.items.geometry = gm; }
-      IV.items.visible = true;
-    } finally { cursor.group = g0; }
     invalidateShadow();
   }
   // E target among the kit objects: the best candidate in the world (reach and cone), no wall in between; returns {score, text, action, target}
@@ -294,7 +277,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const IV = h.IV as InteractablesState; try { h.state.iv = IV.world.serialize(); } catch (e) { /* no stored state */ }
     if (IV.efx) { try { IV.efx.dispose(); } catch (e) { /* already released */ } }
     for (const sc of IV.screens.values()) sc.dispose();
-    if (IV.items) IV.items.geometry.dispose();
+    for (const view of IV.contents.values()) view.dispose(); IV.contents.clear();
   }
   // what the house shows whoever uses it: house.interactives
   function ivPublish(h: HouseInstance): HouseInteractives {
@@ -320,6 +303,6 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     };
     return IV.pub;
   }
-  const defined: KernelInteractablesBridge = { IV_MATERIAL, IV_WIRE, IV_DOOR, ivGroup, ivAccumulate, ivBuild, ivRoomEffective, ivDraw, ivCords, ivAssemble, ivScreen, ivEvent, ivSeat, ivUpdate, IV_SHAPE, ivItems, ivTarget, ivRoomLight, ivParts, ivDispose, ivPublish };
+  const defined: KernelInteractablesBridge = { IV_MATERIAL, IV_WIRE, IV_DOOR, ivGroup, ivAccumulate, ivBuild, ivRoomEffective, ivDraw, ivCords, ivAssemble, ivScreen, ivEvent, ivSeat, ivUpdate, ivItems, ivContents, ivTarget, ivRoomLight, ivParts, ivDispose, ivPublish };
   Object.assign(K, defined);
 }

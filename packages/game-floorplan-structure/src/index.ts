@@ -51,4 +51,5 @@ export { DEFAULT_LAMP_TYPE, LAMP_TYPE_BY_ROOM, OUTBUILDING_LAMP_TYPE, OUTDOOR_LA
 export type { LampType, LightPoint } from './utilities/lamp-types'
 export type { Gas, GasMeter } from './utilities/gas'
 export { OUTBUILDING_ROOM_TYPE, outbuildingCeilingLight, withOutbuildingRooms } from './utilities/outbuildings'
+export { PANEL_ENVELOPE, WALL_MOUNT_GAP } from './utilities/wall-reservations'
 export * from './masonry-units'

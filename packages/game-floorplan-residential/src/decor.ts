@@ -1,3 +1,4 @@
+import { visorLayout } from '@adatechnology/game-floorplan'
 import type { DecorPass, DecorPassContext, PlacedItem, Rect, Room, Vec2 } from '@adatechnology/game-floorplan'
 import type { DecorProfile } from './decor-profiles'
 
@@ -55,6 +56,23 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
     return seg.axis === 'u' ? [center - w / 2, seg.pos + n * off - d / 2, center + w / 2, seg.pos + n * off + d / 2] : [seg.pos + n * off - d / 2, center - w / 2, seg.pos + n * off + d / 2, center + w / 2]
   }
   const segNormal = (seg: WallRun): Vec2 => (seg.axis === 'u' ? [0, seg.side] : [seg.side, 0])
+  /** The strip in front of an item that its doors or drawers open into (`opening` of the catalogue). */
+  const frontStrip = (m: PlacedItem): Rect | null => {
+    const depth = CATALOG[m.type]?.opening
+    if (!depth || !m.aabb) return null
+    const r = m.aabb
+    const fu = m.frontU ?? 0
+    const fv = m.frontV ?? 1
+    return fv > 0 ? [r[0], r[3], r[2], r[3] + depth] : fv < 0 ? [r[0], r[1] - depth, r[2], r[1]] : fu > 0 ? [r[2], r[1], r[2] + depth, r[3]] : [r[0] - depth, r[1], r[0], r[3]]
+  }
+  /** A box of the room, `y0`..`y1` high, runs into an item standing there or into what an item's doors and drawers open into. */
+  const occupiedAt = (room: Room, r: Rect, y0: number, y1: number): boolean =>
+    !visorLayout() && itemsOfRoom(room).some((m) => {
+      if (m.flat || !m.aabb) return false
+      if (overlaps(r, m.aabb) && (m.y || 0) < y1 && topOf(m) > y0) return true
+      const strip = frontStrip(m)
+      return !!strip && overlaps(r, strip) && (m.y || 0) < y1 && topOf(m) > y0
+    })
 
   // ---- condensers (declared first: used by the per-room loop) ----
   const condenserOutside = (room: Room, seg: WallRun, c0: number, _split: PlacedItem): PlacedItem | null => {
@@ -164,7 +182,10 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
         if (i === 0 && ceiling > 4 && isHigh) type = 'chandelier'
         const it = CATALOG[type]
         const y = r2(ceiling - it.h - (ceiling > 4 && (type === 'chandelier' || type === 'pendant') ? 1.2 : 0))
-        add(make(room, type, [cx - it.w / 2, cz - it.d / 2, cx + it.w / 2, cz + it.d / 2], [0, 1], { y, h: it.h }))
+        const rect: Rect = [cx - it.w / 2, cz - it.d / 2, cx + it.w / 2, cz + it.d / 2]
+        // a light never hangs into another (the pendant over the table took this spot) nor into what reaches the ceiling (a flight of stairs)
+        if (occupiedAt(room, inflate(rect, 0.05), y, y + it.h)) continue
+        add(make(room, type, rect, [0, 1], { y, h: it.h }))
       }
     }
     // air conditioning (split + condenser)
@@ -245,7 +266,8 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
           const x = k % 2 ? R[2] - 0.45 : R[0] + 0.45
           const z = k < 2 ? R[1] + 0.45 : R[3] - 0.45
           const r: Rect = [x - 0.15, z - 0.15, x + 0.15, z + 0.15]
-          if (!zonesOfFloor(plan, room.floor).some((zz) => overlaps(r, zz))) add(make(room, 'hanging_plant', r, [0, 1], { y: r2(ceiling - 1.2), h: 0.7 }))
+          const hangY = r2(ceiling - 1.2)
+          if (!zonesOfFloor(plan, room.floor).some((zz) => overlaps(r, zz)) && !occupiedAt(room, r, hangY, hangY + 0.7)) add(make(room, 'hanging_plant', r, [0, 1], { y: hangY, h: 0.7 }))
         }
       }
       // curtains and blinds
@@ -259,8 +281,17 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
         const d = it.d
         const cc = j.axis === 'u' ? [j.u, j.v + n[1] * (MARGIN + d / 2)] : [j.u + n[0] * (MARGIN + d / 2), j.v]
         const r: Rect = j.axis === 'u' ? [cc[0] - w / 2, cc[1] - d / 2, cc[0] + w / 2, cc[1] + d / 2] : [cc[0] - d / 2, cc[1] - w / 2, cc[0] + d / 2, cc[1] + w / 2]
-        const h = type === 'curtain' ? r2(Math.min(ceiling - 0.1, j.y1 + 0.25)) : r2(j.y1 - j.y0 + 0.2)
-        add(make(room, type, r, n, { w, h, y: type === 'curtain' ? 0.05 : r2(j.y0 - 0.1), window: j.id }))
+        // a curtain down to the floor needs the wall under the window free; with furniture there (or the swing of its doors) the window gets blinds, and none when they would not fit either
+        const curtainY = 0.05
+        const curtainH = r2(Math.min(ceiling - 0.1, j.y1 + 0.25))
+        const blindsY = r2(j.y0 - 0.1)
+        const blindsH = r2(j.y1 - j.y0 + 0.2)
+        const chosen = type === 'curtain' && !occupiedAt(room, r, curtainY, curtainY + curtainH) ? 'curtain' : occupiedAt(room, r, blindsY, blindsY + blindsH) ? null : 'blinds'
+        if (!chosen) continue
+        const d2 = CATALOG[chosen].d
+        const cc2 = j.axis === 'u' ? [j.u, j.v + n[1] * (MARGIN + d2 / 2)] : [j.u + n[0] * (MARGIN + d2 / 2), j.v]
+        const r2c: Rect = j.axis === 'u' ? [cc2[0] - w / 2, cc2[1] - d2 / 2, cc2[0] + w / 2, cc2[1] + d2 / 2] : [cc2[0] - d2 / 2, cc2[1] - w / 2, cc2[0] + d2 / 2, cc2[1] + w / 2]
+        add(make(room, chosen, r2c, n, chosen === 'curtain' ? { w, h: curtainH, y: curtainY, window: j.id } : { w, h: blindsH, y: blindsY, window: j.id }))
       }
     }
   }
@@ -275,7 +306,10 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
         const segment = plan.lot.perimeter.find((q: { side: string; u0: number; u1: number }) => q.side === 'front' && Math.min(q.u0, q.u1) <= u - it.w / 2 + 1e-6 && Math.max(q.u0, q.u1) >= u + it.w / 2 - 1e-6)
         const zone = plan.zones.find((z) => z.parts.some((q) => u >= q[0] && u <= q[2] && -setback + 0.1 >= q[1] && -setback + 0.1 <= q[3]))
         if (!segment || !zone) continue
-        const box = make(zone, 'mailbox', [u - it.w / 2, -setback - it.d / 2, u + it.w / 2, -setback + it.d / 2], [0, -1])
+        const boxRect: Rect = [u - it.w / 2, -setback - it.d / 2, u + it.w / 2, -setback + it.d / 2]
+        // not into a tree or a shrub of the front garden
+        if (occupiedAt(zone, boxRect, 1.1, 1.1 + it.h)) continue
+        const box = make(zone, 'mailbox', boxRect, [0, -1])
         add(Object.assign(box, { y: 1.1, slot: 'mailbox', perimeter: segment.id, side: 'front', gate: gate.id }))
         break
       }

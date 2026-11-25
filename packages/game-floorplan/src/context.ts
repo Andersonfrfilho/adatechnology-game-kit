@@ -1,3 +1,4 @@
+import { visorLayout } from './layout-mode'
 import { EPS } from './constants'
 import { wallMargin } from './wall-thickness'
 import {
@@ -153,6 +154,7 @@ export function createPlacementContext(plan: Plan, items: PlacedItem[]): Placeme
         continue
       }
       if (occupied.some((m) => !m.low && !m.flat && !m.on && !m.decor && (m.clearance ?? 0) > 0 && overlaps(r, clearRect(m._r as Rect, [m.frontU ?? 0, m.frontV ?? 1], m.clearance ?? 0)))) continue
+      if (!visorLayout() && occupied.some((m) => !m.flat && !m.on && !m.decor && (registries().CATALOG[m.type]?.opening ?? 0) > 0 && overlaps(r, clearRect(m._r as Rect, [m.frontU ?? 0, m.frontV ?? 1], registries().CATALOG[m.type]?.opening ?? 0)))) continue
       if (opts.without && opts.without(r)) continue
       if (!reachable(opts.railing || gridOf(room), solidList.concat([r]), room.outdoor ? 0.16 : plan.playerRadius)) continue
       return r

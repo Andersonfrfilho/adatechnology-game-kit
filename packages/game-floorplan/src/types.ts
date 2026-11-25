@@ -35,6 +35,8 @@ export interface FurnitureDef {
   decor?: boolean
   /** Hangs a wall cabinet over the counter (y 1.55 to 2.15 m): it blocks a window unless the fill dropped the cabinet. */
   overhead?: boolean
+  /** Depth in front of the item that its doors or drawers sweep, with the reach to use them (metres): the fill keeps it clear of walls and of other items, even for a low item. */
+  opening?: number
   /** Effective height that blocks a window when taller than `h` (a shower enclosure is 0.1 m tray plus 1.95 m glass). */
   windowHeight?: number
   /** Plugs into a socket (lamps, appliances). */
@@ -47,7 +49,8 @@ export interface FurnitureDef {
 }
 export type ItemInput = Pick<FurnitureDef, 'type' | 'category' | 'w' | 'd' | 'h'> & Partial<FurnitureDef>
 
-export type Anchor = 'wall' | 'corner' | 'center' | 'window' | 'on' | 'inside'
+/** `beside`: on the floor next to the item of the slot `on`, backed on the same line as its back and facing the same way, on its `side` (`left` or `right`, seen from its front). */
+export type Anchor = 'wall' | 'corner' | 'center' | 'window' | 'on' | 'inside' | 'beside'
 export type Side = 'left' | 'right' | 'front' | 'back' | 'any'
 export type FacingRule = 'center' | 'door' | 'target' | 'u+' | 'u-' | 'v+' | 'v-'
 
@@ -91,6 +94,7 @@ export interface SlotKit {
   windowSlot(id: string, size: number[], cats: Weights, o?: Partial<SlotDef>): SlotDef
   on(id: string, parent: string, cats: Weights, o?: Partial<SlotDef>): SlotDef
   inside(id: string, parent: string, cats: Weights, o?: Partial<SlotDef>): SlotDef
+  beside(id: string, parent: string, side: 'left' | 'right', cats: Weights, o?: Partial<SlotDef>): SlotDef
 }
 
 export interface RoomDef {
@@ -328,6 +332,8 @@ export interface FloorplanOptions {
   day?: number
   /** Region of the world for the finds (`FindsQuery.region`), as the item pack names it. */
   region?: string
+  /** Lays the furniture out as the Visor de casas 3D did (no room kept for doors and drawers, a nightstand in the bed's corner): the team's golden only. Default `false`. */
+  visorLayout?: boolean
   [extra: string]: Json
 }
 

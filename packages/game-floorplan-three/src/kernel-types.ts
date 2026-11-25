@@ -228,6 +228,8 @@ export interface Mount extends Frame {
   typeWith?: string | null
   /** Hose of a wall tap, as points from the tap (`furniture/yard`). */
   hose?: number[][]
+  /** How far (m) from its stem a potted plant may spread its crown and leaves: the room the walls and the furniture round it leave (`furniture/plant-room`). */
+  reach?: number
   u?: number
   v?: number
   [extra: string]: unknown

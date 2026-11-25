@@ -475,182 +475,182 @@
   ]
  },
  "household/fridge:high": {
-  "hash": "88b62dc1",
+  "hash": "a86ecb9d",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 7350b0ee",
-   "0/1 Mesh 62bb594c",
+   "0/0 Mesh acc1cc4",
+   "0/1 Mesh c33b00b5",
    "0/2 Mesh 3c2665e1",
    "0/3 Group c18b9ee3",
-   "0/3/0 Mesh 75e3b1c5",
-   "0/3/1 Mesh 60ee786",
+   "0/3/0 Mesh 7519e533",
+   "0/3/1 Mesh 190d38c9",
    "0/4 Group 6f0e1984",
-   "0/4/0 Mesh ddb6d750",
-   "0/4/1 Mesh dc2d5274"
+   "0/4/0 Mesh 787a0a0f",
+   "0/4/1 Mesh 83a8b983"
   ]
  },
  "household/fridge_compact:high": {
-  "hash": "38bd15ca",
+  "hash": "2b5d0ec2",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f95b58a3",
-   "0/1 Mesh de402c2b",
+   "0/0 Mesh 77cd5578",
+   "0/1 Mesh e3d28fdf",
    "0/2 Group c5b13e7c",
-   "0/2/0 Mesh 74aaabd2",
-   "0/2/1 Mesh d3d2915c",
+   "0/2/0 Mesh f6e7e3f8",
+   "0/2/1 Mesh 55695029",
    "0/3 Group 38e0153",
    "0/3/0 Mesh a0a0a8f1",
-   "0/3/1 Mesh 46cd3407"
+   "0/3/1 Mesh 14a3d5b5"
   ]
  },
  "household/kitchen_cabinet_base:high": {
-  "hash": "2c8300dc",
+  "hash": "d8a3f2c5",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 7c135064",
+   "0/0 Mesh 463b1f04",
    "0/1 Mesh 63f111a7",
    "0/2 Group 3b4cae40",
-   "0/2/0 Mesh a436d7fb",
+   "0/2/0 Mesh 28adf914",
    "0/2/1 Mesh 6eee35aa",
-   "0/2/2 Mesh f41cf752",
+   "0/2/2 Mesh de3c7290",
    "0/3 Group 64c28fcd",
    "0/3/0 Mesh 3360c75a",
-   "0/3/1 Mesh cd744da1",
-   "0/3/2 Mesh b449cabb",
+   "0/3/1 Mesh c4904ee",
+   "0/3/2 Mesh 846f5d3c",
    "0/4 Group 4f2ab625",
    "0/4/0 Mesh 8695eec6",
-   "0/4/1 Mesh 3f2048bf",
-   "0/4/2 Mesh 64866a48"
+   "0/4/1 Mesh cf2ab666",
+   "0/4/2 Mesh 73906a83"
   ]
  },
  "household/kitchen_cabinet_wall:high": {
-  "hash": "14a2ea79",
+  "hash": "d1a6b61f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh b9abf4da",
+   "0/0 Mesh a4891c2e",
    "0/1 Mesh dadb0eb3",
    "0/2 Group 6ccab790",
    "0/2/0 Mesh 36421598",
-   "0/2/1 Mesh f488dd4a",
+   "0/2/1 Mesh ca4d66c3",
    "0/2/2 Mesh ce47e1e8",
    "0/3 Group 36b7ec6a",
    "0/3/0 Mesh 8b3e17e1",
-   "0/3/1 Mesh f1023572",
+   "0/3/1 Mesh b425ccb9",
    "0/3/2 Mesh 931ef328"
   ]
  },
  "household/pantry:high": {
-  "hash": "fe5975ed",
+  "hash": "fa95c72f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a42e6d1f",
+   "0/0 Mesh c6a6b497",
    "0/1 Mesh 311fb9b0",
    "0/2 Group 37f8ed94",
    "0/2/0 Mesh 844272af",
-   "0/2/1 Mesh 251c3e09",
+   "0/2/1 Mesh dc4eb2c7",
    "0/2/2 Mesh ce47e1e8",
    "0/3 Group b1299b44",
    "0/3/0 Mesh ec0c292",
-   "0/3/1 Mesh f2d18465",
+   "0/3/1 Mesh 6704519f",
    "0/3/2 Mesh 931ef328"
   ]
  },
  "household/wardrobe:high": {
-  "hash": "cdcdb072",
+  "hash": "1bd1e5f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 62eb749e",
-   "0/1 Mesh 5b3d563a",
-   "0/2 Mesh 8ad4809d",
+   "0/0 Mesh 5357850d",
+   "0/1 Mesh 10e29b86",
+   "0/2 Mesh 776ffed8",
    "0/3 Mesh 1888ff6b",
    "0/4 Group 363d4486",
    "0/4/0 Mesh 56481829",
-   "0/4/1 Mesh b58f1dab",
-   "0/4/2 Mesh 587e0b6",
+   "0/4/1 Mesh ae751d6",
+   "0/4/2 Mesh 1c103ede",
    "0/5 Group 4c50fbdc",
    "0/5/0 Mesh c5503bf8",
-   "0/5/1 Mesh ad412d7",
-   "0/5/2 Mesh 79f82360",
+   "0/5/1 Mesh 27ff07ba",
+   "0/5/2 Mesh 2c9ba5b4",
    "0/5/3 Mesh eec1965b",
    "0/6 Group a14e1b1e",
    "0/6/0 Mesh d9837dba",
-   "0/6/1 Mesh 879be387",
-   "0/6/2 Mesh 4c84e525",
+   "0/6/1 Mesh 97f70066",
+   "0/6/2 Mesh 64105c58",
    "0/7 Group 60aa941",
-   "0/7/0 Mesh 1e077756",
+   "0/7/0 Mesh a1ab7490",
    "0/7/1 Mesh d3cac8b2",
-   "0/7/2 Mesh 6e636f31",
+   "0/7/2 Mesh 5a97935a",
    "0/8 Group cf6ed507",
-   "0/8/0 Mesh c852c97e",
+   "0/8/0 Mesh 82e00d78",
    "0/8/1 Mesh 73259fec",
-   "0/8/2 Mesh c4de075f",
+   "0/8/2 Mesh 528bf0fc",
    "0/9 Group 6dcfa90d",
-   "0/9/0 Mesh 7d9c8cb2",
+   "0/9/0 Mesh 56f35acc",
    "0/9/1 Mesh 30a256d6",
-   "0/9/2 Mesh 54bb8b6d"
+   "0/9/2 Mesh 31192b76"
   ]
  },
  "household/dresser:high": {
-  "hash": "e8a47b08",
+  "hash": "8a239f4",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 6a8d1a1c",
    "0/1 Mesh 677084a9",
    "0/2 Group 46391ceb",
-   "0/2/0 Mesh 85a0e410",
+   "0/2/0 Mesh 1b761e18",
    "0/2/1 Mesh 985d0363",
-   "0/2/2 Mesh 56bfc434",
+   "0/2/2 Mesh b70fb044",
    "0/3 Group 5cd4ab45",
-   "0/3/0 Mesh 10b8666e",
+   "0/3/0 Mesh fde133b2",
    "0/3/1 Mesh abaeba5f",
-   "0/3/2 Mesh 647ec2bc",
+   "0/3/2 Mesh 7685cf7c",
    "0/4 Group 7a275a1d",
-   "0/4/0 Mesh 881b45d0",
+   "0/4/0 Mesh 9ab6ddd8",
    "0/4/1 Mesh 57a0227f",
-   "0/4/2 Mesh 5c149200",
+   "0/4/2 Mesh ae48d148",
    "0/5 Group 8fee4ec3",
-   "0/5/0 Mesh 2008640a",
+   "0/5/0 Mesh e7cc746",
    "0/5/1 Mesh d856dcab",
-   "0/5/2 Mesh 3541b3b0"
+   "0/5/2 Mesh 93d30ef8"
   ]
  },
  "household/nightstand:high": {
-  "hash": "fa6368a2",
+  "hash": "8ee06a9c",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 3add707",
    "0/1 Mesh 8e1ca059",
    "0/2 Group f730940",
-   "0/2/0 Mesh 2eb0d0bd",
+   "0/2/0 Mesh d6ec9b19",
    "0/2/1 Mesh f8df119f",
    "0/2/2 Mesh ed2b5ee1",
    "0/3 Group d022bcfb",
    "0/3/0 Mesh 25520db7",
-   "0/3/1 Mesh 68efb93d",
+   "0/3/1 Mesh d64362d5",
    "0/3/2 Mesh 4ff8553"
   ]
  },
  "household/bathroom_cabinet:high": {
-  "hash": "5acc83e",
+  "hash": "3f040b8b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 796f768e",
-   "0/1 Mesh f363836c",
+   "0/0 Mesh 48a65d3e",
+   "0/1 Mesh 65c2b411",
    "0/2 Group c3c09fea",
-   "0/2/0 Mesh 25375f83",
+   "0/2/0 Mesh df6a9d7d",
    "0/2/1 Mesh 4d9154d7",
    "0/2/2 Mesh d81d4a9b"
   ]
  },
  "household/stove:high": {
-  "hash": "8117a29b",
+  "hash": "b765caf7",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh ad3c0d74",
    "0/1 Mesh 5eae9bd5",
    "0/2 Group d250e6a1",
    "0/2/0 Mesh 87339ab8",
-   "0/2/1 Mesh 5cde62c8",
+   "0/2/1 Mesh a7b16238",
    "0/2/2 Mesh b1a98cac",
    "0/3 Group 2f8575bd",
    "0/3/0 Mesh b8a3b89b",
@@ -674,35 +674,35 @@
   ]
  },
  "household/sink_kitchen:high": {
-  "hash": "1405780f",
+  "hash": "69885d8e",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 9bc07086",
-   "0/1 Mesh a39b27d3",
-   "0/2 Mesh e19f9c25",
+   "0/0 Mesh d63bfc3e",
+   "0/1 Mesh 78045006",
+   "0/2 Mesh ed2be082",
    "0/3 Group f469a200",
    "0/3/0 Mesh f54df4fa",
    "0/4 Group a3da6d22",
    "0/4/0 Mesh f86ef3e0",
-   "0/4/1 Mesh 876b8c38",
-   "0/4/2 Mesh a3fae4c5",
+   "0/4/1 Mesh a6259033",
+   "0/4/2 Mesh 5b6cbada",
    "0/5 Group 133ed1ea",
    "0/5/0 Mesh 2bb186ba",
-   "0/5/1 Mesh 13cadf9c",
-   "0/5/2 Mesh 3881594a"
+   "0/5/1 Mesh 4db99112",
+   "0/5/2 Mesh 965e1a5b"
   ]
  },
  "household/sink_bathroom:high": {
-  "hash": "a16bf6d",
+  "hash": "3923defb",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 7dc3fffc",
-   "0/1 Mesh 7eed8113",
-   "0/2 Mesh 274757f0",
+   "0/0 Mesh 1ba660ab",
+   "0/1 Mesh c7db652b",
+   "0/2 Mesh b6eb454f",
    "0/3 Group af55d296",
    "0/3/0 Mesh f54df4fa",
    "0/4 Group 19462e92",
-   "0/4/0 Mesh e4857884",
+   "0/4/0 Mesh 9699e004",
    "0/4/1 Mesh dcec07db"
   ]
  },
@@ -732,10 +732,10 @@
   ]
  },
  "household/utility_sink:high": {
-  "hash": "a8f1c3d5",
+  "hash": "4d352a9b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 253dc48a",
+   "0/0 Mesh 84bb9878",
    "0/1 Mesh 3fe05c4c",
    "0/2 Group 6474359b",
    "0/2/0 Mesh 43b1cbcf"
@@ -778,7 +778,7 @@
   ]
  },
  "household/electrical_panel:high": {
-  "hash": "528cbb7c",
+  "hash": "ddad61ed",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh c7bf08d3",
@@ -786,7 +786,7 @@
    "0/2 Group e6c865d4",
    "0/2/0 Mesh 51a4d0ab",
    "0/3 Group 1b65d61f",
-   "0/3/0 Mesh 4cc9d3e4"
+   "0/3/0 Mesh 2cae1a75"
   ]
  },
  "household/power_meter:high": {
@@ -818,14 +818,14 @@
   ]
  },
  "household/microwave:high": {
-  "hash": "441fe24e",
+  "hash": "9a43fd99",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh d1c1cbcd",
    "0/1 Mesh fe969d00",
    "0/2 Group 10d1e10a",
-   "0/2/0 Mesh 5911e1be",
-   "0/2/1 Mesh ab2d186",
+   "0/2/0 Mesh 83c3b8e6",
+   "0/2/1 Mesh f41e7383",
    "0/2/2 Mesh 4b54379d",
    "0/3 Group 518b0bd7",
    "0/3/0 Mesh c66d973c"
@@ -845,50 +845,50 @@
   ]
  },
  "household/sofa:high": {
-  "hash": "e4945e47",
+  "hash": "a15355d8",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh dfa28390",
-   "0/1 Mesh 6d24a85a"
+   "0/1 Mesh ce47696d"
   ]
  },
  "household/armchair:high": {
-  "hash": "1e6670f0",
+  "hash": "b1105aa5",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 977ad3f",
-   "0/1 Mesh 8e24f508"
+   "0/1 Mesh 4175d4bd"
   ]
  },
  "household/dining_chair:high": {
-  "hash": "e7f8ecd4",
+  "hash": "a3a0286b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f5f9cbb3",
+   "0/0 Mesh 268cba42",
    "0/1 Mesh f128d2d8"
   ]
  },
  "household/bed_double:high": {
-  "hash": "8cdcafc",
+  "hash": "35834f46",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh bba36bd8",
+   "0/0 Mesh 4125e67a",
    "0/1 Mesh 74580bcb"
   ]
  },
  "household/bed_single:high": {
-  "hash": "9e6d6f19",
+  "hash": "576b6a8c",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh cac38bfe",
+   "0/0 Mesh 26e82615",
    "0/1 Mesh 423b27be"
   ]
  },
  "household/bench:high": {
-  "hash": "53635095",
+  "hash": "edeaaa74",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5ae402f4",
+   "0/0 Mesh e7d4687f",
    "0/1 Mesh 6a7af8d8"
   ]
  },
@@ -1027,14 +1027,14 @@
   ]
  },
  "household/bbq:high": {
-  "hash": "9f1a1ceb",
+  "hash": "a79c781d",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh a3ef8264",
    "0/1 Mesh 662f2124",
    "0/2 Group 6ad3c0fd",
-   "0/2/0 Mesh a605add",
-   "0/2/1 Mesh fa6b4c99"
+   "0/2/0 Mesh 60b529fd",
+   "0/2/1 Mesh a9564edb"
   ]
  },
  "household/clothesline:high": {
@@ -1084,10 +1084,10 @@
   ]
  },
  "household/bunk_bed:high": {
-  "hash": "9d58a333",
+  "hash": "adaa5af2",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ee7ac86",
+   "0/0 Mesh ff3125a1",
    "0/1 Mesh ea88f3ec"
   ]
  },
@@ -1103,11 +1103,11 @@
   ]
  },
  "household/fireplace:high": {
-  "hash": "a1a30953",
+  "hash": "d219e991",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh cbd62725",
-   "0/1 Mesh ae68a8c1",
+   "0/0 Mesh 347cba66",
+   "0/1 Mesh a18ac382",
    "0/2 Mesh 9f104b5d"
   ]
  },
@@ -1629,128 +1629,128 @@
   ]
  },
  "household/fridge:game": {
-  "hash": "ddf52e27",
+  "hash": "2bc073e7",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 1a1a7334",
-   "0/1 Mesh 1d0eef14",
+   "0/0 Mesh cdbe6c37",
+   "0/1 Mesh d7edcca7",
    "0/2 Group 1dac1b1c",
-   "0/2/0 Mesh 1f22c451",
+   "0/2/0 Mesh ec602c91",
    "0/3 Group 75efe917",
-   "0/3/0 Mesh 9a120658"
+   "0/3/0 Mesh 51c6cea0"
   ]
  },
  "household/fridge_compact:game": {
-  "hash": "e6f9997c",
+  "hash": "98c55e52",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5d2c7573",
-   "0/1 Mesh 81bb4155",
+   "0/0 Mesh e50e3afe",
+   "0/1 Mesh 36be2bb1",
    "0/2 Group c5b13e7c",
-   "0/2/0 Mesh e62edcf0",
+   "0/2/0 Mesh c4cc4183",
    "0/3 Group 38e0153",
-   "0/3/0 Mesh 9dfd5c64"
+   "0/3/0 Mesh 9373b08a"
   ]
  },
  "household/kitchen_cabinet_base:game": {
-  "hash": "9375eb7d",
+  "hash": "527008b1",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh d975472a",
+   "0/0 Mesh aa68f722",
    "0/1 Group 23e35ce3",
-   "0/1/0 Mesh 972c8ada",
+   "0/1/0 Mesh 18ff7173",
    "0/2 Group 52a271e8",
-   "0/2/0 Mesh ce234130",
+   "0/2/0 Mesh f30e5ea4",
    "0/3 Group dae90e6",
-   "0/3/0 Mesh 9350c7c0"
+   "0/3/0 Mesh d5d0f51b"
   ]
  },
  "household/kitchen_cabinet_wall:game": {
-  "hash": "a0f9a6f6",
+  "hash": "75527ee3",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5e02a6de",
+   "0/0 Mesh ca3ecf33",
    "0/1 Group 47f7fd6b",
-   "0/1/0 Mesh 2d3a797a",
+   "0/1/0 Mesh 4e8e8edd",
    "0/2 Group 9bb4d00f",
-   "0/2/0 Mesh 3e9f9788"
+   "0/2/0 Mesh e505de47"
   ]
  },
  "household/pantry:game": {
-  "hash": "a6fcd3bc",
+  "hash": "cabde791",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 73ba5be6",
+   "0/0 Mesh c4408b32",
    "0/1 Group 141b2c3f",
-   "0/1/0 Mesh 16ad77bd",
+   "0/1/0 Mesh 4d3a1920",
    "0/2 Group 5e3f38a9",
-   "0/2/0 Mesh 1de59977"
+   "0/2/0 Mesh 3f50fce3"
   ]
  },
  "household/wardrobe:game": {
-  "hash": "b71e300d",
+  "hash": "8b255d42",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 4135073c",
+   "0/0 Mesh a35f60ae",
    "0/1 Group 5a58749f",
-   "0/1/0 Mesh fca9271f",
+   "0/1/0 Mesh 88ba2065",
    "0/2 Group 186fe7bb",
-   "0/2/0 Mesh 8a30856b",
+   "0/2/0 Mesh 1bd75bf2",
    "0/2/1 Mesh 7d680b47",
    "0/3 Group 53784c1b",
-   "0/3/0 Mesh a009299a",
+   "0/3/0 Mesh 459f3456",
    "0/4 Group b8c0d45e",
-   "0/4/0 Mesh 74bec0a8",
+   "0/4/0 Mesh 4eb25e1c",
    "0/5 Group 9a1a0fe2",
-   "0/5/0 Mesh 453233b4",
+   "0/5/0 Mesh f43683d8",
    "0/6 Group ad7d7c16",
-   "0/6/0 Mesh 45b6cf88"
+   "0/6/0 Mesh 48262ffc"
   ]
  },
  "household/dresser:game": {
-  "hash": "2716025c",
+  "hash": "f17f4f34",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 1803b56",
    "0/1 Group 22243ae4",
-   "0/1/0 Mesh 97788517",
+   "0/1/0 Mesh 4a375fe1",
    "0/2 Group 60b9cf30",
-   "0/2/0 Mesh 3d419b4d",
+   "0/2/0 Mesh 3539df0b",
    "0/3 Group ba38060e",
-   "0/3/0 Mesh 9d937c97",
+   "0/3/0 Mesh 9fd61661",
    "0/4 Group f35e7286",
-   "0/4/0 Mesh f41147a1"
+   "0/4/0 Mesh 37e44327"
   ]
  },
  "household/nightstand:game": {
-  "hash": "2c358136",
+  "hash": "7fcabeca",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 604419c7",
    "0/1 Group 4700b61b",
-   "0/1/0 Mesh e81d190b",
+   "0/1/0 Mesh 3aef2677",
    "0/2 Group 5bc3d2ce",
-   "0/2/0 Mesh ceef683b"
+   "0/2/0 Mesh 9eb2e5c9"
   ]
  },
  "household/bathroom_cabinet:game": {
-  "hash": "df9f08c9",
+  "hash": "f055d28f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh bf7cac84",
-   "0/1 Mesh 1cce3434",
+   "0/0 Mesh 4c647974",
+   "0/1 Mesh a20e24db",
    "0/2 Group c3c09fea",
-   "0/2/0 Mesh d42ff227",
+   "0/2/0 Mesh 942a00a",
    "0/2/1 Mesh 92bec344"
   ]
  },
  "household/stove:game": {
-  "hash": "87837d87",
+  "hash": "65dd2768",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 9db30cc",
    "0/1 Group 477bdb08",
-   "0/1/0 Mesh feccedc",
+   "0/1/0 Mesh c46986ab",
    "0/1/1 Mesh c924f797",
    "0/2 Group b5b6f672",
    "0/2/0 Mesh 21eac8e3",
@@ -1774,27 +1774,27 @@
   ]
  },
  "household/sink_kitchen:game": {
-  "hash": "fcdbae08",
+  "hash": "b64a4f6f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ea1f806d",
+   "0/0 Mesh fa803b7b",
    "0/1 Group 779d2376",
    "0/1/0 Mesh 58fa83ed",
    "0/2 Group ef5cebd0",
-   "0/2/0 Mesh 14095984",
+   "0/2/0 Mesh f05cd85a",
    "0/3 Group 8e4291dc",
-   "0/3/0 Mesh 48408022"
+   "0/3/0 Mesh f1faa6ad"
   ]
  },
  "household/sink_bathroom:game": {
-  "hash": "6d1c9caf",
+  "hash": "7ad43491",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 8d6578e6",
+   "0/0 Mesh 54e06a9",
    "0/1 Group 2fe23914",
    "0/1/0 Mesh 58fa83ed",
    "0/2 Group 1c064d04",
-   "0/2/0 Mesh b56c1e76"
+   "0/2/0 Mesh 8ad24f8f"
   ]
  },
  "household/shower:game": {
@@ -1822,10 +1822,10 @@
   ]
  },
  "household/utility_sink:game": {
-  "hash": "ec2270c0",
+  "hash": "c74b848a",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh acd84cc9",
+   "0/0 Mesh b437ed77",
    "0/1 Group 4803d3f4",
    "0/1/0 Mesh 58fa83ed"
   ]
@@ -1864,14 +1864,14 @@
   ]
  },
  "household/electrical_panel:game": {
-  "hash": "135674d6",
+  "hash": "3e5e42e5",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh fbddf55c",
    "0/1 Group e3d96bb3",
    "0/1/0 Mesh 5ef66b11",
    "0/2 Group 4a436d62",
-   "0/2/0 Mesh 20880c1c"
+   "0/2/0 Mesh b7fe66d3"
   ]
  },
  "household/power_meter:game": {
@@ -1901,12 +1901,12 @@
   ]
  },
  "household/microwave:game": {
-  "hash": "cf57336",
+  "hash": "e29266c6",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 713c5546",
    "0/1 Group 1276d299",
-   "0/1/0 Mesh c959544c",
+   "0/1/0 Mesh e2c3afca",
    "0/1/1 Mesh 6f320b14",
    "0/2 Group c67330e8",
    "0/2/0 Mesh c5af3082"
@@ -1925,45 +1925,45 @@
   ]
  },
  "household/sofa:game": {
-  "hash": "51e15d30",
+  "hash": "7fb69c4a",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a95f6d3e"
+   "0/0 Mesh ed5db708"
   ]
  },
  "household/armchair:game": {
-  "hash": "cc871285",
+  "hash": "65e7af67",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5843d36f"
+   "0/0 Mesh 76760615"
   ]
  },
  "household/dining_chair:game": {
-  "hash": "72d92f22",
+  "hash": "2310deb3",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 427192a0"
+   "0/0 Mesh b8b00125"
   ]
  },
  "household/bed_double:game": {
-  "hash": "4cfb3a72",
+  "hash": "1fa22dff",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 96c2d448"
+   "0/0 Mesh 5128aebd"
   ]
  },
  "household/bed_single:game": {
-  "hash": "473f8e5c",
+  "hash": "d81cbe7b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 45465dea"
+   "0/0 Mesh 9d7465f9"
   ]
  },
  "household/bench:game": {
-  "hash": "37a9b9c7",
+  "hash": "2c4efe7",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a56e81d9"
+   "0/0 Mesh 22397eb5"
   ]
  },
  "household/blinds:game": {
@@ -2021,12 +2021,12 @@
   ]
  },
  "household/bbq:game": {
-  "hash": "88a64f53",
+  "hash": "29e8d2f6",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 5da3796a",
    "0/1 Group 81993faa",
-   "0/1/0 Mesh baf276e7"
+   "0/1/0 Mesh f3c4534a"
   ]
  },
  "household/clothesline:game": {
@@ -2039,10 +2039,10 @@
   ]
  },
  "household/bunk_bed:game": {
-  "hash": "4b0878ca",
+  "hash": "5dc8b1fc",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh b0b34690"
+   "0/0 Mesh 10ce6286"
   ]
  },
  "household/wood_stove:game": {
@@ -2056,10 +2056,10 @@
   ]
  },
  "household/fireplace:game": {
-  "hash": "a7ba4232",
+  "hash": "b337ffa",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f2faf074"
+   "0/0 Mesh 22771d40"
   ]
  },
  "household/outhouse:game": {
@@ -2147,57 +2147,57 @@
   ]
  },
  "options/wardrobe:materials": {
-  "hash": "f3ee55ac",
+  "hash": "e287ef0e",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5713c573",
-   "0/1 Mesh 5b3d563a",
+   "0/0 Mesh ccd1db41",
+   "0/1 Mesh 10e29b86",
    "0/2 Mesh 5bc23950",
    "0/3 Group 3634711",
-   "0/3/0 Mesh 1f596aa3",
-   "0/3/1 Mesh 2fdd8d12",
+   "0/3/0 Mesh 21bec6b6",
+   "0/3/1 Mesh 59ac19db",
    "0/4 Group f7c165e9",
-   "0/4/0 Mesh f582fd55",
-   "0/4/1 Mesh 85967a44",
+   "0/4/0 Mesh f16752ff",
+   "0/4/1 Mesh f1a59d59",
    "0/4/2 Mesh fefd9c3e",
    "0/5 Group b46c56e9",
-   "0/5/0 Mesh 1acbe6fc",
-   "0/5/1 Mesh 91705544",
+   "0/5/0 Mesh f0e7ff29",
+   "0/5/1 Mesh d5b74119",
    "0/6 Group 4751b9c4",
-   "0/6/0 Mesh 7137cf56",
+   "0/6/0 Mesh 3c8b83a3",
    "0/6/1 Mesh c6983421",
    "0/7 Group b51dc974",
-   "0/7/0 Mesh f1e0b73e",
+   "0/7/0 Mesh 3d3506cb",
    "0/7/1 Mesh 31fd2d51",
    "0/8 Group 5a114718",
-   "0/8/0 Mesh 37fbc1f6",
+   "0/8/0 Mesh e8240f43",
    "0/8/1 Mesh d03a84a1"
   ]
  },
  "options/fridge:doubleSidedPlanes+shadows": {
-  "hash": "44be9903",
+  "hash": "7b1f7387",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 89da7d78",
-   "0/1 Mesh bca89836",
+   "0/0 Mesh 643b535a",
+   "0/1 Mesh a660ae9f",
    "0/2 Mesh e03aedbb",
    "0/3 Group c18b9ee3",
-   "0/3/0 Mesh ca46a9df",
-   "0/3/1 Mesh 28c10708",
+   "0/3/0 Mesh 10a4eb39",
+   "0/3/1 Mesh ceed235b",
    "0/4 Group 6f0e1984",
-   "0/4/0 Mesh 7f305aa6",
-   "0/4/1 Mesh ec6659ea"
+   "0/4/0 Mesh 59c04e5",
+   "0/4/1 Mesh 212efa79"
   ]
  },
  "options/stove:materialFor": {
-  "hash": "ebc4c0e1",
+  "hash": "9f3cf755",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh ad3c0d74",
    "0/1 Mesh 5eae9bd5",
    "0/2 Group d250e6a1",
    "0/2/0 Mesh 87339ab8",
-   "0/2/1 Mesh 4f87b3c3",
+   "0/2/1 Mesh e666cd33",
    "0/2/2 Mesh cf851f47",
    "0/3 Group 2f8575bd",
    "0/3/0 Mesh b8a3b89b",
@@ -2223,23 +2223,23 @@
   ]
  },
  "options/wardrobe:quality": {
-  "hash": "ddb85dc1",
+  "hash": "905d417d",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh db843f75",
+   "0/0 Mesh f877b7da",
    "0/1 Group 366218bf",
-   "0/1/0 Mesh da89a5bf",
+   "0/1/0 Mesh 7461bc05",
    "0/2 Group c1957572",
-   "0/2/0 Mesh a349dca",
+   "0/2/0 Mesh 2f161887",
    "0/2/1 Mesh d0552ba8",
    "0/3 Group f0183541",
-   "0/3/0 Mesh a6f0c3dc",
+   "0/3/0 Mesh 3f368c74",
    "0/4 Group 7ea94abc",
-   "0/4/0 Mesh c0f4570e",
+   "0/4/0 Mesh d5620b16",
    "0/5 Group ac06aeeb",
-   "0/5/0 Mesh ab5050c9",
+   "0/5/0 Mesh 7226385b",
    "0/6 Group 6dc9e98e",
-   "0/6/0 Mesh f5bd3db8"
+   "0/6/0 Mesh 2ec816ec"
   ]
  }
 }

@@ -51,7 +51,7 @@ const cacheOf = (result: object): Cache => {
  * A house of another system, or the Visor de casas 3D reproduction, keeps the engine's walls.
  */
 function resolveMasonryUnit(template: TemplateDef, options: FloorplanOptions): FloorplanOptions {
-  if (options.visorSections === true) return options
+  if (options.visorSections === true) return { ...options, visorLayout: true }
   const unit = (options.masonryUnit as string | undefined) ?? template.masonryUnit
   const system = (options.construction as string | undefined) ?? template.construction
   if (unit === undefined || (system !== undefined && system !== 'masonry')) return options

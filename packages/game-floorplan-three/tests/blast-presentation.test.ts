@@ -36,7 +36,8 @@ const BLAST_RADIUS = 6
 // Recorded again on the merge of both: the 4 mm panes and the parts held in the ground
 // Recorded again on the merge with the moulded members, pier and pillar corners of main: both changes meet in the blast
 // Recorded again when the world came to solve the structure once per operation: every detach comes at the end of the blast, with the groups it left; every part ends as it did
-const RECORDED_BLAST_OUTCOME = '4537ca4c2ff0217e74b82b23409881ad98f8bfa4'
+// Recorded again when the furniture kept room for its doors and drawers, the nightstands went beside the bed and the lights and curtains stopped hanging into what stands under them: the house blown up holds other pieces
+const RECORDED_BLAST_OUTCOME = 'd3c51dd1bafd07df54d1389fe7c23e0bcbffa4ed'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })

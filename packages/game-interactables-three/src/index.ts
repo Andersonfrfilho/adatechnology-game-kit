@@ -5,6 +5,8 @@ export type { FinishOptions, MaterialMap, MeshApi, MeshApiOptions, MeshResult } 
 export { standOutCoincidentBoxes } from './stand-out'
 export { mergeParts } from './merge'
 export type { MergedGroup, MergeOptions, PoseBatch, SwayBatch } from './merge'
+export { createContentsView } from './contents'
+export type { ContentsItemBuilder, ContentsView, ContentsViewItem, ContentsViewOptions } from './contents'
 export { applyPose, poseOf, rememberRest, syncObject } from './pose'
 export type { Pose, SyncOptions } from './pose'
 export { attachSway, patchSwayShader, swayMaterial } from './sway'

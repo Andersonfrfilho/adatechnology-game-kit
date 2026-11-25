@@ -58,9 +58,11 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/game-items-goods": "workspace:^",
     "@adatechnology/game-destruction": "workspace:^",
     "@adatechnology/game-destruction-three": "workspace:^",
+    "@adatechnology/game-interactables-household": "workspace:^",
+    "@adatechnology/game-interactables-three": "workspace:^",
+    "@adatechnology/game-items-goods": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
