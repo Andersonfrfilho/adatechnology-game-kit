@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 
 import type { AudioEngine } from '@adatechnology/game-audio'
-import type { BlastShoveOptions, GroundLayout, WorkerCoordinator } from '@adatechnology/game-contracts'
+import type { BlastShoveOptions, GroundLayout, RainCover, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DestructionOptions, DestructionWorld } from '@adatechnology/game-destruction'
 import type { FluidWorld, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { TerrainBudget } from '@adatechnology/game-terrain'
@@ -111,6 +111,8 @@ export type KitWorld<TRecord = unknown> = {
   readonly info: KitWorldInfo
   /** The stream the host draws from (the ground's fire and smoke): the game's own, or the host's seeded one that `reset` takes back to its seed. */
   readonly random: () => number
+  /** What is roofed over in the world: houses and sheds add their covers, the weather renderer reads it (`createWeatherRenderer({ cover })`) and the rain keeps off them. */
+  readonly rainCover: RainCover
   /** The sun's shadow map and the renderer's pixel ratio for a quality level, on a renderer the host made. */
   setQuality(quality: KitWorldQuality): void
   warmUp(): void

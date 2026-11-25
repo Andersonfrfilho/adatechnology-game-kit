@@ -17,7 +17,7 @@ import { WATER_SHOT_BY_CALIBER, waterShotClassOf } from '@adatechnology/game-vfx
 import { createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, createRainCover, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
@@ -4303,6 +4303,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const environment = options.environment ?? createEnvironmentBus()
+  const rainCover = createRainCover()
   const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
     if (event.type === 'explosion') knockPlayer(event)
@@ -4417,6 +4418,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(graphics ? { graphics: graphics.host } : {}),
     ...(audioSink ? { audio: audioSink } : {}),
     environment,
+    rainCover,
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
@@ -4876,6 +4878,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fluidRenderer: fluidView,
     audio,
     environment,
+    rainCover,
     log,
     get tool() {
       return tool

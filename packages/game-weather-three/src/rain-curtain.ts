@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import type { RainCover } from '@adatechnology/game-contracts'
 import type { WeatherSample } from '@adatechnology/game-weather'
 import type { ThreeLib, WeatherProfileName } from './types'
 
@@ -14,6 +15,14 @@ export const RAIN_CURTAIN_FRAGMENT = 'uniform float uDay; void main(){ gl_FragCo
 
 /** The share of the 14 000 points each quality draws. */
 export const RAIN_CURTAIN_PROFILES: Readonly<Record<WeatherProfileName, number>> = { low: 0.35, medium: 0.7, high: 1 }
+/** The curtain's vertex shader when something is roofed over: a point under the top the cover texture holds for its cell is moved out of the view. Cells are `RAIN_COVER_CELL` wide. */
+export const RAIN_CURTAIN_COVERED_VERTEX =
+  'uniform float uTime; uniform vec3 uCam; uniform sampler2D uCover; uniform vec3 uCoverBox; void main(){ vec3 p = position; p.y = mod(p.y - uTime*13., 25.); p.xz = uCam.xz + mod(p.xz - uCam.xz + 35., 70.) - 35.; float top = texture2D(uCover, (p.xz - uCoverBox.xy) / (uCoverBox.z * 130.)).r; if (p.y < top) { gl_Position = vec4(2., 2., 2., 1.); gl_PointSize = 0.; return; } gl_Position = projectionMatrix*viewMatrix*vec4(p,1.); gl_PointSize = 1.6; }'
+/** Cells of the cover texture per side (the box of 70 m is 128 of them; two more take the snapping of its corner to the grid). */
+export const RAIN_COVER_CELLS = 130
+export const RAIN_COVER_CELL = RAIN_CURTAIN.width / 128
+const NO_COVER_HEIGHT = -1
+
 /** The weather's `drops` at which the whole curtain is drawn (the storm's 4 000). */
 export const RAIN_CURTAIN_FULL_AT = 4000
 
@@ -34,6 +43,8 @@ export type RainCurtainOptions = {
   /** Drops (`WeatherSample.drops`) that draw the whole curtain. */
   readonly fullAt?: number
   readonly count?: number
+  /** What is roofed over: the points under a roof or slab are not drawn. Without it the curtain is the page's, shader and all. */
+  readonly cover?: RainCover
 }
 
 export type RainCurtain = {
@@ -51,7 +62,37 @@ export function createRainCurtain(THREE: ThreeLib, options: RainCurtainOptions =
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.BufferAttribute(rainCurtainPositions(options.random, count), 3))
   const uniforms = { uTime: { value: 0 }, uCam: { value: new THREE.Vector3() }, uDay: { value: 1 } }
-  const material = new THREE.ShaderMaterial({ uniforms, transparent: true, depthWrite: false, vertexShader: RAIN_CURTAIN_VERTEX, fragmentShader: RAIN_CURTAIN_FRAGMENT })
+  const cover = options.cover
+  const coverCells = cover ? new Float32Array(RAIN_COVER_CELLS * RAIN_COVER_CELLS) : undefined
+  const coverTexture = coverCells ? new THREE.DataTexture(coverCells, RAIN_COVER_CELLS, RAIN_COVER_CELLS, THREE.RedFormat, THREE.FloatType) : undefined
+  if (coverTexture) {
+    coverTexture.minFilter = THREE.NearestFilter
+    coverTexture.magFilter = THREE.NearestFilter
+  }
+  const coverBox = new THREE.Vector3()
+  const coverUniforms: Record<string, { value: unknown }> = coverTexture ? { uCover: { value: coverTexture }, uCoverBox: { value: coverBox } } : {}
+  const material = new THREE.ShaderMaterial({ uniforms: { ...uniforms, ...coverUniforms }, transparent: true, depthWrite: false, vertexShader: coverTexture ? RAIN_CURTAIN_COVERED_VERTEX : RAIN_CURTAIN_VERTEX, fragmentShader: RAIN_CURTAIN_FRAGMENT })
+  let cutX = NaN
+  let cutZ = NaN
+  let cutVersion = -1
+  /** The texture is cut again only when the camera moves to another cell or a cover changes: a cell is one read of the cover's grid. */
+  const cutCover = (camera: { readonly x: number; readonly z: number }): void => {
+    if (!cover || !coverCells || !coverTexture) return
+    const originX = Math.floor((camera.x - RAIN_CURTAIN.width / 2) / RAIN_COVER_CELL) * RAIN_COVER_CELL
+    const originZ = Math.floor((camera.z - RAIN_CURTAIN.width / 2) / RAIN_COVER_CELL) * RAIN_COVER_CELL
+    const version = cover.version()
+    if (originX === cutX && originZ === cutZ && version === cutVersion) return
+    cutX = originX
+    cutZ = originZ
+    cutVersion = version
+    for (let row = 0; row < RAIN_COVER_CELLS; row++) {
+      for (let column = 0; column < RAIN_COVER_CELLS; column++) {
+        coverCells[row * RAIN_COVER_CELLS + column] = cover.coverTopAt(originX + (column + 0.5) * RAIN_COVER_CELL, originZ + (row + 0.5) * RAIN_COVER_CELL) ?? NO_COVER_HEIGHT
+      }
+    }
+    coverTexture.needsUpdate = true
+    coverBox.set(originX, originZ, RAIN_COVER_CELL)
+  }
   const object = new THREE.Points(geometry, material)
   object.frustumCulled = false
   object.name = 'weather-rain-curtain'
@@ -68,6 +109,7 @@ export function createRainCurtain(THREE: ThreeLib, options: RainCurtainOptions =
       uniforms.uTime.value = time
       uniforms.uDay.value = daylight
       uniforms.uCam.value.set(camera.x, camera.y, camera.z)
+      if (drawn > 0) cutCover(camera)
     },
     setProfile(profile) {
       share = RAIN_CURTAIN_PROFILES[profile]
@@ -75,6 +117,7 @@ export function createRainCurtain(THREE: ThreeLib, options: RainCurtainOptions =
     drawn: () => drawn,
     dispose() {
       geometry.dispose()
+      coverTexture?.dispose()
       material.dispose()
     },
   }

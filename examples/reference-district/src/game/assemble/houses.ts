@@ -8,7 +8,7 @@ import { register as registerPostApocalyptic } from '@adatechnology/game-floorpl
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
 import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import { register as registerStructure } from '@adatechnology/game-floorplan-structure'
-import { create as createHouseRenderer, planLod, registerHouseQueues } from '@adatechnology/game-floorplan-three'
+import { addHouseRainCover, create as createHouseRenderer, planLod, registerHouseQueues } from '@adatechnology/game-floorplan-three'
 import type { House, HouseRendererOptions } from '@adatechnology/game-floorplan-three'
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
@@ -133,6 +133,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
   }
   const renderer = createHouseRenderer(THREE, options)
   const unregister = registerHouseQueues(renderer, world.frame.scheduler.budget)
+  const removeCovers: Array<() => void> = []
   const list = lots.map(({ lot, plan, size, placement }): PlacedHouse => {
     const house = renderer.build(plan, { quality: 'game', terrain: false })
     house.group.rotation.y = placement.ry
@@ -140,6 +141,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     house.group.updateMatrixWorld(true)
     scene.add(house.group)
     house.destruction.activate()
+    removeCovers.push(addHouseRainCover(world.rainCover, house))
     return { lot, plan, house, placement, footprint: footprintOf(placement, size), overflow: overflowOf(lot.rect, lot.front, size) }
   })
   let sincePlan = PLAN_EVERY_SECONDS
@@ -159,6 +161,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     },
     dispose() {
       unregister()
+      for (const remove of removeCovers) remove()
       for (const placed of list) placed.house.dispose()
       renderer.dispose?.()
     },

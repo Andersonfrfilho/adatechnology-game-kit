@@ -1,3 +1,4 @@
+import type { RainCover } from '@adatechnology/game-contracts'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -33,6 +34,8 @@ export type WeatherRendererOptions = {
   readonly random?: () => number
   readonly zone?: ZoneFog
   readonly puddles?: readonly Puddle[]
+  /** What is roofed over (`ModuleHost.rainCover`, `KitWorld.rainCover`): the rain keeps off it, near and far. */
+  readonly cover?: RainCover
   readonly puddleAt?: (x: number, z: number) => boolean
   readonly headlights?: HeadlightRules
   /**
@@ -69,7 +72,7 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
   const group = new THREE.Group()
   group.name = 'weather'
   scene.add(group)
-  const curtain = createRainCurtain(THREE, { ...(options.random ? { random: options.random } : {}), ...(options.profile ? { profile: options.profile } : {}) })
+  const curtain = createRainCurtain(THREE, { ...(options.cover ? { cover: options.cover } : {}), ...(options.random ? { random: options.random } : {}), ...(options.profile ? { profile: options.profile } : {}) })
   const haze = createHeatHaze(THREE)
   group.add(curtain.object, haze.object)
   const sky = createSky(THREE, scene, { camera, ...(options.sun ? { sun: options.sun } : {}) })
@@ -77,7 +80,7 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
   const fog = createFog(THREE, scene, { stable: options.lights !== undefined })
   const lightning = createLightning(THREE, scene, vfx, options.lights ? { lights: options.lights } : {})
   const headlights = createHeadlights(THREE, options.lights ? { ...options.headlights, lights: options.lights } : options.headlights)
-  const nearRain = createNearRain(vfx, { ...(options.puddles ? { puddles: options.puddles } : {}), ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}) })
+  const nearRain = createNearRain(vfx, { ...(options.cover ? { cover: options.cover } : {}), ...(options.puddles ? { puddles: options.puddles } : {}), ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}) })
   const on = new Map<WeatherLayerId, boolean>(WEATHER_LAYERS.map((id) => [id, options.layers?.[id] ?? true]))
   let zone = options.zone
   let time = 0

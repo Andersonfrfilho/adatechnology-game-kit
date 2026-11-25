@@ -26,7 +26,7 @@ export type DistrictWeather = {
  */
 export function createDistrictWeather({ THREE, world, state, hour, seed, fog }: { readonly THREE: typeof THREE_NS; readonly world: KitWorld; readonly state: string; readonly hour: number; readonly seed: number; readonly fog?: ZoneFog }): DistrictWeather {
   const weather = createWeather({ seed, start: state, startHour: hour, timeScale: HELD_TIME_SCALE, autoSchedule: false })
-  const renderer = createWeatherRenderer(THREE, { scene: world.view.scene, camera: world.view.camera, weather, vfx: world.effects.world, lights: world.lights, sun: world.sun, random: world.random, ...(fog === undefined ? {} : { zone: fog }) })
+  const renderer = createWeatherRenderer(THREE, { scene: world.view.scene, camera: world.view.camera, weather, cover: world.rainCover, vfx: world.effects.world, lights: world.lights, sun: world.sun, random: world.random, ...(fog === undefined ? {} : { zone: fog }) })
   const ambientDay = world.ambient.intensity
   return {
     weather,

@@ -83,6 +83,7 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
         camera: host.camera as THREE_NS.Camera,
         weather,
         ...(options.vfx ? { vfx: options.vfx } : {}),
+        ...(host.rainCover ? { cover: host.rainCover } : {}),
         ...(options.profile ? { profile: options.profile } : {}),
         ...(options.random ? { random: options.random } : {}),
         ...(options.zone ? { zone: options.zone } : {}),
