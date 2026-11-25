@@ -17,11 +17,18 @@ export type SpawnOptions = {
   mat?: Material
   r?: number
   floor?: number
+  /** End size as a multiple of the start size, over the life (the plume law); without it the puff follows the kit's own growth. */
+  growth?: number
+  /** Upward pull (m/s²) and drag (1/s) of a routed puff; without them the effects world's defaults for smoke. */
+  lift?: number
+  drag?: number
 }
 /** A burst of particles: the spawn options plus a main direction, speed, spread and how far from the point they start. */
 export type BurstOptions = SpawnOptions & { dir?: Vector3; speed?: number; spread?: number; jitter?: number }
-export type EmitterOptions = { world?: boolean; rate?: number; s?: number; dir?: Vector3 | null }
+/** `damage` reads how wrecked the source is (0 intact, 1 wrecked): the smoke of an engine thickens as it is hurt. */
+export type EmitterOptions = { world?: boolean; rate?: number; s?: number; dir?: Vector3 | null; damage?: () => number }
 import { warnOnce } from '@adatechnology/game-contracts'
+import { PLUME_PUFFS, SmokeCause, smokeCauseOfEmitter, smokePuff, smokeRate } from './engine-smoke'
 import { routedParticleRequest, ROUTED_PARTICLE_TYPES } from './routed-particles'
 import { clamp, hash, smooth } from './util'
 
@@ -182,6 +189,9 @@ export function installParticles(kit: Kit) {
         ...(o.s ? { size: o.s } : {}),
         ...(o.life ? { life: o.life } : {}),
         ...(o.grow ? { grow: o.grow } : {}),
+        ...(o.growth ? { growth: o.growth } : {}),
+        ...(o.lift != null ? { gravity: -o.lift } : {}),
+        ...(o.drag != null ? { drag: o.drag } : {}),
       }),
     )
     return null
@@ -236,6 +246,7 @@ export function installParticles(kit: Kit) {
       spin: (c.rand() - 0.5) * 1.2,
       ph: c.rand() * 6.28,
       grow: o.grow || 1,
+      growth: o.growth || 0,
     }
     c.particles.push(P)
     return P
@@ -277,7 +288,7 @@ export function installParticles(kit: Kit) {
         m.position.addScaledVector(P.v, dt)
         m.position.x += Math.sin(P.age * 1.7 + P.ph) * 0.08 * dt
         m.position.z += Math.cos(P.age * 1.3 + P.ph) * 0.08 * dt
-        const gs = P.s0 * P.grow * (0.18 + 1.5 * (1 - Math.exp(-P.age * 1.1)) + P.age * 0.12)
+        const gs = P.growth ? P.s0 * (1 + (P.growth - 1) * t) : P.s0 * P.grow * (0.18 + 1.5 * (1 - Math.exp(-P.age * 1.1)) + P.age * 0.12)
         m.scale.set(gs, gs, 1)
         m.material.rotation += P.spin * dt
         m.material.opacity = P.op * Math.min(1, P.age / 0.3)
@@ -342,7 +353,7 @@ export function installParticles(kit: Kit) {
     }
   }
   kit.burst = burst
-  /* Continuous emitter. p in c.vehicle (or in the vehicle world with o.world). kind: white|black|fire|exhaust (exhaust follows c.engineHealth) */
+  /* Continuous emitter. p in c.vehicle (or in the vehicle world with o.world). kind: white (steam)|oil|black (fire smoke)|fire|exhaust (exhaust follows c.engineHealth) */
   kit.addEmitter = function (c: BuildContext, p: Vector3, kind: string, o?: EmitterOptions | null) {
     o = o || {}
     if (
@@ -360,6 +371,7 @@ export function installParticles(kit: Kit) {
       s: o.s || 1,
       dir: o.dir || null,
       gap: 0,
+      ...(o.damage ? { damage: o.damage } : {}),
     }
     c.emitters.push(e)
     return e
@@ -372,7 +384,34 @@ export function installParticles(kit: Kit) {
     return ['#141414', 0.66]
   }
   kit.exhaustLook = exhaustLook
+  /* one puff of an engine-bay plume (engine-smoke.ts): born around the vent, small and see-through, climbing and leaning with the wind */
+  function spawnSmokePuff(c: BuildContext, cause: SmokeCause, scale: number, vent: Vector3) {
+    for (let k = 0; k < PLUME_PUFFS; k++) {
+      const puff = smokePuff({ cause, scale, random: c.rand })
+      const at = vent.clone().add(c.dirToEffects(new V3(puff.offset[0], puff.offset[1], puff.offset[2])))
+      kit.spawn(c, 'smoke', at, new V3(puff.velocity[0], puff.velocity[1], puff.velocity[2]), {
+        col: puff.color,
+        op: puff.alpha,
+        s: puff.size,
+        life: puff.life,
+        growth: puff.growth,
+        lift: puff.lift,
+        drag: puff.drag,
+      })
+    }
+  }
+  /* the kit's own sprite puff of the smoke emitters, kept as it always drew it: the host with no effects world (and the team goldens) sees no change */
+  function spawnOwnSmokePuff(c: BuildContext, e: VehicleEmitter, p: Vector3) {
+    const black = e.kind === 'black' || e.kind === 'oil'
+    kit.spawn(c, 'smoke', p, new V3((c.rand() - 0.5) * 0.2, black ? 0.9 + c.rand() * 0.3 : 1.1 + c.rand() * 0.3, (c.rand() - 0.5) * 0.2), {
+      variant: black ? 'black' : 'steam',
+      s: (black ? 0.75 : 0.6) * e.s * (0.8 + c.rand() * 0.4),
+      life: black ? 3.2 : 2.0,
+    })
+  }
   function tickEmit(c: BuildContext, dt: number) {
+    // the engine-bay plume (engine-smoke.ts) is drawn where the puffs go to the host's effects world: the room and the game
+    const plume = !!kit.effects?.()
     c.emitters.forEach(function (e) {
       if (e.kind === 'exhaust') {
         const h = c.engineHealth == null ? 1 : c.engineHealth
@@ -383,7 +422,7 @@ export function installParticles(kit: Kit) {
           if (e.gap > 0) return
         }
       }
-      e.acc += e.rate * dt
+      e.acc += (plume && e.damage ? smokeRate(e.rate, e.damage()) : e.rate) * dt
       while (e.acc >= 1) {
         e.acc -= 1
         const p = e.world ? e.p.clone() : c.toEffects(e.p)
@@ -396,8 +435,10 @@ export function installParticles(kit: Kit) {
             s: (0.45 + c.rand() * 0.45) * e.s,
             life: 0.55 + c.rand() * 0.35,
           })
-          if (c.rand() < 0.45)
-            kit.spawn(c, 'smoke', p.clone().add(new V3(0, 0.7 * e.s, 0)), new V3(0, 1.0, 0), { variant: 'black', s: 0.9 * e.s, life: 3.2 })
+          if (c.rand() < 0.45) {
+            if (plume) spawnSmokePuff(c, SmokeCause.FIRE, e.s, p.clone().add(new V3(0, 0.5 * e.s, 0)))
+            else kit.spawn(c, 'smoke', p.clone().add(new V3(0, 0.7 * e.s, 0)), new V3(0, 1.0, 0), { variant: 'black', s: 0.9 * e.s, life: 3.2 })
+          }
           if (c.rand() < 0.15)
             kit.spawn(
               c,
@@ -416,14 +457,9 @@ export function installParticles(kit: Kit) {
             life: 1.4 + c.rand() * 0.5,
           })
         } else {
-          const preta = e.kind === 'black'
-          kit.spawn(
-            c,
-            'smoke',
-            p,
-            new V3((c.rand() - 0.5) * 0.2, preta ? 0.9 + c.rand() * 0.3 : 1.1 + c.rand() * 0.3, (c.rand() - 0.5) * 0.2),
-            { variant: preta ? 'black' : 'steam', s: (preta ? 0.75 : 0.6) * e.s * (0.8 + c.rand() * 0.4), life: preta ? 3.2 : 2.0 },
-          )
+          const cause = smokeCauseOfEmitter(e.kind)
+          if (cause && plume) spawnSmokePuff(c, cause, e.s, p)
+          else spawnOwnSmokePuff(c, e, p)
         }
       }
     })

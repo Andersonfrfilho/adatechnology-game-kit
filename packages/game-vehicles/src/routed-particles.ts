@@ -35,6 +35,11 @@ export interface RoutedParticleInput {
   readonly size?: number
   readonly life?: number
   readonly grow?: number
+  /** End size as a multiple of the start size (default: the local puff's law). */
+  readonly growth?: number
+  /** Gravity (negative lifts the puff) and drag the effects world applies (default: the local puff's). */
+  readonly gravity?: number
+  readonly drag?: number
   readonly position: [number, number, number]
   readonly velocity: readonly [number, number, number]
 }
@@ -46,7 +51,7 @@ export function routedParticleRequest(input: RoutedParticleInput): ParticleEffec
   const life = input.life ?? LIFE[type] ?? 99
   const size = (input.size ?? 1) * (input.grow ?? 1)
   const isFire = type === 'fire'
-  const growth = isFire ? 1 : (SMOKE_START_SCALE + 1.5 * (1 - Math.exp(-life * 1.1)) + life * 0.12) / SMOKE_START_SCALE
+  const growth = input.growth ?? (isFire ? 1 : (SMOKE_START_SCALE + 1.5 * (1 - Math.exp(-life * 1.1)) + life * 0.12) / SMOKE_START_SCALE)
   return {
     effect: ROUTED_PARTICLE_TYPES[type]!,
     point: input.position,
@@ -55,12 +60,12 @@ export function routedParticleRequest(input: RoutedParticleInput): ParticleEffec
       vy: input.velocity[1],
       vz: input.velocity[2],
       life,
-      size: isFire ? size * 0.85 : size * SMOKE_START_SCALE,
+      size: input.growth !== undefined ? size : isFire ? size * 0.85 : size * SMOKE_START_SCALE,
       grow: growth,
       color: input.color ?? (isFire ? FIRE_COLOR : look[0]),
       alpha: input.alpha ?? look[1],
-      gravity: isFire ? 0 : type === 'dust' ? 0 : -0.08,
-      drag: type === 'dust' ? 2.5 : isFire ? 1.5 : 0.9,
+      gravity: input.gravity ?? (isFire ? 0 : type === 'dust' ? 0 : -0.08),
+      drag: input.drag ?? (type === 'dust' ? 2.5 : isFire ? 1.5 : 0.9),
     },
   }
 }
