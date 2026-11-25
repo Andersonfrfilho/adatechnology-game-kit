@@ -3233,7 +3233,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (hand) {
       // with a body the item rides its weapon hand in both views, and tilts with `useItemPlayer` or `heldTilt`
       const handWorld = heldHands.carryAt(tmpHand) ?? hand.getWorldPosition(tmpHand)
-      heldHands.drawOn(root, cameraMode === 'first' && heldHands.hand === 'L' ? FIRST_PERSON_LAYER : 0)
+      heldHands.drawOn(root, cameraMode === 'first' && (heldHands.hand === 'L' || heldHands.hand === 'both') ? FIRST_PERSON_LAYER : 0)
       const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
       const pose = useItemPlayer?.pose()
       const rx = pose ? (isDrink ? Math.abs(pose.rotation[0]) * 0.9 : pose.rotation[0]) : -heldTilt

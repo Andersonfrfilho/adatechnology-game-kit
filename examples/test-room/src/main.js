@@ -15,6 +15,7 @@
 //   ?ui=0               hide the panels
 //   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
+//   ?bodySlots=hip,back where the body puts a weapon away to free the hands (default hip: a holster, no sling; ?bodySlots= none: the weapon drops)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
 //   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table (default: the goods, Itens; ?table=0 leaves it empty)
@@ -134,6 +135,7 @@ const room = createTestRoom({
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
   firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),
   strikeComboOn: params.get('combo') === '1',
+  ...(params.has('bodySlots') ? { bodySlots: (params.get('bodySlots') ?? '').split(',').filter(Boolean) } : {}),
   // the default page has every ground to try, in lots before the wall; a page that asked for something in particular has the plain floor its tests expect
   ...(deferred && !params.get('area') && !items && !params.get('scenario') && !params.get('scene') ? { ground: terrainLotsGround(locale) } : {}),
   quality,

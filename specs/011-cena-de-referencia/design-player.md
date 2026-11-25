@@ -273,3 +273,8 @@ pode utilizar a outra mão não mão da arma".
 Onde mora: a regra pura em `game-player` (`planHands`, `drawBackOf`, `interactionHandsFor`), as mãos e o lugar de cada arma em `game-weapons` (`rules.hands`, `weaponHandsOf`); a cola da
 sala em `game-test-room/src/held-hands.ts` (pegar/carregar e empurrar; `TestRoomOptions.bodySlots`, padrão `['hip']`). Na T1.8 (pegar e arremessar) a cola vai junto para
 `game-kit-defaults/player` (`hold.ts`).
+
+Como aparece (fechado na mesma branch): a arma guardada é desenhada no corpo (`PlayerAvatar.slot('hip' | 'back')`, `ModuleHost.bodySlot`, evento `holster`,
+`createHolsteredWeapons` do `game-weapons-three`: pistola de cano para baixo no coldre da cintura, arma longa atravessada nas costas); o objeto pequeno vai na mão esquerda
+(`HandTargets.L`) com a arma na direita; o objeto grande vai na frente do peito com uma palma em cada lado (`bothHandsCarry`, `carry-poses.ts`), nas duas câmeras; machado,
+marreta, picareta e motosserra levam a etiqueta `two_handed`.

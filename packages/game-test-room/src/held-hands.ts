@@ -10,7 +10,7 @@ import type { BodyHand, HandsPlan } from '@adatechnology/game-player'
 import { weaponHandsOf } from '@adatechnology/game-weapons'
 import type { Arsenal } from '@adatechnology/game-weapons'
 
-import { offHandCarryPose } from './carry-poses'
+import { bothHandsCarry, offHandCarryPose } from './carry-poses'
 
 /** The slots the body wears when the page names none: a holster at the hip, no sling for a long gun. */
 export const DEFAULT_BODY_SLOTS: readonly string[] = ['hip']
@@ -53,8 +53,8 @@ export type HeldHands = {
   /** The slots the body wears (`hip`, `back`...). */
   slots: readonly string[]
   /**
-   * The hands on the thing carried, for the arms: the left hand under it with the weapon's targets kept for the right (`L`); null when it rides the weapon hand or nothing is
-   * carried. `shoulder` answers a shoulder of the body (world space), `size` is the thing's box in its own space.
+   * The hands on the thing carried, for the arms: the left hand under it with the weapon's targets kept for the right (`L`), or both hands on its sides (`both`); null when it rides
+   * the weapon hand alone (`R`) or nothing is carried. `shoulder` answers a shoulder of the body (world space), `size` is the thing's box in its own space.
    */
   carry(params: CarryParams): HandTargets | null
   /** Where the middle of the thing carried goes (the last `carry`), written into `out`; null when it rides the weapon hand. */
@@ -143,7 +143,12 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
         carryPoint = pose.position
         return { ...(params.tool ?? {}), L: pose, gripL: 0.85, elbows: 'body' }
       }
-      return null
+      const right = side('R')
+      const left = plan?.hand === 'both' && right ? side('L') : null
+      if (!right || !left) return null
+      const both = bothHandsCarry({ R: right, L: left }, params.yaw, params.size)
+      carryPoint = both.center
+      return both.targets
     },
     carryAt(out) {
       return carryPoint ? out.set(carryPoint[0], carryPoint[1], carryPoint[2]) : null
