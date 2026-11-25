@@ -18,6 +18,8 @@ const QUALITY_MULTIPLIERS = [1, 0.5, 0.2] as const
 const FIRE_FLICKER_SWAY = 0.25
 const FIRE_FLICKER_JITTER = 0.08
 const LENS_FADE = 0.16
+/** A decal whose normal is this close to straight up is a mark on the floor. */
+const FLOOR_NORMAL_Y = 0.9
 
 /** Water or blood on the camera lens: a soft blob that fades and runs down (W351-352). */
 export interface LensBlob {
@@ -217,7 +219,10 @@ export class WorkshopEngine {
     if (this.placement) {
       const [x, y, z] = this.place([recipe[0], recipe[1], recipe[2]])
       const options = recipe[5]
-      args = [x, y, z, recipe[3], recipe[4], options?.n ? { ...options, n: this.turn(options.n) } : options]
+      const normal = options?.n ? this.turn(options.n) : undefined
+      // a mark on the floor of the recipe (a pool, a scorch) lies on the ground under it, not at the height of the point it was played at (a hole in a tank)
+      const onFloor = !normal || normal[1] > FLOOR_NORMAL_Y
+      args = [x, onFloor ? this.context.groundAt(x, z) : y, z, recipe[3], recipe[4], normal ? { ...options, n: normal } : options]
     }
     this.context.trace?.('decal', args)
     this.decals.add(args[0], args[1], args[2], args[3], args[4], args[5])
