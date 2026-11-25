@@ -89,7 +89,8 @@ export function installInteractionState(K: Kernel, shared: Shared): void {
   }
   function togglePiece(p: InteractivePiece): void { p.target = p.target > 0.5 ? 0 : 1; shared.partState.set(p.name, p.target); if (p.col && p.col.off !== (p.target > 0.5)) { p.col.off = p.target > 0.5; colliderChanged(p.col); } I().anim.add(p); }
   const lightBase = (roomId: string | null | undefined): boolean => (roomId == null ? true : (shared.partState.has('light:' + roomId) ? !!shared.partState.get('light:' + roomId) : !!shared.ctx.night));
-  const lightOn = (roomId: string | null | undefined): boolean => { const S = roomId != null && shared.ctx.iv && shared.ctx.iv.roomStates.get(roomId); return S ? S.ef : lightBase(roomId); };
+  // a house with its own interactables world lights nothing while its grid is down (an outage of the street): no room, window or lamp of any switch
+  const lightOn = (roomId: string | null | undefined): boolean => { if (shared.ctx.iv && !shared.ctx.iv.world.power.grid) return false; const S = roomId != null && shared.ctx.iv && shared.ctx.iv.roomStates.get(roomId); return S ? S.ef : lightBase(roomId); };
    // with cfg.interactives the room is lit when some kit lamp is on and powered
   function applyLight(roomId: string): void {
     const on = lightOn(roomId), inter = I(), mats: MaterialTable = shared.mats;

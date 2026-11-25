@@ -182,6 +182,7 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     switch (e.type) {
       case 'part': { if (e.part === '_x') break; IV.anim.set(e.object + '|' + e.part, { object: e.object, part: e.part, target: e.target, t0: IV.t }); IV.itemsDirty = true; const E = e.target > 0 ? IV.entries.get(e.object) : undefined; if (E) ivContents(IV, E)?.sync(); invalidate(); break; } // the contents are drawn before the part moves, so they ride it from its first frame
       case 'device': { const roomId = IV.lampRoom.get(e.object); if (roomId) shared.partState.set('light:' + roomId, !!e.on); invalidate(); break; }
+      case 'power': { for (const roomId of (shared.inter as InteractiveState).lights.keys()) if (roomId != null) applyLight(roomId); invalidate(); break; } // the grid went down or came back: every room's lamps and windows follow it
       case 'message': hudMessage(e.text); break;
       case 'pickup': IV.contents.get(e.object)?.sync(); IV.itemsDirty = true; if (e.actor === 'player' && e.stack) { const d = IV.world.t('item.' + e.stack.type); hudMessage(t('message.pickedUp', { name: d, qty: e.stack.qty > 1 ? ' x' + e.stack.qty : '' })); } break;
       case 'seat': IV.itemsDirty = true; break;

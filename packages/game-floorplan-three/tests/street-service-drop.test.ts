@@ -163,3 +163,32 @@ describe('a house on a street whose power runs underground (`street: \'network_u
     }
   })
 })
+
+describe('a house whose grid goes down at night (an outage of its street)', () => {
+  const kit = { GameInteractables, GameInteractablesHousehold, GameInteractablesThree }
+
+  it('lights no room, window or lamp while its grid is down, and lights them again when it comes back', () => {
+    const night = planOf('single_storey_a', 3, 'normal', { street: 'network_underground' })
+    const { house } = houseOf(night, { interactives: kit }, { quality: 'game', night: true })
+    const rooms = Object.keys(house.lights.byRoom)
+    const lit = (): string[] => rooms.filter((room) => house.lightOn(room))
+    const fixtures = (): Map<string, unknown> => {
+      const out = new Map<string, unknown>()
+      house.group.traverse((object) => {
+        const mesh = object as { isMesh?: boolean; name: string; uuid: string; material?: unknown }
+        if (mesh.isMesh && mesh.name.endsWith('/emissive')) out.set(mesh.uuid, mesh.material)
+      })
+      return out
+    }
+    expect(lit().length, 'lit at night').toBeGreaterThan(0)
+    const before = fixtures()
+    house.interactives!.world.power.setGrid(false)
+    house.update(0.05, 0.05)
+    expect(lit(), 'no room lit with the grid down').toEqual([])
+    const after = fixtures()
+    expect([...before].filter(([id, material]) => after.get(id) !== material).length, 'the lit fixtures go dark').toBeGreaterThan(0)
+    house.interactives!.world.power.setGrid(true)
+    house.update(0.05, 0.1)
+    expect(lit().length, 'lit again').toBeGreaterThan(0)
+  })
+})
