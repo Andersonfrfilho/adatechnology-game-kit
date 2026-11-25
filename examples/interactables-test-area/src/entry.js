@@ -32,7 +32,7 @@ import { createModule as createCharactersModule } from '../../characters-test-ar
 import { createModule as createCrowdModule } from '../../crowd-test-area/src/entry.js'
 import { createModule as createUrbanModule, createVehicleBuilder } from '../../urban-test-area/src/entry.js'
 import { loadVegetationTestModule } from '../../vegetation-test-area/src/entry.js'
-import { loadVehiclesTestModule } from '../../vehicles-test-area/src/entry.js'
+import { loadVehiclesTestModule, loadVehiclesTestModuleAsync } from '../../vehicles-test-area/src/entry.js'
 import { loadModule as loadProvingModule } from '../../vehicles-proving-area/src/entry.js'
 import { createModule as createFloorplanModule } from '../../floorplan-test-area/src/entry.js'
 import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
@@ -51,8 +51,9 @@ import { planFurnitureTypes } from './house-complete-layout.js'
 /** @typedef {Partial<Parameters<typeof create>[0]>} FurnitureOptions */
 /** The options of `loadInto`: the furniture area's, plus `<step>: false` to leave a module out. */
 /** @typedef {FurnitureOptions & { readonly [step: string]: unknown }} LoadOptions */
-/** @typedef {{ index: number; total: number; key: string; name: string; done?: boolean }} LoadProgress */
-/** @typedef {{ key: string; prepare: () => { name: string; load: () => unknown } }} LoadStep */
+/** @typedef {{ index: number; total: number; key: string; name: string; done?: boolean; item?: string }} LoadProgress */
+/** @typedef {(itemId: string) => Promise<void>} BetweenItems awaited before each item of a module is built and checked (the page paints) */
+/** @typedef {{ key: string; prepare: () => { name: string; load: () => unknown; loadAsync?: (between: BetweenItems) => Promise<unknown> } }} LoadStep */
 /** The keys the other modules' reports go under in the furniture report (`REPORT_KEYS`). */
 /** @typedef {'weapons' | 'explosives' | 'itemsArea' | 'characters' | 'animals' | 'vfx' | 'terrain' | 'audio' | 'soundCheck' | 'weather' | 'floorplan' | 'vehicles' | 'vehicles_proving' | 'vegetation' | 'urban' | 'player' | 'crowd' | 'stories' | 'houseTables' | 'houseTablesKitchen'} SubReportKey */
 /** @typedef {ModuleReport & { readonly [key in SubReportKey]?: ModuleReport }} FurnitureReport */
@@ -155,12 +156,17 @@ function loadSteps(room, options, lang) {
       prepare: () => {
         before?.()
         const module = create()
-        return { name: module.name ?? label(key), load: () => room.loadModule(module) }
+        return { name: module.name ?? label(key), load: () => room.loadModule(module), loadAsync: (/** @type {BetweenItems} */ between) => room.loadModuleAsync(module, between) }
       },
     })
   }
-  const custom = (/** @type {string} */ key, /** @type {() => unknown} */ load) => {
-    if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load }) })
+  /**
+   * @param {string} key
+   * @param {() => unknown} load
+   * @param {(between: BetweenItems) => Promise<unknown>} [loadAsync]
+   */
+  const custom = (key, load, loadAsync) => {
+    if (on(key)) steps.push({ key, prepare: () => ({ name: label(key), load, ...(loadAsync ? { loadAsync } : {}) }) })
   }
   // the recorded shots and reload steps of game-audio's sfx, when the page carries them (the test room inlines them as `window.__kitSfx`)
   const sfx = globalThis.__kitSfx
@@ -192,7 +198,9 @@ function loadSteps(room, options, lang) {
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
   // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
   const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
-  custom('vehicles', () => loadVehiclesTestModule(room, { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }))
+  const vehicleOptions = { locale: lang, ...(vehicleKeys ? { vehicles: vehicleKeys.split(',') } : {}) }
+  // a vehicle at a time on the page's bar: building and checking the fleet's ten takes seconds
+  custom('vehicles', () => loadVehiclesTestModule(room, vehicleOptions), (between) => loadVehiclesTestModuleAsync(room, between, vehicleOptions))
   // the proving ground: a fleet vehicle runs the measured tests on a track, with the vehicle cameras, the mirrors and the certificate board (its own area is `?area=vehicles_proving`; it builds nothing until opened)
   custom('vehicles_proving', () => loadProvingModule(room, { locale: lang, occupant: 'person_nurse' }))
   // the plants of the Viveiro: cut, shot and burnt next to the house (the module only loads here; its own area is `?area=vegetation`)
@@ -279,10 +287,15 @@ export async function loadIntoAsync(room, options = {}) {
   /** @type {Array<[string, unknown]>} */
   const results = []
   for (const [i, step] of steps.entries()) {
-    const { name, load } = step.prepare()
+    const { name, load, loadAsync } = step.prepare()
     onProgress?.({ index: i + 1, total: steps.length, key: step.key, name })
     await nextPaint()
-    results.push([step.key, load()])
+    // a module is loaded an item at a time, the page painting between them: one heavy module no longer freezes it
+    const between = async (/** @type {string} */ item) => {
+      onProgress?.({ index: i + 1, total: steps.length, key: step.key, name, item })
+      await nextPaint()
+    }
+    results.push([step.key, loadAsync ? await loadAsync(between) : load()])
   }
   onProgress?.({ index: steps.length + 1, total: steps.length, key: 'done', name: '', done: true })
   return assemble(results)

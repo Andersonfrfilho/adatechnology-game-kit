@@ -6,9 +6,9 @@
 import { wallPiece } from '@adatechnology/game-floorplan-three'
 import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { fleetVehicleIds } from '@adatechnology/game-vehicles-fleet'
-import { VEHICLES_AREA_ID, createVehiclesTestModule, loadVehiclesTestModule } from '@adatechnology/game-vehicles-three/testing'
+import { VEHICLES_AREA_ID, createVehiclesTestModule, loadVehiclesTestModule, loadVehiclesTestModuleAsync } from '@adatechnology/game-vehicles-three/testing'
 
-export { createVehiclesTestModule, loadVehiclesTestModule, fleetVehicleIds }
+export { createVehiclesTestModule, loadVehiclesTestModule, loadVehiclesTestModuleAsync, fleetVehicleIds }
 
 /** @type {NonNullable<Parameters<typeof createVehiclesTestModule>[0]>['wall']} */
 const crashWall = (THREE, { length, height, thickness }) =>

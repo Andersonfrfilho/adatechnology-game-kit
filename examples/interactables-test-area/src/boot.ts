@@ -8,6 +8,8 @@ export interface LoadProgress {
   readonly total: number
   readonly name: string
   readonly done?: boolean
+  /** The item of the module being built and checked now, when the module loads an item at a time. */
+  readonly item?: string
 }
 
 export interface BootOptions<TReport> {
@@ -77,7 +79,7 @@ export async function bootFurnitureRoom<TReport>(room: TestRoom, options: BootOp
     task.step(text.starting, 0)
     await task.paint()
     const report = await options.load(room, {
-      onProgress: (progress) => task.step(progress.done ? text.opening : `${progress.name} ${progress.index}/${progress.total}`, Math.round(((progress.index - 1) / progress.total) * MODULES_SHARE)),
+      onProgress: (progress) => task.step(progress.done ? text.opening : `${progress.name} ${progress.index}/${progress.total}${progress.item ? ` · ${progress.item}` : ''}`, Math.round(((progress.index - 1) / progress.total) * MODULES_SHARE)),
     })
     options.onLoaded?.(report)
     const area = params.get('area')

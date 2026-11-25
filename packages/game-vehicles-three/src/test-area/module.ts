@@ -658,9 +658,25 @@ export type ModuleRoomLike = { loadModule(module: never): unknown }
  * (`attach`), so this first lends an empty module to learn the namespace and then loads the real one with it. Pass `three` to skip that.
  */
 export function loadVehiclesTestModule<Room extends ModuleRoomLike>(room: Room, options: VehiclesTestOptions = {}): ReturnType<Room['loadModule']> {
+  return room.loadModule(createVehiclesTestModule({ ...options, three: learnThree(room, options) }) as never) as ReturnType<Room['loadModule']>
+}
+
+/** The three.js namespace the items are built with: the one given, or the room's, learned by lending it an empty module. */
+function learnThree(room: ModuleRoomLike, options: VehiclesTestOptions): unknown {
   let three = options.three
   if (!three) {
     room.loadModule({ id: 'vehicles_probe', name: 'Vehicles probe', group: 'Vehicles', items: () => [], attach: (lent: ModuleHost) => { three = lent.THREE; return () => undefined } } as never)
   }
-  return room.loadModule(createVehiclesTestModule({ ...options, three }) as never) as ReturnType<Room['loadModule']>
+  return three
+}
+
+/** What `loadVehiclesTestModuleAsync` needs of a room: `TestRoom.loadModuleAsync` has it. */
+export type AsyncModuleRoomLike<TReport> = ModuleRoomLike & { loadModuleAsync(module: never, between: (itemId: string) => Promise<void>): Promise<TReport> }
+
+/**
+ * `loadVehiclesTestModule` a vehicle at a time: building and checking a vehicle takes a while (the fleet's eight and two wrecks, seconds in all), so `between(itemId)` is
+ * awaited before each one and the page paints and moves its bar instead of freezing.
+ */
+export function loadVehiclesTestModuleAsync<TReport>(room: AsyncModuleRoomLike<TReport>, between: (itemId: string) => Promise<void>, options: VehiclesTestOptions = {}): Promise<TReport> {
+  return room.loadModuleAsync(createVehiclesTestModule({ ...options, three: learnThree(room, options) }) as never, between)
 }

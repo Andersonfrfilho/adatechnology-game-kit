@@ -1,5 +1,5 @@
-export { createVehiclesTestModule, DEFAULT_TEST_VEHICLES, loadVehiclesTestModule, VEHICLES_AREA_ID } from './module'
+export { createVehiclesTestModule, DEFAULT_TEST_VEHICLES, loadVehiclesTestModule, loadVehiclesTestModuleAsync, VEHICLES_AREA_ID } from './module'
 export { PAGE_ITEM_ALIASES, PAGE_SCENARIO_ALIASES, VEHICLE_SCENARIO_IDS } from './text'
 export { DEFAULT_TEST_WRECKS, defaultEffectIds, defaultSoundIds } from './types'
-export type { ModuleRoomLike } from './module'
+export type { AsyncModuleRoomLike, ModuleRoomLike } from './module'
 export type { DocumentLike, EffectsLike, VehicleEffectIds, VehicleSoundIds, VehicleWreck, VehiclesContext, VehiclesRoom, VehiclesTestFleet, VehiclesTestOptions } from './types'
