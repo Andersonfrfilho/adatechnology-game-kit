@@ -400,7 +400,18 @@ export function installParticles(kit: Kit) {
       })
     }
   }
+  /* the kit's own sprite puff of the smoke emitters, kept as it always drew it: the host with no effects world (and the team goldens) sees no change */
+  function spawnOwnSmokePuff(c: BuildContext, e: VehicleEmitter, p: Vector3) {
+    const black = e.kind === 'black' || e.kind === 'oil'
+    kit.spawn(c, 'smoke', p, new V3((c.rand() - 0.5) * 0.2, black ? 0.9 + c.rand() * 0.3 : 1.1 + c.rand() * 0.3, (c.rand() - 0.5) * 0.2), {
+      variant: black ? 'black' : 'steam',
+      s: (black ? 0.75 : 0.6) * e.s * (0.8 + c.rand() * 0.4),
+      life: black ? 3.2 : 2.0,
+    })
+  }
   function tickEmit(c: BuildContext, dt: number) {
+    // the engine-bay plume (engine-smoke.ts) is drawn where the puffs go to the host's effects world: the room and the game
+    const plume = !!kit.effects?.()
     c.emitters.forEach(function (e) {
       if (e.kind === 'exhaust') {
         const h = c.engineHealth == null ? 1 : c.engineHealth
@@ -411,7 +422,7 @@ export function installParticles(kit: Kit) {
           if (e.gap > 0) return
         }
       }
-      e.acc += (e.damage ? smokeRate(e.rate, e.damage()) : e.rate) * dt
+      e.acc += (plume && e.damage ? smokeRate(e.rate, e.damage()) : e.rate) * dt
       while (e.acc >= 1) {
         e.acc -= 1
         const p = e.world ? e.p.clone() : c.toEffects(e.p)
@@ -424,7 +435,10 @@ export function installParticles(kit: Kit) {
             s: (0.45 + c.rand() * 0.45) * e.s,
             life: 0.55 + c.rand() * 0.35,
           })
-          if (c.rand() < 0.45) spawnSmokePuff(c, SmokeCause.FIRE, e.s, p.clone().add(new V3(0, 0.5 * e.s, 0)))
+          if (c.rand() < 0.45) {
+            if (plume) spawnSmokePuff(c, SmokeCause.FIRE, e.s, p.clone().add(new V3(0, 0.5 * e.s, 0)))
+            else kit.spawn(c, 'smoke', p.clone().add(new V3(0, 0.7 * e.s, 0)), new V3(0, 1.0, 0), { variant: 'black', s: 0.9 * e.s, life: 3.2 })
+          }
           if (c.rand() < 0.15)
             kit.spawn(
               c,
@@ -444,7 +458,8 @@ export function installParticles(kit: Kit) {
           })
         } else {
           const cause = smokeCauseOfEmitter(e.kind)
-          if (cause) spawnSmokePuff(c, cause, e.s, p)
+          if (cause && plume) spawnSmokePuff(c, cause, e.s, p)
+          else spawnOwnSmokePuff(c, e, p)
         }
       }
     })

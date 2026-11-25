@@ -260,19 +260,19 @@
   "counts": "12,1,0,0,21,6,5,4"
  },
  "proto radiator@38": {
-  "objects": 341,
-  "hash": "abe2d308",
-  "counts": "29,2,0,0,21,6,5,4"
+  "objects": 329,
+  "hash": "b3897004",
+  "counts": "17,2,0,0,21,6,5,4"
  },
  "proto radiator@13": {
-  "objects": 360,
-  "hash": "6ff3f483",
-  "counts": "48,2,0,0,21,6,5,4"
+  "objects": 334,
+  "hash": "c3748c35",
+  "counts": "22,2,0,0,21,6,5,4"
  },
  "proto radiator@0": {
-  "objects": 382,
-  "hash": "9ff742b",
-  "counts": "70,2,0,0,21,6,5,4"
+  "objects": 340,
+  "hash": "f7d694b2",
+  "counts": "28,2,0,0,21,6,5,4"
  },
  "__zones proto": [
   "bumper_front",
@@ -450,14 +450,14 @@
   "counts": "12,1,0,0,5,0,2,2"
  },
  "bike engine@38": {
-  "objects": 55,
-  "hash": "746be3",
-  "counts": "24,2,0,0,5,0,2,2"
+  "objects": 45,
+  "hash": "c057a088",
+  "counts": "14,2,0,0,5,0,2,2"
  },
  "bike engine@0": {
-  "objects": 87,
-  "hash": "4e34a477",
-  "counts": "52,2,1,0,5,0,2,2"
+  "objects": 56,
+  "hash": "3cb2c265",
+  "counts": "21,2,1,0,5,0,2,2"
  },
  "bike taillight_center@38": {
   "objects": 55,
@@ -659,14 +659,14 @@
   "counts": "0,0,0,0,3,1,0,0"
  },
  "heli engine@38": {
-  "objects": 22,
-  "hash": "cd84ae62",
-  "counts": "12,1,0,0,3,1,0,0"
+  "objects": 13,
+  "hash": "9027c75a",
+  "counts": "3,1,0,0,3,1,0,0"
  },
  "heli engine@0": {
-  "objects": 96,
-  "hash": "1e32d434",
-  "counts": "86,2,0,0,3,1,0,0"
+  "objects": 36,
+  "hash": "ced4815b",
+  "counts": "26,2,0,0,3,1,0,0"
  },
  "__zones heli": [
   "nose",
@@ -740,14 +740,14 @@
   "wheels_axle_2"
  ],
  "op zoneImpact front": {
-  "objects": 477,
-  "hash": "d32fd4d8",
-  "counts": "153,3,1,7,21,6,5,4"
+  "objects": 407,
+  "hash": "59a7d3e",
+  "counts": "83,3,1,7,21,6,5,4"
  },
  "op zoneImpact rear": {
-  "objects": 546,
-  "hash": "1d8ebadd",
-  "counts": "224,4,1,5,21,6,5,4"
+  "objects": 424,
+  "hash": "1ac0a7a0",
+  "counts": "102,4,1,5,21,6,5,4"
  },
  "op zoneImpact left": {
   "objects": 377,
@@ -760,9 +760,9 @@
   "counts": "79,1,0,3,21,6,5,4"
  },
  "op impact": {
-  "objects": 465,
-  "hash": "c698d719",
-  "counts": "132,3,1,9,21,6,5,4"
+  "objects": 447,
+  "hash": "2b3e912b",
+  "counts": "114,3,1,9,21,6,5,4"
  },
  "op impact windshield": {
   "objects": 429,
@@ -770,23 +770,23 @@
   "counts": "107,1,0,3,21,6,5,4"
  },
  "op explode": {
-  "objects": 622,
-  "hash": "7d44a104",
-  "counts": "304,3,0,1,21,6,5,4"
+  "objects": 529,
+  "hash": "dffdcfd3",
+  "counts": "211,3,0,1,21,6,5,4"
  },
  "op explode delayed": {
-  "objects": 670,
-  "hash": "bce3fa94",
-  "counts": "352,4,0,1,21,6,5,4"
+  "objects": 523,
+  "hash": "cde8ab3b",
+  "counts": "205,4,0,1,21,6,5,4"
  },
  "op roll": {
-  "objects": 674,
-  "hash": "5c8e47a9",
-  "counts": "312,2,1,8,21,6,5,4"
+  "objects": 640,
+  "hash": "b467f7de",
+  "counts": "278,2,1,8,21,6,5,4"
  },
  "op roll left after hit": {
   "objects": 786,
-  "hash": "a2be1603",
+  "hash": "89c65926",
   "counts": "400,4,2,15,21,6,5,4"
  },
  "op hood": {
@@ -805,14 +805,14 @@
   "counts": "12,1,1,0,21,6,5,4"
  },
  "op particles": {
-  "objects": 442,
-  "hash": "91cb92dd",
-  "counts": "130,2,0,0,21,6,5,4"
+  "objects": 371,
+  "hash": "10005220",
+  "counts": "59,2,0,0,21,6,5,4"
  },
  "op flag burnt": {
-  "objects": 376,
-  "hash": "df769934",
-  "counts": "64,3,0,0,21,6,5,4"
+  "objects": 338,
+  "hash": "b8d1b1ce",
+  "counts": "26,3,0,0,21,6,5,4"
  },
  "op flag abandoned": {
   "objects": 402,
@@ -820,19 +820,19 @@
   "counts": "12,1,0,0,21,6,5,4"
  },
  "op flag flipped": {
-  "objects": 645,
-  "hash": "20f0ea4f",
-  "counts": "283,2,1,8,21,6,5,4"
+  "objects": 633,
+  "hash": "25556785",
+  "counts": "271,2,1,8,21,6,5,4"
  },
  "op flags combined": {
-  "objects": 765,
-  "hash": "d0a80e18",
-  "counts": "325,4,1,8,21,6,5,4"
+  "objects": 741,
+  "hash": "ce6ac7ce",
+  "counts": "301,4,1,8,21,6,5,4"
  },
  "scenario sc1 proto": {
-  "objects": 619,
-  "hash": "2fcc41f7",
-  "counts": "160,5,1,0,21,6,5,4"
+  "objects": 530,
+  "hash": "16beb864",
+  "counts": "71,5,1,0,21,6,5,4"
  },
  "__scenario sc1 proto": {
   "health": {
@@ -859,9 +859,9 @@
   "sc": "sc1"
  },
  "scenario sc1 plane": {
-  "objects": 133,
-  "hash": "730d0aa8",
-  "counts": "50,3,0,0,5,1,0,3"
+  "objects": 107,
+  "hash": "e41f7dc7",
+  "counts": "24,3,0,0,5,1,0,3"
  },
  "__scenario sc1 plane": {
   "health": {

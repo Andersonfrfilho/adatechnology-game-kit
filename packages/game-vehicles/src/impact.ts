@@ -102,8 +102,8 @@ export function installImpact(kit: Kit) {
       hurtEngine(c, 0.6)
     } else if (k === 'engine') {
       // a hit engine bleeds oil on the hot block: light grey smoke out of the bay, thicker the more the engine is hurt (black is for a fire)
+      kit.addEmitter(c, pt.pos.clone().add(new V3(0, 0.3, 0)), 'oil', { rate: 6, damage: () => 1 - (c.engineHealth ?? 1) })
       hurtEngine(c, force > 1.1 ? 0.1 : 0.3)
-      kit.addEmitter(c, pt.pos.clone().add(new V3(0, 0.3, 0)), 'oil', { rate: 3, damage: () => 1 - (c.engineHealth ?? 1) })
       if (c.hood && force > 0.5 && !c.hood.noLatch) {
         c.hood.latch = Math.max(c.hood.latch, 0.15)
       }

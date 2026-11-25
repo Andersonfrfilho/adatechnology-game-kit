@@ -394,7 +394,7 @@ export class VehicleVisuals implements CreaseWork {
       if (open && piv.parent === this.c.vehicle && !this.skins.has(id)) {
         busy = true
         try {
-          this.skins.set(id, this.takeSkin(id, piv))
+          this.skins.set(id, this.takeSkin(id, piv, this.gone.has(id)))
         } finally {
           busy = false
         }
@@ -428,7 +428,7 @@ export class VehicleVisuals implements CreaseWork {
    * Cuts the skin of a door or lid zone out of the body (as the damage's hanging door does) and hangs it, with the thin parts on it (trim, handle) and, for a door, the side
    * window over it, on the hinge. Done with the hinge closed, so every piece keeps its place; answers whether there was skin to take.
    */
-  private takeSkin(id: string, piv: Object3D): boolean {
+  private takeSkin(id: string, piv: Object3D, torn = false): boolean {
     const p = this.byId.get(id)
     const z = p && this.zone(p)
     if (!p || !z) return false
@@ -449,7 +449,9 @@ export class VehicleVisuals implements CreaseWork {
         this.doorTops.set(id, top)
         const rect = [B.x0 + 0.03, B.x1 - 0.03, B.y0 + Math.min(0.08, (B.y1 - B.y0) * 0.1), top]
         const pcs = (I.cutPanel(this.c, z, rect, true, dirty, { anyN: true }) as Array<{ mesh?: Obj }>).map((x) => x.mesh).filter((m): m is Obj => !!m)
-        this.mend(dirty)
+        // torn off by a blast, the body's normals are smoothed over the next frames, never all in the frame of the blast
+        if (torn) this.mendLater(dirty)
+        else this.mend(dirty)
         if (pcs.length) {
           // the cut reaches into the body behind the door (a wheel house, the floor): that goes back to the body instead of hanging under the open door
           leaveDeepSkinOnBody(this.THREE, pcs, { toVehicle: inv, side: z.side < 0 ? -1 : 1, depth: DOOR_SKIN_DEPTH })
@@ -1446,13 +1448,16 @@ export class VehicleVisuals implements CreaseWork {
     } catch {
       // a zone with nothing to cut
     }
+    this.mendLater(dirty)
+    this.gone.add(p.id)
+  }
+  private mendLater(dirty: Set<Obj>): void {
     dirty.forEach((msh) => {
       const g = msh.geometry
       if (g.userData.crease || !g.index) this.smoothLater(msh)
       else g.computeVertexNormals()
       this.I.refreshBounds(g)
     })
-    this.gone.add(p.id)
   }
 
   // ---- parts coming off --------------------------------------------------------------------------------------------------------------------

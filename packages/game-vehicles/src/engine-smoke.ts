@@ -26,8 +26,8 @@ const CAUSE_OF_EMITTER: Readonly<Record<string, SmokeCause>> = { white: SmokeCau
 export const smokeCauseOfEmitter = (kind: string): SmokeCause | undefined => CAUSE_OF_EMITTER[kind]
 
 /** Light emission at the first damage, full emission at a wreck: puffs a second grow with the damage (0 intact, 1 wrecked). */
-const RATE_AT_NO_DAMAGE = 0.35
-const RATE_AT_WRECK = 2.2
+const RATE_AT_NO_DAMAGE = 0.25
+const RATE_AT_WRECK = 1
 
 export function smokeRate(baseRate: number, damage: number): number {
   const level = Math.min(1, Math.max(0, damage))
