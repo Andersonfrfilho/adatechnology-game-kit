@@ -26,8 +26,8 @@ const BAR_TOTAL = 100
 const QUIET_MOVE = 0.002
 const QUIET_WINDOW_MS = 400
 const QUIET_WINDOWS = 2
-/** A piece that never sleeps (a jitter) must not hold the page closed: past this the room shows anyway. */
-const SETTLE_LIMIT_MS = 30000
+/** A piece that never sleeps (a jitter) must not hold the page closed: past this many windows (30 s) the room shows anyway. */
+const SETTLE_WINDOWS = 75
 
 const TEXTS = {
   'pt-BR': { title: 'Sala de móveis', starting: 'Iniciando…', opening: 'Montando a área', settling: 'Assentando as peças', moving: 'em movimento', ready: 'Pronta' },
@@ -54,15 +54,14 @@ function movingSince(room: TestRoom, before: ReadonlyMap<string, readonly [numbe
 
 /** Waits for what the area laid to come to rest, telling on the bar how many pieces still move. */
 async function settle(room: TestRoom, step: (text: string, done: number) => void, text: { readonly settling: string; readonly moving: string }): Promise<void> {
-  const started = Date.now()
   let quiet = 0
-  while (quiet < QUIET_WINDOWS && Date.now() - started < SETTLE_LIMIT_MS) {
+  for (let pass = 0; pass < SETTLE_WINDOWS && quiet < QUIET_WINDOWS; pass++) {
     const before = positionsOf(room.spawned())
     await wait(QUIET_WINDOW_MS)
     const moving = movingSince(room, before)
     quiet = moving === 0 ? quiet + 1 : 0
-    const share = Math.min(1, (Date.now() - started) / SETTLE_LIMIT_MS)
-    step(`${text.settling}: ${moving} ${text.moving}`, Math.round(AREA_SHARE + (BAR_TOTAL - AREA_SHARE - 1) * Math.max(share, quiet / QUIET_WINDOWS)))
+    const share = Math.max((pass + 1) / SETTLE_WINDOWS, quiet / QUIET_WINDOWS)
+    step(`${text.settling}: ${moving} ${text.moving}`, Math.round(AREA_SHARE + (BAR_TOTAL - AREA_SHARE - 1) * share))
   }
 }
 
