@@ -142,6 +142,12 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     house.destruction.activate()
     return { lot, plan, house, placement, footprint: footprintOf(placement, size), overflow: overflowOf(lot.rect, lot.front, size) }
   })
+  // after the budget placed this frame's lights: a street lamp lights the outside of the houses and gets in only through a window or an open door that faces it
+  const houseLights = renderer.effectLights?.({ budget: world.lights })
+  const houseObjects = list.map((placed) => placed.house)
+  const stopHouseLights = houseLights
+    ? world.frame.add(() => houseLights.update(houseObjects, world.view.camera.position), { phase: 'present', order: 20, id: 'district.house-lights' })
+    : undefined
   let sincePlan = PLAN_EVERY_SECONDS
   return {
     list,
@@ -158,6 +164,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
       for (const placed of list) placed.house.update(dt, time)
     },
     dispose() {
+      stopHouseLights?.()
       unregister()
       for (const placed of list) placed.house.dispose()
       renderer.dispose?.()
