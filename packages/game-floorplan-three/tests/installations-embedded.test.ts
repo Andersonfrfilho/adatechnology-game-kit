@@ -133,15 +133,44 @@ describe('each piece shows from the stage of the work it belongs to', () => {
   const sidewalk = (): THREE.Object3D[] => partsOf(house.group, (o) => (o as THREE.Mesh).isMesh && /\/sidewalk/.test(o.name) && /^f\d/.test(o.name) && shown(o))
   const embeddedRuns = (): THREE.Object3D[] => partsOf(house.group, (o) => (o.userData.part === 'wall_pipe' || o.userData.part === 'wall_conduit') && shown(o))
 
-  it('the gutters\' downpipes, the protective sidewalk and the facade\'s tiles come with the end of the work, never at the rough-in', () => {
-    for (const level of [3, 4, 5, 6, 7]) {
+  it('the downpipes go up with the gutters and the tiles (level 6), the sidewalk and the facade\'s tiles last (level 8): never at the rough-in', () => {
+    for (const level of [3, 4, 5]) {
       house.setConstructionLevel?.(level)
       expect(downpipes().length, `downpipes at level ${level}`).toBe(0)
+    }
+    for (const level of [6, 7, 8]) {
+      house.setConstructionLevel?.(level)
+      expect(downpipes().length, `downpipes at level ${level}`).toBeGreaterThan(0)
+    }
+    for (const level of [3, 4, 5, 6, 7]) {
+      house.setConstructionLevel?.(level)
       expect(sidewalk().length, `sidewalk at level ${level}`).toBe(0)
     }
     house.setConstructionLevel?.(8)
-    expect(downpipes().length).toBeGreaterThan(0)
     expect(sidewalk().length).toBeGreaterThan(0)
+  })
+
+  it('follows the order of a Brazilian work: foundation, frame, masonry, runs in it, roof timber, tiles, the render, then doors and windows and the sidewalk', () => {
+    const first = (shownAt: (level: number) => boolean): number => [0, 1, 2, 3, 4, 5, 6, 7, 8].find((level) => { house.setConstructionLevel?.(level); return shownAt(level) }) ?? -1
+    const group = (name: string) => (): boolean => { const g = (house.groups as Record<string, THREE.Object3D>)[name]; return !!g && shown(g) }
+    const ofStage = (stage: string) => (): boolean => partsOf(house.group, (o) => o.userData.constructionStage === stage && shown(o)).length > 0
+    expect({
+      foundation: first(group('stage:1:foundation')),
+      frame: first(group('stage:2:frame')),
+      masonry: first(group('stage:3:masonry')),
+      runs: first(() => embeddedRuns().length > 0),
+      roofFraming: first(group('stage:7:roof_framing')),
+      roof: first(group('roof')),
+      downpipes: first(() => downpipes().length > 0),
+      render: first(ofStage('finishes')),
+      openings: first(ofStage('openings')),
+      sidewalk: first(() => sidewalk().length > 0),
+    }).toEqual({ foundation: 1, frame: 2, masonry: 3, runs: 4, roofFraming: 5, roof: 6, downpipes: 6, render: 7, openings: 8, sidewalk: 8 })
+    // the bare work stays until the render covers it, never after
+    house.setConstructionLevel?.(6)
+    expect(group('stage:3:masonry')()).toBe(true)
+    house.setConstructionLevel?.(7)
+    expect(group('stage:3:masonry')()).toBe(false)
   })
 
   it('the runs in the walls are laid in the rough-in, before the render, and stay there', () => {

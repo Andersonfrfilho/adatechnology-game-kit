@@ -29,14 +29,14 @@ function upFaces(root: THREE.Object3D, box: readonly number[], from: number, to:
 }
 
 describe('the outbuilding\'s roof slab reaches the outer faces of its walls: no wall stands round or above it', () => {
-  it('single_storey_a, from the finishes to the fittings (levels 5 to 7)', () => {
+  it('single_storey_a, once rendered (level 7)', () => {
     const plan = planOf('single_storey_a', 1) as unknown as { outbuildings: Outbuilding[] }
     const e = plan.outbuildings[0]!
     const half = (e.thickness ?? 0.15) / 2
     const outer = [e.aabb[0]! - half, e.aabb[1]! - half, e.aabb[2]! + half, e.aabb[3]! + half]
     const top = (e.ceiling ?? 2.6) + 0.2
-    const { house } = houseOf(plan as never, {}, { quality: 'game', constructionStages: true, constructionLevel: 5 })
-    for (const level of [5, 6, 7]) {
+    const { house } = houseOf(plan as never, {}, { quality: 'game', constructionStages: true, constructionLevel: 7 })
+    for (const level of [7]) {
       house.setConstructionLevel?.(level)
       house.group.updateMatrixWorld(true)
       const faces = upFaces(house.group, outer, 1.5, top + 0.01)

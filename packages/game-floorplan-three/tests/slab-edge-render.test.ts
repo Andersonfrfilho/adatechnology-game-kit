@@ -38,10 +38,10 @@ function bareEdgeFaces(plan: Plan, group: THREE.Object3D): string[] {
 
 describe('the house slab edge is rendered like the walls at the plaster stage', () => {
   for (const seed of [1, 2, 5]) {
-    it(`single_storey_a #${seed}: no bare concrete faces the outside above the wall tops (levels 5 and 7)`, () => {
+    it(`single_storey_a #${seed}: no bare concrete faces the outside above the wall tops once rendered (level 7)`, () => {
       const plan = planOf('single_storey_a', seed) as unknown as Plan
-      const { house } = houseOf(plan as never, {}, { quality: 'game', constructionStages: true, constructionLevel: 5 })
-      for (const level of [5, 7]) {
+      const { house } = houseOf(plan as never, {}, { quality: 'game', constructionStages: true, constructionLevel: 7 })
+      for (const level of [7]) {
         house.setConstructionLevel?.(level)
         house.group.updateMatrixWorld(true)
         expect(bareEdgeFaces(plan, house.group), `level ${level}`).toEqual([])

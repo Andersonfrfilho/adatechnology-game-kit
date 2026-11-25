@@ -139,6 +139,26 @@ function clearOfSolids(t: number, width: number, a: Vec, b: Vec, axis: 0 | 2, so
   return t
 }
 
+/**
+ * Where up the slope a batten at `s` is laid: moved a few millimetres when a side of it would lie on the plane of a face of a solid it passes (a bare unit of a
+ * wall going up under the roof), as the rafters are (`clearOfSolids`).
+ */
+function battenClearOfSolids(slope: Slope, s: number, [a, b]: readonly [number, number], solids: readonly Aabb[]): number {
+  const { batten } = TIMBER
+  const p0 = down(slope.point(s, a), batten.top), p1 = down(slope.point(s, b), batten.top)
+  const axis: 0 | 2 = Math.abs(p1[0] - p0[0]) < 1e-6 ? 0 : 2
+  const other = axis === 0 ? 2 : 0
+  const rise = Math.abs(slope.point(1, a)[axis] - slope.point(0, a)[axis])
+  if (rise < 1e-6) return s
+  const lo = Math.min(p0[other], p1[other]), hi = Math.max(p0[other], p1[other])
+  const y0 = Math.min(p0[1], p1[1]) - batten.height, y1 = Math.max(p0[1], p1[1])
+  for (const box of solids) {
+    if (box[other] > hi || box[other + 3] < lo || box[1] > y1 || box[4] < y0) continue
+    for (const face of [box[axis], box[axis + 3]]) for (const side of [p0[axis] - batten.width / 2, p0[axis] + batten.width / 2]) if (Math.abs(face - side) < BATTEN_SIDE_CLEAR) return s + SIDE_STEP * 2 / rise
+  }
+  return s
+}
+
 /** Where the slope is at height `s`: the stretch of its eave line that is still roof (the hips eat `s` at each end of a hipped slope). */
 function spanAt(slope: Slope, s: number): readonly [number, number] {
   return slope.hipped ? [slope.t0 + s + EDGE, slope.t1 - s - EDGE] : [slope.t0 + EDGE, slope.t1 - EDGE]
@@ -150,8 +170,10 @@ function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly
   for (let s = batten.spacing / 2; s < slope.run - 0.12; s += batten.spacing) {
     const [a0, b0] = spanAt(slope, s)
     // a batten stops a little short of the ends of the purlins and the plate, so their end faces never meet
-    const a = a0 + 0.015, b = b0 - 0.015
-    if (b - a > 0.05) addTimberAround(batches.battens, down(slope.point(s, a), batten.top), down(slope.point(s, b), batten.top), batten.width, batten.height, keepOut)
+    const a = a0 + BATTEN_SHORT, b = b0 - BATTEN_SHORT
+    if (b - a <= 0.05) continue
+    const at = battenClearOfSolids(slope, s, [a, b], solids)
+    addTimberAround(batches.battens, down(slope.point(at, a), batten.top), down(slope.point(at, b), batten.top), batten.width, batten.height, keepOut)
   }
   const t0 = slope.t0 + EDGE, t1 = slope.t1 - EDGE
   const count = Math.max(1, Math.round((t1 - t0) / rafter.spacing))
@@ -174,7 +196,8 @@ function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly
     const depth = Math.min(purlin.height, p0[1] - slabTop - 0.003)
     if (depth < 0.02) return
     // (a purlin cut around the tank gets a post under each cut end)
-    addTimberAround(batches.timber, p0, p1, purlin.width, depth, keepOut, k === 0 ? undefined : (end) => addPost(batches.timber, end[0], end[2], slabTop, end[1] - purlin.height))
+    // (the wall plate a little narrower than a log or a block wall it may lie on: its sides never on the wall's faces, bare before the render)
+    addTimberAround(batches.timber, p0, p1, k === 0 ? purlin.width - PLATE_NARROWER : purlin.width, depth, keepOut, k === 0 ? undefined : (end) => addPost(batches.timber, end[0], end[2], slabTop, end[1] - purlin.height))
     if (k === 0) return
     const posts = Math.max(1, Math.ceil((b - a) / TIMBER.post.spacing))
     for (let j = 0; j <= posts; j++) {
@@ -189,6 +212,40 @@ function frameSlope(slope: Slope, batches: { readonly timber: BoxBatch; readonly
  * from the eave to the ridge and the hips, and the battens cross them under the tiles. Every piece lies under the tile planes, so none of it shows through the
  * tiles, and none of it hangs inside the rooms.
  */
+/** How far a batten stops short of the ends of the purlins and the plate, metres (off the plane of the bare masonry's end units too). */
+const BATTEN_SHORT = 0.0185
+/** How close a batten's side may come to the plane of a face it passes, metres (a unit's face across a mortar joint from it). */
+const BATTEN_SIDE_CLEAR = 0.0035
+/** How much narrower than a purlin the wall plate is, metres. */
+const PLATE_NARROWER = 0.008
+
+/** Vertices of one box of a `BoxBatch`. */
+const BOX_VERTICES = 24
+
+/**
+ * The boxes of the bare work the frame goes up over (the frame's pillars, beams and slabs, the masonry's units), in the house's frame: the rafters keep their
+ * sides off these faces as off the finished ones (the roof goes on before the render).
+ */
+export function bareBoxesOf(THREE: Three, groups: readonly THREE_NS.Object3D[]): Aabb[] {
+  const out: Aabb[] = []
+  const v = new THREE.Vector3()
+  for (const group of groups) {
+    group.updateMatrixWorld(true)
+    group.traverse((o) => {
+    const mesh = o as THREE_NS.Mesh
+    if (!mesh.isMesh) return
+    const position = mesh.geometry.getAttribute('position')
+    const step = position.count > BOX_VERTICES && position.count % BOX_VERTICES === 0 ? BOX_VERTICES : position.count
+    for (let i = 0; i + step <= position.count; i += step) {
+      const box = new THREE.Box3()
+      for (let k = i; k < i + step; k++) box.expandByPoint(v.fromBufferAttribute(position, k).applyMatrix4(mesh.matrixWorld))
+      out.push([box.min.x, box.min.y, box.min.z, box.max.x, box.max.y, box.max.z])
+    }
+    })
+  }
+  return out
+}
+
 export function buildRoofFramingStage(THREE: Three, roofRects: readonly RoofRect[], material?: THREE_NS.Material, solids: readonly Aabb[] = [], keepOut: readonly Aabb[] = []): THREE_NS.Group {
   const group = new THREE.Group()
   group.name = 'stage:7:roof_framing'
