@@ -198,27 +198,35 @@ function tryBreak(trial: Trial, so: SpawnedObject): boolean {
   return isBroken(room, so.objectId)
 }
 
-/** Every trial on one piece, in the order a player tries them: look, open, pick up, shoot, break. */
-export function trialOf(trial: Trial, so: SpawnedObject): HouseItemTrial {
-  const { room, step } = trial
-  aimAt(trial, so)
-  step(0.05)
-  const errors: string[] = []
-  // a trial that throws is a failed trial of that piece, said in `errors`: the next pieces are still tried
-  const attempt = <T>(run: () => T, failed: T): T => {
-    try {
-      return run()
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : String(error))
-      return failed
-    }
+/** Runs a trial; one that throws is a failed trial of that piece, said in `errors`, and the next pieces are still tried. */
+function attempt<T>(errors: string[], run: () => T, failed: T): T {
+  try {
+    return run()
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : String(error))
+    return failed
   }
-  const looked = room.inspect()?.objectId === so.objectId
-  const used = attempt<boolean | null>(() => tryUse(trial, so), false)
-  const picked = attempt(() => tryPick(trial, so), false)
-  const shot = attempt(() => isLive(room, so.objectId) && tryShot(trial, so), false)
-  const broken = attempt(() => tryBreak(trial, so), false)
-  return { item: so.itemId, looked, used, picked, shot, broken, errors }
+}
+
+type HandTrial = Pick<HouseItemTrial, 'item' | 'looked' | 'used' | 'picked' | 'errors'>
+
+/** What the hands try on a piece, as a player does: look at it, open it, pick it up. */
+export function handTrialOf(trial: Trial, so: SpawnedObject): HandTrial {
+  aimAt(trial, so)
+  trial.step(0.05)
+  const errors: string[] = []
+  const looked = trial.room.inspect()?.objectId === so.objectId
+  const used = attempt<boolean | null>(errors, () => tryUse(trial, so), false)
+  const picked = attempt(errors, () => tryPick(trial, so), false)
+  return { item: so.itemId, looked, used, picked, errors }
+}
+
+/** What the weapons try on a piece: a shot, then blows until it breaks. */
+export function damageTrialOf(trial: Trial, so: SpawnedObject, hands: HandTrial): HouseItemTrial {
+  const errors = [...hands.errors]
+  const shot = attempt(errors, () => isLive(trial.room, so.objectId) && tryShot(trial, so), false)
+  const broken = attempt(errors, () => tryBreak(trial, so), false)
+  return { ...hands, shot, broken, errors }
 }
 
 function scenariosOf(locale: Locale, layout: () => HouseCompleteLayout, three: () => Three | null): Array<ModuleScenario<ScenarioContext>> {
@@ -253,8 +261,11 @@ function scenariosOf(locale: Locale, layout: () => HouseCompleteLayout, three: (
           return
         }
         const floor = layout().onFloor
-        const trials = spawned.filter((so) => floor.has(so.itemId) || layout().onWall.has(so.itemId)).map((so) => {
-          const trial = trialOf({ room, step, THREE }, so)
+        const pieces = spawned.filter((so) => floor.has(so.itemId) || layout().onWall.has(so.itemId))
+        // every piece is handled before any is shot or broken: debris of a neighbour must not stand between the hand and a door
+        const hands = pieces.map((so) => handTrialOf({ room, step, THREE }, so))
+        const trials = pieces.map((so, index) => {
+          const trial = damageTrialOf({ room, step, THREE }, so, hands[index] as HandTrial)
           room.log.add({ channel: 'action', type: HOUSE_COMPLETE_TRIAL_LOG, text: `${trial.item}: ${JSON.stringify(trial)}`, itemId: trial.item, data: { ...trial } })
           return trial
         })
