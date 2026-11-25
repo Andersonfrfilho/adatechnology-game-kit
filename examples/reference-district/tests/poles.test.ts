@@ -101,7 +101,10 @@ describe('each house is fed by the network\'s drop', () => {
       expect(pole.kind, house.lot.id).toBe('pole')
       expect(drop!.from, house.lot.id).toEqual([pole.at[0], edge.heights![0], pole.at[2]])
       expect(Math.hypot(drop!.from[0] - x, drop!.from[2] - z), `${house.lot.id}: a drop no longer than a utility allows`).toBeLessThanOrEqual(DEFAULT_NETWORK_RULES.power.dropMaxLength)
-      if (entrance.pole) expect([landing[0], landing[1]], house.lot.id).toEqual([entrance.pole.u, entrance.pole.v])
+      if (entrance.pole) {
+        expect(landing[0], `${house.lot.id}: on the post`).toBe(entrance.pole.u)
+        expect(Math.abs(landing[1] - entrance.pole.v), `${house.lot.id}: on the post's street face`).toBeLessThanOrEqual(0.15)
+      }
       else expect([landing[0], landing[1]], `${house.lot.id}: on the facade mast`).toEqual([entrance.mast?.u, entrance.mast?.v])
     }
     expect(fed, 'every lot with an entrance is fed').toBe(lots.length)

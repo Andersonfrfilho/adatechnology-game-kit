@@ -18,11 +18,11 @@ const generated = buildNetworks({ plan, site, lots, avoid })
 const { nodes, edges } = generated.networks
 /** The bytes of the recorte's networks: a change that moves anything shows here, and is recorded on purpose. */
 // re-recorded when every house declared its own connections (T2.8c: meter post or facade mast anchor, inspection box clear of the wall, downspout at the kerb, water meter)
-const RECORDED = 'c922cf43f4e3421eb453be0716e457e037fcb6eb7060d2e5fc2616968cde7034'
+const RECORDED = '29b150ab58a55e21f5c27ea7323bed0a00c27062369243cab3f4f874aef99601'
 
 describe('the networks of the recorte', () => {
   it('pass every rule of validateNetworks, laid with no warning', () => {
-    expect(validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt })).toEqual([])
+    expect(validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt, frontages: generated.frontages })).toEqual([])
     expect(generated.warnings).toEqual([])
   })
 

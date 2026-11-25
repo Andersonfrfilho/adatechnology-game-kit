@@ -13,7 +13,7 @@ const setBack = (front: number, x = 20): NetworkLot => ({ id: 'back', rect: [x, 
 const generate = (lots: readonly NetworkLot[], avoid: Array<readonly [number, number, number, number]> = []) => generateNetworks({ plan: PLAN, lots, seed: 1, avoid })
 const poles = (out: ReturnType<typeof generate>): NetworkNode[] => out.networks.nodes.filter((node) => node.kind === 'pole')
 const service = (out: ReturnType<typeof generate>): NetworkNode[] => poles(out).filter((node) => node.id.includes(':lot:'))
-const valid = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt })
+const valid = (out: ReturnType<typeof generate>) => validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt, frontages: out.frontages })
 
 describe('poles added to reach a lot', () => {
   it('spaces the service poles evenly from the street pole to the meter post, never past it', () => {

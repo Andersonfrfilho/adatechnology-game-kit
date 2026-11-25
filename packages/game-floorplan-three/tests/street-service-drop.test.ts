@@ -1,6 +1,7 @@
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
+import { coincidentFacesOf } from '@adatechnology/game-shapes-three'
 import { describe, expect, it } from 'vitest'
 
 import { houseOf, planOf } from './helpers/houses'
@@ -76,7 +77,27 @@ describe('a house on a street with a utility network (`street: \'network\'`)', (
       for (const options of [{}, { interactives: kit }]) {
         const ids = partIds(houseOf(plan, options, build).house)
         expect(ids.some((id) => id.startsWith('wiring:service:')), 'no drop from the street pole').toBe(false)
+        expect(ids.some((id) => id.startsWith('wiring:drop:')), 'no wire from the post to the meter').toBe(false)
       }
+    }
+  })
+
+  it('draws the padrão as a slim post (no crossarm), the meter box at its foot and the conduit down its face', () => {
+    const { house } = houseOf(plan, {}, { quality: 'game' })
+    const post = house.structure.parts.find((part) => part.id === 'pole:' + entrance.pole!.u.toFixed(1))!
+    expect(post.aabb[2] - post.aabb[0], 'slim').toBeLessThanOrEqual(0.25)
+    expect(post.aabb[3] - post.aabb[1], 'slim').toBeLessThanOrEqual(0.25)
+    expect(post.y1).toBeLessThanOrEqual(entrance.pole!.h + 0.01)
+    expect(entrance.meter?.place).toBe('post')
+  })
+
+  it('the padrão (post, bracket, meter box, conduit) has no coincident faces, with and without the interactables', () => {
+    for (const options of [{}, { interactives: kit }]) {
+      const { house } = houseOf(plan, options, { quality: 'game' })
+      house.group.updateMatrixWorld(true)
+      const near = (point: readonly number[]): boolean => Math.hypot(point[0]! - entrance.pole!.u, point[2]! - entrance.pole!.v) < 0.3
+      const hits = coincidentFacesOf(house.group, { maxHits: Number.POSITIVE_INFINITY }).filter((hit) => near(hit.point))
+      expect(hits.map((hit) => `${hit.labelA} x ${hit.labelB}`)).toEqual([])
     }
   })
 

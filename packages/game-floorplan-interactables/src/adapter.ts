@@ -707,6 +707,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
           house: [r3(K.x(end[0]!) - px), end[2]!, r3(K.z(end[1]!) - pz)],
         }
         if (ee.tap || electrical.mode === 'tap') item.variant = 'gato' // illegal tap: the drop leaves the pole straight to the house, with no meter box
+        else if (ee.street === 'network') item.variant = 'network' // the padrão of a network: a slim post, the meter box and the conduit are objects of their own
         const e = entry('service_entrance', 'service_entrance', item, 'service_entrance', -1)
         push(e)
         result.serviceEntrance = e.id

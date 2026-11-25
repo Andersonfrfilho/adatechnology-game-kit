@@ -7,7 +7,7 @@ import { AVENUE, DOUBLE, LONG_RIVER, T_JUNCTION } from './layouts'
 
 const run = (params: Omit<GenerateNetworksParams, 'seed'> & { seed?: number }) => {
   const out = generateNetworks({ seed: 3, ...params })
-  return { out, violations: validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt }) }
+  return { out, violations: validateNetworks(out.networks, { connections: out.connections, surfaceAt: out.surfaceAt, frontages: out.frontages }) }
 }
 const nodesOf = (out: ReturnType<typeof generateNetworks>, kind: NetworkNode['kind']): NetworkNode[] => out.networks.nodes.filter((node) => node.kind === kind)
 
@@ -94,6 +94,8 @@ describe('the circuits at their limits', () => {
     const wall = [-300, -8, 300, 8] as const
     const { out } = run({ plan: PLAN, lots: LOTS, avoid: [wall] })
     expect(out.warnings.length).toBeGreaterThan(0)
-    expect(out.warnings.every((warning) => warning.code === 'pole_on_avoid')).toBe(true)
+    expect(out.warnings.some((warning) => warning.code === 'pole_on_avoid')).toBe(true)
+    // with no free ground a pole cannot be added in front of a lot either: the drop is laid and told off the street's practice
+    expect(out.warnings.every((warning) => warning.code === 'pole_on_avoid' || warning.code === 'drop_off_practice')).toBe(true)
   })
 })

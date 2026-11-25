@@ -30,7 +30,7 @@ export type NetworksParams = {
 export function buildNetworks({ plan, site, lots, avoid }: NetworksParams): GeneratedNetworks {
   const connections = lots.flatMap(({ lot, plan: house, placement }) => connectionsInWorld({ plan: house, lot: lot.id, placement, kerb: SIDEWALK_WIDTH }))
   const generated = generateNetworks({ plan, lots: site.lots, seed: site.seed, avoid, connections })
-  const violations = validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt })
+  const violations = validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt, frontages: generated.frontages })
   if (violations.length > 0) console.error(`the networks of "${plan.id}" break ${violations.length} rule(s)`, violations)
   if (generated.warnings.length > 0) console.error(`the networks of "${plan.id}" were laid with ${generated.warnings.length} warning(s)`, generated.warnings)
   return generated

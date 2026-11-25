@@ -7,6 +7,7 @@ import { layPower, poleHeightsOf } from './aerial'
 import type { NetworkSink } from './aerial'
 import type { BuriedContext } from './buried'
 import { lotConnectionsOf, ofNetwork } from './connections'
+import type { LotFrontage } from './drop-rules'
 import type { GroundAt } from './connections'
 import { frameOf, hashOf } from './frame'
 import { poleStationsOf } from './pole-layout'
@@ -47,6 +48,8 @@ export type GeneratedNetworks = {
   readonly connections: readonly UtilityConnection[]
   /** Road, sidewalk or lot under a point, from the plan's streets: the `surfaceAt` of `validateNetworks`. */
   readonly surfaceAt: (x: number, z: number) => NetworkSurface
+  /** The front of every lot on its street: the `frontages` of `validateNetworks` (the drop rules). */
+  readonly frontages: readonly LotFrontage[]
   /** What the generator laid against its own rules because nothing else fit (empty for a plan it can lay). */
   readonly warnings: readonly NetworkWarning[]
 }
@@ -89,8 +92,14 @@ function polesOf({ params, layout, sink }: { readonly params: GenerateNetworksPa
   const canServe = ({ x, z, lot }: { readonly x: number; readonly z: number; readonly lot: string }): boolean =>
     surface(x, z) !== 'road' && !params.lots.some((other) => other.id !== lot && inside(x, z, other.rect))
   const reach = Math.min(rules.power.dropMaxLength, rules.telecom.dropMaxLength)
-  const reached = reachLots({ runs: stations, anchors, served: new Map(served.map((entry) => [entry.lot.id, entry])), reach, rules: rules.layout, isFree, canServe, warn })
-  return poleTreeOf({ chains: [...reached.runs, ...reached.chains], sides, setback: rules.layout.poles.curbSetback })
+  const frontages = new Map(frontagesOf({ served, sidewalk: rules.layout.sidewalk }).map((frontage) => [frontage.lot, frontage]))
+  const reached = reachLots({ runs: stations, anchors, served: new Map(served.map((entry) => [entry.lot.id, entry])), reach, rules: rules.layout, isFree, canServe, warn, frontages, power: rules.power })
+  return { tree: poleTreeOf({ chains: [...reached.runs, ...reached.chains], sides, setback: rules.layout.poles.curbSetback }), feeds: reached.feeds }
+}
+
+/** The front of every lot on its street, for the drop rules (`validateNetworks`' `frontages`). */
+export function frontagesOf({ served, sidewalk }: { readonly served: readonly ServedLot[]; readonly sidewalk: number }): LotFrontage[] {
+  return served.map((entry) => ({ lot: entry.lot.id, rect: entry.lot.rect, frame: { along: entry.run.along, axis: entry.run.axis }, reach: entry.run.width / 2 + sidewalk, side: entry.side, span: entry.span }))
 }
 
 /**
@@ -106,7 +115,7 @@ export function generateNetworks(params: GenerateNetworksParams): GeneratedNetwo
   const sides = poleSidesOf({ runs, served })
   const connections = lotConnectionsOf({ served, declared: params.connections ?? [], rules, groundAt })
   const sink: NetworkSink = { nodes: [], edges: [], warnings: [] }
-  const tree = polesOf({ params, layout: { rules, runs, served, sides, connections }, sink })
+  const { tree, feeds } = polesOf({ params, layout: { rules, runs, served, sides, connections }, sink })
   const pole = params.pole ?? { id: 'concrete_distribution', spec: DISTRIBUTION }
   const heights = poleHeightsOf(pole.spec.slots)
   const isPeriphery = peripheryOf({ plan: params.plan, kinds: rules.layout.periphery.kinds })
@@ -115,8 +124,8 @@ export function generateNetworks(params: GenerateNetworksParams): GeneratedNetwo
       .filter(({ lot }) => isPeriphery((lot.rect[0] + lot.rect[2]) / 2, (lot.rect[1] + lot.rect[3]) / 2) && hashOf({ seed: params.seed, id: `hookup:${lot.id}` }) < rules.layout.periphery.hookupShare)
       .map((entry) => entry.lot.id),
   )
-  layPower({ tree, connections: ofNetwork({ connections, network: 'power' }), rules, heights, pole: { id: pole.id, lampReach: pole.spec.lamp.reach }, unmetered, sink })
-  layTelecom({ tree, connections: ofNetwork({ connections, network: 'telecom' }), rules, heights, seed: params.seed, isPeriphery, sink })
+  layPower({ tree, connections: ofNetwork({ connections, network: 'power' }), rules, heights, pole: { id: pole.id, lampReach: pole.spec.lamp.reach }, unmetered, feeds, sink })
+  layTelecom({ tree, connections: ofNetwork({ connections, network: 'telecom' }), rules, heights, seed: params.seed, isPeriphery, feeds, sink })
   const [width, depth] = params.plan.size ?? [0, 0]
   const rivers = (params.plan.lines ?? []).filter((line) => line.kind === 'river')
   const context: BuriedContext = { runs, sides, served: new Map(served.map((entry) => [entry.lot.id, entry])), rules, groundAt, rivers, border: [width / 2, depth / 2], sink }
@@ -124,5 +133,5 @@ export function generateNetworks(params: GenerateNetworksParams): GeneratedNetwo
   layWater({ context, connections: ofNetwork({ connections, network: 'water' }) })
   laySewer({ context, connections: ofNetwork({ connections, network: 'sewer' }), above: storm })
   const networks: UtilityNetworks = { nodes: sink.nodes, edges: sink.edges, seed: params.seed, rules }
-  return { networks, connections, surfaceAt: surfaceOf({ runs, sidewalk: rules.layout.sidewalk }), warnings: sink.warnings }
+  return { networks, connections, surfaceAt: surfaceOf({ runs, sidewalk: rules.layout.sidewalk }), frontages: frontagesOf({ served, sidewalk: rules.layout.sidewalk }), warnings: sink.warnings }
 }

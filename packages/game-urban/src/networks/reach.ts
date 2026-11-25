@@ -1,7 +1,10 @@
 import type { UtilityConnection } from '@adatechnology/game-contracts'
 
 import { frameOf, ordinal } from './frame'
+import { dropMisfitOf, lotUnderDrop } from './drop-rules'
+import type { LotFrontage } from './drop-rules'
 import type { NetworkLayoutRules } from './layout-rules'
+import type { PowerRules } from './rules'
 import { piecesOf } from './pole-layout'
 import type { PoleStation } from './pole-layout'
 import type { ServedLot, StreetRun } from './runs'
@@ -21,6 +24,9 @@ export type ReachParams = {
   /** Where a service pole of a lot may stand: off the roadway and out of every other lot. */
   readonly canServe: (point: { readonly x: number; readonly z: number; readonly lot: string }) => boolean
   readonly warn: (warning: NetworkWarning) => void
+  /** The lots' fronts and the drop rules: a power anchor is fed from a pole in front of it or straight across, never over another lot. */
+  readonly frontages: ReadonlyMap<string, LotFrontage>
+  readonly power: Pick<PowerRules, 'dropMaxSkew' | 'dropFrontageSlack' | 'dropsPerPole'>
 }
 
 export type Reached = {
@@ -28,7 +34,12 @@ export type Reached = {
   readonly runs: PoleStation[][]
   /** Service poles into a lot set back from its street: each chain starts at the street pole it hangs from. */
   readonly chains: PoleStation[][]
+  /** The pole (where it stands) each lot's drop of each network leaves from, by `feedKey`. */
+  readonly feeds: ReadonlyMap<string, { readonly x: number; readonly z: number }>
 }
+
+/** The key of a lot's drop of one network in `Reached.feeds`. */
+export const feedKey = (anchor: Pick<UtilityConnection, 'lot' | 'network'>): string => `${anchor.lot}:${anchor.network}`
 
 const distance = (station: PoleStation, anchor: UtilityConnection): number => Math.hypot(station.x - anchor.at[0], station.z - anchor.at[2])
 
@@ -78,16 +89,42 @@ function chainTo({ from, anchor, params }: { readonly from: PoleStation; readonl
   return out
 }
 
+/** Whether a pole may feed the anchor: in reach, in front of the lot or straight across, over no other lot. */
+export function feedsAnchor({ station, anchor, params }: { readonly station: { readonly x: number; readonly z: number }; readonly anchor: UtilityConnection; readonly params: Pick<ReachParams, 'reach' | 'frontages' | 'power'> }): boolean {
+  if (Math.hypot(station.x - anchor.at[0], station.z - anchor.at[2]) > params.reach - 1e-6) return false
+  const frontage = params.frontages.get(anchor.lot)
+  if (!frontage) return true
+  if (dropMisfitOf({ frontage, pole: station, anchor: anchor.at, rules: params.power }) !== undefined) return false
+  return lotUnderDrop({ from: [station.x, station.z], to: [anchor.at[0], anchor.at[2]], lot: anchor.lot, frontages: [...params.frontages.values()] }) === undefined
+}
+
 /**
- * Poles added where a lot's anchor is out of a drop's reach (design §4): first an in-line pole on its street at the lot's station; when the
- * lot stands farther back than a drop, service poles into it from that pole.
+ * Poles added where a lot's anchor has no pole to feed it (design §4): the nearest pole in front of the lot or straight across the street with
+ * room for one more drop (`dropsPerPole`); with none, an in-line pole on its street at the lot's station, and when the lot stands farther back
+ * than a drop, service poles into it from that pole.
  */
 export function reachLots(params: ReachParams): Reached {
   const runs = params.runs.map((stations) => [...stations])
   const chains: PoleStation[][] = []
+  const feeds = new Map<string, PoleStation>()
+  const load = new Map<PoleStation, number>()
   const all = (): PoleStation[] => [...runs.flat(), ...chains.flat()]
-  for (const anchor of params.anchors) {
-    if (all().some((station) => distance(station, anchor) <= params.reach - 1e-6)) continue
+  const take = (anchor: UtilityConnection, station: PoleStation): void => {
+    feeds.set(feedKey(anchor), station)
+    if (anchor.network === 'power') load.set(station, (load.get(station) ?? 0) + 1)
+  }
+  const free = (station: PoleStation): boolean => (load.get(station) ?? 0) < params.power.dropsPerPole
+  // power first, so a telecom drop can leave the pole its lot's power drop leaves
+  const anchors = [...params.anchors].sort((a, b) => (a.network === 'power' ? 0 : 1) - (b.network === 'power' ? 0 : 1))
+  for (const anchor of anchors) {
+    const isPower = anchor.network === 'power'
+    const fits = (station: PoleStation): boolean => feedsAnchor({ station, anchor, params }) && (!isPower || free(station))
+    const power = feeds.get(`${anchor.lot}:power`)
+    const nearest = power !== undefined && !isPower && fits(power) ? power : all().filter(fits).sort((a, b) => distance(a, anchor) - distance(b, anchor))[0]
+    if (nearest) {
+      take(anchor, nearest)
+      continue
+    }
     const served = params.served.get(anchor.lot)
     const stations = runs.find((entry) => entry[0]?.run.id === served?.run.id)
     if (served === undefined || stations === undefined) continue
@@ -95,9 +132,17 @@ export function reachLots(params: ReachParams): Reached {
     if (added !== undefined) stations.push(added)
     stations.sort((a, b) => a.u - b.u)
     const from = added ?? [...stations].sort((a, b) => distance(a, anchor) - distance(b, anchor))[0]
-    if (from === undefined || distance(from, anchor) <= params.reach - 1e-6) continue
+    if (from === undefined) continue
+    if (distance(from, anchor) <= params.reach - 1e-6) {
+      if (!fits(from)) params.warn({ code: 'drop_off_practice', id: anchor.lot, detail: 'no pole in front of the lot or straight across the street' })
+      take(anchor, from)
+      continue
+    }
     const chain = chainTo({ from, anchor, params })
-    if (chain !== undefined) chains.push([from, ...chain])
+    if (chain === undefined) continue
+    chains.push([from, ...chain])
+    take(anchor, chain[chain.length - 1] ?? from)
   }
-  return { runs: runs.map((stations) => stations.map((station, index) => ({ ...station, id: `pole:${station.run.id}:${ordinal(index)}` }))), chains }
+  const renumbered = runs.map((stations) => stations.map((station, index) => ({ ...station, id: `pole:${station.run.id}:${ordinal(index)}` })))
+  return { runs: renumbered, chains, feeds: new Map([...feeds].map(([lot, station]) => [lot, { x: station.x, z: station.z }])) }
 }
