@@ -770,6 +770,13 @@
    "0/3/1 Mesh 6d98f14e"
   ]
  },
+ "household/service_mast:high": {
+  "hash": "433d8c8",
+  "nodes": [
+   "0 Group 99159f93",
+   "0/0 Mesh 28a12a0a"
+  ]
+ },
  "household/electrical_panel:high": {
   "hash": "528cbb7c",
   "nodes": [
@@ -1847,6 +1854,13 @@
    "0/1 Group 5050a01f",
    "0/1/0 Mesh 72cc9519",
    "0/1/1 Mesh cd6a7752"
+  ]
+ },
+ "household/service_mast:game": {
+  "hash": "8d38933",
+  "nodes": [
+   "0 Group 99159f93",
+   "0/0 Mesh 56cba8dd"
   ]
  },
  "household/electrical_panel:game": {

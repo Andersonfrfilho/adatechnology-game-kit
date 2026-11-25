@@ -47,4 +47,6 @@
 "item/stilt_village":{"hash":"cb9a8463","objects":71},
 "item/military":{"hash":"a41c5e5f","objects":45},
 "item/rural":{"hash":"93c43240","objects":59},
-"helpers":{"hash":"50008e55","objects":7}}
+"helpers":{"hash":"50008e55","objects":7},
+"networks/day":{"hash":"c35fe78b","objects":11},
+"networks/night_failing":{"hash":"3d987467","objects":11}}
