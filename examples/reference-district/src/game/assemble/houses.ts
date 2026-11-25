@@ -45,6 +45,8 @@ export type Houses = {
   readonly renderer: ReturnType<typeof createHouseRenderer>
   /** Cuts or restores the grid of one lot's house (an outage of its circuit): each house has its own interactables world. False for a lot with no house or no interactables. */
   setLotGrid(lot: string, on: boolean): boolean
+  /** Cuts or restores the water of one lot's house (a main broke upstream): its tank runs dry, so the taps, showers and hoses of its interactables world deliver nothing; restoring fills the tank. False for a lot with no house or no plumbing. */
+  setLotWater(lot: string, on: boolean): boolean
   /** Steps the doors, the wind and the level of detail; the focus is the camera. */
   update(dt: number, time: number, focus: { readonly x: number; readonly y: number; readonly z: number }): void
   dispose(): void
@@ -58,6 +60,19 @@ export function setLotGrid({ list, lot, on }: { readonly list: readonly LotPower
   const power = list.find((placed) => placed.lot.id === lot)?.house.interactives?.world.power
   if (!power) return false
   power.setGrid(on)
+  return true
+}
+
+/** What `setLotWater` reads of a placed house: its lot and the water of the house (`House.water`: the tank the plumbing points draw from). */
+export type LotWater = { readonly lot: { readonly id: string }; readonly house: { readonly water: { readonly capacity: number; readonly points: Readonly<Record<string, unknown>>; level(): number; consume(point: string, liters: number): number; fill(liters: number): number } } }
+
+/** Cuts or restores the water of one lot's house: drawing the whole tank through one of its points runs it dry (the fixtures draw through `waterSupply`, which delivers what the tank holds); false for a lot with no house or no point. */
+export function setLotWater({ list, lot, on }: { readonly list: readonly LotWater[]; readonly lot: string; readonly on: boolean }): boolean {
+  const water = list.find((placed) => placed.lot.id === lot)?.house.water
+  const point = water === undefined ? undefined : Object.keys(water.points)[0]
+  if (water === undefined || point === undefined) return false
+  if (on) water.fill(water.capacity - water.level())
+  else water.consume(point, water.level())
   return true
 }
 
@@ -156,6 +171,9 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     renderer,
     setLotGrid(lot, on) {
       return setLotGrid({ list, lot, on })
+    },
+    setLotWater(lot, on) {
+      return setLotWater({ list, lot, on })
     },
     update(dt, time, focus) {
       sincePlan += dt

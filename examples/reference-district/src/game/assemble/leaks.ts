@@ -20,6 +20,8 @@ export type LeaksParams = {
   readonly sewers: DistrictSewers
   /** Whether it rains now (`game-weather`): the drainage only runs then. */
   readonly isRaining: () => boolean
+  /** The houses: a lot an outage marks dry has its water cut, and given back on reset. */
+  readonly houses: { setLotWater(lot: string, on: boolean): boolean }
 }
 
 export type DistrictLeaks = {
@@ -47,7 +49,7 @@ const turnOf = (ry: number): [number, number, number, number] => [0, Math.sin(ry
  * drainage only when it rains), finite; a main that breaks cuts the water to the houses downstream (an outage event); a cover that was thrown leaves its shaft open in the ground
  * (`Terrain.open`) and flies off as a plate of cast iron, a loose piece of the destruction world that lands and stays.
  */
-export function createDistrictLeaks({ world, scene, generated, sewers, isRaining }: LeaksParams): DistrictLeaks {
+export function createDistrictLeaks({ world, scene, generated, sewers, isRaining, houses }: LeaksParams): DistrictLeaks {
   const { networks } = generated
   const fluids = world.liquids.fluids
   const events: NetworkEvent[] = []
@@ -97,7 +99,10 @@ export function createDistrictLeaks({ world, scene, generated, sewers, isRaining
     for (const id of fresh) severed.add(id)
     const outage: NetworkOutage | undefined = waterOutageOf(networks, { before, after: [...severed] })
     if (outage !== undefined) {
-      for (const lot of outage.lots) dryLots.add(lot)
+      for (const lot of outage.lots) {
+        dryLots.add(lot)
+        houses.setLotWater(lot, false)
+      }
       emit({ type: 'network_outage', outage })
     }
     for (const id of breach.surface) {
@@ -132,6 +137,7 @@ export function createDistrictLeaks({ world, scene, generated, sewers, isRaining
     }
     lids.clear()
     severed.clear()
+    for (const lot of dryLots) houses.setLotWater(lot, true)
     dryLots.clear()
     events.length = 0
   }

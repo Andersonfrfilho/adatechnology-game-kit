@@ -144,7 +144,7 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
 - **Desenho** (`game-urban-three`): `drawCoverLid` (a tampa solta: placa e nervuras, ou a grelha inteira), `DrawnSurface.restore` e `DrawnBuried.mend` (o `reset` devolve tampa e cano).
 - **Cena** (`assemble/leaks.ts`): cada cratera que quebra cano vira torneira do `game-fluids` na ruptura (água sobe e espirra, esgoto escorre pela linha do cano) e some quando o volume acaba;
   cada tampa arrancada abre o poço no terreno, vira peça solta do mundo de destruição (`makePiece`, ferro fundido) e pousa; `leaks.events`, `leaks.dryLots`, `leaks.lids`.
-- **Limites ditos**: a borda do poço colide como o próprio terreno (campo de alturas, célula de 0,47 m neste recorte), não como aro à parte; o poço de 0,9 m fica grosseiro. As casas **não** cortam a torneira
+- **Limites ditos**: a borda do poço colide como o próprio terreno (campo de alturas, célula de 0,47 m neste recorte), não como aro à parte; o poço de 0,9 m fica grosseiro. As casas cortam a torneira (setLotWater esvazia o tanque da casa; teste em lot-water.test.ts)
   ainda: o mundo de interativos de cada casa nasce dentro do `game-floorplan-three` sem `WaterNetwork` (T2.8f só emite e expõe `dryLots`). A chuva só entra por `isRaining`.
 - **Pendências de golden** (nenhum regravado): `networks/lids` (novo) e `networks/surface`, `networks/buried` (já faltavam desde a T2.8e) em `game-urban-three/tests/fixtures/exact-urban.json`.
   O banco de custo (`--cost-check`) passou sem entrada nova. Prints: `vazamento-agua`, `vazamento-esgoto`, `vazamento-poco`, `vazamento-primeira-pessoa` na pasta de rascunho da sessão.

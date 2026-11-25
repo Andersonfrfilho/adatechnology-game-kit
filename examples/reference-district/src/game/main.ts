@@ -111,7 +111,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   })
   const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 
-  const leaks = createDistrictLeaks({ world, scene, generated: networks, sewers, isRaining: () => weather.weather.sample().rain > 0 })
+  const leaks = createDistrictLeaks({ world, scene, generated: networks, sewers, houses, isRaining: () => weather.weather.sample().rain > 0 })
 
   const nightFactor = isNight ? 1 : 0
   const stops = [

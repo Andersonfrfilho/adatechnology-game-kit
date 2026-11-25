@@ -47,11 +47,13 @@ const BLAST_JOULES = 1e8
 const TICK = 1 / 60
 
 async function district({ isRaining = false }: { readonly isRaining?: boolean } = {}) {
+  const calls: Array<readonly [string, boolean]> = []
+  const houses = { setLotWater: (lot: string, on: boolean): boolean => (calls.push([lot, on]), true) }
   const world = await makeDistrictWorld()
   const sewers = drawDistrictSewers({ THREE, generated, world })
   world.view.scene.add(sewers.surface.root, sewers.buried.root)
-  const leaks = createDistrictLeaks({ world, scene: world.view.scene, generated, sewers, isRaining: () => isRaining })
-  return { world, sewers, leaks }
+  const leaks = createDistrictLeaks({ world, scene: world.view.scene, generated, sewers, isRaining: () => isRaining, houses })
+  return { world, sewers, leaks, calls }
 }
 
 function blastOver(world: KitWorld, [x, z]: readonly [number, number]): void {
@@ -73,7 +75,7 @@ function drain(leaks: { readonly running: readonly unknown[]; step(dt: number): 
 
 describe('a blast that reaches a water main', () => {
   it('breaks it, sprays water from the break into the crater and cuts the water to the houses downstream', async () => {
-    const { world, leaks } = await district()
+    const { world, leaks, calls } = await district()
     const main = pipeOf('water_main')
     blastOver(world, middleOf(main))
     const leak = leaks.events.flatMap((event) => (event.type === 'network_leak' && event.leak.id === main.id ? [event.leak] : []))[0]
@@ -86,6 +88,7 @@ describe('a blast that reaches a water main', () => {
     expect(outage?.causes).toContain(main.id)
     expect(outage?.lots.length).toBeGreaterThan(0)
     expect([...leaks.dryLots]).toEqual(expect.arrayContaining([...outage!.lots]))
+    expect(calls.filter(([, on]) => !on).map(([lot]) => lot).sort()).toEqual([...outage!.lots].sort())
   })
 
   it('lets out a finite volume: the taps stop when the break is empty and the litres add up to what there was', async () => {
@@ -161,7 +164,7 @@ describe('a blast over a cover', () => {
 
 describe('memory: what a blast made leaves with the reset', () => {
   it('takes out the taps, the lids, the holes and the pools, and puts the pipes and covers back', async () => {
-    const { world, leaks, sewers } = await district()
+    const { world, leaks, sewers, calls } = await district()
     const scene = world.view.scene
     const before = new Set<THREE.Object3D>()
     scene.traverse((object) => before.add(object))
@@ -170,7 +173,9 @@ describe('memory: what a blast made leaves with the reset', () => {
     blastOver(world, middleOf(pipeOf('water_main')))
     expect(leaks.running.length).toBeGreaterThan(0)
     expect(leaks.lids.length).toBeGreaterThan(0)
+    const dry = [...leaks.dryLots]
     leaks.reset()
+    expect(calls.filter(([, on]) => on).map(([lot]) => lot).sort()).toEqual(dry.sort())
     sewers.reset()
     world.reset()
     expect(leaks.running).toEqual([])
