@@ -69,8 +69,11 @@ describe('room metrics', () => {
     }
 
     it('fps follows the real delta even past the 50 ms the simulation is clamped to', () => {
+      // the loop starts its clock at performance.now() when the room is made: pin it, or the time spent building the room lands in the first frame
+      const clock = vi.spyOn(performance, 'now').mockReturnValue(0)
       const { room, frame } = ownLoopRoom()
-      let now = performance.now()
+      clock.mockRestore()
+      let now = 0
       for (let i = 0; i < 8; i++) frame((now += 100))
       expect(room.metrics().room.fps).toBeCloseTo(10, 0)
       expect(room.metrics().room.frame_ms).toBeCloseTo(100, 0)
