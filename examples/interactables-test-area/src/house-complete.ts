@@ -65,34 +65,27 @@ function boxOf(THREE: Three, so: SpawnedObject): { centre: Triple; size: Triple 
   return { centre: [centre.x, centre.y, centre.z], size: [size.x, size.y, size.z] }
 }
 
-/** Whether `node` is drawn under `root`. */
-const isInside = (node: ThreeNamespace.Object3D, root: ThreeNamespace.Object3D): boolean => {
-  for (let o: ThreeNamespace.Object3D | null = node; o; o = o.parent) if (o === root) return true
-  return false
-}
-
 /** Where to look from at a piece: in front of it (+z, the player's side), a little above its middle, close enough to reach it. */
 function eyeOf(THREE: Three, so: SpawnedObject): Triple {
   const { centre, size } = boxOf(THREE, so)
   return [centre[0], Math.max(centre[1], 0.4) + 0.35, centre[2] + size[2] / 2 + 1.1]
 }
 
+const GRID = [0.5, 0.3, 0.7, 0.1, 0.9] as const
+const HEIGHTS = [0.5, 0.95, 0.8, 0.3, 0.1] as const
+
 /**
- * A point of what is drawn of the piece that the eye sees first: rays from the eye over a grid of its box (a table's middle is the air under its top, a pool's is
- * water) until one meets a visible mesh of the piece before anything else. The middle of the box when none does.
+ * A point of the piece the player's aim lands on: the room's own aim (`inspect`, what the crosshair names) tried over a grid of its box until it names the piece (a
+ * table's middle is the air under its top, a pool's is water). The middle of the box when none does.
  */
 function targetOf({ room, THREE }: Trial, so: SpawnedObject, eye: Triple): Triple {
   const box = new THREE.Box3().setFromObject(so.root)
-  const from = new THREE.Vector3(...eye)
-  const ray = new THREE.Raycaster()
-  ray.camera = room.camera
-  const steps = [0.5, 0.3, 0.7, 0.1, 0.9]
-  for (const fy of [0.5, 0.8, 0.95, 0.3, 0.1]) {
-    for (const fx of steps) {
-      const at = new THREE.Vector3(box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), (box.min.z + box.max.z) / 2)
-      ray.set(from, at.clone().sub(from).normalize())
-      const hit = ray.intersectObjects(room.scene.children, true).find((h) => h.object.visible && (h.object as ThreeNamespace.Mesh).isMesh)
-      if (hit && isInside(hit.object, so.root)) return [hit.point.x, hit.point.y, hit.point.z]
+  const z = (box.min.z + box.max.z) / 2
+  for (const fy of HEIGHTS) {
+    for (const fx of GRID) {
+      const at: Triple = [box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), z]
+      room.look(eye, at)
+      if (room.inspect()?.objectId === so.objectId) return at
     }
   }
   const centre = box.getCenter(new THREE.Vector3())
