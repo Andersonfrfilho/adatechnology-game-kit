@@ -15,9 +15,9 @@ export interface SmokeLook {
 }
 
 export const SMOKE_LOOKS: Readonly<Record<SmokeCause, SmokeLook>> = {
-  [SmokeCause.STEAM]: { color: 0xe2e6e8, alpha: 0.24 },
-  [SmokeCause.OIL]: { color: 0xa9aeb2, alpha: 0.28 },
-  [SmokeCause.FIRE]: { color: 0x232324, alpha: 0.42 },
+  [SmokeCause.STEAM]: { color: 0xe2e6e8, alpha: 0.18 },
+  [SmokeCause.OIL]: { color: 0xa9aeb2, alpha: 0.2 },
+  [SmokeCause.FIRE]: { color: 0x232324, alpha: 0.3 },
 }
 
 /** The emitter kinds of `kit.addEmitter` that are smoke, and the cause each one draws. */
@@ -33,6 +33,9 @@ export function smokeRate(baseRate: number, damage: number): number {
   const level = Math.min(1, Math.max(0, damage))
   return baseRate * (RATE_AT_NO_DAMAGE + (RATE_AT_WRECK - RATE_AT_NO_DAMAGE) * level)
 }
+
+/** Puffs born per emission: a plume is many faint puffs overlapping, never a few dense ones. */
+export const PLUME_PUFFS = 3
 
 /** The wind the plume leans with, metres a second (the same wind the kit's own puffs drift to). */
 export const SMOKE_WIND: readonly [number, number, number] = [-0.45, 0, 0.16]

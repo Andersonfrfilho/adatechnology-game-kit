@@ -28,7 +28,7 @@ export type BurstOptions = SpawnOptions & { dir?: Vector3; speed?: number; sprea
 /** `damage` reads how wrecked the source is (0 intact, 1 wrecked): the smoke of an engine thickens as it is hurt. */
 export type EmitterOptions = { world?: boolean; rate?: number; s?: number; dir?: Vector3 | null; damage?: () => number }
 import { warnOnce } from '@adatechnology/game-contracts'
-import { SmokeCause, smokeCauseOfEmitter, smokePuff, smokeRate } from './engine-smoke'
+import { PLUME_PUFFS, SmokeCause, smokeCauseOfEmitter, smokePuff, smokeRate } from './engine-smoke'
 import { routedParticleRequest, ROUTED_PARTICLE_TYPES } from './routed-particles'
 import { clamp, hash, smooth } from './util'
 
@@ -386,17 +386,19 @@ export function installParticles(kit: Kit) {
   kit.exhaustLook = exhaustLook
   /* one puff of an engine-bay plume (engine-smoke.ts): born around the vent, small and see-through, climbing and leaning with the wind */
   function spawnSmokePuff(c: BuildContext, cause: SmokeCause, scale: number, vent: Vector3) {
-    const puff = smokePuff({ cause, scale, random: c.rand })
-    const at = vent.add(c.dirToEffects(new V3(puff.offset[0], puff.offset[1], puff.offset[2])))
-    kit.spawn(c, 'smoke', at, new V3(puff.velocity[0], puff.velocity[1], puff.velocity[2]), {
-      col: puff.color,
-      op: puff.alpha,
-      s: puff.size,
-      life: puff.life,
-      growth: puff.growth,
-      lift: puff.lift,
-      drag: puff.drag,
-    })
+    for (let k = 0; k < PLUME_PUFFS; k++) {
+      const puff = smokePuff({ cause, scale, random: c.rand })
+      const at = vent.clone().add(c.dirToEffects(new V3(puff.offset[0], puff.offset[1], puff.offset[2])))
+      kit.spawn(c, 'smoke', at, new V3(puff.velocity[0], puff.velocity[1], puff.velocity[2]), {
+        col: puff.color,
+        op: puff.alpha,
+        s: puff.size,
+        life: puff.life,
+        growth: puff.growth,
+        lift: puff.lift,
+        drag: puff.drag,
+      })
+    }
   }
   function tickEmit(c: BuildContext, dt: number) {
     c.emitters.forEach(function (e) {

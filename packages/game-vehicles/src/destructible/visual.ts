@@ -331,7 +331,8 @@ export class VehicleVisuals implements CreaseWork {
     if (!z) return
     const B = z.box
     const THREE = this.THREE
-    const mats = this.I.MATERIALS
+    // the inside of the opening under a swinging plate: the door card's grey, lit like the cabin, not a flat black slab
+    const lining = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.85 })
     const grid = (a0: number, a1: number, b0: number, b1: number): Array<[number, number]> => {
       const out: Array<[number, number]> = []
       for (const fa of [0.25, 0.5, 0.75]) for (const fb of [0.3, 0.7]) out.push([a0 + (a1 - a0) * fa, b0 + (b1 - b0) * fb])
@@ -346,7 +347,7 @@ export class VehicleVisuals implements CreaseWork {
       const hingeFront = z.hinge !== 'rear'
       const hx = hingeFront ? B.x1 - 0.03 : B.x0 + 0.03
       const cy = (B.y0 + B.y1) / 2
-      const recess = this.box(len - 0.04, hgt - 0.04, 0.01, mats.dark, (B.x0 + B.x1) / 2, cy, sk + s * 0.004)
+      const recess = this.box(len - 0.04, hgt - 0.04, 0.01, lining, (B.x0 + B.x1) / 2, cy, sk + s * 0.004)
       recess.userData.noFollow = true
       const piv = new THREE.Group()
       piv.name = p.id
@@ -364,7 +365,7 @@ export class VehicleVisuals implements CreaseWork {
       if (sk == null) return
       const wy = B.y1 - B.y0 - 0.1
       const wz = B.z1 - B.z0 - 0.1
-      const recess = this.box(0.01, wy - 0.04, wz - 0.04, mats.dark, sk + 0.004, (B.y0 + B.y1) / 2, 0)
+      const recess = this.box(0.01, wy - 0.04, wz - 0.04, lining, sk + 0.004, (B.y0 + B.y1) / 2, 0)
       recess.userData.noFollow = true
       const piv = new THREE.Group()
       piv.name = p.id
@@ -388,8 +389,9 @@ export class VehicleVisuals implements CreaseWork {
       if (busy) return
       const r = piv.rotation
       const open = Math.abs(r.x) + Math.abs(r.y) + Math.abs(r.z) > 1e-3 || this.gone.has(id) || piv.parent !== this.c.vehicle
-      // the first time it swings, the door takes its own skin, window and trim off the body: what opens is the door the model draws
-      if (open && !this.gone.has(id) && piv.parent === this.c.vehicle && !this.skins.has(id)) {
+      // the first time it swings, or as it is torn off, the door takes its own skin, window and trim off the body: what opens or flies is the
+      // door the model draws, and the opening it leaves is empty
+      if (open && piv.parent === this.c.vehicle && !this.skins.has(id)) {
         busy = true
         try {
           this.skins.set(id, this.takeSkin(id, piv))
@@ -397,9 +399,10 @@ export class VehicleVisuals implements CreaseWork {
           busy = false
         }
       }
-      // with its own skin hung on the hinge the opening shows the cabin; the flat plate and its dark recess stay for a model with no skin to take
+      // with its own skin hung on the hinge the opening shows the cabin; the flat plate and its recess stay for a model with no skin to take, and
+      // the recess only while the plate swings on it: a door gone leaves no slab standing in its place
       panel.visible = open && !this.skins.get(id)
-      recess.visible = open && !this.skins.get(id)
+      recess.visible = open && !this.skins.get(id) && !this.gone.has(id)
       if (open) this.openNow.add(id)
       else this.openNow.delete(id)
       this.seams.forEach((doors, seam) => {
