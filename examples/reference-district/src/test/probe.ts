@@ -58,6 +58,7 @@ export function createProbe(district: District, choice: PageChoice, scripts: Scr
     place(spot) {
       player.player.state.x = spot.x
       player.player.state.z = spot.z
+      player.snap()
       player.view.yaw = spot.yaw
       player.view.pitch = spot.pitch ?? 0.1
       if (spot.mode) player.setMode(spot.mode)

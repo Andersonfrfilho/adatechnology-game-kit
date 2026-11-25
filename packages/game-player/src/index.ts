@@ -14,3 +14,5 @@ export { DOOR_ARM_REACH, DOOR_SHOULDER_HEIGHT, DOOR_USE_DEFAULTS, createDoorUse,
 export type { DoorUse, DoorUseBlock, DoorUseHand, DoorUsePhase, DoorUseRules, DoorUseStep, DoorUseTarget } from './door-use'
 export { HANDS_DEFAULTS, drawBackOf, interactionHandsFor, planHands } from './hands'
 export type { BodyHand, HandWeapon, HandsMove, HandsPlan, HandsRules, PlanHandsParams } from './hands'
+export { STEP_POSE_DEFAULTS, createStepPose } from './step-pose'
+export type { StepPose, StepPoseOptions, StepPosition } from './step-pose'

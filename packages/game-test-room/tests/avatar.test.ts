@@ -173,6 +173,35 @@ describe('room avatar', () => {
     restore()
   })
 
+  it('the camera comes back out once the wall is behind it no more, easing and not jumping', () => {
+    const r = room()
+    r.setAvatar(fakeAvatar())
+    const wallZ = (r.world.state('target_wall') as unknown as { position?: [number, number, number] } | null)?.position?.[2] ?? -13
+    r.look([0, 1.7, wallZ + 1.6], [0, 1.7, wallZ + 10])
+    r.setCameraMode('third')
+    r.update(1 / 60)
+    const boomOf = (): number => {
+      const eyeZ = r.camera.position.z
+      const restore = r.applyCamera()
+      const boom = Math.abs(r.camera.position.z - eyeZ)
+      restore()
+      return boom
+    }
+    const pulledIn = boomOf()
+    expect(pulledIn).toBeLessThan(2)
+    r.look([0, 1.7, wallZ + 12], [0, 1.7, wallZ + 20])
+    const booms: number[] = []
+    for (let i = 0; i < 180; i++) {
+      r.update(1 / 60)
+      booms.push(boomOf())
+    }
+    expect(booms[booms.length - 1]).toBeGreaterThan(3.5)
+    const steps = booms.slice(1).map((boom, i) => boom - booms[i]!)
+    expect(Math.min(...steps)).toBeGreaterThanOrEqual(-1e-9)
+    expect(Math.max(...steps)).toBeLessThan(0.2)
+    expect(steps.slice(1).every((step, i) => step <= steps[i]! + 1e-9)).toBe(true)
+  })
+
   // wide: the shoulder camera's ray is off to one side, and now it has a floor to land on if it misses
   const wideCrate = { ...crateItem, spec: { ...crate, parts: [{ ...crate.parts[0]!, mass: 5, shape: { kind: 'box' as const, size: [4, 3, 0.4] as [number, number, number] }, position: [0, 1.5, 0] as [number, number, number] }] } }
 

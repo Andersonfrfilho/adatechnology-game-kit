@@ -120,7 +120,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
     world.frame.add((context) => horde.step(context.dt, { nightFactor, viewYaw: player.view.yaw }), { phase: 'fixedSimulate', order: 1500, id: 'district.horde' }),
     world.frame.add(
       (context) => {
-        player.pose(context.dt)
+        player.pose(context.dt, context.alpha)
         houses.update(context.dt, context.simTime, world.view.camera.position)
         weather.update(context.dt)
         streets.drawn.animate(context.simTime)
