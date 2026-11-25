@@ -120,6 +120,10 @@ const binding = bindNavigator(navigator, 'home', house) // wall stage 2 opens ce
 navigator.blocked(x, z, floor) // 1 blocked, 0 free, -1 use the ground grid
 ```
 
+`createHouseNavObstacles(houses)` is what the houses put on the ground for a walker's grid (a `NavObstacleSource` of `game-contracts`, written into the horde's grid by
+`bindNavObstacles` of `game-crowd`): the ground-floor walls, lot walls, fences, barricade boards and the doors and gates, in the world. Route the renderer's `onCollider`
+to `colliderChanged` and a door or gate that opens comes out of `changes()`; a wall the destruction cuts comes out in what stands of it (`breach.standing`).
+
 ## Injected, never read from globals
 
 | Option | What |
@@ -157,10 +161,15 @@ textos vêm de `locales` (`en`, `pt-BR`).
 
 ## Effect lights in the rooms
 
-With a `LightBudget` (`host.lights`), the room lights of `lighting({ budget })` keep their slots and their masks. The lights of effects (a blast, a fire, a flare) hold the other slots: `renderer.effectLights({ budget }).update(houses)`, once a frame after the budget's `present`, points the mask of each lit one at the room where its point is, and at the rooms either side of an open door or window within 2.5 m of it, so a grenade lights the room it goes off in and not the next one. `lighting()` does this by itself for the slots it does not lease. The renderer option `effectLightsIndoors: false` brings back the old behaviour (an effect light reaches no house surface). The houses area has a layer `room_lights` that turns the house's own lamps on with these masks.
+With a `LightBudget` (`host.lights`), the room lights of `lighting({ budget })` keep their slots and their masks. The lights of effects (a blast, a fire, a flare) hold the other slots: `renderer.effectLights({ budget }).update(houses)`, once a frame after the budget's `present`, points the mask of each lit one at the room where its point is, and at the rooms either side of an open door or window within 2.5 m of it, so a grenade lights the room it goes off in and not the next one. A light whose point is in no room (a street lamp, a fire in the yard) is an outdoor light: it lights the outside of the houses and, inside, only the rooms behind an outer window or open outer door that faces it, within its reach; walls, roofs and closed doors keep it out (`update(houses, camera)`: the camera orders the houses whose interiors it stays out of, 32 room boxes at most). Only the room lamps of `lighting()` add the faint fill to the faces turned away from them. `effectLights` gives the house materials the mask itself, with or without `lighting()`. `lighting()` does this by itself for the slots it does not lease. The renderer option `effectLightsIndoors: false` brings back the old behaviour (an effect light reaches no house surface). The houses area has a layer `room_lights` that turns the house's own lamps on with these masks.
 
 ### A street that brings its own poles (`serviceFrom`)
 
 `renderer.build(plan, { serviceFrom: [u, y, v] })`, for a plan generated with `streetPoles: true`: the point of the house's frame where the service drop leaves the street's pole. The house then draws
 no grid poles of its own (no neighbouring poles 22 m away, no grid wires): one drop sags from that point to `serviceEntrance.drop[0]` (the entrance post's head, or the facade over the meter),
 held by the ground at the street's end. Without it the house draws its own pole, the two neighbours and the grid, as before.
+
+A plan generated with `street: 'network'` (`serviceEntrance.street`) is on a street whose utility network (`game-urban/networks`) brings the poles: the house never draws a
+neighbouring pole nor the grid, with or without `serviceFrom` (give it the start of the network's `service_drop` to the lot). Its entrance is the meter post (padrão, 6 m) or, with no
+front yard, a mast up the facade; with the interactables kit the kit draws the post (`service_entrance`, one object) and the house does not. In this mode `house.electrical.pole` is
+that meter post, not the utility's pole.

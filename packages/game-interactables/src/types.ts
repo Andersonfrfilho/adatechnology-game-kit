@@ -11,7 +11,7 @@
  * (front = +z, origin at the center of the footprint on the floor, meters). `World` converts them with the object's `Transform`.
  */
 
-import type { Thumbnail } from '@adatechnology/game-contracts'
+import type { CarryHands, Thumbnail } from '@adatechnology/game-contracts'
 
 export type Vec3 = [number, number, number]
 
@@ -486,6 +486,8 @@ export interface WorldOptions {
   onEvent?: (event: WorldEvent) => void
   /** Return false to cancel an interaction (locked, needs a tool, tutorial...). */
   canInteract?: (interaction: Interactable, actor: string) => boolean | void
+  /** Each stack in an open container offers a `take` of its own at its slot (`interactables()`, `target`, `act`). Default true; false leaves only the declared interactions. */
+  takeContents?: boolean
 }
 
 export type WorldEvent =
@@ -518,6 +520,10 @@ export interface Interactable {
   verb: string
   /** Localized thing the verb applies to, e.g. "the fridge" / "a geladeira" (falls back to the object type name). Named `noun` because `object` is the owning object's id. */
   noun: string
+  /** Hands the thing taken needs (an item inside a piece of furniture: 1, the other hand stays free), as a destruction part taken by hand. Only on `take` of a contained item. */
+  hands?: CarryHands
+  /** The catalogue id of the item a `take` of a contained stack hands over (`jeans`), for the host to put it in the hand. Only on `take` of a contained item. */
+  itemType?: string
   /** False when the interaction cannot be used right now (see `reason`). `world.target` skips these unless `includeUnavailable`. */
   available: boolean
   /** Locale key explaining why it is unavailable (`requires_open`, `no_power`, `locked`, `already_lit`, `needs_ignition`, `turn_on_first`); `world.t(reason)` is the text. */

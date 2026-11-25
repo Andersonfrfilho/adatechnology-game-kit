@@ -1,5 +1,79 @@
 # @adatechnology/game-urban
 
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-floorplan@0.5.2
+
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-floorplan@0.5.1
+
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [32547af]
+  - @adatechnology/game-floorplan@0.5.0
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-floorplan@0.4.1
+
+## 0.5.0
+
+### Minor Changes
+
+- 30a8199: Desenho das redes do bairro (spec 011, T2.8d). `game-urban/networks`: `distributionHardwareOf` (cruzeta e isoladores na faixa MT, trafo com buchas, grampo da BT, uma braçadeira por cabo de telecom, braço e luminária, olhal do estai, tudo lido das `slots`), `networkLampsOf` (o estado da lâmpada do #470 por nó `light`) e o `DistributionSpec` com `crossarm`, `insulators`, `bushings`, `lowVoltage`, `telecom` e `guy`. `game-urban-three`: `createUrbanThree(...).drawNetworks(networks, { isNight, lamps, surfaceAt, poles })` com mastros e ferragem instanciados, vãos fundidos por classe com catenária (`spans`: faixa de índices por vão), estai nos postes de esquina e fim de linha ancorado na calçada, LOD de longe em `LineSegments` (`setFocus`), luzes pelo `LightBudget` do host; cerca de 10 chamadas perto. `game-floorplan-three`: em `street: 'network'` a casa não desenha mais o ramal aéreo (é da rede). O poste `concrete_distribution` desenhado sozinho pelo registro continua o braço simples (golden da área de teste sem diff).
+
+  Rua de verdade (revisão do dono): a MT corre por todo poste de rua do alimentador (cruzeta e 3 fases em todos), não só até o trafo. O ramal sai do poste em frente ao lote ou atravessa a rua em linha reta (no máximo `power.dropMaxSkew` = 30° da normal), nunca passa sobre outro lote, e cada poste leva no máximo `power.dropsPerPole` = 4 ramais; sem poste que sirva, o gerador acrescenta um na estação do lote. O `validateNetworks` ganha `frontages` (de `GeneratedNetworks.frontages`) e os códigos `drop_skewed`, `drop_off_frontage`, `drop_over_other_lot` e `pole_too_many_drops`; aviso novo `drop_off_practice`. O padrão de entrada em `street: 'network'` é um poste fino de concreto de 6 m (`NETWORK_POST`) com o ramal ancorado na face da rua, a caixa do medidor no pé (`meter.place: 'post'`) e o eletroduto descendo pela face: nenhum fio do topo do poste até outro ponto (o objeto `service_entrance` ganha a variante `network`).
+
+## 0.4.0
+
+### Minor Changes
+
+- f9d5dbc: `lampStateOf({ seed, x, z, shares: { lit, flicker } })`: escolhe por semente e pelo lugar quais postes acendem, quais falham (piscam) e quais estão queimados, sem tirar número do `b.random` da cena.
+- 3a0d4fb: Postes de verdade à noite, tudo opcional (quem não liga as opções desenha igual a antes):
+
+  - `game-urban`: o poste falhando (`flicker: true`) põe o mesmo `flickerPhase` (`flickerPhaseOf(x, z)`) na lente e na luz. As peças sem falha não mudam.
+  - `game-urban-three`, `physicalLights: true` (com `lights`): a luz do poste recebe `physicalIntensityOf(part)` e o holofote `physicalIntensityOf(part, feixe)`. Os números do time foram afinados no r128 sem luz fisicamente correta; o fator faz o chão no pé do poste (ou onde o feixe bate) ficar tão claro quanto na página. Sem a opção, as fontes mantêm os números da página.
+  - `game-urban-three`, `flickerLenses: true`: o poste falhando pisca a cabeça junto com a luz. A fase é arredondada para 4 grupos, com um material de lente por cor e grupo, e as duas seguem `flickerLevel` (`LAMP_FLICKER`). Assim a cabeça pisca mesmo sem luz real. Sem a opção, a lente fica acesa e a luz segue a fórmula da página (`sin(23t + x)`...), nos dois caminhos.
+  - Exporta `physicalIntensityOf`, `flickerLevel`, `flickerGroupOf`, `flickerGroupPhase` e `LAMP_FLICKER`.
+
+- a4637d8: `generateNetworks` em `@adatechnology/game-urban/networks`: as redes do bairro geradas do plano de cidade e dos lotes do site, como dado. Postes de um lado da rua a 0,4 m do meio-fio, vãos de 30 a 40 m na divisa dos lotes, longe de portão (`avoid`), poste de esquina e de fim de linha com estai, intermediário a 5 m da pista transversal; trafos pela demanda diversificada no centro de carga, MT só até eles, BT até 200 m para cada lado, ramal do poste mais próximo; luminária em todo poste; telecom com feixe de 3 a 5 cabos e alguns gatos sem medidor na periferia (pela semente); esgoto no eixo com PV em todo cruzamento e a cada 80 m até o interceptor da margem e a ETE na borda; galeria de drenagem com bocas de lobo nas esquinas e a cada 60 m até o muro de ala; água sob a calçada oposta com registro e hidrante no cruzamento. Regras de traçado em `rules.layout` (`DEFAULT_NETWORK_LAYOUT`), aresta nova `storm_gutter` (sarjeta, canal aberto) e poste `concrete_distribution` no registro com as faixas (`slots`). Poste a mais para o lote fora do alcance do ramal, esquina de T e esquinas ligadas por vão, circuito acima do maior trafo dividido, elevatória (`pumping_station`) onde o esgoto passaria de 4,5 m ou a galeria desceria abaixo do rio, ETE na borda sem rio; `warnings` diz o que foi assentado contra a regra por falta de lugar. Mesma entrada, mesmos bytes (spec 011, T2.8b).
+- b3fb084: Entrada nova `@adatechnology/game-urban/networks`: as redes do bairro (energia MT e BT, iluminação, telecom, esgoto, drenagem, água) como dado, sem three.js. Tipos de nó e aresta, regras com `resolveNetworkRules` (folgas por classe, demanda diversificada e trafos, declividade, recobrimento, cruzamentos), faixas do poste de distribuição (`DEFAULT_POLE_SLOTS`, `checkPoleSlots`; `PoleSlots` e `DistributionSpec` no registro de postes), o grafo (`buildNetworkGraph`, `connectedNodes`, `circuitOf`) e `validateNetworks` com códigos estáveis em `NETWORK_VIOLATION`. O lado do lote é o `UtilityConnection` do `game-contracts`. Nada muda na saída de `createUrban` (spec 011, T2.8a).
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [f17aebb]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-floorplan@0.4.0
+  - @adatechnology/game-vehicles-fleet@7.0.0
+
 ## 0.3.13
 
 ### Patch Changes

@@ -20,9 +20,12 @@ import type {
   StainTint,
   StreamCause,
   StreamState,
+  SurfacePose,
   SurfaceSpec,
   Vec3,
 } from './types'
+import { IDENTITY_POSE, carryStain, posedFrame, runoffStart, runoffTilt, tiltOf } from './surface-pose'
+import type { SurfaceRest } from './surface-pose'
 
 interface Hole {
   point: Vec3
@@ -78,7 +81,14 @@ interface StreamInt extends StreamState {
   temperature: number
 }
 
-interface SurfaceInt extends SurfaceSpec, StainSurface {}
+interface SurfaceInt extends SurfaceSpec, StainSurface {
+  /** Where it was added, and the move of it since (`setSurfacePose`, `moveSurface`). */
+  rest: SurfaceRest
+  pose: SurfacePose
+}
+
+/** A surface of a snapshot: as it was added, and its pose when it was moved. */
+type SnapshotSurface = SurfaceSpec & { pose?: SurfacePose }
 
 interface Snapshot {
   version: 1
@@ -87,7 +97,7 @@ interface Snapshot {
   counters: { container: number; stream: number; stain: number; tap?: number }
   taps?: TapInt[]
   containers: Array<Omit<ContainerInt, 'cols'>>
-  surfaces: SurfaceSpec[]
+  surfaces: SnapshotSurface[]
   streams: StreamInt[]
   stains: StainInt[]
 }
@@ -155,10 +165,30 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
 
   const surfaceFor = (id: string): StainSurface => (id === GROUND_ID ? groundSurface : (surfaces.get(id) ?? groundSurface))
 
-  const landingSurfaces = (): LandingSurface[] => {
+  const landingSurfaces = (except?: string): LandingSurface[] => {
     const list: LandingSurface[] = []
-    for (const [id, s] of surfaces) list.push({ id, normal: s.normal, t1: s.t1, t2: s.t2, point: s.point, half: s.half })
+    for (const [id, s] of surfaces) if (id !== except) list.push({ id, normal: s.normal, t1: s.t1, t2: s.t2, point: s.point, half: s.half })
     return list
+  }
+
+  /** Moves a surface to `pose` from its rest; the stains on it go along when `carry` (a snapshot loads them where they already are). */
+  const poseSurface = (surface: SurfaceInt, pose: SurfacePose, carry: boolean): void => {
+    const from = surface.pose
+    const to: SurfacePose = { position: copy3(pose.position), rotation: [pose.rotation[0], pose.rotation[1], pose.rotation[2], pose.rotation[3]] }
+    if (carry) for (const st of stains.values()) if (st.surface === surface.id) carryStain({ stain: st, from, to })
+    const frame = posedFrame(surface.rest, to)
+    Object.assign(surface, makeBasis(frame.normal, frame.tangent), { point: frame.point, normal: frame.normal, pose: to })
+  }
+
+  /** The pool of a stain on a surface turned past what its liquid holds on leaves by the low rim and lands on what is under it; the soaked part stays. */
+  const runOff = (st: StainInt, def: LiquidDef): void => {
+    const surface = surfaces.get(st.surface)
+    if (!surface || st.liters <= 1e-6 || tiltOf(surface.rest, surface.normal) <= runoffTilt(def)) return
+    const { origin, velocity } = runoffStart({ center: st.center, surface })
+    const liters = st.liters
+    st.liters = 0
+    const hit = trace(landingSurfaces(surface.id), groundAt, origin, velocity, gravity)
+    if (hit) deposit(st.liquid, hit, liters, hit.velocity, st.tint)
   }
 
   const stopStream = (id: string): void => {
@@ -515,6 +545,7 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
     for (const st of [...stains.values()]) {
       const def = liquids.get(st.liquid)
       if (!def) continue
+      runOff(st, def)
       const status = stepStain(st, def, surfaceFor(st.surface), ambientC, dt)
       if (status === 'dried_mark') emit({ type: 'dried', stain: st.id, mark: true })
       else if (status === 'dried_gone') {
@@ -666,6 +697,16 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       containers.delete(id)
     },
 
+    shatter(id) {
+      const c = containers.get(id)
+      if (!c) return
+      const liquid = c.liquid
+      const liters = c.liters
+      const at = add(c.position, scale(c.normal, c.liters > 0 ? c.d : 0))
+      world.removeContainer(id)
+      if (liquid && liters > 0) world.splash(liquid, at, liters, c.velocity)
+    },
+
     setTransform(id, position, rotation, velocity) {
       const c = containers.get(id)
       if (!c) return
@@ -772,6 +813,8 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
         ...basis,
         point: copy3(spec.point),
         half: [spec.halfSize[0], spec.halfSize[1]],
+        rest: { point: copy3(spec.point), normal: copy3(basis.normal), tangent: copy3(basis.t1) },
+        pose: IDENTITY_POSE,
       })
     },
 
@@ -782,9 +825,12 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
 
     moveSurface(id, offset) {
       const surface = surfaces.get(id)
-      if (!surface) return
-      surface.point = add(surface.point, offset)
-      for (const s of stains.values()) if (s.surface === id) s.center = add(s.center, offset)
+      if (surface) poseSurface(surface, { position: add(surface.pose.position, offset), rotation: surface.pose.rotation }, true)
+    },
+
+    setSurfacePose(id, pose) {
+      const surface = surfaces.get(id)
+      if (surface) poseSurface(surface, pose, true)
     },
 
     splash(liquid, point, liters, velocity, options) {
@@ -848,7 +894,10 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
           const { cols: _cols, ...rest } = c
           return clone(rest)
         }),
-        surfaces: [...surfaces.values()].map((s) => clone({ id: s.id, point: s.point, normal: s.normal, halfSize: s.half, tangent: s.t1, porosity: s.porosity })),
+        surfaces: [...surfaces.values()].map((s) => {
+          const moved = s.pose !== IDENTITY_POSE
+          return clone({ id: s.id, point: s.rest.point, normal: s.rest.normal, halfSize: s.half, tangent: s.rest.tangent, porosity: s.porosity, ...(moved ? { pose: s.pose } : {}) })
+        }),
         streams: [...streams.values()].map((s) => clone(s)),
         taps: [...taps.values()].map((t) => clone(t)),
         stains: [...stains.values()].map((s) => clone(s)),
@@ -868,7 +917,11 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       containers = new Map()
       for (const raw of snap.containers) containers.set(raw.id, { ...raw, cols: makeColumns(raw.spec.shape) })
       surfaces = new Map()
-      for (const s of snap.surfaces) world.addSurface(s)
+      for (const { pose, ...spec } of snap.surfaces) {
+        world.addSurface(spec)
+        const surface = surfaces.get(spec.id)
+        if (pose && surface) poseSurface(surface, pose, false)
+      }
       counters.tap = snap.counters.tap ?? 0
       streams = new Map(snap.streams.map((s) => [s.id, s]))
       taps = new Map((snap.taps ?? []).map((t) => [t.id, t]))

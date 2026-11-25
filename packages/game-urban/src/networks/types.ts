@@ -17,6 +17,7 @@ export type NetworkNodeKind =
   | 'hydrant'
   | 'reservoir'
   | 'treatment'
+  | 'pumping_station'
   | 'connection'
 
 /** A point of a network, in world metres. */
@@ -48,6 +49,7 @@ export type NetworkEdgeKind =
   | 'sewer_lateral'
   | 'storm_gallery'
   | 'storm_lateral'
+  | 'storm_gutter'
   | 'water_main'
   | 'water_service'
 

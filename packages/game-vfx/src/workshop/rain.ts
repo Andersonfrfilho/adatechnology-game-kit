@@ -52,6 +52,8 @@ export class RainField {
   puddles: readonly Puddle[] = WORKSHOP_PUDDLES
   /** Replaces the puddle test (a game knows its own wet spots). */
   puddleAt: ((x: number, z: number) => boolean) | undefined
+  /** Top (world y) of the roof or slab over (x, z), `undefined` for open sky: a streak that falls under it is gone, with no splash and no ring. Unset: nothing is roofed. */
+  coverTopAt: ((x: number, z: number) => number | undefined) | undefined
 
   constructor(private readonly engine: WorkshopEngine) {}
 
@@ -101,6 +103,13 @@ export class RainField {
       positions[o + 3]! += slant
       positions[o + 1]! -= fall
       positions[o + 4]! -= fall
+      if (this.coverTopAt) {
+        const top = this.coverTopAt(positions[o]!, positions[o + 2]!)
+        if (top !== undefined && positions[o + 4]! < top) {
+          this.restart(o)
+          continue
+        }
+      }
       const ground = context.groundAt(positions[o]!, positions[o + 2]!)
       if (positions[o + 4]! < ground) {
         const x = positions[o]!
@@ -116,10 +125,7 @@ export class RainField {
             }
           }
         }
-        const nx = random.between(BOX_X[0], BOX_X[1]) + this.centerX
-        const ny = random.between(REENTRY_HEIGHT[0], REENTRY_HEIGHT[1])
-        const nz = random.between(BOX_Z[0], BOX_Z[1]) + this.centerZ
-        this.set(o, nx, ny, nz)
+        this.restart(o)
       }
     }
   }
@@ -127,6 +133,14 @@ export class RainField {
   /** `rain.visible = false; RN.on = false` (W440): the field stops; the streaks stay where they were. */
   clear(): void {
     this.on = false
+  }
+
+  private restart(offset: number): void {
+    const { random } = this.engine
+    const nx = random.between(BOX_X[0], BOX_X[1]) + this.centerX
+    const ny = random.between(REENTRY_HEIGHT[0], REENTRY_HEIGHT[1])
+    const nz = random.between(BOX_Z[0], BOX_Z[1]) + this.centerZ
+    this.set(offset, nx, ny, nz)
   }
 
   private set(offset: number, x: number, y: number, z: number): void {

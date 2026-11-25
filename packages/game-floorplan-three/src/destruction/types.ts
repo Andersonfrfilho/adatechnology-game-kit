@@ -55,7 +55,7 @@ export interface HouseStructure {
   levels: number[]
   elevation: number
   byId: Map<string, HouseStructurePart>
-  /** Pieces whose maker said what holds them (`holdOn`) and nothing does: no floor under, no wall in reach, not on the ground. They come loose at load; none should. */
+  /** Pieces whose maker said what holds them (`holdOn`, or a `holder` that was never built) and nothing does: no floor under, no wall in reach, not on the ground. They come loose at load; none should. */
   unheld: string[]
   meshesOf(id: string): StructureMeshItem[]
   /** The piece a raycast hit (object and face index): merged mesh by its ranges, single-piece mesh or loose group by userData. */

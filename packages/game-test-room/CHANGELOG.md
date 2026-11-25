@@ -1,5 +1,227 @@
 # @adatechnology/game-test-room
 
+## 0.38.2
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-audio@0.15.3
+  - @adatechnology/game-destruction@0.29.3
+  - @adatechnology/game-destruction-three@0.26.3
+  - @adatechnology/game-fluids@0.6.8
+  - @adatechnology/game-fluids-three@0.6.3
+  - @adatechnology/game-items@0.2.20
+  - @adatechnology/game-kit-defaults@0.3.5
+  - @adatechnology/game-player@0.9.1
+  - @adatechnology/game-render-three@0.4.3
+  - @adatechnology/game-runtime@0.3.3
+  - @adatechnology/game-terrain@0.9.3
+  - @adatechnology/game-terrain-three@0.6.5
+  - @adatechnology/game-weapons@0.13.2
+
+## 0.38.1
+
+### Patch Changes
+
+- c6faa01: O corpo que anda em passos fixos deixa de tremer: `createStepPose` (game-player) guarda os dois últimos passos e mistura pelo `alpha` do agendador, e o distrito de referência desenha o corpo e a câmera por ele (a 144 Hz o corpo andava 0 ou 2 passos por quadro, variação de 118% na velocidade desenhada). Na sala, o braço da câmera em terceira pessoa volta a se afastar da parede (o `dt` da recuperação era sempre 0) e o olho sobe uma soleira ou borda de laje em poucos quadros, em vez de um salto de 4,5 cm.
+- Updated dependencies [c6faa01]
+  - @adatechnology/game-player@0.9.0
+
+## 0.38.0
+
+### Minor Changes
+
+- 5682afd: O item tirado de um móvel vai para a mão: `ModuleHost.takeInHand` (`HostTakenItem`) leva o item com as mãos que ele pede; o `take` de um item guardado diz qual é (`Interactable.itemType`); a área de casas entrega o item ao apertar E, e a sala fecha a mão nele com a regra de mãos e coldre (uma mão: a arma fica na outra). A sala passa a respeitar as mãos que a peça pede em vez de deduzi-las da massa.
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-audio@0.15.2
+  - @adatechnology/game-destruction@0.29.2
+  - @adatechnology/game-destruction-three@0.26.2
+  - @adatechnology/game-fluids@0.6.7
+  - @adatechnology/game-fluids-three@0.6.2
+  - @adatechnology/game-items@0.2.19
+  - @adatechnology/game-kit-defaults@0.3.4
+  - @adatechnology/game-player@0.8.1
+  - @adatechnology/game-render-three@0.4.2
+  - @adatechnology/game-runtime@0.3.2
+  - @adatechnology/game-terrain@0.9.2
+  - @adatechnology/game-terrain-three@0.6.4
+  - @adatechnology/game-weapons@0.13.1
+
+## 0.37.0
+
+### Minor Changes
+
+- 81e70aa: Hands and holster (owner's rule, 2026-11-24): `planHands`, `drawBackOf` and `interactionHandsFor` in game-player; `rules.hands` and `weaponHandsOf` in game-weapons; the test room picks a small thing up in the off hand with the weapon still in hand, and a big thing or a push first puts the weapon away in the slot that fits (`bodySlots`, default a hip holster) or drops it to the floor, drawing it back after.
+- 81e70aa: A weapon put away is drawn on the body: `HostEvent` `holster` and `ModuleHost.bodySlot` (game-contracts), `PlayerAvatar.slot('hip' | 'back')` (game-characters-three), `createHolsteredWeapons`/`holsteredModel` (game-weapons-three: pistol on the hip, long gun across the back); the test room sends the events and lends the slots.
+- 81e70aa: A big thing is carried in both hands: in front of the chest with a palm on each of its sides (`bothHandsCarry`), in first and third person; `?bodySlots=hip,back` on the test-room page.
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-player@0.8.0
+  - @adatechnology/game-weapons@0.13.0
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-destruction@0.29.1
+  - @adatechnology/game-items@0.2.17
+  - @adatechnology/game-audio@0.15.1
+  - @adatechnology/game-destruction-three@0.26.1
+  - @adatechnology/game-fluids@0.6.6
+  - @adatechnology/game-fluids-three@0.6.1
+  - @adatechnology/game-kit-defaults@0.3.2
+  - @adatechnology/game-render-three@0.4.1
+  - @adatechnology/game-runtime@0.3.1
+  - @adatechnology/game-terrain@0.9.1
+  - @adatechnology/game-terrain-three@0.6.3
+
+## 0.36.0
+
+### Minor Changes
+
+- c88deea: `jitWarmUp` (ligado por padrão): o primeiro `createDestructionRenderer` roda uma explosão numa parede pequena fora da tela, num mundo e num renderizador próprios, tudo liberado, uma vez por motor. A primeira explosão do jogo deixa de custar o dobro: o primeiro segundo de física cai 14% na explosão e 12% no martelo da sala, por 0,37 s a mais no carregamento. `false` desliga; `{ engine }` aquece também os caminhos do motor. `warmUpDestructionJit` é exportado. `game-shapes-three` passa a dependência de `game-destruction-three`. Na sala de teste: `debris.jitWarmUp` e `?warmup=0`.
+- c71e079: Colisores fixos pelo coordenador de workers (spec 009, T10): `staticCollidersKind` (`destruction.static-colliders`, faixa `build`) com o núcleo puro `measureStaticPart`, que agora mede também no quadro principal; `RendererOptions.workers` (e `debris.workers` na sala) entrega as peças ao coordenador, opt-in porque a medida da sala não pagou. O preset hospeda a categoria.
+- 51c7f3d: O trabalho que uma explosão deixa (grupos soltos a cortar em peças, fragmentos a soltar, entulho a acordar) pode correr num orçamento de quadro em **unidades de trabalho**, nunca em tempo (spec 008, T3.8aa). Desligado por padrão: sem a opção nada muda.
+
+  `game-physics`: `WorkBudget` (o árbitro: `budgetMs` × `unitsPerMs` / `tier` unidades por quadro, padrões 4 ms, 100 e 1, e `maxWaitFrames` 12, decisão do dono em 2026-11-16), `WorkQueue` (trabalho guardado como dado, por prioridade e chave estável, ao menos um por quadro, o que esperou o teto sai de qualquer jeito; salva e carrega) e `WORK_KINDS` (a ordem fixa em que as filas tiram do orçamento). `WakeQueue.release` aceita `limit`.
+
+  `game-destruction-three`: `RendererOptions.workBudget` (`ExplosionWorkOptions`: as opções do `WorkBudget` mais `costs`, padrões em `WORK_UNIT_DEFAULTS`). Os eventos aplicam no próprio quadro (clarão, poeira, trincas); cada grupo solto espera numa fila, o mais perto do `focus` primeiro, desenhado e sólido no objeto até a vez dele; fragmentos e a fila de despertar tiram do mesmo orçamento. `splitWorkUnits` estima o custo de um corte pelo tamanho do trabalho, sem contar caixas já ajustadas.
+
+  `game-test-room`: `debris.workBudget` (o jogador é a câmera); a página da sala lê `?workBudget=4`.
+
+- 6fb91f5: `room.measure(itemId)`: largura, profundidade e altura do modelo de um item do catálogo na rotação 0 (null para um id que o catálogo não tem), a mesma medida que a mesa de testes usa para as fileiras. Serve à área que põe lado a lado peças de vários módulos, como a casa e o quintal nas mesas da sala (`?area=house_tables`).
+
+  `AreaPlacement.fixed`: a peça fica presa onde a área a pôs, sem física própria, seja qual for o item (um armário aéreo pendurado na parede, que solto no chão cai). Continua tomando tiro e quebrando; o que se solta dela cai.
+
+- b37d94f: Spec 010, fases 1 e 3: passo fixo único e filas no prazo do quadro.
+
+  - `game-physics`: `PhysicsLoop.stepFixed(steps)` roda passos inteiros vindos do agendador (`step(dt)` continua, com o próprio acumulador). **Quebra para quem implementa `PhysicsWorld`:** o membro `readActiveBodies(out)` passa a ser obrigatório (devolve só os corpos acordados).
+  - `game-physics-jolt`: implementa `readActiveBodies`.
+  - `game-render-three`: `createStaticBatchQueue` e a opção `queue` dos lotes estáticos, para o orçamento do quadro drenar a junção dos lotes.
+  - `game-fluids-three`: `FilmManager.deferredQueue()`, a fila do filme de líquido no prazo do quadro; o tempo devido de um grid que sai é esquecido junto com ele.
+  - `game-crowd`: o campo de fluxo passa a andar em células por passo (`cellsPerStep`) por padrão, não pelo relógio; `flow.ms` vale 0. Mesmo resultado em toda máquina.
+  - `game-destruction-three`: `DestructionRenderer` ganha `interpolate`, `present`, `restoreStepPose`, `markMoved` e `deferredQueues` (desenho interpolado entre passos e filas registradas no orçamento); uma peça segurada pelo host (empurrar, carregar) é lida mesmo com o motor a dando como dormindo.
+  - `game-test-room`: opção `frameTargetMs` (prazo do quadro); a pose do passo volta antes da fase `input`, para empurrar e carregar escreverem na pose do passo, não no desenho misturado do quadro anterior.
+  - `game-destruction`: uma operação que lança exceção não passa estrutura e `detach` pela metade para a seguinte.
+
+- adf4811: Com o motor Jolt, uma peça solta de várias partes (um poste com os fios) pode assentar o chão só sob a caixa de cada parte, e não sob a caixa de todas juntas. Desligado por padrão: o chão assentado é o mesmo de antes.
+
+  `game-destruction-three`: `RendererOptions.tilesUnderParts` (e `PieceSystemOptions.tilesUnderParts`). Ligado, `EnginePieces.layGround` assenta os ladrilhos sob cada caixa de parte (`partBoxes`, com a mesma margem de 0,5 m, a mesma oscilação e os mesmos pontos do caminho). Uma peça de 23 m de largura feita de 26 partes finas assentava 72 ladrilhos (e o sólido de cada um); com a opção, assenta os que tem partes sob ou perto. Medido na sala: p99 do quadro do blast de 91 para 78 ms e máximo de 206 para 178 ms (T3.8v). Fica desligado porque, nas rodadas do blast, o poste que ganha energia (C1 acima de 5 kg·m) apareceu em 8 de 25 rodadas com a opção contra 2 de 25 sem ela; o dono decide.
+
+  `game-test-room`: `debris.tilesUnderParts`, e `?tilesUnderParts=1` na página da sala.
+
+- ca2dac7: Amortecimento de rolamento por material: além da resistência ao rolamento (C_rr), cada material da peça (`surfaceOf`: vidro e aço 0,02/s, madeira 0,4/s, borracha 0,3/s, tecido 1/s) e cada chão (`TerrainMaterial.rollingDamping`: concreto 0,3/s, cerâmica 0,1/s, grama 1,5/s, areia 2/s, lama 3/s) tiram uma parte do giro por segundo, e os dois se somam: a garrafa rola mais no piso liso, a tora para logo na grama. Cerâmica e madeira de piso passam a ter C_rr 0,008 e 0,01 (antes o 0,015 padrão). Contrato: `Rolling.damping` e `Material.rollingDamping`; o adaptador Jolt aplica os dois em todo corpo com `rolling` (`rollingImpulse`), e o `saveState` guarda o amortecimento. Terreno: `rollingDampingAt`. Renderizador: `terrainRollingDampingAt` (a sala de teste liga ao terreno). Em rampa a peça continua rolando, e um impulso a acorda e ela volta a rolar. Medição na sala: `examples/test-room/rolling-test.mjs`.
+
+### Patch Changes
+
+- b0a370f: O chão que o motor põe sob as peças custa menos, sem mudar o chão nem o que as peças fazem sobre ele.
+
+  `game-terrain`: `Terrain.heightRange(minX, maxX, minZ, maxZ)` devolve os limites exatos da altura do terreno sobre um retângulo, lidos nos vértices que ele cobre (a altura entre vértices é uma mistura dos quatro ao redor), ou `null` quando o retângulo sai do terreno.
+
+  `game-destruction-three`: com `terrainRangeAt` (opção do renderizador e do sistema de peças), um ladrilho que o terreno prova plano é assentado como laje sem ler as 25 921 amostras; qualquer relevo sob ele, uma cratera de um vértice inclusive, faz a leitura inteira como antes. `blastGroundTiles` (padrão 0, desligado: medido, 48 ladrilhos moveram cerca de 24 ms para o quadro da explosão e não melhoraram o pior quadro) assenta, na explosão, essa quantidade de ladrilhos ao alcance dela, os mais próximos primeiro, antes de as peças que ela solta precisarem deles. O sólido sob uma cratera refeito por uma mudança do chão reaproveita os cascos que a mudança não tocou.
+
+  `game-physics`, `game-physics-jolt`: `ShapeDesc` composto aceita `reuseHulls`; o corpo guarda os cascos convexos da forma atual e a próxima forma dele pega os que são iguais bit a bit, em vez de montá-los de novo. Guarda só os cascos da forma atual, então a memória não cresce com as mudanças.
+
+  `game-test-room`: a sala passa o `terrainRangeAt` do terreno dela.
+
+- 85c7e53: Golpe corpo a corpo mirado para baixo: o que o olho já tem dentro do alcance da ferramenta é atingido como mirado. Desde que o golpe passou a sair do ombro para alcançar o chão, a faca (alcance 0,4 m) a 0,2 m de uma lata na mesa saía de 0,4 m acima do alvo e dava golpe no ar; a mesa de teste reprovava "faca alcança o item" na rodada diária desde 15/11.
+- d3055fe: A falha do foguete ou da granada que bate antes de armar agora diz quantos metros ele voou e quantos o espoletim precisa ("bateu antes de armar (6,2 m dos 10 m que precisa), não explodiu").
+- 23534c3: O indicador de carga (`createLoading`, `KitLoading`, `loadingMarkup`, `LOADING_CSS`, `nextPaint`) passa a morar em `@adatechnology/game-kit-defaults/world`, ao lado de `createKitWorld`: um jogo mostra o mesmo cartão da sala enquanto monta o mundo. A sala de teste usa e reexporta de lá com os nomes antigos (`RoomLoading`), sem mudança de comportamento.
+- 3b22fa3: Latas e garrafas: o piso de massa da peça cai de 0,2 kg para `MIN_PIECE_MASS_KG` (20 g), então a lata vazia de 50 g pesa 50 g nos choques; a massa da peça cai com o líquido que sai (bebido, despejado ou vazado, na densidade do líquido) pelo novo `DestructionRenderer.setPieceMass`, e a inércia de giro acompanha; o líquido de dentro da lata gira só metade do que um sólido de mesma massa (`LIQUID_SPIN_COUPLING`), em vez de ser tratado como sólido.
+
+  O corpo de um recipiente segurado (cinemático no Jolt) também guarda a massa nova e a recebe ao ser solto; os refits de quebra mantêm a massa sem o líquido que saiu; a perda é medida em kg com histerese de 10 g, na peça que guarda o líquido, e uma recarga soma massa.
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- c360fa4: O que e mais denso que a agua afunda na sala: o volume que a peca desloca vem das partes do objeto como foram desenhadas (`displacedVolume`), nao da caixa em volta da peca. Marreta, chave inglesa e martelo (aco, caixa grande ou fina demais) boiavam por terem massa dividida por um volume inflado; agora vao ao fundo, e o que e leve (tabua, garrafa vazia, lata vazia) continua boiando.
+- 8ebd34c: `createRaycastOcclusion` (com `OcclusionRayFilter`, `OcclusionPartRef`, `RaycastOcclusionWorld`, `RaycastOcclusionOptions` e `OCCLUDER_MIN_RADIUS`) sai da sala de teste para o `game-audio`: monta a consulta de oclusão sobre qualquer mundo que responda raios e diga o material de uma parte (um mundo do `game-destruction` serve), sem o `game-audio` depender de outro núcleo. A sala importa do pacote; o comportamento não muda.
+- 02e9999: `@adatechnology/game-kit-defaults/world`: entrada nova com `createObjectRegistry` (registro de objetos do mundo: entrar, sair, segurar, soltar, achar) e `createReportPort` (relatos tipados do mundo). A sala de teste registra os objetos dela ali; o comportamento não muda.
+- f7de1ec: `scheduler.systemProbe`: gancho opcional de medição, avisado antes e depois de cada sistema de cada fase (`enter(id)`/`leave(id)`); sem sonda não faz nada além de ler uma propriedade por sistema. `SystemProbe` é exportado. Na sala de teste, `frameParts.scheduler` entrega o agendador à ferramenta de medição (`tools/gpu/room-explosion.mjs`).
+- 7a401c2: A sala de teste monta o mundo pelo host do kit (`createKitWorldSync` de `@adatechnology/game-kit-defaults/world`, spec 011 T1.5): renderizador, cena, câmera, sol, chão, destruição, fluidos, som, efeitos, orçamento de desenho, agendador, filas, marca-passo e laço vêm do host, na mesma ordem. Saem as cópias da sala (`blast-pacing.ts`, `simulation-phases.ts`, `frame-queues.ts`, `sun-shadow.ts`, `graphics.ts`) e o sol do `arena.ts`. `TestRoomOptions` e `TestRoom` não mudam; `RoomGraphicsOptions` passa a ser o `KitWorldGraphicsOptions` do host.
+- c394683: O tiro num veículo não percorre mais a cena inteira para achar a normal da superfície. `DestructionWorld.shoot` agora devolve a normal traçada (`HitResult.normal`, da `surfaceRay` do corpo) e a sala usa essa normal para o empurrão do tiro, em vez de re-raycastar todos os triângulos do corpo — o quadro do tiro na porta de um sedã caía de ~24 ms para ~2 ms.
+
+  A faísca do impacto (`impact_*`) entra no aquecimento da sala, então o primeiro tiro não paga os buffers da faísca em jogo.
+
+- Updated dependencies [334489c]
+- Updated dependencies [c88deea]
+- Updated dependencies [96c27a1]
+- Updated dependencies [737b677]
+- Updated dependencies [f693949]
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [b0a370f]
+- Updated dependencies [c71e079]
+- Updated dependencies [f1c7229]
+- Updated dependencies [c4783d3]
+- Updated dependencies [10f2df0]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [51c7f3d]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [18bd23f]
+- Updated dependencies [dc3ad20]
+- Updated dependencies [0095c76]
+- Updated dependencies [fcf6f83]
+- Updated dependencies [23534c3]
+- Updated dependencies [f17aebb]
+- Updated dependencies [3b22fa3]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [8ebd34c]
+- Updated dependencies [fc1310c]
+- Updated dependencies [b37d94f]
+- Updated dependencies [556586e]
+- Updated dependencies [6cc4abe]
+- Updated dependencies [20cdc73]
+- Updated dependencies [adf4811]
+- Updated dependencies [e987bbe]
+- Updated dependencies [6356f68]
+- Updated dependencies [232c3a6]
+- Updated dependencies [65b522a]
+- Updated dependencies [1fede95]
+- Updated dependencies [6473d97]
+- Updated dependencies [02e9999]
+- Updated dependencies [f7de1ec]
+- Updated dependencies [ca2dac7]
+- Updated dependencies [5da32ec]
+- Updated dependencies [1807dd8]
+- Updated dependencies [631d9d0]
+- Updated dependencies [da15205]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-kit-defaults@0.3.0
+  - @adatechnology/game-destruction-three@0.26.0
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-destruction@0.29.0
+  - @adatechnology/game-terrain@0.9.0
+  - @adatechnology/game-player@0.7.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-audio@0.15.0
+  - @adatechnology/game-fluids-three@0.6.0
+  - @adatechnology/game-runtime@0.3.0
+  - @adatechnology/game-vfx@0.16.0
+  - @adatechnology/game-fluids@0.6.5
+  - @adatechnology/game-items@0.2.16
+  - @adatechnology/game-terrain-three@0.6.2
+  - @adatechnology/game-weapons@0.12.2
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.35.4
 
 ### Patch Changes

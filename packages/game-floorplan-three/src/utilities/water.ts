@@ -127,10 +127,13 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
   }
   function underSink(tr: NonNullable<NonNullable<HouseRecord['utilities']>['plumbing']>['visibleRuns'][number]): void {
     const H = (shared.ctx.r as HouseRecord).utilities?.plumbing, nA = shared.ctx.r.floors.length, pt = H && H.points.find(p => p.id === tr.to), pts = tr.points.map((p) => [p[0], p[2], p[1]]), d = tr.diameter || 0.025;
+    // the feed under a sink goes in with the sink it serves (louças e metais): never standing alone where the sink will be
+    const stage = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'furniture';
     cursor.group = pt && pt.floor >= 0 ? 'f' + Math.min(pt.floor, nA - 1) : 'lot'; cursor.pc = pieceRecord('pipe:' + tr.id, 'plastic', null, { tags: ['pipe'] });
     for (let i = 0; i + 1 < pts.length; i++) pipe(pts[i], pts[i + 1], d, PIPE_COLOR);
     for (const p of pts) { cylBase('metal', p[0], p[1] - d * 0.9, p[2], d * 0.75, d * 1.8, 0xc8c8c4); }
     cursor.pc = null;
+    cursor.stage = stage;
   }
   const defined: KernelUtilitiesWater = { createWater, PIPE_COLOR, pipe, _v3, waterPipes };
   Object.assign(K, defined);

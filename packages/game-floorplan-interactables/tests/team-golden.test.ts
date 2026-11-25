@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { create } from '../src'
-import { GameInteractables, GameInteractablesHousehold, planOf, TEMPLATES } from './support/plans'
+import { GameInteractables, GameInteractablesHousehold, visorPlanOf, TEMPLATES } from './support/plans'
 import { loadTeamAdapter, normalizeWorld, planToKit, teamSeedKey, teamShape, toKit, withoutSource } from './support/team-shape'
 
 // The team's own `AdaptadorInterativos` (tests/fixtures/team-golden/adaptador-interativos.js, the IIFE of the page, byte for byte) runs in a vm on the team's `res` rebuilt from
@@ -9,14 +9,14 @@ import { loadTeamAdapter, normalizeWorld, planToKit, teamSeedKey, teamShape, toK
 const Team = loadTeamAdapter()
 const kit = { GameInteractables, GameInteractablesHousehold }
 const teamAdapter = Team.criar({ ...kit, locale: 'pt-BR', regiao: 'br' })
-const adapter = create({ ...kit, locale: 'pt-BR', region: 'br', seedKey: teamSeedKey })
+const adapter = create({ ...kit, locale: 'pt-BR', region: 'br', seedKey: teamSeedKey, visor: true })
 
 const CASES: [string, number, string][] = []
 for (const t of TEMPLATES) for (const seed of [1, 2, 3]) CASES.push([t, seed, 'normal'])
 for (const t of ['single_storey_a', 'townhouse', 'mansion', 'market']) for (const state of ['fortified', 'abandoned']) CASES.push([t, 5, state])
 
 const planned = (template: string, seed: number, state: string, popts: Record<string, unknown> = {}) => {
-  const r = planOf(template, seed, state)
+  const r = visorPlanOf(template, seed, state)
   const res = teamShape(r)
   const mine = adapter.plan(r, { seed: r.seed, ...popts })
   const team = planToKit(teamAdapter.planejar(res, { semente: res.semente, ...(popts.night ? { noite: true } : {}), ...(popts.floor !== undefined ? { andar: popts.floor } : {}) }))
@@ -55,7 +55,7 @@ describe('plan: the same objects as the team\'s adapter, house by house', () => 
   })
 
   it('the stacks keep the item they came from in data.source', () => {
-    const r = planOf('single_storey_a', 3)
+    const r = visorPlanOf('single_storey_a', 3)
     const mine = adapter.plan(r, { seed: r.seed })
     const fridge = mine.items.find((e) => e.type === 'fridge')!
     const ids = new Set(r.contents['kitchen.fridge'].map((s) => s.itemId))
@@ -84,7 +84,7 @@ describe('world and add: the same world, door by door', () => {
   }
 
   it('the walls: blockedOf answers like bloqueadoDe on a grid of points', () => {
-    const r = planOf('townhouse', 2)
+    const r = visorPlanOf('townhouse', 2)
     const res = teamShape(r)
     const a = adapter.blockedOf(r, { originX: 3, originZ: -2 })
     const b = teamAdapter.bloqueadoDe(res, { origemX: 3, origemZ: -2 })

@@ -14,6 +14,7 @@ export const EDGE_NETWORK: Readonly<Record<NetworkEdgeKind, NetworkKind>> = {
   sewer_lateral: 'sewer',
   storm_gallery: 'storm',
   storm_lateral: 'storm',
+  storm_gutter: 'storm',
   water_main: 'water',
   water_service: 'water',
 }
@@ -30,6 +31,7 @@ export const EDGE_CLASS: Readonly<Record<NetworkEdgeKind, NetworkClass>> = {
   sewer_lateral: 'sewer',
   storm_gallery: 'storm',
   storm_lateral: 'storm',
+  storm_gutter: 'storm',
   water_main: 'water',
   water_service: 'water',
 }

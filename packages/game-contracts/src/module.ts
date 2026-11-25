@@ -3,9 +3,10 @@ import type { AudioSink } from './audio'
 import type { BlastShoveOptions } from './blast-shove'
 import type { BusySink } from './busy'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
-import type { DestructibleSpec, Vec3 } from './destruction'
+import type { CarryHands, DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
+import type { RainCover } from './rain-cover'
 import type { EffectSink } from './effects'
 import type { HandPose, HandTargetSource, MuzzleSource, ToolHand } from './hands'
 import type { GaitId, SurfaceId } from './foley'
@@ -254,6 +255,12 @@ export type HostEvent =
    * With a tool in each hand, the tool of `hand` is put away against the body (`on`) to free that hand for the other tool, or taken back in hand; `duration` is the seconds the move takes.
    */
   | { type: 'stow'; weapon: string; on: boolean; duration?: number; hand?: ToolHand }
+  /**
+   * A weapon put away on the body (`on`) in the place that takes it (`slot`: `hip` a holster, `back` across the back, `sling` hanging on its sling; `ground` tossed to the floor)
+   * while the hands do something else, or taken back in hand. A module that draws weapons draws it there (`ModuleHost.bodySlot`) until it comes back. With `seconds` the move is
+   * seen: the weapon goes from `from` (the weapon hand on its grip as it leaves the hand) to the slot in that time, the hand on it, and comes back the same way.
+   */
+  | { type: 'holster'; weapon: string; slot: string; on: boolean; from?: HandPose; seconds?: number }
   /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
   | { type: 'player' }
   /**
@@ -337,6 +344,22 @@ export interface PlayerState {
   readonly running: boolean
   /** How the camera follows the player (`first`, `shoulder`...); the ids are the host's. */
   readonly cameraMode: string
+}
+
+/** An item a module's object hands over to the player (a pair of jeans taken out of a wardrobe), for `ModuleHost.takeInHand`. */
+export interface HostTakenItem {
+  /** Catalogue id of the item (`ItemDef.id` of the goods catalogue): the host keeps one catalogue entry per id. */
+  readonly itemId: string
+  /** Its name, already translated. */
+  readonly name: string
+  /** Where it was taken from, world space: the host makes it an object there and the hand closes on it. */
+  readonly position: Vec3
+  /** Draws it with the host's `THREE` (origin at the centre of its footprint, on its base), as `TestableItem.build`. */
+  readonly build: (THREE: unknown) => unknown
+  /** What it weighs and measures (as `TestableItem.physical`); without it the host measures the drawing. */
+  readonly physical?: { readonly weightKg: number; readonly size: readonly [number, number, number] }
+  /** Hands it is carried with (the hands and holster rule decides what the weapon does). */
+  readonly hands: CarryHands
 }
 
 /** A leaf a module moves itself, for the host's hand (`ModuleHost.reachFor`). */
@@ -485,11 +508,22 @@ export interface ModuleHost {
    */
   holdFrame?(hand?: ToolHand): HandPose | null
   /**
+   * Where a place on the player's body that takes a weapon put away is now (world space; `hip`, `back`): its origin just off the cloth, `quaternion` the body's turn (+z its front, -x the
+   * weapon side, y up). Null for a host with no body or a body without that place.
+   */
+  bodySlot?(slot: string): HandPose | null
+  /**
    * Puts the player's hand on a leaf the module moves itself (a door of a house): the host plays the reach to `handle()`, calls `onGrip` when the hand is on it (the module then turns
    * the handle and swings the leaf), keeps the hand on `handle()` for `seconds` as it moves, and takes it back; the body pulls or pushes (`pull`) or shakes a locked one (`locked`).
    * `handle` answers the world point of the handle every frame. A host without a body leaves it out (the module then moves the leaf at once).
    */
   reachFor?(reach: HostReach): void
+  /**
+   * Puts in the player's hand an item a module's object hands over (a pair of jeans taken out of a wardrobe): the host makes it an object of the world at `position` and the hand
+   * closes on it as on anything picked up, with its `hands` (one leaves the weapon in the other hand). Returns whether the hand took it. A host without hands leaves it out (the item
+   * is then only gone from the object).
+   */
+  takeInHand?(item: HostTakenItem): boolean
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /**
@@ -514,6 +548,8 @@ export interface ModuleHost {
   audio?: AudioSink
   /** The host's weather, light and ground; a module that reacts to rain, wind or night reads it. */
   environment?: EnvironmentBus
+  /** What is roofed over in the host: houses, sheds and the like add their covers here, and the rain keeps off what they cover. A host that does not know leaves it out. */
+  rainCover?: RainCover
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
   /** The most loose bodies a module may keep alive at once (ejected casings, dropped magazines), read at each spawn: the host's one budget. Absent when the host keeps no budget of its own. */

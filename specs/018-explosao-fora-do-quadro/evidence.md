@@ -790,3 +790,22 @@ Rodadas alternadas `main`, branch, 3 de cada (9 estágios por lado). RTX 5070 La
 
 - **Leitura:** ganho bem acima do ruído da régua (±2–3 ms), sem mudar um único byte com ou sem pausa. Todos os 9 estágios da branch
   ficaram abaixo de 28,9 ms no pior quadro da janela (folga > 4,4 ms frente à meta de 33,3 ms).
+
+## T2.2: M67, bomba de cano, C4 e M79 com a explosão espalhada (2026-11-24)
+
+`main` `923fa511f` (com #449), página padrão da sala (marca-passo ligado), régua `room-explosion` no modo de prazo, 1x, `jolt-d4-worker`,
+`ROOM_EXPLOSION_KINDS=blast`, 3 estágios, `FRAME_PARTS=1`, `FRAME_SERIES=24`, sob `flock`. RTX 5070 Laptop. Uma rodada por explosivo
+(carga no começo entre 1,6 e 11; a M67 começou com 11, por isso ela foi conferida contra o 2026-11-23 e bate).
+
+| Explosivo | `f0Ms` | `afterMs` | quadros segurados |
+|---|---|---|---|
+| M67 | 20,1 | 22,4 | f1..f15 |
+| bomba de cano | 23,2 | 24,8 | f1..f11 |
+| M79 (`m79_40mm`) | 21,8 | 21,3 | f1..f14 |
+| C4 | 82,6 e 74,1 (duas rodadas) | 29,0 e 26,7 | nenhum |
+
+- A bomba de cano, que era a pior (~67 ms depois do #427), e o M79 ficam abaixo de 33,3 ms com a explosão espalhada.
+- **O C4 não é espalhado:** sem raios de fragmento, a explosão cabe numa fatia e o marca-passo a roda inteira no tique (`createBlastPacer`:
+  "a blast that fits in one slice ... is the one-shot blast"). Ele fica em 74–83 ms no quadro da explosão; no pior quadro, `explode` ~20–22 ms,
+  `destrEvents` ~7–8 ms e `fragments` ~6,5 ms. Em 2026-11-21 o C4 media 63–67 ms; a diferença para hoje não foi investigada (duas rodadas só).
+  O C4 é o explosivo que hoje passa da meta e o portão diário dele segue comparando.

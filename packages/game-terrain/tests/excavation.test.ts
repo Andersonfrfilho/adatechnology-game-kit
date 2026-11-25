@@ -51,4 +51,16 @@ describe('excavation: a construction trench is a real hole in the ground', () =>
     expect(losses).toEqual([])
     expect(terrain.voidUnder(0, 0, 0.15).fraction).toBe(1)
   })
+  it('open digs a pit into the ground as it stands, tells the renderers, and a reset closes it', () => {
+    const terrain = ground()
+    const deformed: number[] = []
+    terrain.onDeform((area) => deformed.push(area.radius))
+    terrain.open({ rect: [-0.3, -0.3, 0.3, 0.3], depth: 1.2 })
+    expect(terrain.heightAt(0, 0)).toBeCloseTo(-1.2, 2)
+    expect(terrain.heightAt(2, 2)).toBeCloseTo(0, 3)
+    expect(terrain.voidUnder(0, 0, 0.15).fraction).toBe(1)
+    expect(deformed.length).toBe(1)
+    terrain.reset()
+    expect(terrain.heightAt(0, 0)).toBeCloseTo(0, 3)
+  })
 })

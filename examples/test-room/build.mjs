@@ -60,8 +60,8 @@ async function bundleMain(full) {
   return result.outputFiles[0].text
 }
 const safe = (/** @type {string} */ s) => s.replace(/<\/(script|style)/gi, '<\\/$1')
-// the loading indicator's look comes from the room's own source (game-test-room/src/loading-view.ts, no dependency), so the screen the page starts with and the one the room shows later are one
-const view = await esbuild.build({ entryPoints: [join(pkg('game-test-room'), 'src/loading-view.ts')], bundle: true, write: false, format: 'esm', platform: 'node', target: 'es2020' })
+// the loading indicator's look comes from its own source (game-kit-defaults/src/world/loading-view.ts, no dependency), so the screen the page starts with and the one the room shows later are one
+const view = await esbuild.build({ entryPoints: [join(pkg('game-kit-defaults'), 'src/world/loading-view.ts')], bundle: true, write: false, format: 'esm', platform: 'node', target: 'es2020' })
 const { LOADING_CSS, loadingMarkup } = await import(`data:text/javascript;base64,${Buffer.from(view.outputFiles[0].text).toString('base64')}`)
 const css = safe(readFileSync(join(here, 'src/style.css'), 'utf8') + LOADING_CSS)
 const template = readFileSync(join(here, 'index.html'), 'utf8')

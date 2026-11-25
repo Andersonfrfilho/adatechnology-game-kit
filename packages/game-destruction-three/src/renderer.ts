@@ -122,6 +122,12 @@ const STAND_LEAN = 0.1
 const EDGE_NUDGE = 1
 const TIP_MIN_HEIGHT = 0.3
 const TIP_NARROW = 0.3
+/**
+ * What is left of a piece of furniture after something came off it stands, though tall over narrow feet (a bookcase 2 m high on sides 35 cm deep), when its feet are at
+ * least this wide (m) and the centre of its drawn box is over their middle, off it by less than `TIP_CENTRED` of their width: a book taken off a shelf does not tip the case.
+ */
+const TIP_STANDING_FEET = 0.1
+const TIP_CENTRED = 0.15
 /** What a loose group hangs on (`hingeOf`) stands still when its piece is slower than this (m/s) and turns slower than this (rad/s). */
 const HINGE_STILL_SPEED = 0.2
 const HINGE_STILL_SPIN = 0.5
@@ -2475,7 +2481,7 @@ class Renderer implements DestructionRenderer {
     } else if (kitOriginOf(b.root)?.kind === 'furniture' && !this.splittingAtLoad) {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples; at load it stands as it stood
       const piece = this.makePiece(objectId)
-      this.tipIfTopHeavy(b)
+      this.tipIfTopHeavy(b, true)
       // the host stops keeping the footprint it had where it stood: it is a body that moves now
       this.o.onLoosened?.(objectId, piece, 'apart')
     }
@@ -3109,9 +3115,10 @@ class Renderer implements DestructionRenderer {
 
   /**
    * A piece of furniture standing on feet too close for its height (a board on two legs in a line, a lone leg) does not stay up: the box of a piece hides that its weight is up
-   * high and its feet are thin, so it gets the start of the fall, across the line of its feet.
+   * high and its feet are thin, so it gets the start of the fall, across the line of its feet. `isStandingWhenCentred`: what is left after a part came off stands when it is
+   * centred over feet wide enough (`TIP_STANDING_FEET`, `TIP_CENTRED`).
    */
-  private tipIfTopHeavy(b: Bound): void {
+  private tipIfTopHeavy(b: Bound, isStandingWhenCentred = false): void {
     const piece = b.piece
     if (!piece) return
     const box = new this.THREE.Box3()
@@ -3126,6 +3133,8 @@ class Renderer implements DestructionRenderer {
     if (height < TIP_MIN_HEIGHT || Math.min(spanX, spanZ) >= TIP_NARROW * height) return
     const across = spanX <= spanZ ? 0 : 2
     const lean = across === 0 ? box.min.x + box.max.x - feet.min.x - feet.max.x : box.min.z + box.max.z - feet.min.z - feet.max.z
+    const span = Math.min(spanX, spanZ)
+    if (isStandingWhenCentred && span >= TIP_STANDING_FEET && Math.abs(lean) / 2 < TIP_CENTRED * span) return
     const away = lean < 0 ? -1 : 1
     // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
     if (across === 0) this.pieceSys.tip(piece, 0, -away)

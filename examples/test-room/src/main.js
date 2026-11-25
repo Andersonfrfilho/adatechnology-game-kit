@@ -8,13 +8,16 @@
 //   ?scene=push        pushing furniture: a light piece, one too heavy and one against the wall
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
-//   ?area=furniture     open on one catalogue group (the groups the loaded modules add); ?area=house_tables: the house and the yard on tables
+//   ?area=furniture     open on one catalogue group (the groups the loaded modules add); ?area=house_tables: the house and the yard on tables;
+//                       ?area=house_complete: every house item of the SDK, labelled one by one
 //   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
 //   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
 //                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
 //   ?ui=0               hide the panels
 //   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
+//   ?bodySlots=hip,back where the body puts a weapon away to free the hands (default hip and the long gun's own sling, which every list but the empty one
+//                       gets: a rifle hangs on it and H brings it back; back takes the axes and long tools; ?bodySlots= none: the weapon drops)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
 //   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table (default: the goods, Itens; ?table=0 leaves it empty)
@@ -62,8 +65,10 @@ document.title = locale === 'en' ? 'Test room' : 'Sala de testes'
 
 const isFloorplan = params.get('area') === 'floorplan_area' || location.pathname.includes('sala-casas')
 // the house and the yard on tables lays every room of a house in rows: it needs a wider floor and only the target wall (what hangs on a wall hangs on it)
-const isHouseTables = params.get('area') === 'house_tables'
-const arena = Number(params.get('arena')) || (isFloorplan ? 40 : isHouseTables ? 24 : 0)
+// the whole house (house_complete) lays every house item of the SDK in labelled lines: a floor 40 m each way, with only the target wall as well
+const isWholeHouse = params.get('area') === 'house_complete'
+const isHouseTables = params.get('area') === 'house_tables' || isWholeHouse
+const arena = Number(params.get('arena')) || (isFloorplan || isWholeHouse ? 40 : isHouseTables ? 24 : 0)
 const quality = /** @type {import('@adatechnology/game-test-room').TestRoomOptions['quality']} */ (['low', 'medium', 'high'].includes(/** @type {string} */ (params.get('quality'))) ? params.get('quality') : 'medium')
 const items = params.get('items')
 
@@ -134,6 +139,7 @@ const room = createTestRoom({
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
   firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),
   strikeComboOn: params.get('combo') === '1',
+  ...(params.has('bodySlots') ? { bodySlots: (params.get('bodySlots') ?? '').split(',').filter(Boolean) } : {}),
   // the default page has every ground to try, in lots before the wall; a page that asked for something in particular has the plain floor its tests expect
   ...(deferred && !params.get('area') && !items && !params.get('scenario') && !params.get('scene') ? { ground: terrainLotsGround(locale) } : {}),
   quality,

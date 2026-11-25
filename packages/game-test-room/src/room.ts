@@ -1,8 +1,8 @@
 import type * as THREE_NS from 'three'
 import { JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
-import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3, CarryHands } from '@adatechnology/game-destruction'
 import { createAudioSink } from '@adatechnology/game-audio'
-import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, probeOf } from '@adatechnology/game-kit-defaults/world'
+import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, createLoading, probeOf } from '@adatechnology/game-kit-defaults/world'
 import { MIN_PIECE_MASS_KG, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
@@ -17,10 +17,13 @@ import { WATER_SHOT_BY_CALIBER, waterShotClassOf } from '@adatechnology/game-vfx
 import { createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, createRainCover, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
+import { createTopStains } from './top-stains'
+import { createVessels } from './vessels'
+import { createPartLeaks } from './part-leaks'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
@@ -33,7 +36,6 @@ import { createBlastSettings } from './blast-settings'
 import { createTestTable } from './test-table'
 import { toHostEvent } from './host-events'
 import { createDualReload } from './dual-reload'
-import { createLoading } from './loading'
 import { createLog } from './log'
 import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
@@ -41,6 +43,10 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
+import { bodySlotPose, itemPoseOf } from './carry-poses'
+import { followHeldTarget } from './held-follow'
+import { createHeldHands, holsterEventOf } from './held-hands'
+import { twistTargets } from './twist-hand'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
@@ -60,6 +66,7 @@ import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
 import { createRoomBag } from './inventory-room'
+import { createHandTake, createTakenInHand, partNameOf } from './hand-take'
 import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -188,10 +195,6 @@ const GRAVITY_EARTH = 9.81
 /** Speed (m/s) the rounds of one trigger pull must give a free-standing object to move it: a shotgun moves a bookcase, a pistol does not. */
 const SHOVE_SPEED = 0.04
 const METRICS_INTERVAL_S = 0.25
-/** How far the palm sits off the part of a carried item it holds (m). */
-const CARRY_PALM = 0.012
-/** Metres a screw cap rises off its thread at the end of an opening use, which the hand on it follows. */
-const CAP_RISE = 0.03
 /** Faster than this (m/s) a change of the player's position is a teleport, not walking: the avatar does not stride for it. The player runs at 6.2. */
 const MAX_STRIDE_SPEED = 10
 
@@ -358,35 +361,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   kit.ground.addProvider(() => restingTopAt)
   const defaultGround = options.ground ?? DEFAULT_GROUND_LAYOUT
 
-  /** The scenery tops whose surface left the fluid world: the top broke or came off, and what was spilt on it went with it. */
-  const fallenTops = new Set<string>()
-  /**
-   * A stain lies on the top it was spilt on: when the top breaks, melts or burns away, the stain goes with it, not left in the air where
-   * the top was; a top of boards loses the stains of each board that went. A top that is gone takes no more liquid (it is no surface any more).
-   */
-  const dropStainsOffFallenTops = (): void => {
-    // a top pushed along the floor is still a top (its stains move with it, `pushMoved`): only the board that broke, melted or burnt away is gone
-    const lost = (object: string, part: string): boolean => {
-      const p = world.part(object, part)
-      return !p || p.status === 'broken' || p.status === 'melted' || p.status === 'ashes'
-    }
-    for (const t of arena.tops) {
-      if (fallenTops.has(t.id)) continue
-      if (t.boards ? t.boards.every((b) => lost(t.id, b.part)) : lost(t.id, t.topPart)) {
-        fluids.removeSurface(t.id)
-        fallenTops.add(t.id)
-        continue
-      }
-      if (!t.boards) continue
-      const gone = t.boards.filter((b) => lost(t.id, b.part))
-      if (gone.length === 0) continue
-      for (const st of fluids.stains()) {
-        if (st.surface !== t.id) continue
-        const [x, , z] = st.center
-        if (gone.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ)) fluids.clearStains(st.center, 1e-3)
-      }
-    }
-  }
+  // what was spilt on a top goes with it (pushed, tipped over, broken or burnt away); a vessel that breaks and a part that leaks let their liquid fall
+  const rootOf = (id: string): THREE_NS.Object3D | undefined => renderer.piece(id)?.root ?? entries.get(id)?.so.root
+  const vessels = createVessels({ world, fluids, view: fluidView })
+  const partLeaks = createPartLeaks({ THREE, world, fluids, rootOf })
+  const topStains = createTopStains({ THREE, world, fluids, tops: arena.tops, objects: arena.objects, rootOf })
   const itemUseDefs = [...ITEM_USES, ...(options.itemUses ?? [])]
 
   const rendererPieces = new Map<string, Piece>()
@@ -407,7 +386,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.piece = piece
     leaveFootprint(objectId)
     rendererPieces.set(objectId, piece)
-    action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
+    if (!handTake.wasTakenFrom(objectId)) action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
   })
   // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
   kit.destruction.on('brokenChecked', (objectId, released) => {
@@ -436,16 +415,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     }
     if (best) splitOf.set(piece.objectId, best)
+    handTake.arrived(piece)
   })
   // a module let an object go for good (a house replaced) and the renderer took its pieces out of the world: the room forgets them too
   kit.destruction.on('released', (pieceIds) => {
-    for (const id of pieceIds) {
-      rendererPieces.delete(id)
-      splitOf.delete(id)
-      bodyBoxes.delete(id)
-      inWater.delete(id)
-      prevVy.delete(id)
-    }
+    for (const id of pieceIds) for (const forget of [rendererPieces, splitOf, bodyBoxes, inWater, prevVy]) forget.delete(id)
   })
 
   // the ground is an object of the world: shots, blows, blasts and flames reach it like anything else
@@ -509,7 +483,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const e = entries.get(objectId)
     if (e) return e.name
     const s = splitOf.get(objectId)
-    return s ? `${s.name} (${t('piece')})` : objectId
+    return s ? (partNameOf({ world, spec: specs.get(s.so.objectId), objectId, text: S.text }) ?? `${s.name} (${t('piece')})`) : objectId
   }
   const narrator = createNarrator({
     world,
@@ -580,7 +554,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const puncture = (ev: Extract<DestructionEvent, { type: 'leak' }>): void => {
     const e = entryOf(ev.object)
-    if (!e?.containerId || e.fluidPart !== ev.part) return
+    if (!e?.containerId || e.fluidPart !== ev.part) return partLeaks.start(ev)
     const host = hostOf(e)
     host.root.updateMatrixWorld(true)
     tmpM.copy(host.root.matrixWorld).invert()
@@ -902,7 +876,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     blockers,
     ...(options.push ? { rules: options.push } : {}),
     pick: () => {
-      if (heldPiece || (tool.def.category !== 'hand' && toolId !== 'fists')) return null
+      if (heldPiece) return null
       aim()
       const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
       const aimed = r ? (rendererPieces.get(r.object)?.root ?? (entries.get(r.object)?.free ? entries.get(r.object)?.so.root : undefined)) : undefined
@@ -928,6 +902,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
       action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
       fire('push', ev)
+      if (ev.type === 'grip') heldHands.begin(2)
+      else if (ev.type === 'release') heldHands.end()
       if (ev.type === 'engaged') say(t('hud.push_on', vars))
       else if (ev.type === 'too_heavy') say(t('hud.push_too_heavy', vars))
       else if (ev.type === 'obstacle') say(t('hud.push_blocked', vars))
@@ -1277,7 +1253,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     root.updateMatrixWorld(true)
     const mass = spec.parts.reduce((m, p) => m + (p.mass ?? 0), 0)
     const heavy = (mass || massGuess(spec)) > maxCarry
-    const movable = own || fixed ? false : (item.movable ?? !heavy)
+    const movable = own || fixed || spec.fixed ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
       // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)
@@ -1444,10 +1420,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!e) return
     if (entries.held === e) releaseHeld()
     for (let i = playing.length - 1; i >= 0; i--) if (playing[i].entry === e) playing.splice(i, 1)
-    if (e.containerId) {
-      fluidView.unbindContainer(e.containerId)
-      fluids.removeContainer(e.containerId)
-    }
+    vessels.remove(e)
     try {
       renderer.unbind(id)
     } catch {
@@ -1567,7 +1540,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (kit.liquids.isOwned) {
       kit.liquids.reset()
-      fallenTops.clear()
+      topStains.reset()
+      partLeaks.clear()
     }
     pending = []
     strikes = []
@@ -1706,10 +1680,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** `armed` forced by a module (the bench); null follows the tool in hand. */
   let armedForced: boolean | null = null
   let camDistance = Infinity
-  const tmpHand = new THREE.Vector3()
 
   const thirdPose = (dt: number): ThirdPersonPose => {
-    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.feet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
+    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
       withoutHeld(() => world.raycast(o, d, max))?.distance ?? null,
     )
     // a wall pulls the camera in at once, the way back is slow (`view.cd`, line 76559 of the team game)
@@ -1789,12 +1762,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       : heldPiece && heldTilt > 0.01
         ? { id: 'tilt', position: [0.2, -0.1, -0.38], rotation: [-heldTilt, 0, 0] }
         : null
-    avatar.root.position.set(x, player.feet, z)
+    avatar.root.position.set(x, player.drawnFeet, z)
     avatar.root.rotation.set(0, player.yaw + Math.PI, 0) // the body's front is +z (the three.js way, as the catalogue items), the view looks down -z at yaw 0
     avatarState.clipRate = scheduler.timeScale
     avatar.update(dt, avatarState)
     avatar.root.updateMatrixWorld(true)
     placeEye()
+    if (dt > 0 && thirdActive()) thirdPose(dt) // the boom eases back out only here: the render and the aim read it with dt 0
   }
   /**
    * A view a script asked for (`room.look`: scenarios, the test table, the view an area opens on) is kept exactly until the player moves: the body's eye stands ahead and at the
@@ -1901,7 +1875,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
-    const targets = push.active ? null : (doorHand ?? (heldPiece ? twistHand : (handSource?.() ?? null)))
+    // a thing used in the weapon hand (a drink) moves the arm by its own pose
+    const carry = useItemPlayer && heldHands.hand === 'R' ? null : heldHands.targets
+    const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? carry) : (carry ?? handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       triggerFinger: targets?.fingers?.index ?? null,
@@ -2486,13 +2462,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   /**
    * A blow reaches from the body, not from the eye: aimed down, the striker bends (at the hips, or crouches further) to the spot the eye looks at, and the reach is measured
-   * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not.
+   * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not. What the eye already has within the tool's reach (a knife 0.2 m from a can on a table) is struck as aimed.
    */
   const bodyReach = (use: Extract<Use, { kind: 'melee' }>): Extract<Use, { kind: 'melee' }> => {
     // an eye placed higher than a standing body's (a scripted view over a tall plant) has no body under it to bend: the blow leaves from the eye
     if (use.direction[1] > MELEE_BODY.downward || use.origin[1] - player.feet > MELEE_BODY.eyeHighest) return use
     const seen = rayWorld(use.origin, use.direction, MELEE_BODY.lookRange)
-    if (!seen) return use
+    if (!seen || seen.distance <= use.reach) return use
     const crouched = player.crouching
     const shoulder = player.feet + (crouched ? MELEE_BODY.shoulderCrouched : MELEE_BODY.shoulderStanding)
     const lowest = player.feet + (crouched ? MELEE_BODY.bentCrouched : MELEE_BODY.bentStanding)
@@ -3022,6 +2998,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     afterOpening = null
     twisting = null
     twistHand = null
+    heldHands.end()
     entries.release()
     heldPiece = null
     heldTilt = 0
@@ -3131,10 +3108,29 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (open && document.pointerLockElement) document.exitPointerLock?.()
     },
   }
+  const handTake = createHandTake(world, (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands))
+  const takeInHand = createTakenInHand({ catalog: catalogMap, spawn: (itemId, position) => spawn(itemId, position), pieceOf: (objectId) => rendererPieces.get(objectId), grab: (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands) })
   const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
   if (bagEnabled) container.appendChild(bag.element)
+  const heldHands = createHeldHands({
+    arsenal,
+    loadout,
+    catalog,
+    inHand: () => ({ R: toolId, L: offToolId }),
+    equip: (hand, weapon) => (hand === 'L' ? setOffTool(weapon) : equip(weapon ?? 'hand')),
+    handPose: (hand) => handSource?.()?.[hand] ?? null,
+    instant: () => !avatar?.shoulder,
+    carried: { get: () => carriedTool, set: (carried) => (carriedTool = carried), putDown: () => putDownTool() },
+    place: (item) => bagHost.placeBack({ ...item, state: {} }),
+    report: (e) => {
+      const event = holsterEventOf(e)
+      if (event) emitHost(event)
+      if (e.type !== 'toss') action(`hands_${e.type}`, t(`act.hands_${e.type}${e.fell === false ? '_lost' : ''}`, { weapon: toolName(e.weapon), slot: t(`hands.slot.${e.slot ?? ''}`) }), { data: { ...e } })
+    },
+    slots: options.bodySlots,
+  })
   const grab = (): boolean => {
-    if (push.active) return false
+    if (push.active || heldHands.busy) return false
     if (!heldPiece && carriedTool) {
       putDownTool()
       fire('grab', { held: false })
@@ -3154,27 +3150,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return false
     }
     const piece = rendererPieces.get(r.object)
-    if (!piece) {
-      say(t('hud.cannot_grab', { name: nameOf(r.object) }))
-      return false
-    }
+    if (piece) return grabPiece(r.object, piece, r.point as Vec3)
+    if (handTake.take(r.object, r.part, r.point as Vec3) !== null) return true
+    say(t('hud.cannot_grab', { name: nameOf(r.object) }))
+    return false
+  }
+  const grabPiece = (objectId: string, piece: Piece, point: Vec3, hands?: CarryHands): boolean => {
     const kg = piece.mass
     if (kg > maxCarry) {
-      say(t('hud.too_heavy', { name: nameOf(r.object), kg: num(kg, 0) }))
+      say(t('hud.too_heavy', { name: nameOf(objectId), kg: num(kg, 0) }))
       return false
     }
-    const toolWeapon = entryOf(r.object)?.item?.weapon
-    const toolEntry = entries.get(r.object)
+    const toolWeapon = entryOf(objectId)?.item?.weapon
+    const toolEntry = entries.get(objectId)
     if (toolWeapon && toolEntry && arsenal.weapons.has(toolWeapon)) {
-      const picked = pickUpTool(r.object, toolEntry, toolWeapon)
-      if (picked) fire('grab', { held: true, objectId: r.object })
+      const picked = pickUpTool(objectId, toolEntry, toolWeapon)
+      if (picked) fire('grab', { held: true, objectId })
       return picked
     }
-    heldPiece = piece
-    entries.hold(r.object)
-    heldName = nameOf(r.object)
-    piece.held = true
-    piece.sleeping = false
     // centre and unrotated size of the object's bounding box in its own space, to hold it by its middle or cylindrical side
     const savedQ = piece.root.quaternion.clone()
     piece.root.quaternion.identity()
@@ -3184,13 +3177,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     box.getSize(heldSize)
     piece.root.quaternion.copy(savedQ)
     piece.root.updateMatrixWorld(true)
+    // the weapons go off the hands, the hand reaches the thing and closes on it: only then is it held
+    heldHands.begin(hands ?? { massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] }, { size: [heldSize.x, heldSize.y, heldSize.z], item: () => itemPoseOf(piece.root, heldLocal), taken: () => holdPiece(objectId, piece, point, hands) })
+    return true
+  }
+  const holdPiece = (objectId: string, piece: Piece, point: Vec3, hands?: CarryHands): void => {
+    const kg = piece.mass
+    heldPiece = piece
+    entries.hold(objectId)
+    heldName = nameOf(objectId)
+    piece.held = true
+    piece.sleeping = false
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
-    playSound(pickupSoundOf(entries.held?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
-    action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
-    fire('grab', { held: true, objectId: r.object })
-    return true
+    playSound(pickupSoundOf(entries.held?.item?.sounds, world.materials.get(heaviestMaterial(objectId) ?? '')), point, Math.min(1, 0.45 + kg * 0.1))
+    action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId, itemId: entryOf(objectId)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10, ...(hands ? { hands } : {}) } })
+    fire('grab', { held: true, objectId })
   }
 
   const throwHeld = (speed = 9): boolean => {
@@ -3212,79 +3215,32 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return true
   }
 
-  /**
-   * The left hand on the top of the held item while `twisting`: palm down on the part, the fingers round it, the wrist turned by the stroke about the item's
-   * axis and lifted with the part as it comes off. The same pose for the first-person arms and the body.
-   */
-  const twistTargets = (root: THREE_NS.Object3D, gripQ: THREE_NS.Quaternion): HandTargets | null => {
-    if (!twisting) return null
-    const { stroke, lift } = twisting
-    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(root.quaternion)
-    const top = heldLocal
-      .clone()
-      .applyQuaternion(root.quaternion)
-      .add(root.position)
-      .addScaledVector(up, heldSize.y * 0.5 + lift * CAP_RISE + stroke.lift * TWIST_LIFT + CARRY_PALM)
-    // the fingers point to the right and away from the body (the forearm comes in from the left, not in front of the item), then the wrist turns with the stroke (a cap comes off turning to the left seen from above)
-    const knuckles = new THREE.Vector3(0.85, 0, -0.5).normalize().applyQuaternion(gripQ)
-    knuckles.addScaledVector(up, -knuckles.dot(up)).normalize().applyAxisAngle(up, stroke.angle)
-    const side = new THREE.Vector3().crossVectors(knuckles, up).normalize()
-    // the palm sits over the middle of the part, so the middle of the hand is a little back toward the wrist
-    const palm = top.addScaledVector(knuckles, -0.025)
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(knuckles, up, side))
-    return { L: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] }, gripL: 0.35 + 0.5 * stroke.grip }
-  }
-
   const gripQuat = new THREE.Quaternion()
   const followHeld = (dt: number): void => {
     const piece = heldPiece
     twistHand = null
+    heldHands.update(dt)
+    heldHands.carry({ shoulder: (side) => avatar?.shoulder?.(side).getWorldPosition(pocketAt).toArray() ?? null, yaw: player.yaw, tool: () => handSource?.() ?? null, turn: { yaw: heldYaw, tilt: heldTilt } })
     if (!piece) return
     camera.updateMatrixWorld(true)
     const root = piece.root
-    let pos: THREE_NS.Vector3
     const targetQ = tmpQ
-    const hand = avatar?.hand?.('R')
+    const hand = avatar?.hand?.(heldHands.hand === 'L' ? 'L' : 'R')
     const isDrink = useItemName === 'drink' || useItemName === 'sip' || useItemName === 'chug'
-    if (hand) {
-      // with a body the item rides its weapon hand in both views, and tilts with `useItemPlayer` or `heldTilt`
-      const handWorld = hand.getWorldPosition(tmpHand)
-      const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
-      const pose = useItemPlayer?.pose()
-      const rx = pose ? (isDrink ? Math.abs(pose.rotation[0]) * 0.9 : pose.rotation[0]) : -heldTilt
-      const ry = pose ? pose.rotation[1] : 0
-      const rz = pose ? pose.rotation[2] : 0
-      gripQuat.copy(yawQ).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.max(-1.35, Math.min(1.25, rx)), ry, rz, 'XYZ')))
-      targetQ.copy(yawQ).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ')))
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
-      const gripOffset = new THREE.Vector3(-0.02, 0.015, -0.04).applyQuaternion(gripQuat)
-      pos = tmpV.copy(handWorld).add(gripOffset)
-    } else if (useItemPlayer) {
-      const pose = useItemPlayer.pose()
-      const frameQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
-      const raise = isDrink ? Math.max(0, Math.min(1, (pose.position[1] + 0.2) / 0.22)) : 0
-      const px = pose.position[0] + (isDrink ? 0.02 * raise : 0)
-      const py = pose.position[1] - (isDrink ? 0.08 * raise : 0)
-      const pz = pose.position[2] - (isDrink ? 0.05 * raise : 0)
-      pos = tmpV.set(px, py, pz).applyQuaternion(frameQ).add(camera.position)
-      const rx = isDrink ? Math.abs(pose.rotation[0]) * 0.85 : pose.rotation[0]
-      const eq = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, pose.rotation[1], pose.rotation[2], 'XYZ'))
-      const wristEq = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.max(-1.35, Math.min(1.25, rx)), pose.rotation[1], pose.rotation[2], 'XYZ'))
-      gripQuat.copy(frameQ).multiply(wristEq)
-      targetQ.copy(frameQ).multiply(eq)
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
-    } else {
-      // no body to hold it: the item floats in front of the eye
-      pos = tmpV.set(0.05, -0.28, -1.15).applyMatrix4(camera.matrixWorld)
-      gripQuat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.max(-1.35, -heldTilt)))
-      targetQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw + heldYaw)
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
-    }
-    const k = Math.min(1, (useItemPlayer ? 30 : 16) * dt)
+    // held in the palm (`HeldHands.item`): exactly where the hand's grip puts it; a thing being used rides the hand by its own pose
+    const placed = useItemPlayer || twisting ? null : heldHands.item
+    if (hand) heldHands.drawOn(root, cameraMode === 'first' && (heldHands.hand === 'L' || heldHands.hand === 'both') ? FIRST_PERSON_LAYER : 0)
+    if (hand && placed) {
+      targetQ.set(placed.quaternion[0], placed.quaternion[1], placed.quaternion[2], placed.quaternion[3])
+      gripQuat.copy(targetQ)
+      tmpV.set(placed.position[0], placed.position[1], placed.position[2])
+    } else followHeldTarget({ THREE, hand: hand ?? null, carried: heldHands.hand === 'R' ? null : (heldHands.item?.position ?? null), use: useItemPlayer?.pose() ?? null, isDrink, yaw: player.yaw, turn: { yaw: heldYaw, tilt: heldTilt }, camera }, { position: tmpV, target: targetQ, grip: gripQuat })
+    const pos = tmpV
+    const k = placed ? 1 : Math.min(1, (useItemPlayer ? 30 : 16) * dt)
     const px = root.position.x
     const py = root.position.y
     const pz = root.position.z
-    root.quaternion.slerp(targetQ, Math.min(1, k * 0.9))
+    root.quaternion.slerp(targetQ, placed ? 1 : Math.min(1, k * 0.9))
     // the middle of the carried object follows the target; the offset uses the current rotation so it does not orbit
     const off2 = tmpV2.copy(heldLocal).applyQuaternion(root.quaternion)
     root.position.set(root.position.x + (pos.x - off2.x - root.position.x) * k, root.position.y + (pos.y - off2.y - root.position.y) * k, root.position.z + (pos.z - off2.z - root.position.z) * k)
@@ -3294,7 +3250,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldVel[2] = (root.position.z - pz) / dt
     }
     root.updateMatrixWorld(true)
-    twistHand = twistTargets(root, gripQuat)
+    twistHand = twistTargets(THREE, { root, gripQ: gripQuat, local: heldLocal, size: heldSize, twisting })
   }
 
   /** How far (m) from the player an item on the table still counts as at hand (a can opener next to the tin). */
@@ -3544,7 +3500,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const inWater = new Set<string>()
   const floatPiece = (piece: Piece, dt: number): void => {
-    if (piece.held) return
+    if (piece.held || piece.sleeping) return
     const box = tmpBox.setFromObject(piece.root)
     const centre = box.getCenter(tmpV)
     const here = terrain.waterAt(centre.x, centre.z)
@@ -3595,9 +3551,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const restingLoad = (piece: Piece): TerrainLoad | null => {
     // what is still weighs on the ground under it, through whatever it rests on (a stack, a shelf); what is falling does not yet
     if (piece.held || Math.hypot(piece.velocity[0], piece.velocity[1], piece.velocity[2]) > RESTING_SPEED) return null
-    const box = tmpBox.setFromObject(piece.root)
-    const centre = box.getCenter(tmpV)
-    return { x: centre.x, z: centre.z, radius: Math.max(piece.halfExtents[0], piece.halfExtents[2]), newtons: piece.mass * GRAVITY_EARTH }
+    const at = piece.root.position
+    return { x: at.x, z: at.z, radius: Math.max(piece.halfExtents[0], piece.halfExtents[2]), newtons: piece.mass * GRAVITY_EARTH }
   }
   const updateLoads = (dt: number): void => {
     loadClock += dt
@@ -3718,6 +3673,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyH': {
         const w = (entries.held ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
         if (w) equip(w)
+        // H with no weapon item at hand: the weapon on the body back to the hands, letting go of what they hold
+        else if (heldHands.away.length === 0) say(t('act.hands_nothing_to_draw'))
+        else {
+          if (heldPiece) releaseHeld()
+          heldHands.drawBack()
+        }
         break
       }
       case 'BracketRight':
@@ -3954,7 +3915,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const syncLiters = (): void => {
     for (const e of entries.values()) {
-      if (!e.containerId) continue
+      if (!e.containerId || vessels.shatterIfBroken(e, hostOf(e).objectId)) continue
       const c = fluids.container(e.containerId)
       if (!c) continue
       if (e.fluidPart) {
@@ -3992,7 +3953,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     updateWater(dt)
     rockPlayer(dt)
     updateLoads(dt)
-    dropStainsOffFallenTops()
+    topStains.update()
+    partLeaks.update()
     flush()
   })
 
@@ -4185,7 +4147,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    */
   const followPart = (e: Entry, id: string, obj: THREE_NS.Object3D, rest: { p: Vec3; r: Vec3 }): void => {
     const ps = specs.get(e.so.objectId)?.parts.find((p) => p.id === id)
-    if (!ps || !obj.parent) return
+    if (!ps || !obj.parent || !world.part(e.so.objectId, id)) return
     const root = e.so.root
     root.updateMatrixWorld(true)
     fpRoot.copy(root.matrixWorld).invert()
@@ -4318,6 +4280,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const hostListeners = new Set<(event: HostEvent) => void>()
   const environment = options.environment ?? createEnvironmentBus()
+  const rainCover = createRainCover()
   const audioSink = audio ? createAudioSink(audio) : undefined
   function emitHost(event: HostEvent): void {
     if (event.type === 'explosion') knockPlayer(event)
@@ -4432,6 +4395,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ...(graphics ? { graphics: graphics.host } : {}),
     ...(audioSink ? { audio: audioSink } : {}),
     environment,
+    rainCover,
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
@@ -4505,13 +4469,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
-    reachFor(reach) {
-      if (!avatar) {
-        reach.onGrip?.()
-        return
-      }
-      doors.reachFor(reach)
-    },
+    bodySlot: (slot) => (slot === 'hip' || slot === 'back' || slot === 'sling' ? bodySlotPose(avatar?.slot?.(slot)) : null),
+    reachFor: (reach) => (avatar ? doors.reachFor(reach) : reach.onGrip?.()),
+    takeInHand: (item) => takeInHand(item),
     setHandTargets(source) {
       handSource = source
       return () => {
@@ -4895,6 +4855,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     fluidRenderer: fluidView,
     audio,
     environment,
+    rainCover,
     log,
     get tool() {
       return tool

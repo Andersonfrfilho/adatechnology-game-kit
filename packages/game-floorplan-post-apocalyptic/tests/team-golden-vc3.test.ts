@@ -22,7 +22,7 @@ const plansOf = (file: unknown): PlanEvent[] => (file as GoldenRecord).events.ma
 const allPlans = plansOf(goldenFile)
 
 function sdkRows(plan: PlanEvent): PlanLists {
-  return teamRowsOf(engine.generate(sdkTemplateOf.get(plan.template) as string, { seed: plan.seed, state: sdkStateOf.get(plan.state) }))
+  return teamRowsOf(engine.generate(sdkTemplateOf.get(plan.template) as string, { seed: plan.seed, state: sdkStateOf.get(plan.state), visorLayout: true }))
 }
 
 function explain(plan: PlanEvent, list: string): string {
@@ -57,7 +57,7 @@ describe('plans against the Visor de casas 3D (VC3)', () => {
 
   it('a hash notices an item moved by 1 cm', () => {
     const plan = allPlans.find((x) => x.template === 'casaA') as PlanEvent
-    const generated = engine.generate('single_storey_a', { seed: plan.seed, state: sdkStateOf.get(plan.state) })
+    const generated = engine.generate('single_storey_a', { seed: plan.seed, state: sdkStateOf.get(plan.state), visorLayout: true })
     generated.items[0].x += 0.01
     const moved = (teamRowsOf(generated).items as string[]).join('\n')
     expect(hashText(moved)).not.toBe(plan.hashes.items)

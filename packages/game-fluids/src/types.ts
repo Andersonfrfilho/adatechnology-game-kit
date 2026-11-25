@@ -140,6 +140,12 @@ export interface SurfaceSpec {
   /** Slope makes stains run downhill (computed from `normal`). */
 }
 
+/** A rigid move of a surface from where it was added: rotated by `rotation`, then moved by `position` (world space). */
+export interface SurfacePose {
+  position: Vec3
+  rotation: Quat
+}
+
 export interface StainState {
   id: string
   surface: string
@@ -207,6 +213,11 @@ export interface FluidWorld {
   describe(event: FluidEvent): string
   addContainer(spec: ContainerSpec, options?: { id?: string; position?: Vec3; rotation?: Quat }): string
   removeContainer(id: string): void
+  /**
+   * The vessel broke (shot through, smashed, melted): it holds nothing any more, so all its liquid falls from where it is, with the vessel's velocity, and lands
+   * on what is under it (a top, the floor) as one splash; the container is gone. Unknown ids are ignored.
+   */
+  shatter(id: string): void
   /** Keep in sync with the object that carries it (tilt decides spilling and the surface plane; velocity makes it slosh). */
   setTransform(id: string, position: Vec3, rotation: Quat, velocity?: Vec3): void
   open(id: string): void
@@ -226,6 +237,13 @@ export interface FluidWorld {
   removeSurface(id: string): void
   /** Moves a surface and the stains on it by `offset` (a pushed table carries what was spilled on its top). Unknown ids are ignored. */
   moveSurface(id: string, offset: Vec3): void
+  /**
+   * Puts a surface where the object it belongs to is now: `pose` moves the surface as it was added (`x' = rotation · x + position`; the identity is where
+   * it was added, a `moveSurface` adds to `position`). The stains on it go with it, and once it turned from its rest past what the liquid holds on (6° for
+   * water, more for a thicker one; a top turned over holds nothing), the pool on it runs off its low rim and lands on what is under it; the part
+   * soaked in stays on the surface. Unknown ids are ignored.
+   */
+  setSurfacePose(id: string, pose: SurfacePose): void
   /**
    * Add a tap: while `on` it runs a `tap` stream (cause `'tap'`) from `position` along `direction` at `rate` litres per second. The stream fills any
    * container whose opening it lands in (the same logic as a pour) and otherwise makes a stain on the surface below. Returns the tap id.

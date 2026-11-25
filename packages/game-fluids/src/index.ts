@@ -23,6 +23,7 @@ export type {
   StainTint,
   StreamCause,
   StreamState,
+  SurfacePose,
   SurfaceSpec,
   TapSpec,
   TapState,

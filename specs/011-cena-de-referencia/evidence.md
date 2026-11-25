@@ -101,3 +101,49 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
 - **Fica para a página da cena (T2.2):** T1.4, a regra `scene-not-testing`, porque o `check:layers` só percorre `packages/*/src` e a cena
   ainda não tem código de página.
 - **Bloqueado em nada.** Os merges estão com o dono: a máquina barra o `gh pr merge` no modo automático.
+
+## T2.8d — desenho das redes (2026-11-24)
+
+- `drawNetworks` no `game-urban-three`; a cena desenha os postes da rede (sai o `polePointsOf`) e a casa em `street: 'network'` não desenha
+  o próprio ramal (revisão do #475, itens 1 e 3).
+- **Custo do recorte** (teste sem GPU): 9 chamadas perto, 1 de longe; o caso do banco `urban/networks` grava 17 chamadas (com sombra),
+  9.464 triângulos, 9 materiais.
+- **Mudança dita:** os postes da cena mudaram de lugar (são os da rede, um lado da rua, na divisa dos lotes) e as lâmpadas acendem pelos nós
+  `light`; os prints de `shots/` foram regravados pelo `pnpm check:district` (passou). A régua de desempenho do `pior` não foi refeita neste PR.
+- Prints antes e depois: `fios-antes-*` e `rede-depois-*` (dia, `tipico`) e `rede-depois-*-noite` (`pior`), na pasta de rascunho da sessão.
+- **Revisão do dono (teia de aranha):** MT em todo poste de rua; ramal do poste em frente ou reto através da rua, nunca sobre outro lote,
+  até 4 por poste (validador com 4 códigos novos, recorte com 0 violações e 0 avisos); o padrão é poste fino com medidor no pé e eletroduto.
+  Postes acrescentados no trecho dos lotes: o vão ali cai para 10 a 22 m. Hashes de dados das redes (`generate.test.ts` do `game-urban` e
+  `networks.test.ts` do exemplo) regravados; custo `urban/networks` 9.464 → 12.272 triângulos (aceito por nome). Prints `rede-v2-*`.
+
+## T2.8e — esgoto, drenagem e água na superfície (2026-11-24)
+
+- **Validador** (`validate-surface.ts`, 4 códigos, cada um com caso que reprova em `surface-rules.test.ts`): `pv_missing` (PV onde três coletores se
+  encontram ou dois viram), `inlet_spacing` (> 60 m entre bocas de lobo de um meio-fio), `inlet_at_corner` (esquina de cruzamento sem boca de lobo
+  a ≤ 15 m), `branch_skewed` (ramal predial ou de boca de lobo fora de 90° ± 5° da rua). O recorte e o gerador passam nos quatro sem mudar nó nem aresta.
+- **Peças** (dado em `game-urban/networks`: `surfacePiecesOf`, `pipePiecesOf`, `breachOf`; desenho em `game-urban-three`: `drawNetworkSurface`,
+  `drawBuriedNetworks`): tampa de PV e da caixa da galeria, terminal de limpeza, tampa de registro, grelha da boca de lobo, hidrante, muro de ala,
+  tampa da caixa de inspeção, caixa do hidrômetro e boca do buzinote; canos e poços enterrados nas profundidades das regras.
+- **Camadas** (pedido do dono): o `road` do `game-terrain` (asfalto 5 cm, brita 25 cm, solo 1,5 m) já era a estrutura; a calçada era laje de 12 cm
+  sem camada embaixo, então ganhou o perfil `sidewalk` (concreto 8 cm, brita 22 cm, solo 1,5 m, mesma coluna de 1,8 m). O plano de asfalto que o
+  `game-urban` desenhava a 2 cm tapava a cratera: `streets.road` ganhou `plane: false` e a cena usa só o asfalto do terreno (tracejado sobre ele).
+- **Cratera até os canos**: `world.ground.on('blow')` → `breachOf` → `sever` do cano e `remove` da tampa (ligado em `drawDistrictSewers`).
+  Com 40 MJ na pista (raio 2,3 m, fundo 1,34 m) quebrou ramais de água e de esgoto e arrancou a tampa; o cano aparece na cratera (`esgoto-cratera.png`).
+- **Limites ditos**: o perfil `road` tem 1,8 m, e o coletor de esgoto fica a ≥ 1,8 m de recobrimento: só a cratera no limite da coluna o alcança; a galeria
+  e o ramal de boca de lobo (1,0 a 1,2 m, ou mais fundo onde há elevatória) pedem carga forte. Meio-fio com altura e sarjeta própria são da T3.9.
+- **Dados**: o hash das redes (`generate.test.ts` do `game-urban`, `networks.test.ts` do exemplo) mudou só porque `rules` ganhou `sewer.turnTolerance`,
+  `sewer.branchMaxSkew` e `storm`; nós e arestas iguais. Custo: `urban/network-surface` 2 chamadas, 5.772 triângulos; `urban/network-buried` 3 chamadas, 6.580.
+
+## T2.8f — vazamento e queda de tampa (2026-11-25)
+
+- **Dado** (`game-urban/networks`): `leaksOf` (cano rompido vira `NetworkLeak`: água sob pressão 6 l/s no tronco e 0,8 no ramal, esgoto 0,5 e 0,15, drenagem 2 e 0,6 só com
+  chuva; cada um é finito, `rate` vezes `seconds`, e `drainLeak` solta até esvaziar), `waterOutageOf` (casas a jusante da ruptura, só o que é novo), `openingOf` (o poço da tampa como
+  `GroundExcavation`), `coverBodyOf` (a tampa como placa de ferro fundido do `DestructibleSpec`), `coverThrowOf` (a velocidade do arremesso, pura) e `NetworkEvent`
+  (`network_leak`, `network_outage`, `network_hole`).
+- **Terreno**: `Terrain.open(excavation)` abre um poço no chão como está (sem perda de chão; o `reset` fecha junto com as crateras). **Fluidos**: o líquido `sewage` entrou em `game-fluids`.
+- **Desenho** (`game-urban-three`): `drawCoverLid` (a tampa solta: placa e nervuras, ou a grelha inteira), `DrawnSurface.restore` e `DrawnBuried.mend` (o `reset` devolve tampa e cano).
+- **Cena** (`assemble/leaks.ts`): cada cratera que quebra cano vira torneira do `game-fluids` na ruptura (água sobe e espirra, esgoto escorre pela linha do cano) e some quando o volume acaba;
+  cada tampa arrancada abre o poço no terreno, vira peça solta do mundo de destruição (`makePiece`, ferro fundido) e pousa; `leaks.events`, `leaks.dryLots`, `leaks.lids`.
+- **Limites ditos**: a borda do poço colide como o próprio terreno (campo de alturas, célula de 0,47 m neste recorte), não como aro à parte; o poço de 0,9 m fica grosseiro. As casas cortam a água: `Houses.setLotWater` esvazia o tanque da casa do lote seco (torneira aberta entrega 0; a de casa com água gastou 0,24 l em 2 s) e `reset` enche de novo; o SDK não tem peça de aro de colisão para o poço, que colide como terreno.
+- **Pendências de golden** (nenhum regravado): `networks/lids` (novo) e `networks/surface`, `networks/buried` (já faltavam desde a T2.8e) em `game-urban-three/tests/fixtures/exact-urban.json`.
+  O banco de custo (`--cost-check`) passou sem entrada nova. Prints: `vazamento-agua`, `vazamento-esgoto`, `vazamento-poco`, `vazamento-primeira-pessoa` na pasta de rascunho da sessão.

@@ -1,4 +1,4 @@
-import type { PoleDef, PoleSlotBand, PoleSlots } from '../poles'
+import type { PoleDef, PoleSlotBand, PoleSlots } from '../pole-specs'
 
 /** The bands from the top of the pole down. */
 export const POLE_SLOT_ORDER: readonly PoleSlotBand[] = ['mv', 'transformer', 'lv', 'lighting', 'telecom']

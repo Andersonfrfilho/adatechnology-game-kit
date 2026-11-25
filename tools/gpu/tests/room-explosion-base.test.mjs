@@ -74,6 +74,13 @@ test('a report with another explosive than c4 never becomes the base nor enters 
   assert.deepEqual(mergeBase({ ...night(65), explosive: 'dynamite' }, night(68)), night(68))
 })
 
+test('an m67 report becomes the m67 base and merges into it, and replaces a base of another explosive', () => {
+  const m67 = (/** @type {number} */ f0Ms) => ({ ...night(f0Ms), explosive: 'm67' })
+  assert.deepEqual(mergeBase(undefined, m67(22)), m67(22))
+  assert.equal(mergeBase(m67(20), m67(25)).frameMetrics?.[0]?.f0Ms, 20)
+  assert.deepEqual(mergeBase(night(65), m67(22)), m67(22))
+})
+
 const HEAD = 'a'.repeat(40)
 const MACHINE = { gpu: { renderer: 'NVIDIA GeForce RTX 5070 Laptop GPU', vendor: 'NVIDIA Corporation', tier: 'discrete', driver: { module: '620.73.04', userspace: '620.73.04', mismatch: false } } }
 const CLEAN_BUILD = { commit: HEAD, dirty: false, builtAt: '2026-11-21T00:00:00.000Z' }

@@ -25,6 +25,7 @@ import { createVehiclesThree } from '@adatechnology/game-vehicles-three'
 import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
 import { createUrban } from '@adatechnology/game-urban'
 import type { UrbanBuilder } from '@adatechnology/game-urban'
+import { generateNetworks } from '@adatechnology/game-urban/networks'
 import { createUrbanThree } from '@adatechnology/game-urban-three'
 import * as GameVegetation from '@adatechnology/game-vegetation'
 import * as GameVegetationAdapter from '@adatechnology/game-vegetation/three'
@@ -215,6 +216,16 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
   const urbanFlickering = createUrbanThree(THREE, { document: stubDocument(), flickerLenses: true })
   const failingPole = urbanScene((b) => urbanKit.poles.get('concrete_arm').build(b, { x: 0, z: 0, dir: 1, on: true, flicker: true }))
   entries.push({ id: 'urban/pole:concrete-failing', run: () => urbanFlickering.draw(failingPole) })
+  // the aerial networks of a periphery street with a corner (13 poles, a transformer, a telecom bundle with its splice, drops to six lots), at night with failing lamps
+  const networkCut = generateNetworks({
+    plan: { id: 'network_bench', scale: 'town', size: [240, 240], districts: [{ id: 'periphery', kind: 'residential_popular', rect: [-120, -120, 120, 120] }], lines: [{ id: 'main_street', kind: 'street', width: 10, points: [[-110, 0], [110, 0]] }, { id: 'side_street', kind: 'street', width: 10, points: [[60, 0], [60, 110]] }] },
+    lots: [10, 22, 34].flatMap((x) => [{ id: `north_${x}`, rect: [x, -32.5, x + 12, -7.5] as const }, { id: `south_${x}`, rect: [x, 7.5, x + 12, 32.5] as const }]),
+    seed: 5,
+  })
+  entries.push({ id: 'urban/networks', run: () => urbanFlickering.drawNetworks(networkCut.networks, { isNight: true, lamps: { lit: 0.7, flicker: 0.3 }, surfaceAt: networkCut.surfaceAt }) })
+  // the same street's buried networks where they show (covers, grates, hydrants, wing walls, the boxes of each lot) and under the ground (pipes and pits)
+  entries.push({ id: 'urban/network-surface', run: () => urbanFlickering.drawNetworkSurface(networkCut.networks, { surfaceAt: networkCut.surfaceAt }) })
+  entries.push({ id: 'urban/network-buried', run: () => urbanFlickering.drawBuriedNetworks(networkCut.networks, { surfaceAt: networkCut.surfaceAt }) })
 
   // houses: the seven typologies of the Visor (seed 3, full quality), the plan drawn once; the bench is the house renderer
   registerResidential(floorplanEngine)

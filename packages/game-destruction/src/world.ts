@@ -38,7 +38,7 @@ import type {
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastCharge, BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
-  BallisticExtras, ExplosionJob, SweepProbe,
+  BallisticExtras, ExplosionJob, SweepProbe, CarryHands,
 } from './types'
 import { bodyImpulse, chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, fuelFireball, ignitionChance, ignitionDose, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
 import type { Fireball } from '@adatechnology/game-contracts'
@@ -4590,6 +4590,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (mat.ductility >= 0.5 && p.thickness <= THIN_SHEET_DISHING) addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(E * 0.00002, 0.001, 0.03), src)
       if (brittle && mat.fracture === 'shatter') addCrack(o, p, entry, n, crackLen, src)
       if (p.spec.contains && (p.st.liters ?? 0) > 1e-4) {
+        // the level drops in `update` from now on, also for an object the world had let rest
+        o.active = true
         emit({
           ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry,
           direction: p.spec.contains.outflow ? vec.normalize(rotateVec(o.st.rotation, rotateVec(p.q, p.spec.contains.outflow))) : n, rate: holeRate(hole, !!p.spec.contains.pressurized),
@@ -6370,6 +6372,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
         return j.st.progress
       }).value
+    },
+    take(objectId, partId): CarryHands | null {
+      if (impls.has(objectId)) return null
+      const o = getObj(objectId)
+      const part = o.byId.get(partId)
+      const hands = part?.spec.hands
+      if (!part || !hands || isLost(part)) return null
+      const holding = (o.byPart.get(partId) ?? []).filter((j) => !j.st.open)
+      if (holding.length === 0 || holding.some((j) => !j.spec.tools.includes('hand'))) return null
+      run(() => {
+        for (const j of holding) {
+          j.st.progress = 1
+          j.st.open = true
+          j.st.openedBy = 'tool'
+        }
+        loosened(o, holding, 'tool')
+        collapseCheck(o)
+      })
+      return hands
     },
     workableJoints(objectId, tool) {
       const im = impls.get(objectId)

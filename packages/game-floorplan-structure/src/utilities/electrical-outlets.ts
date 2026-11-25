@@ -5,6 +5,7 @@ import { distanceToRect } from './shared'
 import { atDoor, hasWindowAt } from './wall-points'
 import type { WallPoint } from './wall-points'
 import type { Outlet } from './types'
+import { clashes, plateBox, spotOf, wallItemBoxesOf } from './wall-reservations'
 
 /** Categories that need a socket of their own. */
 const APPLIANCES = ['fridge', 'display_fridge', 'freezer', 'tv', 'appliance', 'washing_machine', 'air_conditioner', 'cash_register', 'table_light']
@@ -32,8 +33,11 @@ export function addOutlets(layout: Layout): void {
   const counters = items.filter((m) => COUNTERS.includes(m.category) && !m.outdoor)
   const heightFor = (room: Room, point: WallPoint): number =>
     room.type === 'kitchen' && counters.some((m) => m.floor === room.floor && m.room === room.id && distanceToRect(point.u, point.v, m.aabb) < 0.45) ? 1.1 : 0.3
+  const wallItems = new Map<number, ReturnType<typeof wallItemBoxesOf>>()
+  const wallItemsOf = (floor: number): ReturnType<typeof wallItemBoxesOf> => wallItems.get(floor) ?? wallItems.set(floor, wallItemBoxesOf(items, floor)).get(floor)!
+  // a socket keeps clear of what hangs on its wall: a picture over it, a curtain down to the floor in front of it
   const valid = (room: Room, point: WallPoint, y: number): boolean =>
-    !hasWindowAt(point, y, 0.25) && !atDoor(plan, room, point, 0.45) && !outletsOf(room).some((t) => Math.hypot(t.u - point.u, t.v - point.v) < 0.5 && t.y === y)
+    !hasWindowAt(point, y, 0.25) && !atDoor(plan, room, point, 0.45) && !outletsOf(room).some((t) => Math.hypot(t.u - point.u, t.v - point.v) < 0.5 && t.y === y) && (!!layout.visor || !wallItemsOf(room.floor).some((box) => clashes(box, plateBox(spotOf(point), y))))
   const pick = (room: Room, score: (point: WallPoint) => number, fixedY: number | null, ignoreBlocked?: boolean): Pick | null => {
     let best: Pick | null = null
     for (const point of pointsOf.get(keyOf(room)) ?? []) {

@@ -1,5 +1,61 @@
 # @adatechnology/game-weather-three
 
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-render-three@0.4.3
+  - @adatechnology/game-weather@0.3.24
+
+## 0.6.0
+
+### Minor Changes
+
+- 9deb7df: O céu de verdade: `createSky` (com `camera`) e `createWeatherRenderer` passam a desenhar uma cúpula que segue a câmera, com gradiente do zênite ao horizonte, sol com brilho na direção do sol do host (`sun`), calor de nascer e pôr do sol, uma camada de nuvens procedural que acompanha o clima (esparsas no claro, cobertas na chuva, escuras na tempestade) e anda com o vento, e à noite lua e estrelas (escondidas pela cobertura). O horizonte tem a cor da névoa, sem emenda. A cor continua indo para a névoa como antes; `Sky.update(sample, zone, dt)` ganha `dt` e `Sky.dispose()` solta a cúpula. A sala de testes e a sala-casas passam a ter céu pela camada `sky` do clima.
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-render-three@0.4.2
+  - @adatechnology/game-weather@0.3.23
+
+## 0.5.20
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-render-three@0.4.1
+  - @adatechnology/game-weather@0.3.22
+
+## 0.5.19
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [b37d94f]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [1fede95]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-vfx@0.16.0
+  - @adatechnology/game-weather@0.3.21
+
 ## 0.5.18
 
 ### Patch Changes

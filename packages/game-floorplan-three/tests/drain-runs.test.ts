@@ -5,6 +5,9 @@ import type { House } from '../src'
 import { fakeRoom } from './helpers/area-room'
 import { TEMPLATES, THREE, houseOf, planOf } from './helpers/houses'
 
+/** 30 kJ in the bathroom of single_storey_a, against the wall behind the basin (wall_0_17), at the height of its drain's outlet in it. */
+const AT_BASIN: [number, number, number] = [9.59, 0.5, 6.85]
+
 /** A house of the room, built as the area builds it, with every event of its destruction world recorded. */
 const roomHouse = (template: string, seed: number) => {
   const room = fakeRoom()
@@ -45,23 +48,21 @@ const isHeld = ({ room, id }: Scene, stretch: string, host: string): boolean => 
 describe('the drain runs of a finished house are pieces, hidden in the walls and slabs they run through', () => {
   it('lays the sewer of a bathroom inside its wall, in stretches held by it, and hides what is embedded', () => {
     const scene = roomHouse('single_storey_a', 1)
-    const shower = hostedBy(scene.house, /^drain:sewer_pt4/, 'wall_0_10')
-    expect(shower.length).toBeGreaterThan(0)
-    for (const stretch of shower) {
+    const basin = hostedBy(scene.house, /^drain:sewer_pt3/, 'wall_0_17')
+    expect(basin.length).toBeGreaterThan(0)
+    for (const stretch of basin) {
       expect(isDrawn(scene.house, stretch), stretch).toBe(false)
       expect(scene.room.world.part(scene.id, stretch)!.exposed, stretch).toBeUndefined()
-      expect(isHeld(scene, stretch, 'wall_0_10'), stretch).toBe(true)
+      expect(isHeld(scene, stretch, 'wall_0_17'), stretch).toBe(true)
     }
-    // the stub from the fixture to the wall is in the room, in the open: drawn, and not hosted by anything
-    const stub = stretchesOf(scene.house, /^drain:sewer_pt4/).filter((part) => part.hostedIn === undefined)
-    expect(stub.length).toBeGreaterThan(0)
-    expect(isDrawn(scene.house, stub[0]!.id)).toBe(true)
+    // nothing of it crosses the room in the open (NBR 8160): what no wall hosts runs under the floor, to the buried branch under the basin
+    for (const stretch of stretchesOf(scene.house, /^drain:sewer_pt3/).filter((part) => part.hostedIn === undefined)) expect(drawnBox(scene.house, stretch.id).max.y, stretch.id).toBeLessThan(0.01)
   })
 
   it('buries them again when the house is put back', () => {
     const scene = roomHouse('single_storey_a', 1)
-    const embedded = hostedBy(scene.house, /^drain:sewer_pt4/, 'wall_0_10')
-    blastAt(scene, [10.55, 0.1, 6.64], 30000)
+    const embedded = hostedBy(scene.house, /^drain:sewer_pt3/, 'wall_0_17')
+    blastAt(scene, AT_BASIN, 30000)
     for (const stretch of embedded) expect(isDrawn(scene.house, stretch), stretch).toBe(true)
     scene.house.destruction.restore()
     for (const stretch of embedded) expect(isDrawn(scene.house, stretch), stretch).toBe(false)
@@ -74,32 +75,30 @@ describe('the drain runs of a finished house are pieces, hidden in the walls and
 })
 
 describe('a blast hole in a wall exposes the drain pipe that runs through it', () => {
-  // 30 kJ against the east wall of the bathroom of single_storey_a (x 10.92 to 11.09, z 4.92 to 7.29), at the height of the shower's drain
-  const AT_SHOWER: [number, number, number] = [10.55, 0.1, 6.64]
 
   it('shows the stretch in the hole, drawn and no longer hidden, and brings it off the wall', () => {
     const scene = roomHouse('single_storey_a', 1)
-    const embedded = hostedBy(scene.house, /^drain:sewer_pt4/, 'wall_0_10')
-    blastAt(scene, AT_SHOWER, 30000)
+    const embedded = hostedBy(scene.house, /^drain:sewer_pt3/, 'wall_0_17')
+    blastAt(scene, AT_BASIN, 30000)
     const shown = revealed(scene.events)
     for (const stretch of embedded) {
       expect(shown, stretch).toContain(stretch)
       expect(isDrawn(scene.house, stretch), stretch).toBe(true)
     }
-    const wall = scene.room.world.state(scene.id)!.parts.find((part) => part.id === 'wall_0_10')!
+    const wall = scene.room.world.state(scene.id)!.parts.find((part) => part.id === 'wall_0_17')!
     expect(wall.status).not.toBe('broken')
     expect(wall.chipped?.length).toBeGreaterThan(0)
     // the wall opened under it: its stretch is off the wall (a loose piece, or held by the stretches beside it)
     const joints = scene.events.filter((event) => event.type === 'detach').map((event) => (event as { joint: string }).joint)
-    for (const stretch of embedded) expect(joints, stretch).toContain(`${stretch}~wall_0_10`)
+    for (const stretch of embedded) expect(joints, stretch).toContain(`${stretch}~wall_0_17`)
   })
 
   it('exposes only the stretches inside or crossing the hole: the rest of the run stays hidden, embedded and held', () => {
-    // 10 kJ in the bathroom upstairs of townhouse: the hole in its wall takes the stretches of the run there, not the ones that go on down through the floor and the wall below
+    // 10 kJ against the ground floor's wall the upstairs toilet's stack goes down in (townhouse): the hole takes the stretches of the run there, not the ones in the slab over it nor under the floor
     const scene = roomHouse('townhouse', 3)
     const run = stretchesOf(scene.house, /^drain:sewer_pt6:/).filter((part) => part.hostedIn !== undefined).map((part) => part.id)
     expect(run.length).toBeGreaterThan(6)
-    blastAt(scene, [5.75, 2.95, 10.9], 10000)
+    blastAt(scene, [5.4, 1.4, 11.0], 10000)
     const shown = revealed(scene.events).filter((id) => run.includes(id))
     expect(shown.length).toBeGreaterThan(0)
     expect(shown.length).toBeLessThan(run.length)
@@ -220,7 +219,7 @@ describe('the drain runs hold, nothing floats, nothing is a collider without geo
 
   it('every loose drain piece the blast leaves has colliders that hug its drawing: boxes, and none without a stretch drawn', () => {
     const scene = roomHouse('single_storey_a', 1)
-    blastAt(scene, [10.55, 0.1, 6.64], 30000)
+    blastAt(scene, AT_BASIN, 30000)
     const loose = scene.room.renderer.pieces().filter((piece) => scene.room.world.state(piece.objectId)?.parts.some((part) => part.id.startsWith('drain:')))
     expect(loose.length).toBeGreaterThan(0)
     for (const piece of loose) {

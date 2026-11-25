@@ -268,21 +268,29 @@ describe('houses in the room', () => {
     expect(house.groups['stage:4:installations']?.visible).toBe(true)
     expect(house.groups['f0']?.visible).toBe(true)
 
+    // the timber frame goes up at 5 over the bare work, the tiles with the gutters at 6 and the frame stays under them
     r.set('construction_level', 5)
     expect(stageMetric()).toContain('5 ·')
-    expect(house.groups['stage:2:frame']?.visible).toBe(false)
-    expect(house.groups['stage:3:masonry']?.visible).toBe(false)
+    expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
+    expect(house.groups['roof']?.visible).toBe(false)
+    expect(house.groups['stage:3:masonry']?.visible).toBe(true)
     expect(house.groups['stage:4:installations']?.visible).toBe(false)
 
     r.layer('water', true)
     expect(house.groups['stage:4:installations']?.visible).toBe(true)
     r.layer('water', false)
 
-    // the timber frame goes up at 7, before the tiles; the tiles come at 8 and the frame stays under them
+    r.set('construction_level', 6)
+    expect(stageMetric()).toContain('6 ·')
+    expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
+    expect(house.groups['roof']?.visible).toBe(true)
+    expect(house.groups['stage:2:frame']?.visible).toBe(true)
+
+    // the render covers the bare work at 7
     r.set('construction_level', 7)
     expect(stageMetric()).toContain('7 ·')
-    expect(house.groups['stage:7:roof_framing']?.visible).toBe(true)
-    expect(house.groups['roof']?.visible).toBe(false)
+    expect(house.groups['stage:2:frame']?.visible).toBe(false)
+    expect(house.groups['stage:3:masonry']?.visible).toBe(false)
 
     r.set('construction_level', 8)
     expect(stageMetric()).toContain('8 ·')
@@ -306,7 +314,7 @@ describe('houses in the room', () => {
     await scenario.run({ room: r.room, step: r.step, expect: (ok, label) => checks.push([ok, label]) })
     expect(checks.length).toBeGreaterThanOrEqual(10)
     expect(checks.filter(([ok]) => !ok)).toEqual([])
-  })
+  }, 600_000) // builds every typology: ~118 s alone, past the 120 s default when the machine is loaded
 })
 
 describe('the scenarios stop listening when they end (CLAUDE.md, "Memória")', () => {

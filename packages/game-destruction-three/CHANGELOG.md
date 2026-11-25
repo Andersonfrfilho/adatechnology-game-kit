@@ -1,5 +1,208 @@
 # @adatechnology/game-destruction-three
 
+## 0.26.3
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-audio@0.15.3
+  - @adatechnology/game-destruction@0.29.3
+  - @adatechnology/game-render-three@0.4.3
+  - @adatechnology/game-shapes@0.4.3
+  - @adatechnology/game-terrain@0.9.3
+  - @adatechnology/game-vfx-three@0.10.7
+
+## 0.26.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-audio@0.15.2
+  - @adatechnology/game-destruction@0.29.2
+  - @adatechnology/game-render-three@0.4.2
+  - @adatechnology/game-shapes@0.4.2
+  - @adatechnology/game-terrain@0.9.2
+  - @adatechnology/game-vfx-three@0.10.6
+
+## 0.26.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-destruction@0.29.1
+  - @adatechnology/game-audio@0.15.1
+  - @adatechnology/game-render-three@0.4.1
+  - @adatechnology/game-shapes@0.4.1
+  - @adatechnology/game-terrain@0.9.1
+  - @adatechnology/game-vfx-three@0.10.5
+
+## 0.26.0
+
+### Minor Changes
+
+- c88deea: `jitWarmUp` (ligado por padrão): o primeiro `createDestructionRenderer` roda uma explosão numa parede pequena fora da tela, num mundo e num renderizador próprios, tudo liberado, uma vez por motor. A primeira explosão do jogo deixa de custar o dobro: o primeiro segundo de física cai 14% na explosão e 12% no martelo da sala, por 0,37 s a mais no carregamento. `false` desliga; `{ engine }` aquece também os caminhos do motor. `warmUpDestructionJit` é exportado. `game-shapes-three` passa a dependência de `game-destruction-three`. Na sala de teste: `debris.jitWarmUp` e `?warmup=0`.
+- b0a370f: O chão que o motor põe sob as peças custa menos, sem mudar o chão nem o que as peças fazem sobre ele.
+
+  `game-terrain`: `Terrain.heightRange(minX, maxX, minZ, maxZ)` devolve os limites exatos da altura do terreno sobre um retângulo, lidos nos vértices que ele cobre (a altura entre vértices é uma mistura dos quatro ao redor), ou `null` quando o retângulo sai do terreno.
+
+  `game-destruction-three`: com `terrainRangeAt` (opção do renderizador e do sistema de peças), um ladrilho que o terreno prova plano é assentado como laje sem ler as 25 921 amostras; qualquer relevo sob ele, uma cratera de um vértice inclusive, faz a leitura inteira como antes. `blastGroundTiles` (padrão 0, desligado: medido, 48 ladrilhos moveram cerca de 24 ms para o quadro da explosão e não melhoraram o pior quadro) assenta, na explosão, essa quantidade de ladrilhos ao alcance dela, os mais próximos primeiro, antes de as peças que ela solta precisarem deles. O sólido sob uma cratera refeito por uma mudança do chão reaproveita os cascos que a mudança não tocou.
+
+  `game-physics`, `game-physics-jolt`: `ShapeDesc` composto aceita `reuseHulls`; o corpo guarda os cascos convexos da forma atual e a próxima forma dele pega os que são iguais bit a bit, em vez de montá-los de novo. Guarda só os cascos da forma atual, então a memória não cresce com as mudanças.
+
+  `game-test-room`: a sala passa o `terrainRangeAt` do terreno dela.
+
+- c71e079: Colisores fixos pelo coordenador de workers (spec 009, T10): `staticCollidersKind` (`destruction.static-colliders`, faixa `build`) com o núcleo puro `measureStaticPart`, que agora mede também no quadro principal; `RendererOptions.workers` (e `debris.workers` na sala) entrega as peças ao coordenador, opt-in porque a medida da sala não pagou. O preset hospeda a categoria.
+- c4783d3: O quadro que corta a casa em peças deixa de recalcular o que não mudou, sem mudar o resultado. As caixas que `fitOrientedBoxes` ajusta a uma parte desenhada por uma faixa de uma malha unida são ajustadas antes do golpe, uma parte por vez, com no máximo 1 ms de cada quadro, e guardadas com os pontos e triângulos de onde saíram: quando a parte rompe, o corte lê as mesmas caixas (os mesmos números, bit a bit) em vez de ajustá-las; se o desenho mudou (um amassado), ajusta de novo. O cache é solto com o objeto (`unbind`, `dispose`). O hospedeiro da malha unida é reescrito uma vez por lote de `splitLoose`, não uma por peça.
+
+  `RendererOptions.fitBoxesAhead` (padrão ligado): desligado, as caixas são ajustadas quando a parte rompe, como antes.
+
+- 51c7f3d: O trabalho que uma explosão deixa (grupos soltos a cortar em peças, fragmentos a soltar, entulho a acordar) pode correr num orçamento de quadro em **unidades de trabalho**, nunca em tempo (spec 008, T3.8aa). Desligado por padrão: sem a opção nada muda.
+
+  `game-physics`: `WorkBudget` (o árbitro: `budgetMs` × `unitsPerMs` / `tier` unidades por quadro, padrões 4 ms, 100 e 1, e `maxWaitFrames` 12, decisão do dono em 2026-11-16), `WorkQueue` (trabalho guardado como dado, por prioridade e chave estável, ao menos um por quadro, o que esperou o teto sai de qualquer jeito; salva e carrega) e `WORK_KINDS` (a ordem fixa em que as filas tiram do orçamento). `WakeQueue.release` aceita `limit`.
+
+  `game-destruction-three`: `RendererOptions.workBudget` (`ExplosionWorkOptions`: as opções do `WorkBudget` mais `costs`, padrões em `WORK_UNIT_DEFAULTS`). Os eventos aplicam no próprio quadro (clarão, poeira, trincas); cada grupo solto espera numa fila, o mais perto do `focus` primeiro, desenhado e sólido no objeto até a vez dele; fragmentos e a fila de despertar tiram do mesmo orçamento. `splitWorkUnits` estima o custo de um corte pelo tamanho do trabalho, sem contar caixas já ajustadas.
+
+  `game-test-room`: `debris.workBudget` (o jogador é a câmera); a página da sala lê `?workBudget=4`.
+
+- 78ac539: Os fios do poste do lote soltam-se em trechos que não vão com o poste. Antes, cada trecho da fiação pendia do poste por uma junta que sempre une; ao cair, o poste levava os fios que a explosão não tinha soltado e virava um corpo de 1000 kg com 26 caixas e 23 m de largura, e a varredura contínua (CCD) do Jolt custava 60 a 70 ms por passo. Agora o poste leva só o fuste, a travessa e os isoladores (950 kg, 10 caixas) e cada trecho de fio cai como peça sua, com o próprio cobre.
+
+  `game-contracts`, `game-destruction`: `JointSpec.tears` (padrão falso). A parte `a` pende de `b` só enquanto `b` está de pé (em um grupo ancorado); com `b` solto a junta larga, e o fio de um poste que cai desce sozinho. Uma junta que não rasga continua unindo as duas partes em um grupo. Quem se segura em duas pontas, uma delas de pé (o fio do ramal preso à parede da casa), fica pendurado nela.
+
+  `game-destruction-three`: as peças que um `tears` separou (o fio e o poste de que pendia) não se tocam mais: sem isso o poste de 950 kg, ao tombar, batia nos fios de 12 kg que ele acabava de largar e os lançava (C1 de 34 e 105 kg·m, C2 acima do limite em 4 de 10 rodadas). `JointState.tears` (contrato), `PieceSystem.tether`, e o renderizador marca os pares ao soltar os grupos.
+
+  `game-floorplan-structure`: `Support.tears` chega à junta da especificação destrutível.
+
+  `game-floorplan-three`: os trechos da grade e do ramal pendem do poste mais próximo por uma junta que rasga (`tears`); o trecho que fica dentro de laje ou parede, ou ao lado de um, continua preso a ela. Com `segmentLimits.wiring: Infinity` a fiação segue como o time desenhou (uma peça só). Goldens regravados: `destruction/breach`, `destruction/spall`, `destruction/fracture` e o resultado do blast (21 objetos a mais, os trechos).
+
+- 3b22fa3: Latas e garrafas: o piso de massa da peça cai de 0,2 kg para `MIN_PIECE_MASS_KG` (20 g), então a lata vazia de 50 g pesa 50 g nos choques; a massa da peça cai com o líquido que sai (bebido, despejado ou vazado, na densidade do líquido) pelo novo `DestructionRenderer.setPieceMass`, e a inércia de giro acompanha; o líquido de dentro da lata gira só metade do que um sólido de mesma massa (`LIQUID_SPIN_COUPLING`), em vez de ser tratado como sólido.
+
+  O corpo de um recipiente segurado (cinemático no Jolt) também guarda a massa nova e a recebe ao ser solto; os refits de quebra mantêm a massa sem o líquido que saiu; a perda é medida em kg com histerese de 10 g, na peça que guarda o líquido, e uma recarga soma massa.
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- fc1310c: Com o motor Jolt, as peças novas de um quadro entram no mundo de uma vez (`createBodies`: uma inserção na broadphase, ids na ordem da lista) e não uma a uma. Uma peça que dorme e sai do motor (some, é cortada pelo limite de peças vivas, é trocada) acorda o que dormia apoiado nela: antes, essas peças ficavam dormindo no ar. Uma peça acordada há um passo ou mais não precisa: o que se apoia nela está na mesma ilha, acordado. A que dormia no último passo do motor e foi acordada e removida no mesmo quadro precisa (o motor ainda não acordou o que estava em cima): também acorda. O passo em lote é medido como "sem regressão" (a queda de quadros acima de 5 ms está dentro do ruído).
+
+  `game-destruction-three`: `EnginePieces.prepare` cria os corpos novos em lote (`makeBodies`); `EnginePieces.remove` de uma peça dormindo (ou que dormia no último passo do motor) acorda os corpos numa caixa ao redor da peça (`wakeAround`, margem de 0,1 m). `clear` não acorda ninguém.
+
+- b37d94f: Spec 010, fases 1 e 3: passo fixo único e filas no prazo do quadro.
+
+  - `game-physics`: `PhysicsLoop.stepFixed(steps)` roda passos inteiros vindos do agendador (`step(dt)` continua, com o próprio acumulador). **Quebra para quem implementa `PhysicsWorld`:** o membro `readActiveBodies(out)` passa a ser obrigatório (devolve só os corpos acordados).
+  - `game-physics-jolt`: implementa `readActiveBodies`.
+  - `game-render-three`: `createStaticBatchQueue` e a opção `queue` dos lotes estáticos, para o orçamento do quadro drenar a junção dos lotes.
+  - `game-fluids-three`: `FilmManager.deferredQueue()`, a fila do filme de líquido no prazo do quadro; o tempo devido de um grid que sai é esquecido junto com ele.
+  - `game-crowd`: o campo de fluxo passa a andar em células por passo (`cellsPerStep`) por padrão, não pelo relógio; `flow.ms` vale 0. Mesmo resultado em toda máquina.
+  - `game-destruction-three`: `DestructionRenderer` ganha `interpolate`, `present`, `restoreStepPose`, `markMoved` e `deferredQueues` (desenho interpolado entre passos e filas registradas no orçamento); uma peça segurada pelo host (empurrar, carregar) é lida mesmo com o motor a dando como dormindo.
+  - `game-test-room`: opção `frameTargetMs` (prazo do quadro); a pose do passo volta antes da fase `input`, para empurrar e carregar escreverem na pose do passo, não no desenho misturado do quadro anterior.
+  - `game-destruction`: uma operação que lança exceção não passa estrutura e `detach` pela metade para a seguinte.
+
+- adf4811: Com o motor Jolt, uma peça solta de várias partes (um poste com os fios) pode assentar o chão só sob a caixa de cada parte, e não sob a caixa de todas juntas. Desligado por padrão: o chão assentado é o mesmo de antes.
+
+  `game-destruction-three`: `RendererOptions.tilesUnderParts` (e `PieceSystemOptions.tilesUnderParts`). Ligado, `EnginePieces.layGround` assenta os ladrilhos sob cada caixa de parte (`partBoxes`, com a mesma margem de 0,5 m, a mesma oscilação e os mesmos pontos do caminho). Uma peça de 23 m de largura feita de 26 partes finas assentava 72 ladrilhos (e o sólido de cada um); com a opção, assenta os que tem partes sob ou perto. Medido na sala: p99 do quadro do blast de 91 para 78 ms e máximo de 206 para 178 ms (T3.8v). Fica desligado porque, nas rodadas do blast, o poste que ganha energia (C1 acima de 5 kg·m) apareceu em 8 de 25 rodadas com a opção contra 2 de 25 sem ela; o dono decide.
+
+  `game-test-room`: `debris.tilesUnderParts`, e `?tilesUnderParts=1` na página da sala.
+
+- 232c3a6: Workers ligados por padrão (spec 009, T6, T7 e T13): `createKitWorkers` e `KIT_WORKER_KINDS` no preset, com o arquivo do worker do kit (`dist/kit-worker.js` e `dist/kit-worker.global.js`); o chão da cratera vira a categoria `destruction.ground-tiles` (`groundTilesKind`, entrada sem three.js `./worker-kinds`) e passa pelo coordenador com `createCoordinatorGroundPort`. A sala usa um coordenador por página, com o chão por ele por padrão (`?groundWorker=0` desliga, `?workers=N` escolhe quantos).
+- 1fede95: A quina de pilar e parede quebra como obra:
+
+  - `game-destruction`: um membro moldado (peça com `reinforcement`) dentro da caixa de uma parede de unidades (o pilar que fecha a ponta da parede, a verga, a cinta) tira da parede os tijolos daquele lugar, e o tiro, o golpe e o raio que caem ali (também no reboco por cima) vão para o membro.
+  - `game-vfx`: `PIECES_DRAWN_VARIABLE`; com ela os efeitos de rombo e desabamento soltam só a poeira, sem os blocos de enfeite (até 1 m) que jogam numa cena sem pedaços de verdade.
+  - `game-destruction-three`: os efeitos de evento vão com `piecesDrawn` (o renderer já desenha os pedaços); `BindOptions.marksOn` põe as marcas de uma peça sem malha própria nas malhas das peças que a desenham.
+  - `game-floorplan-three`: o pilar sem malha própria leva as marcas nas paredes em que está.
+
+- 6473d97: Alvenaria que perde o apoio tomba para um lado em volta do pé (os tijolos de cima saem mais rápido), em vez de cair reta e formar uma coluna de tijolos parados. Um pedaço só fica em cima de outro com o centro sobre ele; se o centro passa da borda, ele escorrega e cai. Tijolo inteiro que sai pela junta é desenhado como tijolo, não como entulho. O tiro em concreto, tijolo ou pedra abre uma cratera de material quebrado, de uns cinco calibres, em volta do furo.
+- ca2dac7: Amortecimento de rolamento por material: além da resistência ao rolamento (C_rr), cada material da peça (`surfaceOf`: vidro e aço 0,02/s, madeira 0,4/s, borracha 0,3/s, tecido 1/s) e cada chão (`TerrainMaterial.rollingDamping`: concreto 0,3/s, cerâmica 0,1/s, grama 1,5/s, areia 2/s, lama 3/s) tiram uma parte do giro por segundo, e os dois se somam: a garrafa rola mais no piso liso, a tora para logo na grama. Cerâmica e madeira de piso passam a ter C_rr 0,008 e 0,01 (antes o 0,015 padrão). Contrato: `Rolling.damping` e `Material.rollingDamping`; o adaptador Jolt aplica os dois em todo corpo com `rolling` (`rollingImpulse`), e o `saveState` guarda o amortecimento. Terreno: `rollingDampingAt`. Renderizador: `terrainRollingDampingAt` (a sala de teste liga ao terreno). Em rampa a peça continua rolando, e um impulso a acorda e ela volta a rolar. Medição na sala: `examples/test-room/rolling-test.mjs`.
+- 5da32ec: Grupos soltos viram peças logo depois da carga, não no primeiro evento: um objeto ligado (`bind`) ou redesenhado (`redraw`) que o mundo já entrega com grupos soltos (postes do lote, caixa de correio, porta de box, fiação da casa) tem esses grupos separados em peças no próximo `update` (ou na próxima drenagem da fila adiada), onde estavam, sem esperar um golpe. Antes eles ficavam desenhados e sólidos dentro do objeto até o primeiro evento (a porta do box sem parede ficava no ar, §12) e viravam peças todos dentro dos quadros da explosão. Sem `workBudget` a separação acontece na drenagem, depois dos eventos, respeitando o prazo; com `workBudget` continua na fila como antes. `autoSplit: false` mantém tudo no objeto. Objeto sem grupo solto não custa nada (e não conta como trabalho pendente na fila adiada). Uma peça separada na carga só dorme onde estava se o centro de massa estiver sobre o fecho dos pontos apoiados das suas partes (um tampo numa perna só tomba); móvel separado se apoia nos cantos das partes desenhadas (`contacts`). Só um `bind` novo conta como carga: `redraw` e `releasePieces` separam como ao vivo (um móvel quebrado restaurado tomba).
+
+### Patch Changes
+
+- 96c27a1: Correções da auditoria: uma peça que dorme com o centro fora do disco de uma mudança do chão e fica até 1 cm dentro dele agora é acordada para o motor tirá-la (antes ficava 8 mm dentro para sempre); o conjunto de pares soltos por um fio rompido esquece o par quando uma das peças sai (§8). A régua de energia dos testes (R1–R3) deixa de perdoar subida de poste ao acordar, de desligar o C3 por energia declarada mínima e de perdoar o pulo num impacto.
+- 737b677: Correções da auditoria do motor de física. `game-physics-jolt`: a regra "não colidir" entre dois corpos sai com o corpo removido (o Jolt reaproveita o número, e o próximo corpo herdava a regra: um caco caído sobre o poste parava dentro dele); a moto (duas rodas em linha) é lida com as suas 2 rodas e a roda motriz tem diferencial próprio; erro em `createBodies` não deixa mais corpos nem o vetor de ids no heap. `game-destruction-three`: uma peça que dormia no último passo do motor e é acordada e removida no mesmo quadro acorda o que estava em cima dela (§12); o teste da subida do chão mede a penetração real da ponta (8 mm, limite 1 cm); `pnpm test:jolt` roda os blocos só do modo Jolt, agora no CI.
+- f693949: As caixas de uma parte desenhada por um trecho de malha mesclada (telhado, chapas da casa) são ajustadas no espaço dos próprios vértices e levadas até a peça pela pose (giro e translação), em vez de ajustadas nos pontos já no quadro da peça. A quebra da casa e o objeto movido reaproveitam as caixas ajustadas antes: na casa de teste de 4 partes, os ajustes no quadro da quebra caem de 3 para 0. Pose com escala, cisalhamento ou espelho continua no caminho exato; parte amassada ou lascada é ajustada de novo. As caixas podem diferir das de antes em até alguns por cento de volume, porque o ajuste depende do quadro nas bordas da amostragem (`ceil` do comprimento da aresta).
+- 10f2df0: No modo Jolt, o chão que se deforma passa a ter as alturas do ladrilho alteradas no lugar, em vez de refazer o ladrilho todo. O chão resultante é o mesmo de um ladrilho recém-assentado.
+
+  `game-physics`: `PhysicsWorld.updateHeights(id, region, heights)` e o tipo `HeightRegion`. Troca no lugar as alturas de um retângulo de um corpo estático de campo de alturas; devolve `false`, sem mudar nada, quando a engine não pode (não é campo de alturas, retângulo fora dele, altura fora da faixa com que o campo foi feito), e quem chama dá ao corpo uma forma nova (`setShape`).
+
+  `game-physics-jolt`: `JoltWorld.updateHeights` sobre `HeightFieldShape::SetHeights`, com o retângulo alargado ao bloco do Jolt, as amostras acrescentadas escritas dos valores exatos (nunca relidas), a memória do wasm liberada e o broadphase avisado. O Jolt também requantiza os blocos à esquerda e acima dos escritos (até 4,4e-5 m por escrita, 1,8 mm em 50): quem escreve o mesmo campo várias vezes refaz a forma de vez em quando.
+
+  `game-destruction-three`: o ladrilho marcado por `groundChanged` lê de novo só as amostras da região avisada (mais 25 cm), não toca no motor se nada ali mudou, escreve no campo só o retângulo que mudou (até metade do campo, quatro vezes seguidas; depois a forma é refeita dos valores exatos) e refaz o sólido sob o campo só quando as alturas mudaram.
+
+- e3a9ee8: A estrutura de um objeto é resolvida uma vez por operação (`hit`, `explode`, `update`), não uma vez por parte perdida ou junta aberta: na explosão de 4 MJ no sobrado, 174 chamadas de `solveStructure` viram 39 (é resolvida de novo só quando algo lê cargas ou tensões no meio da operação). Muda o contrato do `detach`: `groups` são os grupos do objeto depois da operação inteira, e todos os `detach` da operação saem no fim dela, na ordem em que as juntas abriram, depois dos outros eventos (o `collapse` inclusive). `DestructionWorld.structureProbe()` conta as resoluções. `game-destruction-three`: uma fratura solta primeiro os grupos que a operação deixou soltos e só então vê se o que sobrou do objeto perdeu o apoio, então a ordem do `detach` e da `fracture` não muda como as peças se separam. A garantia vale para o mundo do `createDestruction`; os outros `DestructibleImpl` (veículos de `game-vehicles`, personagens de `game-characters`, que manda só a peça que saiu, `[[segmento, ...caídos]]`) continuam emitindo um `detach` por junta com os grupos daquele momento.
+- f17aebb: Janela e parede na explosão, como no mundo real:
+
+  - O vão da janela fica livre: os tijolos que a parede desenha onde foi cortada param no batente, no peitoril e na verga, e nenhum aparece atrás do vidro.
+  - O vidro de janela é lido como vidro comum de 4 mm (o desenho segue com 12 mm): uma granada na cozinha quebra as vidraças do cômodo e as próximas.
+  - `PlanWindow.frame` e `BuildOptions.windowFrame` (`'wood'`, `'aluminium'`, `'frameless'`): moldura de madeira (lasca), de alumínio (amassa) ou blindex (vidro temperado de 8 mm, sem moldura). O padrão é madeira na casa simples e alumínio nas outras. Na sala: `?windowFrame=`.
+  - O pilar de canto quebra nas duas paredes que se encontram nele, e a quina se desfaz.
+  - As lascas batem na primeira face no caminho (parede, teto, móvel) e caem (`FragmentSystemOptions.sweep`), em vez de atravessar a parede e ficar presas dentro dela à vista.
+
+- 556586e: `game-destruction-three`: o terreno que assenta (entulho que sobe o chão alguns mm) não levanta mais uma peça solta que só o toca por uma ponta. Antes, `EnginePieces.groundChanged` erguia a peça inteira pelo tanto que o canto de uma caixa ficava sob o chão novo, a partir de 5 mm e sem velocidade; o poste de 1 t, cuja ponta de fio de 11 m encontrava o entulho, ganhava de graça massa x g x subida (6 a 8 kg·m por atualização, o C1 da sala). Até 1 cm o contato do motor resolve a sobreposição sozinho; só uma subida maior é erguida pelo kit, como antes.
+- 6cc4abe: Two loose box pieces that overlap are now put apart by their real boxes, not by a circle of their largest half side, and nothing is launched doing it.
+  `shapeContact` answers two box shapes with a separating-axis test (the 15 axes of two oriented boxes, per part), and `boxesAlongGround` gives the least
+  overlap along the ground. `separatePair` takes back half the overlap per step, summed over every pair of a piece and bounded per piece at 1.5 m/s
+  (`applyPushes`), never down. Side by side, the two go apart along the ground, split by mass. One over the other as deep as a contact (3 cm, plus what
+  the closing speed sank them this step), only the upper rises, and a contact impulse at the point stops it sinking (`propped`: the support counts for its
+  rest). Deeper, the two were made inside each other: they slide apart along the ground instead of the upper being lifted out. The resting gates
+  (stacked, on a top, leaning on a part) no longer hide two pieces deep inside each other, nor two side by side. In a collapsed sobrado no chunk's centre
+  rises more than 3.5 cm (it was up to 4.1 m with the plain separating axis). A piece split off with several parts (a board and its books) is landed on
+  by its parts as drawn, not by the box around them.
+- 20cdc73: A peça que sai de um objeto (no carregamento, desde o #339, ou num golpe) é marcada como desenhada por `game-destruction-three` (`kind: 'piece'`): a auditoria "de onde vem cada peça desenhada" deixa de ver as peças feitas na carga como desenho sem origem. Os cenários da vegetação contam só os pedaços que saíram da própria planta: a pia e outros móveis da sala com um grupo solto na carga também criam `obj_N`, e o tiro de 9 mm e a cerca viva falhavam por contá-los.
+- e987bbe: `fitOrientedBoxes(points, triangles?)` passa a aceitar também os triângulos da peça. Assim, uma peça desenhada por anéis de vértices, como poste, cano ou fio, é segurada pelo corpo inteiro, e não por placas nas pontas. O mesmo vale para um cano em L, que segue a curva e não vira uma placa de ar atravessando a dobra.
+
+  O poste de concreto do lote colide como fuste de 7,5 m, com cruzeta e isoladores. Deitado, ele dorme em cerca de 2 s com o Jolt.
+
+  Sem os triângulos, o resultado da função continua o mesmo de antes.
+
+- da15205: Um fragmento parado (tijolo, lasca, pedaço de reboco) só segura o que está sobre a área de chão que ele de fato cobre: o teste de apoio (`pileUnder`) passou da caixa que o envolve (muito maior para um pedaço comprido virado de lado) para o casco convexo dos oito cantos visto de cima. Antes, um pedaço pequeno ficava dormindo no ar sobre o canto vazio da caixa de outro.
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [b0a370f]
+- Updated dependencies [f1c7229]
+- Updated dependencies [10f2df0]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [51c7f3d]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [18bd23f]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [8ebd34c]
+- Updated dependencies [b37d94f]
+- Updated dependencies [e987bbe]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [1fede95]
+- Updated dependencies [6473d97]
+- Updated dependencies [ca2dac7]
+- Updated dependencies [1807dd8]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-destruction@0.29.0
+  - @adatechnology/game-terrain@0.9.0
+  - @adatechnology/game-physics@0.2.0
+  - @adatechnology/game-shapes@0.4.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-audio@0.15.0
+  - @adatechnology/game-vfx@0.16.0
+  - @adatechnology/game-vfx-three@0.10.4
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.25.0
 
 ### Minor Changes

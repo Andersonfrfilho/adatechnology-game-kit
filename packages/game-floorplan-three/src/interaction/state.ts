@@ -15,7 +15,7 @@ export function installInteractionState(K: Kernel, shared: Shared): void {
    // piece name / 'light:living' -> target; reset together with DOOR_STATE when the model changes
   const newInteractiveState = (): InteractiveState => ({ defs: new Map(), items: [], pieces: [], lights: new Map(), litRooms: new Set(), objs: [], anim: new Set(), msg: null, target: null });
   shared.inter = newInteractiveState();
-  const MESSAGE_MS = 2200;
+  const MESSAGE_MS = 2200, LAMP_OFF_COLOR = 0xeeece6, LAMP_DIFFUSER_MATERIAL = 'glass';
   UV_SCALE.doorWood = 1.0;
   UV_SCALE.doorPaint = 1.0;
   function createInteractiveMaterials(mats: MaterialTable): void {
@@ -34,7 +34,8 @@ export function installInteractionState(K: Kernel, shared: Shared): void {
     });
     mats.doorWood = new THREE.MeshLambertMaterial({ vertexColors: true, map: wood });
     mats.doorPaint = new THREE.MeshLambertMaterial({ vertexColors: true, map: paint });
-    mats.off = new THREE.MeshBasicMaterial({ vertexColors: true, color: 0x8a8780 });
+    mats.off = new THREE.MeshBasicMaterial({ vertexColors: true, color: 0x8a8780 }); // (the Visor's unlit lamp: the light's own colour at half strength, a caramel on a warm lamp)
+    mats.lampOff = new THREE.MeshPhongMaterial({ color: LAMP_OFF_COLOR, shininess: 70, specular: 0x666666, transparent: true, opacity: 0.9 }); // a lamp that is off is milky white glass, never tinted by its light colour
   }
   // ---------- utilities ----------
   const _EY = new THREE.Vector3(0, 1, 0), _UM3 = new THREE.Vector3(1, 1, 1);
@@ -49,7 +50,7 @@ export function installInteractionState(K: Kernel, shared: Shared): void {
       const g = gs[name]; if (!g) continue; delete gs[name];
       const outer = new THREE.Group(); outer.position.fromArray(def.pivot); outer.rotation.y = def.ry || 0; outer.updateMatrix();
       const inv = new THREE.Matrix4().compose(new THREE.Vector3().fromArray(def.pivot), new THREE.Quaternion().setFromAxisAngle(_EY, def.ry || 0), _UM3).invert();
-      g.traverse(o => { if (isMesh(o)) { o.geometry.applyMatrix4(inv); o.userData.piece = def; def.meshes.push(o); } });
+      g.traverse(o => { if (isMesh(o)) { o.geometry.applyMatrix4(inv); o.userData.piece = def; def.meshes.push(o); if (def.roomId && o.name.endsWith('/emissive')) o.userData.destructionMaterial = LAMP_DIFFUSER_MATERIAL; } });
       outer.add(g); def.outer = outer; def.inner = g;
       const parent = def.leaf ? def.leaf.gs[def.k as number] : (gs[def.parent as string] || (gs[def.parent as string] = new THREE.Group())) /* only a handle has no parent, and it has a leaf */;
       if (parent) parent.add(outer);
@@ -92,7 +93,7 @@ export function installInteractionState(K: Kernel, shared: Shared): void {
    // with cfg.interactives the room is lit when some kit lamp is on and powered
   function applyLight(roomId: string): void {
     const on = lightOn(roomId), inter = I(), mats: MaterialTable = shared.mats;
-    for (const d of inter.lights.get(roomId) || []) for (const m of d.meshes) if (m.name.endsWith('/emissive')) m.material = (on ? mats.emissive : mats.off) as THREE_NS.Material;
+    for (const d of inter.lights.get(roomId) || []) for (const m of d.meshes) if (m.name.endsWith('/emissive')) m.material = (on ? mats.emissive : shared.ctx.visorScene ? mats.off : mats.lampOff) as THREE_NS.Material;
     const sw = inter.defs.get('ix:int:' + roomId); if (sw) { sw.target = on ? 1 : 0; if (sw.t !== sw.target) inter.anim.add(sw); }
     invalidate();
   }

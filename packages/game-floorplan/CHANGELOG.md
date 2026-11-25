@@ -1,5 +1,65 @@
 # @adatechnology/game-floorplan
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
+## 0.5.0
+
+### Minor Changes
+
+- 32547af: Móveis sem z-fighting e layout com o espaço real de cada coisa: sofá, geladeira e cuba (e mais 14 móveis do household) sem faces no mesmo plano; portas e gavetas com a faixa de abertura livre (`opening`); criado-mudo ao lado da cabeceira (`beside`), também na edícula; quadro de luz, tomadas e interruptores com a caixa real na parede; cano de gás por cima das portas; gabinete ao lado da pia na altura do tampo; vaso de planta com a copa até onde a parede deixa; cabo só em tomada do mesmo lado da parede.
+
+  Plafon apagado em vidro branco leitoso, aceso emissivo. Conteúdo de gavetas, portas e prateleiras desenhado com o item real do catálogo (`createContainedItemModel`, `createContentsView`, `interactives.itemModel`), filho da parte que o leva desde o primeiro quadro, e cada item pegável com uma mão (`take` com `hands: 1`).
+
+  Os goldens do Visor de casas 3D e do adaptador da equipe seguem iguais com `visorLayout` (planta) e `visor` (adaptador).
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+
+## 0.4.0
+
+### Minor Changes
+
+- f17aebb: Janela e parede na explosão, como no mundo real:
+
+  - O vão da janela fica livre: os tijolos que a parede desenha onde foi cortada param no batente, no peitoril e na verga, e nenhum aparece atrás do vidro.
+  - O vidro de janela é lido como vidro comum de 4 mm (o desenho segue com 12 mm): uma granada na cozinha quebra as vidraças do cômodo e as próximas.
+  - `PlanWindow.frame` e `BuildOptions.windowFrame` (`'wood'`, `'aluminium'`, `'frameless'`): moldura de madeira (lasca), de alumínio (amassa) ou blindex (vidro temperado de 8 mm, sem moldura). O padrão é madeira na casa simples e alumínio nas outras. Na sala: `?windowFrame=`.
+  - O pilar de canto quebra nas duas paredes que se encontram nele, e a quina se desfaz.
+  - As lascas batem na primeira face no caminho (parede, teto, móvel) e caem (`FragmentSystemOptions.sweep`), em vez de atravessar a parede e ficar presas dentro dela à vista.
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+
 ## 0.3.13
 
 ### Patch Changes

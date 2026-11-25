@@ -119,7 +119,7 @@ for (const template of ['single_storey_a', 'townhouse', 'mid_modern_single_store
         const shown = sets.filter(visibleIn).map((o) => o.userData.mount)
         expect(shown.length > 0, `level ${level}`).toBe(level >= 4 && level <= 7)
         expect(new Set(shown).size, `level ${level}`).toBe(shown.length ? 1 : 0)
-        expect(shown[0], `level ${level}`).toBe(level < 4 || level > 7 ? undefined : level === 4 ? 'slab' : 'ceiling')
+        expect(shown[0], `level ${level}`).toBe(level < 4 || level > 7 ? undefined : level < 7 ? 'slab' : 'ceiling')
       }
     })
   })

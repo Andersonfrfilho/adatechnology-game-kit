@@ -67,6 +67,9 @@ export interface PartAperture {
   bars?: { axis: 0 | 1; spacing: number; width: number }
 }
 
+/** Hands a thing needs to be carried: one leaves the other free, two take both. */
+export type CarryHands = 1 | 2
+
 export interface PartSpec {
   /** Unique inside the object. */
   id: string
@@ -128,6 +131,12 @@ export interface PartSpec {
   }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
+  /**
+   * The part is taken off its object by hand and carried with this many hands (a book on its shelf: 1). Taking it (`take` of the destruction world)
+   * opens at once the joints that hold it, all of which a hand must be able to undo (`resting`); it then comes off as a piece of its own. One hand
+   * leaves the other free (the player stays armed); two need both. Without it the part is not taken by hand.
+   */
+  hands?: CarryHands
   /** Free tags the host can use (`door`, `wheel`, `screen`, `trunk`, `leaf`...). */
   tags?: string[]
   /**
@@ -333,6 +342,11 @@ export interface DestructibleSpec {
   joints?: JointSpec[]
   /** Free tags (`furniture`, `vehicle`, `plant`, `structure`, `weapon`, `item`...). */
   tags?: string[]
+  /**
+   * The object is fixed where it is laid, never a loose body a host hands to its physics: it hangs on a wall (a range hood, a curtain rod), is set into the ground
+   * (the legs of a swing) or is rooted (a tree). Its parts still break and come off as pieces. Default false.
+   */
+  fixed?: boolean
   /**
    * The ground the object stands on: a soil class id (one layer) or a profile. With it the foundations bear on the soil: the object settles, tilts
    * and, when the soil cannot carry it, sinks and tips over (`ObjectState.soil`, `settle` events). Without it the foundations are fixed as before.

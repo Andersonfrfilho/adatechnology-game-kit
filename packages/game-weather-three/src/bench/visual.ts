@@ -7,6 +7,7 @@ import type * as THREE_NS from 'three'
 import { HEADLIGHTS } from '../headlights'
 import { createWeatherRenderer } from '../renderer'
 import type { WeatherLayerId, WeatherRenderer, WeatherRendererOptions } from '../renderer'
+import type { HostSun } from '../sky'
 import type { ThreeLib } from '../types'
 import { weatherVisualTextOf } from './text'
 
@@ -27,6 +28,8 @@ export type WeatherVisualOptions = Pick<WeatherRendererOptions, 'profile' | 'ran
    * blocks the player and its doors open, and the lamps go on its nose. Wins over `vehicles` when the host can place it; until a loaded module has the item the rig has only the lamps.
    */
   readonly rigItem?: string
+  /** The host's sun the sky's disc sits in; default the first shadow-casting `DirectionalLight` of the host's scene, and the hour's own arc when there is none. */
+  readonly sun?: HostSun
   /** Which layers start on (all do by default); the room that is not about weather starts the sky and the fog off to keep its own look. */
   readonly layers?: Partial<Record<WeatherLayerId, boolean>>
 }
@@ -80,6 +83,7 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
         camera: host.camera as THREE_NS.Camera,
         weather,
         ...(options.vfx ? { vfx: options.vfx } : {}),
+        ...(host.rainCover ? { cover: host.rainCover } : {}),
         ...(options.profile ? { profile: options.profile } : {}),
         ...(options.random ? { random: options.random } : {}),
         ...(options.zone ? { zone: options.zone } : {}),
@@ -87,6 +91,7 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
         ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}),
         ...(options.headlights ? { headlights: options.headlights } : {}),
         ...(options.layers ? { layers: options.layers } : {}),
+        ...sunOption(options.sun ?? sunOf(host.scene as THREE_NS.Scene)),
         ...(isLightBudget(host.lights) ? { lights: host.lights } : {}),
       })
       const item = options.rigItem && host.addObject ? options.rigItem : undefined
@@ -94,6 +99,18 @@ export function createWeatherVisual(options: WeatherVisualOptions = {}): Weather
     },
   }
 }
+
+/** The sun a host lights its scene with: its first shadow-casting directional light. */
+function sunOf(scene: THREE_NS.Scene): THREE_NS.DirectionalLight | undefined {
+  let found: THREE_NS.DirectionalLight | undefined
+  scene.traverse((node) => {
+    const light = node as THREE_NS.DirectionalLight
+    if (!found && light.isDirectionalLight && light.castShadow) found = light
+  })
+  return found
+}
+
+const sunOption = (sun: HostSun | undefined): { readonly sun?: HostSun } => (sun ? { sun } : {})
 
 function footprintOf(car: { readonly group: THREE_NS.Object3D; readonly length: number; readonly width?: number }): Footprint | undefined {
   if (!car.width) return undefined

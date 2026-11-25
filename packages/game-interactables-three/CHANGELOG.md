@@ -1,5 +1,78 @@
 # @adatechnology/game-interactables-three
 
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-interactables@0.5.1
+  - @adatechnology/game-render-three@0.4.3
+  - @adatechnology/game-shapes@0.4.3
+
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-interactables@0.5.0
+  - @adatechnology/game-render-three@0.4.2
+  - @adatechnology/game-shapes@0.4.2
+
+## 0.3.0
+
+### Minor Changes
+
+- 32547af: Móveis sem z-fighting e layout com o espaço real de cada coisa: sofá, geladeira e cuba (e mais 14 móveis do household) sem faces no mesmo plano; portas e gavetas com a faixa de abertura livre (`opening`); criado-mudo ao lado da cabeceira (`beside`), também na edícula; quadro de luz, tomadas e interruptores com a caixa real na parede; cano de gás por cima das portas; gabinete ao lado da pia na altura do tampo; vaso de planta com a copa até onde a parede deixa; cabo só em tomada do mesmo lado da parede.
+
+  Plafon apagado em vidro branco leitoso, aceso emissivo. Conteúdo de gavetas, portas e prateleiras desenhado com o item real do catálogo (`createContainedItemModel`, `createContentsView`, `interactives.itemModel`), filho da parte que o leva desde o primeiro quadro, e cada item pegável com uma mão (`take` com `hands: 1`).
+
+  Os goldens do Visor de casas 3D e do adaptador da equipe seguem iguais com `visorLayout` (planta) e `visor` (adaptador).
+
+### Patch Changes
+
+- Updated dependencies [32547af]
+  - @adatechnology/game-interactables@0.4.0
+
+## 0.2.18
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-interactables@0.3.1
+  - @adatechnology/game-render-three@0.4.1
+  - @adatechnology/game-shapes@0.4.1
+
+## 0.2.17
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [18bd23f]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [b37d94f]
+- Updated dependencies [e987bbe]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-shapes@0.4.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-interactables@0.3.0
+  - @adatechnology/game-props3d@0.3.5
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.2.16
 
 ### Patch Changes

@@ -13,8 +13,8 @@ function fitsSize(size: number[], max: number[]): boolean {
 
 describe('catalog and data', () => {
   it('has the expected types', () => {
-    expect(TYPES.length).toBe(51)
-    for (const t of ['fridge', 'fridge_compact', 'kitchen_cabinet_base', 'kitchen_cabinet_wall', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'stove', 'gas_bottle', 'sink_kitchen', 'sink_bathroom', 'shower', 'toilet', 'utility_sink', 'wall_socket', 'wall_switch', 'service_entrance', 'conduit_run', 'tv', 'microwave', 'washing_machine', 'sofa', 'armchair', 'dining_chair', 'bed_double', 'bed_single', 'bench', 'blinds', 'curtain', 'trash_bin', 'wheelie_bin', 'mailbox', 'dog_house', 'bbq', 'clothesline', 'bunk_bed', 'wood_stove', 'fireplace', 'outhouse', 'well', 'cooler', 'campfire', 'camp_stove', 'gas_canister', 'lantern_lamp', 'camp_chair', 'camp_table']) expect(TYPES).toContain(t)
+    expect(TYPES.length).toBe(52)
+    for (const t of ['fridge', 'fridge_compact', 'kitchen_cabinet_base', 'kitchen_cabinet_wall', 'pantry', 'wardrobe', 'dresser', 'nightstand', 'bathroom_cabinet', 'stove', 'gas_bottle', 'sink_kitchen', 'sink_bathroom', 'shower', 'toilet', 'utility_sink', 'wall_socket', 'wall_switch', 'service_entrance', 'service_mast', 'conduit_run', 'tv', 'microwave', 'washing_machine', 'sofa', 'armchair', 'dining_chair', 'bed_double', 'bed_single', 'bench', 'blinds', 'curtain', 'trash_bin', 'wheelie_bin', 'mailbox', 'dog_house', 'bbq', 'clothesline', 'bunk_bed', 'wood_stove', 'fireplace', 'outhouse', 'well', 'cooler', 'campfire', 'camp_stove', 'gas_canister', 'lantern_lamp', 'camp_chair', 'camp_table']) expect(TYPES).toContain(t)
   })
 
   it('has at least 70 well-formed items with names in both locales', () => {
@@ -435,6 +435,20 @@ describe('electrical', () => {
     expect(mid[1]).toBeLessThan(chord)
     expect(b.spec.parts!.some((p) => p.id === 'meter_door')).toBe(true)
     expect(b.spec.wires!.some((w) => w.kind === 'conduit')).toBe(true)
+  })
+
+  it('service mast is a galvanised pipe up the facade with a weatherhead bent over the top, its capped end pointing down', () => {
+    const b = build('service_mast', { points: [[0, 1.65, 0], [0, 5.85, 0], [0, 5.92, 0.03], [0, 5.93, 0.08], [0, 5.92, 0.13], [0, 5.85, 0.16]] })
+    const prims = localPrims(b)
+    expect(prims.length, 'five stretches of pipe and the cap').toBe(6)
+    expect(prims.every((p) => p.kind === 'cylinder' && p.material === 'metal')).toBe(true)
+    expect(b.spec.wires ?? []).toEqual([])
+    expect(b.spec.colliders!.length).toBe(1)
+    const plain = localPrims(build('service_mast'))
+    const foot = plain[0]!
+    const cap = plain[plain.length - 1]!
+    expect(cap.y, 'the default mast reaches the item height').toBeGreaterThan(4.2)
+    expect(cap.z - foot.z, 'bent toward the street (+z)').toBeCloseTo(0.16)
   })
 
   it('conduit run follows the item points', () => {

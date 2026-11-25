@@ -7,6 +7,7 @@ import { registries } from './registry'
 import { weightedOrder } from './rng'
 import type { Rng } from './rng'
 import type { FurnitureDef, PlacedItem, Plan, Rect, Room, Slot, Vec2, Weights } from './types'
+import { visorLayout } from './layout-mode'
 
 function candidatesOf(cats: Weights): { it: FurnitureDef; weight: number }[] {
   const out: { it: FurnitureDef; weight: number }[] = []
@@ -40,6 +41,9 @@ function itemRect(slot: Slot, it: FurnitureDef, shift: number): Rect {
   return [u0, v0, u0 + extentU, v0 + extentV]
 }
 
+/** Gap between an item and the one it stands `beside`, metres. */
+const BESIDE_GAP = 0.03
+
 /** Radius of the relaxed pass: a required item that did not fit settles for a narrower walkway. */
 const RELAXED_RADIUS = 0.12
 
@@ -61,6 +65,8 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
   const state: Record<string, PlacedItem> = {}
   const solids: Rect[] = []
   const reserves: Rect[] = []
+  // what the doors and drawers of the items open into: no item stands there, low ones included
+  const openings: Rect[] = []
   const rims: Rect[] = []
   const inners = usableParts(room, 0)
   const grid = createGrid(plan, room)
@@ -92,11 +98,11 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
     u.members
       .flatMap((m) => [m.requires, m.on])
       .filter(Boolean)
-      .filter((id) => slots.some((s) => s.id === id && !u.members.includes(s)))
+      .filter((id) => slots.some((s) => (s.id === id || s.group === id) && !u.members.includes(s)))
   const done = new Set<string>()
   const ready = (u: Unit) => dependencies(u).every((id) => done.has(id as string))
   const make = (s: Slot, it: FurnitureDef, r: Rect, parent: PlacedItem | null, overheadOff?: boolean) => {
-    const f: Vec2 = [s.frontU, s.frontV]
+    const f: Vec2 = facingOf(s)
     const id = room.id + '.' + s.id
     const m: PlacedItem = {
       id,
@@ -132,8 +138,34 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
     if (parent && s.anchor === 'inside') m.y = r2(parent.y || 0)
     if (room.link) m.link = { from: room.link[0], to: room.link[1] }
     state[s.id] = m
+    // a slot expanded from `any` is found by its group too (`beside: 'bed'` finds the bed on whichever wall it went)
+    if (s.group && !state[s.group]) state[s.group] = m
     items.push(m)
     return m
+  }
+  // an item `beside` another faces the way that one does; any other the way its slot does
+  const facingOf = (s: Slot): Vec2 => {
+    const parent = s.anchor === 'beside' ? state[s.on as string] : undefined
+    return parent ? [parent.frontU ?? 0, parent.frontV ?? 1] : [s.frontU, s.frontV]
+  }
+  // beside the item of the slot `on`: its back on the line of that item's back, `BESIDE_GAP` from its side
+  const besideRects = (s: Slot, it: FurnitureDef): { rect: Rect }[] => {
+    const parent = state[s.on as string]
+    if (!parent) return []
+    const f: Vec2 = [parent.frontU ?? 0, parent.frontV ?? 1]
+    const r: Rect = parent._r ?? parent.aabb
+    const sign = s.side === 'left' ? 1 : -1
+    const t: Vec2 = [-f[1] * sign, f[0] * sign]
+    const [extentU, extentV] = extent([it.w, it.d], f)
+    const halfAlong = Math.abs(t[0]) * (r[2] - r[0]) / 2 + Math.abs(t[1]) * (r[3] - r[1]) / 2
+    const itemAlong = Math.abs(t[0]) * extentU / 2 + Math.abs(t[1]) * extentV / 2
+    const cu = (r[0] + r[2]) / 2 + t[0] * (halfAlong + BESIDE_GAP + itemAlong)
+    const cv = (r[1] + r[3]) / 2 + t[1] * (halfAlong + BESIDE_GAP + itemAlong)
+    // the back on the parent's back line
+    const back = f[1] > 0 ? r[1] : f[1] < 0 ? r[3] : f[0] > 0 ? r[0] : r[2]
+    const u0 = f[0] > 0 ? back : f[0] < 0 ? back - extentU : cu - extentU / 2
+    const v0 = f[1] > 0 ? back : f[1] < 0 ? back - extentV : cv - extentV / 2
+    return [{ rect: [u0, v0, u0 + extentU, v0 + extentV] }]
   }
   const tryFit = (s: Slot, relax: boolean, overheadOff?: boolean): PlacedItem | null => {
     const cands = weightedOrder(candidatesOf(s.cats), rng)
@@ -153,13 +185,13 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
     }
     for (const { it } of cands) {
       if (it.w > s.w + EPS || it.d > s.d + EPS) continue
-      const f: Vec2 = [s.frontU, s.frontV]
+      const f: Vec2 = facingOf(s)
       const slide = s.anchor === 'wall' ? (s.slide == null ? 2.0 : s.slide) : 0
       const shifts = [0]
       for (let k = 1; k * 0.1 <= slide + 1e-9; k++) shifts.push(k * 0.1, -k * 0.1)
-      let found: { rect: Rect; cl?: Rect | null; rimRect?: Rect | null } | null = null
+      let found: { rect: Rect; cl?: Rect | null; rimRect?: Rect | null; front?: Rect | null } | null = null
       const car = it.category === 'car' && !relax
-      const tries: { rect: Rect; clear?: Rect }[] = car ? carCandidates(s, it, plan.carClearance) : shifts.map((shift) => ({ rect: itemRect(s, it, shift) }))
+      const tries: { rect: Rect; clear?: Rect }[] = car ? carCandidates(s, it, plan.carClearance) : s.anchor === 'beside' ? besideRects(s, it) : shifts.map((shift) => ({ rect: itemRect(s, it, shift) }))
       for (const attempt of tries) {
         const r = attempt.rect
         if (!insideUnion(r, inners)) continue
@@ -171,12 +203,19 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
         if (zones.some((z) => overlaps(r, z))) continue
         if (windowZones.some(({ z, j }) => blocksWindow(it, j, overheadOff) && overlaps(r, z))) continue
         if (solids.some((o) => overlaps(r, o))) continue
+        if (openings.some((o) => overlaps(r, o))) continue // (empty in the Visor's layout)
         if (!it.deck && rims.some((a) => overlaps(r, a))) continue
         let cl: Rect | null = car ? (attempt.clear as Rect) : null
         if (!car && !relax && s.clearance > 0 && !it.low) {
           cl = clearRect(r, f, s.clearance)
           if (!insideUnion(cl, inners)) continue
           if (items.some((m) => !m.low && !m.flat && !m.on && overlaps(cl as Rect, m._r ?? m.aabb))) continue
+        }
+        let front: Rect | null = null
+        if (!car && it.opening && !visorLayout()) {
+          front = clearRect(r, f, it.opening)
+          if (!insideUnion(front, inners)) continue
+          if (items.some((m) => !m.flat && !m.on && overlaps(front as Rect, m._r ?? m.aabb))) continue
         }
         if (!it.low && reserves.some((q) => overlaps(r, q))) continue
         let rimRect: Rect | null = null
@@ -185,11 +224,12 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
           if (!insideUnion(rimRect, inners) || solids.some((o) => overlaps(rimRect as Rect, o)) || zones.some((z) => overlaps(rimRect as Rect, z))) continue
         }
         if (!(relax ? reachable(relaxedGrid, solids.concat([r]), RELAXED_RADIUS) : reachable(grid, solids.concat([r]), inflation))) continue
-        found = { rect: r, cl, rimRect }
+        found = { rect: r, cl, rimRect, front }
         break
       }
       if (!found) continue
-      const { rect: r, cl, rimRect } = found
+      const { rect: r, cl, rimRect, front } = found
+      if (front) openings.push(front)
       if (it.flat) return make(s, it, r, null)
       const m = make(s, it, r, null, overheadOff)
       if (cl) reserves.push(cl)
@@ -237,6 +277,7 @@ export function fillRoom(plan: Plan, room: Room, slots: Slot[], rng: Rng): { ite
     const u = pending.splice(i, 1)[0]
     process(u)
     for (const m of u.members) done.add(m.id)
+    if (u.group) done.add(u.group)
   }
   return { items, missing }
 }

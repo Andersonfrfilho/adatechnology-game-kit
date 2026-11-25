@@ -1,5 +1,64 @@
 # @adatechnology/game-render-three
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+
+## 0.4.0
+
+### Minor Changes
+
+- 08c5801: Menos chamadas de desenho nos piores quadros da explosão da casa, sem mudar o que aparece na tela.
+
+  - `createStaticBatcher` ganhou `shadowOnly`: as malhas continuam desenhadas sozinhas para a câmera e deixam de projetar sombra enquanto estão no lote; cada lote (só posições, um por lado que o passe de profundidade desenha) entra só no mapa de sombra. Malha com sombra que depende do material (recorte por mapa, planos de corte, deslocamento, material de profundidade próprio) continua projetando a própria. A malha que muda volta a projetar a própria sombra, do formato novo, no quadro em que muda. `maxVertices` divide um grupo grande em lotes menores, para cada um caber num quadro do orçamento.
+  - Casa (`game-floorplan-three`): as peças paradas projetam a sombra de poucos lotes só de sombra (`createHouseShadowBatches`, ligado por padrão em `house.update`; `shadowBatches: false` desliga, e `?shadowBatches=0` na sala compara). Na sala, a sombra da estrutura caiu de 231 para 16 chamadas por quadro. Quando um quarto das peças volta a projetar sozinha (explosão, corte de andar), os lotes são refeitos do que ficou de pé depois de 2 s sem mudança.
+  - Veículo atingido (`game-vehicles-three`): as peças paradas entram em lote logo no golpe, em pedaços de até 16k vértices, e só as que mudam saem; as que saíram voltam a um lote novo, no formato amassado, depois de 1,5 s sem mudança. Antes, o carro esperava 1,5 s desenhando peça por peça (~620 chamadas por quadro, com sombra) e depois juntava tudo de uma vez (16 a 22 ms num quadro). No sedã a 60 quadros por segundo: de 95 quadros acima de 300 chamadas para ~10, nenhuma atualização acima de ~6 ms, e 70 + 37 de sombra no fim (eram 67 + 34).
+
+- b37d94f: Spec 010, fases 1 e 3: passo fixo único e filas no prazo do quadro.
+
+  - `game-physics`: `PhysicsLoop.stepFixed(steps)` roda passos inteiros vindos do agendador (`step(dt)` continua, com o próprio acumulador). **Quebra para quem implementa `PhysicsWorld`:** o membro `readActiveBodies(out)` passa a ser obrigatório (devolve só os corpos acordados).
+  - `game-physics-jolt`: implementa `readActiveBodies`.
+  - `game-render-three`: `createStaticBatchQueue` e a opção `queue` dos lotes estáticos, para o orçamento do quadro drenar a junção dos lotes.
+  - `game-fluids-three`: `FilmManager.deferredQueue()`, a fila do filme de líquido no prazo do quadro; o tempo devido de um grid que sai é esquecido junto com ele.
+  - `game-crowd`: o campo de fluxo passa a andar em células por passo (`cellsPerStep`) por padrão, não pelo relógio; `flow.ms` vale 0. Mesmo resultado em toda máquina.
+  - `game-destruction-three`: `DestructionRenderer` ganha `interpolate`, `present`, `restoreStepPose`, `markMoved` e `deferredQueues` (desenho interpolado entre passos e filas registradas no orçamento); uma peça segurada pelo host (empurrar, carregar) é lida mesmo com o motor a dando como dormindo.
+  - `game-test-room`: opção `frameTargetMs` (prazo do quadro); a pose do passo volta antes da fase `input`, para empurrar e carregar escreverem na pose do passo, não no desenho misturado do quadro anterior.
+  - `game-destruction`: uma operação que lança exceção não passa estrutura e `detach` pela metade para a seguinte.
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+
 ## 0.3.0
 
 ### Minor Changes

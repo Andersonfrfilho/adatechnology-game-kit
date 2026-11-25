@@ -489,6 +489,8 @@ declare global {
     __playerReport: AreaReport<'player-test-area'>
     __crowdReport: AreaReport<'crowd-test-area'>
     __furnitureReport: AreaReport<'interactables-test-area'>
+    /** The furniture room page's boot is over: its loading indicator is down (the modules are in, the area of `?area=` laid and at rest). */
+    __furnitureReady?: boolean
     __showroom: ShowroomApi
   }
 }

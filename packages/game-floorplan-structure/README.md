@@ -83,3 +83,12 @@ The contract of **structural** masonry exists (`MASONRY_SYSTEM.STRUCTURAL`, the 
 `engine.generate(id, { streetPoles: true })` is for a city that draws its own street poles: the service entrance's post (`serviceEntrance.pole`, the padrão) stands inside the lot,
 `SERVICE_POST_INSIDE_LOT` behind its front edge, or is `null` when the front yard is shallower than `SERVICE_POST_MIN_YARD` (the meter is then on the facade). The street's drop lands at
 `serviceEntrance.drop[0]` either way. Without the option the pole stands on the sidewalk, `SERVICE_POLE_OUTSIDE_LOT` in front of the lot, as the house's own grid pole.
+
+### A street with a utility network (`street: 'network'`)
+
+`engine.generate(id, { street: 'network' })` is for a street whose utility network (`game-urban/networks`) lays the poles and the drops. The entrance is marked
+`serviceEntrance.street: 'network'` (absent is `'own'`, every other plan as before): a meter post (padrão) of `NETWORK_POST.h` (6 m) inside the lot with the drop anchored at
+`NETWORK_POST.anchor` (5.7 m), or, with no front yard, the descent up the facade as a mast to the same height. `utilities.connections` lists where the house takes the five
+networks in its plan (`at` is `[u, y, v]`): power at the drop's anchor with `installedKva` (`installedKvaOf`: sockets and light points 0.1 kVA each, shower heaters by power),
+telecom 0.6 m under it, the inspection box outlet with its `invert`, the downspout outlet at the lot's front edge and the water meter beside the electric meter.
+`connectionsInWorld({ plan, lot, placement, kerb })` places them on the lot as the `UtilityConnection`s (`frame: 'world'`) a network takes, the downspout carried `kerb` metres out.

@@ -321,6 +321,24 @@ if (PART === 'all' || PART === 'shots') {
   await page.close()
 }
 
+// the whole house (`?area=house_complete`): every house item of the SDK (household types, the furniture of the house plans, the goods a house keeps) is laid with
+// its name on the floor, and each piece is looked at, opened, picked up, shot and broken. A piece added to the SDK that does not reach the room fails here.
+if (PART === 'all' || PART === 'house') {
+  const page = await open('?lang=pt-BR&ui=0&area=house_complete')
+  // the page boots behind the room's loading indicator: it is still up once the modules are in, and goes down only after the area is laid and has come to rest
+  const loading = await page.evaluate(() => window.__testRoom.loading.state() ?? null)
+  await page.waitForFunction(() => window.__furnitureReady === true, null, { timeout: 600000, polling: 1000 })
+  const ready = await page.evaluate(() => ({ active: window.__testRoom.loading.active, spawned: window.__testRoom.spawned().length }))
+  check('house_complete: the loading indicator covers the page until the area is laid and at rest', loading !== null && loading.total === 100 && !ready.active && ready.spawned > 50, { loading, ready })
+  const report = await page.evaluate(async () => {
+    const room = window.__testRoom
+    return room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('house_complete_')))
+  })
+  for (const result of report.results) check(`house_complete: ${result.name}`, result.ok, result.checks.filter((c) => !c.ok).map((c) => c.label))
+  await page.screenshot({ path: join(shots, '06-whole-house-after-trials.png'), timeout: 300000 })
+  await page.close()
+}
+
 if (PART === 'all' || PART === 'shots') {
   const p = await open('?lang=pt-BR&ui=0')
   const shot = async (/** @type {string} */ name, /** @type {string} */ setup) => {

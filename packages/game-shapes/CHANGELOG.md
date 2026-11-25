@@ -1,5 +1,67 @@
 # @adatechnology/game-shapes
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+
+## 0.4.0
+
+### Minor Changes
+
+- 18bd23f: As formas passam pelo coordenador de workers (spec 009, T11): `shapesGenerateKind` (`shapes.generate`, faixa `build`, entrada `./worker-kinds`) e `createShapePool({ workers })`; o `size`/`spawn` antigo continua como legado. O preset inclui a categoria em `KIT_WORKER_KINDS`.
+- e987bbe: `fitOrientedBoxes(points, triangles?)` passa a aceitar também os triângulos da peça. Assim, uma peça desenhada por anéis de vértices, como poste, cano ou fio, é segurada pelo corpo inteiro, e não por placas nas pontas. O mesmo vale para um cano em L, que segue a curva e não vira uma placa de ar atravessando a dobra.
+
+  O poste de concreto do lote colide como fuste de 7,5 m, com cruzeta e isoladores. Deitado, ele dorme em cerca de 2 s com o Jolt.
+
+  Sem os triângulos, o resultado da função continua o mesmo de antes.
+
+### Patch Changes
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+
 ## 0.3.0
 
 ### Minor Changes

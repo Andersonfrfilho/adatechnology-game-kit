@@ -67,6 +67,8 @@ export interface RoomAvatar {
   hand?(side: 'R' | 'L'): THREE_NS.Object3D
   /** The joint of a shoulder: in third person the room rests a long gun's stock in the pocket just inside the right one (`ModuleHost.holdFrame`). */
   shoulder?(side: 'R' | 'L'): THREE_NS.Object3D
+  /** A place on the body that takes a weapon put away (`hip`, `back`): the room answers `ModuleHost.bodySlot` from it. */
+  slot?(name: 'hip' | 'back' | 'sling'): THREE_NS.Object3D
   /**
    * Where the body's eyes are after its pose (world space), sampled before `reach`: with it the room draws the body in both views, puts the first-person camera there (pulled back out of
    * walls) and shoots, aims and reaches from there in both views. Without it the room keeps the player's own eye.

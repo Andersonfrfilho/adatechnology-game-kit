@@ -39,6 +39,9 @@ import { createModule as createPlayerModule } from '../../player-test-area/src/e
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
 import { createHouseTablesAreas } from './house-tables.js'
+import { createHouseCompleteArea } from './house-complete.js'
+import { bootFurnitureRoom as boot } from './boot.js'
+import { planFurnitureTypes } from './house-complete-layout.js'
 
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
 /** @typedef {import('@adatechnology/game-test-room').ModuleReport} ModuleReport */
@@ -173,18 +176,19 @@ function loadSteps(room, options, lang) {
   mod('animals', () => createAnimalsModule({ locale: lang }))
   mod('vfx', () => createVfxTestModule({ locale: lang }))
   mod('terrain', () => createTerrainTestModule({ locale: lang }))
-  // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze; the sky and the fog stay the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
+  // the sound and the weather (with its picture: rain curtain, near rain, mist, lightning, headlights, haze and the sky dome; the fog stays the room's own) ride along too: they use the room's engine and environment (`host.audio`, `host.environment`), so what the furniture does under rain, wind and shots is heard and seen here
   // the probe of the sound bench is a portable radio of the goods catalogue, drawn by game-items-three
   const radio = (/** @type {unknown} */ THREE) => buildItem(/** @type {ThreeLib} */ (THREE), /** @type {Parameters<typeof buildItem>[1]} */ (createGoodsItems().items.get('portable_radio'))).root
   mod('audio', () => createAudioTestModule({ locale: lang, probe: radio }))
   // the measuring area of the sound criteria C1–C10 (`?area=sound_check_area`): files played live, measured offline through the real engine, 3 s recorded for the owner's ear
   // the source is the same portable radio; the wall that muffles it is a wall of the houses (wallPiece: the houses' structure and renderer)
   mod('soundCheck', () => createSoundCheckModule({ locale: lang, probe: radio, wall: (THREE) => wallPiece(/** @type {ThreeLib} */ (THREE), { w: 4, h: 2.6 }).build(/** @type {ThreeLib} */ (THREE)) }))
-  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: { sky: false }, vehicles: (THREE) => createVehicleBuilder(/** @type {ThreeLib} */ (THREE), lang, room.effects), rigItem: 'sedan' }) }))
+  mod('weather', () => createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, vehicles: (THREE) => createVehicleBuilder(/** @type {ThreeLib} */ (THREE), lang, room.effects), rigItem: 'sedan' }) }))
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   // ?shadowBatches=0: each mesh of the house casts its own shadow, as before the shadow batches (to compare the two)
   const shadowBatches = new URLSearchParams(globalThis.location?.search ?? '').get('shadowBatches') === '0' ? { shadowBatches: false } : {}
-  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang, ...shadowBatches }))
+  // every furniture type of the house plans is a catalogue item here (`furniture_<type>`), so the whole house (`?area=house_complete`) can lay each one
+  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang, furniture: planFurnitureTypes(), ...shadowBatches }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
   // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
   const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
@@ -206,6 +210,11 @@ function loadSteps(room, options, lang) {
   const [houseTables, houseTablesKitchen] = createHouseTablesAreas({ locale: lang, measure: (itemId) => room.measure(itemId), floorFront: () => room.terrain.bounds[3] })
   mod('houseTables', () => houseTables)
   mod('houseTablesKitchen', () => houseTablesKitchen)
+  // the whole house (`?area=house_complete`): every catalogue id of what a house of the kit holds, each with its name on the floor, to look at, open, pick up, shoot and break
+  const names = () => new Map(room.testTable.items().map((item) => [item.id, item.name]))
+  /** @type {Map<string, string> | null} */
+  let named = null
+  mod('houseComplete', () => createHouseCompleteArea({ locale: lang, measure: (itemId) => room.measure(itemId), nameOf: (itemId) => (named ??= names()).get(itemId) ?? itemId, floorFront: () => room.terrain.bounds[3] }))
   // the furniture comes last: its report is the base of the whole one
   steps.push({
     key: 'furniture',
@@ -277,4 +286,18 @@ export async function loadIntoAsync(room, options = {}) {
   }
   onProgress?.({ index: steps.length + 1, total: steps.length, key: 'done', name: '', done: true })
   return assemble(results)
+}
+
+/**
+ * Boots the furniture room page (sala-moveis.html): the room's loading indicator from the start, the modules with a bar (`loadIntoAsync`), the area of `?area=` laid and
+ * settled, then the room. Publishes the modules' report as `window.__furnitureReport` once they are in.
+ * @param {TestRoom} room
+ */
+export function bootFurnitureRoom(room) {
+  return boot(room, {
+    load: (r, options) => loadIntoAsync(r, options),
+    onLoaded: (report) => {
+      /** @type {{ __furnitureReport?: unknown }} */ (globalThis).__furnitureReport = report
+    },
+  })
 }

@@ -1,5 +1,105 @@
 # @adatechnology/game-floorplan-structure
 
+## 4.0.2
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-destruction@0.29.3
+
+## 4.0.1
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-destruction@0.29.2
+
+## 4.0.0
+
+### Minor Changes
+
+- 32547af: Móveis sem z-fighting e layout com o espaço real de cada coisa: sofá, geladeira e cuba (e mais 14 móveis do household) sem faces no mesmo plano; portas e gavetas com a faixa de abertura livre (`opening`); criado-mudo ao lado da cabeceira (`beside`), também na edícula; quadro de luz, tomadas e interruptores com a caixa real na parede; cano de gás por cima das portas; gabinete ao lado da pia na altura do tampo; vaso de planta com a copa até onde a parede deixa; cabo só em tomada do mesmo lado da parede.
+
+  Plafon apagado em vidro branco leitoso, aceso emissivo. Conteúdo de gavetas, portas e prateleiras desenhado com o item real do catálogo (`createContainedItemModel`, `createContentsView`, `interactives.itemModel`), filho da parte que o leva desde o primeiro quadro, e cada item pegável com uma mão (`take` com `hands: 1`).
+
+  Os goldens do Visor de casas 3D e do adaptador da equipe seguem iguais com `visorLayout` (planta) e `visor` (adaptador).
+
+### Patch Changes
+
+- Updated dependencies [32547af]
+  - @adatechnology/game-floorplan@0.5.0
+
+## 3.1.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-destruction@0.29.1
+
+## 3.1.0
+
+### Minor Changes
+
+- 30a8199: Desenho das redes do bairro (spec 011, T2.8d). `game-urban/networks`: `distributionHardwareOf` (cruzeta e isoladores na faixa MT, trafo com buchas, grampo da BT, uma braçadeira por cabo de telecom, braço e luminária, olhal do estai, tudo lido das `slots`), `networkLampsOf` (o estado da lâmpada do #470 por nó `light`) e o `DistributionSpec` com `crossarm`, `insulators`, `bushings`, `lowVoltage`, `telecom` e `guy`. `game-urban-three`: `createUrbanThree(...).drawNetworks(networks, { isNight, lamps, surfaceAt, poles })` com mastros e ferragem instanciados, vãos fundidos por classe com catenária (`spans`: faixa de índices por vão), estai nos postes de esquina e fim de linha ancorado na calçada, LOD de longe em `LineSegments` (`setFocus`), luzes pelo `LightBudget` do host; cerca de 10 chamadas perto. `game-floorplan-three`: em `street: 'network'` a casa não desenha mais o ramal aéreo (é da rede). O poste `concrete_distribution` desenhado sozinho pelo registro continua o braço simples (golden da área de teste sem diff).
+
+  Rua de verdade (revisão do dono): a MT corre por todo poste de rua do alimentador (cruzeta e 3 fases em todos), não só até o trafo. O ramal sai do poste em frente ao lote ou atravessa a rua em linha reta (no máximo `power.dropMaxSkew` = 30° da normal), nunca passa sobre outro lote, e cada poste leva no máximo `power.dropsPerPole` = 4 ramais; sem poste que sirva, o gerador acrescenta um na estação do lote. O `validateNetworks` ganha `frontages` (de `GeneratedNetworks.frontages`) e os códigos `drop_skewed`, `drop_off_frontage`, `drop_over_other_lot` e `pole_too_many_drops`; aviso novo `drop_off_practice`. O padrão de entrada em `street: 'network'` é um poste fino de concreto de 6 m (`NETWORK_POST`) com o ramal ancorado na face da rua, a caixa do medidor no pé (`meter.place: 'post'`) e o eletroduto descendo pela face: nenhum fio do topo do poste até outro ponto (o objeto `service_entrance` ganha a variante `network`).
+
+- 30a8199: Lado da casa das redes do bairro (spec 011, T2.8c): `engine.generate(id, { street: 'network' })` marca a entrada `serviceEntrance.street: 'network'` (ausente = `'own'`, todas as outras plantas iguais, goldens sem diff), põe o poste do padrão de 6 m no lote com o ramal ancorado a 5,7 m (sem quintal, o eletroduto sobe a fachada como pontalete até a mesma altura) e declara em `utilities.connections` os cinco pontos de ligação (energia com `installedKva`, telecom 0,6 m abaixo, saída da caixa de inspeção com `invert`, buzinote na divisa da frente, cavalete do hidrômetro). `connectionsInWorld` passa esses pontos para o mundo como `UtilityConnection`. No `-three`, uma casa em `'network'` nunca desenha os postes vizinhos nem a rede entre eles; com interativos o padrão é um objeto só (`service_entrance`). **Em `'network'`, `ElectricalInfo.pole` é o poste do padrão, não o da concessionária.**
+
+## 3.0.1
+
+### Patch Changes
+
+- 33b7423: Instalações da casa como numa obra brasileira: nenhum cano no ar, nenhum cruzando porta ou janela.
+
+  - Linha de gás em cobre (NBR 15526) embutida num rasgo da parede; onde há porta no caminho, desce ao contrapiso e passa sob a soleira. A mangueira do fogão (amarela, NBR 8613) entra com o fogão.
+  - Esgoto (NBR 8160): pia, tanque e máquina saem do ponto na parede atrás da peça e descem nela; vaso e ralo descem direto pelo piso; no andar de cima, cruzam dentro da laje até a prumada; no térreo, terminam no contrapiso sobre o ramal enterrado.
+  - Água fria (NBR 5626) e eletrodutos (NBR 5410) de sobrado descem pela parede de cada andar, trocando de prumada dentro da laje, sem atravessar cômodo de cima nem janela alta de pé-direito duplo; luz do térreo é alimentada pela laje sobre ela.
+  - Água sob a pia entra com a pia; condutores pluviais entram com as calhas (nível 8); calçada de proteção e barrado cerâmico externo são o fim da obra (nível 8).
+  - Fundação: baldrame impermeabilizado (betume) e cama de terra compactada só sob a casa, sem a faixa marrom em volta.
+
+## 3.0.0
+
+### Minor Changes
+
+- 78ac539: Os fios do poste do lote soltam-se em trechos que não vão com o poste. Antes, cada trecho da fiação pendia do poste por uma junta que sempre une; ao cair, o poste levava os fios que a explosão não tinha soltado e virava um corpo de 1000 kg com 26 caixas e 23 m de largura, e a varredura contínua (CCD) do Jolt custava 60 a 70 ms por passo. Agora o poste leva só o fuste, a travessa e os isoladores (950 kg, 10 caixas) e cada trecho de fio cai como peça sua, com o próprio cobre.
+
+  `game-contracts`, `game-destruction`: `JointSpec.tears` (padrão falso). A parte `a` pende de `b` só enquanto `b` está de pé (em um grupo ancorado); com `b` solto a junta larga, e o fio de um poste que cai desce sozinho. Uma junta que não rasga continua unindo as duas partes em um grupo. Quem se segura em duas pontas, uma delas de pé (o fio do ramal preso à parede da casa), fica pendurado nela.
+
+  `game-destruction-three`: as peças que um `tears` separou (o fio e o poste de que pendia) não se tocam mais: sem isso o poste de 950 kg, ao tombar, batia nos fios de 12 kg que ele acabava de largar e os lançava (C1 de 34 e 105 kg·m, C2 acima do limite em 4 de 10 rodadas). `JointState.tears` (contrato), `PieceSystem.tether`, e o renderizador marca os pares ao soltar os grupos.
+
+  `game-floorplan-structure`: `Support.tears` chega à junta da especificação destrutível.
+
+  `game-floorplan-three`: os trechos da grade e do ramal pendem do poste mais próximo por uma junta que rasga (`tears`); o trecho que fica dentro de laje ou parede, ou ao lado de um, continua preso a ela. Com `segmentLimits.wiring: Infinity` a fiação segue como o time desenhou (uma peça só). Goldens regravados: `destruction/breach`, `destruction/spall`, `destruction/fracture` e o resultado do blast (21 objetos a mais, os trechos).
+
+- 65b522a: O que é preso no mundo real é preso no mundo da destruição: a casa carrega como um grupo só, e nada cai ou escorrega na carga. Novo tipo de junta `slide` (corrediça de gaveta, 100 de resistência, sai com a mão ou com chave de fenda, 3 s) em `JointKind` e `JOINT_DEFAULTS`; as gavetas dos móveis do `game-interactables-household` passam de `clip` para `slide`. Na casa (`game-floorplan-three`), cada peça declara onde se prende (`holder`, ou `holdOn: 'floor' | 'wall'` com `holdJoint`): muro do lote e poste fincados no chão com a junta que `JOINT_BY_MATERIALS` dá contra concreto (tijolo e concreto: argamassa), soleira assentada no baldrame, portão e porta da caixa de correio na dobradiça do muro ao lado (`slide` no portão de correr), porta do box na parede do banheiro, portas e gavetas dos móveis no piso onde o móvel está (`hinge`/`slide`), eletroduto aparente grampeado na parede, botijão apoiado no piso (`resting`), cano fora da parede preso na laje em que entra; com o poste preso, a fiação pendura nele. Só cai quando essa junta quebra. Limitação conhecida: as portas e gavetas dos móveis da casa ficam presas ao piso sob o móvel (a laje do andar, ou o chão no térreo) até o corpo do móvel virar uma parte do mundo da destruição; hoje elas só caem quando a dobradiça/corrediça quebra ou o piso vai. Peça que diz onde se prende e não acha nada (`holdOn` sem piso, parede ou chão sob ela) vai para `house.structure.unheld`, e o teste de carga exige essa lista vazia em todo o catálogo. Peças interativas abertas são medidas fechadas. O que se finca no chão segura como a base enterrada: `embedmentStrength` (game-destruction) dá a resistência da junta pela base enterrada no solo (`soils.json`, pressão básica × segurança, camada a camada) sobre a base de referência de `EMBEDMENT_DEFAULTS`; `postEmbedment` é a regra do poste (10% da altura + 0,6 m). `Support.strength` (game-floorplan-structure) leva a resistência até a junta. Na casa, o poste declara a base pela regra, o muro do lote o baldrame (`GROUND_BEAM_DEPTH`) ao longo do comprimento, e uma peça desenhada abaixo do terreno conta o que está enterrado; pé no terreno ou abaixo dele (o terreno lido no canto mais baixo da pegada) está ancorado, nunca solto.
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [f17aebb]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [b37d94f]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [1fede95]
+- Updated dependencies [6473d97]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-destruction@0.29.0
+  - @adatechnology/game-floorplan@0.4.0
+
 ## 2.3.1
 
 ### Patch Changes

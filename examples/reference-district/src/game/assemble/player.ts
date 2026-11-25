@@ -5,7 +5,7 @@ import type { CameraRig } from '@adatechnology/game-camera'
 import { createPlayerAvatar } from '@adatechnology/game-characters-three'
 import type { PlayerAvatar } from '@adatechnology/game-characters-three'
 import type { NavGrid, PlayerCrowdLike } from '@adatechnology/game-crowd'
-import { createPlayer } from '@adatechnology/game-player'
+import { createPlayer, createStepPose } from '@adatechnology/game-player'
 import type { Player } from '@adatechnology/game-player'
 import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
 
@@ -23,6 +23,7 @@ const WALK_KEYS: Readonly<Record<string, readonly [forward: number, right: numbe
 }
 const RUN_KEYS = ['ShiftLeft', 'ShiftRight']
 const CYCLE_KEY = 'KeyV'
+const START_PITCH = 0.1
 
 export type PlayerRig = {
   readonly player: Player
@@ -33,12 +34,16 @@ export type PlayerRig = {
   /** What the scripted run holds down in place of the keys: `forward` and `right` in -1..1. */
   readonly held: { forward: number; right: number; run: boolean }
   setMode(mode: CameraChoice): void
+  /** Puts the body back as it began (where it stood, its vitals, alive) looking the way it looked; the world stays as it is. */
+  backToStart(): void
   /** Hands the body the crowd it fights and is held by (the crowd is made after the body, which it hunts). */
   bindCrowd(crowd: PlayerCrowdLike): void
   /** One fixed step: reads the keys and moves the body on the nav grid. */
   step(dt: number): void
-  /** One frame: poses the avatar by the body's speed and places the camera. */
-  pose(dt: number): void
+  /** Draws the body where the frame is between its last two steps (`alpha`, the scheduler's) and places the camera. */
+  pose(dt: number, alpha: number): void
+  /** The body was moved by hand (a placed spot): it is drawn there at once, not swept from where it was. */
+  snap(): void
   dispose(): void
 }
 
@@ -62,7 +67,10 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
   world.view.scene.add(avatar.root)
   const camera = createCameraRig(THREE, { locale: 'pt-BR' })
   camera.setMode(mode)
-  const view = { yaw: start.yaw, pitch: 0.1 }
+  const groundAt = (x: number, z: number): number => world.ground.at(x, z)
+  const view = { yaw: start.yaw, pitch: START_PITCH }
+  const startSave = player.save()
+  const stepPose = createStepPose(player.state)
   const held = { forward: 0, right: 0, run: false }
   const keys = new Set<string>()
   const onKeyDown = (event: KeyboardEvent): void => {
@@ -99,22 +107,35 @@ export function createPlayerRig({ THREE, world, grid, start, mode, seed }: Playe
     view,
     held,
     setMode: (next: CameraChoice) => camera.setMode(next),
+    backToStart() {
+      player.load(startSave)
+      stepPose.reset(player.state)
+      view.yaw = start.yaw
+      view.pitch = START_PITCH
+      held.forward = 0
+      held.right = 0
+      held.run = false
+    },
     bindCrowd: (crowd) => player.setWorld({ solidAt: grid.solidAt, cellKind: grid.cellKind, inWater, crowd }),
     step(dt) {
       const walk = walkOf()
       player.update(dt, { forward: walk.forward, right: walk.right, run: isRunning(), yaw: view.yaw })
       player.state.y = world.ground.at(player.state.x, player.state.z)
+      stepPose.record(player.state)
     },
-    pose(dt) {
+    snap: () => stepPose.reset(player.state),
+    pose(dt, alpha) {
       const { state } = player
+      const drawn = stepPose.blend(alpha)
       const running = isRunning()
-      avatar.root.position.set(state.x, state.y, state.z)
+      avatar.root.position.set(drawn.x, drawn.y, drawn.z)
       avatar.root.rotation.set(0, view.yaw + Math.PI, 0)
-      avatar.update(dt, { speed: Math.hypot(state.vx, state.vz), running, crouch: state.crouch })
+      avatar.update(dt, { speed: Math.hypot(state.vx, state.vz), running, crouch: state.crouch, down: state.downTimer > 0 || !state.alive })
       avatar.root.updateMatrixWorld(true)
-      const isFirst = camera.isFirstPerson()
+      // dead, the camera circles the body from outside in either mode: the whole body is drawn
+      const isFirst = camera.isFirstPerson() && state.alive
       avatar.setView(isFirst ? 'first' : 'third', isFirst ? world.view.camera : null)
-      camera.update(world.view.camera, { x: state.x, y: state.y, z: state.z, yaw: view.yaw, pitch: view.pitch, crouching: state.crouch, alive: state.alive, deathT: state.deathTime }, dt)
+      camera.update(world.view.camera, { x: drawn.x, y: drawn.y, z: drawn.z, yaw: view.yaw, pitch: view.pitch, crouching: state.crouch, alive: state.alive, deathT: state.deathTime, groundAt }, dt)
     },
     dispose() {
       if (document.pointerLockElement === world.view.domElement) document.exitPointerLock()

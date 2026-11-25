@@ -5,6 +5,10 @@
 
 /** The explosive every saved base is measured with; a report without the field was measured with it. */
 export const DEFAULT_EXPLOSIVE = 'c4'
+/** The explosives a run is compared with a base of: the C4 (the old reference) and the M67, the case the frame goal of spec 018 is measured on (D3). Each has its own base. */
+export const GATED_EXPLOSIVES = /** @type {readonly string[]} */ (['c4', 'm67'])
+/** Whether runs with `explosive` are compared with a base (and may become one). @param {string} explosive @returns {boolean} */
+export const isGatedExplosive = (explosive) => GATED_EXPLOSIVES.includes(explosive)
 
 /** How many of the worst f0 (one per stage round) `f0Ms` averages. */
 export const WORST_F0_COUNT = 3
@@ -101,11 +105,11 @@ export const isFrameWorse = (now, was, rule = FRAME_REGRESSION) => now > was * (
 
 /**
  * Whether a saved base can be compared with a run: only if it was measured in the same frame budget mode (a quota number is not a deadline number) and with the same explosive.
- * A missing mode counts as different; a missing explosive counts as c4. A run with another explosive than c4 is never comparable.
+ * A missing mode counts as different; a missing explosive counts as c4. A run with an explosive out of `GATED_EXPLOSIVES` is never comparable.
  * @param {SavedReport | undefined} base @param {string} mode @param {string} [explosive]
  */
 export const isBaseComparable = (base, mode, explosive = DEFAULT_EXPLOSIVE) =>
-  base !== undefined && base.budgetMode === mode && explosive === DEFAULT_EXPLOSIVE && (base.explosive ?? DEFAULT_EXPLOSIVE) === explosive
+  base !== undefined && base.budgetMode === mode && isGatedExplosive(explosive) && (base.explosive ?? DEFAULT_EXPLOSIVE) === explosive
 
 /** @typedef {'compared' | 'no-frame-parts' | 'unmeasurable' | 'no-blocking-level' | 'no-base' | 'other-mode' | 'other-explosive' | 'other-gpu' | 'base-without-metrics'} GateStatus */
 
@@ -121,7 +125,7 @@ export const frameGate = ({ measure, base, mode, variant, gated, explosive = DEF
   if (measure.metrics.length === 0 && measure.problems.length === 0) return none('no-frame-parts', 'the run has no frame parts (ROOM_EXPLOSION_FRAME_PARTS=1 and a stage pass are needed)')
   if (measure.metrics.length === 0) return none('unmeasurable', `no kind gave a number: ${measure.problems.map((entry) => `${entry.key} ${entry.status}`).join(', ')}`)
   if (blocking.length === 0) return none('no-blocking-level', `there are metrics but none at the blocking level (${variant}, ${[...gated].map((level) => `${level}x`).join(', ')}): check ROOM_EXPLOSION_STAGE_THROTTLES`)
-  if (explosive !== DEFAULT_EXPLOSIVE) return none('other-explosive', `this run detonated ${explosive}, the base is c4: a run with another explosive is never compared`)
+  if (!isGatedExplosive(explosive)) return none('other-explosive', `this run detonated ${explosive}: only ${GATED_EXPLOSIVES.join(' and ')} are compared with a base`)
   if (!base) return none('no-base', 'no base report')
   if (!isBaseComparable(base, mode, explosive)) {
     if (base.budgetMode !== mode) return none('other-mode', `the base was measured in ${base.budgetMode ?? 'no mode'}, this run in ${mode}`)

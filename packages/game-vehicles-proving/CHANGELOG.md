@@ -1,5 +1,58 @@
 # @adatechnology/game-vehicles-proving
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-runtime@0.3.3
+  - @adatechnology/game-vehicles-driving@0.2.26
+
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-runtime@0.3.2
+  - @adatechnology/game-vehicles-driving@0.2.25
+
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-runtime@0.3.1
+  - @adatechnology/game-vehicles-driving@0.2.24
+
+## 0.2.0
+
+### Minor Changes
+
+- df3fbd5: O banco de provas deixa de ter acumulador próprio (spec 010 T3.8): `ProvingRun.step(dt)` sai; o agendador anda a corrida com `stepFixed(STEPS_PER_TICK)` na fase `fixedSimulate` (e `advance(seconds)` para quem roda sozinho, sobre um agendador do `game-runtime`). O `time_scale` da área vira quantos tiques de passos cada tique roda. Mesma trajetória a 60 Hz.
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [f7de1ec]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-runtime@0.3.0
+  - @adatechnology/game-vehicles-driving@0.2.23
+
 ## 0.1.13
 
 ### Patch Changes

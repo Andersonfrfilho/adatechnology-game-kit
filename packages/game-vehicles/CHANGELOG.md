@@ -1,5 +1,74 @@
 # @adatechnology/game-vehicles
 
+## 0.6.21
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
+## 0.6.20
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
+## 0.6.19
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+
+## 0.6.18
+
+### Patch Changes
+
+- 5e05bb2: Estilhaços do invólucro (`BlastCharge.casing`), mudança de comportamento: muda o dano da M67, da bomba de cano e de todo explosivo de fragmentação, e a sequência sorteada depois do invólucro.
+
+  - O invólucro nunca lança mais raios que `min(maxRays, fragments)`. Cada estilhaço tem direção sorteada por igual na esfera e massa de Mott, de um fluxo semeado pela semente do mundo e pela carga; as massas são normalizadas à massa do invólucro. Um estilhaço que cruza várias esferas de peças conta uma vez.
+  - São alvo as peças dos objetos do mundo (`world.add`) e as peças dos corpos registrados com `world.register` (hoje, os veículos), peça por peça; a peça de um corpo que é caixa é testada pela caixa. Personagens, multidão e animais não são alvo dos estilhaços.
+  - O estilhaço perde energia no ar (`exp(-2 k d)`, `fragmentDrag`) e só voa até cair abaixo de `FRAGMENT_MIN_SPEED`.
+  - Acima do teto: os estilhaços que vão a um corpo registrado e os demais são escolhidos por igual em cada grupo (os demais ficam com pelo menos metade do teto), e cada raio lançado vale por `qualificados / escolhidos` do seu grupo, no máximo `DestructionOptions.fragmentMaxWeight` (padrão 8). Nas peças do mundo o peso vale só nos pontos de vida (até a peça falhar, não além), na energia dos pedaços de uma peça que quebra e no desgaste das juntas; num corpo registrado chega por `Hit.pieces` (novo no contrato: ausente = 1, finito e pelo menos 1, só para dano acumulado de pontos de vida; furo, penetração e marca são de um estilhaço). Por construção, a energia lançada, pesada, nunca passa da energia do invólucro (½·massa·v², os pesos encolhem quando um sorteio pega estilhaços pesados). Acima de `maxRays x fragmentMaxWeight` qualificados num grupo o excesso fica de fora: o grupo entrega `fragmentMaxWeight x escolhidos / qualificados` dos pontos de vida. Com o teto padrão de 256 isso começa em 2048 estilhaços fora de corpos (sem corpo) ou 1024 (com corpos ocupando a metade deles); o maior invólucro dos dados (M67) tem 1000, então não acontece com os explosivos do kit. O que é lançado é determinístico para um estado do mundo e uma carga, mas não é local: acrescentar uma peça em qualquer lugar ao alcance muda quais estilhaços a escolha guarda perto da carga.
+  - `game-vehicles`: o tiro de estilhaço multiplica só os pontos de vida da peça por `Hit.pieces`; furo, penetração, saída e a quebra do vidro (decidida por tiro) continuam de um estilhaço. Personagens, terreno e o resto ignoram o campo.
+  - Contra material marcado com `strength.ndrc` (o concreto), o estilhaço só atravessa se o NDRC modificado também deixar (`concretePerforation`, fator de ponta `BlastCasing.noseFactor`, padrão 0,84). O tijolo continua na regra linear. O tiro de arma não muda.
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- 25a08b0: Um tiro de 9 mm na porta de um carro parado deixava uma chamada de desenho nova por furo, que nunca voltava: cada tiro criava uma malha de furo solta, e a sala só agrupa as malhas que já existiam no spawn. O quadro do tiro também dava um pico de 30–60 ms (o primeiro, pior), por alocar o material e a textura do furo na hora.
+
+  Os furos agora são desenhados por `InstancedMesh`: uma malha instanciada por (peça que carrega o furo × material), então uma porta cheia de furos vira uma chamada só, e o furo continua indo junto com a porta quando ela abre. N furos viram 1 chamada, não N.
+
+  Teste de regressão em `game-vehicles/tests/hole-draw-calls.test.ts` (roda no CI, sem GPU): dez tiros na porta somam dez furos e uma única chamada de desenho a mais.
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.6.17
 
 ### Patch Changes

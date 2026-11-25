@@ -1,40 +1,10 @@
 import { flickerPhaseOf } from './lamps'
+import { DISTRIBUTION } from './pole-distribution'
 import type { UrbanBuilder } from './scene'
-import type { PartStyle } from './types'
+import type { BarSpec, DistributionSpec, DoubleArmSpec, LampLightSpec, LampSpec, LensSpec, MastSpec, PoleDef, SingleArmSpec } from './pole-specs'
 
-/** The pole that carries the lamp: a tapered cylinder. */
-export type MastSpec = { radiusTop: number; radiusBottom: number; height: number; color: number; segments?: number; style?: PartStyle }
-/** A bar or a box of the pole, placed by its base `y`. `reach` is how far from the mast its centre sits. */
-export type BarSpec = { reach: number; y: number; width: number; height: number; depth: number; color: number }
-/** The box of a lamp head: its colour is the lens, lit or unlit. */
-export type LampSpec = { reach: number; y: number; width: number; height: number; depth: number }
-/** Colour of the lamp lens when the lamp is on (it glows) and when it is off. */
-export type LensSpec = { lit: number; unlit: number }
-/** The real light a lamp that is on may get from the budget. `reach` moves it along the arm. */
-export type LampLightSpec = { color: number; intensity: number; distance: number; y: number; reach?: number; z?: number }
+export type { BarSpec, DistributionPoleDef, DistributionSpec, DoubleArmSpec, LampLightSpec, LampSpec, LensSpec, MastSpec, PoleDef, PoleSlotBand, PoleSlots, SingleArmSpec } from './pole-specs'
 
-/** Double arm with two LED heads (the avenue pole of the downtown pattern). */
-export type DoubleArmSpec = { mast: MastSpec; arm: BarSpec; lamp: LampSpec; lens: LensSpec; light: LampLightSpec }
-/** Concrete pole with one arm and a sodium lamp, with an optional transformer drum. */
-export type SingleArmSpec = {
-  mast: MastSpec
-  arm: BarSpec
-  lamp: LampSpec
-  lens: LensSpec
-  light: LampLightSpec
-  transformer: { offset: number; y: number; radius: number; height: number; color: number; segments: number }
-}
-/** The bands of a distribution pole, top down: medium voltage, transformer, low voltage, street light, telecom. */
-export type PoleSlotBand = 'mv' | 'transformer' | 'lv' | 'lighting' | 'telecom'
-/**
- * Where each network is fixed on a distribution pole: `[bottom, top]` in metres over the ground. `height` is the whole pole and
- * `embedment` what is buried of it (`postEmbedment(height)` of game-destruction), so the bands fit in `height - embedment`.
- */
-export type PoleSlots = { readonly height: number; readonly embedment: number; readonly bands: Readonly<Record<PoleSlotBand, readonly [number, number]>> }
-/** A distribution pole: the single arm pole plus the bands its networks are fixed at. The crossarm, insulators and clamps come with its builder. */
-export type DistributionSpec = SingleArmSpec & { readonly slots: PoleSlots }
-/** A registry entry of a distribution pole: the `distribution` shape reads a `DistributionSpec`. */
-export type DistributionPoleDef = PoleDef & { shape: 'distribution'; spec: DistributionSpec }
 /** Short iron post with a lantern box and a pointed cap. */
 export type LanternSpec = { mast: MastSpec; lamp: LampSpec; cap: { y: number; radius: number; height: number; color: number; segments: number }; lens: LensSpec; light: LampLightSpec }
 /** Wooden pole with a crossarm and a hanging lamp. */
@@ -70,12 +40,6 @@ export type PoleOptions = {
 /** Draws a pole from its `spec`. Declared as a method so the registry can hold each builder with its own spec type (the `PoleDef` names the builder that reads its spec). */
 export type PoleShapeBuilder<TSpec extends object = object> = { build(b: UrbanBuilder, spec: TSpec, o: PoleOptions): void }['build']
 
-export type PoleDef = {
-  id: string
-  /** Key of the shape builder that reads `spec`. */
-  shape: string
-  spec: object
-}
 
 const on = (o: PoleOptions): boolean => o.on ?? true
 /** The lens of a lamp: glowing when on, and a failing lamp's lens flickers on the phase of its light. */
@@ -148,8 +112,11 @@ const floodTower: PoleShapeBuilder = (b, spec: FloodTowerSpec, o) => {
   spendLight(b, spec.light, o.x, o.z, o)
 }
 
-/** The shape builders the five default poles use; a game adds its own through `createUrban({ shapes })`. */
-export const POLE_SHAPES: Readonly<Record<string, PoleShapeBuilder>> = { double_arm: doubleArm, single_arm: singleArm, lantern, crossarm, flood_tower: floodTower }
+/** The distribution pole alone draws as its single arm (mast, arm, lamp, drum), the golden of the test area's item; a network draws its poles with their hardware (`distributionHardwareOf`, game-urban-three's `drawNetworks`). */
+const distribution: PoleShapeBuilder = (b, spec: DistributionSpec, o) => singleArm(b, spec, o)
+
+/** The shape builders the default poles use; a game adds its own through `createUrban({ shapes })`. */
+export const POLE_SHAPES: Readonly<Record<string, PoleShapeBuilder>> = { double_arm: doubleArm, single_arm: singleArm, lantern, crossarm, flood_tower: floodTower, distribution }
 
 const LED: DoubleArmSpec = {
   mast: { radiusTop: 0.1, radiusBottom: 0.14, height: 9, color: 0x55595e, style: { metalness: 0.6, roughness: 0.5 } },
@@ -194,7 +161,7 @@ const FLOOD: FloodTowerSpec = {
 
 /**
  * The five poles of the neighbourhood patterns, with the numbers of the Galeria (heights, arms, lens colours, the colour,
- * strength and reach of the real light). A game patches a number by id or adds a pole with its own shape.
+ * strength and reach of the real light), and the distribution pole the utility networks stand on. A game patches a number by id or adds a pole with its own shape.
  */
 export const DEFAULT_POLES: readonly PoleDef[] = [
   { id: 'led_double', shape: 'double_arm', spec: LED },
@@ -202,4 +169,5 @@ export const DEFAULT_POLES: readonly PoleDef[] = [
   { id: 'cast_iron', shape: 'lantern', spec: IRON },
   { id: 'wood_crossarm', shape: 'crossarm', spec: WOOD },
   { id: 'flood_tower', shape: 'flood_tower', spec: FLOOD },
+  { id: 'concrete_distribution', shape: 'distribution', spec: DISTRIBUTION },
 ]

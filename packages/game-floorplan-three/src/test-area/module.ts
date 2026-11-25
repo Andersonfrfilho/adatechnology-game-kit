@@ -13,6 +13,7 @@ import { createHouseScenarios, SPECIMEN_AT } from './scenarios.js'
 import type { AreaContext } from './scenarios.js'
 import { DEFAULT_AREA_FURNITURE, furnitureItems } from './furniture-items.js'
 import { buildSpecimenMeshes, DEFAULT_SPECIMENS, specimenSpec } from './specimens.js'
+import { takenItemOf } from './taken-item.js'
 import { fill, TEXT } from './text.js'
 import type { AreaText } from './text.js'
 import type { FloorplanTestOptions, SpecimenDef, TemplateGroup } from './types.js'
@@ -20,6 +21,7 @@ import type * as THREE_NS from 'three'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { DoorLeaf, Eye, RoomLighting, Three } from '../kernel-types.js'
 import type { House, HouseRenderer } from '../types.js'
+import { addHouseRainCover } from '../rain-cover.js'
 
 export const FLOORPLAN_AREA_ID = 'floorplan_area'
 
@@ -154,7 +156,9 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     roomLights = null
   }
 
+  const removeCovers: Array<() => void> = []
   const clearHouses = (): void => {
+    for (const remove of removeCovers.splice(0)) remove()
     for (const p of placed) p.house.dispose()
     placed.length = 0
     lastSheet = ''
@@ -268,6 +272,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     }
     layout()
     for (const p of placed) if (options.world) p.house.destruction.activate()
+    if (host.rainCover) for (const p of placed) removeCovers.push(addHouseRainCover(host.rainCover, p.house))
     showAll()
     applyLod()
     updateBlueprintCorner()
@@ -312,6 +317,10 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       }
     }
     return best
+  }
+  const worldOf = (p: Placed, q: readonly number[]): [number, number, number] => {
+    const at = p.house.group.localToWorld(new (THREE as Three).Vector3(q[0] ?? 0, q[1] ?? 0, q[2] ?? 0))
+    return [at.x, at.y, at.z]
   }
   const eyeOf = (p: Placed): Eye => {
     const T = THREE as Three
@@ -377,12 +386,14 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       host?.log(text.steps.no_door as string)
       return
     }
+    // a take of an item inside the furniture: read what it hands over before the take empties its slot, and put it in the hand after
+    const taken = takenItemOf({ target, itemModel: options.house?.interactives?.itemModel, toWorld: (q) => worldOf(p, q) })
     const fo = target.target as DoorLeaf | undefined /* a door leaf when its type is swing */
     const reach = fo && host?.reachFor && fo.type === 'swing' && fo.gs?.[0] && fo.handles?.[0] ? doorReach(p, fo) : null
     if (reach && host?.reachFor) {
       // the hand goes to the handle first; the door turns its handle and swings when the hand is on it
       host.reachFor({ ...reach, onGrip: () => void p.house.toggleDoor(fo as DoorLeaf) })
-    } else p.house.interact(eyeOf(p))
+    } else if (p.house.interact(eyeOf(p)) && taken) host?.takeInHand?.(taken)
     host?.log(fill(text.steps.door as string, { text: String(target.text) }))
   }
   /** The handle of a door leaf of the house in the world (on the player's side of the leaf), and whether opening brings it toward the player. */

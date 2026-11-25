@@ -7,7 +7,7 @@
 import type * as THREE_NS from 'three'
 import type { catenary } from '@adatechnology/game-shapes-three'
 import type { PlantSpec } from '@adatechnology/game-vegetation'
-import type { ObjectSpec, World } from '@adatechnology/game-interactables'
+import type { ItemStack, ObjectSpec, World } from '@adatechnology/game-interactables'
 import type { FloorplanAdapter } from '@adatechnology/game-floorplan-interactables'
 import type { Vec3 } from './kernel-types.js'
 
@@ -48,6 +48,18 @@ export interface InteractablesGfx {
   createCord(points: readonly Vec3[], radius: number, material: THREE_NS.Material): THREE_NS.Mesh
   catenary: typeof catenary
 }
+
+/** Draws one stack of a container as the real item of the items catalogue, with the house's `THREE` (origin at the bottom centre, y up, metres); null draws nothing. */
+export type ContainedItemModel = (stack: ItemStack, THREE: typeof THREE_NS) => THREE_NS.Object3D | null
+
+/** The items in one object's containers (`createContentsView` of game-interactables-three). */
+export interface InteractablesContentsView {
+  sync(): void
+  dispose(): void
+}
+
+/** `createContentsView` of game-interactables-three, injected with the module. */
+export type CreateContentsView = (THREE: typeof THREE_NS, options: { world: World; objectId: string; root: THREE_NS.Object3D; buildItem: ContainedItemModel }) => InteractablesContentsView
 
 /** What draws a part of a bound object: a mesh or group, or a vertex range `[v0, v1)` of a mesh. */
 export type BoundMeshes = THREE_NS.Object3D | { mesh: THREE_NS.Mesh; range: [number, number] }

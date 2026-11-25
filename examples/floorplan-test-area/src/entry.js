@@ -14,8 +14,11 @@ import * as GameInteractablesThree from '@adatechnology/game-interactables-three
 import * as GameVegetation from '@adatechnology/game-vegetation'
 import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
 import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
-import { itemModels } from '@adatechnology/game-items-three'
+import { GOODS_ITEMS } from '@adatechnology/game-items-goods'
+import { createContainedItemModel, itemModels } from '@adatechnology/game-items-three'
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
+import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
+import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
 import { FLOORPLAN_AREA_ID, createFloorplanTestModule, floorplanAreaParams } from '@adatechnology/game-floorplan-three/testing'
 
 export { FLOORPLAN_AREA_ID, createFloorplanTestModule, createWeaponsTestModule }
@@ -65,17 +68,33 @@ export const TEST_ROOM_FURNITURE = [
 export function createModule(options = {}) {
   registerPacks()
   // the houses are drawn with the interactables kit and vegetation kit: the adapter that turns the plan into doors, drawers, appliances, sockets and lamps is the package's default (game-floorplan-interactables)
-  return createFloorplanTestModule({
+  // the console reaches the houses through `__floorplanArea.houses[i].house` (its `interactives`: world, entries, drawers and contents) for scripted checks and screenshots
+  const area = createFloorplanTestModule({
     engine,
     groups: GROUPS,
     furniture: options.furniture ?? TEST_ROOM_FURNITURE,
     ...options,
     house: {
-      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree },
+      // what the furniture holds is drawn as the catalogue's real items (game-items-three), riding the drawer or door from its first frame;
+      // `destructible` tags the drawing with the item's real weight, so one taken in the hand weighs what the catalogue says
+      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree, itemModel: createContainedItemModel(GOODS_ITEMS, { destructible: true }) },
       vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
       ...options.house,
     },
   })
+  Object.assign(globalThis, { __floorplanArea: area })
+  return area
+}
+
+/**
+ * The weather module with the room's film (wet ground) and effects world (near rain, mist, lightning, wind): without them the module only draws the curtain and the sky. The rain layers start off: the bench switches them on.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {'en' | 'pt-BR'} lang
+ */
+export function loadWeather(room, lang) {
+  if (room.modules().some((m) => m.id === 'weather_area')) return
+  const rain = { far_rain: false, near_rain: false, mist: false, lightning: false, headlights: false, haze: false }
+  room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: rain, rig: false }) }))
 }
 
 /**
@@ -92,6 +111,7 @@ export function loadInto(room, options = {}) {
   if (!room.modules().some((m) => m.id === 'weapons_area')) {
     room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: '../weapon-svg/', flyRocket: false, items: itemModels }))
   }
+  loadWeather(room, /** @type {'en' | 'pt-BR'} */ (lang))
   // ?effectlights=0: a blast lights no house surface (what the houses did before `effectLightsIndoors`), to compare with the default
   const house = params.get('effectlights') === '0' ? { effectLightsIndoors: false, ...options.house } : options.house
   // ?template=mansion&seed=4&state=abandoned opens straight on that house

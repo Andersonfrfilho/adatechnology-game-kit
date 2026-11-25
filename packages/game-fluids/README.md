@@ -8,8 +8,8 @@ Engine-agnostic liquids for games, with no renderer. It knows nothing about any 
 - **Streams**: the jet leaving a lip or a hole. Ballistic, it ends on the first surface it hits (planes with half extents) or on the ground.
 - **Stains**: grow from a flow front (16 radial samples, never a perfect disc), run downhill, soak into porous surfaces, dry from the edge in and
   either vanish or leave a permanent mark (coffee, blood, oil).
-- **21 built-in liquids** (`LIQUIDS`): water, coffee, tea, milk, soda, juice, beer, wine, spirits, fuel, diesel, motor_oil, cooking_oil, blood,
-  old_blood, bile, sap, acid, paint, bleach, honey. Each one has its own colour, viscosity, drying time, gloss and drink effects (`caffeine`, `alcohol`, `poison`,
+- **23 built-in liquids** (`LIQUIDS`): water, coffee, tea, milk, soda, juice, beer, wine, spirits, fuel, diesel, motor_oil, cooking_oil, blood,
+  old_blood, bile, sap, acid, paint, bleach, sewage, honey, mud. Each one has its own colour, viscosity, drying time, gloss and drink effects (`caffeine`, `alcohol`, `poison`,
   `disgust`).
 - **Item uses** (`ITEM_USES`): scripted `sip`, `drink`, `chug`, `pour`, `pour_out`, `open` and `close`, as pure keyframe data plus a player.
 - Deterministic from a seed (no `Math.random`), so a LAN host can run it and send events. `serialize()` / `load()` round trip the whole world.
@@ -169,7 +169,7 @@ film.setWeather({ rain: 1 }) // drying stops, spread x1.5 (a no-op until game-we
 | Export | What it is |
 |---|---|
 | `createFluids(options?)` | Creates a `FluidWorld`. Options: `liquids`, `locale`, `seed`, `ambientC`, `gravity`, `groundAt(x, z)`, `mergeDistance`, `maxStains`, `onEvent` |
-| `LIQUIDS` | The 21 built-in `LiquidDef`s (`id`, `color`, `opacity`, `stainColor`, `viscosity`, `density`, `dryTime`, `leavesMark`, `gloss`, `drink`...) |
+| `LIQUIDS` | The 23 built-in `LiquidDef`s (`id`, `color`, `opacity`, `stainColor`, `viscosity`, `density`, `dryTime`, `leavesMark`, `gloss`, `drink`...) |
 | `ITEM_USES` | The built-in `ItemUseDef`s |
 | `createItemUse(world, containerId, def, getHandTransform?)` | Returns an `ItemUsePlayer` (`pose()`, `update(dt)`, `cancel()`, `time`, `done`) |
 | `createFilm(options)`, `createFilmLcg(seed)`, `PADRAO_LAYOUT`, `WORKSHOP_LAYOUT`, `layoutFromSurfaces`, `createFoldedLayout`, `FILM_PROFILES`, `filmProfileOf` | The running film (see above) |

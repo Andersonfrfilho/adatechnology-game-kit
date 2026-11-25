@@ -12,8 +12,12 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
    when the heat of a blast became its fireball's: 0.48 kg of TNT (400 kJ) burns 1 m wide for 8 ms, 11.7 kJ/m2 against the 99 kJ/m2 a tyre or plastic needs, so
    the nine blasts no longer set the car's rubber and plastics alight as the old 450 °C over half the radius did. Retaken when a blast on a vehicle became the P-I work
    of its wave on each part (waveWork): 0.48 kg of TNT against a panel crushes it with the contact shock, 0.04 x 0.48 kg x 4.184 MJ/kg x a half = 40 kJ, where the old
-   energy / (1 + 4 d^2) x 0.04 gave it 16 kJ: the panels the blasts tear off come apart in more pieces (826 to 875 nodes). */
-const GOLDEN_DIGEST = '867:3406952109'
+   energy / (1 + 4 d^2) x 0.04 gave it 16 kJ: the panels the blasts tear off come apart in more pieces (826 to 875 nodes). Retaken when a door torn off
+   took its own skin, window and trim with it (as on its first swing) instead of flying as the flat plate and leaving its dark recess standing in the
+   opening: the doors' skins are cut out of the body (875 to 944 nodes). Retaken when a door or lid that comes off became a closed volume (its skin, the
+   fold round its edge and its inner panel, door-shell.ts) and an opened lid lines its trunk (a tub and a seal): the same torn parts, closed (944 to 956 nodes). Retaken when the cabins met the R6 table (spec 012, phase 3): the inner trim of the sedan is
+   shorter and the dash compact, so its torn doors carry less of it (956 to 940 nodes). */
+const GOLDEN_DIGEST = '940:684114408'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261

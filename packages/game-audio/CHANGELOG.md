@@ -1,5 +1,49 @@
 # @adatechnology/game-audio
 
+## 0.15.3
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
+## 0.15.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
+## 0.15.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 8ebd34c: `createRaycastOcclusion` (com `OcclusionRayFilter`, `OcclusionPartRef`, `RaycastOcclusionWorld`, `RaycastOcclusionOptions` e `OCCLUDER_MIN_RADIUS`) sai da sala de teste para o `game-audio`: monta a consulta de oclusão sobre qualquer mundo que responda raios e diga o material de uma parte (um mundo do `game-destruction` serve), sem o `game-audio` depender de outro núcleo. A sala importa do pacote; o comportamento não muda.
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+
 ## 0.14.0
 
 ### Minor Changes

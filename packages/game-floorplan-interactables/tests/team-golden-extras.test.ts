@@ -2,7 +2,7 @@ import { createGoodsFindsProvider, createGoodsItems } from '@adatechnology/game-
 import { describe, expect, it } from 'vitest'
 
 import { create } from '../src'
-import { engine, GameInteractables, GameInteractablesHousehold, planOf } from './support/plans'
+import { engine, GameInteractables, GameInteractablesHousehold, visorPlanOf } from './support/plans'
 import type { TestPlan } from './support/plans'
 import { loadTeamAdapter, normalizeWorld, planToKit, teamSeedKey, teamShape, withoutSource } from './support/team-shape'
 
@@ -11,7 +11,7 @@ import { loadTeamAdapter, normalizeWorld, planToKit, teamSeedKey, teamShape, wit
 const Team = loadTeamAdapter()
 const kit = { GameInteractables, GameInteractablesHousehold }
 const teamAdapter = Team.criar({ ...kit })
-const adapter = create({ ...kit, seedKey: teamSeedKey })
+const adapter = create({ ...kit, seedKey: teamSeedKey, visor: true })
 const clean = (v: unknown) => withoutSource(JSON.parse(JSON.stringify(v)))
 
 function same(r: TestPlan, popts: Record<string, unknown> = {}) {
@@ -31,7 +31,7 @@ describe('chimney: the smoke of the fireplace and the flue of the wood stove rea
   it('fireplace', () => {
     let seen = 0
     for (const [template, seed, extra] of [['wood_frame_house', 1, { fireplace: true }], ['wood_frame_house', 2, { fireplace: true }], ['a_frame_chalet', 3, { fireplace: true }]] as const) {
-      const r = planOf(template, seed, 'normal', extra)
+      const r = visorPlanOf(template, seed, 'normal', extra)
       const fire = r.items.find((m) => m.type === 'fireplace')
       if (!fire) continue
       seen++
@@ -48,7 +48,7 @@ describe('chimney: the smoke of the fireplace and the flue of the wood stove rea
   it('wood stove', () => {
     let seen = 0
     for (const seed of [1, 2, 3, 4]) {
-      const r = planOf('log_cabin', seed)
+      const r = visorPlanOf('log_cabin', seed)
       const stove = r.items.find((m) => m.type === 'wood_stove')
       if (!stove) continue
       seen++
@@ -61,7 +61,7 @@ describe('chimney: the smoke of the fireplace and the flue of the wood stove rea
   })
 
   it('a chimney that names its item (fireplace / stove) is matched by id', () => {
-    const r = planOf('wood_frame_house', 1, 'normal', { fireplace: true })
+    const r = visorPlanOf('wood_frame_house', 1, 'normal', { fireplace: true })
     const fire = r.items.find((m) => m.type === 'fireplace')
     if (!fire) return
     r.structureExtras = { chimney: { kind: 'fireplace', material: 'brick', aabb: [0, 0, 1, 1], height: 6, fireplace: 'nobody' } }
@@ -77,7 +77,7 @@ describe('the contents the goods catalog answers', () => {
     engine.registerFindsProvider(createGoodsFindsProvider(createGoodsItems()))
     let stacks = 0
     for (const [template, seed, state] of [['single_storey_a', 1, 'normal'], ['townhouse', 2, 'fortified'], ['mansion', 3, 'abandoned'], ['market', 1, 'normal'], ['log_cabin', 2, 'normal']] as const) {
-      const r = planOf(template, seed, state)
+      const r = visorPlanOf(template, seed, state)
       const mine = same(r)
       for (const e of mine.items) for (const list of Object.values(e.item.contents || {})) stacks += list.filter(Boolean).length
     }

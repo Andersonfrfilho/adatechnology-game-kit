@@ -403,6 +403,28 @@
     ]
   },
   {
+    "id": "sewage",
+    "color": 5921582,
+    "opacity": 0.92,
+    "stainColor": 3093273,
+    "viscosity": 4,
+    "density": 1010,
+    "dryTime": 1800,
+    "gloss": 0.8,
+    "leavesMark": true,
+    "drink": {
+      "thirst": 0,
+      "effects": [
+        "disgust",
+        "poison"
+      ]
+    },
+    "tags": [
+      "organic",
+      "waste"
+    ]
+  },
+  {
     "id": "honey",
     "color": 14193162,
     "opacity": 0.9,
@@ -432,6 +454,46 @@
     "gloss": 0.4,
     "tags": [
       "dirty"
+    ]
+  },
+  {
+    "id": "coolant",
+    "color": 3455050,
+    "opacity": 0.7,
+    "stainColor": 2783796,
+    "viscosity": 4,
+    "density": 1070,
+    "dryTime": 1200,
+    "gloss": 0.85,
+    "leavesMark": true,
+    "drink": {
+      "thirst": 0,
+      "effects": [
+        "poison"
+      ]
+    },
+    "tags": [
+      "coolant"
+    ]
+  },
+  {
+    "id": "brake_fluid",
+    "color": 13145646,
+    "opacity": 0.8,
+    "stainColor": 9069600,
+    "viscosity": 8,
+    "density": 1050,
+    "dryTime": 3600,
+    "gloss": 0.9,
+    "leavesMark": true,
+    "drink": {
+      "thirst": 0,
+      "effects": [
+        "poison"
+      ]
+    },
+    "tags": [
+      "brake_fluid"
     ]
   }
 ]

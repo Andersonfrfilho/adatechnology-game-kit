@@ -21,12 +21,12 @@ export type DistrictWeather = {
 }
 
 /**
- * The weather of the district held at one state and one hour: `game-weather` decides what the sky does and `game-weather-three` draws the rain, the fog and the sky colour; the host's sun and
+ * The weather of the district held at one state and one hour: `game-weather` decides what the sky does and `game-weather-three` draws the rain, the fog and the sky (a dome with the sun at the host sun's direction, clouds that follow the weather, the moon and stars); the host's sun and
  * ambient fill follow the daylight the weather reports, so a night is dark and an overcast day flat.
  */
 export function createDistrictWeather({ THREE, world, state, hour, seed, fog }: { readonly THREE: typeof THREE_NS; readonly world: KitWorld; readonly state: string; readonly hour: number; readonly seed: number; readonly fog?: ZoneFog }): DistrictWeather {
   const weather = createWeather({ seed, start: state, startHour: hour, timeScale: HELD_TIME_SCALE, autoSchedule: false })
-  const renderer = createWeatherRenderer(THREE, { scene: world.view.scene, camera: world.view.camera, weather, vfx: world.effects.world, lights: world.lights, random: world.random, ...(fog === undefined ? {} : { zone: fog }) })
+  const renderer = createWeatherRenderer(THREE, { scene: world.view.scene, camera: world.view.camera, weather, cover: world.rainCover, vfx: world.effects.world, lights: world.lights, sun: world.sun, random: world.random, ...(fog === undefined ? {} : { zone: fog }) })
   const ambientDay = world.ambient.intensity
   return {
     weather,

@@ -4,6 +4,8 @@ import type { DamageZone, VehicleContext, VehicleKit } from '../api'
 import type { VehicleModel } from './model'
 import type { VehicleVisuals } from './visual'
 
+/** A trunk lid or tailgate lifts this far on its hinge, radians (75 degrees). */
+const LID_OPEN = 1.31
 /** Seconds an opening or closing takes. */
 const DURATION = 1.2
 
@@ -18,7 +20,7 @@ export function createVehicleClips(model: VehicleModel, vis: VehicleVisuals | nu
       if (!z || (vis && !vis.plates.has(p.id))) continue
       const sgn = z.hinge === 'rear' ? -1 : 1
       doors[p.id] = { rotation: [0, (z.side < 0 ? -1 : 1) * sgn * 1.15, 0] }
-    } else if (p.role === 'lid' && (!vis || vis.plates.has(p.id))) lid[p.id] = { rotation: [0, 0, -1.15] }
+    } else if (p.role === 'lid' && (!vis || vis.plates.has(p.id))) lid[p.id] = { rotation: [0, 0, -LID_OPEN] }
     else if (p.role === 'hood' && (!vis || vis.hood?.id === p.id)) hood[p.id] = { rotation: [0, 0, (vis?.hood?.open ?? c.hood?.open ?? 1) * (vis?.hood?.sign ?? c.hood?.sign ?? 1)] }
   }
   const clips: AnimationClipSpec[] = []

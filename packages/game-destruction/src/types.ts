@@ -11,6 +11,7 @@
  */
 
 import type {
+  CarryHands,
   BallisticExtras,
   ShelterOptions,
   BlastOptions,
@@ -44,6 +45,7 @@ export type {
   HitIgnition,
   ChainDelay,
   BendHinge,
+  CarryHands,
   Crack,
   DamageStage,
   DamageType,
@@ -727,6 +729,12 @@ export interface DestructionWorld {
   disassemble(objectId: string, jointId: string, tool: ToolKind, dt: number): number
   /** Joints of an object that `tool` can undo now (open joints excluded). */
   workableJoints(objectId: string, tool: ToolKind): JointState[]
+  /**
+   * Takes a part off its object by hand (a book off its shelf): the part must say how many hands carry it (`PartSpec.hands`) and every closed joint of it must be
+   * one a hand undoes (`resting`). They open at once (`detach` with `by: 'tool'`) and the part becomes a loose group, which the renderer makes a piece of its own.
+   * Returns the hands it takes, or null when it cannot be taken (no `hands`, a joint a hand cannot undo, already loose, destroyed, a hosted body).
+   */
+  take(objectId: string, partId: string): CarryHands | null
   /**
    * Joint nearest to a world point (for "aim at the screw"). With `tool`, the nearest open-able joint that tool can undo within `maxDistance`
    * wins; only when none qualifies does it fall back to the nearest joint of any kind.

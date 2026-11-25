@@ -4,6 +4,7 @@ import type { TerrainOptions, UrbanBuilder } from '@adatechnology/game-urban'
 import * as THREE_NS from 'three'
 import { createPrism, createRoundedBox, createUrbanTestModule, createUrbanThree, flickerGroupOf, flickerGroupPhase, flickerLevel } from '../src'
 import { fakeDocument } from './fake-dom'
+import { networkCases } from './network-cases'
 import valley from './fixtures/valley-terrain.json'
 
 /** The pieces of the catalog every catalog test walks (exact golden, z-fighting): built from the package's own lists, so a new piece is in them. */
@@ -88,3 +89,6 @@ export const cases: Array<[string, () => Root]> = []
     },
   ])
 }
+
+// the networks by day and at night with failing lamps (spec 011, T2.8d)
+cases.push(...networkCases(THREE_NS))

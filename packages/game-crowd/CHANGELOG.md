@@ -1,5 +1,69 @@
 # @adatechnology/game-crowd
 
+## 0.7.0
+
+### Minor Changes
+
+- 2e803a4: Zumbis não atravessam mais paredes: as casas publicam paredes do térreo, muros, grades, portas e portões (`createHouseNavObstacles`, contrato `NavObstacleSource`) e a horda os grava na sua grade (`bindNavObstacles`). Contornam a parede, entram por porta ou portão aberto e pelo buraco de uma explosão, e batem na porta fechada até quebrá-la (a casa a mostra aberta).
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-characters@0.2.25
+
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-characters@0.2.24
+
+## 0.6.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-characters@0.2.23
+
+## 0.6.0
+
+### Minor Changes
+
+- f1c7229: Coordenador de workers do SDK (`game-workers`): quantidade automática pelos núcleos ou por configuração, faixas `sim`/`build`/`background`, prioridade e prazo em quadros, fallback no quadro principal com os mesmos bytes, navegador e Node. Contratos em `game-contracts`. A física da multidão roda como a residente `crowd.physics` quando o jogo passa `physics.workers`.
+- b37d94f: Spec 010, fases 1 e 3: passo fixo único e filas no prazo do quadro.
+
+  - `game-physics`: `PhysicsLoop.stepFixed(steps)` roda passos inteiros vindos do agendador (`step(dt)` continua, com o próprio acumulador). **Quebra para quem implementa `PhysicsWorld`:** o membro `readActiveBodies(out)` passa a ser obrigatório (devolve só os corpos acordados).
+  - `game-physics-jolt`: implementa `readActiveBodies`.
+  - `game-render-three`: `createStaticBatchQueue` e a opção `queue` dos lotes estáticos, para o orçamento do quadro drenar a junção dos lotes.
+  - `game-fluids-three`: `FilmManager.deferredQueue()`, a fila do filme de líquido no prazo do quadro; o tempo devido de um grid que sai é esquecido junto com ele.
+  - `game-crowd`: o campo de fluxo passa a andar em células por passo (`cellsPerStep`) por padrão, não pelo relógio; `flow.ms` vale 0. Mesmo resultado em toda máquina.
+  - `game-destruction-three`: `DestructionRenderer` ganha `interpolate`, `present`, `restoreStepPose`, `markMoved` e `deferredQueues` (desenho interpolado entre passos e filas registradas no orçamento); uma peça segurada pelo host (empurrar, carregar) é lida mesmo com o motor a dando como dormindo.
+  - `game-test-room`: opção `frameTargetMs` (prazo do quadro); a pose do passo volta antes da fase `input`, para empurrar e carregar escreverem na pose do passo, não no desenho misturado do quadro anterior.
+  - `game-destruction`: uma operação que lança exceção não passa estrutura e `detach` pela metade para a seguinte.
+
+- 631d9d0: Thread de simulação (spec 009, T22): `installSimThread`, `startSimThread` e `runSimInline` no `game-workers`, com memória compartilhada sem espera na página (buffer triplo de retratos e anel de comandos); `SimModule` no `game-contracts`; a horda como módulo (`hordeSimModule`) no `game-crowd`; a bancada da multidão com `hordeThread`. `run` de uma categoria `sim` sem worker roda no quadro principal (a thread de simulação aguarda os jobs).
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-characters@0.2.22
+
 ## 0.5.4
 
 ### Patch Changes

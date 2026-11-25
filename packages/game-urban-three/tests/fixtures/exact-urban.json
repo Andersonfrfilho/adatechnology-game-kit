@@ -34,6 +34,7 @@
 "item/pole_cast_iron":{"hash":"1cbce30d","objects":5},
 "item/pole_wood_crossarm":{"hash":"17b8cf7b","objects":5},
 "item/pole_flood_tower":{"hash":"e5dd7cca","objects":10},
+"item/pole_concrete_distribution":{"hash":"41ae4218","objects":5},
 "item/street_grid":{"hash":"a9dcc70f","objects":45},
 "item/terrain_patch":{"hash":"6376a133","objects":3},
 "item/downtown":{"hash":"eb5f6505","objects":48},
@@ -46,4 +47,9 @@
 "item/stilt_village":{"hash":"cb9a8463","objects":71},
 "item/military":{"hash":"a41c5e5f","objects":45},
 "item/rural":{"hash":"93c43240","objects":59},
-"helpers":{"hash":"50008e55","objects":7}}
+"helpers":{"hash":"50008e55","objects":7},
+"networks/day":{"hash":"c35fe78b","objects":11},
+"networks/night_failing":{"hash":"3d987467","objects":11},
+"networks/surface":{"hash":"8460241a","objects":3},
+"networks/buried":{"hash":"f197b9dc","objects":4},
+"networks/lids":{"hash":"e9d7afd0","objects":258}}

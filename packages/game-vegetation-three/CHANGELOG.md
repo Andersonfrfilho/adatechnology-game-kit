@@ -1,5 +1,47 @@
 # @adatechnology/game-vegetation-three
 
+## 0.3.18
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
+## 0.3.17
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
+## 0.3.16
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+
+## 0.3.15
+
+### Patch Changes
+
+- 20cdc73: A peça que sai de um objeto (no carregamento, desde o #339, ou num golpe) é marcada como desenhada por `game-destruction-three` (`kind: 'piece'`): a auditoria "de onde vem cada peça desenhada" deixa de ver as peças feitas na carga como desenho sem origem. Os cenários da vegetação contam só os pedaços que saíram da própria planta: a pia e outros móveis da sala com um grupo solto na carga também criam `obj_N`, e o tiro de 9 mm e a cerca viva falhavam por contá-los.
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.3.14
 
 ### Patch Changes

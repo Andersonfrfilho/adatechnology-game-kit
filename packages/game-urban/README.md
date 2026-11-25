@@ -47,7 +47,7 @@ createUrban({
 
 ## Streets, blocks and props
 
-- `streets.road(b, x, z, w, l, 'x' | 'z')`: a plane at 2 cm with a dash (1.8 x 0.16 m) every 5 m from 2 m after the start, as instances. `walk`, `ground` and `grid({ block, count, width })` (2n+1 roads each way and a sidewalk slab on each of the 2n x 2n blocks).
+- `streets.road(b, x, z, w, l, 'x' | 'z')`: a plane at 2 cm (`road.plane: false` leaves it out, for a host whose terrain has a road layer a blast can dig) with a dash (1.8 x 0.16 m) every 5 m from 2 m after the start, as instances. `walk`, `ground` and `grid({ block, count, width })` (2n+1 roads each way and a sidewalk slab on each of the 2n x 2n blocks).
 - `block.fill(b, { cx, cz, size, minHeight, maxHeight, k, gap, lit, shop })`: a `k x k` split of the block less 2 m of street; a building a little smaller than its lot, as tall as `lerp(min, max, random^1.6)` (more low buildings than tall ones), drawn by `createCityBuilding` of game-floorplan with the shared generator. Returns the buildings for the game's bookkeeping. `block.building` places one.
 - `props`: `fence`, `tent`, `pine`, `tree`, `container`, `watchtower` (with a searchlight whose beam circles the ground), `sandbags` (instances), `label` (two lines on a 22 x 4.4 m board) and `wires`.
 
@@ -176,9 +176,72 @@ const violations = validateNetworks(networks, {
   with more than 200 m of low voltage line from it (service drops not counted).
 - **Pole slots** (`DEFAULT_POLE_SLOTS`, `checkPoleSlots`): the bands of a distribution pole over the ground, top down: medium voltage 9-9.25 m,
   transformer 7.7-8.7, low voltage 7.1-7.4, lamp 6.5-6.8, telecom 5.7-6.1, on the 11 m pole with 1.7 m buried. A registry pole whose spec has
-  `slots` (`DistributionPoleDef`, `DistributionSpec`) is read by `slotsOfPole`; the first one enters the registry in T2.8b.
+  `slots` (`DistributionPoleDef`, `DistributionSpec`) is read by `slotsOfPole`. The registry ships `concrete_distribution` (shape `distribution`, drawn
+  as its single arm until the crossarm and insulators get their drawing).
 
-The generator that lays the networks out from a city plan comes next (spec 011, T2.8b); this entry is the model it fills.
+### The generator
+
+```ts
+import { generateNetworks, validateNetworks } from '@adatechnology/game-urban/networks'
+
+const { networks, connections, surfaceAt, warnings } = generateNetworks({
+  plan,                      // CityPlanInput: streets along x or z, rivers, districts
+  lots: site.lots,           // { id, rect }: each takes the networks from the street it faces
+  connections,               // optional UtilityConnection[] the houses declared (frame 'world'); the rest get the default point of the lot
+  seed: site.seed,           // hookups and telecom bundles: hash of the seed and an id, never the scene's random
+  avoid,                     // optional PlanRect[]: no pole in front of a gate, a door or by a meter post
+  rules,                     // optional DeepPartial<NetworkRules>; the layout numbers live in `rules.layout` (DEFAULT_NETWORK_LAYOUT)
+  pole,                      // optional { id, spec: DistributionSpec }: the bands and the lamp's reach come from the pole's spec
+})
+// warnings: what it laid against its own rules because nothing else fit (a pole with no free ground but in front of a gate,
+// a pole whose own consumers no transformer takes); [] for a plan it can lay
+validateNetworks(networks, { connections, surfaceAt }) // [] for a plan the generator can lay
+```
+
+`distributionHardwareOf(spec, { mv, transformer, lamp, cables, cableGap })` gives the hardware of a distribution pole in its own frame (x toward
+the road, z along the line) with every fixing point read from its `slots`, the same heights the generator hangs the conductors at;
+`networkLampsOf({ networks, shares, isNight })` gives every `light` node with its lamp's state (`lampStateOf` by the seed and the node's place).
+`game-urban-three`'s `drawNetworks` draws both.
+
+- **Poles** on one side of each street (the side with more lots; on a tie north or west), 0.4 m from the kerb, 30 to 40 m apart on lot
+  boundaries when one is in reach, slid clear of `avoid` (else the next boundary in reach, never past 40 m); a guyed pole at each corner (the
+  end of a street at another, a T, is a corner too) and each end of line, the corners of two streets joined by a span; an in-line pole at
+  least 5 m from a cross street's roadway. A lot out of a drop's reach gets an in-line pole at its station, and service poles into it when it
+  stands farther back. Each street pole carries a lamp on its arm over the road (`light_feed` from its low voltage).
+- **Power**: one system per feed where a street leaves the map (no span over a river); circuits cut on the pole tree so that the line each way
+  from the transformer stays within 200 m and the diversified demand (plus the lamps) within the largest rating; each transformer on its
+  circuit's centre, sized by `pickTransformer`, a circuit over the largest rating split into more; medium voltage on every street pole of the feeder
+  and to each transformer; a drop from the nearest pole to every lot.
+  Lots of the periphery (`layout.periphery.kinds`) get a few hookups with no meter (`spec: 'unmetered'`), counted in the load.
+- **Drops** follow the street's practice: from the pole in front of the lot, or straight across the street (within `power.dropMaxSkew`, 30°, of
+  its normal), never over another lot, at most `power.dropsPerPole` (4) on a pole; a lot no pole can feed so gets an in-line pole at its station.
+  `validateNetworks(..., { frontages })` checks it (`drop_skewed`, `drop_off_frontage`, `drop_over_other_lot`, `pole_too_many_drops`).
+- **Telecom** on every pole from its own feed, 1-2 cables in the centre and 3-5 in the periphery, a splice box with its reserve coil every 4 spans.
+- **Sewer**: DN 150 under the axis, a manhole at every crossing and at most 80 m apart, a cleanout at each dry head, falling at least 0.5 %
+  to the river bank, then an interceptor along the bank to a `treatment` node where the river leaves the map (with no river, from the line's
+  end to the border); a `pumping_station` where a main would go deeper than 4.5 m; each lateral perpendicular, from
+  the inspection box over the gallery (or under the water main) to a drop and a saddle on the main; mains laid under every drainage pipe they cross.
+- **Drainage**: a DN 600 gallery 2 m off the axis on the side of the poles, to a headwall on the bank above the river's level (a lift where it
+  would reach under it, or deeper than a sewer could pass under); inlets on both
+  kerbs at each corner and at most 60 m apart, each with a lateral; the downspout of every lot down the gutter (`storm_gutter`, an open channel of
+  diameter 0) to the nearest inlet of its kerb.
+- **Water**: DN 75 under the sidewalk opposite the poles from a reservoir at the border, a valve and a pillar hydrant at every crossing, a
+  DN 20 service from a tee to every lot.
+- **What the validator asks of the street's plan** (`validateSurface`): a manhole wherever three mains meet or two turn (`pv_missing`), at most
+  `storm.inletSpacing` (60 m) between the inlets of a kerb (`inlet_spacing`), an inlet within `storm.cornerReach` of every corner of a crossing
+  (`inlet_at_corner`), and each house lateral and each inlet's lateral within `sewer.branchMaxSkew` (5°) of square to the street (`branch_skewed`).
+- **What shows and what is under it** (`surfacePiecesOf`, `pipePiecesOf`): a piece at each node that has a face on the ground (the PV and
+  gallery box covers, cleanout and valve covers, the inlets' grates, hydrants, the outfalls' wing walls, and at every lot the inspection box
+  cover, the meter box and the downspout's mouth), each with the pit down to its pipe's bottom (`shaft`), and every pipe laid as a body in the
+  ground at the depths of the rules (`coverOf`). `surfaceAt` lifts the pieces on the road to the asphalt (`ROAD_SURFACE_LEVEL`, 2 cm). The materials
+  are ids of `game-destruction`; a cover and a grate are ground (`solid: false`), a hydrant, wing wall and meter box stand (`solid: true`).
+- **A crater over them** (`breachOf(pieces, { x, z, radius, depth })`): the bowl is a paraboloid; a pipe whose top the bowl gets down to is
+  `reached`, one whose centre line it gets to is `severed` and says what leaks (`sewage`, `stormwater`, `water`); the covers inside the bowl are
+  listed to be thrown. Pure: the same answer for the same bowl.
+- **What a break lets out and cuts** (`leaksOf`, `waterOutageOf`, `drainLeak`): a severed pipe is a `NetworkLeak` of its content at the break: water under pressure (6 l/s a main, 0.8 a service), sewage a slow run (0.5, 0.15), stormwater only when `isRaining`; each is finite (`rate` times `seconds` of `DEFAULT_LEAK_RULES`, patchable) and `drainLeak(startLeak(leak), dt)` gives what a step lets out until nothing is left. `waterOutageOf(networks, { before, after })` is the water a break cuts: the nodes the reservoir no longer reaches and the lots among them (a tree loses all downstream of the break), only what is new since `before`.
+- **The hole and the cover** (`openingOf`, `coverBodyOf`): a cover thrown off leaves the square of its shaft dug to the shaft's floor (a `GroundExcavation` for `Terrain.open`), and is itself a plate of its material (cast iron) as a `DestructibleSpec`, with its mass, for the host to hand to the destruction world as a loose piece.
+- Limits: straight streets along x or z only (another stretch throws); the ground defaults to flat (`groundAt` for terrain). The pole tree
+  and the line trees are plain Dijkstra (tens of nodes a system); the nearest pole and the crossings are found by 20-40 m cells.
 
 ## Terrain
 

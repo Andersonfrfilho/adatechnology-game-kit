@@ -51,6 +51,8 @@ const result = await esbuild.build({
   alias: {
     '@adatechnology/game-vegetation-three/testing': join(pkg('game-vegetation-three'), 'dist/testing.js'),
     '@adatechnology/game-urban-three/testing': join(pkg('game-urban-three'), 'dist/testing.js'),
+    // a second entry of the package: the generic alias below would resolve it under dist/index.js
+    '@adatechnology/game-urban/networks': join(pkg('game-urban'), 'dist/networks/index.js'),
     '@adatechnology/game-vehicles-three/testing': join(pkg('game-vehicles-three'), 'dist/testing.js'),
     '@adatechnology/game-vfx-three/testing': join(pkg('game-vfx-three'), 'dist/testing.js'),
     '@adatechnology/game-weather-three/testing': join(pkg('game-weather-three'), 'dist/testing.js'),
@@ -116,8 +118,10 @@ if (existsSync(roomHtml)) {
   const page = readFileSync(roomHtml, 'utf8')
   const at = page.lastIndexOf('</body>')
   if (at < 0) throw new Error('the room page has no </body>')
-  // the room page sets window.__testRoom synchronously; our script runs right after it and loads the module into that room
-  const boot = `window.__furnitureReport = FurnitureArea.loadInto(window.__testRoom)`
+  // the room page sets window.__testRoom synchronously; our script runs right after it and boots the page: the room's loading indicator covers it from the start while the
+  // modules load (a bar, module by module), the area of ?area= is laid and comes to rest (`bootFurnitureRoom`); `__furnitureReport` is set once the modules are in,
+  // `__furnitureReady` once the indicator is down
+  const boot = `FurnitureArea.bootFurnitureRoom(window.__testRoom).then(() => { window.__furnitureReady = true })`
   const html = `${page.slice(0, at)}<script>${safe(bundle)}\n${boot}</script>\n${page.slice(at)}`
   writeFileSync(join(here, 'dist/sala-moveis.html'), html)
   console.log(`dist/sala-moveis.html ${(html.length / 1024).toFixed(0)} KB`)

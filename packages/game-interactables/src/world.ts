@@ -34,7 +34,13 @@ import type {
 
 const DEFAULT_ACTOR = 'player'
 const DEFAULT_RADIUS = 1.2
+/** Local id prefix of the `take` a stack in an open container offers (`<object>:take.<container>.<slot>`). */
+const TAKE_PREFIX = 'take.'
+/** Reach radius of one contained item, metres. */
+const TAKE_RADIUS = 0.6
 const AUTO_RANGE = 2
+/** How far behind a socket's face (m) a plug may be and still take it: a plug on the wall's other side is a wall's thickness (10 cm or more) behind it. */
+const SOCKET_BEHIND = 0.05
 const SMOKE_TAIL = 20
 const FLUSH_SECONDS = 2
 const ACTOR_HEIGHT = 1.7
@@ -471,9 +477,13 @@ export function createWorld(options: WorldOptions = {}): World {
   // ------------------------------------------------------------------ power
   function rebuildPlugs(): void {
     plugs.clear()
-    const sockets: Array<{ id: string; pos: Vec3; circuit?: string; local: string }> = []
+    const sockets: Array<{ id: string; pos: Vec3; circuit?: string; local: string; facing: Vec3 }> = []
     for (const o of objs.values()) {
-      for (const s of o.spec.sockets ?? []) sockets.push({ id: gid(o, s.id), local: s.id, pos: toWorld(o, s.pos), circuit: s.circuit })
+      for (const s of o.spec.sockets ?? []) {
+        const pos = toWorld(o, s.pos)
+        const ahead = toWorld(o, [s.pos[0], s.pos[1], s.pos[2] + 1])
+        sockets.push({ id: gid(o, s.id), local: s.id, pos, circuit: s.circuit, facing: [ahead[0] - pos[0], ahead[1] - pos[1], ahead[2] - pos[2]] })
+      }
     }
     const used = new Set<string>()
     const autos: Array<{ o: ObjState; d: DeviceState }> = []
@@ -499,6 +509,8 @@ export function createWorld(options: WorldOptions = {}): World {
       let bestD = AUTO_RANGE
       for (const s of sockets) {
         if (used.has(s.id)) continue
+        // a socket faces out of its wall (+z): a plug behind its face is on the wall's other side, in the next room, and its cord would cross the wall
+        if ((from[0] - s.pos[0]) * s.facing[0] + (from[1] - s.pos[1]) * s.facing[1] + (from[2] - s.pos[2]) * s.facing[2] < -SOCKET_BEHIND) continue
         const dd = dist3(from, s.pos)
         if (dd <= bestD) {
           best = s
@@ -1143,9 +1155,58 @@ export function createWorld(options: WorldOptions = {}): World {
     })
   }
 
+  /**
+   * One `take` per stack an open container shows, at its slot (it rides the drawer or door shelf with it): each item inside a piece of furniture is picked up
+   * on its own, with one hand. Items the catalogue marks `pickable: false`, and stacks whose data says so, are left out.
+   */
+  function contentTakes(o: ObjState): Interactable[] {
+    if (options.takeContents === false) return []
+    const out: Interactable[] = []
+    for (const c of o.spec.containers ?? []) {
+      const list = o.contents.get(c.id)
+      if (!list || !list.some((st) => st !== null) || !accessible(o.id, c.id)) continue
+      list.forEach((stack, slot) => {
+        if (!stack || options.items?.[stack.type]?.pickable === false || stack.data?.pickable === false) return
+        const verb = t('prompt.take')
+        const noun = table[`item.${stack.type}`] ?? humanize(stack.type)
+        const item: Interactable = {
+          id: `${o.id}:${TAKE_PREFIX}${c.id}.${slot}`,
+          object: o.id,
+          kind: 'take',
+          pos: slotPosition(o.id, c.id, slot),
+          radius: TAKE_RADIUS,
+          label: `${verb} ${noun}`,
+          verb,
+          noun,
+          hands: 1,
+          itemType: stack.type,
+          available: true,
+          act: (actor) => takeAt(o.id, c.id, slot, actor ?? DEFAULT_ACTOR),
+        }
+        if (options.canInteract?.(item, DEFAULT_ACTOR) === false) {
+          item.available = false
+          item.reason = 'locked'
+        }
+        out.push(item)
+      })
+    }
+    return out
+  }
+
+  function takeAt(objectId: string, containerId: string, slot: number, actor: string): boolean {
+    const o = objs.get(objectId)
+    if (!o) return false
+    const probe = contentTakes(o).find((k) => k.id === `${objectId}:${TAKE_PREFIX}${containerId}.${slot}`)
+    if (!probe || options.canInteract?.(probe, actor) === false) return false
+    return take(objectId, containerId, slot, actor) !== null
+  }
+
   function interactables(): Interactable[] {
     const out: Interactable[] = []
-    for (const o of objs.values()) for (const e of interactablesOf(o)) out.push(e.item)
+    for (const o of objs.values()) {
+      for (const e of interactablesOf(o)) out.push(e.item)
+      out.push(...contentTakes(o))
+    }
     return out
   }
 
@@ -1156,11 +1217,11 @@ export function createWorld(options: WorldOptions = {}): World {
     let best: Interactable | null = null
     let bestScore = Infinity
     for (const o of objs.values()) {
-      for (const e of interactablesOf(o)) {
-        if (!e.item.available && !opts.includeUnavailable) continue
-        if (opts.kinds && !opts.kinds.includes(e.item.kind)) continue
-        if (opts.filter && !opts.filter(e.item)) continue
-        const v: Vec3 = [e.item.pos[0] - eye.x, e.item.pos[1] - eye.y, e.item.pos[2] - eye.z]
+      for (const item of [...interactablesOf(o).map((e) => e.item), ...contentTakes(o)]) {
+        if (!item.available && !opts.includeUnavailable) continue
+        if (opts.kinds && !opts.kinds.includes(item.kind)) continue
+        if (opts.filter && !opts.filter(item)) continue
+        const v: Vec3 = [item.pos[0] - eye.x, item.pos[1] - eye.y, item.pos[2] - eye.z]
         const d = Math.hypot(v[0], v[1], v[2])
         if (d > reach) continue
         const cos = d < 1e-6 ? 1 : clamp((v[0] * dir[0] + v[1] * dir[1] + v[2] * dir[2]) / d, -1, 1)
@@ -1169,7 +1230,7 @@ export function createWorld(options: WorldOptions = {}): World {
         const score = (angle / cone) * 0.6 + (d / reach) * 0.4
         if (score < bestScore) {
           bestScore = score
-          best = e.item
+          best = item
         }
       }
     }
@@ -1181,6 +1242,10 @@ export function createWorld(options: WorldOptions = {}): World {
     for (const o of objs.values()) {
       if (!interactableId.startsWith(o.id + ':')) continue
       const local = interactableId.slice(o.id.length + 1)
+      if (local.startsWith(TAKE_PREFIX)) {
+        const at = contentTakes(o).find((k) => k.id === interactableId)
+        if (at) return at.act(actor)
+      }
       if (!o.interactions.some((i) => i.id === local)) continue
       found = interactablesOf(o).find((e) => e.spec.id === local) ?? null
       if (found) break

@@ -28,6 +28,7 @@ import { chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, waveWork, ignition
 import type { VehicleContext, VehicleKit } from '../api'
 import type { KitShared, SceneNode } from '../types'
 import { clamp, rng, strHash } from '../util'
+import { engineBayVent } from '../engine-smoke'
 import { buildVehicleModel, kindOf, type JointDef, type PartDef, type PartRole, type VehicleModel } from './model'
 import type { CreaseQueue } from './crease-queue'
 import { VehicleVisuals } from './visual'
@@ -45,6 +46,11 @@ export interface VehicleDestructibleOptions {
   hitch?: boolean
   /** Do not create or move any mesh (logic only, for servers and tests that need no scene). */
   headless?: boolean
+  /**
+   * Draw a puddle of its own under each leak (default true). A host whose fluid world lays what leaks (the `leak` event carries the part, the fluid, the hole
+   * and the rate) passes false, so the liquid shows once, as much as came out, instead of a drawing of a fixed size on top of it.
+   */
+  puddles?: boolean
   /** Extra seed for the choices that are random in the real world (which way a broken steering pulls). */
   seed?: number
   /** How full the fuel tank starts, 0 to 1 (default 1). A nearly empty tank leaks little and lights easily (see `ignition`). */
@@ -234,6 +240,9 @@ const TYRE_FLAT_AIR = 0.2
 const BRAKE_FLUID_NEEDED = 0.6
 const BRAKE_NO_FLUID = 0.15
 /** An engine runs at this temperature; without coolant it climbs this many °C per second at full work, steams at, and seizes at. Under this share of oil it wears this share of its life per second. */
+/** Below this share of its hit points a hurt engine bleeds oil on the hot block and smokes light grey; the plume thickens down to the wreck. */
+const ENGINE_SMOKE_FROM = 0.85
+const ENGINE_OIL_SMOKE_RATE = 4
 const ENGINE_WORKING_C = 90
 const ENGINE_SETTLE_S = 30
 const ENGINE_HEATING = 0.5
@@ -501,6 +510,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     out.push(ev({ type: 'damage', part: p.def.id, amount: r2(before - p.hp), hp: r2(p.hp), damageType: dtype, ...(source ? { source } : {}) }))
     if (!punctures) wear(p, amount, out)
     syncZone(p)
+    if (vis && p.def.role === 'engine' && p.hp < p.def.hp * ENGINE_SMOKE_FROM) smokeFromBay(p, 'oil', ENGINE_OIL_SMOKE_RATE)
     if (p.hp <= 0) lose(p, 'broken', out, cause)
     else if (p.def.role === 'light') vis?.crackLight(p.def, dtype === 'ballistic')
     if (p.def.role === 'tyre' && !p.flat && p.hp < p.def.hp * 0.6 && !p.lost) {
@@ -586,11 +596,17 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         const pos = new V3(d.box.center[0], Math.max(0.2, (c.meta.clearance ?? 0.3) * 0.8), d.box.center[2])
         // hot coolant also steams out of the front; every liquid runs down into a puddle of its own colour
         if (fluid === 'coolant') kit.addEmitter(c, new V3(d.box.center[0], d.box.center[1] + 0.2, d.box.center[2]), 'white', { rate: 5, s: 0.8 })
-        if ((c.meta.kind ?? 'car') !== 'boat') l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : fluid === 'brake_fluid' ? 0.4 : 1.1)
+        if ((c.meta.kind ?? 'car') !== 'boat' && options.puddles !== false) l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : fluid === 'brake_fluid' ? 0.4 : 1.1)
       }
     }
     const out3 = dirToWorld(new V3(dirLocal.x * 0.5, dirLocal.y * 0.5 - 0.6, dirLocal.z * 0.5))
     out.push(ev({ type: 'leak', part: d.id, fluid, point: toWorld(holePoint), direction: r3(out3), rate: r2(rate), pressurized: !!d.contains.pressurized }))
+  }
+
+  // ---- engine-bay smoke: a plume out of the top of the bay, thicker the more the engine is hurt ----------------------------------------
+  const smokeFromBay = (p: PState, kind: 'oil' | 'white' | 'black', rate: number): void => {
+    const [x, y, z] = engineBayVent(p.def.box)
+    kit.addEmitter(c, new V3(x, y, z), kind, { rate, damage: () => 1 - p.hp / p.def.hp })
   }
 
   // ---- fire ----------------------------------------------------------------------------------------------------------------------------
@@ -603,7 +619,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     if (!vis) return
     const cen = centreOf(d)
     kit.addEmitter(c, cen.clone().add(new V3(0, 0.1, 0)), 'fire', { rate: d.role === 'tyre' ? 7 : 10, s: d.role === 'tyre' ? 0.6 : 0.9 })
-    kit.addEmitter(c, cen.clone().add(new V3(0, 0.6, 0)), 'black', { rate: 4, s: 1.1 })
+    // burning rubber and fuel smoke black; the engine's leaves through the top of the bay, not through the hood and the windshield
+    if (d.role === 'engine') smokeFromBay(p, 'black', 5)
+    else kit.addEmitter(c, cen.clone().add(new V3(0, 0.6, 0)), 'black', { rate: 4, s: 1.1 })
     if (d.role === 'fuel_tank' || d.role === 'engine') {
       const l = leaks.get('fuel_tank')
       if (l?.pud && l.fluid === 'fuel') I.igniteFuel(c, l.pud)
@@ -1398,7 +1416,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       if (oil < OIL_NEEDED) engine.hp = Math.max(0, engine.hp - engine.def.hp * OIL_WEAR * work * seconds * ((OIL_NEEDED - oil) / OIL_NEEDED))
       if (engineHeat >= ENGINE_STEAM_C && vis && !steaming) {
         steaming = true
-        kit.addEmitter(c, new V3(engine.def.box.center[0], engine.def.box.center[1] + 0.4, 0), 'white', { rate: 8, s: 1 })
+        smokeFromBay(engine, 'white', 8)
       }
       if (engineHeat >= ENGINE_SEIZE_C || engine.hp <= engine.def.hp * ENGINE_SEIZE_HP) {
         seized = true

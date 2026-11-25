@@ -1,3 +1,4 @@
+import type { RainCover } from '@adatechnology/game-contracts'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { VfxWorld } from '@adatechnology/game-vfx'
@@ -15,7 +16,7 @@ import type { NearRain } from './rain-near'
 import { createRainCurtain } from './rain-curtain'
 import type { RainCurtain } from './rain-curtain'
 import { createSky } from './sky'
-import type { Sky } from './sky'
+import type { HostSun, Sky } from './sky'
 import type { ThreeLib, Vec3, WeatherProfileName, WeatherSource, ZoneFog } from './types'
 
 /** The parts the renderer draws, each of which a layer switches. */
@@ -33,6 +34,8 @@ export type WeatherRendererOptions = {
   readonly random?: () => number
   readonly zone?: ZoneFog
   readonly puddles?: readonly Puddle[]
+  /** What is roofed over (`ModuleHost.rainCover`, `KitWorld.rainCover`): the rain keeps off it, near and far. */
+  readonly cover?: RainCover
   readonly puddleAt?: (x: number, z: number) => boolean
   readonly headlights?: HeadlightRules
   /**
@@ -40,6 +43,8 @@ export type WeatherRendererOptions = {
    * the fog state of the scene. Without it the lights are created here, as before (deprecated, removed in the next major).
    */
   readonly lights?: LightBudget
+  /** The host's sun (its `DirectionalLight`): the sun disc of the sky dome sits in its direction. Without it the disc follows the hour. */
+  readonly sun?: HostSun
   readonly layers?: Partial<Record<WeatherLayerId, boolean>>
 }
 
@@ -67,14 +72,15 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
   const group = new THREE.Group()
   group.name = 'weather'
   scene.add(group)
-  const curtain = createRainCurtain(THREE, { ...(options.random ? { random: options.random } : {}), ...(options.profile ? { profile: options.profile } : {}) })
+  const curtain = createRainCurtain(THREE, { ...(options.cover ? { cover: options.cover } : {}), ...(options.random ? { random: options.random } : {}), ...(options.profile ? { profile: options.profile } : {}) })
   const haze = createHeatHaze(THREE)
   group.add(curtain.object, haze.object)
-  const sky = createSky(THREE, scene)
+  const sky = createSky(THREE, scene, { camera, ...(options.sun ? { sun: options.sun } : {}) })
+  if (sky.object) group.add(sky.object)
   const fog = createFog(THREE, scene, { stable: options.lights !== undefined })
   const lightning = createLightning(THREE, scene, vfx, options.lights ? { lights: options.lights } : {})
   const headlights = createHeadlights(THREE, options.lights ? { ...options.headlights, lights: options.lights } : options.headlights)
-  const nearRain = createNearRain(vfx, { ...(options.puddles ? { puddles: options.puddles } : {}), ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}) })
+  const nearRain = createNearRain(vfx, { ...(options.cover ? { cover: options.cover } : {}), ...(options.puddles ? { puddles: options.puddles } : {}), ...(options.puddleAt ? { puddleAt: options.puddleAt } : {}) })
   const on = new Map<WeatherLayerId, boolean>(WEATHER_LAYERS.map((id) => [id, options.layers?.[id] ?? true]))
   let zone = options.zone
   let time = 0
@@ -86,6 +92,7 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
     else if (id === 'fog') fog.clear()
     else if (id === 'lightning') lightning.light.intensity = 0
     else if (id === 'haze') haze.object.visible = false
+    else if (id === 'sky' && sky.object) sky.object.visible = false
   }
 
   return {
@@ -106,7 +113,7 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
       const where: Vec3 = [eye.x, eye.y, eye.z]
       const background = (scene.background as THREE_NS.Color | null) ?? undefined
       const ownSky = on.get('sky') === true
-      const color = ownSky ? sky.update(sample, zone) : background && (background as { isColor?: boolean }).isColor ? background : sky.color
+      const color = ownSky ? sky.update(sample, zone, dt) : background && (background as { isColor?: boolean }).isColor ? background : sky.color
       if (on.get('fog')) fog.update(sample, color, zone)
       if (on.get('lightning')) lightning.update(sample, ownSky ? (scene.background as THREE_NS.Color) : undefined)
       if (on.get('far_rain')) curtain.update(sample, eye, time, sample.sun)
@@ -133,6 +140,7 @@ export function createWeatherRenderer(THREE: ThreeLib, options: WeatherRendererO
       scene.remove(group)
       curtain.dispose()
       haze.dispose()
+      sky.dispose()
       lightning.dispose()
       headlights.dispose()
       nearRain.clear()

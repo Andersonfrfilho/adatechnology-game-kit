@@ -1,5 +1,21 @@
 # @adatechnology/game-floorplan-rural
 
+## 7.0.0
+
+### Patch Changes
+
+- Updated dependencies [32547af]
+  - @adatechnology/game-floorplan@0.5.0
+  - @adatechnology/game-floorplan-residential@8.0.0
+
+## 6.0.0
+
+### Patch Changes
+
+- Updated dependencies [f17aebb]
+  - @adatechnology/game-floorplan@0.4.0
+  - @adatechnology/game-floorplan-residential@7.0.0
+
 ## 5.0.1
 
 ### Patch Changes

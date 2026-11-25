@@ -37,10 +37,10 @@ describe('pipes under the street', () => {
   it('keeps a sewer lateral no deeper than 0.85 m where it crosses the gallery', () => {
     const lot = (inverts: readonly [number, number]) =>
       streetNetworks({
-        nodes: (nodes) => [...nodes, { id: 'lot:c:sewer', kind: 'connection', at: [30, 0, 9], invert: -0.5, carries: ['sewer'], lot: 'c' }],
+        nodes: (nodes) => [...nodes, { id: 'lot:c:sewer', kind: 'connection', at: [60, 0, 9], invert: -0.5, carries: ['sewer'], lot: 'c' }],
         edges: (edges) => [...edges, { id: 'sewer:c', kind: 'sewer_lateral', from: 'lot:c:sewer', to: 'pv:2', diameter: 0.1, inverts }],
       })
-    const options = streetOptions({ connections: [...CONNECTIONS, { lot: 'c', network: 'sewer', frame: 'world', at: [30, 0, 9], invert: -0.5 }] })
+    const options = streetOptions({ connections: [...CONNECTIONS, { lot: 'c', network: 'sewer', frame: 'world', at: [60, 0, 9], invert: -0.5 }] })
     expect(validateNetworks(lot([-0.5, -0.9]), options)).toEqual([])
     const deep = validateNetworks(lot([-0.5, -1.3]), options)
     expect(deep).toEqual([{ code: 'lateral_too_deep', id: 'storm:2xsewer:c', value: expect.closeTo(0.5 + 0.8 * (7 / 9), 6) as number, limit: 0.85 }])

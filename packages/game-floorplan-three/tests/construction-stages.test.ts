@@ -163,9 +163,10 @@ describe('construction stages of single_storey_a', () => {
     expect(holders.length).toBe(2 * bulbs.length)
     for (const level of [3, 4, 5, 6, 7, 8]) {
       house.setConstructionLevel(level)
-      expect(holders.filter(visibleIn).every((h) => h.userData.mount === (level === 4 ? 'slab' : 'ceiling')), `holders at ${level}`).toBe(true)
+      // the socket hangs from the bare slab from the rough-in until the render (level 7), then from the rendered ceiling until the fittings go up (level 8)
+      expect(holders.filter(visibleIn).every((h) => h.userData.mount === (level < 7 ? 'slab' : 'ceiling')), `holders at ${level}`).toBe(true)
       expect(holders.some(visibleIn), `holders at ${level}`).toBe(level >= 4 && level <= 7)
-      expect(bulbs.every(visibleIn), `bulbs at ${level}`).toBe(level >= 5 && level <= 7)
+      expect(bulbs.every(visibleIn), `bulbs at ${level}`).toBe(level === 7)
     }
   })
 
@@ -213,10 +214,12 @@ describe('construction stages of single_storey_a', () => {
     expect(shown).toEqual([])
   })
 
-  it('puts the timber frame up at level 7, under where the tiles go, and the tiles at level 8', () => {
-    house.setConstructionLevel(7)
+  it('puts the timber frame up at level 5, under where the tiles go, and the tiles at level 6 (before the render)', () => {
+    house.setConstructionLevel(5)
     expect(visibleIn(group('stage:7:roof_framing'))).toBe(true)
     expect(group('roof').visible).toBe(false)
+    house.setConstructionLevel(6)
+    expect(group('roof').visible).toBe(true)
     house.setConstructionLevel(8)
     expect(group('roof').visible).toBe(true)
     const tiles: THREE.Object3D[] = []

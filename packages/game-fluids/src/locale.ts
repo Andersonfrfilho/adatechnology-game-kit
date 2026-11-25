@@ -35,8 +35,11 @@ export const locales: Record<FluidLocale, FluidStrings> = {
       acid: 'acid',
       paint: 'paint',
       bleach: 'bleach',
+      sewage: 'sewage',
       honey: 'honey',
       mud: 'mud',
+      coolant: 'coolant',
+      brake_fluid: 'brake fluid',
     },
     events: {
       fill: 'filled',
@@ -78,8 +81,11 @@ export const locales: Record<FluidLocale, FluidStrings> = {
       acid: 'ácido',
       paint: 'tinta',
       bleach: 'água sanitária',
+      sewage: 'esgoto',
       honey: 'mel',
       mud: 'lama',
+      coolant: 'líquido de arrefecimento',
+      brake_fluid: 'fluido de freio',
     },
     events: {
       fill: 'encheu',

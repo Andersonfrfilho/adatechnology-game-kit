@@ -1,5 +1,53 @@
 # @adatechnology/game-items-goods
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-items@0.2.20
+
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-items@0.2.19
+
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-items@0.2.17
+
+## 0.4.0
+
+### Minor Changes
+
+- 0b25285: The KA-BAR (uncommon), the katana (rare) and the brass knuckles (rare) are items of the goods catalog and turn up in the house loot: the KA-BAR in dressers, nightstands, the workbench and the tool shelf (drawers and garage), the katana in the wardrobe, the brass knuckles in dressers, nightstands and the wardrobe. Each is the same object as its weapon (`weapon` and `model` of the same id) and `game-weapons-three` draws the weapon with the item model of `game-items-three`, so the model exists once. The pool weight of an entry is small (0.06 uncommon, 0.03 rare, against 2 for a common entry) and only pools of six entries or more carry one, so each turns up in a few containers in a hundred; the reason in `tools/items-catalog/decisions.json` (`housePoolExtras`).
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-items@0.2.16
+
 ## 0.3.15
 
 ### Patch Changes

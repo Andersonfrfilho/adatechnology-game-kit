@@ -141,6 +141,8 @@ export interface AdapterPlan {
   lanterns: string[]
   canisters: string[]
   serviceEntrance: string | null
+  /** The mast up the facade (`service_mast`) that takes a street network's drop on a building with no front yard; absent otherwise. */
+  serviceMast?: string
   panel: string | null
   meter: string | null
   conduits: string[]
@@ -224,6 +226,8 @@ export interface AdapterOptions {
   chairSide?: number
   /** Maps the id of an object to the key of its seeded random (default: the id itself); the house renderer passes its `seedKey` to reproduce the team's seeds. */
   seedKey?: (id: string) => string | null | undefined
+  /** The team's adapter as it was (its golden only): the base cabinet beside the kitchen sink keeps the plan's height, over the sink's worktop. Default `false`. */
+  visor?: boolean
   /** Texts of the warnings and errors, by key. */
   messages?: Partial<Record<MessageKey, string>>
   /** Furniture type of the plan to object of the kit; `null` drops a default entry. */

@@ -8,6 +8,8 @@ export type { SceneNode } from './types'
 export { defaultDamageableKinds } from './damageables'
 export type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 export { hash, clamp, smooth, rng, strHash } from './util'
+export { PLUME_PUFFS, SMOKE_LOOKS, SMOKE_WIND, SmokeCause, engineBayVent, smokeCauseOfEmitter, smokePuff, smokeRate } from './engine-smoke'
+export type { BayBox, SmokeLook, SmokePuff, SmokePuffParams } from './engine-smoke'
 export type {
   Band,
   BandId,
@@ -54,6 +56,8 @@ export type {
 } from './api'
 export type { StrayLamp } from './stray-lamps'
 export { strayLampsOf } from './stray-lamps'
+export { DOOR_SHELL_DEPTH, DOOR_SHELL_MAX_DEPTH, doorShell, openEdgeCount } from './destructible/door-shell'
+export type { DoorShellParams, DoorShellResult } from './destructible/door-shell'
 export { ARMOUR_LEVELS, armourLevelOf, CRASH_RULES, crashDeltaV, crashVehicle, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES, cabinEnclosure, cabinBoxOf, swingOf, CABIN_LEAK } from './destructible'
 export type {
   DriveReport,

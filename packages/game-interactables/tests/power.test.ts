@@ -5,7 +5,7 @@ import { origin, world } from './fixtures'
 const tvStand: ObjectSpec = {
   type: 'tv',
   parts: [{ id: 'button', pivot: [0, 1, 0], motion: { kind: 'rocker' } }],
-  devices: [{ id: 'tv', kind: 'screen', watts: 80, socket: 'auto', plug: [0, 0, -0.1], part: 'button', channels: 3 }],
+  devices: [{ id: 'tv', kind: 'screen', watts: 80, socket: 'auto', plug: [0, 0, 0.1], part: 'button', channels: 3 }], // (in front of the sockets' walls, which face +z)
 }
 const wall = (id: string, circuit?: string): ObjectSpec => ({ type: 'wall', sockets: [{ id, pos: [0, 0.3, 0], circuit }] })
 const lamp: ObjectSpec = { type: 'lamp', devices: [{ id: 'bulb', kind: 'lamp', watts: 10, circuit: 'lights' }] }
@@ -33,6 +33,13 @@ describe('power', () => {
     expect(w.power.pluggedInto('tv2', 'tv')).toBeNull()
     w.add('lonely', tvStand, { x: 50, y: 0, z: 0, ry: 0 })
     expect(w.power.pluggedInto('lonely', 'tv')).toBeNull()
+  })
+
+  it('does not plug into a socket on the other side of its wall', () => {
+    const { w } = world()
+    w.add('behind', wall('s'), { x: 0.5, y: 0, z: 0.3, ry: 0 }) // faces +z from 20 cm in front of the plug: the plug is behind its wall
+    w.add('tv', tvStand, origin)
+    expect(w.power.pluggedInto('tv', 'tv')).toBeNull()
   })
 
   it('explicit socket ids (world-wide) are honoured', () => {

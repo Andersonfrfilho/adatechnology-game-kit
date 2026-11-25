@@ -89,7 +89,8 @@
     },
     "mass": 2.8,
     "tags": [
-      "heavy"
+      "heavy",
+      "two_handed"
     ]
   },
   {
@@ -167,7 +168,8 @@
     },
     "mass": 6,
     "tags": [
-      "heavy"
+      "heavy",
+      "two_handed"
     ]
   },
   {

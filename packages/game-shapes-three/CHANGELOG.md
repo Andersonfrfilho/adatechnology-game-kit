@@ -1,5 +1,14 @@
 # @adatechnology/game-shapes-three
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [18bd23f]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [e987bbe]
+  - @adatechnology/game-shapes@0.4.0
+
 ## 0.4.0
 
 ### Minor Changes

@@ -5,6 +5,7 @@ import type { HandTargets } from '@adatechnology/game-contracts'
 
 import type { ReachView } from './arm-reach'
 import type { AvatarItemUsePose, AvatarViewOptions, PlayerAvatar } from './avatar'
+import type { BodySlotName } from './body-slots'
 import type { AvatarViewMode } from './head-hiding'
 import type { THREE_NS } from '../three'
 
@@ -14,6 +15,8 @@ export type RoomAvatarLike = {
   update(dt: number, state: { speed: number; running: boolean; crouch: boolean; down: boolean; fallForward?: boolean; armed: boolean; pitch: number; push?: { readonly phase: 'grip' | 'push' | 'strain'; readonly progress: number } | null; door?: { readonly phase: 'reach' | 'swing' | 'push' | 'release' | 'rattle'; readonly progress: number; readonly height: number; readonly pull: boolean } | null; holding?: boolean; itemUse?: AvatarItemUsePose | null; seat?: { readonly pose: 'sit' | 'lie'; readonly hip: number } | null; clipRate?: number }): void
   hand(side: 'R' | 'L'): THREE_NS.Object3D
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
+  /** A place on the body that takes a weapon put away (`PlayerAvatar.slot`): the room answers `ModuleHost.bodySlot` from it. */
+  slot(name: BodySlotName): THREE_NS.Object3D
   /** Where the body's eyes are after its pose (`RoomAvatar.eye`): the room draws the body in both views and puts the first-person camera there. */
   eye(out?: THREE_NS.Vector3): THREE_NS.Vector3
   /** Hides the head and neck from `camera` in first person, and the arms with `arms` (`RoomAvatar.setView`). */
@@ -148,6 +151,7 @@ export const toRoomAvatar = (avatar: PlayerAvatar, options: ToRoomAvatarOptions 
     },
     hand: (side) => avatar.hand(side),
     shoulder: (side) => avatar.shoulder(side),
+    slot: (name) => avatar.slot(name),
     reach: (targets, view) => avatar.reach(targets, view),
     strike: (clipId, strikeOptions) => {
       const clip = strikes.get(clipId)

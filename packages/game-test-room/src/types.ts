@@ -8,7 +8,7 @@
  * Every action and result goes to a behaviour log shown on screen in plain words and exportable as JSON / NDJSON, and scripted scenarios run
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
-import type { BlastPacingOptions, KitWorldGraphicsOptions } from '@adatechnology/game-kit-defaults/world'
+import type { BlastPacingOptions, KitLoading as RoomLoading, KitWorldGraphicsOptions } from '@adatechnology/game-kit-defaults/world'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
@@ -16,7 +16,6 @@ import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptio
 import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-player'
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
-import type { RoomLoading } from './loading'
 import type { BlastDebrisOptions, DestructionRenderer, ExplosionWorkOptions, GroundWorkerPort, JitWarmUpOptions, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'
@@ -30,7 +29,7 @@ import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } fr
 import type { RoomSeat } from './seating'
 import type { ToolCondition } from './shovel'
 import type { BagResult, InventorySnapshot } from './inventory-types'
-import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, RainCover, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -315,6 +314,12 @@ export interface TestRoomOptions {
   toolMenu?: false | { keys?: string[] }
   /** The bag (I opens its list, P puts what is aimed at into it, O stores the hand): a 30 L backpack of 20 slots by default, weight limit `maxCarryKg`. `false`: no bag keys and no list. */
   inventory?: false | { litres?: number; slots?: number; inside?: readonly [number, number, number] }
+  /**
+   * The places on the body that take a weapon when an interaction wants its hands (`rules.hands.slots` of game-weapons: `hip` a holster, `back` across the back, `sling` a long
+   * gun's own sling): a weapon with none that fits drops to the floor (`planHands` of game-player). Every list but the empty one gets the sling (the gun brings it): a rifle hangs on
+   * it until H brings it back. Default `['hip', 'sling']`.
+   */
+  bodySlots?: readonly string[]
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists', 'brass_knuckles']`); the shove and the kick are not. */
@@ -447,6 +452,8 @@ export interface TestRoom {
   readonly audio: AudioEngine | null
   /** The environment store lent to modules as `host.environment`. */
   readonly environment: EnvironmentBus
+  /** What is roofed over in the room, lent to modules as `host.rainCover`. */
+  readonly rainCover: RainCover
   readonly world: DestructionWorld
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene

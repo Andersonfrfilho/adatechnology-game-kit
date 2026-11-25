@@ -38,6 +38,7 @@ export type {
   PartAperture,
   PartShape,
   PartSpec,
+  CarryHands,
   PartBreach,
   PartState,
   PartStatus,
@@ -100,7 +101,7 @@ export { STAGE_EVENT, TOOL_CLIP, checkToolClips, createToolClipPlayer, leadClipE
 export type { ToolAnimationStep, ToolAnimator, ToolClipId, ToolClipPlayer, ToolClipPlayerOptions, ToolClipSet, ToolRig } from './tool-animation'
 export { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, FRAME_PHASES, MUST_DRAIN_QUEUE_IDS, checkDeferredQueue, drainDetached } from './frame'
 export type { DeferredQueue, DeferredQueueOptions, DeferredQueueReport, FramePhase } from './frame'
-export type { FrameOptions, AreaPlacement, GroundExcavation, GroundLayout, GroundZone, HostEvent, HostGraphics, HostTool, HostToolAttachment, CornerImage, ModuleArea, ModuleHost, HostMovable, HostShove, ModuleView, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, ItemSounds, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach } from './module'
+export type { FrameOptions, AreaPlacement, GroundExcavation, GroundLayout, GroundZone, HostEvent, HostGraphics, HostTool, HostToolAttachment, CornerImage, ModuleArea, ModuleHost, HostMovable, HostShove, ModuleView, ModuleItemFluid, ModuleItemSeal, ModuleScenario, PlayerState, ItemSeat, ItemSounds, TestableItem, TestableModule, Thumbnail, ToolCommand, ToolCommandResult, HostReach, HostTakenItem } from './module'
 export { applyPatches, deepMerge, mergeById, removeIds } from './registry'
 export type { DeepPartial } from './registry'
 import { resetWarnOnce as resetWarnOnceForTests } from './warn'
@@ -134,8 +135,12 @@ export type { CategorizedOptions, CategorizedReport, CategoryDef, CategoryOption
 export { KIT_ORIGIN_KEY, kitOriginOf, markKitOrigin, unmarkedDrawings } from './origin'
 export type { KitOrigin, UnmarkedDrawing } from './origin'
 export { footprintBlocker } from './footprint'
+export { createGridRainCover, createRainCover, rainCoverTopOf } from './rain-cover'
+export type { GridRainCoverOptions, GridRainCoverSource, RainCover, RainCoverBounds, RainCoverHole, RainCoverRect, RainCoverSource } from './rain-cover'
 export type { UtilityConnection, UtilityNetwork } from './utility'
 export type { Footprint, FootprintObject } from './footprint'
+export { NAV_OBSTACLE_KIND } from './nav-obstacles'
+export type { NavObstacle, NavObstacleBox, NavObstacleKind, NavObstacleSource } from './nav-obstacles'
 export {
   BLOW_IDS,
   BODY_FOLEY_IDS,

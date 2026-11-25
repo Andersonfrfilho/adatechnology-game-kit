@@ -130,10 +130,19 @@ const HARD_LANDING = 3
 const SLOP = 0.002
 /** A resting support narrower than this fraction of the centre-of-mass height is a balancing act, not a rest: the piece topples. */
 const NARROW = 0.3
+/**
+ * Share of the width of its support that the centre of mass must be inside it by to rest. The ground under a piece is read at its corners and at points along its edges,
+ * so a sharp step between two of them (a crater's rim, a kerb) is missed: a lath held up there by a point just under its centre of mass would rest balanced in the air.
+ */
+const SUPPORT_MARGIN = 0.05
 /** Angular acceleration (rad/s^2 per metre of height) that pushes a balancing piece off its edge, toward the side its centre of mass leans to. */
 const TOPPLE = 3
 /** Angular acceleration (rad/s^2) of a piece that falls over (`tip`), beyond what the box of its bounds would allow, and the height of the centre of mass (m) at which it lies. */
 const TIP_ACCELERATION = 30
+/** Speed (m/s) the centre of a tipping piece may rise at: faster, the push is lifting it, not making it fall. */
+const TIP_RISING = 0.02
+/** Seconds into a tip after which a rising centre ends it. */
+const TIP_RISE_AFTER = 0.5
 const TIP_LYING = 0.25
 const TIP_SECONDS = 3
 /** How far (m) above a corner a top may be and still catch it (on top of what the corner falls in one sub-step): higher is beside it, not under it. */
@@ -149,6 +158,22 @@ const SIDE_BOUNCE = 0.1
  * (the piece is over a step): the edge of a table under a box's bottom is a support between its corners. On level ground the corners are enough.
  */
 const EDGE_POINTS = [-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75]
+/**
+ * Widest gap (m) between two of those points along a long edge of a board or a lath (a piece no thicker than twice `THIN_HALF`): a step between two of them (a crater's rim
+ * under a 1.5 m lath) is missed, and the piece sinks over it and rests on the points beside it, balanced in the air. Such an edge gets more points (at most
+ * `MAX_EDGE_POINTS`); a bulky piece (a sofa, a crate) keeps `EDGE_POINTS`, its own weight being what the step holds.
+ */
+const EDGE_SPACING = 0.05
+const MAX_EDGE_POINTS = 31
+const THIN_HALF = 0.03
+
+/** Fractions of a half edge of `half` metres, of a piece whose thinnest half extent is `thin`, where the points along it are. */
+const edgeFractions = (half: number, thin: number): readonly number[] => {
+  if (thin > THIN_HALF) return EDGE_POINTS
+  const count = Math.min(MAX_EDGE_POINTS, Math.ceil((2 * half) / EDGE_SPACING) - 1)
+  if (count <= EDGE_POINTS.length) return EDGE_POINTS
+  return Array.from({ length: count }, (_, i) => -1 + (2 * (i + 1)) / (count + 1))
+}
 /** Sleeping pieces whose support is looked at again each update, in turn: what held one up may have broken, fallen over or been carried off. */
 const SUPPORT_CHECKS = 16
 /** A sleeping piece none of whose lowest points has a support within this many metres under it wakes and falls. */
@@ -787,8 +812,9 @@ export class PieceSystem {
     for (let axis = 0; axis < 3; axis++) {
       const a1 = (axis + 1) % 3
       const a2 = (axis + 2) % 3
+      const fractions = edgeFractions(h[axis]!, Math.min(hx, hy, hz))
       for (let k = 0; k < 4; k++) {
-        for (const f of EDGE_POINTS) {
+        for (const f of fractions) {
           const p: Vec3 = [0, 0, 0]
           p[axis] = f * h[axis]
           p[a1] = k & 1 ? h[a1] : -h[a1]
@@ -1611,13 +1637,18 @@ export class PieceSystem {
       const wx = x1 - x0
       const wz = z1 - z0
       // a round piece lying on its side rests on a line: that is its rest, not a balancing act (it rolls if the ground slopes)
-      unstable = !b.round && (Math.min(wx, wz) < NARROW * height || x0 > 0 || x1 < 0 || z0 > 0 || z1 < 0)
+      const pastX = x0 > -SUPPORT_MARGIN * wx || x1 < SUPPORT_MARGIN * wx
+      const pastZ = z0 > -SUPPORT_MARGIN * wz || z1 < SUPPORT_MARGIN * wz
+      unstable = !b.round && (Math.min(wx, wz) < NARROW * height || pastX || pastZ)
       if (b.tipping) {
         b.tipping.seconds -= h
         // lying is measured on the box as it is turned: a top corner held from above (a board it was joined to) says nothing of how it stands
         const [hx, hy, hz] = b.halfExtents
         const upHalf = Math.abs(e[1]) * hx + Math.abs(e[5]) * hy + Math.abs(e[9]) * hz
-        if (upHalf < TIP_LYING || b.tipping.seconds <= 0) b.tipping = null
+        // past its first moments (going over an edge lifts the centre a little) the start of a fall only takes the centre down: once it lifts it (the piece landed
+        // leaning on something and the push turns it back up), the fall is over
+        const rising = TIP_SECONDS - b.tipping.seconds > TIP_RISE_AFTER && v[1] > TIP_RISING
+        if (upHalf < TIP_LYING || b.tipping.seconds <= 0 || rising) b.tipping = null
         else {
           w[0] += b.tipping.x * TIP_ACCELERATION * h
           w[2] += b.tipping.z * TIP_ACCELERATION * h
@@ -1629,8 +1660,10 @@ export class PieceSystem {
         const dirX = x0 + x1 > 0 ? -1 : 1
         const dirZ = z0 + z1 > 0 ? -1 : 1
         const k = TOPPLE * Math.min(height, 1) * h
+        // the centre of mass past the support along one axis only (a lath on a crater's rim, held at one end): it goes over that way, whichever side is narrower
+        const overZ = pastX === pastZ ? wx <= wz : pastX
         // rotating about -z moves the top toward +x; rotating about +x moves it toward +z
-        if (wx <= wz) w[2] -= dirX * k
+        if (overZ) w[2] -= dirX * k
         else w[0] += dirZ * k
       }
       // rolling / spinning resistance while touching the ground: a box loses its spin; a round piece rolls on, held back by its rolling resistance
@@ -1811,8 +1844,8 @@ export class PieceSystem {
 
   /** The corners of `b` (its own frame, or its own `contacts`) that have the ground, a piece or a fixed top within `SUPPORT_GAP` under them now; the points along its edges when no corner has. */
   private restPointsOf(b: PieceBody): Vec3[] {
-    const corners = this.samples(b, false).filter((point) => this.supportsPoint(b, point))
-    return corners.length > 0 ? corners : this.samples(b, true).filter((point) => this.supportsPoint(b, point))
+    // the points along its edges too: a board leaning on the corner of a step rests there by an edge point between its corners, and must come down when the step goes
+    return this.samples(b, true).filter((point) => this.supportsPoint(b, point))
   }
 
   /** Whether the point of `b` (its own frame) has the ground, a piece or a fixed top within `SUPPORT_GAP` under it. */
@@ -2167,6 +2200,15 @@ export class PieceSystem {
     if (resting) return
     const [upper, c, up]: [PieceBody, Vec3, Vec3] = n[1] > 0 ? [a, ca, n] : [b, cb, [-n[0], -n[1], -n[2]]]
     if (upper.held || upper.sleeping) return
+    // only what lies on the other is lifted out of it: a body whose centre is under the other's (a book under the end of a tilted board) is put apart along the
+    // ground instead, or a pile whose contacts point every way (the book lifted into the board, the board out of the next book, that book into the first) lifts
+    // itself step after step and shakes
+    const otherCentre = upper === a ? cb : ca
+    if (c[1] < otherCentre[1] - SLOP) {
+      const level = boxesApartAlongGround(sa, sb)
+      if (level) this.slideApart(a, b, ima, imb, level)
+      return
+    }
     upper.propped = up
     const e = this.m.makeRotationFromQuaternion(upper.root.quaternion).elements
     const r: Vec3 = [hit.point[0] - c[0], hit.point[1] - c[1], hit.point[2] - c[2]]

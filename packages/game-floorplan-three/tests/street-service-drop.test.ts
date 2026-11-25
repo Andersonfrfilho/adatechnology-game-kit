@@ -1,3 +1,7 @@
+import * as GameInteractables from '@adatechnology/game-interactables'
+import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
+import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
+import { coincidentFacesOf } from '@adatechnology/game-shapes-three'
 import { describe, expect, it } from 'vitest'
 
 import { houseOf, planOf } from './helpers/houses'
@@ -41,5 +45,89 @@ describe('a house on a street that brings its own poles (`serviceFrom`)', () => 
   it('without `serviceFrom` the house keeps its own grid, as before', () => {
     const { house } = houseOf(planOf('single_storey_a', 1), {}, { quality: 'game' })
     expect(partIds(house).filter((id) => id.startsWith('pole:')).length).toBe(3)
+  })
+})
+
+describe('a house on a street with a utility network (`street: \'network\'`)', () => {
+  const plan = planOf('single_storey_a', 1, 'normal', { street: 'network' })
+  const entrance = plan.utilities.electrical.serviceEntrance!
+  const kit = { GameInteractables, GameInteractablesHousehold, GameInteractablesThree }
+  const entrances = (house: ReturnType<typeof houseOf>['house']): number => [...house.interactives!.entries.values()].filter((entry) => entry.type === 'service_entrance').length
+
+  it('draws its meter post once and no pole of the street, with or without the network\'s drop', () => {
+    expect(entrance.street).toBe('network')
+    for (const build of [{ quality: 'game' as const }, { quality: 'game' as const, serviceFrom: FROM }]) {
+      const ids = partIds(houseOf(plan, {}, build).house)
+      expect(ids.filter((id) => id.startsWith('pole:')), 'only the meter post').toEqual(['pole:' + entrance.pole!.u.toFixed(1)])
+      expect(ids.some((id) => id.startsWith('wiring:grid'))).toBe(false)
+    }
+  })
+
+  it('with the interactables the kit draws the post (one entrance object) and the house none', () => {
+    for (const build of [{ quality: 'game' as const }, { quality: 'game' as const, serviceFrom: FROM }]) {
+      const { house } = houseOf(plan, { interactives: kit }, build)
+      expect(partIds(house).some((id) => id.startsWith('pole:')), 'the house draws no pole').toBe(false)
+      expect(entrances(house), 'one entrance object').toBe(1)
+      expect(house.interactives!.plane.items.filter((item) => item.type === 'service_entrance').length).toBe(1)
+    }
+  })
+
+  it('draws no overhead drop of its own: the network draws the drop to the anchor on the post', () => {
+    for (const build of [{ quality: 'game' as const }, { quality: 'game' as const, serviceFrom: FROM }]) {
+      for (const options of [{}, { interactives: kit }]) {
+        const ids = partIds(houseOf(plan, options, build).house)
+        expect(ids.some((id) => id.startsWith('wiring:service:')), 'no drop from the street pole').toBe(false)
+        expect(ids.some((id) => id.startsWith('wiring:drop:')), 'no wire from the post to the meter').toBe(false)
+      }
+    }
+  })
+
+  it('draws the padrão as a slim post (no crossarm), the meter box at its foot and the conduit down its face', () => {
+    const { house } = houseOf(plan, {}, { quality: 'game' })
+    const post = house.structure.parts.find((part) => part.id === 'pole:' + entrance.pole!.u.toFixed(1))!
+    expect(post.aabb[2] - post.aabb[0], 'slim').toBeLessThanOrEqual(0.25)
+    expect(post.aabb[3] - post.aabb[1], 'slim').toBeLessThanOrEqual(0.25)
+    expect(post.y1).toBeLessThanOrEqual(entrance.pole!.h + 0.01)
+    expect(entrance.meter?.place).toBe('post')
+  })
+
+  it('the padrão (post, bracket, meter box, conduit) has no coincident faces, with and without the interactables', () => {
+    for (const options of [{}, { interactives: kit }]) {
+      const { house } = houseOf(plan, options, { quality: 'game' })
+      house.group.updateMatrixWorld(true)
+      const near = (point: readonly number[]): boolean => Math.hypot(point[0]! - entrance.pole!.u, point[2]! - entrance.pole!.v) < 0.3
+      const hits = coincidentFacesOf(house.group, { maxHits: Number.POSITIVE_INFINITY }).filter((hit) => near(hit.point))
+      expect(hits.map((hit) => `${hit.labelA} x ${hit.labelB}`)).toEqual([])
+    }
+  })
+
+  it('draws the meter post or the facade mast (pontalete), never both and never none, with or without the interactables', () => {
+    let mastsSeen = 0
+    for (const template of ['single_storey_a', 'drugstore', 'pharmacy', 'townhouse']) {
+      const network = planOf(template, 3, 'normal', { street: 'network' })
+      const own = network.utilities.electrical.serviceEntrance!
+      const plain = partIds(houseOf(network, {}, { quality: 'game', serviceFrom: FROM }).house)
+      const posts = plain.filter((id) => id.startsWith('pole:')).length
+      const masts = plain.filter((id) => id.startsWith('mast:')).length
+      expect(posts + masts, `${template}: one entrance drawn by the house`).toBe(1)
+      expect(masts, template).toBe(own.mast ? 1 : 0)
+      mastsSeen += masts
+      const { house } = houseOf(network, { interactives: kit }, { quality: 'game', serviceFrom: FROM })
+      const ids = partIds(house)
+      expect(ids.some((id) => id.startsWith('pole:') || id.startsWith('mast:')), `${template}: the kit draws it, not the house`).toBe(false)
+      const types = [...house.interactives!.entries.values()].map((entry) => entry.type)
+      expect(types.filter((type) => type === 'service_entrance' || type === 'service_mast').length, `${template}: one entrance object`).toBe(1)
+      if (own.mast) expect(types.includes('conduit_run') && [...house.interactives!.entries.keys()].includes('conduit_descent'), `${template}: the mast is the descent`).toBe(false)
+    }
+    expect(mastsSeen, 'a building at the lot front has a mast').toBeGreaterThan(0)
+  })
+
+  it('each house has its own interactables world: an outage of one lot (`power.setGrid(false)`) leaves its neighbour lit', () => {
+    const one = houseOf(plan, { interactives: kit }).house
+    const other = houseOf(planOf('single_storey_a', 2, 'normal', { street: 'network' }), { interactives: kit }).house
+    expect(one.interactives!.world).not.toBe(other.interactives!.world)
+    one.interactives!.world.power.setGrid(false)
+    expect(one.interactives!.world.power.grid).toBe(false)
+    expect(other.interactives!.world.power.grid).toBe(true)
   })
 })

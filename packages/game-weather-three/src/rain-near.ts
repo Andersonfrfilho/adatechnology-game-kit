@@ -1,3 +1,4 @@
+import type { RainCover } from '@adatechnology/game-contracts'
 import type { Puddle, VfxWorld } from '@adatechnology/game-vfx'
 import { inPuddle } from '@adatechnology/game-vfx'
 import type { WeatherSample } from '@adatechnology/game-weather'
@@ -12,6 +13,8 @@ export type NearRainOptions = {
   /** Replaces the puddle test. */
   readonly puddleAt?: (x: number, z: number) => boolean
   readonly splashFrom?: number
+  /** What is roofed over: no streak, splash or ring under it. */
+  readonly cover?: RainCover
 }
 
 export type NearRain = {
@@ -38,6 +41,7 @@ export function createNearRain(vfx: VfxWorld | undefined, options: NearRainOptio
         if (field.on) field.clear()
         return
       }
+      field.coverTopAt = options.cover && !options.cover.isEmpty() ? options.cover.coverTopAt : undefined
       field.puddleAt = options.puddleAt ?? ((x, z) => inPuddle(puddles, x, z))
       field.drive(sample.drops, sample.windX, camera[0], camera[2])
       field.update(dt, sample.rain >= (options.splashFrom ?? SPLASH_FROM_MM), camera)

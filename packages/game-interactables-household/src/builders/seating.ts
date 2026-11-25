@@ -16,18 +16,19 @@ function sofaLike(c: Ctx, n: number, lie: boolean): void {
   const baseTop = 0.28
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('wood', sx * (hw - 0.07) - 0.025, 0, sz * (hd - 0.07) - 0.025, sx * (hw - 0.07) + 0.025, legH, sz * (hd - 0.07) + 0.025, 0x3a2a1e)
   c.b('fabric', -hw, legH, -hd, hw, baseTop, hd, dark) // base frame
-  c.b('fabric', -hw + armW, baseTop - 0.01, hd - 0.02, hw - armW, baseTop + 0.02, hd, shade(fab, 0.7)) // front rail
+  c.b('fabric', -hw + armW, baseTop - 0.01, hd - 0.02, hw - armW, baseTop + 0.02, hd + 0.004, shade(fab, 0.7)) // front rail, 4 mm proud of the frame
   // back: a tall slab with a rounded top
   const bt = 0.2
   c.b('fabric', -hw, baseTop, -hd, hw, h - 0.07 - bt / 2, -hd + bt, fab)
-  c.rod('fabric', 'x', 0, h - 0.07 - bt / 2, -hd + bt / 2, bt / 2, c.w, fab)
+  c.rod('fabric', 'x', 0, h - 0.07 - bt / 2, -hd + bt / 2, bt / 2, c.w - 0.004, fab) // caps 2 mm inside the slab sides
   // arms
   const armTop = 0.62
   for (const s of [-1, 1]) {
     const x0 = s < 0 ? -hw : hw - armW
-    c.b('fabric', x0, baseTop, -hd + bt, x0 + armW, armTop - armW / 2, hd, fab)
-    c.rod('fabric', 'z', x0 + armW / 2, armTop - armW / 2, (-hd + bt + hd) / 2, armW / 2, hd - (-hd + bt), fab)
-    c.b('fabric', s < 0 ? x0 + armW - 0.012 : x0, baseTop + 0.02, -hd + bt, s < 0 ? x0 + armW : x0 + 0.012, armTop - armW / 2, hd - 0.02, light) // inner face, lighter
+    // the arm block stops 6 mm short of the lighter inner face, which caps it; the rod's caps sit 2 mm inside the block's ends
+    c.b('fabric', s < 0 ? x0 : x0 + 0.006, baseTop, -hd + bt, s < 0 ? x0 + armW - 0.006 : x0 + armW, armTop - armW / 2, hd, fab)
+    c.rod('fabric', 'z', x0 + armW / 2, armTop - armW / 2, (-hd + bt + hd) / 2, armW / 2, hd - (-hd + bt) - 0.004, fab)
+    c.b('fabric', s < 0 ? x0 + armW - 0.012 : x0, baseTop + 0.02, -hd + bt + 0.003, s < 0 ? x0 + armW : x0 + 0.012, armTop - armW / 2 + 0.003, hd - 0.02, light) // inner face, lighter
   }
   // seat + back cushions
   const ix0 = -hw + armW
@@ -42,7 +43,7 @@ function sofaLike(c: Ctx, n: number, lie: boolean): void {
     const col = i % 2 === 0 ? light : fab
     c.b('fabric', x0, baseTop + 0.02, sz0 + 0.02, x1, seatY, sz1, col)
     c.b('fabric', x0 + 0.01, seatY, sz0 + 0.03, x1 - 0.01, seatY + 0.025, sz1 - 0.01, mix(col, 0xffffff, 0.06)) // crowned top
-    c.b('fabric', x0, baseTop + 0.02, sz1 - 0.006, x1, seatY + 0.02, sz1, shade(col, 0.75)) // piping
+    c.b('fabric', x0 + 0.003, baseTop + 0.025, sz1 - 0.006, x1 - 0.003, seatY + 0.02, sz1 + 0.003, shade(col, 0.75)) // piping, 3 mm proud of the cushion front
     // back cushion, leaning back
     c.b('fabric', x0 + 0.005, seatY + 0.02, sz0 + 0.02, x1 - 0.005, h - 0.12, sz0 + 0.19, col, 0, -0.18)
     const cx = (x0 + x1) / 2
@@ -70,15 +71,16 @@ export function diningChair(c: Ctx): void {
   const lt = 0.035
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('wood', sx * (hw - lt / 2 - 0.01) - lt / 2, 0, sz * (hd - lt / 2 - 0.01) - lt / 2, sx * (hw - lt / 2 - 0.01) + lt / 2, sz < 0 ? h : seatY - 0.03, sz * (hd - lt / 2 - 0.01) + lt / 2, shade(wood, sz < 0 ? 0.9 : 1)) // back legs rise into the back posts
   // rails under the seat
-  c.b('wood', -hw + 0.01, seatY - 0.09, -hd + 0.01, hw - 0.01, seatY - 0.04, -hd + 0.04, shade(wood, 0.85))
-  c.b('wood', -hw + 0.01, seatY - 0.09, hd - 0.04, hw - 0.01, seatY - 0.04, hd - 0.01, shade(wood, 0.85))
-  c.b('wood', -hw + 0.01, seatY - 0.09, -hd + 0.04, -hw + 0.04, seatY - 0.04, hd - 0.04, shade(wood, 0.85))
-  c.b('wood', hw - 0.04, seatY - 0.09, -hd + 0.04, hw - 0.01, seatY - 0.04, hd - 0.04, shade(wood, 0.85))
+  // rails under the seat sit 4 mm inside the legs' outer faces
+  c.b('wood', -hw + 0.014, seatY - 0.09, -hd + 0.014, hw - 0.014, seatY - 0.04, -hd + 0.04, shade(wood, 0.85))
+  c.b('wood', -hw + 0.014, seatY - 0.09, hd - 0.04, hw - 0.014, seatY - 0.04, hd - 0.014, shade(wood, 0.85))
+  c.b('wood', -hw + 0.014, seatY - 0.09, -hd + 0.04, -hw + 0.04, seatY - 0.04, hd - 0.04, shade(wood, 0.85))
+  c.b('wood', hw - 0.04, seatY - 0.09, -hd + 0.04, hw - 0.014, seatY - 0.04, hd - 0.04, shade(wood, 0.85))
   c.b('wood', -hw, seatY - 0.03, -hd, hw, seatY, hd, wood) // seat board
   c.b('fabric', -hw + 0.02, seatY, -hd + 0.05, hw - 0.02, seatY + 0.04, hd - 0.02, cush) // cushion
   c.b('fabric', -hw + 0.03, seatY + 0.04, -hd + 0.06, hw - 0.03, seatY + 0.045, hd - 0.03, mix(cush, 0xffffff, 0.1))
   // back: top rail and slats
-  c.b('wood', -hw + 0.01, h - 0.1, -hd + 0.01, hw - 0.01, h - 0.03, -hd + 0.04, wood)
+  c.b('wood', -hw + 0.014, h - 0.1, -hd + 0.014, hw - 0.014, h - 0.03, -hd + 0.04, wood)
   for (let i = 0; i < 3; i++) c.b('wood', -hw + 0.07 + i * ((c.w - 0.14) / 3), seatY + 0.06, -hd + 0.015, -hw + 0.07 + i * ((c.w - 0.14) / 3) + 0.04, h - 0.1, -hd + 0.035, shade(wood, 1.05))
   c.add('seats', { id: 'seat', pose: 'sit', pos: [0, round3(seatY + 0.05), 0.02], ry: FACE, exit: [0, 0, round3(hd + 0.45)] })
   c.interact('sit', [0, seatY + 0.3, 0.1], { do: 'sit', seat: 'seat' }, 'prompt.sit', 1.5)
@@ -92,8 +94,9 @@ function bedBuild(c: Ctx, double: boolean): void {
   const matTop = 0.54
   // legs, side rails, headboard (tall) and footboard (low)
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('wood', sx * (hw - 0.04) - 0.035, 0, sz * (hd - 0.04) - 0.035, sx * (hw - 0.04) + 0.035, 0.16, sz * (hd - 0.04) + 0.035, shade(wood, 0.8))
-  c.b('wood', -hw, 0.14, -hd, -hw + 0.05, frameTop, hd, wood)
-  c.b('wood', hw - 0.05, 0.14, -hd, hw, frameTop, hd, wood)
+  // side rails run between the head and foot boards, so their faces never lie on the boards' outer faces
+  c.b('wood', -hw, 0.14, -hd + 0.06, -hw + 0.05, frameTop, hd - 0.05, wood)
+  c.b('wood', hw - 0.05, 0.14, -hd + 0.06, hw, frameTop, hd - 0.05, wood)
   c.b('wood', -hw, 0.14, hd - 0.05, hw, 0.44, hd, shade(wood, 1.05)) // footboard
   c.b('wood', -hw, 0.14, -hd, hw, h, -hd + 0.06, shade(wood, 0.92)) // headboard
   c.b('wood', -hw + 0.06, h - 0.08, -hd + 0.06, hw - 0.06, h - 0.02, -hd + 0.07, shade(wood, 1.12)) // panel detail
@@ -141,10 +144,10 @@ export function bench(c: Ctx): void {
     const x = sx * (hw - 0.06)
     c.b('metal', x - 0.025, 0, -hd + 0.05, x + 0.025, seatY - 0.03, -hd + 0.09, iron)
     c.b('metal', x - 0.025, 0, hd - 0.09, x + 0.025, seatY - 0.03, hd - 0.05, iron)
-    c.b('metal', x - 0.025, seatY - 0.05, -hd + 0.04, x + 0.025, seatY - 0.02, hd - 0.04, iron)
+    c.b('metal', x - 0.02, seatY - 0.05, -hd + 0.04, x + 0.02, seatY - 0.02, hd - 0.04, iron) // seat rail, 5 mm narrower than the legs
     c.b('metal', x - 0.025, seatY - 0.02, -hd + 0.04, x + 0.025, h, -hd + 0.08, iron) // back post
-    c.b('metal', x - 0.03, 0.62, -hd + 0.04, x + 0.03, 0.655, hd - 0.12, iron) // armrest
-    c.b('metal', x - 0.025, seatY - 0.02, hd - 0.12, x + 0.025, 0.62, hd - 0.09, iron)
+    c.b('metal', x - 0.03, 0.62, -hd + 0.045, x + 0.03, 0.655, hd - 0.12, iron) // armrest, starting inside the back post
+    c.b('metal', x - 0.025, seatY - 0.04, hd - 0.12, x + 0.025, 0.62, hd - 0.09, iron) // front post, rooted in the seat rail below the slats
   }
   // slats
   for (let i = 0; i < 5; i++) c.b('wood', -hw + 0.03, seatY - 0.02, -hd + 0.09 + i * ((c.d - 0.18) / 5), hw - 0.03, seatY + 0.015, -hd + 0.09 + i * ((c.d - 0.18) / 5) + (c.d - 0.18) / 5 - 0.012, i % 2 ? wood : shade(wood, 1.06))
@@ -189,7 +192,7 @@ export function bunkBed(c: Ctx): void {
   c.b('wood', -hw + post, highTop + 0.04, zEnd - post - 0.45, -hw + post + 0.03, highTop + 0.07, zEnd - post, wood)
   c.b('wood', hw - post - 0.03, highTop + 0.04, zEnd - post - 0.45, hw - post, highTop + 0.07, zEnd - post, wood)
   for (const x of [-0.2, 0.2]) c.b('wood', x - 0.02, 0.06, zEnd, x + 0.02, highTop + 0.3, hd, shade(wood, 1.1)) // ladder rails
-  for (let i = 0; i < 5; i++) c.b('wood', -0.2, 0.3 + i * 0.22, zEnd, 0.2, 0.34 + i * 0.22, hd - 0.01, wood) // rungs
+  for (let i = 0; i < 5; i++) c.b('wood', -0.2, 0.3 + i * 0.22, zEnd + 0.005, 0.2, 0.34 + i * 0.22, hd - 0.01, wood) // rungs, set into the rails' depth
   // lie seats: head at -z, same convention as the beds
   for (const [id, top, ex] of [['lie_lower', lowTop, 1], ['lie_upper', highTop, -1]] as const) {
     c.add('seats', { id, pose: 'lie', pos: [0, round3(top + 0.06), round3(-hd + 0.95)], ry: FACE, eye: 0.2, exit: [round3(ex * (hw + 0.5)), 0, round3(-hd + 1.1)] })

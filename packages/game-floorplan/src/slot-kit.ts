@@ -8,4 +8,5 @@ export const slotKit: SlotKit = {
   windowSlot: (id, size, cats, o) => Object.assign({ id, anchor: 'window', size, cats }, o) as SlotDef,
   on: (id, parent, cats, o) => Object.assign({ id, anchor: 'on', on: parent, cats }, o) as SlotDef,
   inside: (id, parent, cats, o) => Object.assign({ id, anchor: 'inside', on: parent, cats }, o) as SlotDef,
+  beside: (id, parent, side, cats, o) => Object.assign({ id, anchor: 'beside', on: parent, side, cats }, o) as SlotDef,
 }

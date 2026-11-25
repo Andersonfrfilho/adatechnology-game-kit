@@ -1,5 +1,6 @@
 /** The kernel's types of the house's systems and state: materials, mirrors, cars, vegetation, interaction, room lights, the interactables kit and the build. */
 import type { Aabb } from './house/solids.js';
+import type { CordPath, ItemBounds } from './furniture/item-bounds.js';
 import type * as THREE_NS from 'three'
 import type { ResultGate, WindowFrame } from '@adatechnology/game-floorplan'
 import type { Outbuilding, StructurePart } from '@adatechnology/game-floorplan-structure'
@@ -10,7 +11,7 @@ import type { Props3d } from '@adatechnology/game-props3d'
 import type * as Vegetation from '@adatechnology/game-vegetation'
 import type * as VegetationThree from '@adatechnology/game-vegetation/three'
 import type * as Interactables from '@adatechnology/game-interactables'
-import type { InteractablesEffects, InteractablesGfx, InteractablesScreen, SpeciesLibrary } from './adapter-shapes.js'
+import type { ContainedItemModel, CreateContentsView, InteractablesContentsView, InteractablesEffects, InteractablesGfx, InteractablesScreen, SpeciesLibrary } from './adapter-shapes.js'
 import type { AdapterPlan, AddResult, BlockedFn, FloorplanAdapter, HouseholdKit, PlanEntry, WaterNetwork } from '@adatechnology/game-floorplan-interactables'
 import type { LightBudget, LightHandle } from '@adatechnology/game-render-three'
 import type { BuildOptions, Damageable, House, HouseFleetDamageable, HousePart, HouseRenderer, HouseInteractable, LightingOptions } from './types.js'
@@ -129,7 +130,7 @@ export interface KernelCars {
 
 /** The vegetation packages the game injected (`cfg.vegetation`): what the house uses of them. */
 export interface VegetationLibs {
-  G: Pick<typeof Vegetation, 'scatter' | 'buildLot'> & Pick<typeof VegetationThree, 'createLotObject' | 'createVegetationMaterials'>
+  G: Pick<typeof Vegetation, 'scatter' | 'buildLot'> & Partial<Pick<typeof Vegetation, 'generate'>> & Pick<typeof VegetationThree, 'createLotObject' | 'createVegetationMaterials'>
   S: SpeciesLibrary
 }
 
@@ -146,6 +147,8 @@ export interface VegetationContext extends VegetationLibs {
   groups: Map<string, VegetationGroup>
   /** Species the package knows (cached `toSpec` checks). */
   ok: Map<string, boolean>
+  /** Crown radius and height (m) of a species at full size, by `species|seed` (potted plants fitted to the room round them). */
+  sizes: Map<string, { radius: number; height: number }>
   opts: Omit<Vegetation.BuildLotOptions, 'seed'>
 }
 
@@ -381,7 +384,8 @@ export interface RoomLighting {
 
 /** The masks of the effect lights of a budget (`effectLights`). */
 export interface EffectLighting {
-  update(houses: LitHouse | readonly (LitHouse | null | undefined)[] | null | undefined): void
+  /** `focus` (the camera) orders the houses whose interiors the outdoor lights stay out of, the nearest first. */
+  update(houses: LitHouse | readonly (LitHouse | null | undefined)[] | null | undefined, focus?: { x: number; y: number; z: number }): void
 }
 
 /** The uniforms of the room masks, shared by every lit material. */
@@ -391,6 +395,12 @@ export interface RoomMaskUniforms {
   uRB2: { value: Float32Array }
   uRBY: { value: Float32Array }
   uREx: { value: Float32Array }
+  /** The kind of each slot: 0 a room lamp of `lighting()` (with the fake indirect), 1 an outdoor light (every face outside the interiors and, inside, only the rooms of its boxes), 2 an effect light indoors. */
+  uROut: { value: Float32Array }
+  /** The interiors (room boxes and their y bands) the outdoor lights stay out of, `uRInN` of them. */
+  uRIn: { value: Float32Array }
+  uRInY: { value: Float32Array }
+  uRInN: { value: number }
   uIndK: { value: number }
 }
 
@@ -409,10 +419,12 @@ export interface KernelLightsRoomLight {
 export interface InteractablesRefs {
   GI: typeof Interactables
   HH: HouseholdKit
-  GT: { createThreeAdapter(THREE: Three, options?: Record<string, unknown>): InteractablesGfx }
+  GT: { createThreeAdapter(THREE: Three, options?: Record<string, unknown>): InteractablesGfx; createContentsView?: CreateContentsView }
   A: FloorplanAdapter
   gfx: InteractablesGfx
   items: boolean
+  /** The real model of a contained stack (`interactives.itemModel`); without it the contents are not drawn. */
+  itemModel: ContainedItemModel | null
   effects: boolean
   effectSink: unknown
   camera: unknown
@@ -472,7 +484,8 @@ export interface InteractablesState {
   anim: Map<string, { object: string; part: string; target: number; t0: number }>
   screens: Map<string, InteractablesScreen>
   efx: InteractablesEffects | null
-  items: THREE_NS.Mesh | null
+  /** The drawn contents of each object whose containers were seen (object id -> view). */
+  contents: Map<string, InteractablesContentsView>
   itemsDirty: boolean
   itemsT: number
   dirty: boolean
@@ -567,8 +580,8 @@ export interface KernelInteractablesBridge {
   ivEvent(h: HouseInstance, e: Interactables.WorldEvent): void
   ivSeat(IV: InteractablesState): KitSeat | null
   ivUpdate(h: HouseInstance, dt: number, time?: number, focus?: { x: number; y: number; z: number } | null): void
-  IV_SHAPE: Record<string, [string, number, number, number, number, number][]>
   ivItems(IV: InteractablesState, h: HouseInstance): void
+  ivContents(IV: InteractablesState, E: KitEntry): InteractablesContentsView | null
   ivTarget(IV: InteractablesState, o: Eye, opt?: KitTargetOptions): KitInteractionTarget | null
   ivRoomLight(IV: InteractablesState, roomId: string, on: boolean): void
   ivParts(IV: InteractablesState, parts: Record<string, unknown>, tagDamage: (type: string) => unknown): void
@@ -697,6 +710,10 @@ export interface BuildContext {
   keepOut?: readonly Aabb[] | undefined
   /** The square boxes of the piece being drawn so far (a storey's furniture, outside the Visor's scene): a face of a later one lying against one is not drawn. */
   itemBoxes?: Aabb[] | undefined
+  /** What each plan item was drawn as, when the build records it (`BuildOptions.itemBounds`). */
+  itemBounds?: ItemBounds[] | undefined
+  /** The cords drawn from the devices to their sockets, when the build records them (`BuildOptions.itemBounds`). */
+  cordPaths?: CordPath[] | undefined
   /** The group the piece being drawn stands in: only its boxes there are noted (a moving part shows its faces once moved). */
   itemGroup?: string | undefined
   apartment: boolean

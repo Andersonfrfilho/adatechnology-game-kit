@@ -1,5 +1,85 @@
 # @adatechnology/game-contracts
 
+## 0.39.0
+
+### Minor Changes
+
+- 2e803a4: Zumbis não atravessam mais paredes: as casas publicam paredes do térreo, muros, grades, portas e portões (`createHouseNavObstacles`, contrato `NavObstacleSource`) e a horda os grava na sua grade (`bindNavObstacles`). Contornam a parede, entram por porta ou portão aberto e pelo buraco de uma explosão, e batem na porta fechada até quebrá-la (a casa a mostra aberta).
+
+## 0.38.0
+
+### Minor Changes
+
+- 5682afd: O item tirado de um móvel vai para a mão: `ModuleHost.takeInHand` (`HostTakenItem`) leva o item com as mãos que ele pede; o `take` de um item guardado diz qual é (`Interactable.itemType`); a área de casas entrega o item ao apertar E, e a sala fecha a mão nele com a regra de mãos e coldre (uma mão: a arma fica na outra). A sala passa a respeitar as mãos que a peça pede em vez de deduzi-las da massa.
+
+## 0.37.0
+
+### Minor Changes
+
+- 81e70aa: A weapon put away is drawn on the body: `HostEvent` `holster` and `ModuleHost.bodySlot` (game-contracts), `PlayerAvatar.slot('hip' | 'back')` (game-characters-three), `createHolsteredWeapons`/`holsteredModel` (game-weapons-three: pistol on the hip, long gun across the back); the test room sends the events and lends the slots.
+
+## 0.36.0
+
+### Minor Changes
+
+- cd5113c: Os canos de saída da casa (esgoto de vaso, chuveiro, pias, cozinha e área de serviço, e as descidas da calha) viram peças de destruição, e um furo de explosão na parede ou na laje por onde passam os expõe.
+
+  `game-contracts`: `PartSpec.hostedIn` (a peça está embutida, ou presa, em outra), `PartState.exposed` e o evento `reveal`.
+
+  `game-destruction`: uma peça com `hostedIn` que fica inteira dentro da caixa do hospedeiro não toma a onda da explosão nem tem a junta afrouxada pelo choque enquanto o hospedeiro está de pé. Quando um furo do hospedeiro (abertura, tijolos arrancados, ou o hospedeiro perdido) alcança a peça, ela aparece (`reveal`, `exposed`) e a junta com o hospedeiro abre: só o trecho dentro ou cruzando o furo se solta, o resto do traçado fica onde está, e um trecho preso pelos vizinhos fica pendurado no furo.
+
+  `game-floorplan-three`: `utilities/drains.ts` põe cada dreno de aparelho dentro da parede mais próxima, descendo pela laje até o pé da parede do térreo, em trechos cortados por `cutRun`, escondidos enquanto embutidos e presos pelo sólido onde estão. As descidas da calha saem em trechos entre as braçadeiras, presos à parede. A cena do time (`visor*`) não os desenha. O trecho de laje que só tinha a laje inteira como apoio agora se apoia no painel dela (o apoio se perdia quando a laje virava painéis).
+
+- ff1a27b: `BlastOptions.soilCover` (metros de solo sobre a carga): `world.explode` entrega às estruturas só a parte da energia que o solo deixa sair (`buriedTransmission`, profundidade escalada pela raiz cúbica da carga em TNT, raio e raio letal pela raiz cúbica dessa parte) e o solo segura os fragmentos do invólucro. Sem `soilCover` nada muda (porão, cratera e peças abaixo de y = 0 não são solo). O evento `explode` continua informando a carga inteira.
+- f1c7229: Coordenador de workers do SDK (`game-workers`): quantidade automática pelos núcleos ou por configuração, faixas `sim`/`build`/`background`, prioridade e prazo em quadros, fallback no quadro principal com os mesmos bytes, navegador e Node. Contratos em `game-contracts`. A física da multidão roda como a residente `crowd.physics` quando o jogo passa `physics.workers`.
+- e3a9ee8: A estrutura de um objeto é resolvida uma vez por operação (`hit`, `explode`, `update`), não uma vez por parte perdida ou junta aberta: na explosão de 4 MJ no sobrado, 174 chamadas de `solveStructure` viram 39 (é resolvida de novo só quando algo lê cargas ou tensões no meio da operação). Muda o contrato do `detach`: `groups` são os grupos do objeto depois da operação inteira, e todos os `detach` da operação saem no fim dela, na ordem em que as juntas abriram, depois dos outros eventos (o `collapse` inclusive). `DestructionWorld.structureProbe()` conta as resoluções. `game-destruction-three`: uma fratura solta primeiro os grupos que a operação deixou soltos e só então vê se o que sobrou do objeto perdeu o apoio, então a ordem do `detach` e da `fracture` não muda como as peças se separam. A garantia vale para o mundo do `createDestruction`; os outros `DestructibleImpl` (veículos de `game-vehicles`, personagens de `game-characters`, que manda só a peça que saiu, `[[segmento, ...caídos]]`) continuam emitindo um `detach` por junta com os grupos daquele momento.
+- 78ac539: Os fios do poste do lote soltam-se em trechos que não vão com o poste. Antes, cada trecho da fiação pendia do poste por uma junta que sempre une; ao cair, o poste levava os fios que a explosão não tinha soltado e virava um corpo de 1000 kg com 26 caixas e 23 m de largura, e a varredura contínua (CCD) do Jolt custava 60 a 70 ms por passo. Agora o poste leva só o fuste, a travessa e os isoladores (950 kg, 10 caixas) e cada trecho de fio cai como peça sua, com o próprio cobre.
+
+  `game-contracts`, `game-destruction`: `JointSpec.tears` (padrão falso). A parte `a` pende de `b` só enquanto `b` está de pé (em um grupo ancorado); com `b` solto a junta larga, e o fio de um poste que cai desce sozinho. Uma junta que não rasga continua unindo as duas partes em um grupo. Quem se segura em duas pontas, uma delas de pé (o fio do ramal preso à parede da casa), fica pendurado nela.
+
+  `game-destruction-three`: as peças que um `tears` separou (o fio e o poste de que pendia) não se tocam mais: sem isso o poste de 950 kg, ao tombar, batia nos fios de 12 kg que ele acabava de largar e os lançava (C1 de 34 e 105 kg·m, C2 acima do limite em 4 de 10 rodadas). `JointState.tears` (contrato), `PieceSystem.tether`, e o renderizador marca os pares ao soltar os grupos.
+
+  `game-floorplan-structure`: `Support.tears` chega à junta da especificação destrutível.
+
+  `game-floorplan-three`: os trechos da grade e do ramal pendem do poste mais próximo por uma junta que rasga (`tears`); o trecho que fica dentro de laje ou parede, ou ao lado de um, continua preso a ela. Com `segmentLimits.wiring: Infinity` a fiação segue como o time desenhou (uma peça só). Goldens regravados: `destruction/breach`, `destruction/spall`, `destruction/fracture` e o resultado do blast (21 objetos a mais, os trechos).
+
+- 5e05bb2: Estilhaços do invólucro (`BlastCharge.casing`), mudança de comportamento: muda o dano da M67, da bomba de cano e de todo explosivo de fragmentação, e a sequência sorteada depois do invólucro.
+
+  - O invólucro nunca lança mais raios que `min(maxRays, fragments)`. Cada estilhaço tem direção sorteada por igual na esfera e massa de Mott, de um fluxo semeado pela semente do mundo e pela carga; as massas são normalizadas à massa do invólucro. Um estilhaço que cruza várias esferas de peças conta uma vez.
+  - São alvo as peças dos objetos do mundo (`world.add`) e as peças dos corpos registrados com `world.register` (hoje, os veículos), peça por peça; a peça de um corpo que é caixa é testada pela caixa. Personagens, multidão e animais não são alvo dos estilhaços.
+  - O estilhaço perde energia no ar (`exp(-2 k d)`, `fragmentDrag`) e só voa até cair abaixo de `FRAGMENT_MIN_SPEED`.
+  - Acima do teto: os estilhaços que vão a um corpo registrado e os demais são escolhidos por igual em cada grupo (os demais ficam com pelo menos metade do teto), e cada raio lançado vale por `qualificados / escolhidos` do seu grupo, no máximo `DestructionOptions.fragmentMaxWeight` (padrão 8). Nas peças do mundo o peso vale só nos pontos de vida (até a peça falhar, não além), na energia dos pedaços de uma peça que quebra e no desgaste das juntas; num corpo registrado chega por `Hit.pieces` (novo no contrato: ausente = 1, finito e pelo menos 1, só para dano acumulado de pontos de vida; furo, penetração e marca são de um estilhaço). Por construção, a energia lançada, pesada, nunca passa da energia do invólucro (½·massa·v², os pesos encolhem quando um sorteio pega estilhaços pesados). Acima de `maxRays x fragmentMaxWeight` qualificados num grupo o excesso fica de fora: o grupo entrega `fragmentMaxWeight x escolhidos / qualificados` dos pontos de vida. Com o teto padrão de 256 isso começa em 2048 estilhaços fora de corpos (sem corpo) ou 1024 (com corpos ocupando a metade deles); o maior invólucro dos dados (M67) tem 1000, então não acontece com os explosivos do kit. O que é lançado é determinístico para um estado do mundo e uma carga, mas não é local: acrescentar uma peça em qualquer lugar ao alcance muda quais estilhaços a escolha guarda perto da carga.
+  - `game-vehicles`: o tiro de estilhaço multiplica só os pontos de vida da peça por `Hit.pieces`; furo, penetração, saída e a quebra do vidro (decidida por tiro) continuam de um estilhaço. Personagens, terreno e o resto ignoram o campo.
+  - Contra material marcado com `strength.ndrc` (o concreto), o estilhaço só atravessa se o NDRC modificado também deixar (`concretePerforation`, fator de ponta `BlastCasing.noseFactor`, padrão 0,84). O tijolo continua na regra linear. O tiro de arma não muda.
+
+- 6fb91f5: `room.measure(itemId)`: largura, profundidade e altura do modelo de um item do catálogo na rotação 0 (null para um id que o catálogo não tem), a mesma medida que a mesa de testes usa para as fileiras. Serve à área que põe lado a lado peças de vários módulos, como a casa e o quintal nas mesas da sala (`?area=house_tables`).
+
+  `AreaPlacement.fixed`: a peça fica presa onde a área a pôs, sem física própria, seja qual for o item (um armário aéreo pendurado na parede, que solto no chão cai). Continua tomando tiro e quebrando; o que se solta dela cai.
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- 6356f68: `game-runtime`: o orçamento do quadro ganha o modo de prazo, opcional por quadro. Com `targetMs` (opção do agendador ou `budget.targetMs`, mutável) e `FrameRunOptions.frameStartMs` (o `startLoop` passa o horário do `requestAnimationFrame`), as filas recebem o que sobra até o prazo menos a média móvel do render, entre o piso (`minBudgetMs`) e o teto (`budgetMs`), sem dívida. Quadro sem `frameStartMs` (headless, `advance`, testes) segue na cota de antes. `budget.stats()` ganha `mode`, `allowanceMs`, `renderEstimateMs`, `mustDrainSpentMs`, `overMs`, `forcedThisFrame` e `forcedMs`; `QueueStats` ganha `lastSpentMs` e `mustDrain`; `budget.skipRenderSample()` e `budget.recordRender()`. `game-contracts`: `DeferredQueueOptions.mustDrain` (fila que drena inteira fora do prazo).
+- 65b522a: O que é preso no mundo real é preso no mundo da destruição: a casa carrega como um grupo só, e nada cai ou escorrega na carga. Novo tipo de junta `slide` (corrediça de gaveta, 100 de resistência, sai com a mão ou com chave de fenda, 3 s) em `JointKind` e `JOINT_DEFAULTS`; as gavetas dos móveis do `game-interactables-household` passam de `clip` para `slide`. Na casa (`game-floorplan-three`), cada peça declara onde se prende (`holder`, ou `holdOn: 'floor' | 'wall'` com `holdJoint`): muro do lote e poste fincados no chão com a junta que `JOINT_BY_MATERIALS` dá contra concreto (tijolo e concreto: argamassa), soleira assentada no baldrame, portão e porta da caixa de correio na dobradiça do muro ao lado (`slide` no portão de correr), porta do box na parede do banheiro, portas e gavetas dos móveis no piso onde o móvel está (`hinge`/`slide`), eletroduto aparente grampeado na parede, botijão apoiado no piso (`resting`), cano fora da parede preso na laje em que entra; com o poste preso, a fiação pendura nele. Só cai quando essa junta quebra. Limitação conhecida: as portas e gavetas dos móveis da casa ficam presas ao piso sob o móvel (a laje do andar, ou o chão no térreo) até o corpo do móvel virar uma parte do mundo da destruição; hoje elas só caem quando a dobradiça/corrediça quebra ou o piso vai. Peça que diz onde se prende e não acha nada (`holdOn` sem piso, parede ou chão sob ela) vai para `house.structure.unheld`, e o teste de carga exige essa lista vazia em todo o catálogo. Peças interativas abertas são medidas fechadas. O que se finca no chão segura como a base enterrada: `embedmentStrength` (game-destruction) dá a resistência da junta pela base enterrada no solo (`soils.json`, pressão básica × segurança, camada a camada) sobre a base de referência de `EMBEDMENT_DEFAULTS`; `postEmbedment` é a regra do poste (10% da altura + 0,6 m). `Support.strength` (game-floorplan-structure) leva a resistência até a junta. Na casa, o poste declara a base pela regra, o muro do lote o baldrame (`GROUND_BEAM_DEPTH`) ao longo do comprimento, e uma peça desenhada abaixo do terreno conta o que está enterrado; pé no terreno ou abaixo dele (o terreno lido no canto mais baixo da pegada) está ancorado, nunca solto.
+- 631d9d0: Thread de simulação (spec 009, T22): `installSimThread`, `startSimThread` e `runSimInline` no `game-workers`, com memória compartilhada sem espera na página (buffer triplo de retratos e anel de comandos); `SimModule` no `game-contracts`; a horda como módulo (`hordeSimModule`) no `game-crowd`; a bancada da multidão com `hordeThread`. `run` de uma categoria `sim` sem worker roda no quadro principal (a thread de simulação aguarda os jobs).
+- 8d26913: `UtilityConnection` e `UtilityNetwork`: o ponto onde um lote pega cada rede da rua (energia, telecom, esgoto, drenagem, água). A casa produz, a rede do `game-urban/networks` consome em `frame: 'world'`, sem um núcleo importar o outro (spec 011, T2.8a).
+
+### Patch Changes
+
+- c394683: O tiro num veículo não percorre mais a cena inteira para achar a normal da superfície. `DestructionWorld.shoot` agora devolve a normal traçada (`HitResult.normal`, da `surfaceRay` do corpo) e a sala usa essa normal para o empurrão do tiro, em vez de re-raycastar todos os triângulos do corpo — o quadro do tiro na porta de um sedã caía de ~24 ms para ~2 ms.
+
+  A faísca do impacto (`impact_*`) entra no aquecimento da sala, então o primeiro tiro não paga os buffers da faísca em jogo.
+
 ## 0.35.0
 
 ### Minor Changes

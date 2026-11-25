@@ -8,6 +8,7 @@ import { translate } from './locale'
 import { buildPlan, floorsOf } from './plan'
 import { hexString, palette } from './palette'
 import { withWallThickness, wallThicknessFor } from './wall-thickness'
+import { withVisorLayout } from './layout-mode'
 import { registries } from './registry'
 import { createRng, hashString } from './rng'
 import { resolveSlots } from './slots'
@@ -40,7 +41,7 @@ const cleanSlot = (s: Slot): RecordedSlot => {
 export function slots(template: string | TemplateDef, options?: FloorplanOptions): RecordedSlot[] {
   const tpl = templateOf(template)
   const o = resolveOptions(tpl, options || {})
-  return withWallThickness(wallThicknessFor(tpl, o), () => slotsWith(tpl, o))
+  return withVisorLayout(o.visorLayout === true, () => withWallThickness(wallThicknessFor(tpl, o), () => slotsWith(tpl, o)))
 }
 
 function slotsWith(tpl: TemplateDef, o: FloorplanOptions): RecordedSlot[] {
@@ -96,7 +97,7 @@ const loc = (key: string | undefined, locale: string, ns: 'labels' | 'facadeColo
 export function generate(template: string | TemplateDef, options?: FloorplanOptions): FloorplanResult {
   const tpl = templateOf(template)
   const o = resolveOptions(tpl, options || {})
-  return withWallThickness(wallThicknessFor(tpl, o), () => generateWith(tpl, o))
+  return withVisorLayout(o.visorLayout === true, () => withWallThickness(wallThicknessFor(tpl, o), () => generateWith(tpl, o)))
 }
 
 /** The options of every resolver registered (`registerOptionResolver`), applied in order. */
