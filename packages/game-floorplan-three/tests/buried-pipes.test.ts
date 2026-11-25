@@ -9,7 +9,7 @@ import { THREE, houseOf, planOf } from './helpers/houses'
 interface Piece { readonly points: readonly (readonly number[])[]; readonly bore: number }
 
 /** PG-7V (RPG-7) as the destruction world hands it to the ground: 200 kJ on the arsenal's scale, its charge 0.45 kg of TNT. */
-const PG7V = { energy: 200_000, tnt: 0.45, radius: 16 } as const
+const PG7V = { energy: 200_000, tnt: 0.45, hasCharge: true, radius: 16 } as const
 
 /** The finished house turned and moved as the houses area lays it. */
 function placedHouse(): ReturnType<typeof houseOf>['house'] {
@@ -30,7 +30,7 @@ function over(house: ReturnType<typeof placedHouse>, network: 'sewer' | 'rain', 
 }
 
 /** The yard's soil, and the bowl each blast at `at` leaves in it as the host tells it (`onCrater`: the floor as deep as the column is now). */
-function yard(): (at: THREE.Vector3, hit: { readonly energy: number; readonly tnt?: number; readonly radius: number }) => Crater {
+function yard(): (at: THREE.Vector3, hit: { readonly energy: number; readonly tnt?: number; readonly hasCharge?: true; readonly radius: number }) => Crater {
   const terrain = createTerrain({ bounds: [-30, -30, 30, 30], cellSize: 0.1, layout: { surface: 'dirt' } })
   return (at, hit) => {
     const result = terrain.applyHit({ type: 'explosive', point: [at.x, 0, at.z], ...hit })!
