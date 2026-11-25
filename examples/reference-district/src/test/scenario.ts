@@ -5,6 +5,8 @@ import type { ScenarioId, Script, Scripts } from './scripts'
 /** What the page address chooses: `?cena=tipico|pior|caos` and `?camera=third|first` (third person is the default, there is no view from above). */
 export type PageChoice = {
   readonly scenario: ScenarioId
+  /** `?lang=en` writes the HUD in English; the default is `pt-BR`. */
+  readonly locale: 'pt-BR' | 'en'
   readonly camera: CameraChoice
   readonly physics: 'jolt' | 'own'
   /** `?roteiro=1`: the page starts with an empty street and the script releases the horde (the determinism run). */
@@ -15,6 +17,14 @@ export const DEFAULT_SCENARIO: ScenarioId = 'tipico'
 const HOUR_OF = { day: 14, night: 23 } as const
 const WEATHER_OF = { overcast: 'overcast', rain: 'heavy_rain' } as const
 
+const SCENARIO_TITLE: Readonly<Record<'pt-BR' | 'en', Readonly<Record<ScenarioId, string>>>> = {
+  'pt-BR': { tipico: 'Cena típica', pior: 'Pior caso', caos: 'Caos' },
+  en: { tipico: 'Typical scene', pior: 'Worst case', caos: 'Chaos' },
+}
+
+/** The scenario's name the HUD shows, in `pt-BR` (default) or `en`. */
+export const scenarioTitleOf = (scenario: ScenarioId, locale = 'pt-BR'): string => SCENARIO_TITLE[locale.toLowerCase().startsWith('en') ? 'en' : 'pt-BR'][scenario]
+
 const isScenario = (value: string | null): value is ScenarioId => SCENARIO_IDS.some((id) => id === value)
 
 /** Reads the address; an unknown scenario or camera falls back to the default one (the page always opens). */
@@ -23,6 +33,7 @@ export function parsePageChoice(search: string): PageChoice {
   const scenario = query.get('cena')
   return {
     scenario: isScenario(scenario) ? scenario : DEFAULT_SCENARIO,
+    locale: query.get('lang') === 'en' ? 'en' : 'pt-BR',
     camera: query.get('camera') === 'first' ? 'first' : 'shoulder',
     physics: query.get('solver') === 'own' ? 'own' : 'jolt',
     isScripted: query.get('roteiro') === '1',
@@ -63,5 +74,7 @@ export function districtOptionsOf({ scripts, choice, container }: { readonly scr
     camera: choice.camera,
     start: { x: first.x, z: first.z, yaw: yawToward(first, second) },
     physics: choice.physics,
+    locale: choice.locale,
+    title: scenarioTitleOf(choice.scenario, choice.locale),
   }
 }

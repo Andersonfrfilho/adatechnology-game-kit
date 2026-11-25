@@ -6,6 +6,7 @@ import { sourceSpawn } from '@adatechnology/game-workers'
 
 import { createDistrictGrid, createHorde } from './assemble/horde'
 import { createHouses, planLots } from './assemble/houses'
+import { createDistrictHud } from './assemble/hud'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
 import { buildNetworks } from './assemble/networks'
@@ -24,6 +25,7 @@ import { keepOutOf } from './service'
 const DEFAULT_START = { x: 30, z: 0, yaw: -Math.PI / 2 } as const
 const NIGHT_FROM_HOUR = 18
 const NIGHT_UNTIL_HOUR = 6
+const DEFAULT_LOCALE = 'pt-BR'
 
 /** The kit's worker source the page's build embeds (`__KIT_WORKER_SOURCE__`): a one-file page starts its workers from it, with no request. */
 const embeddedWorkerSource = (): string | undefined => {
@@ -91,11 +93,25 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
   const horde = createHorde({ THREE, world, site, zombies: options.zombies, reserve: options.hordeReserve ?? 0, zones, grid, target: player.player })
   player.bindCrowd(horde.crowd.asPlayerCrowd())
+  const hud = createDistrictHud({
+    container: options.container,
+    rig: player,
+    locale: options.locale ?? DEFAULT_LOCALE,
+    ...(options.title === undefined ? {} : { title: options.title }),
+    onRestart: options.onRestart ?? (() => location.reload()),
+    ...(world.view.domElement ? { canvas: world.view.domElement } : {}),
+  })
   const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 
   const nightFactor = isNight ? 1 : 0
   const stops = [
-    world.frame.add((context) => player.step(context.dt), { phase: 'fixedSimulate', order: 500, id: 'district.player' }),
+    world.frame.add(
+      (context) => {
+        player.step(context.dt)
+        hud.step(context.dt)
+      },
+      { phase: 'fixedSimulate', order: 500, id: 'district.player' },
+    ),
     world.frame.add((context) => horde.step(context.dt, { nightFactor, viewYaw: player.view.yaw }), { phase: 'fixedSimulate', order: 1500, id: 'district.horde' }),
     world.frame.add(
       (context) => {
@@ -104,6 +120,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
         weather.update(context.dt)
         streets.drawn.animate(context.simTime)
         horde.draw(context.dt, player.view.yaw)
+        hud.frame()
       },
       { phase: 'lateSimulate', order: 100, id: 'district.frame' },
     ),
@@ -119,10 +136,12 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
     houses,
     horde,
     player,
+    hud,
     dispose() {
       stopLoop()
       stops.forEach((stop) => stop())
       weather.dispose()
+      hud.dispose()
       horde.dispose()
       player.dispose()
       missing.dispose()

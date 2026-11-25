@@ -6,6 +6,7 @@ import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 import type { ZoneFog } from '@adatechnology/game-weather-three'
 
 import type { Houses } from './assemble/houses'
+import type { DistrictHud } from './assemble/hud'
 import type { PlayerRig } from './assemble/player'
 import type { Horde } from './assemble/horde'
 import type { DistrictLoadingText } from './loading'
@@ -39,6 +40,12 @@ export type DistrictOptions = {
   readonly sounds?: string | null | false
   /** The threads of the page's coordinator (default the automatic count; `0` runs every job on the main thread). */
   readonly workers?: number | 'auto'
+  /** The words of the HUD and the death screen: `pt-BR` (default) or `en`. */
+  readonly locale?: string
+  /** The name the HUD shows at the top left (the scenario); absent, none. */
+  readonly title?: string
+  /** What "restart the scene" does: the page rebuilds the district from the same options (same seed, same scene). Default: reload the page with the same address. */
+  readonly onRestart?: () => void
   /** The texts of the loading card shown while the district is assembled (default `DISTRICT_LOADING_TEXT`, pt-BR); `false` shows no card. */
   readonly loading?: DistrictLoadingText | false
 }
@@ -52,6 +59,7 @@ export type District = {
   readonly houses: Houses
   readonly horde: Horde
   readonly player: PlayerRig
+  readonly hud: DistrictHud
   /** Stops the loop and gives every resource back. */
   dispose(): void
 }

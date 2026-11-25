@@ -29,6 +29,7 @@ player.update(dt, { forward, right, run, aim, yaw, bandage, pressed: { crouch, p
 | `drawWound(tabela, random)` | Sorteio da ferida na ordem do jogo (arranhão 60%, laceração 30%, mordida 10%) |
 | `PlayerCrowd`, `PlayerWorld` | O que o jogador pede da multidão e do mundo (callbacks) |
 | `playerTextOf(id, locale)`, `PLAYER_TEXT` | As frases do jogo (pt-BR) e em inglês, por id |
+| `createPlayerHud`, `createDeathScreen`, `playerHudViewOf` (`./hud`) | HUD do corpo em DOM sem three.js (vida, fôlego, sangramento, infecção, ferimentos, arma e munição, nome, mensagens, mira em 1ª pessoa) e a tela de morte ("Você morreu", tempo sobrevivido, "Reiniciar cena" com Enter/R, "Voltar ao início"); pt-BR e en |
 | `createPlayerTestModule(options)` | Módulo `player_area` da sala de testes |
 
 ## Compõe com
