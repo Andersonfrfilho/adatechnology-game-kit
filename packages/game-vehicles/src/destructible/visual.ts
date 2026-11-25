@@ -16,7 +16,8 @@ import type { PartDef, VehicleModel } from './model'
 import { raycastIndexed, warmTriIndex } from '../tri-index'
 import type { CreaseWork } from './crease-queue'
 import { subdivideNear } from './subdivide-near'
-import { cutStripOverDoor, isDoorSeam, leaveDeepSkinOnBody } from './door-open'
+import { closeDoorSkin, cutStripOverDoor, isDoorSeam, leaveDeepSkinOnBody } from './door-open'
+import { buildTrunkBay } from './trunk-bay'
 
 /** A node the visuals move, hide or cut: most are meshes of the body, read as one (a group just has no geometry). */
 type Obj = Mesh<BufferGeometry, MeshStandardMaterial> & SceneNode
@@ -36,6 +37,16 @@ const HOLE_BATCH_CAPACITY = 64
 const DOOR_DEPTH = 0.07
 /** What a door's cut keeps of the body: its skin and what lies within this of it (the card sits at `DOOR_DEPTH`); deeper is the body behind the door, metres. */
 const DOOR_SKIN_DEPTH = 0.09
+/** Outward direction of a lid's skin (backwards and up, between its back and its top), for closing it into a lid with depth. */
+const LID_OUTWARD: readonly [number, number, number] = [-Math.SQRT1_2, Math.SQRT1_2, 0]
+/** The carpet of the trunk and the rubber seal along its sill: a lit dark grey, never black. */
+const TRUNK_CARPET_COLOR = '#3a3c3f'
+const TRUNK_SEAL_COLOR = '#2a2b2d'
+/** A part of the model within this of a door's zone and no larger than this, metres, is a part of the door (a pull, a knob, a speaker). */
+const DOOR_TRIM_MARGIN = 0.03
+const DOOR_TRIM_SIZE = 0.3
+/** The hinge of a lid sits this far in from the front and top of its zone, metres. */
+const LID_HINGE_INSET = 0.02
 /** A part at the foot of a door this far inside its skin is on the floor, metres. */
 const DOOR_FLOOR_DEPTH = 0.2
 /** Points per side of a door's edge band, each at the height of the skin there: the side of a car is curved. */
@@ -370,10 +381,12 @@ export class VehicleVisuals implements CreaseWork {
       const piv = new THREE.Group()
       piv.name = p.id
       piv.userData.plateOf = p.id
-      piv.position.set(sk - 0.016, B.y1 - 0.05, 0)
+      // a trunk lid or tailgate hinges on the front edge of its top, by the rear window (or on the roof): it lifts up, never out to the back
+      const hinge = { x: B.x1 - LID_HINGE_INSET, y: B.y1 - LID_HINGE_INSET }
+      piv.position.set(hinge.x, hinge.y, 0)
       piv.userData.rigid = true
       this.c.vehicle.add(piv)
-      const panel = this.box(0.022, wy, wz, this.paint(), 0, -wy / 2, 0, piv)
+      const panel = this.box(0.022, wy, wz, this.paint(), sk - 0.016 - hinge.x, B.y1 - 0.05 - hinge.y - wy / 2, 0, piv)
       this.plates.set(p.id, piv)
       this.extra.set(`recess_${p.id}`, [recess])
       this.showWhenOpen(p.id, piv, panel, recess)
@@ -459,12 +472,17 @@ export class VehicleVisuals implements CreaseWork {
           const seals = panes.map((g) => I.paneSeals.get(g) as Obj | undefined).filter((s): s is Obj => !!s)
           const mirrors = this.mirrorsOn(z)
           const frames = this.framesAround(panes, inv)
-          const followers = (I.followersIn(this.c, z, inv) as Obj[]).filter((o) => !this.takeSeam(o, id, z, inv) && !this.inFloor(o, piv, z, inv))
-          objs = [...pcs, ...followers, ...panes, ...seals, ...mirrors, ...frames]
+          const thin = I.followersIn(this.c, z, inv) as Obj[]
+          const followers = [...thin, ...this.doorTrimIn(z, inv).filter((o) => !thin.includes(o))].filter((o) => !this.takeSeam(o, id, z, inv) && !this.inFloor(o, piv, z, inv))
+          objs = [...pcs, ...this.shellOf(pcs, z, inv), ...followers, ...panes, ...seals, ...mirrors, ...frames]
         }
       } else {
         const pcs = this.cutZone(z)
-        if (pcs.length) objs = [...pcs, ...(I.followersIn(this.c, z, inv) as Obj[])]
+        // a lid's skin is its top and its back: closed towards the inside of the trunk, forwards and down
+        if (pcs.length) {
+          objs = [...pcs, ...this.shellOf(pcs, z, inv, LID_OUTWARD), ...(I.followersIn(this.c, z, inv) as Obj[])]
+          this.trunkBay(z)
+        }
       }
     } catch {
       objs = []
@@ -480,13 +498,57 @@ export class VehicleVisuals implements CreaseWork {
       if (di >= 0) deform.splice(di, 1)
     }
     if (p.role === 'door' && objs.length > 0) {
-      this.doorEdges(piv, z, this.doorTops.get(id) ?? B.y1 - 0.02)
+      this.doorEdges(piv, z, this.doorTops.get(id) ?? B.y1 - 0.02, objs.some((o) => o.userData.doorShell))
       this.liftDoorTrim(objs, z)
       this.cutStripsAcross(piv, z, inv)
     }
     piv.quaternion.copy(q)
     this.c.root.updateMatrixWorld(true)
     return objs.length > 0
+  }
+  /** The skin closed into a door with depth: the fold all round its real edge, in the paint, and the inner panel behind it, in the door card's grey. */
+  private shellOf(skin: Obj[], z: DamageZone, inv: Matrix4, outward?: readonly [number, number, number]): Obj[] {
+    const paint = this.paint().clone()
+    paint.side = this.THREE.DoubleSide
+    const liner = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.85 }).clone()
+    liner.side = this.THREE.DoubleSide
+    for (const piece of skin) piece.userData.doorSkin = true
+    const meshes = closeDoorSkin(this.THREE, skin, { toVehicle: inv, side: z.side < 0 ? -1 : 1, paint, liner, ...(outward ? { outward } : {}) }) as Obj[]
+    meshes.forEach((mesh, i) => {
+      // closeDoorSkin gives the fold first, then the inner panel
+      mesh.userData.doorShell = meshes.length === 2 && i === 0 ? 'fold' : 'inner'
+      mesh.castShadow = false
+      this.c.vehicle.add(mesh)
+    })
+    return meshes
+  }
+  /**
+   * The trunk under a lid that opens: a tub lined in carpet (floor, sides, the front wall at the back seat) under the opening, and the rubber seal
+   * along the sill, so the opening shows the luggage space and not the dark inside of the body.
+   */
+  private trunkBay(z: DamageZone): void {
+    const carpet = this.I.makeMaterial(TRUNK_CARPET_COLOR, { roughness: 0.95 }).clone()
+    const seal = this.I.makeMaterial(TRUNK_SEAL_COLOR, { roughness: 0.7 })
+    for (const mesh of buildTrunkBay(this.THREE, { box: z.box, clearance: this.c.meta.clearance ?? 0.3, carpet, seal })) this.c.vehicle.add(mesh)
+  }
+
+  /**
+   * The small parts the model draws inside the door (the inner pull and its bezel, the lock knob, a speaker): they stand deeper than the thin
+   * trim the followers take, but sit within the door, so they swing with it instead of staying in the air over the opening.
+   */
+  private doorTrimIn(z: DamageZone, inv: Matrix4): Obj[] {
+    const B = z.box
+    const THREE = this.THREE
+    const deform = new Set<unknown>(this.c.deform ?? [])
+    return (this.c.vehicle.children as Obj[]).filter((o) => {
+      if (!o.isMesh || !o.visible || deform.has(o) || o.userData.decal || o.userData.glass || o.userData.noFollow || this.c.wheels.includes(o)) return false
+      const box = this.I.localBox(this.c, o, inv)
+      if (box.isEmpty()) return false
+      const centre = box.getCenter(new THREE.Vector3())
+      const size = box.getSize(new THREE.Vector3())
+      const inside = centre.x > B.x0 - DOOR_TRIM_MARGIN && centre.x < B.x1 + DOOR_TRIM_MARGIN && centre.y > B.y0 && centre.y < B.y1 && centre.z > B.z0 - DOOR_TRIM_MARGIN && centre.z < B.z1 + DOOR_TRIM_MARGIN
+      return inside && Math.max(size.x, size.y, size.z) <= DOOR_TRIM_SIZE
+    })
   }
   /** A thin part at the foot of the opening, well inside the skin (a step, a sill trim, a rail on the floor), is the floor's: it does not swing with the door. */
   private inFloor(o: Obj, piv: Object3D, z: DamageZone, inv: Matrix4): boolean {
@@ -508,7 +570,7 @@ export class VehicleVisuals implements CreaseWork {
     return true
   }
   /** A door has edges: a band that follows the skin all round closes it to its card and hides where the cut followed the triangles of the shell; the same band, in the same paint as on a real car, lines the opening. */
-  private doorEdges(piv: Object3D, z: DamageZone, y1: number): void {
+  private doorEdges(piv: Object3D, z: DamageZone, y1: number, closed: boolean): void {
     const THREE = this.THREE
     const B = z.box
     const side = z.side < 0 ? -1 : 1
@@ -562,22 +624,20 @@ export class VehicleVisuals implements CreaseWork {
     const cardMaterial = this.I.makeMaterial(DOOR_CARD_COLOR, { roughness: 0.85 }).clone()
     cardMaterial.side = THREE.DoubleSide
     const card = new THREE.Mesh(cardGeometry, cardMaterial)
-    card.userData.noFollow = true
-    card.castShadow = false
-    this.c.vehicle.add(card)
-    piv.attach(card)
     const all = loop.map((_, i) => i)
     // the opening is lined up its sides and along its sill; over the door's top it goes on up to the roof, so a band there would be a bar across it
     const top = 2 * DOOR_EDGE_PIECES
     const sides = [...all.slice(3 * DOOR_EDGE_PIECES), ...all.slice(0, top + 1)]
     const edges = new THREE.Mesh(band(0.002, all, true), paint)
     const lining = new THREE.Mesh(band(0.002, sides, false), paint)
-    for (const m of [edges, lining]) {
+    // a skin already closed into a door with depth (shellOf) needs no card or band of its own: they would stand inside it, short of its edge
+    const onDoor = closed ? [] : [card, edges]
+    for (const m of [...onDoor, lining]) {
       m.userData.noFollow = true
       m.castShadow = false
       this.c.vehicle.add(m)
     }
-    piv.attach(edges)
+    for (const m of onDoor) piv.attach(m)
   }
   /** The frame the model draws round a door's window (a dark strip over the glass) goes with the door: left behind it hangs in the air over the opening. */
   private framesAround(panes: Obj[], inv: Matrix4): Obj[] {

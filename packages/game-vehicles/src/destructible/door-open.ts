@@ -16,6 +16,7 @@ type Geometry = {
   dispose(): void
   computeBoundingBox(): void
   computeBoundingSphere(): void
+  computeVertexNormals(): void
 }
 type Object3D = { readonly position: { copy(v: unknown): unknown }; readonly quaternion: { copy(q: unknown): unknown }; readonly scale: { copy(v: unknown): unknown }; readonly matrixWorld: Matrix4 }
 type Mesh = Object3D & { geometry: Geometry; material: unknown; castShadow: boolean; receiveShadow: boolean; parent: { add(o: Mesh): unknown } | null }
@@ -29,6 +30,8 @@ type Three = {
   readonly Float32BufferAttribute: new (array: Float32Array, itemSize: number) => Attribute
   readonly Mesh: new (geometry: Geometry, material: unknown) => Mesh
 }
+import { doorShell } from './door-shell'
+
 /** A cut of the kit's `cutMesh`: a negative distance is what it takes away. */
 type CutTest = { readonly sdf: (x: number, y: number, z: number) => number }
 /** What the strip cut needs of the vehicle kit. */
@@ -265,4 +268,52 @@ export function isDoorSeam(three: unknown, params: DoorSeamParams): boolean {
   if (Math.sign(centre.z) !== Math.sign(side) || size.x > SEAM_THIN || size.z > SEAM_THIN || size.y < (zone.y1 - zone.y0) * SEAM_TALL) return false
   if (centre.y < zone.y0 || centre.y > zone.y1) return false
   return Math.abs(centre.x - zone.x0) < SEAM_AT_EDGE || Math.abs(centre.x - zone.x1) < SEAM_AT_EDGE
+}
+
+export type DoorShellMeshParams = {
+  /** From world coordinates to the vehicle's (a `THREE.Matrix4`): the shell is built in the vehicle's frame. */
+  readonly toVehicle: unknown
+  readonly side: number
+  /** Material of the fold round the edge (the body's paint) and of the inner panel (the door card). */
+  readonly paint: unknown
+  readonly liner: unknown
+  /** Outward direction of the skin when it is not across the car (a tailgate faces backwards). */
+  readonly outward?: readonly [number, number, number]
+}
+
+/**
+ * The fold and the inner panel that close the skin a door took off the body into a door with depth (`door-shell.ts`): meshes in the vehicle's
+ * coordinates, for the caller to add to the vehicle and hang on the hinge with the skin. None when the skin has no triangles.
+ */
+export function closeDoorSkin(three: unknown, meshes: readonly unknown[], params: DoorShellMeshParams): unknown[] {
+  const THREE = three as Three
+  const toVehicle = params.toVehicle as Matrix4
+  const positions: number[] = []
+  const at = new THREE.Vector3()
+  for (const mesh of meshes as readonly Mesh[]) {
+    const geometry = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry
+    const matrix = new THREE.Matrix4().multiplyMatrices(toVehicle, mesh.matrixWorld)
+    const position = geometry.getAttribute('position')
+    for (let i = 0; i < position.count; i++) {
+      at.fromBufferAttribute(position, i).applyMatrix4(matrix)
+      positions.push(at.x, at.y, at.z)
+    }
+    if (geometry !== mesh.geometry) geometry.dispose()
+  }
+  if (!positions.length) return []
+  const shell = doorShell({ positions, side: params.side, ...(params.outward ? { outward: params.outward } : {}) })
+  const out: Mesh[] = []
+  for (const [array, material] of [
+    [shell.flange, params.paint],
+    [shell.inner, params.liner],
+  ] as const) {
+    if (!array.length) continue
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(array, 3))
+    geometry.computeVertexNormals()
+    geometry.computeBoundingBox()
+    geometry.computeBoundingSphere()
+    out.push(new THREE.Mesh(geometry, material))
+  }
+  return out
 }

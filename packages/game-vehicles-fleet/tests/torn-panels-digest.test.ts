@@ -14,8 +14,9 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
    of its wave on each part (waveWork): 0.48 kg of TNT against a panel crushes it with the contact shock, 0.04 x 0.48 kg x 4.184 MJ/kg x a half = 40 kJ, where the old
    energy / (1 + 4 d^2) x 0.04 gave it 16 kJ: the panels the blasts tear off come apart in more pieces (826 to 875 nodes). Retaken when a door torn off
    took its own skin, window and trim with it (as on its first swing) instead of flying as the flat plate and leaving its dark recess standing in the
-   opening: the doors' skins are cut out of the body (875 to 944 nodes). */
-const GOLDEN_DIGEST = '944:3033499737'
+   opening: the doors' skins are cut out of the body (875 to 944 nodes). Retaken when a door or lid that comes off became a closed volume (its skin, the
+   fold round its edge and its inner panel, door-shell.ts) and an opened lid lines its trunk (a tub and a seal): the same torn parts, closed (944 to 956 nodes). */
+const GOLDEN_DIGEST = '956:2985151422'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261
