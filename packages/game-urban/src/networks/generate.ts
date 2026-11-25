@@ -162,7 +162,7 @@ export function generateNetworks(params: GenerateNetworksParams): GeneratedNetwo
   const ducts = layUnderground({
     context: base,
     runs: runs.filter((run) => underground.has(run.id)),
-    connections: connections.filter((connection) => !aerial(connection) && (connection.network === 'power' || connection.network === 'telecom')),
+    connections: connections.filter((connection) => !aerial(connection)),
     column: { id: pole.id, lampReach: pole.spec.lamp.reach, heights },
     canStand: (x, z) => surface(x, z) === 'sidewalk' && !(params.avoid ?? []).some((rect) => x > rect[0] && x < rect[2] && z > rect[1] && z < rect[3]),
     crossings: crossingsOf({ context: base, connections }),

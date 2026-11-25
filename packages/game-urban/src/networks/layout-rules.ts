@@ -135,7 +135,7 @@ export const DEFAULT_NETWORK_LAYOUT: NetworkLayoutRules = {
     boxSpacing: 40,
     lightFromKerb: 0.4,
     lightSpacing: 35,
-    lateralGap: 0.8,
+    lateralGap: 1,
     padFromKerb: 1.85,
   },
 }

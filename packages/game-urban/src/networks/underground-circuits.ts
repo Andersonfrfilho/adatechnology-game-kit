@@ -50,6 +50,23 @@ export function lightsOfRun({ context, run, canStand, crossings, lampReach }: Li
 }
 
 /** The lots of a street that take power or telecom from it, by station. */
+/**
+ * The station of a lot's box: across from its meter, or stepped away from the nearest pipe that leaves the street within `gap` of it (on the
+ * side away from it, so the lateral never crosses that pipe), in 0.1 m steps until it and the lateral's middle clear every other, at most 3 m.
+ */
+function clearStation({ target, others, gap }: { readonly target: number; readonly others: readonly number[]; readonly gap: number }): number {
+  const nearest = [...others].sort((a, b) => Math.abs(a - target) - Math.abs(b - target))[0]
+  if (nearest === undefined || Math.abs(nearest - target) >= gap) return target
+  const away = Math.sign(target - nearest) || 1
+  // the lateral runs from the box to the meter: halfway along it, it keeps half the gap too
+  const clear = (u: number): boolean => others.every((other) => Math.abs(other - u) >= gap && Math.abs(other - (u + target) / 2) >= gap / 2)
+  for (let step = 1; step <= 30; step++) {
+    const u = target + away * step * 0.1
+    if (clear(u)) return u
+  }
+  return target + away * gap
+}
+
 function lotsOf({ context, run, connections }: { readonly context: BuriedContext; readonly run: StreetRun; readonly connections: readonly UtilityConnection[] }): UndergroundLot[] {
   return [...context.served.values()]
     .filter((served) => served.run.id === run.id)
@@ -58,7 +75,11 @@ function lotsOf({ context, run, connections }: { readonly context: BuriedContext
       const telecom = connections.find((connection) => connection.lot === served.lot.id && connection.network === 'telecom')
       const anchor = power ?? telecom
       if (anchor === undefined) return []
-      const [u] = frameOf({ frame: run, x: anchor.at[0], z: anchor.at[2] })
+      const along = (connection: UtilityConnection): number => frameOf({ frame: run, x: connection.at[0], z: connection.at[2] })[0]
+      // the box stands across from the meter, unless another pipe leaves the street at nearly the same station (this lot's water or sewer, a
+      // neighbour's across the street): then it steps aside, so the lateral never runs on their line
+      const others = connections.filter((connection) => connection.network !== 'power' && connection.network !== 'telecom' && context.served.get(connection.lot)?.run.id === run.id).map(along)
+      const u = clearStation({ target: along(anchor), others, gap: context.rules.layout.underground.lateralGap })
       return [{ key: `box:${served.lot.id}`, served, u, ...(power === undefined ? {} : { power }), ...(telecom === undefined ? {} : { telecom }) }]
     })
     .sort((a, b) => a.u - b.u)

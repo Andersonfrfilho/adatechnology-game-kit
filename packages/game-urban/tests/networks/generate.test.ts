@@ -13,7 +13,7 @@ const bytes = (out: ReturnType<typeof generate>): string => createHash('sha256')
 // re-recorded when the rules the output carries gained `layout.poles.minGap` (nodes and edges unchanged)
 // re-recorded again when the rules gained `sewer.turnTolerance`, `sewer.branchMaxSkew` and `storm` (nodes and edges unchanged)
 // re-recorded when the rules gained `underground`, `layout.connection.telecomBesidePower` and the cover and crossing rank of the ducts (nodes and edges unchanged: the old bytes come back with those keys taken out)
-const RECORDED = '822d8d953dec216ec77b63c976be501641bd81770b7f89dd1842df2a2c5f1cb3'
+const RECORDED = '82540f973fdc5daa9b867f6a53d040d4f98b9da46fefb3e2fa0c8e6f803094e9'
 const count = (nodes: readonly NetworkNode[], kind: NetworkNode['kind']): number => nodes.filter((node) => node.kind === kind).length
 
 describe('generateNetworks', () => {

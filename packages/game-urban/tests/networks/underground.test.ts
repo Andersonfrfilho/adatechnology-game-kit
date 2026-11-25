@@ -135,7 +135,7 @@ describe('a crater on the duct bank', () => {
     const feed = networks.nodes.find((entry) => entry.kind === 'feed' && entry.spec === 'underground_feed')!
     const first = networks.edges.find((edge) => edge.kind === 'mv_duct' && edge.from === feed.id)!
     const outage = powerOutageOf(networks, { before: [], after: [first.id] })
-    expect(outage?.lots.sort()).toEqual(CENTRE.map((lot) => lot.id).sort())
+    expect([...(outage?.lots ?? [])].sort()).toEqual(CENTRE.map((lot) => lot.id).sort())
     expect(outage?.lights?.length).toBeGreaterThan(0)
     expect(powerOutageOf(networks, { before: [first.id], after: [first.id] })).toBeUndefined()
   })

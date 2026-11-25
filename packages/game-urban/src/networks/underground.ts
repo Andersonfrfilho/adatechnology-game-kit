@@ -19,7 +19,7 @@ export type UndergroundParams = {
   readonly context: BuriedContext
   /** The streets whose power runs underground. */
   readonly runs: readonly StreetRun[]
-  /** The power and telecom points of the lots on those streets. */
+  /** The points of the lots on those streets: their power and telecom are laid, their water and sewer kept clear of. */
   readonly connections: readonly UtilityConnection[]
   /** The distribution pole of the registry the light columns are drawn as (only its lamp and arm), and its lamp's height and reach. */
   readonly column: { readonly id: string; readonly lampReach: number; readonly heights: PoleHeights }
