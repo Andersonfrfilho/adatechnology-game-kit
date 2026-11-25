@@ -50,11 +50,12 @@
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-destruction": "workspace:^",
     "@adatechnology/game-floorplan-interactables": "workspace:^",
+    "@adatechnology/game-floorplan-residential": "workspace:^",
     "@adatechnology/game-floorplan-structure": "workspace:^",
     "@adatechnology/game-props3d": "workspace:^",
     "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
-    "@adatechnology/game-floorplan-residential": "workspace:^"
+    "@adatechnology/game-urban": "workspace:^"
   },
   "peerDependencies": {
     "three": "^0.160.0",

@@ -22,6 +22,8 @@ import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { DoorLeaf, Eye, RoomLighting, Three } from '../kernel-types.js'
 import type { House, HouseRenderer } from '../types.js'
 import { addHouseRainCover } from '../rain-cover.js'
+import { createBuriedLeaks } from './buried-leaks.js'
+import type { BuriedLeaks } from './buried-leaks.js'
 
 export const FLOORPLAN_AREA_ID = 'floorplan_area'
 
@@ -157,8 +159,11 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
   }
 
   const removeCovers: Array<() => void> = []
+  // the houses' sewer and rain pipes under the host's ground: a crater that reaches one shows it, breaks it and lets it leak
+  let buried: BuriedLeaks | null = null
   const clearHouses = (): void => {
     for (const remove of removeCovers.splice(0)) remove()
+    buried?.setHouses([])
     for (const p of placed) p.house.dispose()
     placed.length = 0
     lastSheet = ''
@@ -273,6 +278,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     layout()
     for (const p of placed) if (options.world) p.house.destruction.activate()
     if (host.rainCover) for (const p of placed) removeCovers.push(addHouseRainCover(host.rainCover, p.house))
+    buried?.setHouses(placed.map((p) => p.house.group as THREE_NS.Object3D))
     showAll()
     applyLod()
     updateBlueprintCorner()
@@ -695,9 +701,12 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
       THREE = lent.THREE as Three
       removers.push(lent.addBlocker?.(blocked) ?? (() => undefined))
       removers.push(lent.onClear?.(clearHouses) ?? (() => undefined))
+      buried = createBuriedLeaks(lent, THREE)
+      removers.push(lent.onReset?.(() => buried?.reset()) ?? (() => undefined))
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame((dt) => {
         time += dt
+        buried?.step(dt)
         if (dirty && time - dirtyAt > 0.4) {
           dirty = false
           // a rebuild takes a good part of a second: behind the host's loading indicator when it has one
@@ -749,6 +758,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         globalThis.removeEventListener?.('keydown', onKey)
         for (const remove of removers.splice(0)) remove()
         clearHouses()
+        buried?.dispose()
+        buried = null
         stopPaintQueue?.()
         stopPaintQueue = undefined
         stopShadowQueue?.()

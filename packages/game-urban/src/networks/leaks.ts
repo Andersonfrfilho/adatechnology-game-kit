@@ -1,6 +1,6 @@
 import { connectedNodes, buildNetworkGraph } from './graph'
-import type { Breach } from './breach'
-import type { PipeContent } from './pipes'
+import type { Breach, PipeBreach } from './breach'
+import type { PipeContent, PipePiece } from './pipes'
 import { pipePiecesOf } from './pipes'
 import type { UtilityNetworks } from './types'
 
@@ -66,16 +66,22 @@ export type LeaksOptions = {
  * The leaks a breach opens: one for each pipe the bowl severed, of its content, at the break. Water runs under pressure and comes up out of the crater; sewage runs slow; stormwater only runs
  * when it rains. Each is finite (`rate` for `seconds`): `drainLeak` gives what a step lets out until nothing is left. Pure, in the order of the breach.
  */
-export function leaksOf(networks: Pick<UtilityNetworks, 'nodes' | 'edges'>, breach: Breach, { isRaining, rules = DEFAULT_LEAK_RULES }: LeaksOptions): NetworkLeak[] {
+export function leaksOf(networks: Pick<UtilityNetworks, 'nodes' | 'edges'>, breach: Breach, options: LeaksOptions): NetworkLeak[] {
   const pipes = new Map(pipePiecesOf(networks).map((pipe) => [pipe.id, pipe]))
   return breach.pipes.flatMap((reached): NetworkLeak[] => {
     const pipe = pipes.get(reached.id)
-    if (!reached.severed || pipe === undefined) return []
-    if (reached.content === 'stormwater' && !isRaining) return []
-    const rule = rules[reached.content]
-    const rate = BRANCH_KINDS.has(pipe.kind) ? rule.branchRate : rule.mainRate
-    return [{ id: reached.id, content: reached.content, at: reached.at, diameter: pipe.diameter, rate, volume: rate * rule.seconds, isPressurised: rule.isPressurised }]
+    const leak = pipe === undefined ? undefined : leakOfPipe(pipe, reached, options)
+    return leak === undefined ? [] : [leak]
   })
+}
+
+/** The leak of one pipe a breach reached (any buried pipe: a street's or a house's): none while it is not severed, nor for a drain when it does not rain. */
+export function leakOfPipe(pipe: PipePiece, reached: PipeBreach, { isRaining, rules = DEFAULT_LEAK_RULES }: LeaksOptions): NetworkLeak | undefined {
+  if (!reached.severed) return undefined
+  if (reached.content === 'stormwater' && !isRaining) return undefined
+  const rule = rules[reached.content]
+  const rate = BRANCH_KINDS.has(pipe.kind) ? rule.branchRate : rule.mainRate
+  return { id: reached.id, content: reached.content, at: reached.at, diameter: pipe.diameter, rate, volume: rate * rule.seconds, isPressurised: rule.isPressurised }
 }
 
 /** A leak being let out: what is left of it. */
