@@ -12,7 +12,7 @@ import { routeConduits, routingPlanOf } from '../construction-stages/installatio
 import type { RoutableElectrical } from '../construction-stages/installation-routes.js';
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
 import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
-import { buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
+import { bareBoxesOf, buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
 import { gutterKeepOut } from '../roof/gutters.js';
 import { createHouseShadowBatches } from '../house/shadow-batches.js';
 import { WALL_BOX, wallBehindOf, wallBoxExtent } from '../utilities/wall-box.js';
@@ -243,8 +243,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           // the masonry is laid with the chases of the runs that go up and down inside it
           const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r, shared.ctx.wallBoxShifts)], shared.ctx.blockLaid ?? []);
           const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? [], shared.ctx.paving ?? []);
-          // (its rafters clear of the faces of the slabs' edges they pass, its timbers cut around the water tank standing in the attic and the gutters hung on the eaves)
-          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, shared.ctx.occupied, [...atticKeepOut(THREE, house, Object.values(parts)), ...gutterKeepOut(shared.ctx.gutterInfo?.gutters ?? [])]);
+          // (its rafters clear of the faces of the slabs' edges they pass, finished or bare (the roof goes on before the render), its timbers cut around the water tank standing in the attic and the gutters hung on the eaves)
+          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, [...(shared.ctx.occupied ?? []), ...bareBoxesOf(THREE, [stGroups.frame, stGroups.masonry])], [...atticKeepOut(THREE, house, Object.values(parts)), ...gutterKeepOut(shared.ctx.gutterInfo?.gutters ?? [])]);
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
           for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
             gs[sg.name] = sg;

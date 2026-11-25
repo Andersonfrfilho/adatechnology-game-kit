@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 
 import type { Three } from '../kernel-types.js'
-import { CONSTRUCTION_LEVEL_MAX } from './apply-level.js'
+import { CONSTRUCTION_LEVEL_MAX, STAGE_LEVEL } from './apply-level.js'
 import { coplanarOverlaps } from './coplanar.js'
 import { SPOIL_HEAP } from './installations-stage.js'
 
@@ -165,7 +165,7 @@ function checkNetwork(T: Three, h: StagedHouseView, plan: Plan, set: (level: num
   set(4)
   const at4 = snapshot()
   for (const o of runs) if (!shown(o)) out.push({ code: STAGE_PROBLEM.NETWORK_CHANGES, level: 4, detail: `${String(o.userData.id)} not shown in the rough-in` })
-  for (const level of [5, 8]) {
+  for (let level = STAGE_LEVEL.installations + 1; level <= CONSTRUCTION_LEVEL_MAX; level++) {
     set(level)
     if (snapshot() !== at4) out.push({ code: STAGE_PROBLEM.NETWORK_CHANGES, level, detail: 'the runs moved' })
     // under the render the run is still there, where it runs: the render covers it, nothing hides it (a wall broken open shows it)
@@ -211,7 +211,7 @@ function checkRoof(T: Three, h: StagedHouseView, plan: Plan, set: (level: number
     for (let i = 0; i < position.count; i += 7) {
       const p = new T.Vector3().fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld)
       const y = roofOver(p, p.y - 1)
-      if (y !== null && y <= p.y) out.push({ code: STAGE_PROBLEM.FRAMING_THROUGH_TILES, level: 7, detail: `timber at ${p.toArray().map((v) => v.toFixed(2))}, tiles at ${y.toFixed(2)}` })
+      if (y !== null && y <= p.y) out.push({ code: STAGE_PROBLEM.FRAMING_THROUGH_TILES, level: STAGE_LEVEL.roof, detail: `timber at ${p.toArray().map((v) => v.toFixed(2))}, tiles at ${y.toFixed(2)}` })
     }
   })
   const tank = plan.waterTank
@@ -249,7 +249,7 @@ export function checkConstructionStages(T: Three, h: StagedHouseView, options: {
   }
   checkFrame(T, h, out)
   checkSewer(T, h, out)
-  for (const level of [4, 5, 8]) {
+  for (let level = STAGE_LEVEL.installations; level <= CONSTRUCTION_LEVEL_MAX; level++) {
     set(level)
     checkGroundPlane(h, level, out)
   }
