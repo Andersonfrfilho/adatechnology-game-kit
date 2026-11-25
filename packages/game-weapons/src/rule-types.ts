@@ -130,6 +130,18 @@ export interface WeaponRules {
      */
     readonly stowSeconds: number
   }
+  /**
+   * The hands a weapon takes and where it goes when the hands are wanted for something else (`weaponHandsOf`). A weapon is two-handed by its category (`twoHanded.categories`), its
+   * id (`twoHanded.weapons`) or a `two_handed` tag, unless it goes one in each hand (`dualWield`). `slots` names, by category, the place on the body that takes it (`hip` a holster,
+   * `back` a sling or back slot), and `weaponSlots` by id over it (null: none); a weapon left out of both has none, and goes to the ground when the hands are needed. The ids in
+   * `bare` are the body itself (a kick, a shove, the fists): nothing in the hand, nothing to put away.
+   */
+  readonly hands: {
+    readonly twoHanded: { readonly categories: readonly WeaponCategory[]; readonly weapons: readonly WeaponId[] }
+    readonly slots: Readonly<Partial<Record<WeaponCategory, string>>>
+    readonly weaponSlots: Readonly<Record<WeaponId, string | null>>
+    readonly bare: readonly WeaponId[]
+  }
   /** Folding or sliding in the stock: the seconds it takes and what it does to the weapon while it is in. */
   readonly stock: { readonly seconds: number; readonly collapsed: readonly StatModifier[] }
   /**

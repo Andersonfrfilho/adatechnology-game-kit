@@ -80,6 +80,8 @@ export { CHARACTER_SOUND_BANK, CHARACTER_SOUNDS, UNDEAD_VOICE_GROUP } from './au
 export { BODY_SOUNDS, PLAYER_SOUNDS, UNDEAD_VOICES, UNDEAD_VOICE_SOURCES, createCharacterSound } from './audio/sound'
 export type { BodySoundRule, CharacterSound, CharacterSoundOptions, CharacterSoundSink, CharacterSoundStyle, UndeadVoice, VoiceMoment, VoiceStep } from './audio/sound'
 export { createPlayerAvatar } from './player/avatar'
+export { BODY_SLOT_CLEARANCE, createBodySlots } from './player/body-slots'
+export type { BodySlotName } from './player/body-slots'
 export type { AvatarEvent, AvatarItemUsePose, AvatarUpdate, PlayPoseOptions, PlayerAvatar, PlayerAvatarColors, PlayerAvatarOptions, PlayerAvatarSpec } from './player/avatar'
 export type { AvatarViewMode } from './player/head-hiding'
 export type { AvatarViewOptions } from './player/avatar'

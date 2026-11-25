@@ -31,6 +31,7 @@ player.update(dt, { forward, right, run, aim, yaw, bandage, pressed: { crouch, p
 | `playerTextOf(id, locale)`, `PLAYER_TEXT` | As frases do jogo (pt-BR) e em inglês, por id |
 | `createPlayerHud`, `createDeathScreen`, `playerHudViewOf` (`./hud`) | HUD do corpo em DOM sem three.js (vida, fôlego, sangramento, infecção, ferimentos, arma e munição, nome, mensagens, mira em 1ª pessoa) e a tela de morte ("Você morreu", tempo sobrevivido, "Reiniciar cena" com Enter/R, "Voltar ao início"); pt-BR e en |
 | `createPlayerTestModule(options)` | Módulo `player_area` da sala de testes |
+| `planHands`, `drawBackOf`, `interactionHandsFor`, `HANDS_DEFAULTS` | Mãos e coldre (dono, 2026-11-24): uma mão usa a mão livre e a arma fica; duas mãos guardam a arma no coldre/bandoleira que couber ou a soltam no chão; arma de duas mãos sempre sai; o guardado volta à mão no fim, o que caiu fica. Mãos e lugar de cada arma: `weaponHandsOf` (`game-weapons`) |
 
 ## Compõe com
 `game-crowd` (implementa `PlayerCrowd`; a multidão ouve o `noise`), `game-weather` (`footstepScale` multiplica o raio do `noise`), `game-audio` (`host.audio`

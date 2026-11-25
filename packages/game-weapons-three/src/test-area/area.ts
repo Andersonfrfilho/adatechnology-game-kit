@@ -13,6 +13,7 @@ import { showcaseTextOf } from './showcase-text'
 import { createWeaponAudio } from '../audio'
 import type { WeaponAudio, WeaponSampleOptions } from '../audio'
 import { createWeaponFx } from '../fx'
+import { createHolsteredWeapons } from '../fx/holstered'
 import type { WeaponFx } from '../fx'
 import { createLaserRaycast } from '../laser-raycast'
 import { ARCHETYPE_MODELS, hasWeaponModel } from '../models'
@@ -495,8 +496,15 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         else if (change.kind === 'control' && change.id === 'fuse_length' && typeof change.value === 'number') lent.configureTool?.({ fuse_length: String(change.value) })
       })
       const worldEffects = createWorldEffects({ arsenal })
+      // the weapons put away on the body while the hands do something else (`holster` events), where the host's body keeps them
+      const bodySlot = lent.bodySlot?.bind(lent)
+      const holstered = bodySlot ? createHolsteredWeapons({ THREE: lent.THREE as typeof THREE_NS, scene: lent.scene as THREE_NS.Scene, arsenal, ...(options.items ? { items: options.items } : {}), bodySlot }) : null
       const offEvents = lent.on((event) => {
         worldEffects.handle(event, lent.effects)
+        if (event.type === 'holster') {
+          holstered?.handle(event)
+          return
+        }
         if (event.type === 'explosion') {
           // a host that lends its engine (the test room) plays the blast itself, recorded, from the destruction sound: no second synthesized burst on top
           if (lentEngine) return
@@ -515,7 +523,10 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         }
         if (event.type === 'reload') lent.log(fill(event.phase === 'start' ? text.reloadStart : text.reloadEnd, { weapon: arsenal.name(event.weapon), ammo: tool.ammo, capacity: tool.capacity }), { weapon: event.weapon, phase: event.phase })
       })
-      const offFrame = lent.onFrame((dt) => created.update(dt))
+      const offFrame = lent.onFrame((dt) => {
+        created.update(dt)
+        holstered?.update()
+      })
       const offHands = lent.setHandTargets?.(() => created.handTargets())
       const offMuzzle = lent.setMuzzleSource?.((hand) => created.muzzle(hand))
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
@@ -529,6 +540,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         offHands?.()
         offMuzzle?.()
         created.dispose()
+        holstered?.dispose()
         audio?.dispose()
         fx = null
         host = null

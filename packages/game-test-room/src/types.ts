@@ -314,6 +314,11 @@ export interface TestRoomOptions {
   toolMenu?: false | { keys?: string[] }
   /** The bag (I opens its list, P puts what is aimed at into it, O stores the hand): a 30 L backpack of 20 slots by default, weight limit `maxCarryKg`. `false`: no bag keys and no list. */
   inventory?: false | { litres?: number; slots?: number; inside?: readonly [number, number, number] }
+  /**
+   * The places on the body that take a weapon when an interaction wants its hands (`rules.hands.slots` of game-weapons: `hip` a holster, `back` a sling): a weapon with none
+   * that fits drops to the floor (`planHands` of game-player). Default `['hip']`: a holster, no sling.
+   */
+  bodySlots?: readonly string[]
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */
   punchHand?: PunchHand
   /** The tools whose strike is thrown with one hand, so `punchHand` picks it (default `['hand', 'fists', 'brass_knuckles']`); the shove and the kick are not. */

@@ -16,6 +16,8 @@ import type { GaitProfile, PoseClip, PoseClipEvent, PoseClipRegistry } from '@ad
 import type { HandTargets } from '@adatechnology/game-contracts'
 
 import preset from '../presets/player-avatar.json'
+import { createBodySlots } from './body-slots'
+import type { BodySlotName } from './body-slots'
 import { buildHand } from '../rich/accessories/hands'
 import { createBestBuilder } from '../rich/best-builder'
 import { createRigAnimator } from '../rich/animator'
@@ -163,6 +165,8 @@ export type PlayerAvatar = {
   readonly playing: string | null
   /** A socket at the hand: 'R' is the weapon hand (the puppet's right, at -x), 'L' the other one. */
   hand(side: 'R' | 'L'): THREE_NS.Object3D
+  /** A place on the body that takes a weapon put away (`hip` a holster on the weapon side, `back` a sling): a socket in the body's own turn, its origin just off the cloth. */
+  slot(name: BodySlotName): THREE_NS.Object3D
   /** The joint of a shoulder ('R' the weapon side, at -x): where a long gun's stock rests, just inside it. */
   shoulder(side: 'R' | 'L'): THREE_NS.Object3D
   /**
@@ -623,6 +627,9 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
     animator.setPose(rig, blended as PoseTargets)
   }
 
+  // the places a weapon is put away, read off the body at rest before it ever moves
+  const slots = createBodySlots(THREE, rig, root, heightScale)
+
   return {
     root,
     rig,
@@ -734,6 +741,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       if (run) run.target = 0
     },
     hand: (side) => sockets[side],
+    slot: (name) => slots[name],
     shoulder: (side) => armOf[side].g as unknown as THREE_NS.Object3D,
     reach(targets, view) {
       // a clip that drives the arms (a punch) keeps them; one that leaves them (`body`: a shovel's dig) lets the hands stay on the tool

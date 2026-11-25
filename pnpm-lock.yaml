@@ -2282,6 +2282,9 @@ importers:
         specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
+      '@adatechnology/game-characters-three':
+        specifier: workspace:^
+        version: link:../game-characters-three
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room

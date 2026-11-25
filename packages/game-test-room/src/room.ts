@@ -17,7 +17,7 @@ import { WATER_SHOT_BY_CALIBER, waterShotClassOf } from '@adatechnology/game-vfx
 import { createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, TWIST_LIFT, useToHit } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
@@ -41,6 +41,9 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
+import { bodySlotPose } from './carry-poses'
+import { createHeldHands } from './held-hands'
+import { twistTargets } from './twist-hand'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
@@ -189,10 +192,6 @@ const GRAVITY_EARTH = 9.81
 /** Speed (m/s) the rounds of one trigger pull must give a free-standing object to move it: a shotgun moves a bookcase, a pistol does not. */
 const SHOVE_SPEED = 0.04
 const METRICS_INTERVAL_S = 0.25
-/** How far the palm sits off the part of a carried item it holds (m). */
-const CARRY_PALM = 0.012
-/** Metres a screw cap rises off its thread at the end of an opening use, which the hand on it follows. */
-const CAP_RISE = 0.03
 /** Faster than this (m/s) a change of the player's position is a teleport, not walking: the avatar does not stride for it. The player runs at 6.2. */
 const MAX_STRIDE_SPEED = 10
 
@@ -887,7 +886,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     blockers,
     ...(options.push ? { rules: options.push } : {}),
     pick: () => {
-      if (heldPiece || (tool.def.category !== 'hand' && toolId !== 'fists')) return null
+      if (heldPiece) return null
       aim()
       const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
       const aimed = r ? (rendererPieces.get(r.object)?.root ?? (entries.get(r.object)?.free ? entries.get(r.object)?.so.root : undefined)) : undefined
@@ -913,6 +912,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const vars = { name: ev.name, kg: num(ev.massKg, 0) }
       action(`push_${ev.type}`, t(`act.push_${ev.type}`, vars), { objectId: ev.objectId, itemId: entryOf(ev.objectId)?.so.itemId, data: { massKg: Math.round(ev.massKg * 10) / 10 } })
       fire('push', ev)
+      if (ev.type === 'grip') heldHands.begin(2)
+      else if (ev.type === 'release') heldHands.end()
       if (ev.type === 'engaged') say(t('hud.push_on', vars))
       else if (ev.type === 'too_heavy') say(t('hud.push_too_heavy', vars))
       else if (ev.type === 'obstacle') say(t('hud.push_blocked', vars))
@@ -1886,7 +1887,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
-    const targets = push.active ? null : (doorHand ?? (heldPiece ? twistHand : (handSource?.() ?? null)))
+    const carry = heldPiece ? heldHands.carry({ shoulder: (side) => avatar?.shoulder?.(side).getWorldPosition(pocketAt).toArray() ?? null, yaw: player.yaw, size: [heldSize.x, heldSize.y, heldSize.z], tool: handSource?.() ?? null }) : null
+    const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? carry) : (handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       triggerFinger: targets?.fingers?.index ?? null,
@@ -3007,6 +3009,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     afterOpening = null
     twisting = null
     twistHand = null
+    heldHands.end()
     entries.release()
     heldPiece = null
     heldTilt = 0
@@ -3119,6 +3122,20 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const handTake = createHandTake(world, (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands))
   const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
   if (bagEnabled) container.appendChild(bag.element)
+  const heldHands = createHeldHands({
+    arsenal,
+    loadout,
+    catalog,
+    inHand: () => ({ R: toolId, L: offToolId }),
+    equip: (hand, weapon) => (hand === 'L' ? setOffTool(weapon) : equip(weapon ?? 'hand')),
+    carried: { get: () => carriedTool, set: (carried) => (carriedTool = carried), putDown: () => putDownTool() },
+    place: (item) => bagHost.placeBack({ ...item, state: {} }),
+    report: (e) => {
+      if (e.type !== 'drop') emitHost({ type: 'holster', weapon: e.weapon, slot: e.slot ?? '', on: e.type === 'holster' })
+      action(`hands_${e.type}`, t(`act.hands_${e.type}${e.fell === false ? '_lost' : ''}`, { weapon: toolName(e.weapon), slot: t(`hands.slot.${e.slot ?? ''}`) }), { data: { ...e } })
+    },
+    slots: options.bodySlots,
+  })
   const grab = (): boolean => {
     if (push.active) return false
     if (!heldPiece && carriedTool) {
@@ -3172,6 +3189,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     box.getSize(heldSize)
     piece.root.quaternion.copy(savedQ)
     piece.root.updateMatrixWorld(true)
+    heldHands.begin({ massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] })
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
@@ -3200,29 +3218,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return true
   }
 
-  /**
-   * The left hand on the top of the held item while `twisting`: palm down on the part, the fingers round it, the wrist turned by the stroke about the item's
-   * axis and lifted with the part as it comes off. The same pose for the first-person arms and the body.
-   */
-  const twistTargets = (root: THREE_NS.Object3D, gripQ: THREE_NS.Quaternion): HandTargets | null => {
-    if (!twisting) return null
-    const { stroke, lift } = twisting
-    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(root.quaternion)
-    const top = heldLocal
-      .clone()
-      .applyQuaternion(root.quaternion)
-      .add(root.position)
-      .addScaledVector(up, heldSize.y * 0.5 + lift * CAP_RISE + stroke.lift * TWIST_LIFT + CARRY_PALM)
-    // the fingers point to the right and away from the body (the forearm comes in from the left, not in front of the item), then the wrist turns with the stroke (a cap comes off turning to the left seen from above)
-    const knuckles = new THREE.Vector3(0.85, 0, -0.5).normalize().applyQuaternion(gripQ)
-    knuckles.addScaledVector(up, -knuckles.dot(up)).normalize().applyAxisAngle(up, stroke.angle)
-    const side = new THREE.Vector3().crossVectors(knuckles, up).normalize()
-    // the palm sits over the middle of the part, so the middle of the hand is a little back toward the wrist
-    const palm = top.addScaledVector(knuckles, -0.025)
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(knuckles, up, side))
-    return { L: { position: [palm.x, palm.y, palm.z], quaternion: [q.x, q.y, q.z, q.w] }, gripL: 0.35 + 0.5 * stroke.grip }
-  }
-
   const gripQuat = new THREE.Quaternion()
   const followHeld = (dt: number): void => {
     const piece = heldPiece
@@ -3232,11 +3227,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const root = piece.root
     let pos: THREE_NS.Vector3
     const targetQ = tmpQ
-    const hand = avatar?.hand?.('R')
+    const hand = avatar?.hand?.(heldHands.hand === 'L' ? 'L' : 'R')
     const isDrink = useItemName === 'drink' || useItemName === 'sip' || useItemName === 'chug'
     if (hand) {
       // with a body the item rides its weapon hand in both views, and tilts with `useItemPlayer` or `heldTilt`
-      const handWorld = hand.getWorldPosition(tmpHand)
+      const handWorld = heldHands.carryAt(tmpHand) ?? hand.getWorldPosition(tmpHand)
+      heldHands.drawOn(root, cameraMode === 'first' && (heldHands.hand === 'L' || heldHands.hand === 'both') ? FIRST_PERSON_LAYER : 0)
       const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
       const pose = useItemPlayer?.pose()
       const rx = pose ? (isDrink ? Math.abs(pose.rotation[0]) * 0.9 : pose.rotation[0]) : -heldTilt
@@ -3282,7 +3278,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       heldVel[2] = (root.position.z - pz) / dt
     }
     root.updateMatrixWorld(true)
-    twistHand = twistTargets(root, gripQuat)
+    twistHand = twistTargets(THREE, { root, gripQ: gripQuat, local: heldLocal, size: heldSize, twisting })
   }
 
   /** How far (m) from the player an item on the table still counts as at hand (a can opener next to the tin). */
@@ -4493,6 +4489,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
+    bodySlot: (slot) => (slot === 'hip' || slot === 'back' ? bodySlotPose(avatar?.slot?.(slot)) : null),
     reachFor(reach) {
       if (!avatar) {
         reach.onGrip?.()

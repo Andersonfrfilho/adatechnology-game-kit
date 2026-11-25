@@ -86,7 +86,7 @@ const createHandFx = (options: WeaponFxOptions, layers: FxLayers, hand: ToolHand
 /** Feeds one hand's presentations: the gallery model when it drew the weapon, the prop otherwise. */
 const handleHand = (pair: HandFx, event: HostEvent, tool: HostTool): void => {
   const { box, model } = pair
-  if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
+  if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall' || event.type === 'holster') return
   if (event.type === 'tool') {
     if (hasWeaponModel(event.weapon)) box.unequip()
     else model.unequip()
@@ -125,7 +125,7 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
   }
   return {
     handle(event, tool) {
-      if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall') return
+      if (event.type === 'explosion' || event.type === 'player' || event.type === 'footfall' || event.type === 'holster') return
       if (event.hand !== 'L') {
         handleHand(right, event, tool)
         return
