@@ -4,11 +4,13 @@
  * what was put away comes back to the hand. The room says what is in each hand and does the moving; this decides and remembers.
  */
 import type * as THREE_NS from 'three'
-import type { HandPose, HandTargets, ToolHand } from '@adatechnology/game-contracts'
+import type { HandTargets } from '@adatechnology/game-contracts'
 import { drawBackOf, interactionHandsFor, planHands } from '@adatechnology/game-player'
 import type { BodyHand, HandsPlan } from '@adatechnology/game-player'
 import { weaponHandsOf } from '@adatechnology/game-weapons'
 import type { Arsenal } from '@adatechnology/game-weapons'
+
+import { offHandCarryPose } from './carry-poses'
 
 /** The slots the body wears when the page names none: a holster at the hip, no sling for a long gun. */
 export const DEFAULT_BODY_SLOTS: readonly string[] = ['hip']
@@ -33,6 +35,14 @@ export type HeldHandsHost<TCarried extends { readonly weaponId: string }> = {
   readonly slots?: readonly string[] | undefined
 }
 
+export type CarryParams = {
+  readonly shoulder: (hand: BodyHand) => readonly number[] | null
+  readonly yaw: number
+  readonly size: readonly [number, number, number]
+  /** The targets of the weapon in hand, kept for the right hand while the left one carries. */
+  readonly tool: HandTargets | null
+}
+
 export type HeldHands = {
   /** The interaction starts: a thing of `massKg` and `size` (metres), or a number of hands (a push takes 2). Answers which hand takes it and what happened to the weapons. */
   begin(what: { readonly massKg: number; readonly size?: readonly number[] } | 1 | 2): HandsPlan
@@ -42,9 +52,12 @@ export type HeldHands = {
   readonly hand: BodyHand | 'both' | null
   /** The slots the body wears (`hip`, `back`...). */
   slots: readonly string[]
-  /** The hand targets of the weapon with the left hand on the thing it carries (the off-hand carry); null when the left hand is not carrying alone. */
-  withCarry(targets: HandTargets | null, carry: HandPose | null): HandTargets | null
-  /** Where the left hand holds the thing it carries alone (the last `withCarry`), written into `out`; null when the left hand is not carrying alone. */
+  /**
+   * The hands on the thing carried, for the arms: the left hand under it with the weapon's targets kept for the right (`L`); null when it rides the weapon hand or nothing is
+   * carried. `shoulder` answers a shoulder of the body (world space), `size` is the thing's box in its own space.
+   */
+  carry(params: CarryParams): HandTargets | null
+  /** Where the middle of the thing carried goes (the last `carry`), written into `out`; null when it rides the weapon hand. */
   carryAt(out: THREE_NS.Vector3): THREE_NS.Vector3 | null
   /**
    * Draws the carried thing on `layer` (the first-person layer in first person: framed with the arms that hold it, by the lens of the tool in the other hand), and back on the
@@ -74,7 +87,7 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
     if (host.loadout.includes(weapon)) host.loadout.splice(host.loadout.indexOf(weapon), 1)
     return true
   }
-  let carry: HandPose | null = null
+  let carryPoint: readonly [number, number, number] | null = null
   let drawn: { readonly root: THREE_NS.Object3D; readonly layer: number } | null = null
   const setLayer = (root: THREE_NS.Object3D, layer: number): void => root.traverse((node) => node.layers.set(layer))
   const held: HeldHands = {
@@ -107,7 +120,7 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
     end() {
       const done = plan
       plan = null
-      carry = null
+      carryPoint = null
       if (drawn && drawn.layer !== 0) setLayer(drawn.root, 0)
       drawn = null
       if (!done) return
@@ -116,15 +129,24 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
         stashed.delete(back.weapon)
         host.equip(back.hand, back.weapon)
         if (carried !== undefined) host.carried.set(carried)
-        host.report({ type: 'draw', weapon: back.weapon, hand: back.hand })
+        const slot = done.moves.find((move) => move.weapon === back.weapon && move.hand === back.hand)?.slot ?? ''
+        host.report({ type: 'draw', weapon: back.weapon, hand: back.hand, slot })
       }
     },
-    withCarry(targets, pose) {
-      carry = plan?.hand === 'L' ? pose : null
-      return carry ? { ...(targets ?? {}), L: carry, gripL: 0.85, elbows: 'body' } : null
+    carry(params) {
+      carryPoint = null
+      const side = (hand: BodyHand): readonly number[] | null => params.shoulder(hand)
+      if (plan?.hand === 'L') {
+        const shoulder = side('L')
+        if (!shoulder) return null
+        const pose = offHandCarryPose(shoulder, params.yaw)
+        carryPoint = pose.position
+        return { ...(params.tool ?? {}), L: pose, gripL: 0.85, elbows: 'body' }
+      }
+      return null
     },
     carryAt(out) {
-      return carry && plan?.hand === 'L' ? out.set(carry.position[0], carry.position[1], carry.position[2]) : null
+      return carryPoint ? out.set(carryPoint[0], carryPoint[1], carryPoint[2]) : null
     },
     drawOn(root, layer) {
       if (drawn?.root === root && drawn.layer === layer) return
@@ -133,35 +155,4 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
     },
   }
   return held
-}
-
-/** Where the left hand holds a thing it carries alone: low and ahead of the left shoulder, the fingers forward and the thumb up, turned with the body (`yaw`, the view down -z at 0). */
-export const offHandCarryPose = (shoulder: readonly [number, number, number], yaw: number, hand: ToolHand = 'L'): HandPose => {
-  const forward: [number, number, number] = [-Math.sin(yaw), 0, -Math.cos(yaw)]
-  const side = hand === 'L' ? -1 : 1
-  const outward: [number, number, number] = [Math.cos(yaw) * side, 0, -Math.sin(yaw) * side]
-  const position: [number, number, number] = [shoulder[0] + forward[0] * 0.3 - outward[0] * 0.04, shoulder[1] - 0.4, shoulder[2] + forward[2] * 0.3 - outward[2] * 0.04]
-  // hand-local x along the fingers (forward), y the back of the hand (outward), z up for a left hand's thumb
-  return { position, quaternion: quaternionOfBasis(forward, outward, [0, side === -1 ? 1 : -1, 0]) }
-}
-
-const quaternionOfBasis = (x: readonly number[], y: readonly number[], z: readonly number[]): [number, number, number, number] => {
-  const [m00, m10, m20] = x as [number, number, number]
-  const [m01, m11, m21] = y as [number, number, number]
-  const [m02, m12, m22] = z as [number, number, number]
-  const trace = m00 + m11 + m22
-  if (trace > 0) {
-    const s = 0.5 / Math.sqrt(trace + 1)
-    return [(m21 - m12) * s, (m02 - m20) * s, (m10 - m01) * s, 0.25 / s]
-  }
-  if (m00 > m11 && m00 > m22) {
-    const s = 2 * Math.sqrt(1 + m00 - m11 - m22)
-    return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s]
-  }
-  if (m11 > m22) {
-    const s = 2 * Math.sqrt(1 + m11 - m00 - m22)
-    return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s]
-  }
-  const s = 2 * Math.sqrt(1 + m22 - m00 - m11)
-  return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s]
 }

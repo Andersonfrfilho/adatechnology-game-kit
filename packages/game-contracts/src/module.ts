@@ -254,6 +254,11 @@ export type HostEvent =
    * With a tool in each hand, the tool of `hand` is put away against the body (`on`) to free that hand for the other tool, or taken back in hand; `duration` is the seconds the move takes.
    */
   | { type: 'stow'; weapon: string; on: boolean; duration?: number; hand?: ToolHand }
+  /**
+   * A weapon put away on the body (`on`) in the place that takes it (`slot`: `hip` a holster, `back` a sling) while the hands do something else, or taken back in hand. A module that
+   * draws weapons draws it there (`ModuleHost.bodySlot`) until it comes back.
+   */
+  | { type: 'holster'; weapon: string; slot: string; on: boolean }
   /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
   | { type: 'player' }
   /**
@@ -484,6 +489,11 @@ export interface ModuleHost {
    * a host without a body leaves it out. With `hand: 'L'` it is the pocket of the left shoulder (the same frame mirrored), where a tool in the left hand is held.
    */
   holdFrame?(hand?: ToolHand): HandPose | null
+  /**
+   * Where a place on the player's body that takes a weapon put away is now (world space; `hip`, `back`): its origin just off the cloth, `quaternion` the body's turn (+z its front, -x the
+   * weapon side, y up). Null for a host with no body or a body without that place.
+   */
+  bodySlot?(slot: string): HandPose | null
   /**
    * Puts the player's hand on a leaf the module moves itself (a door of a house): the host plays the reach to `handle()`, calls `onGrip` when the hand is on it (the module then turns
    * the handle and swings the leaf), keeps the hand on `handle()` for `seconds` as it moves, and takes it back; the body pulls or pushes (`pull`) or shakes a locked one (`locked`).

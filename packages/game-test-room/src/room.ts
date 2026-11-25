@@ -41,7 +41,8 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
-import { createHeldHands, offHandCarryPose } from './held-hands'
+import { bodySlotPose } from './carry-poses'
+import { createHeldHands } from './held-hands'
 import { twistTargets } from './twist-hand'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
@@ -1890,9 +1891,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
-    const shoulderL = heldPiece && heldHands.hand === 'L' ? avatar?.shoulder?.('L').getWorldPosition(pocketAt) : undefined
-    const carryL = shoulderL ? offHandCarryPose([shoulderL.x, shoulderL.y, shoulderL.z], player.yaw) : null
-    const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? heldHands.withCarry(handSource?.() ?? null, carryL)) : (handSource?.() ?? null)))
+    const carry = heldPiece ? heldHands.carry({ shoulder: (side) => avatar?.shoulder?.(side).getWorldPosition(pocketAt).toArray() ?? null, yaw: player.yaw, size: [heldSize.x, heldSize.y, heldSize.z], tool: handSource?.() ?? null }) : null
+    const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? carry) : (handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       triggerFinger: targets?.fingers?.index ?? null,
@@ -3133,7 +3133,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     equip: (hand, weapon) => (hand === 'L' ? setOffTool(weapon) : equip(weapon ?? 'hand')),
     carried: { get: () => carriedTool, set: (carried) => (carriedTool = carried), putDown: () => putDownTool() },
     place: (item) => bagHost.placeBack({ ...item, state: {} }),
-    report: (e) => action(`hands_${e.type}`, t(`act.hands_${e.type}${e.fell === false ? '_lost' : ''}`, { weapon: toolName(e.weapon), slot: t(`hands.slot.${e.slot ?? ''}`) }), { data: { ...e } }),
+    report: (e) => {
+      if (e.type !== 'drop') emitHost({ type: 'holster', weapon: e.weapon, slot: e.slot ?? '', on: e.type === 'holster' })
+      action(`hands_${e.type}`, t(`act.hands_${e.type}${e.fell === false ? '_lost' : ''}`, { weapon: toolName(e.weapon), slot: t(`hands.slot.${e.slot ?? ''}`) }), { data: { ...e } })
+    },
     slots: options.bodySlots,
   })
   const grab = (): boolean => {
@@ -4487,6 +4490,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
+    bodySlot: (slot) => (slot === 'hip' || slot === 'back' ? bodySlotPose(avatar?.slot?.(slot)) : null),
     reachFor(reach) {
       if (!avatar) {
         reach.onGrip?.()
