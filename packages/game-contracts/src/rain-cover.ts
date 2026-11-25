@@ -128,3 +128,90 @@ export function rainCoverTopOf(rects: readonly RainCoverRect[], holes: readonly 
   }
   return top
 }
+
+/** A roof seen from above as a turned rectangle: its centre on the ground plan, half sides along its own axes, the turn about y and the height of its top. */
+export type RainCoverFootprint = { readonly x: number; readonly z: number; readonly halfX: number; readonly halfZ: number; readonly yaw: number; readonly top: number }
+
+export type FootprintRainCoverSource = RainCoverSource & {
+  /**
+   * Puts the roofs and the openings where they are now (a car moved, a window broke). The answer follows at once; the version grows only with `bumpVersion`,
+   * which a mover asks once it has gone far enough for whoever caches (the far curtain) to cut again.
+   */
+  set(footprints: readonly RainCoverFootprint[], openings: readonly RainCoverFootprint[], bumpVersion: boolean): void
+}
+
+type Prepared = { readonly x: number; readonly z: number; readonly halfX: number; readonly halfZ: number; readonly cos: number; readonly sin: number; readonly top: number }
+
+const prepare = (f: RainCoverFootprint): Prepared => ({ x: f.x, z: f.z, halfX: f.halfX, halfZ: f.halfZ, cos: Math.cos(f.yaw), sin: Math.sin(f.yaw), top: f.top })
+
+const insideTurned = (f: Prepared, x: number, z: number): boolean => {
+  const dx = x - f.x
+  const dz = z - f.z
+  return Math.abs(dx * f.cos + dz * f.sin) <= f.halfX && Math.abs(-dx * f.sin + dz * f.cos) <= f.halfZ
+}
+
+/**
+ * A source of turned rectangles with openings (a car's cabin, a tent, a kiosk): a question is a few multiplications per rectangle, no allocation, so the near rain
+ * asks it for every drop. `set` moves the rectangles whenever the thing moves; nothing else is cut or cached.
+ */
+export function createFootprintRainCover(): FootprintRainCoverSource {
+  let roofs: Prepared[] = []
+  let openings: Prepared[] = []
+  let bounds: RainCoverBounds = [0, 0, 0, 0]
+  let revision = 0
+  return {
+    bounds: () => bounds,
+    version: () => revision,
+    coverTopAt(x, z) {
+      let top: number | undefined
+      for (const roof of roofs) {
+        if ((top !== undefined && roof.top <= top) || !insideTurned(roof, x, z)) continue
+        top = roof.top
+      }
+      if (top === undefined) return undefined
+      for (const opening of openings) if (insideTurned(opening, x, z)) return undefined
+      return top
+    },
+    set(footprints, cutouts, bumpVersion) {
+      roofs = footprints.map(prepare)
+      openings = cutouts.map(prepare)
+      let x0 = Infinity
+      let z0 = Infinity
+      let x1 = -Infinity
+      let z1 = -Infinity
+      for (const roof of roofs) {
+        const reach = Math.abs(roof.halfX * roof.cos) + Math.abs(roof.halfZ * roof.sin)
+        const reachZ = Math.abs(roof.halfX * roof.sin) + Math.abs(roof.halfZ * roof.cos)
+        x0 = Math.min(x0, roof.x - reach)
+        x1 = Math.max(x1, roof.x + reach)
+        z0 = Math.min(z0, roof.z - reachZ)
+        z1 = Math.max(z1, roof.z + reachZ)
+      }
+      bounds = roofs.length === 0 ? [0, 0, 0, 0] : [x0, z0, x1, z1]
+      if (bumpVersion) revision++
+    },
+  }
+}
+
+/** The most cells a fixed footprint cover cuts: a wide district gets a coarser cell instead of a bigger grid. */
+const FIXED_COVER_MAX_CELLS = 1_000_000
+
+/** A source of turned rectangles that never move (the buildings of a district, a tent, a kiosk): answered from a grid cut once, two array reads a question however many roofs there are. */
+export function createFixedFootprintRainCover(footprints: readonly RainCoverFootprint[], cellSize = 0.5): RainCoverSource {
+  const roofs = footprints.map(prepare)
+  if (roofs.length === 0) return { bounds: () => [0, 0, 0, 0], coverTopAt: () => undefined, version: () => 0 }
+  const x0 = Math.min(...roofs.map((r) => r.x - Math.abs(r.halfX * r.cos) - Math.abs(r.halfZ * r.sin)))
+  const x1 = Math.max(...roofs.map((r) => r.x + Math.abs(r.halfX * r.cos) + Math.abs(r.halfZ * r.sin)))
+  const z0 = Math.min(...roofs.map((r) => r.z - Math.abs(r.halfX * r.sin) - Math.abs(r.halfZ * r.cos)))
+  const z1 = Math.max(...roofs.map((r) => r.z + Math.abs(r.halfX * r.sin) + Math.abs(r.halfZ * r.cos)))
+  const cell = Math.max(cellSize, Math.sqrt(((x1 - x0) * (z1 - z0)) / FIXED_COVER_MAX_CELLS))
+  return createGridRainCover({
+    bounds: [x0, z0, x1, z1],
+    cellSize: cell,
+    coverTopAt(x, z) {
+      let top: number | undefined
+      for (const roof of roofs) if ((top === undefined || roof.top > top) && insideTurned(roof, x, z)) top = roof.top
+      return top
+    },
+  })
+}

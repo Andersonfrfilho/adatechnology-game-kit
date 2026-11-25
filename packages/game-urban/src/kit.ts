@@ -86,7 +86,15 @@ export function createUrban(options: UrbanOptions = {}) {
 
   const towers: TowerOptions | null = options.towers ? (options.towers === true ? {} : options.towers) : null
   const building = (b: UrbanBuilder, x: number, z: number, width: number, depth: number, height: number, color: number, o?: BuildingOptions): BlockBuilding => drawBuilding(b, x, z, width, depth, height, color, o)
-  const drawBlockBuilding = towers ? createTowerDrawer(towers, building) : building
+  const towerDrawer = towers ? createTowerDrawer(towers, building) : null
+  // a tower draws its own parts: its roof is registered for the rain here (a plain building already did)
+  const drawBlockBuilding: typeof building = towerDrawer
+    ? (b, x, z, width, depth, height, color, o) => {
+        const built = towerDrawer(b, x, z, width, depth, height, color, o)
+        b.cover({ x, z, halfX: width / 2, halfZ: depth / 2, yaw: 0, top: built.height })
+        return built
+      }
+    : building
 
   const poles = {
     ids: (): string[] => [...entries.keys()],

@@ -1,3 +1,4 @@
+import type { RainCoverFootprint } from '@adatechnology/game-contracts'
 import { boxRadius } from '@adatechnology/game-floorplan'
 
 import { createLightAllowance } from './budget'
@@ -98,8 +99,13 @@ export function createUrbanBuilder(random: RandomSource, options: UrbanBuilderOp
     for (const part of silhouette.parts) parts.push(part.parent < 0 ? part : { ...part, parent: part.parent + offset })
     for (const window of silhouette.windows) (window.isLit ? windows.lit : windows.dark).push(window)
   }
+  /** What roofs something over in the scene, apart from the parts: the host's rain keeps off it (`ModuleHost.rainCover`). It is not in `scene()`, so what is drawn stays the same. */
+  const covers: RainCoverFootprint[] = []
+  const cover = (footprint: RainCoverFootprint): void => {
+    covers.push(footprint)
+  }
   const scene = (): UrbanScene => ({ parts, items, windows })
-  return { random, pick, lights, parts, items, windows, group, box, cylinder, cone, prism, plane, vault, terrain, crown, line, label, light, spot, place, item, fence, add, scene }
+  return { random, pick, lights, parts, items, windows, covers, cover, group, box, cylinder, cone, prism, plane, vault, terrain, crown, line, label, light, spot, place, item, fence, add, scene }
 }
 
 export type UrbanBuilder = ReturnType<typeof createUrbanBuilder>

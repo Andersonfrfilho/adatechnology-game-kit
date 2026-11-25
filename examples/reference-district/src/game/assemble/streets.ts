@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 
+import type { RainCoverFootprint } from '@adatechnology/game-contracts'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type { CityPlanInput, PlanRect, UrbanKit } from '@adatechnology/game-urban'
 import { createUrbanThree } from '@adatechnology/game-urban-three'
@@ -23,6 +24,8 @@ export type Streets = {
   readonly drawn: DrawnUrban
   /** The footprint of every building the city placed (what `fillBlock` returns), with its height: the gaps between them are open ground. */
   readonly buildings: ReadonlyArray<{ readonly rect: PlanRect; readonly height: number }>
+  /** The roofs of the city (buildings, towers): the rain keeps off what they cover (`world.rainCover`). */
+  readonly covers: readonly RainCoverFootprint[]
 }
 
 /**
@@ -42,5 +45,5 @@ export function drawStreets({ THREE, urban, plan, site, lights, seed }: StreetsP
     }
   }
   const drawn = createUrbanThree(THREE, { document, lights, physicalLights: true, flickerLenses: true }).draw(b.scene())
-  return { drawn, buildings }
+  return { drawn, buildings, covers: b.covers }
 }
