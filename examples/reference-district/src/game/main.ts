@@ -10,7 +10,7 @@ import { createDistrictHud } from './assemble/hud'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
 import { createDistrictLeaks } from './assemble/leaks'
-import { buildNetworks, drawDistrictNetworks, drawDistrictSewers } from './assemble/networks'
+import { DOWNTOWN_UNDERGROUND, buildNetworks, drawDistrictNetworks, drawDistrictSewers, isUndergroundLot } from './assemble/networks'
 import { drawStreets } from './assemble/streets'
 import { createDistrictWeather } from './assemble/weather'
 import { groundLayoutOf, terrainBoundsOf } from './ground'
@@ -79,9 +79,10 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   const isNight = options.hour >= NIGHT_FROM_HOUR || options.hour < NIGHT_UNTIL_HOUR
 
   await step('streets')
-  const lots = planLots(site)
+  const power = options.power === 'underground' ? DOWNTOWN_UNDERGROUND : undefined
+  const lots = planLots(site, { underground: (lot) => isUndergroundLot({ plan, power, rect: lot.rect }) })
   const avoid = keepOutOf(lots, POLE_MIN_GAP)
-  const networks = buildNetworks({ plan, site, lots, avoid })
+  const networks = buildNetworks({ plan, site, lots, avoid, ...(power === undefined ? {} : { power }) })
   const urban = createReferenceUrban({ hostLights: true })
   const streets = drawStreets({ THREE, urban, plan, site, lights: world.lights, seed: site.seed })
   scene.add(streets.drawn.root)
@@ -111,7 +112,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   })
   const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 
-  const leaks = createDistrictLeaks({ world, scene, generated: networks, sewers, houses, isRaining: () => weather.weather.sample().rain > 0 })
+  const leaks = createDistrictLeaks({ world, scene, generated: networks, sewers, houses, lamps: lines.drawn, isRaining: () => weather.weather.sample().rain > 0 })
 
   const nightFactor = isNight ? 1 : 0
   const stops = [

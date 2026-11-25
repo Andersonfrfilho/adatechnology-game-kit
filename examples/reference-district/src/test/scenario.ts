@@ -14,6 +14,8 @@ export type PageChoice = {
   /** `?estado=clear` and `?hora=21.5`: hold another weather state and hour than the scenario's (the prints of the sky). */
   readonly weather: string | undefined
   readonly hour: number | undefined
+  /** `?energia=enterrada`: the power of the downtown runs under its sidewalks (the periphery keeps its poles). */
+  readonly power: 'overhead' | 'underground'
 }
 
 export const DEFAULT_SCENARIO: ScenarioId = 'tipico'
@@ -47,6 +49,7 @@ export function parsePageChoice(search: string): PageChoice {
     isScripted: query.get('roteiro') === '1',
     weather: query.get('estado') ?? undefined,
     hour: hourOf(query.get('hora')),
+    power: query.get('energia') === 'enterrada' ? 'underground' : 'overhead',
   }
 }
 
@@ -84,6 +87,7 @@ export function districtOptionsOf({ scripts, choice, container }: { readonly scr
     camera: choice.camera,
     start: { x: first.x, z: first.z, yaw: yawToward(first, second) },
     physics: choice.physics,
+    ...(choice.power === 'underground' ? { power: 'underground' as const } : {}),
     locale: choice.locale,
     title: scenarioTitleOf(choice.scenario, choice.locale),
   }

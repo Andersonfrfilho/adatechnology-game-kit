@@ -38,6 +38,8 @@ export type DistrictOptions = {
   readonly start?: { readonly x: number; readonly z: number; readonly yaw: number }
   /** Physics of the pieces: Jolt by default, the kit's own solver with `'own'` (the browser tests without wasm). */
   readonly physics?: 'jolt' | 'own'
+  /** `'underground'`: the downtown's power runs under its sidewalks in a duct bank (pad transformers, light columns, no wires); the periphery keeps its poles. Default overhead everywhere. */
+  readonly power?: 'overhead' | 'underground'
   /** Where the kit's recorded sounds are served (default `./sfx/`); `null` plays the recipes only; `false` makes a silent world. */
   readonly sounds?: string | null | false
   /** The threads of the page's coordinator (default the automatic count; `0` runs every job on the main thread). */

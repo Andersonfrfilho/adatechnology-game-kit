@@ -115,10 +115,12 @@ export type PlannedLot = { readonly lot: Lot; readonly plan: FloorplanResult; re
  * The plan of every lot of the site (`engine.generate`, by the lot's typology, seed and state), on a street with a utility network (`street: 'network'`: the meter post stands inside
  * the lot and the house declares its connections), placed on its lot facing the street.
  */
-export function planLots(site: Site): PlannedLot[] {
+export function planLots(site: Site, { underground }: { readonly underground?: (lot: Lot) => boolean } = {}): PlannedLot[] {
   const engine = registerPacks()
   return site.lots.map((lot): PlannedLot => {
-    const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), street: 'network', ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
+    // a lot on a street whose power runs underground takes it under the ground into a low meter box: no post
+    const street = underground?.(lot) === true ? 'network_underground' : 'network'
+    const plan = engine.generate(lot.typology, { seed: seedOf(site.seed, lot.id), street, ...(stateOfLot(lot) === undefined ? {} : { state: stateOfLot(lot) }) })
     const size = houseSizeOf(plan)
     return { lot, plan, size, placement: lotPlacement(lot.rect, lot.front, size) }
   })

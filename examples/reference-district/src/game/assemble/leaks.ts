@@ -1,13 +1,13 @@
 import type * as THREE_NS from 'three'
 
 import type { KitWorld } from '@adatechnology/game-kit-defaults/world'
-import { coverBodyOf, coverThrowOf, drainLeak, leaksOf, openingOf, startLeak, waterOutageOf } from '@adatechnology/game-urban/networks'
-import type { Breach, Crater, GeneratedNetworks, LeakState, NetworkEvent, NetworkLeak, NetworkOutage, PipeContent, SurfacePiece } from '@adatechnology/game-urban/networks'
+import { coverBodyOf, coverThrowOf, drainLeak, leaksOf, openingOf, powerOutageOf, startLeak, waterOutageOf } from '@adatechnology/game-urban/networks'
+import type { Breach, Crater, FluidContent, GeneratedNetworks, LeakState, NetworkEvent, NetworkLeak, NetworkOutage, SurfacePiece } from '@adatechnology/game-urban/networks'
 
 import type { DistrictSewers } from './networks'
 
 /** The liquid of `game-fluids` each content of a pipe leaks: the drainage runs clear when it rains. */
-const LIQUID_OF: Readonly<Record<PipeContent, string>> = { water: 'water', sewage: 'sewage', stormwater: 'water' }
+const LIQUID_OF: Readonly<Record<FluidContent, string>> = { water: 'water', sewage: 'sewage', stormwater: 'water' }
 /** Spray sprites a pressurised leak throws per litre it lets out. */
 const SPRAY_PER_LITER = 80
 const MAX_SPRAY_PER_STEP = 24
@@ -20,8 +20,10 @@ export type LeaksParams = {
   readonly sewers: DistrictSewers
   /** Whether it rains now (`game-weather`): the drainage only runs then. */
   readonly isRaining: () => boolean
-  /** The houses: a lot an outage marks dry has its water cut, and given back on reset. */
-  readonly houses: { setLotWater(lot: string, on: boolean): boolean }
+  /** The houses: a lot an outage marks dry has its water cut, a lot it leaves dark its grid, both given back on reset. */
+  readonly houses: { setLotWater(lot: string, on: boolean): boolean; setLotGrid(lot: string, on: boolean): boolean }
+  /** The drawn street lights (`DrawnNetworks`): the lamps a cut duct leaves dark go out, and light again on reset. */
+  readonly lamps?: { setLampsPowered(ids: readonly string[], on: boolean): void }
 }
 
 export type DistrictLeaks = {
@@ -31,6 +33,9 @@ export type DistrictLeaks = {
   readonly running: readonly LeakState[]
   /** The houses without water now (`NetworkOutage.lots`, all outages together). */
   readonly dryLots: ReadonlySet<string>
+  /** The houses without power now, and the street lights out, after a duct of underground power was cut. */
+  readonly darkLots: ReadonlySet<string>
+  readonly darkLamps: ReadonlySet<string>
   /** Ids of the loose lids of the thrown covers (bodies of the destruction world). */
   readonly lids: readonly string[]
   on(listener: (event: NetworkEvent) => void): () => void
@@ -49,7 +54,7 @@ const turnOf = (ry: number): [number, number, number, number] => [0, Math.sin(ry
  * drainage only when it rains), finite; a main that breaks cuts the water to the houses downstream (an outage event); a cover that was thrown leaves its shaft open in the ground
  * (`Terrain.open`) and flies off as a plate of cast iron, a loose piece of the destruction world that lands and stays.
  */
-export function createDistrictLeaks({ world, scene, generated, sewers, isRaining, houses }: LeaksParams): DistrictLeaks {
+export function createDistrictLeaks({ world, scene, generated, sewers, isRaining, houses, lamps }: LeaksParams): DistrictLeaks {
   const { networks } = generated
   const fluids = world.liquids.fluids
   const events: NetworkEvent[] = []
@@ -57,6 +62,8 @@ export function createDistrictLeaks({ world, scene, generated, sewers, isRaining
   const running: LeakState[] = []
   const severed = new Set<string>()
   const dryLots = new Set<string>()
+  const darkLots = new Set<string>()
+  const darkLamps = new Set<string>()
   const lids = new Map<string, { readonly draw: ReturnType<DistrictSewers['drawLid']> }>()
   const emit = (event: NetworkEvent): void => {
     events.push(event)
@@ -105,6 +112,18 @@ export function createDistrictLeaks({ world, scene, generated, sewers, isRaining
       }
       emit({ type: 'network_outage', outage })
     }
+    // a duct of underground power cut: the houses past it lose their grid, the lamps past it go out
+    const dark = powerOutageOf(networks, { before, after: [...severed] })
+    if (dark !== undefined) {
+      for (const lot of dark.lots.filter((id) => !darkLots.has(id))) {
+        darkLots.add(lot)
+        houses.setLotGrid(lot, false)
+      }
+      const lights = (dark.lights ?? []).filter((id) => !darkLamps.has(id))
+      for (const id of lights) darkLamps.add(id)
+      lamps?.setLampsPowered(lights, false)
+      emit({ type: 'network_outage', outage: dark })
+    }
     for (const id of breach.surface) {
       const piece = sewers.surface.pieces.find((entry) => entry.id === id)
       if (piece !== undefined) openHole(piece, crater)
@@ -139,6 +158,10 @@ export function createDistrictLeaks({ world, scene, generated, sewers, isRaining
     severed.clear()
     for (const lot of dryLots) houses.setLotWater(lot, true)
     dryLots.clear()
+    for (const lot of darkLots) houses.setLotGrid(lot, true)
+    darkLots.clear()
+    lamps?.setLampsPowered([...darkLamps], true)
+    darkLamps.clear()
     events.length = 0
   }
 
@@ -147,6 +170,8 @@ export function createDistrictLeaks({ world, scene, generated, sewers, isRaining
     events,
     running,
     dryLots,
+    darkLots,
+    darkLamps,
     get lids() {
       return [...lids.keys()]
     },

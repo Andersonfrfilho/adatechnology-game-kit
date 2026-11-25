@@ -7,7 +7,7 @@ import type { CityPlanInput, LampShares, PlanRect, UrbanKit } from '@adatechnolo
 import { createUrbanThree } from '@adatechnology/game-urban-three'
 import type { DrawnBuried, DrawnLid, DrawnNetworks, DrawnSurface } from '@adatechnology/game-urban-three'
 import { breachOf, generateNetworks, validateNetworks } from '@adatechnology/game-urban/networks'
-import type { Breach, Crater, GeneratedNetworks, SurfacePiece } from '@adatechnology/game-urban/networks'
+import type { Breach, Crater, GeneratedNetworks, PowerModes, SurfacePiece } from '@adatechnology/game-urban/networks'
 
 import { SIDEWALK_WIDTH } from '../ground'
 import type { Site } from '../site'
@@ -20,6 +20,18 @@ export type NetworksParams = {
   readonly lots: readonly PlannedLot[]
   /** Ground no pole may stand on: the doors, gates and entrance posts of the planned houses (`keepOutOf`). */
   readonly avoid: readonly PlanRect[]
+  /** On poles or underground, per street (`PowerModes`): default overhead everywhere. */
+  readonly power?: PowerModes
+}
+
+/** The downtown of the reference district with its power underground (`?energia=enterrada`): the periphery keeps its poles. */
+export const DOWNTOWN_UNDERGROUND: PowerModes = { districts: { downtown_edge: 'underground' } }
+
+/** Whether a lot stands on a street whose power runs underground: its middle in a district the modes put underground. */
+export function isUndergroundLot({ plan, power, rect }: { readonly plan: CityPlanInput; readonly power: PowerModes | undefined; readonly rect: PlanRect }): boolean {
+  const [x, z] = [(rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2]
+  const holder = [...(plan.districts ?? [])].reverse().find((district) => x >= district.rect[0] && x <= district.rect[2] && z >= district.rect[1] && z <= district.rect[3])
+  return holder !== undefined && (power?.districts?.[holder.id] ?? power?.districts?.[holder.kind] ?? power?.default) === 'underground'
 }
 
 /**
@@ -28,10 +40,10 @@ export type NetworksParams = {
  * its node or edge and the district keeps loading; the example's test fails on any of them. Every house declares its own points
  * (`connectionsInWorld`: the anchor on its meter post, the inspection box, the downspout carried out to the kerb, the water meter); the drawing comes in T2.8d.
  */
-export function buildNetworks({ plan, site, lots, avoid }: NetworksParams): GeneratedNetworks {
+export function buildNetworks({ plan, site, lots, avoid, power }: NetworksParams): GeneratedNetworks {
   const connections = lots.flatMap(({ lot, plan: house, placement }) => connectionsInWorld({ plan: house, lot: lot.id, placement, kerb: SIDEWALK_WIDTH }))
-  const generated = generateNetworks({ plan, lots: site.lots, seed: site.seed, avoid, connections })
-  const violations = validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt, frontages: generated.frontages })
+  const generated = generateNetworks({ plan, lots: site.lots, seed: site.seed, avoid, connections, ...(power === undefined ? {} : { power }) })
+  const violations = validateNetworks(generated.networks, { connections: generated.connections, surfaceAt: generated.surfaceAt, frontages: generated.frontages, undergroundAt: generated.undergroundAt })
   if (violations.length > 0) console.error(`the networks of "${plan.id}" break ${violations.length} rule(s)`, violations)
   if (generated.warnings.length > 0) console.error(`the networks of "${plan.id}" were laid with ${generated.warnings.length} warning(s)`, generated.warnings)
   return generated

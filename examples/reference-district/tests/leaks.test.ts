@@ -9,7 +9,7 @@ import type { PipePiece } from '@adatechnology/game-urban/networks'
 
 import { createDistrictLeaks } from '../src/game/assemble/leaks'
 import { planLots } from '../src/game/assemble/houses'
-import { buildNetworks, drawDistrictSewers } from '../src/game/assemble/networks'
+import { DOWNTOWN_UNDERGROUND, buildNetworks, drawDistrictSewers, isUndergroundLot } from '../src/game/assemble/networks'
 import { groundLayoutOf, terrainBoundsOf } from '../src/game/ground'
 import { POLE_MIN_GAP } from '../src/game/roads'
 import { keepOutOf } from '../src/game/service'
@@ -48,7 +48,7 @@ const TICK = 1 / 60
 
 async function district({ isRaining = false }: { readonly isRaining?: boolean } = {}) {
   const calls: Array<readonly [string, boolean]> = []
-  const houses = { setLotWater: (lot: string, on: boolean): boolean => (calls.push([lot, on]), true) }
+  const houses = { setLotWater: (lot: string, on: boolean): boolean => (calls.push([lot, on]), true), setLotGrid: (): boolean => true }
   const world = await makeDistrictWorld()
   const sewers = drawDistrictSewers({ THREE, generated, world })
   world.view.scene.add(sewers.surface.root, sewers.buried.root)
@@ -203,5 +203,35 @@ describe('memory: what a blast made leaves with the reset', () => {
     const after = new Set<THREE.Object3D>()
     scene.traverse((object) => after.add(object))
     expect([...after].filter((object) => !before.has(object))).toEqual([])
+  })
+})
+
+describe('a blast that reaches the duct bank of an underground street', () => {
+  it('cuts the cables: the houses past the break lose their grid and the lamps past it go out, and a reset gives both back', async () => {
+    const undergroundLots = planLots(site, { underground: (lot) => isUndergroundLot({ plan, power: DOWNTOWN_UNDERGROUND, rect: lot.rect }) })
+    const underground = buildNetworks({ plan, site, lots: undergroundLots, avoid: keepOutOf(undergroundLots, POLE_MIN_GAP), power: DOWNTOWN_UNDERGROUND })
+    const grids: Array<readonly [string, boolean]> = []
+    const lamps: Array<readonly [number, boolean]> = []
+    const houses = { setLotWater: (): boolean => true, setLotGrid: (lot: string, on: boolean): boolean => (grids.push([lot, on]), true) }
+    const world = await makeDistrictWorld()
+    const sewers = drawDistrictSewers({ THREE, generated: underground, world })
+    const leaks = createDistrictLeaks({ world, scene: world.view.scene, generated: underground, sewers, isRaining: () => false, houses, lamps: { setLampsPowered: (ids, on) => void lamps.push([ids.length, on]) } })
+    // the medium voltage where it leaves the feed: every downtown circuit past it
+    const feed = underground.networks.nodes.find((node) => node.spec === 'underground_feed')!
+    const first = underground.networks.edges.find((edge) => edge.kind === 'mv_duct' && edge.from === feed.id)!
+    const bank = pipePiecesOf(underground.networks).find((pipe) => pipe.id === first.id)!
+    blastOver(world, middleOf(bank))
+    // the bank's cables are cut (the blast may break a water pipe beside it too, which leaks; a duct never does)
+    expect(sewers.breaches.flatMap((breach) => breach.pipes).some((pipe) => pipe.id === first.id && pipe.severed)).toBe(true)
+    expect(leaks.running.every((state) => state.leak.content !== ('power' as string))).toBe(true)
+    expect(leaks.darkLots.size).toBeGreaterThan(0)
+    expect(grids.every(([, on]) => !on)).toBe(true)
+    expect(lamps.some(([count, on]) => count > 0 && !on)).toBe(true)
+    expect(leaks.events.some((event) => event.type === 'network_outage' && event.outage.network === 'power')).toBe(true)
+    leaks.reset()
+    expect(grids.filter(([, on]) => on).length).toBe(grids.filter(([, on]) => !on).length)
+    expect(lamps[lamps.length - 1]?.[1]).toBe(true)
+    leaks.dispose()
+    sewers.dispose()
   })
 })
