@@ -50,8 +50,9 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       const spans = cutRun([a, b], shared.ctx.segmentLimits.wiring, solids), pieceId = (index: number): string => spans.length > 1 ? id + ':' + index : id, holders = holdersOf(spans, pieceId);
       spans.forEach((span, index) => { const holder = holders[index]; cursor.pc = pieceRecord(pieceId(index), 'copper', null, { tags: ['wiring'], mass: copperMass(radius, span.length), ...(holder ? { holder } : { holder: pole, tears: true }) }); wireL(span.a, span.b, radius); });
     };
-    const wiringSpans = (P: { u: number; v: number; h: number }, drop: readonly (readonly number[])[] | null): void => {
-      const poleId = (u: number): string => 'pole:' + u.toFixed(1), nearestPole = (x: number): string => poleId([P.u - 22, P.u, P.u + 22].reduce((best, u) => Math.abs(u - x) < Math.abs(best - x) ? u : best));
+    // a stretch hangs only from a pole drawn here as a piece: the kit's service pole (`kitDraws`) is no piece, so the stretches by it hang from the pole at the span's other end
+    const wiringSpans = (P: { u: number; v: number; h: number }, drop: readonly (readonly number[])[] | null, ownPole: boolean): void => {
+      const poleId = (u: number): string => 'pole:' + u.toFixed(1), piecePoles = ownPole ? [P.u - 22, P.u, P.u + 22] : [P.u - 22, P.u + 22], nearestPole = (x: number): string => poleId(piecePoles.reduce((best, u) => Math.abs(u - x) < Math.abs(best - x) ? u : best));
       if (!Number.isFinite(shared.ctx.segmentLimits.wiring)) { // `segmentLimits.wiring: Infinity`: the wiring as the team drew it, one piece (the golden of the team)
         cursor.pc = pieceRecord('wiring:grid', 'copper', null, { tags: ['wiring'] }); for (const dx of [-0.65, -0.2, 0.25, 0.7]) for (const k of [-1, 1]) wireL([P.u + dx, P.h - 0.5, P.v], [P.u + k * 22 + dx, P.h - 0.5, P.v], 0.007);
         if (drop) { const r0 = drop[0], r1 = drop[drop.length - 1]; for (const dz of [0, 0.04]) wireL([r0[0], r0[2], r0[1] + (shared.ctx.visorScene ? 0 : dz)], [r1[0], r1[2], r1[1] + dz], 0.009); wireL([P.u - 0.2, P.h - 0.5, P.v], [r0[0], r0[2], r0[1]], 0.008); }
@@ -86,7 +87,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
         if (P && end && en.drop.length > 1 && !kitDraws) { wireSpans([landing[0], landing[2], landing[1]], [end[0], end[2], end[1]], 0.009, 'wiring:drop:0', 'pole:' + P.u.toFixed(1)); cursor.pc = null; }
       } else if (P) {
         for (const k of [-1, 1]) pole(P.u + k * 22, P.v, P.h); // neighbouring poles and the grid that follows the street
-        wiringSpans(P, en.drop && en.drop.length > 1 && !kitDraws ? en.drop : null);
+        wiringSpans(P, en.drop && en.drop.length > 1 && !kitDraws ? en.drop : null, !kitDraws);
       }
       if (en.descent && en.descent.length > 1 && !(KV && (KV.serviceEntrance || !P))) { // drop: steel conduit from the head to the meter box
         const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hw = shared.ctx.visorScene ? 0.05 : 0.047; /* (the head 3 mm narrower each side outside the Visor's scene: its sides lay on a pillar's and a wall's faces) */ const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls); /* (a head on the lot's wall is laid round the railing's bars standing there) */ try { bx('metal', d0[0] - hw, d0[2] - 0.03, d0[1] - hw, d0[0] + hw, d0[2] + 0.08, d0[1] + hw, 0x7a7e84); } finally { shared.ctx.keepOut = kept; }
