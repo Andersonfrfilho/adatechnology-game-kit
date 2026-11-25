@@ -1,5 +1,13 @@
 # @adatechnology/game-kit-defaults
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies [32547af]
+  - @adatechnology/game-floorplan-residential@8.0.0
+  - @adatechnology/game-urban@0.5.2
+
 ## 0.3.2
 
 ### Patch Changes

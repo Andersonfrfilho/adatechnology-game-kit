@@ -1,5 +1,12 @@
 # @adatechnology/game-urban
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [32547af]
+  - @adatechnology/game-floorplan@0.5.0
+
 ## 0.5.1
 
 ### Patch Changes
