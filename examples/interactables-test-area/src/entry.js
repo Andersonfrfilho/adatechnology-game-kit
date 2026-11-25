@@ -40,6 +40,7 @@ import { createModule as createStoriesModule } from '../../stories-test-area/src
 import { createFurnitureArea as create } from './area.js'
 import { createHouseTablesAreas } from './house-tables.js'
 import { createHouseCompleteArea } from './house-complete.js'
+import { bootFurnitureRoom as boot } from './boot.js'
 import { planFurnitureTypes } from './house-complete-layout.js'
 
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
@@ -285,4 +286,18 @@ export async function loadIntoAsync(room, options = {}) {
   }
   onProgress?.({ index: steps.length + 1, total: steps.length, key: 'done', name: '', done: true })
   return assemble(results)
+}
+
+/**
+ * Boots the furniture room page (sala-moveis.html): the room's loading indicator from the start, the modules with a bar (`loadIntoAsync`), the area of `?area=` laid and
+ * settled, then the room. Publishes the modules' report as `window.__furnitureReport` once they are in.
+ * @param {TestRoom} room
+ */
+export function bootFurnitureRoom(room) {
+  return boot(room, {
+    load: (r, options) => loadIntoAsync(r, options),
+    onLoaded: (report) => {
+      /** @type {{ __furnitureReport?: unknown }} */ (globalThis).__furnitureReport = report
+    },
+  })
 }

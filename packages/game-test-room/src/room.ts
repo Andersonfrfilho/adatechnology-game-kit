@@ -3530,7 +3530,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const inWater = new Set<string>()
   const floatPiece = (piece: Piece, dt: number): void => {
-    if (piece.held) return
+    if (piece.held || piece.sleeping) return
     const box = tmpBox.setFromObject(piece.root)
     const centre = box.getCenter(tmpV)
     const here = terrain.waterAt(centre.x, centre.z)
@@ -3581,9 +3581,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const restingLoad = (piece: Piece): TerrainLoad | null => {
     // what is still weighs on the ground under it, through whatever it rests on (a stack, a shelf); what is falling does not yet
     if (piece.held || Math.hypot(piece.velocity[0], piece.velocity[1], piece.velocity[2]) > RESTING_SPEED) return null
-    const box = tmpBox.setFromObject(piece.root)
-    const centre = box.getCenter(tmpV)
-    return { x: centre.x, z: centre.z, radius: Math.max(piece.halfExtents[0], piece.halfExtents[2]), newtons: piece.mass * GRAVITY_EARTH }
+    const at = piece.root.position
+    return { x: at.x, z: at.z, radius: Math.max(piece.halfExtents[0], piece.halfExtents[2]), newtons: piece.mass * GRAVITY_EARTH }
   }
   const updateLoads = (dt: number): void => {
     loadClock += dt
