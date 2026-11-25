@@ -93,10 +93,10 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   scene.add(missing.group)
 
   await step('horde')
-  const grid = createDistrictGrid({ houses: houses.list.map((placed) => placed.footprint), buildings: streets.buildings, vehicles: props.footprints })
+  const grid = createDistrictGrid({ buildings: streets.buildings, vehicles: props.footprints })
   const player = createPlayerRig({ THREE, world, grid, start: options.start ?? DEFAULT_START, mode: options.camera, seed: site.seed })
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
-  const horde = createHorde({ THREE, world, site, zombies: options.zombies, reserve: options.hordeReserve ?? 0, zones, grid, target: player.player })
+  const horde = createHorde({ THREE, world, site, zombies: options.zombies, reserve: options.hordeReserve ?? 0, zones, grid, obstacles: houses.obstacles, keepOut: houses.list.map((placed) => placed.footprint), target: player.player })
   player.bindCrowd(horde.crowd.asPlayerCrowd())
   const hud = createDistrictHud({
     container: options.container,

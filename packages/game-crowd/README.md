@@ -59,6 +59,13 @@ crowd.damage(i, { region: 0, amount: 35, distance: 12, caliber: { id: '9x19', cl
 crowd.store.x[i] // the struct of arrays: x, z, y, yaw, state, hp, missing, band, variant...
 ```
 
+## Walls, doors and gates of the world
+
+`bindNavObstacles(crowd, source)` writes into the crowd's grid and doors what an SDK publishes as a `NavObstacleSource` of `game-contracts` (the houses of
+`game-floorplan-three` with `createHouseNavObstacles`): each solid is a wall (a stub of a cut wall under 1.2 m a low wall the agents climb), each door or gate a crowd
+door the agents push against and hit until it breaks, and the source is told (`breakDoor`, the house swings it open). Call `binding.sync()` once per fixed step before
+`crowd.update`: a door that opened or closed and a wall a blast cut change only their own cells, from what was under them and the solids still standing there.
+
 ## Furniture the agents shove
 
 `crowd.setMovables([{ id, minX, minZ, maxX, maxZ, top }])` lists the pieces on the floor the host lets the agents push (a sofa, a wardrobe). An agent walking into one

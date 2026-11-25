@@ -120,6 +120,10 @@ const binding = bindNavigator(navigator, 'home', house) // wall stage 2 opens ce
 navigator.blocked(x, z, floor) // 1 blocked, 0 free, -1 use the ground grid
 ```
 
+`createHouseNavObstacles(houses)` is what the houses put on the ground for a walker's grid (a `NavObstacleSource` of `game-contracts`, written into the horde's grid by
+`bindNavObstacles` of `game-crowd`): the ground-floor walls, lot walls, fences, barricade boards and the doors and gates, in the world. Route the renderer's `onCollider`
+to `colliderChanged` and a door or gate that opens comes out of `changes()`; a wall the destruction cuts comes out in what stands of it (`breach.standing`).
+
 ## Injected, never read from globals
 
 | Option | What |

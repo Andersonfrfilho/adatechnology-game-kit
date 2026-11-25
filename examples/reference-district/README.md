@@ -11,6 +11,6 @@ The example a game copies (spec 011): a cut of a city (centre, river, popular qu
 
 ## Known limits
 
-- The nav grid of the horde and the player holds each building at its own footprint (the gaps between buildings are open) and each house **as a solid rectangle**: nobody walks into a house through the grid, and the doors are not opened in it. Going in needs the house colliders and doors of `game-floorplan-three` wired to the player (L1/L6).
+- The nav grid of the horde and the player holds each building at its own footprint (the gaps between buildings are open) and each house **as its own walls**: the ground-floor walls, lot walls, fences, doors and gates of `game-floorplan-three` (`createHouseNavObstacles`), bound by `game-crowd` (`bindNavObstacles`). A zombie walks round a wall, comes in through an open door or gate or a hole a blast left, and hits a closed door until it breaks (the house then shows it open). Windows stay wall (a broken window is not a way in yet), the cars parked in a lot and the furniture are not in the grid, and the player cannot open a door here (no interaction wired, L1/L6).
 - Parked vehicles are scenery (lite build, no body in the world); the nav grid blocks them.
 - A `missing` entry is a warning box with no collision and no physics; it goes when its task puts the real piece in.

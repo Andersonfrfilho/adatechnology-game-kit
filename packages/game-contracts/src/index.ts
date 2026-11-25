@@ -139,6 +139,8 @@ export { createGridRainCover, createRainCover, rainCoverTopOf } from './rain-cov
 export type { GridRainCoverOptions, GridRainCoverSource, RainCover, RainCoverBounds, RainCoverHole, RainCoverRect, RainCoverSource } from './rain-cover'
 export type { UtilityConnection, UtilityNetwork } from './utility'
 export type { Footprint, FootprintObject } from './footprint'
+export { NAV_OBSTACLE_KIND } from './nav-obstacles'
+export type { NavObstacle, NavObstacleBox, NavObstacleKind, NavObstacleSource } from './nav-obstacles'
 export {
   BLOW_IDS,
   BODY_FOLEY_IDS,
