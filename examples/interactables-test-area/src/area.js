@@ -69,6 +69,12 @@ const THICKNESS = { steel: 0.0012, aluminium: 0.001, copper: 0.002, plastic: 0.0
 /** @type {Readonly<Record<string, string>>} */
 const SOUND = { door: 'door', drawer: 'drawer', lid: 'lid', flap: 'flap', knob: 'knob', button: 'click', rocker: 'click', breaker: 'click' }
 
+// catalogue ids that are a household type built with options: the padrão of a street with a utility network is the slim 6 m post (`variant: 'network'`), not the pole with the arm
+/** @type {Readonly<Record<string, { type: string; item: Record<string, unknown>; name: { en: string; 'pt-BR': string } }>>} */
+export const ALIASES = {
+  service_entrance_network: { type: 'service_entrance', item: { variant: 'network', h: 6 }, name: { en: 'Service post of a network street (slim 6 m)', 'pt-BR': 'Padrão de rua com rede (poste esbelto de 6 m)' } },
+}
+
 const sanitize = (/** @type {unknown} */ id) =>
   String(id)
     .trim()
@@ -373,10 +379,11 @@ function buildAnimations(spec, ids, GT, present) {
  * @param {Household} hh
  * @param {string} type
  * @param {InteractablesThree} GT
+ * @param {Record<string, unknown>} [item] what the type is built with besides the seed (an alias of `ALIASES`)
  */
-function analyse(hh, type, GT) {
+function analyse(hh, type, GT, item = {}) {
   const rec = createRecorder(NOOP)
-  const spec = hh.build(type, { seed: 1 }, rec.api)
+  const spec = hh.build(type, { seed: 1, ...item }, rec.api)
   const clusters = clusterStatics(type, spec, rec.statics)
 
   const used = new Set()
@@ -547,7 +554,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   const analyses = {}
   const analysis = (/** @type {string} */ loc, /** @type {string} */ type) => {
     const key = `${isEn(loc) ? 'en' : 'pt-BR'}:${type}`
-    return (analyses[key] ??= analyse(household(loc), type, GT))
+    return (analyses[key] ??= analyse(household(loc), ALIASES[type]?.type ?? type, GT, ALIASES[type]?.item))
   }
   /** @type {WeakMap<ThreeLib, import('@adatechnology/game-interactables-three').ThreeAdapter>} */
   const adapters = new WeakMap()
@@ -555,15 +562,16 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   /**
      * @param {ThreeLib} THREE
      * @param {string} loc
-     * @param {string} type
+     * @param {string} id
      */
-  function build(THREE, loc, type) {
-    const a = analysis(loc, type)
+  function build(THREE, loc, id) {
+    const type = ALIASES[id]?.type ?? id
+    const a = analysis(loc, id)
     let gfx = adapters.get(THREE)
     if (!gfx) adapters.set(THREE, (gfx = GT.createThreeAdapter(THREE, { document: globalThis.document })))
     const mesh = gfx.createMeshApi({ quality: 'high', shadows: true })
     const rec = createRecorder(mesh.api)
-    const spec = household(loc).build(type, { seed: 1 }, rec.api)
+    const spec = household(loc).build(type, { seed: 1, ...ALIASES[id]?.item }, rec.api)
     rec.flush(a.pieces)
     const res = mesh.finish(spec)
     for (const l of res.lights) l.removeFromParent()
@@ -586,7 +594,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     for (const p of a.pieces) tagGroup(p.id, p.material, { id: p.id, piece: p.key })
     for (const m of a.movers) tagGroup(/** @type {string} */ (a.partIds.get(m.source.id)), m.material, { id: m.id, piece: m.tag.piece, joint: m.tag.joint })
     // household ids can be kebab-case; the groups were named by `finish` with the original id
-    res.group.name = type
+    res.group.name = id
     res.group.userData.furnitureType = type
     fillContainers?.(THREE, res.group, spec, type)
     return res.group
@@ -628,7 +636,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
      */
     items(loc) {
       const hh = household(loc)
-      return hh.types.map((t) => {
+      const entries = [...hh.types, ...Object.entries(ALIASES).map(([id, alias]) => ({ ...(/** @type {(typeof hh.types)[number]} */ (hh.types.find((t) => t.id === alias.type))), id, name: alias.name[isEn(loc) ? 'en' : 'pt-BR'] }))]
+      return entries.map((t) => {
         const a = analysis(loc, t.id)
         /** @type {TestableItem} */
         const item = {

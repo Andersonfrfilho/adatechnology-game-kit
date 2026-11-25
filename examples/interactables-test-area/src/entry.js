@@ -14,6 +14,10 @@ import { createAudioTestModule, createSoundCheckModule } from '@adatechnology/ga
 import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
+import * as GameInteractables from '@adatechnology/game-interactables'
+import * as GameVegetation from '@adatechnology/game-vegetation'
+import * as GameVegetationThree from '@adatechnology/game-vegetation/three'
+import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import { placeFinds } from '@adatechnology/game-items'
 import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
 import { buildItem, itemModels } from '@adatechnology/game-items-three'
@@ -34,12 +38,13 @@ import { createModule as createUrbanModule, createVehicleBuilder } from '../../u
 import { loadVegetationTestModule } from '../../vegetation-test-area/src/entry.js'
 import { loadVehiclesTestModule } from '../../vehicles-test-area/src/entry.js'
 import { loadModule as loadProvingModule } from '../../vehicles-proving-area/src/entry.js'
-import { createModule as createFloorplanModule } from '../../floorplan-test-area/src/entry.js'
+import { createModule as createFloorplanModule, registerPacks as registerFloorplanPacks } from '../../floorplan-test-area/src/entry.js'
 import { createModule as createPlayerModule } from '../../player-test-area/src/entry.js'
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
 import { createHouseTablesAreas } from './house-tables.js'
 import { createHouseCompleteArea } from './house-complete.js'
+import { createHouseConnectionsArea } from './house-connections.js'
 import { planFurnitureTypes } from './house-complete-layout.js'
 
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
@@ -214,6 +219,20 @@ function loadSteps(room, options, lang) {
   /** @type {Map<string, string> | null} */
   let named = null
   mod('houseComplete', () => createHouseCompleteArea({ locale: lang, measure: (itemId) => room.measure(itemId), nameOf: (itemId) => (named ??= names()).get(itemId) ?? itemId, floorFront: () => room.terrain.bounds[3] }))
+  // what a house puts on its utility connection (`?area=house_connections`): a labelled row of every piece and one lot connected to its street, in the room's destruction world
+  mod('houseConnections', () =>
+    createHouseConnectionsArea({
+      locale: lang,
+      measure: (itemId) => room.measure(itemId),
+      engine: registerFloorplanPacks(),
+      house: {
+        destruction: room.world,
+        destructionRenderer: room.renderer,
+        interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree },
+        vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
+      },
+    }),
+  )
   // the furniture comes last: its report is the base of the whole one
   steps.push({
     key: 'furniture',

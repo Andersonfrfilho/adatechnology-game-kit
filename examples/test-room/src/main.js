@@ -9,7 +9,8 @@
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
 //   ?area=furniture     open on one catalogue group (the groups the loaded modules add); ?area=house_tables: the house and the yard on tables;
-//                       ?area=house_complete: every house item of the SDK, labelled one by one
+//                       ?area=house_complete: every house item of the SDK, labelled one by one;
+//                       ?area=house_connections: every piece a house puts on its utility connection, and one lot connected to its street
 //   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
 //   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
 //                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
@@ -65,8 +66,9 @@ const isFloorplan = params.get('area') === 'floorplan_area' || location.pathname
 // the house and the yard on tables lays every room of a house in rows: it needs a wider floor and only the target wall (what hangs on a wall hangs on it)
 // the whole house (house_complete) lays every house item of the SDK in labelled lines: a floor 40 m each way, with only the target wall as well
 const isWholeHouse = params.get('area') === 'house_complete'
+const isConnections = params.get('area') === 'house_connections'
 const isHouseTables = params.get('area') === 'house_tables' || isWholeHouse
-const arena = Number(params.get('arena')) || (isFloorplan || isWholeHouse ? 40 : isHouseTables ? 24 : 0)
+const arena = Number(params.get('arena')) || (isFloorplan || isWholeHouse || isConnections ? 40 : isHouseTables ? 24 : 0)
 const quality = /** @type {import('@adatechnology/game-test-room').TestRoomOptions['quality']} */ (['low', 'medium', 'high'].includes(/** @type {string} */ (params.get('quality'))) ? params.get('quality') : 'medium')
 const items = params.get('items')
 
@@ -82,7 +84,7 @@ const sink = furnitureSpec(THREE, 'laundry_tub', { catalog: defaultFurnitureCata
 // a knife, a flame or a blast. It stands on the left of the start, away from the middle of the room where the areas lay their things.
 const testTable = furnitureSpec(THREE, 'gourmet_table_small', { w: 4.4, d: 0.9, h: 0.78, options: { chairs: false } })
 /** @type {Record<string, import('@adatechnology/game-test-room').SceneryObject | null>} */
-const scenery = isFloorplan
+const scenery = isFloorplan || isConnections
   ? { target_wall: null, table: null, shelf: null }
   : isHouseTables
     ? { target_wall: { spec: wall.spec, position: [0, 0, -11], build: wall.build, follow: wall.follow, warmUpProbes: wall.warmUpProbes }, table: null, shelf: null }

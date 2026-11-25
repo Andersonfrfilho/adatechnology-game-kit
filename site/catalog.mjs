@@ -38,6 +38,7 @@ export const EXAMPLES = [
       { id: 'vehicles', title: 'Veículos', what: 'Hatch, sedan e caminhonete da frota', setup: roomRow({ ids: ['hatch', 'sedan', 'pickup'], eye: [0, 1.8, 3], target: [0, 0.8, -4], z: -5, gap: 4 }) },
       { id: 'plants', title: 'Plantas', what: 'Mangueira, ipê e rosa do viveiro', setup: roomRow({ ids: ['mango_tree', 'yellow_ipe', 'rose_bush_red'], eye: [0, 2, 4], target: [0, 2, -4], z: -5, gap: 4 }) },
       { id: 'house_tables', title: 'Casa e quintal nas mesas', what: 'Tudo o que a casa guarda nas mesas, cômodo por cômodo, os móveis no chão, o quintal com as plantas e o que vai na parede pendurado no muro: para atirar, quebrar e explodir lado a lado', setup: `window.__testRoom.openArea('house_tables')` },
+      { id: 'house_connections', title: 'Ligação da casa', what: 'Todas as peças que a casa leva na ligação com a rua (padrão em rede, medidor, eletroduto, pontalete, quadro, poste) lado a lado, com plaquetas, e um lote inteiro ligado a um trecho de rua com poste, ramais, água e esgoto', setup: `window.__testRoom.openArea('house_connections')` },
       { id: 'explosives', title: 'Explosivos', what: 'Botijão de gás P13 na cozinha: tiro, registro aberto, isqueiro e fogo, com zumbi a 3 m', setup: `window.__testRoom.openArea('explosives_area')` },
       { id: 'creatures', title: 'Zumbis e bichos', what: 'Zumbi andarilho, corredor e a vaca', setup: roomRow({ ids: ['zombie_walker', 'zombie_runner', 'animal_cow'], eye: [0, 1.6, 1.2], target: [0, 1, -3], gap: 2 }) },
     ],

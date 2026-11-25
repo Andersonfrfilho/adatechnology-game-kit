@@ -63,7 +63,7 @@ for (const lang of languages) {
     const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === r.module)
     return { module: r.module, ok: r.ok, items: r.items.length, scenarios: r.scenarios.length, problems: r.problems, checks: checks.length, failed: checks.filter((e) => e.type !== 'pass').map((e) => e.text), clips: checks.filter((e) => e.data?.check === 'animation').length }
   })
-  check(`[${lang}] module loaded, 51 items, contract report ok`, rep.ok && rep.items === 51 && rep.problems.length === 0, rep)
+  check(`[${lang}] module loaded, 53 items, contract report ok`, rep.ok && rep.items === 53 && rep.problems.length === 0, rep)
   check(`[${lang}] every checkAnimation line in the room log passed`, rep.clips > 100 && rep.failed.length === 0, { clips: rep.clips, failed: rep.failed.slice(0, 3) })
 
   const spawned = await page.evaluate(() => {
@@ -318,6 +318,28 @@ if (PART === 'all' || PART === 'shots') {
     house,
   )
   await page.screenshot({ path: join(shots, '05-house-and-yard-on-tables.png'), timeout: 180000 })
+  await page.close()
+}
+
+// what a house puts on its utility connection (`?area=house_connections`): every piece of the SDK is laid in the labelled row, the lot connected to its street is built
+// (the house, the poles, the power and telecom drops), and the scenarios (looked at, shot, broken; no coincident faces) pass
+if (PART === 'all' || PART === 'connections') {
+  const page = await open('?lang=pt-BR&ui=0&area=house_connections')
+  await page.evaluate(() => window.__testRoom.openAreaAsync('house_connections'))
+  const connections = await page.evaluate(async () => {
+    const room = window.__testRoom
+    for (let i = 0; i < 100; i++) room.update(0.02)
+    const spawned = room.spawned().map((so) => so.itemId)
+    const missing = room.log.entries({ type: 'house_connections_missing' }).length
+    const run = await room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('house_connections_')))
+    return { spawned, missing, passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => JSON.stringify(c)).join('; ')}`) }
+  })
+  check('the house connection lays every piece in its row, builds the connected lot and its three scenarios pass', connections.spawned.length >= 6 && connections.missing === 0 && connections.passed === 3 && connections.failed === 0, connections)
+  await page.evaluate(async () => {
+    await window.__testRoom.openAreaAsync('house_connections')
+    for (let i = 0; i < 100; i++) window.__testRoom.update(0.02)
+  })
+  await page.screenshot({ path: join(shots, '06-house-connections.png'), timeout: 180000 })
   await page.close()
 }
 
