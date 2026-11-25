@@ -119,3 +119,38 @@ describe('a house on a street with a utility network (`street: \'network\'`)', (
     expect(inspectionBoxV(-6), 'a deep yard: 1 m inside the front edge').toBe(-5)
   })
 })
+
+describe('a house on a street whose power runs underground (`street: \'network_underground\'`)', () => {
+  it('has no post, no mast and no drop: the lateral comes up under the meter box, low on the pillar or the facade, through a conduit from the ground', () => {
+    let seen = 0
+    for (const template of TEMPLATES) {
+      const result = plan(template, 3, { street: 'network_underground' })
+      const entrance = result.utilities.electrical.serviceEntrance
+      if (!entrance || !result.lot) continue
+      seen++
+      expect(entrance.street, template).toBe('network_underground')
+      expect(entrance.pole, template).toBeNull()
+      expect(entrance.mast, template).toBeUndefined()
+      const meter = entrance.meter!
+      expect(meter.y + meter.h / 2, `${template}: a low box`).toBeLessThan(2)
+      expect(entrance.drop, template).toEqual([[meter.u, meter.v, 0]])
+      expect(entrance.descent[entrance.descent.length - 1]![2], `${template}: the conduit from the ground`).toBe(0)
+    }
+    expect(seen).toBeGreaterThan(3)
+  })
+
+  it('declares its power and telecom at the ground, the telecom box beside the meter toward the water stand, with the same five networks', () => {
+    for (const template of TEMPLATES) {
+      const result = plan(template, 3, { street: 'network_underground' })
+      const connections = result.utilities.connections
+      if (connections === undefined || connections.length === 0) continue
+      expect(connections.map((connection) => connection.network).sort(), template).toEqual([...NETWORKS].sort())
+      const power = connections.find((connection) => connection.network === 'power')!
+      const telecom = connections.find((connection) => connection.network === 'telecom')!
+      expect(power.at[1], template).toBe(0)
+      expect(telecom.at[1], template).toBe(0)
+      expect(Math.abs(telecom.at[0] - power.at[0]), template).toBeLessThanOrEqual(0.31)
+      expect(telecom.at[2], template).toBe(power.at[2])
+    }
+  })
+})

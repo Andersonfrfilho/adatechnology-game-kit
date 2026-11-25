@@ -95,7 +95,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
     if (en) {
       const P = en.pole, from = shared.ctx.serviceFrom, kitDraws = !!(KV && KV.serviceEntrance);
       if (P) { if (!kitDraws && en.street === 'network') servicePost(P.u, P.v, P.h); else if (!kitDraws) pole(P.u, P.v, P.h); info.pole = { pos: [P.u, 0, P.v], h: P.h }; }
-      const landing = en.drop[0], network = en.street === 'network';
+      const landing = en.drop[0], network = en.street === 'network' || en.street === 'network_underground', underground = en.street === 'network_underground';
       if ((from || network) && landing) { // on a street with a utility network the network draws the overhead drop, never the house
         if (from && !network) streetDrop(from, [landing[0], landing[2], landing[1]]);
         const end = en.drop[en.drop.length - 1];
@@ -106,7 +106,7 @@ export function installUtilitiesElectrical(K: Kernel, shared: Shared): void {
       }
       if (en.mast) { if (!(KV && KV.serviceMast)) serviceMast(en.mast); } // a street network's drop on a facade: the mast (pontalete) is the descent
       else if (en.descent && en.descent.length > 1 && !(KV && (KV.serviceEntrance || !P))) { // drop: steel conduit from the head to the meter box
-        const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hw = shared.ctx.visorScene ? 0.05 : 0.047; /* (the head 3 mm narrower each side outside the Visor's scene: its sides lay on a pillar's and a wall's faces) */ const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls); /* (a head on the lot's wall is laid round the railing's bars standing there) */ try { bx('metal', d0[0] - hw, d0[2] - 0.03, d0[1] - hw, d0[0] + hw, d0[2] + 0.08, d0[1] + hw, 0x7a7e84); } finally { shared.ctx.keepOut = kept; }
+        const d0 = en.descent[0], d1 = en.descent[en.descent.length - 1]; cylBase('metal', d0[0], d1[2], d0[1], 0.02, d0[2] - d1[2] - (shared.ctx.visorScene ? 0 : 0.01), 0x8a8e92); if (underground) { /* the lateral comes up from the ground into the box: no weatherhead */ } else { /* (its top inside the head outside the Visor's scene, never on a wall's top) */ const hw = shared.ctx.visorScene ? 0.05 : 0.047; /* (the head 3 mm narrower each side outside the Visor's scene: its sides lay on a pillar's and a wall's faces) */ const kept = shared.ctx.keepOut; if (!shared.ctx.visorScene && shared.ctx.lotWalls.length) shared.ctx.keepOut = (kept ?? []).concat(shared.ctx.lotWalls); /* (a head on the lot's wall is laid round the railing's bars standing there) */ try { bx('metal', d0[0] - hw, d0[2] - 0.03, d0[1] - hw, d0[0] + hw, d0[2] + 0.08, d0[1] + hw, 0x7a7e84); } finally { shared.ctx.keepOut = kept; } }
       }
       const M = en.meter;
       if (M) { // meter box with window and seal, on the face of the pillar/facade turned to the street (with the kit: power_meter)

@@ -1,8 +1,13 @@
 import type { PlanAxis } from '@adatechnology/game-floorplan'
 import type { LampType } from './lamp-types'
 
-/** Who brings the street side of the service entrance (`ServiceEntrance.street`). */
-export type ServiceStreet = 'own' | 'network'
+/** Who brings the street side of a house's power: the house itself (`own`), the street's network on poles (`network`), or under the sidewalk (`network_underground`). */
+export type ServiceStreet = 'own' | 'network' | 'network_underground'
+
+/** The street mode a generate option asks for, when it is one of a utility network (on poles or underground). */
+export function networkStreetOf(value: unknown): Exclude<ServiceStreet, 'own'> | undefined {
+  return value === 'network' || value === 'network_underground' ? value : undefined
+}
 
 /** A galvanised pipe up the facade from the meter box (`y0`) to its top (`y1`), crowned by a weatherhead bent toward the street; the drop is anchored just under it. */
 export interface ServiceMast {

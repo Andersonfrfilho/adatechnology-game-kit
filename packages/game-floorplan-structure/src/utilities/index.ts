@@ -13,6 +13,7 @@ import { planPlumbing } from './plumbing'
 import type { Rng } from './shared'
 import type { Outbuilding, Plumbing, ServiceStreet, Solar } from './types'
 import { planSolar } from './solar'
+import { networkStreetOf } from './electrical-types'
 
 export interface Utilities {
   gas: Gas | null
@@ -49,10 +50,10 @@ export function planUtilities(context: UtilitiesContext): Utilities {
   const gas = planGas({ plan, items, stateItems, rng: rngFor('gas'), ...(context.visor ? { visor: true } : {}), ...(context.gasLayout ? { layout: context.gasLayout } : {}) })
   // the outbuildings are wired as rooms of the house, their ceiling lights with them
   const outbuildings = context.outbuildings ?? []
-  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}), ...(context.street === 'network' ? { street: 'network' as const } : {}) })
+  const electrical = planElectrical({ plan: withOutbuildingRooms(plan, outbuildings), items: [...items, ...outbuildings.map(outbuildingCeilingLight)], rng: rngFor('eletrica'), outbuildingIds: outbuildings.map((building) => building.id), ...(energy ? { energy } : {}), ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}), ...(networkStreetOf(context.street) ? { street: networkStreetOf(context.street) } : {}) })
   const solar = planSolar({ plan, rng: rngFor('solar'), ...(energy ? { energy } : {}) })
   const plumbing = planPlumbing({ plan, items, tank })
-  if (context.street !== 'network') return { gas, electrical, solar, plumbing }
+  if (networkStreetOf(context.street) === undefined) return { gas, electrical, solar, plumbing }
   return { gas, electrical, solar, plumbing, connections: houseConnectionsOf({ plan, electrical, items }) }
 }
 

@@ -13,6 +13,8 @@ export type HouseConnection = Omit<UtilityConnection, 'lot' | 'frame' | 'at'> & 
 /** Load (kVA) of a general socket (NBR 5410, 100 VA) and of a light point. */
 const SOCKET_KVA = 0.1
 const LIGHT_KVA = 0.1
+/** Underground: the telecom box stands this far beside the meter, toward the water stand. */
+const TELECOM_BESIDE_METER = 0.3
 /** The telecom anchor hangs this far under the power anchor, on the same post or facade. */
 const TELECOM_BELOW_POWER = 0.6
 /**
@@ -64,9 +66,12 @@ export function houseConnectionsOf({ plan, electrical, items }: { readonly plan:
   const boxV = inspectionBoxV(front)
   const meter = entrance.meter ?? { u: anchor[0], v: anchor[1] }
   const water = clamp(meter.u + away * WATER_FROM_METER, left + 0.3, right - 0.3)
+  // underground: the lateral comes up under the meter box and the telecom box stands beside it at the ground, between the meter and the water stand
+  const underground = entrance.street === 'network_underground'
+  const telecom: readonly [number, number, number] = underground ? [round2(clamp(anchor[0] + away * TELECOM_BESIDE_METER, left + 0.3, right - 0.3)), 0, anchor[1]] : [anchor[0], round2(anchor[2] - TELECOM_BELOW_POWER), anchor[1]]
   return [
     { network: 'power', at: [anchor[0], anchor[2], anchor[1]], installedKva: installedKvaOf({ electrical, items }) },
-    { network: 'telecom', at: [anchor[0], round2(anchor[2] - TELECOM_BELOW_POWER), anchor[1]] },
+    { network: 'telecom', at: telecom },
     { network: 'sewer', at: [boxU, 0, boxV], invert: -INSPECTION_BOX.depth },
     { network: 'storm', at: [round2(boxU - away * DOWNSPOUT_FROM_BOX), 0, front] },
     { network: 'water', at: [round2(water), 0, Math.max(meter.v, front)] },

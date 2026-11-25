@@ -131,3 +131,35 @@ describe('a house on a street with a utility network (`street: \'network\'`)', (
     expect(other.interactives!.world.power.grid).toBe(true)
   })
 })
+
+describe('a house on a street whose power runs underground (`street: \'network_underground\'`)', () => {
+  const kit = { GameInteractables, GameInteractablesHousehold, GameInteractablesThree }
+
+  it('draws no post, no mast, no pole and no wire of the street, with or without the interactables; the meter box stays', () => {
+    for (const template of ['single_storey_a', 'drugstore', 'pharmacy', 'townhouse']) {
+      const underground = planOf(template, 3, 'normal', { street: 'network_underground' })
+      for (const options of [{}, { interactives: kit }]) {
+        const { house } = houseOf(underground, options, { quality: 'game', serviceFrom: FROM })
+        const ids = partIds(house)
+        expect(ids.filter((id) => id.startsWith('pole:') || id.startsWith('mast:') || id.startsWith('wiring:')), template).toEqual([])
+        if (house.interactives) expect([...house.interactives.entries.values()].some((entry) => entry.type === 'service_entrance' || entry.type === 'service_mast'), template).toBe(false)
+      }
+    }
+  })
+
+  it('adds no coincident face at its meter box and the conduit from the ground: none the same house on its own street does not have, with and without the interactables', () => {
+    const underground = planOf('single_storey_a', 3, 'normal', { street: 'network_underground' })
+    const own = planOf('single_storey_a', 3, 'normal')
+    const meter = underground.utilities.electrical.serviceEntrance!.meter!
+    const near = (point: readonly number[]): boolean => Math.hypot(point[0]! - meter.u, point[2]! - meter.v) < 0.4
+    const hitsOf = (plan: typeof own, options: object): string[] => {
+      const { house } = houseOf(plan, options, { quality: 'game' })
+      house.group.updateMatrixWorld(true)
+      return coincidentFacesOf(house.group, { maxHits: Number.POSITIVE_INFINITY }).filter((hit) => near(hit.point)).map((hit) => `${hit.labelA} x ${hit.labelB} @ ${hit.point.map((value) => value.toFixed(2)).join(',')}`)
+    }
+    for (const options of [{}, { interactives: kit }]) {
+      const before = new Set(hitsOf(own, options))
+      expect(hitsOf(underground, options).filter((hit) => !before.has(hit))).toEqual([])
+    }
+  })
+})

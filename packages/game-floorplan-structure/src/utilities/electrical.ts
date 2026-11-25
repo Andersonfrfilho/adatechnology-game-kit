@@ -9,6 +9,7 @@ import { lightPointsOf } from './lamp-types'
 import type { LightPoint } from './lamp-types'
 import { wallPointsOf } from './wall-points'
 import type { WallPoint } from './wall-points'
+import { networkStreetOf } from './electrical-types'
 
 export type EnergyMode = 'grid' | 'tap' | 'offgrid'
 
@@ -81,7 +82,7 @@ export function planElectrical(context: ElectricalContext): Electrical {
   const rooms = plan.rooms.filter((room) => !NO_SOCKET_ROOMS.includes(room.type) && !room.outdoor)
   const pointsOf = new Map<string, WallPoint[]>()
   for (const room of rooms) pointsOf.set(keyOf(room), wallPointsOf(plan, room, items))
-  const layout: Layout = { plan, items, rooms, electrical, pointsOf, ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}), ...(context.street === 'network' ? { street: 'network' as const } : {}) }
+  const layout: Layout = { plan, items, rooms, electrical, pointsOf, ...(context.visor ? { visor: true } : {}), ...(context.streetPoles ? { streetPoles: true } : {}), ...(networkStreetOf(context.street) ? { street: networkStreetOf(context.street) } : {}) }
   addOutlets(layout)
   placeEntrance(layout)
   placePanel(layout)

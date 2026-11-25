@@ -16,6 +16,7 @@ import type { TankPlanOptions } from './water-tank'
 import { VISOR_TANK_PILLAR_SIDE, planWaterTank } from './water-tank'
 import { structureLayer } from './viewer-layer'
 import type { PlanStructure, Roof, StructureOptions, WallDetail } from './types'
+import { networkStreetOf } from './utilities/electrical-types'
 
 /**
  * A `generate` result once the structure pack is registered: the plan of `game-floorplan` with what the pack's extensions add (the construction and its extras,
@@ -117,5 +118,5 @@ export function register(engine: FloorplanEngine, options: StructurePackOptions 
     return outbuildings
   }, { after: ['contents'] })
   engine.registerResultExtension('utilities', (context) => planUtilities({ plan: context.plan, items: context.result.items, stateItems: context.result.stateItems, tank: tankOf(context), // (the Visor's golden leaves the outbuilding unwired)
-    outbuildings: context.options.visorSections === true ? [] : ((context.result.outbuildings as Outbuilding[] | undefined) ?? []), ...(context.options.visorSections === true ? { visor: true } : {}), ...(context.options.streetPoles === true ? { streetPoles: true } : {}), ...(context.options.street === 'network' ? { street: 'network' as const } : {}), ...(context.options.gasLayout === 'indoor_beside_stove' ? { gasLayout: 'indoor_beside_stove' as const } : {}), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
+    outbuildings: context.options.visorSections === true ? [] : ((context.result.outbuildings as Outbuilding[] | undefined) ?? []), ...(context.options.visorSections === true ? { visor: true } : {}), ...(context.options.streetPoles === true ? { streetPoles: true } : {}), ...(networkStreetOf(context.options.street) ? { street: networkStreetOf(context.options.street) } : {}), ...(context.options.gasLayout === 'indoor_beside_stove' ? { gasLayout: 'indoor_beside_stove' as const } : {}), ...(energyOf(context) ? { energy: energyOf(context) } : {}), rngFor: (key) => engine.createRng(context.seed, key) }), { after: ['outbuildings', 'waterTank'] })
 }
