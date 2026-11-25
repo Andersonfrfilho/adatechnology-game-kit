@@ -9,7 +9,8 @@ type Three = typeof THREE_NS
 
 /** The paint of each pipe: sewer PVC in its ochre, water PVC in blue, drainage in concrete rings, a power duct's corrugated PEAD in red, telecom's in green; a duct bank is its concrete. */
 const PIPE_COLOR: Readonly<Record<PipeContent, number>> = { sewage: 0xb87b4a, water: 0x2f6cae, stormwater: 0x8e8d87, power: 0xb8352b, telecom: 0x3f7f45 }
-const BANK_COLOR: Readonly<Record<PipeContent, number>> = { sewage: 0xa3a29b, water: 0xa3a29b, stormwater: 0xa3a29b, power: 0xa9a59a, telecom: 0x9d9b92 }
+/** A power duct bank's concrete is dyed red (the warning the utilities ask for over power cables); telecom's is plain concrete. */
+const BANK_COLOR: Readonly<Record<PipeContent, number>> = { sewage: 0xa3a29b, water: 0xa3a29b, stormwater: 0xa3a29b, power: 0xa4483a, telecom: 0x9d9b92 }
 const SHAFT_COLOR: Readonly<Record<Shaft['material'], number>> = { concrete: 0x8e8d87, plastic: 0xb87b4a, cast_iron: 0x3b3e42, steel: 0x6d7276 }
 const PIPE_SEGMENTS = 8
 const SHAFT_SEGMENTS = 14
