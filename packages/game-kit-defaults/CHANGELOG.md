@@ -1,5 +1,13 @@
 # @adatechnology/game-kit-defaults
 
+## 0.3.1
+
+### Patch Changes
+
+- 92a5504: While a loading task is open, the covered container has `aria-busy="true"`.
+- Updated dependencies [30a8199]
+  - @adatechnology/game-urban@0.5.0
+
 ## 0.3.0
 
 ### Minor Changes
