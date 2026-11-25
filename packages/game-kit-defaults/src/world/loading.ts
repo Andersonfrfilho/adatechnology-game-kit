@@ -15,10 +15,11 @@ export interface LoadingState {
 }
 
 /**
- * The loading indicator of the room: an overlay with a spinner or a bar and a line of text, shown for any slow job so that the page never looks frozen. `begin` shows it at once, `busy` also waits for the
- * paint before it runs the work (the only way to show a bar before a heavy synchronous job), and the last task to end takes it down. The room lends it to modules as `ModuleHost.loading`.
+ * The loading indicator of the kit: an overlay with a spinner or a bar and a line of text, shown for any slow job so that the page never looks frozen. `begin` shows it at once, `busy` also waits for the
+ * paint before it runs the work (the only way to show a bar before a heavy synchronous job), and the last task to end takes it down. A game shows it while it assembles its world; the test room
+ * lends its own to modules as `ModuleHost.loading`. It knows no locale: the caller passes its texts already translated.
  */
-export interface RoomLoading extends BusySink {
+export interface KitLoading extends BusySink {
   /** True while a task is open. */
   readonly active: boolean
   /** Resolves once no task is open (at once when none is): a scenario or test awaits it after a change that rebuilds behind the indicator, instead of sleeping. */
@@ -27,15 +28,15 @@ export interface RoomLoading extends BusySink {
   state(): LoadingState | undefined
   /** Follows it: called whenever a task opens, steps or ends, with `undefined` once none is left. Returns the function that stops following. */
   on(listener: (state: LoadingState | undefined) => void): () => void
-  /** The overlay element (undefined in a room with `ui: false`, where the page draws its own from `on`). */
+  /** The overlay element (undefined with `draw: false`, where the page draws its own from `on`). */
   readonly element: HTMLElement | undefined
   dispose(): void
 }
 
 export interface LoadingOptions {
-  /** The room's container: the overlay covers it. */
+  /** The element the overlay covers (the world's or the room's container). */
   readonly container: HTMLElement
-  /** False for a room with `ui: false`: the state is kept and told through `on`, nothing is drawn. Default true. */
+  /** False to draw nothing (a room with `ui: false`): the state is kept and told through `on`. Default true. */
   readonly draw?: boolean
   /** Text of a task that has none yet (already translated). */
   readonly working: string
@@ -76,7 +77,7 @@ export const nextPaint = (): Promise<void> =>
     setTimeout(finish, PAINT_FALLBACK_MS)
   })
 
-export function createLoading(options: LoadingOptions): RoomLoading {
+export function createLoading(options: LoadingOptions): KitLoading {
   const draw = options.draw !== false && typeof document !== 'undefined'
   const tasks: Task[] = []
   const listeners = new Set<(state: LoadingState | undefined) => void>()

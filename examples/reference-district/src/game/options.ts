@@ -8,6 +8,7 @@ import type { ZoneFog } from '@adatechnology/game-weather-three'
 import type { Houses } from './assemble/houses'
 import type { PlayerRig } from './assemble/player'
 import type { Horde } from './assemble/horde'
+import type { DistrictLoadingText } from './loading'
 import type { Site } from './site'
 
 /** The two views of the district: the third person over the shoulder (`?camera=third`) and the first person. There is no view from above. */
@@ -38,6 +39,8 @@ export type DistrictOptions = {
   readonly sounds?: string | null | false
   /** The threads of the page's coordinator (default the automatic count; `0` runs every job on the main thread). */
   readonly workers?: number | 'auto'
+  /** The texts of the loading card shown while the district is assembled (default `DISTRICT_LOADING_TEXT`, pt-BR); `false` shows no card. */
+  readonly loading?: DistrictLoadingText | false
 }
 
 export type District = {

@@ -8,7 +8,7 @@
  * Every action and result goes to a behaviour log shown on screen in plain words and exportable as JSON / NDJSON, and scripted scenarios run
  * from buttons (or headless in tests) and write pass/fail checks to the same log, so people and agents can verify the behaviour.
  */
-import type { BlastPacingOptions, KitWorldGraphicsOptions } from '@adatechnology/game-kit-defaults/world'
+import type { BlastPacingOptions, KitLoading as RoomLoading, KitWorldGraphicsOptions } from '@adatechnology/game-kit-defaults/world'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
@@ -16,7 +16,6 @@ import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptio
 import type { DoorUseRules, FurniturePushRules } from '@adatechnology/game-player'
 import type { RoomDoorState } from './door-open'
 import type { RoomPushState } from './furniture-push'
-import type { RoomLoading } from './loading'
 import type { BlastDebrisOptions, DestructionRenderer, ExplosionWorkOptions, GroundWorkerPort, JitWarmUpOptions, FragmentLifeRule, PiecePhysics, Quality, SettledBatchOptions, SoundDetail, SpecFromObjectOptions } from '@adatechnology/game-destruction-three'
 import type { GraphicsController } from '@adatechnology/game-graphics'
 import type { GraphicsScreen } from '@adatechnology/game-graphics/screen'

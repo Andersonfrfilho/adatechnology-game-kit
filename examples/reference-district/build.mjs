@@ -45,10 +45,26 @@ const result = await esbuild.build({
   alias: { three: join(here, 'node_modules/three') },
 })
 const safe = (/** @type {string} */ text) => text.replace(/<\/(script|style)/gi, '<\\/$1')
-const css = 'html,body{margin:0;height:100%;background:#000;overflow:hidden}#app{position:fixed;inset:0}#app canvas{display:block}'
+// the first screen is the kit's loading card as static markup (its look from game-kit-defaults/src/world/loading-view.ts, no dependency), painted before the bundle runs: the bundle rides as
+// inert text and a boot script runs it after a paint; the district's live card (startDistrict) then takes over and the markup goes (src/test/entry.ts)
+const view = await esbuild.build({ entryPoints: [join(pkg('game-kit-defaults'), 'src/world/loading-view.ts')], bundle: true, write: false, format: 'esm', platform: 'node', target: 'es2020' })
+const { LOADING_CSS, loadingMarkup } = await import(`data:text/javascript;base64,${Buffer.from(view.outputFiles[0].text).toString('base64')}`)
+const bootScreen = loadingMarkup({ title: 'Carregando o bairro…', step: 'Iniciando…', solid: true, fixed: true, id: 'boot' })
+const boot = `(function () {
+  var run = function () {
+    var script = document.createElement('script')
+    script.textContent = document.getElementById('district-bundle').textContent
+    document.body.appendChild(script)
+  }
+  var done = false
+  var once = function () { if (!done) { done = true; run() } }
+  requestAnimationFrame(function () { setTimeout(once, 0) })
+  setTimeout(once, 100)
+})()`
+const css = `html,body{margin:0;height:100%;background:#000;overflow:hidden}#app{position:fixed;inset:0}#app canvas{display:block}${LOADING_CSS}`
 const page = readFileSync(join(here, 'index.html'), 'utf8')
   .replace('/*STYLE*/', () => css)
-  .replace('<script>/*BUNDLE*/</script>', () => `<script>${safe(result.outputFiles[0].text)}</script>`)
+  .replace('<script>/*BUNDLE*/</script>', () => `${bootScreen}\n<script type="text/plain" id="district-bundle">${safe(result.outputFiles[0].text)}</script>\n<script>${boot}</script>`)
 const dist = join(here, 'dist')
 mkdirSync(dist, { recursive: true })
 writeFileSync(join(dist, 'district.html'), page)
