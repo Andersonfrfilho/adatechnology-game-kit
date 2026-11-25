@@ -735,6 +735,10 @@ export function installMilitary(fx: FleetContext): void {
         mirrorCol: '#22231d',
         wheels: [],
       }
+      s.interior = Object.assign(
+        { floor: s.bottomY + 0.02, roof: s.gh.roof + 0.02, seatH: 0.14, dashD: 0.32, dashH: 0.24, visorUp: true },
+        s.interior || {},
+      )
       kit.car(c, s)
       ;[xf, xr].forEach(function (x) {
         ;[1, -1].forEach(function (sd) {
@@ -1067,8 +1071,8 @@ export function installMilitary(fx: FleetContext): void {
       x: xd - 0.07,
       y: belt + 0.02,
       w: zi * 2,
-      d: 0.48,
-      h: Math.min(0.55, belt - fl - 0.08),
+      d: 0.34,
+      h: Math.min(0.28, belt - fl - 0.16),
       drv: -zi * 0.52,
       mat: trim,
       top: fab,
@@ -1076,8 +1080,12 @@ export function installMilitary(fx: FleetContext): void {
     })
     kit.steeringWheel(c, xd - 0.66, belt + 0.06, -zi * 0.52, { r: 0.23, tilt: 1.12, col: 0.5, mat: trim })
     const sx = Math.max(f - len + 0.62, xd - 1.08)
-    kit.seat(c, sx, fl, -zi * 0.52, { w: 0.5, mat: fab, h: 0.44, back: 0.64, lean: 0.18 })
-    kit.seat(c, sx, fl, zi * 0.42, { w: zi * 0.98, n: 2, mat: fab, h: 0.44, back: 0.6, lean: 0.18 })
+    kit.seat(c, sx, fl, -zi * 0.52, { w: 0.52, mat: fab, h: 0.24, back: 0.64, lean: 0.18, id: 'driver', role: 'driver' })
+    kit.seat(c, sx, fl, zi * 0.42, { w: zi * 0.98, n: 2, mat: fab, h: 0.24, back: 0.6, lean: 0.18, role: 'front_passenger' })
+    const mDoorW = Math.max(0.75, f - 0.1 - (xr - 0.06))
+    const mDoorH = Math.max(1.05, ry - fl - 0.1)
+    c.addDoor({ id: 'door_front_left', widthMetres: Math.round(mDoorW * 1000) / 1000, heightMetres: Math.round(mDoorH * 1000) / 1000 })
+    c.addDoor({ id: 'door_front_right', widthMetres: Math.round(mDoorW * 1000) / 1000, heightMetres: Math.round(mDoorH * 1000) / 1000 })
     c.rod(new V3(sx + 0.55, fl, -0.05), new V3(sx + 0.5, fl + 0.48, -0.08), 0.014, OLIVE_STEEL)
     c.sphere(0.035, BLACK, sx + 0.5, fl + 0.5, -0.08)
     /* military radio on the dashboard and a rifle fixed behind the seat */
@@ -1702,7 +1710,9 @@ export function installMilitary(fx: FleetContext): void {
       ;[-0.9, -2.2].forEach(function (x) {
         c.roundBox(0.3, 0.04, 0.1, 0.02, RED_LIGHT, x, roofY - 0.1, 0).castShadow = false
       })
-      kit.seat(c, 0.95, fl + 0.1, -0.62, { w: 0.5, h: 0.42, back: 0.62, lean: 0.12, mat: CM('#2f3226', { roughness: 0.9 }) })
+      kit.seat(c, 0.95, fl + 0.1, -0.62, { w: 0.5, h: 0.42, back: 0.62, lean: 0.12, mat: CM('#2f3226', { roughness: 0.9 }), id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'hatch_driver', widthMetres: 0.58, heightMetres: 0.6 })
+      c.addDoor({ id: 'ramp_rear', widthMetres: 1.4, heightMetres: 1.35 })
       kit.steeringWheel(c, 1.5, 1.42, -0.62, { r: 0.2, tilt: 0.9, col: 0.35 })
       c.roundBox(0.35, 0.3, 0.7, 0.04, CM('#25261f'), 1.85, 1.45, -0.6)
       kit.seat(c, 0.15, fl, 0.0, { w: 0.5, h: 0.45, back: 0.62, lean: 0.12, mat: CM('#2f3226', { roughness: 0.9 }) })
@@ -2131,7 +2141,9 @@ export function installMilitary(fx: FleetContext): void {
       const fl = 0.72,
         fab = CM('#2f3226', { roughness: 0.9 })
       c.roundBox(3.0, 0.04, 1.6, 0.01, MT.carpet, 0.2, fl, 0)
-      kit.seat(c, 1.0, fl + 0.3, -0.55, { w: 0.46, h: 0.4, back: 0.5, lean: 0.25, mat: fab })
+      kit.seat(c, 1.0, fl, -0.55, { w: 0.46, h: 0.14, back: 0.5, lean: 0.25, mat: fab, id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'hatch_driver', widthMetres: 0.54, heightMetres: 0.58 })
+      c.addDoor({ id: 'hatch_commander', widthMetres: 0.6, heightMetres: 0.6 })
       kit.steeringWheel(c, 1.5, 1.38, -0.55, { r: 0.18, tilt: 0.9, col: 0.3 })
       c.roundBox(0.3, 0.26, 0.6, 0.04, CM('#25261f'), 1.75, 1.35, -0.5)
       /* turret with a 90 mm gun: everything from here to the end of the turret is rigid (it neither dents nor sinks) */
@@ -2184,8 +2196,8 @@ export function installMilitary(fx: FleetContext): void {
         c.rod(new V3(tx - 1.55, ty + 0.14, -0.6 + k * 0.4), new V3(tx - 1.55, ty + 0.4, -0.6 + k * 0.4), 0.015, OLIVE_STEEL)
       c.rod(new V3(tx - 1.55, ty + 0.4, -0.65), new V3(tx - 1.55, ty + 0.4, 0.65), 0.015, OLIVE_STEEL)
       /* commander visible through the open hatch: seat and breech */
-      kit.seat(c, tx - 0.4, fl + 0.45, 0.42, { w: 0.42, h: 0.38, back: 0.45, lean: 0.1, mat: fab })
-      kit.seat(c, tx - 0.4, fl + 0.45, -0.42, { w: 0.42, h: 0.38, back: 0.45, lean: 0.1, mat: fab })
+      kit.seat(c, tx - 0.4, fl + 0.12, 0.42, { w: 0.46, h: 0.16, back: 0.45, lean: 0.1, mat: fab, role: 'crew' })
+      kit.seat(c, tx - 0.4, fl + 0.12, -0.42, { w: 0.46, h: 0.16, back: 0.45, lean: 0.1, mat: fab, role: 'crew' })
       c.roundBox(0.8, 0.3, 0.3, 0.05, BARREL, tx + 0.1, ty + 0.1, 0)
       c.roundBox(1.6, 0.02, 1.2, 0.01, MT.headliner, tx - 0.2, ty + 0.66, 0).castShadow = false
       rigid(c, c.vehicle.children.slice(nT))
@@ -2417,7 +2429,18 @@ export function installMilitary(fx: FleetContext): void {
         )
       /* driver: hatch and periscopes */
       hatch(c, 2.05, roofY - 0.1, -0.78, 0.28, 0, OLIVE_STEEL, { yaw: 0 })
-      kit.seat(c, 1.95, 0.62, -0.76, { w: 0.44, h: 0.34, back: 0.5, lean: 0.5, mat: CM('#2f3226', { roughness: 0.9 }) })
+      kit.seat(c, 1.65, 0.3, -0.76, {
+        w: 0.46,
+        h: 0.14,
+        back: 0.5,
+        lean: 0.5,
+        mat: CM('#2f3226', { roughness: 0.9 }),
+        id: 'driver',
+        role: 'driver',
+        headroomMetres: 0.9,
+      })
+      c.addDoor({ id: 'hatch_driver', widthMetres: 0.56, heightMetres: 0.58 })
+      c.addDoor({ id: 'hatch_commander', widthMetres: 0.68, heightMetres: 0.68 })
       ;[-0.95, -0.78, -0.61].forEach(function (z, i) {
         periscope(c, 2.3, roofY - 0.08, z, 0.14, i === 1 ? lbl('driver_periscope') : null)
       })
@@ -2509,9 +2532,9 @@ export function installMilitary(fx: FleetContext): void {
       c.roundBox(0.25, 0.3, 1.6, 0.06, CANVAS2, bx + 0.12, ty + 0.4, 0)
       c.part('cargo', trl('labels.luggage_basket'), null, new V3(bx + 0.1, ty + 0.5, 0), 1.0)
       /* interior visible through the commander hatch */
-      kit.seat(c, tx - 0.55, ty - 0.45, 0.6, { w: 0.42, h: 0.38, back: 0.45, lean: 0.1, mat: fab })
-      kit.seat(c, tx + 0.2, ty - 0.55, 0.62, { w: 0.4, h: 0.36, back: 0.42, lean: 0.1, mat: fab })
-      kit.seat(c, tx - 0.3, ty - 0.55, -0.62, { w: 0.4, h: 0.36, back: 0.42, lean: 0.1, mat: fab })
+      kit.seat(c, tx - 0.55, ty - 0.45, 0.6, { w: 0.46, h: 0.16, back: 0.45, lean: 0.1, mat: fab, role: 'crew' })
+      kit.seat(c, tx + 0.2, ty - 0.55, 0.62, { w: 0.46, h: 0.16, back: 0.42, lean: 0.1, mat: fab, role: 'crew' })
+      kit.seat(c, tx - 0.3, ty - 0.55, -0.62, { w: 0.46, h: 0.16, back: 0.42, lean: 0.1, mat: fab, role: 'crew' })
       c.roundBox(1.1, 0.35, 0.4, 0.05, BARREL, tx + 0.6, ty + 0.35, 0.05)
       c.roundBox(2.2, 0.02, 1.6, 0.01, MT.headliner, tx - 0.3, tTop - 0.08, 0).castShadow = false
       c.cylinder(0.05, 0.05, 0.03, RED_LIGHT, tx - 0.4, tTop - 0.1, 0.2)
@@ -2802,10 +2825,12 @@ export function installMilitary(fx: FleetContext): void {
         fab = CM('#2f3226', { roughness: 0.9 })
       c.roundBox(5.6, 0.04, 2.05, 0.01, MT.carpet, -0.4, fl, 0).castShadow = false
       ;[0.5, -0.5].forEach(function (z) {
-        kit.seat(c, 1.55, fl, z, { w: 0.5, h: 0.42, back: 0.72, lean: 0.12, mat: fab })
-        c.rod(new V3(2.0, fl, z), new V3(1.95, fl + 0.55, z), 0.016, BLACK)
-        c.sphere(0.035, BLACK, 1.95, fl + 0.57, z)
+        kit.seat(c, 1.55, fl, z, { w: 0.5, h: 0.42, back: 0.72, lean: 0.12, mat: fab, role: 'pilot' })
+        c.rod(new V3(2.0, fl, z), new V3(1.95, fl + 0.55, z), 0.016, BLACK).userData.noCabinRay = true
+        c.sphere(0.035, BLACK, 1.95, fl + 0.57, z).userData.noCabinRay = true
       })
+      c.addDoor({ id: 'door_front_left', widthMetres: 0.75, heightMetres: 1.15 })
+      c.addDoor({ id: 'door_front_right', widthMetres: 0.75, heightMetres: 1.15 })
       c.roundBox(0.25, 0.45, 1.9, 0.05, CM('#232427'), 2.45, fl + 0.55, 0)
       c.roundBox(0.4, 0.05, 1.95, 0.02, CM('#1a1b1d'), 2.4, fl + 0.8, 0, { rot: [0, 0, 0.25] })
       ;[-0.75, -0.45, -0.15, 0.15, 0.45, 0.75].forEach(function (z) {

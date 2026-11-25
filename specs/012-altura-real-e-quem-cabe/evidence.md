@@ -294,3 +294,30 @@ Sem alterar nenhuma medida externa de veículo. Cobertura dos 69 modelos da frot
 3. **Banco traseiro de carro (`passenger_car`):** aprova `0,95 m` nos dianteiros (R6) e `0,90 m` nos traseiros (evita violar o teto caído de cupê/fastback sem mudar altura externa)?
 4. **Fator de inclinação na porta (`entryDuckFactor = 0.44`):** aprova esse valor em `cabin.json` (1,80 m entra em porta de `0,80 m+`; 2,05 m é barrado por `'door'` em portas `≤ 0,89 m`)?
 5. **Fechamento da Fase 0:** após aprovação, commitar os tipos em `packages/game-contracts/src/body-measures.ts` + `packages/game-vehicles/src/data/cabin.json` + `evidence.md` e abrir o PR da Fase 0 antes de iniciar a Fase 1 (ou levar T0.2 já para o PR da Fase 1)?
+
+
+---
+
+## Fase 3 — O veículo sabe o espaço que tem (T3.1–T3.4)
+
+Branch: `spec/012-fase3` (worktree `../adatechnology-game-kit-wt/spec-012-fase3`). Nenhuma medida externa de veículo foi alterada.
+
+### Entregas
+- **T3.1 (`3c7453d`):** `packages/game-vehicles/src/cabin-space.ts`, `context.ts`, `interior.ts`, `kit.ts`, `types.ts`, `api.ts` — `c.seats: SeatSpace[]` e `c.doors: DoorOpening[]` calculados sob demanda (lazy getters, zero mutação de `boundingSphere` em builds que não leem cabine), 5 raios de headroom, legroom no joelho, largura útil de ombros, transformação de `parent` e `face: '+z'/'-z'`, assento automático `rider` com `Infinity` em motos/quadriciclos (`bike`/`quad`) e barcos abertos (`boat`).
+- **T3.2–T3.4 (`fb73855`):**
+  - Carros, SUVs, picapes e vans: `roof: gh.roof + 0.02` (3 cm dentro da casca externa `gh.roof + 0.05`), `floor: s.bottomY + 0.02`, `seatH: 0.12`, painel compacto (`dashD: 0.32, dashH: 0.24`), quebra-sol recolhido (`visorUp: true`), prateleira traseira atrás do encosto, `trimLen` proporcional ao `rowPitch` (eliminando z-fighting entre forros).
+  - Caminhões, ônibus, trator, militares, barcos cabinados e aeronaves: assentos e painéis ajustados para a tabela R6, colunas de direção/cíclicos marcados com `noCabinRay = true` (pernas passam dos lados), portas/escotilhas gravadas via `c.addDoor(...)`.
+  - `packages/game-vehicles-fleet/src/cabin-categories.ts` (`fleetCabinCategoryOf`) e `tests/cabin-spaces.test.ts` + `tests/fixtures/cabin-spaces.json` (Critério 3: 69/69 veículos).
+- **Goldens (commit isolado aprovado pelo dono em 2026-11-24):** `exact-fleet.json`, `golden.json` (5 contagens de rollover ajustadas), `z-fighting-ledger.json` (16 entradas **reduzidas**, zero regressão), `helpers/golden.ts` e `team-golden.test.ts`.
+
+### Tabela de evidências (Fase 3)
+
+| Gate | Comando | Resultado |
+|---|---|---|
+| Typecheck | `pnpm --filter @adatechnology/game-vehicles typecheck && pnpm --filter @adatechnology/game-vehicles-fleet typecheck` | Passou (0 erros) |
+| Testes `game-vehicles` | `pnpm --filter @adatechnology/game-vehicles test` | 27/27 arquivos (358/358 testes, `exact-golden` bit-a-bit) |
+| Critério 3 (69 veículos) | `pnpm --filter @adatechnology/game-vehicles-fleet test tests/cabin-spaces.test.ts` | 69/69 veículos dentro da tabela R6 + golden `cabin-spaces.json` |
+| Aceitação frota (§7) | `pnpm --filter @adatechnology/game-vehicles-fleet test tests/vehicle-acceptance.test.ts` | 69/69 veículos verdes |
+| Z-fighting (§13) | `pnpm --filter @adatechnology/game-vehicles-fleet test tests/z-fighting.test.ts` | Zero faces coincidentes novas; 16 casos reduzidos no ledger |
+| Custo de desenho | `node tools/shapes-bench/dist/cli.js --cost-check` | `every builder within its recorded cost` (69 veículos: 587 draws, 999.342 tris) |
+| Camadas | `pnpm check:layers` | 0 violações |

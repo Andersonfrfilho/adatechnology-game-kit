@@ -430,11 +430,12 @@ export function installPlanesExtra(fx: FleetContext): void {
       const fl = -0.4,
         fab = CM('#3c3a35', { roughness: 0.9 })
       c.roundBox(2.0, 0.025, 0.6, 0.01, MT.carpet, 0.55, fl, 0, PG).castShadow = false
-      kit.seat(c, 0.62, fl, 0, { w: 0.48, h: 0.3, back: 0.55, lean: 0.2, mat: fab, parent: grp, headrest: false })
-      kit.seat(c, -0.22, fl + 0.04, 0, { w: 0.5, h: 0.3, back: 0.58, lean: 0.2, mat: fab, parent: grp, headrest: false })
+      kit.seat(c, 0.62, fl, 0, { w: 0.48, h: 0.16, back: 0.55, lean: 0.2, mat: fab, parent: grp, headrest: false, role: 'pilot' })
+      kit.seat(c, -0.22, fl + 0.04, 0, { w: 0.5, h: 0.16, back: 0.58, lean: 0.2, mat: fab, parent: grp, headrest: false, role: 'crew' })
+      c.addDoor({ id: 'canopy_door', widthMetres: 0.7, heightMetres: 0.85 })
       ;[1.12, 0.3].forEach(function (x) {
-        c.rod(new V3(x, fl, 0), new V3(x - 0.05, fl + 0.5, 0), 0.012, MT.plastic, PG)
-        c.sphere(0.025, MT.plastic, x - 0.055, fl + 0.52, 0, 1, 1.4, 1, PG)
+        c.rod(new V3(x, fl, 0), new V3(x - 0.05, fl + 0.5, 0), 0.012, MT.plastic, PG).userData.noCabinRay = true
+        c.sphere(0.025, MT.plastic, x - 0.055, fl + 0.52, 0, 1, 1.4, 1, PG).userData.noCabinRay = true
       })
       c.roundBox(0.05, 0.22, 0.6, 0.02, CM('#2a2b2d', { roughness: 0.8 }), 1.75, 0.3, 0, PG)
       ;[-0.2, -0.08, 0.04, 0.16, -0.14].forEach(function (z, i) {
@@ -833,7 +834,8 @@ export function installPlanesExtra(fx: FleetContext): void {
         fab = CM('#3d4552', { roughness: 0.9 })
       liner(c, ST, -4.6, 5.9, fl, MT.carpet, { h: 0.03 })
       ;[0.38, -0.38].forEach(function (z) {
-        kit.seat(c, 4.95, fl, z, { w: 0.5, h: 0.38, back: 0.7, lean: 0.14, mat: CM('#2a2c30', { roughness: 0.8 }) })
+        kit.seat(c, 4.95, fl, z, { w: 0.5, h: 0.38, back: 0.7, lean: 0.14, mat: CM('#2a2c30', { roughness: 0.8 }), role: 'pilot' })
+        if (z < 0) c.addDoor({ id: 'cabin_door_left', widthMetres: 0.78, heightMetres: 1.55 })
         kit.yoke(c, 5.5, 1.75, z)
         EA.pedals(c, 5.95, fl, z)
       })
@@ -1267,7 +1269,8 @@ export function installPlanesExtra(fx: FleetContext): void {
         fab = CM('#4a4640', { roughness: 0.9 })
       liner(c, ST, -3.2, 2.0, fl, MT.carpet, { h: 0.03 })
       ;[0.38, -0.38].forEach(function (z) {
-        kit.seat(c, 0.95, fl, z, { w: 0.5, h: 0.38, back: 0.7, lean: 0.14, mat: fab })
+        kit.seat(c, 0.95, fl, z, { w: 0.5, h: 0.38, back: 0.7, lean: 0.14, mat: fab, role: 'pilot' })
+        if (z < 0) c.addDoor({ id: 'cabin_door_left', widthMetres: 0.78, heightMetres: 1.4 })
         kit.yoke(c, 1.5, 2.85, z)
         EA.pedals(c, 1.95, fl, z)
       })
@@ -1718,7 +1721,8 @@ export function installPlanesExtra(fx: FleetContext): void {
         fab = CM('#c9bda6', { roughness: 0.75 })
       liner(c, ST, -2.0, 4.0, fl, MT.carpet, { h: 0.03 })
       ;[0.36, -0.36].forEach(function (z) {
-        kit.seat(c, 3.55, fl, z, { w: 0.48, h: 0.36, back: 0.66, lean: 0.14, mat: CM('#2a2c30') })
+        kit.seat(c, 3.55, fl, z, { w: 0.48, h: 0.36, back: 0.66, lean: 0.14, mat: CM('#2a2c30'), role: 'pilot' })
+        if (z < 0) c.addDoor({ id: 'cabin_door_left', widthMetres: 0.72, heightMetres: 1.35 })
         kit.yoke(c, 4.05, 1.55, z)
       })
       EA.instPanel(c, 4.3, 1.68, 1.35, {
@@ -2118,11 +2122,12 @@ export function installPlanesExtra(fx: FleetContext): void {
         [1.55, 1.24],
         [0.2, 1.46],
       ].forEach(function (q, i) {
-        kit.seat(c, q[0], q[1], 0, { w: 0.5, h: 0.32, back: 0.85, lean: 0.24, mat: fab, headrest: false })
+        kit.seat(c, q[0], q[1], 0, { w: 0.5, h: 0.32, back: 0.85, lean: 0.24, mat: fab, headrest: false, role: i === 0 ? 'pilot' : 'crew' })
         c.roundBox(0.14, 0.3, 0.44, 0.04, CM('#202224'), q[0] - 0.42, q[1] + 1.05, 0, { rot: [0, 0, 0.24] })
         c.rod(new V3(q[0] - 0.38, q[1] + 1.25, -0.06), new V3(q[0] - 0.3, q[1] + 1.4, 0.06), 0.012, MT.yellow)
-        c.rod(new V3(q[0] + 0.35, q[1], 0), new V3(q[0] + 0.32, q[1] + 0.45, 0), 0.016, blk)
-        c.sphere(0.03, blk, q[0] + 0.31, q[1] + 0.48, 0, 1, 1.5, 1)
+        c.rod(new V3(q[0] + 0.35, q[1], 0), new V3(q[0] + 0.32, q[1] + 0.45, 0), 0.016, blk).userData.noCabinRay = true
+        c.sphere(0.03, blk, q[0] + 0.31, q[1] + 0.48, 0, 1, 1.5, 1).userData.noCabinRay = true
+        if (i === 0) c.addDoor({ id: 'canopy_door', widthMetres: 0.68, heightMetres: 0.85 })
         const px = q[0] + 0.75
         c.roundBox(0.16, 0.3, 0.6, 0.04, CM('#232427'), px, q[1] + 0.65, 0, { rot: [0, 0, 0.2] })
         ;[-0.15, 0.15].forEach(function (z) {

@@ -796,8 +796,8 @@ export function createWaterAirKit(kit: VehicleKit) {
   }
   /* helicopter stick (cyclic) and collective */
   function cyclic(c: VehicleContext, x: number, fl: number, z: number) {
-    c.rod(new V3(x, fl, z), new V3(x - 0.04, fl + 0.55, z), 0.014, MT.plastic)
-    c.roundBox(0.04, 0.12, 0.04, 0.015, MT.plastic, x - 0.05, fl + 0.6, z)
+    c.rod(new V3(x, fl, z), new V3(x - 0.04, fl + 0.55, z), 0.014, MT.plastic).userData.noCabinRay = true
+    c.roundBox(0.04, 0.12, 0.04, 0.015, MT.plastic, x - 0.05, fl + 0.6, z).userData.noCabinRay = true
   }
   function collective(c: VehicleContext, x: number, fl: number, z: number) {
     c.rod(new V3(x - 0.35, fl + 0.18, z), new V3(x + 0.05, fl + 0.32, z), 0.016, MT.plastic)
@@ -1409,8 +1409,8 @@ export function installWaterAir(fx: FleetContext): void {
       c.rod(new V3(0.62, cy + 0.72, 0.62), new V3(0.55, cy + 0.82, 0.62), 0.02, MT.chrome)
       c.rod(new V3(0.55, cy + 0.7, 0.98), new V3(0.42, cy + 0.88, 1.0), 0.015, MT.chrome)
       c.sphere(0.035, MT.plastic, 0.42, cy + 0.9, 1.0)
-      kit.seat(c, -0.1, cy + 0.002, 0.72, { w: 0.55, h: 0.42, back: 0.48, lean: 0.12, mat: vinyl, headrest: false })
-      kit.seat(c, -0.1, cy + 0.002, -0.74, { w: 0.55, h: 0.42, back: 0.48, lean: 0.12, mat: vinyl, headrest: false })
+      kit.seat(c, -0.1, cy + 0.002, 0.72, { w: 0.55, h: 0.42, back: 0.48, lean: 0.12, mat: vinyl, headrest: false, open: true, role: 'front_passenger' })
+      kit.seat(c, -0.1, cy + 0.002, -0.74, { w: 0.55, h: 0.42, back: 0.48, lean: 0.12, mat: vinyl, headrest: false, open: true, id: 'driver', role: 'driver' })
       /* wraparound windshield with a central walkway */
       ;[1, -1].forEach(function (s) {
         const pts = []
@@ -1761,7 +1761,8 @@ export function installWaterAir(fx: FleetContext): void {
         c.rod(new V3(0, 0, 0), new V3(0, Math.cos(a8) * 0.36, Math.sin(a8) * 0.36), 0.014, MT.wood, { parent: whl })
       }
       c.cylinder(0.05, 0.05, 0.14, MT.wood, 0.06, 0, 0, 'x', { parent: whl })
-      kit.seat(c, hx - 0.05, hy0 + 0.002, 0, { w: 0.5, h: 0.55, back: 0.45, mat: inner, headrest: false })
+      kit.seat(c, hx - 0.12, hy0 + 0.002, 0, { w: 0.54, h: 0.55, back: 0.45, mat: inner, headrest: false, id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'cabin_door', widthMetres: 0.68, heightMetres: 1.55 })
       c.roundBox(1.8, 0.12, 0.65, 0.04, CM('#7c5a3b'), hx - 0.2, hy0 + 0.5, -0.72)
       c.roundBox(1.7, 0.08, 0.55, 0.04, CM('#6b7c8f', { roughness: 1 }), hx - 0.2, hy0 + 0.6, -0.72)
       c.roundBox(1.9, 0.02, 2.1, 0.01, inner, hx, hy0 + hh - 0.06, 0).castShadow = false
@@ -2006,11 +2007,13 @@ export function installWaterAir(fx: FleetContext): void {
         fab = CM('#4a463f', { roughness: 0.9 })
       c.roundBox(2.2, 0.03, 0.98, 0.01, MT.carpet, 0.2, fl, 0).castShadow = false
       ;[0.26, -0.26].forEach(function (z) {
-        kit.seat(c, 0.38, fl, z, { w: 0.44, h: 0.34, back: 0.62, lean: 0.18, mat: fab })
+        kit.seat(c, 0.38, fl, z, { w: 0.48, h: 0.24, back: 0.62, lean: 0.18, mat: fab, role: 'pilot' })
         EA.pedals(c, 1.18, fl, z)
         kit.yoke(c, 0.98, 1.47, z)
       })
-      kit.seat(c, -0.52, fl, 0, { w: 0.96, n: 2, h: 0.34, back: 0.58, lean: 0.2, mat: fab })
+      kit.seat(c, -0.52, fl, 0, { w: 0.96, n: 2, h: 0.24, back: 0.58, lean: 0.2, mat: fab })
+      c.addDoor({ id: 'door_front_left', widthMetres: 0.75, heightMetres: 0.95 })
+      c.addDoor({ id: 'door_front_right', widthMetres: 0.75, heightMetres: 0.95 })
       EA.instPanel(c, 1.1, 1.52, 1.0, { gauges: 6, z0: -0.38, screens: [[0.0, 0.12, 0.14, 0.22]] })
       c.roundBox(0.1, 0.1, 0.1, 0.02, MT.plastic, 1.0, 1.32, 0)
       c.cylinder(0.018, 0.018, 0.1, MT.chrome, 0.93, 1.34, 0.02, 'x')
@@ -2317,9 +2320,10 @@ export function installWaterAir(fx: FleetContext): void {
       /* cabin: floor, seat, stick, panel */
       const fl = -0.36
       c.roundBox(1.3, 0.03, 0.8, 0.01, MT.carpet, -0.4, fl, 0, { parent: grp }).castShadow = false
-      kit.seat(c, -0.55, fl, 0, { w: 0.5, h: 0.32, back: 0.66, lean: 0.12, mat: CM('#3a3530', { roughness: 0.9 }), parent: grp })
-      c.rod(new V3(0.0, fl, 0), new V3(-0.06, fl + 0.55, 0), 0.016, MT.plastic, { parent: grp })
-      c.roundBox(0.04, 0.13, 0.05, 0.015, MT.plastic, -0.07, fl + 0.6, 0, { parent: grp })
+      kit.seat(c, -0.55, fl, 0, { w: 0.5, h: 0.18, back: 0.66, lean: 0.12, mat: CM('#3a3530', { roughness: 0.9 }), parent: grp, role: 'pilot' })
+      c.addDoor({ id: 'canopy_door', widthMetres: 0.7, heightMetres: 0.85 })
+      c.rod(new V3(0.0, fl, 0), new V3(-0.06, fl + 0.55, 0), 0.016, MT.plastic, { parent: grp }).userData.noCabinRay = true
+      c.roundBox(0.04, 0.13, 0.05, 0.015, MT.plastic, -0.07, fl + 0.6, 0, { parent: grp }).userData.noCabinRay = true
       c.roundBox(0.16, 0.3, 0.8, 0.04, CM('#232427'), 0.36, 0.5, 0, { parent: grp, rot: [0, 0, 0.2] })
       ;[-0.24, -0.12, 0.0, 0.12, 0.24].forEach(function (z, i) {
         c.cylinder(0.036, 0.036, 0.012, MT.gauge, 0.27, 0.55 - (i % 2) * 0.09, z, 'x', { seg: 16, parent: grp }).castShadow = false
@@ -2771,10 +2775,12 @@ export function installWaterAir(fx: FleetContext): void {
         fab = CM('#3b3a38', { roughness: 0.9 })
       c.roundBox(1.9, 0.03, 1.16, 0.01, MT.carpet, 0.2, fl, 0).castShadow = false
       ;[0.3, -0.3].forEach(function (z) {
-        kit.seat(c, 0.35, fl, z, { w: 0.48, h: 0.36, back: 0.62, lean: 0.14, mat: fab })
+        kit.seat(c, 0.35, fl, z, { w: 0.48, h: 0.2, back: 0.62, lean: 0.14, mat: fab, role: 'pilot' })
         EA.pedals(c, 1.35, fl, z)
       })
-      kit.seat(c, -0.55, fl + 0.06, 0, { w: 1.06, n: 2, h: 0.36, back: 0.6, lean: 0.12, mat: fab })
+      kit.seat(c, -0.55, fl + 0.06, 0, { w: 1.06, n: 2, h: 0.2, back: 0.6, lean: 0.12, mat: fab })
+      c.addDoor({ id: 'door_front_left', widthMetres: 0.72, heightMetres: 1.05 })
+      c.addDoor({ id: 'door_front_right', widthMetres: 0.72, heightMetres: 1.05 })
       c.roundBox(0.42, 0.62, 0.3, 0.06, CM('#232427'), 1.15, fl + 0.32, 0, { rot: [0, 0, 0.35] })
       c.roundBox(0.06, 0.3, 0.3, 0.02, CM('#1a1b1d'), 1.25, fl + 0.65, 0, { rot: [0, 0, 0.6] })
       ;[-0.07, 0.07].forEach(function (z) {
@@ -3135,6 +3141,8 @@ export function installWaterAir(fx: FleetContext): void {
       EA.collective(c, 1.3, fl, -0.72)
       EA.collective(c, 1.3, fl, 0.12)
       kit.seat(c, -0.35, fl + 0.04, 0, { w: 1.56, n: 4, h: 0.38, back: 0.62, lean: 0.1, mat: fab })
+      c.addDoor({ id: 'door_front_left', widthMetres: 0.78, heightMetres: 1.15 })
+      c.addDoor({ id: 'door_front_right', widthMetres: 0.78, heightMetres: 1.15 })
       EA.instPanel(c, 2.25, 1.55, 1.2, { gauges: 8, z0: -0.45, tilt: 0.3, screens: [[0.05, 0.25, 0.14, 0.2]] })
       c.roundBox(0.5, 0.45, 0.32, 0.06, CM('#232427'), 2.05, fl + 0.24, 0)
       c.roundBox(2.3, 0.02, 1.4, 0.01, MT.headliner, 0.45, 2.24, 0).castShadow = false

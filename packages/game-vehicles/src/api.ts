@@ -4,6 +4,8 @@
  */
 import type { Group, Matrix4, Mesh, Object3D, Vector3 } from './three-types'
 
+import type { DoorOpening, SeatSpace } from '@adatechnology/game-contracts'
+
 import type { LodSettings } from './lod'
 import type { ZoneBox } from './zone-core'
 import type { BuildContext } from './types'
@@ -56,6 +58,10 @@ export interface VehicleContextFields {
   /** Deterministic random generator seeded from the vehicle key and state. */
   rand: () => number
   parts: VehiclePart[]
+  /** Measured seat spaces in vehicle local coordinates (Spec 012 R5). */
+  seats: SeatSpace[]
+  /** Measured door and hatch openings in vehicle local coordinates (Spec 012 R5). */
+  doors: DoorOpening[]
   log: unknown[]
   zoneErrors?: string[]
   [key: string]: any

@@ -15,8 +15,9 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
    energy / (1 + 4 d^2) x 0.04 gave it 16 kJ: the panels the blasts tear off come apart in more pieces (826 to 875 nodes). Retaken when a door torn off
    took its own skin, window and trim with it (as on its first swing) instead of flying as the flat plate and leaving its dark recess standing in the
    opening: the doors' skins are cut out of the body (875 to 944 nodes). Retaken when a door or lid that comes off became a closed volume (its skin, the
-   fold round its edge and its inner panel, door-shell.ts) and an opened lid lines its trunk (a tub and a seal): the same torn parts, closed (944 to 956 nodes). */
-const GOLDEN_DIGEST = '956:2985151422'
+   fold round its edge and its inner panel, door-shell.ts) and an opened lid lines its trunk (a tub and a seal): the same torn parts, closed (944 to 956 nodes). Retaken when the cabins met the R6 table (spec 012, phase 3): the inner trim of the sedan is
+   shorter and the dash compact, so its torn doors carry less of it (956 to 940 nodes). */
+const GOLDEN_DIGEST = '940:684114408'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261

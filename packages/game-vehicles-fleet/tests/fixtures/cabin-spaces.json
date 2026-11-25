@@ -1,0 +1,5559 @@
+{
+  "compact_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.28,
+          0.41,
+          -0.355
+        ],
+        "headroomMetres": 1.018,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.685,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.28,
+          0.41,
+          0.355
+        ],
+        "headroomMetres": 1.018,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.685,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.16,
+          0.404,
+          -0.44
+        ],
+        "headroomMetres": 0.991,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.16,
+          0.404,
+          0
+        ],
+        "headroomMetres": 0.991,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.16,
+          0.404,
+          0.44
+        ],
+        "headroomMetres": 0.991,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.19,
+        "heightMetres": 1.1
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.72,
+        "heightMetres": 1.1
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.19,
+        "heightMetres": 1.1
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.72,
+        "heightMetres": 1.1
+      }
+    ]
+  },
+  "taxi": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.28,
+          0.41,
+          -0.355
+        ],
+        "headroomMetres": 1.018,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.685,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.28,
+          0.41,
+          0.355
+        ],
+        "headroomMetres": 1.018,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.685,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.16,
+          0.404,
+          -0.44
+        ],
+        "headroomMetres": 0.954,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.16,
+          0.404,
+          0
+        ],
+        "headroomMetres": 0.954,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.16,
+          0.404,
+          0.44
+        ],
+        "headroomMetres": 0.954,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.19,
+        "heightMetres": 1.1
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.8,
+        "heightMetres": 1.1
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.19,
+        "heightMetres": 1.1
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.8,
+        "heightMetres": 1.1
+      }
+    ]
+  },
+  "entry_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.44,
+          0.45,
+          -0.33
+        ],
+        "headroomMetres": 0.958,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.637,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.44,
+          0.45,
+          0.33
+        ],
+        "headroomMetres": 0.958,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.637,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.32,
+          0.444,
+          -0.407
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.433,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.32,
+          0.444,
+          0
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.407,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.32,
+          0.444,
+          0.407
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.433,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.11,
+        "heightMetres": 1.04
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.781,
+        "heightMetres": 1.04
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.11,
+        "heightMetres": 1.04
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.781,
+        "heightMetres": 1.04
+      }
+    ]
+  },
+  "electric_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.14,
+          0.45,
+          -0.365
+        ],
+        "headroomMetres": 1.05,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.704,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.14,
+          0.45,
+          0.365
+        ],
+        "headroomMetres": 1.05,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.704,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.02,
+          0.444,
+          -0.453
+        ],
+        "headroomMetres": 1.067,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.478,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.02,
+          0.444,
+          0
+        ],
+        "headroomMetres": 1.067,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.453,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.02,
+          0.444,
+          0.453
+        ],
+        "headroomMetres": 1.067,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.478,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.27,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.82,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.27,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.82,
+        "heightMetres": 1.15
+      }
+    ]
+  },
+  "midsize_sedan": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.22,
+          0.41,
+          -0.36
+        ],
+        "headroomMetres": 0.979,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.695,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.22,
+          0.41,
+          0.36
+        ],
+        "headroomMetres": 0.979,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.695,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.1,
+          0.404,
+          -0.447
+        ],
+        "headroomMetres": 0.948,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.472,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.1,
+          0.404,
+          0
+        ],
+        "headroomMetres": 0.948,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.447,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.1,
+          0.404,
+          0.447
+        ],
+        "headroomMetres": 0.948,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.472,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.23,
+        "heightMetres": 1.075
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.8,
+        "heightMetres": 1.075
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.23,
+        "heightMetres": 1.075
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.8,
+        "heightMetres": 1.075
+      }
+    ]
+  },
+  "police_sedan": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.2,
+          0.42,
+          -0.365
+        ],
+        "headroomMetres": 0.99,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.704,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.2,
+          0.42,
+          0.365
+        ],
+        "headroomMetres": 0.99,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.704,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.414,
+          -0.453
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.478,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.414,
+          0
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.453,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.414,
+          0.453
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.478,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.23,
+        "heightMetres": 1.09
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.84,
+        "heightMetres": 1.09
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.23,
+        "heightMetres": 1.09
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.84,
+        "heightMetres": 1.09
+      }
+    ]
+  },
+  "highway_police_sedan": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.2,
+          0.42,
+          -0.365
+        ],
+        "headroomMetres": 0.99,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.704,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.2,
+          0.42,
+          0.365
+        ],
+        "headroomMetres": 0.99,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.704,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.414,
+          -0.453
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.478,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.414,
+          0
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.453,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.414,
+          0.453
+        ],
+        "headroomMetres": 0.964,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.478,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.23,
+        "heightMetres": 1.09
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.84,
+        "heightMetres": 1.09
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.23,
+        "heightMetres": 1.09
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.84,
+        "heightMetres": 1.09
+      }
+    ]
+  },
+  "bicycle": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.653,
+          0.997,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "scooter": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.574,
+          0.87,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "commuter_motorcycle": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.567,
+          0.865,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "trail_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.551,
+          0.935,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "adventure_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.585,
+          1.208,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "highway_police_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.585,
+          1.208,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "quad_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.604,
+          1.178,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "beetle": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.08,
+          0.46,
+          -0.27
+        ],
+        "headroomMetres": 0.992,
+        "legroomMetres": 1.022,
+        "widthMetres": 0.607,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.08,
+          0.46,
+          0.27
+        ],
+        "headroomMetres": 0.992,
+        "legroomMetres": 1.022,
+        "widthMetres": 0.607,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.58,
+          0.43,
+          -0.313
+        ],
+        "headroomMetres": 0.942,
+        "legroomMetres": 2.378,
+        "widthMetres": 0.5,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.58,
+          0.43,
+          0
+        ],
+        "headroomMetres": 0.989,
+        "legroomMetres": 0.633,
+        "widthMetres": 0.313,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.58,
+          0.43,
+          0.313
+        ],
+        "headroomMetres": 0.942,
+        "legroomMetres": 2.378,
+        "widthMetres": 0.5,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.08,
+        "heightMetres": 0.88
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.08,
+        "heightMetres": 0.88
+      }
+    ]
+  },
+  "compact_suv": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.03,
+          0.45,
+          -0.36
+        ],
+        "headroomMetres": 1.009,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.708,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.03,
+          0.45,
+          0.36
+        ],
+        "headroomMetres": 1.009,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.708,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.91,
+          0.444,
+          -0.447
+        ],
+        "headroomMetres": 1.015,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.485,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.91,
+          0.444,
+          0
+        ],
+        "headroomMetres": 1.015,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.447,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.91,
+          0.444,
+          0.447
+        ],
+        "headroomMetres": 1.015,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.485,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.06,
+        "heightMetres": 1.105
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.86,
+        "heightMetres": 1.105
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.06,
+        "heightMetres": 1.105
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.86,
+        "heightMetres": 1.105
+      }
+    ]
+  },
+  "hybrid_suv": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.02,
+          0.47,
+          -0.38
+        ],
+        "headroomMetres": 1.039,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.752,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.02,
+          0.47,
+          0.38
+        ],
+        "headroomMetres": 1.039,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.752,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.86,
+          0.464,
+          -0.473
+        ],
+        "headroomMetres": 1.024,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.515,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.86,
+          0.464,
+          0
+        ],
+        "headroomMetres": 1.024,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.473,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.86,
+          0.464,
+          0.473
+        ],
+        "headroomMetres": 1.024,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.515,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.17,
+        "heightMetres": 1.135
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.94,
+        "heightMetres": 1.135
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.17,
+        "heightMetres": 1.135
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.94,
+        "heightMetres": 1.135
+      }
+    ]
+  },
+  "midsize_suv": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0,
+          0.49,
+          -0.377
+        ],
+        "headroomMetres": 1.027,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.748,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0,
+          0.49,
+          0.378
+        ],
+        "headroomMetres": 1.027,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.748,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.88,
+          0.484,
+          -0.47
+        ],
+        "headroomMetres": 1.026,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.513,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.88,
+          0.484,
+          0
+        ],
+        "headroomMetres": 1.026,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.47,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.88,
+          0.484,
+          0.47
+        ],
+        "headroomMetres": 1.026,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.513,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.13,
+        "heightMetres": 1.125
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.96,
+        "heightMetres": 1.125
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.13,
+        "heightMetres": 1.125
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.96,
+        "heightMetres": 1.125
+      }
+    ]
+  },
+  "large_suv": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.03,
+          0.59,
+          -0.38
+        ],
+        "headroomMetres": 1.12,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.75,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.03,
+          0.59,
+          0.38
+        ],
+        "headroomMetres": 1.12,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.75,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.85,
+          0.584,
+          -0.473
+        ],
+        "headroomMetres": 1.116,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.513,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.85,
+          0.584,
+          0
+        ],
+        "headroomMetres": 1.116,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.473,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.85,
+          0.584,
+          0.473
+        ],
+        "headroomMetres": 1.116,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.513,
+        "doorId": "door_rear_right"
+      },
+      {
+        "id": "rear_left_2",
+        "role": "rear",
+        "hipPoint": [
+          -1.65,
+          0.584,
+          -0.355
+        ],
+        "headroomMetres": 1.107,
+        "legroomMetres": 0.505,
+        "widthMetres": 0.75,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right_2",
+        "role": "rear",
+        "hipPoint": [
+          -1.65,
+          0.584,
+          0.355
+        ],
+        "headroomMetres": 1.107,
+        "legroomMetres": 0.505,
+        "widthMetres": 0.75,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.2,
+        "heightMetres": 1.205
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 1.095,
+        "heightMetres": 1.205
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.2,
+        "heightMetres": 1.205
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 1.095,
+        "heightMetres": 1.205
+      }
+    ]
+  },
+  "compact_pickup": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.1,
+          0.48,
+          -0.355
+        ],
+        "headroomMetres": 1.063,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.695,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.1,
+          0.48,
+          0.355
+        ],
+        "headroomMetres": 1.063,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.695,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.5,
+          0.474,
+          -0.44
+        ],
+        "headroomMetres": 1.069,
+        "legroomMetres": 0.294,
+        "widthMetres": 0.475,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.5,
+          0.474,
+          0
+        ],
+        "headroomMetres": 1.069,
+        "legroomMetres": 0.865,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.5,
+          0.474,
+          0.44
+        ],
+        "headroomMetres": 1.069,
+        "legroomMetres": 0.294,
+        "widthMetres": 0.475,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.1,
+        "heightMetres": 1.145
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.93,
+        "heightMetres": 1.145
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.1,
+        "heightMetres": 1.145
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.93,
+        "heightMetres": 1.145
+      }
+    ]
+  },
+  "crossover_pickup": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.14,
+          0.55,
+          -0.385
+        ],
+        "headroomMetres": 1.128,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.757,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.14,
+          0.55,
+          0.385
+        ],
+        "headroomMetres": 1.128,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.757,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.62,
+          0.544,
+          -0.48
+        ],
+        "headroomMetres": 1.134,
+        "legroomMetres": 0.454,
+        "widthMetres": 0.517,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.62,
+          0.544,
+          0
+        ],
+        "headroomMetres": 1.134,
+        "legroomMetres": 1.025,
+        "widthMetres": 0.48,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.62,
+          0.544,
+          0.48
+        ],
+        "headroomMetres": 1.134,
+        "legroomMetres": 0.454,
+        "widthMetres": 0.517,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.17,
+        "heightMetres": 1.21
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 1.02,
+        "heightMetres": 1.21
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.17,
+        "heightMetres": 1.21
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 1.02,
+        "heightMetres": 1.21
+      }
+    ]
+  },
+  "midsize_pickup": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.1,
+          0.61,
+          -0.385
+        ],
+        "headroomMetres": 1.143,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.764,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.1,
+          0.61,
+          0.385
+        ],
+        "headroomMetres": 1.143,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.764,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.66,
+          0.604,
+          -0.48
+        ],
+        "headroomMetres": 1.149,
+        "legroomMetres": 0.454,
+        "widthMetres": 0.523,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.66,
+          0.604,
+          0
+        ],
+        "headroomMetres": 1.149,
+        "legroomMetres": 1.025,
+        "widthMetres": 0.48,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.66,
+          0.604,
+          0.48
+        ],
+        "headroomMetres": 1.149,
+        "legroomMetres": 0.454,
+        "widthMetres": 0.523,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.13,
+        "heightMetres": 1.225
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 1.06,
+        "heightMetres": 1.225
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.13,
+        "heightMetres": 1.225
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 1.06,
+        "heightMetres": 1.225
+      }
+    ]
+  },
+  "monster_truck": {
+    "category": "suv_pickup",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.02,
+          1.7,
+          -0.42
+        ],
+        "headroomMetres": 1.158,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.622,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_center",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.02,
+          1.7,
+          0.015
+        ],
+        "headroomMetres": 1.158,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.483,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.02,
+          1.7,
+          0.545
+        ],
+        "headroomMetres": 1.158,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.1,
+        "heightMetres": 1.24
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.1,
+        "heightMetres": 1.24
+      }
+    ]
+  },
+  "cargo_van": {
+    "category": "van",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.78,
+          1.05,
+          -0.42
+        ],
+        "headroomMetres": 1.218,
+        "legroomMetres": 1.624,
+        "widthMetres": 0.785,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_center",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.78,
+          1.05,
+          0.003
+        ],
+        "headroomMetres": 1.218,
+        "legroomMetres": 1.637,
+        "widthMetres": 0.489,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.78,
+          1.05,
+          0.558
+        ],
+        "headroomMetres": 1.218,
+        "legroomMetres": 1.614,
+        "widthMetres": 0.716,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.51,
+        "heightMetres": 1.91
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.51,
+        "heightMetres": 1.91
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 1.32,
+        "heightMetres": 2.03
+      }
+    ]
+  },
+  "ambulance": {
+    "category": "van",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.72,
+          1.05,
+          -0.42
+        ],
+        "headroomMetres": 1.128,
+        "legroomMetres": 1.694,
+        "widthMetres": 0.793,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_center",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.72,
+          1.05,
+          -0.002
+        ],
+        "headroomMetres": 1.128,
+        "legroomMetres": 1.714,
+        "widthMetres": 0.491,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.72,
+          1.05,
+          0.563
+        ],
+        "headroomMetres": 1.128,
+        "legroomMetres": 1.679,
+        "widthMetres": 0.725,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.39,
+        "heightMetres": 1.78
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.39,
+        "heightMetres": 1.78
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 1.13,
+        "heightMetres": 1.9
+      }
+    ]
+  },
+  "box_truck": {
+    "category": "truck",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          2.529,
+          1.35,
+          -0.504
+        ],
+        "headroomMetres": 1.02,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.922,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          2.529,
+          1.35,
+          0.17
+        ],
+        "headroomMetres": 1.02,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.575,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "front_right_2",
+        "role": "front_passenger",
+        "hipPoint": [
+          2.529,
+          1.35,
+          0.645
+        ],
+        "headroomMetres": 1.02,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.682,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.095,
+        "heightMetres": 1.25
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.095,
+        "heightMetres": 1.25
+      }
+    ]
+  },
+  "tanker_truck": {
+    "category": "truck",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          3.535,
+          1.63,
+          -0.582
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 0.67,
+        "widthMetres": 1.055,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          3.535,
+          1.63,
+          0.196
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.664,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "front_right_2",
+        "role": "front_passenger",
+        "hipPoint": [
+          3.535,
+          1.63,
+          0.745
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 0.664,
+        "widthMetres": 0.777,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.231,
+        "heightMetres": 1.39
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.231,
+        "heightMetres": 1.39
+      }
+    ]
+  },
+  "school_bus": {
+    "category": "bus",
+    "seats": [
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          1.1,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 2.059,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_2",
+        "role": "rear",
+        "hipPoint": [
+          1.1,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 2.075,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          1.1,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 3.509,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_2",
+        "role": "rear",
+        "hipPoint": [
+          1.1,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 3.509,
+        "widthMetres": 0.551,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_3",
+        "role": "rear",
+        "hipPoint": [
+          0.46,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_4",
+        "role": "rear",
+        "hipPoint": [
+          0.46,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_3",
+        "role": "rear",
+        "hipPoint": [
+          0.46,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_4",
+        "role": "rear",
+        "hipPoint": [
+          0.46,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_5",
+        "role": "rear",
+        "hipPoint": [
+          -0.18,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_6",
+        "role": "rear",
+        "hipPoint": [
+          -0.18,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_5",
+        "role": "rear",
+        "hipPoint": [
+          -0.18,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_6",
+        "role": "rear",
+        "hipPoint": [
+          -0.18,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_7",
+        "role": "rear",
+        "hipPoint": [
+          -0.82,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_8",
+        "role": "rear",
+        "hipPoint": [
+          -0.82,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_7",
+        "role": "rear",
+        "hipPoint": [
+          -0.82,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_8",
+        "role": "rear",
+        "hipPoint": [
+          -0.82,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_9",
+        "role": "rear",
+        "hipPoint": [
+          -1.46,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_10",
+        "role": "rear",
+        "hipPoint": [
+          -1.46,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_9",
+        "role": "rear",
+        "hipPoint": [
+          -1.46,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_10",
+        "role": "rear",
+        "hipPoint": [
+          -1.46,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_11",
+        "role": "rear",
+        "hipPoint": [
+          -2.1,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.551,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_12",
+        "role": "rear",
+        "hipPoint": [
+          -2.1,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_11",
+        "role": "rear",
+        "hipPoint": [
+          -2.1,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_12",
+        "role": "rear",
+        "hipPoint": [
+          -2.1,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.551,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_13",
+        "role": "rear",
+        "hipPoint": [
+          -2.74,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_14",
+        "role": "rear",
+        "hipPoint": [
+          -2.74,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_13",
+        "role": "rear",
+        "hipPoint": [
+          -2.74,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_14",
+        "role": "rear",
+        "hipPoint": [
+          -2.74,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_15",
+        "role": "rear",
+        "hipPoint": [
+          -3.38,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_16",
+        "role": "rear",
+        "hipPoint": [
+          -3.38,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_15",
+        "role": "rear",
+        "hipPoint": [
+          -3.38,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_16",
+        "role": "rear",
+        "hipPoint": [
+          -3.38,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_17",
+        "role": "rear",
+        "hipPoint": [
+          -4.02,
+          1.43,
+          -0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_18",
+        "role": "rear",
+        "hipPoint": [
+          -4.02,
+          1.43,
+          -0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_17",
+        "role": "rear",
+        "hipPoint": [
+          -4.02,
+          1.43,
+          0.46
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.69,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_18",
+        "role": "rear",
+        "hipPoint": [
+          -4.02,
+          1.43,
+          0.92
+        ],
+        "headroomMetres": 1.54,
+        "legroomMetres": 0.38,
+        "widthMetres": 0.555,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          3.45,
+          1.48,
+          -0.7
+        ],
+        "headroomMetres": 1.49,
+        "legroomMetres": 1.157,
+        "widthMetres": 2.483,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.85,
+        "heightMetres": 1.95
+      }
+    ]
+  },
+  "city_bus": {
+    "category": "bus",
+    "seats": [
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          3.3,
+          0.9,
+          -0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.401,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_2",
+        "role": "rear",
+        "hipPoint": [
+          3.3,
+          0.9,
+          -0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.45,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          3.3,
+          0.9,
+          0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 2.42,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_2",
+        "role": "rear",
+        "hipPoint": [
+          3.3,
+          0.9,
+          0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.425,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_3",
+        "role": "rear",
+        "hipPoint": [
+          2.55,
+          0.9,
+          -0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_4",
+        "role": "rear",
+        "hipPoint": [
+          2.55,
+          0.9,
+          -0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_3",
+        "role": "rear",
+        "hipPoint": [
+          2.55,
+          0.9,
+          0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_4",
+        "role": "rear",
+        "hipPoint": [
+          2.55,
+          0.9,
+          0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_5",
+        "role": "rear",
+        "hipPoint": [
+          0,
+          0.9,
+          -0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 2.29,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_6",
+        "role": "rear",
+        "hipPoint": [
+          0,
+          0.9,
+          -0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 2.29,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_5",
+        "role": "rear",
+        "hipPoint": [
+          0,
+          0.9,
+          0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 2.29,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_6",
+        "role": "rear",
+        "hipPoint": [
+          0,
+          0.9,
+          0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 2.29,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_7",
+        "role": "rear",
+        "hipPoint": [
+          -0.75,
+          0.9,
+          -0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_8",
+        "role": "rear",
+        "hipPoint": [
+          -0.75,
+          0.9,
+          -0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_7",
+        "role": "rear",
+        "hipPoint": [
+          -0.75,
+          0.9,
+          0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_8",
+        "role": "rear",
+        "hipPoint": [
+          -0.75,
+          0.9,
+          0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_9",
+        "role": "rear",
+        "hipPoint": [
+          -1.5,
+          0.9,
+          -0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_10",
+        "role": "rear",
+        "hipPoint": [
+          -1.5,
+          0.9,
+          -0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_9",
+        "role": "rear",
+        "hipPoint": [
+          -1.5,
+          0.9,
+          0.494
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.713,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_10",
+        "role": "rear",
+        "hipPoint": [
+          -1.5,
+          0.9,
+          0.931
+        ],
+        "headroomMetres": 2.09,
+        "legroomMetres": 0.49,
+        "widthMetres": 0.537,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_11",
+        "role": "rear",
+        "hipPoint": [
+          -3.2,
+          1.35,
+          -0.925
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 6.784,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_12",
+        "role": "rear",
+        "hipPoint": [
+          -3.2,
+          1.35,
+          -0.475
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 7.681,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_11",
+        "role": "rear",
+        "hipPoint": [
+          -3.2,
+          1.35,
+          0.475
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 9.33,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_12",
+        "role": "rear",
+        "hipPoint": [
+          -3.2,
+          1.35,
+          0.925
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 9.33,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_13",
+        "role": "rear",
+        "hipPoint": [
+          -3.92,
+          1.35,
+          -0.925
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_14",
+        "role": "rear",
+        "hipPoint": [
+          -3.92,
+          1.35,
+          -0.475
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_13",
+        "role": "rear",
+        "hipPoint": [
+          -3.92,
+          1.35,
+          0.475
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_14",
+        "role": "rear",
+        "hipPoint": [
+          -3.92,
+          1.35,
+          0.925
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_15",
+        "role": "rear",
+        "hipPoint": [
+          -4.64,
+          1.35,
+          -0.925
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_16",
+        "role": "rear",
+        "hipPoint": [
+          -4.64,
+          1.35,
+          -0.475
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_15",
+        "role": "rear",
+        "hipPoint": [
+          -4.64,
+          1.35,
+          0.475
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_right_16",
+        "role": "rear",
+        "hipPoint": [
+          -4.64,
+          1.35,
+          0.925
+        ],
+        "headroomMetres": 1.64,
+        "legroomMetres": 0.46,
+        "widthMetres": 0.545,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          4.85,
+          1.07,
+          -0.68
+        ],
+        "headroomMetres": 1.92,
+        "legroomMetres": 1.291,
+        "widthMetres": 2.492,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left_17",
+        "role": "rear",
+        "hipPoint": [
+          3.95,
+          1.06,
+          -0.95
+        ],
+        "headroomMetres": 1.93,
+        "legroomMetres": 2.191,
+        "widthMetres": 2.502,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_right",
+        "widthMetres": 1,
+        "heightMetres": 2.05
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 1,
+        "heightMetres": 2.05
+      }
+    ]
+  },
+  "armored_truck": {
+    "category": "truck",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          2.684,
+          1.55,
+          -0.536
+        ],
+        "headroomMetres": 1.27,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.983,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          2.684,
+          1.55,
+          0.18
+        ],
+        "headroomMetres": 1.27,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.61,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "front_right_2",
+        "role": "front_passenger",
+        "hipPoint": [
+          2.684,
+          1.55,
+          0.685
+        ],
+        "headroomMetres": 1.27,
+        "legroomMetres": 0.664,
+        "widthMetres": 0.728,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.107,
+        "heightMetres": 1.5
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.107,
+        "heightMetres": 1.5
+      }
+    ]
+  },
+  "tractor": {
+    "category": "agricultural",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -1.08,
+          1.52,
+          0
+        ],
+        "headroomMetres": 1.11,
+        "legroomMetres": 0.915,
+        "widthMetres": 0.54,
+        "doorId": "cab_entry_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "cab_entry_left",
+        "widthMetres": 0.85,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "cab_entry_right",
+        "widthMetres": 0.85,
+        "heightMetres": 1.15
+      }
+    ]
+  },
+  "light_4x4": {
+    "category": "military_light",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.58,
+          0.69,
+          -0.405
+        ],
+        "headroomMetres": 1.108,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.813,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.58,
+          0.69,
+          0.405
+        ],
+        "headroomMetres": 1.108,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.813,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.01,
+        "heightMetres": 1.21
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.01,
+        "heightMetres": 1.21
+      }
+    ]
+  },
+  "troop_truck": {
+    "category": "truck",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          2.485,
+          1.65,
+          -0.546
+        ],
+        "headroomMetres": 1.32,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.998,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          2.485,
+          1.65,
+          0.184
+        ],
+        "headroomMetres": 1.32,
+        "legroomMetres": 0.67,
+        "widthMetres": 0.622,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "front_right_2",
+        "role": "front_passenger",
+        "hipPoint": [
+          2.485,
+          1.65,
+          0.698
+        ],
+        "headroomMetres": 1.32,
+        "legroomMetres": 0.664,
+        "widthMetres": 0.738,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.169,
+        "heightMetres": 1.55
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.169,
+        "heightMetres": 1.55
+      }
+    ]
+  },
+  "apc_6x6": {
+    "category": "military_armored",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.95,
+          1.35,
+          -0.62
+        ],
+        "headroomMetres": 0.88,
+        "legroomMetres": 0.725,
+        "widthMetres": 2.387,
+        "doorId": "hatch_driver"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          0.15,
+          1.28,
+          0
+        ],
+        "headroomMetres": 0.95,
+        "legroomMetres": 1.318,
+        "widthMetres": 2.438,
+        "doorId": "hatch_driver"
+      }
+    ],
+    "doors": [
+      {
+        "id": "hatch_driver",
+        "widthMetres": 0.58,
+        "heightMetres": 0.6
+      },
+      {
+        "id": "ramp_rear",
+        "widthMetres": 1.4,
+        "heightMetres": 1.35
+      }
+    ]
+  },
+  "armored_car_6x6": {
+    "category": "military_armored",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          1,
+          0.87,
+          -0.55
+        ],
+        "headroomMetres": 0.895,
+        "legroomMetres": 1.653,
+        "widthMetres": 2.492,
+        "doorId": "hatch_driver"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.65,
+          1.01,
+          0.42
+        ],
+        "headroomMetres": 0.79,
+        "legroomMetres": 3.162,
+        "widthMetres": 1.184,
+        "doorId": "hatch_driver"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.65,
+          1.01,
+          -0.42
+        ],
+        "headroomMetres": 0.79,
+        "legroomMetres": 1.302,
+        "widthMetres": 1.184,
+        "doorId": "hatch_driver"
+      }
+    ],
+    "doors": [
+      {
+        "id": "hatch_driver",
+        "widthMetres": 0.54,
+        "heightMetres": 0.58
+      },
+      {
+        "id": "hatch_commander",
+        "widthMetres": 0.6,
+        "heightMetres": 0.6
+      }
+    ]
+  },
+  "battle_tank": {
+    "category": "military_armored",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          1.65,
+          0.45,
+          -0.76
+        ],
+        "headroomMetres": 0.9,
+        "legroomMetres": 1.233,
+        "widthMetres": 2,
+        "doorId": "hatch_driver"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.55,
+          1.26,
+          0.6
+        ],
+        "headroomMetres": 0.26,
+        "legroomMetres": 0.454,
+        "widthMetres": 1.231,
+        "doorId": "hatch_driver"
+      },
+      {
+        "id": "crew_right_2",
+        "role": "crew",
+        "hipPoint": [
+          0.2,
+          1.16,
+          0.62
+        ],
+        "headroomMetres": 0.36,
+        "legroomMetres": 3.025,
+        "widthMetres": 3.028,
+        "doorId": "hatch_driver"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.3,
+          1.16,
+          -0.62
+        ],
+        "headroomMetres": 0.36,
+        "legroomMetres": 3.525,
+        "widthMetres": 1.502,
+        "doorId": "hatch_driver"
+      }
+    ],
+    "doors": [
+      {
+        "id": "hatch_driver",
+        "widthMetres": 0.56,
+        "heightMetres": 0.58
+      },
+      {
+        "id": "hatch_commander",
+        "widthMetres": 0.68,
+        "heightMetres": 0.68
+      }
+    ]
+  },
+  "transport_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          1.55,
+          1.29,
+          0.5
+        ],
+        "headroomMetres": 1.15,
+        "legroomMetres": 0.769,
+        "widthMetres": 1.138,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          1.55,
+          1.29,
+          -0.5
+        ],
+        "headroomMetres": 1.15,
+        "legroomMetres": 0.769,
+        "widthMetres": 1.138,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.25,
+          1.27,
+          -0.731
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.567,
+        "widthMetres": 0.488,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left_2",
+        "role": "crew",
+        "hipPoint": [
+          -0.25,
+          1.27,
+          -0.244
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 2.575,
+        "widthMetres": 0.488,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.25,
+          1.27,
+          0.244
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 2.575,
+        "widthMetres": 0.488,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_right_2",
+        "role": "crew",
+        "hipPoint": [
+          -0.25,
+          1.27,
+          0.731
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.567,
+        "widthMetres": 0.488,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_left_3",
+        "role": "crew",
+        "hipPoint": [
+          -1.15,
+          1.27,
+          -0.731
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.617,
+        "widthMetres": 0.488,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left_4",
+        "role": "crew",
+        "hipPoint": [
+          -1.15,
+          1.27,
+          -0.244
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.617,
+        "widthMetres": 0.488,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right_3",
+        "role": "crew",
+        "hipPoint": [
+          -1.15,
+          1.27,
+          0.244
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.617,
+        "widthMetres": 0.488,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_right_4",
+        "role": "crew",
+        "hipPoint": [
+          -1.15,
+          1.27,
+          0.731
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.617,
+        "widthMetres": 0.488,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_left_5",
+        "role": "crew",
+        "hipPoint": [
+          -2.35,
+          1.27,
+          -0.5
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.952,
+        "widthMetres": 0.9,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_center",
+        "role": "crew",
+        "hipPoint": [
+          -2.35,
+          1.27,
+          0
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 4.675,
+        "widthMetres": 0.5,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right_5",
+        "role": "crew",
+        "hipPoint": [
+          -2.35,
+          1.27,
+          0.5
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.952,
+        "widthMetres": 0.9,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_right_6",
+        "role": "crew",
+        "hipPoint": [
+          0.6,
+          1.27,
+          0.75
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.713,
+        "widthMetres": 1.179,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_left_6",
+        "role": "crew",
+        "hipPoint": [
+          0.6,
+          1.27,
+          -0.75
+        ],
+        "headroomMetres": 1.17,
+        "legroomMetres": 0.713,
+        "widthMetres": 1.179,
+        "doorId": "door_front_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.75,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.75,
+        "heightMetres": 1.15
+      }
+    ]
+  },
+  "river_skiff": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.55,
+          0.32,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "rear_center_2",
+        "role": "rear",
+        "hipPoint": [
+          -0.15,
+          0.32,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          1.05,
+          0.32,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "speedboat": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.1,
+          0.652,
+          0.72
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.1,
+          0.652,
+          -0.74
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "fishing_boat": {
+    "category": "boat_cabin",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -2.82,
+          1.121,
+          0
+        ],
+        "headroomMetres": 1.268,
+        "legroomMetres": 0.67,
+        "widthMetres": 2.2,
+        "doorId": "cabin_door"
+      }
+    ],
+    "doors": [
+      {
+        "id": "cabin_door",
+        "widthMetres": 0.68,
+        "heightMetres": 1.55
+      }
+    ]
+  },
+  "single_engine_plane": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          0.38,
+          0.99,
+          0.26
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 1.917,
+        "widthMetres": 0.56,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          0.38,
+          0.99,
+          -0.26
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 1.917,
+        "widthMetres": 0.56,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.52,
+          0.99,
+          -0.24
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 0.6,
+        "widthMetres": 0.551,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.52,
+          0.99,
+          0.24
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 0.6,
+        "widthMetres": 0.551,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.75,
+        "heightMetres": 0.95
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.75,
+        "heightMetres": 0.95
+      }
+    ]
+  },
+  "crop_duster": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_center",
+        "role": "pilot",
+        "hipPoint": [
+          -0.208,
+          0.729,
+          0
+        ],
+        "headroomMetres": 1.348,
+        "legroomMetres": 2.413,
+        "widthMetres": 0.939,
+        "doorId": "canopy_door"
+      }
+    ],
+    "doors": [
+      {
+        "id": "canopy_door",
+        "widthMetres": 0.7,
+        "heightMetres": 0.85
+      }
+    ]
+  },
+  "piston_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          0.35,
+          0.93,
+          0.3
+        ],
+        "headroomMetres": 1.004,
+        "legroomMetres": 1.539,
+        "widthMetres": 0.642,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          0.35,
+          0.93,
+          -0.3
+        ],
+        "headroomMetres": 1.004,
+        "legroomMetres": 1.539,
+        "widthMetres": 0.642,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.55,
+          0.99,
+          -0.265
+        ],
+        "headroomMetres": 0.908,
+        "legroomMetres": 0.598,
+        "widthMetres": 0.614,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.55,
+          0.99,
+          0.265
+        ],
+        "headroomMetres": 0.908,
+        "legroomMetres": 0.598,
+        "widthMetres": 0.614,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.72,
+        "heightMetres": 1.05
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.72,
+        "heightMetres": 1.05
+      }
+    ]
+  },
+  "rescue_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          1.25,
+          1.17,
+          0.42
+        ],
+        "headroomMetres": 1.06,
+        "legroomMetres": 1.956,
+        "widthMetres": 0.89,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          1.25,
+          1.17,
+          -0.42
+        ],
+        "headroomMetres": 1.06,
+        "legroomMetres": 1.956,
+        "widthMetres": 0.883,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.35,
+          1.21,
+          -0.585
+        ],
+        "headroomMetres": 0.976,
+        "legroomMetres": 1.305,
+        "widthMetres": 0.498,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left_2",
+        "role": "crew",
+        "hipPoint": [
+          -0.35,
+          1.21,
+          -0.195
+        ],
+        "headroomMetres": 0.993,
+        "legroomMetres": 1.313,
+        "widthMetres": 0.39,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.35,
+          1.21,
+          0.195
+        ],
+        "headroomMetres": 0.993,
+        "legroomMetres": 1.313,
+        "widthMetres": 0.39,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_right_2",
+        "role": "crew",
+        "hipPoint": [
+          -0.35,
+          1.21,
+          0.585
+        ],
+        "headroomMetres": 0.976,
+        "legroomMetres": 1.305,
+        "widthMetres": 0.492,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.78,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.78,
+        "heightMetres": 1.15
+      }
+    ]
+  },
+  "step_through_scooter": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.52,
+          0.788,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "naked_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.542,
+          0.829,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "sport_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.55,
+          0.843,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "cruiser": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.342,
+          0.747,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "delivery_bike": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rider",
+        "role": "rider",
+        "hipPoint": [
+          -0.553,
+          0.789,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "boxy_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.28,
+          0.36,
+          -0.32
+        ],
+        "headroomMetres": 1.028,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.631,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.28,
+          0.36,
+          0.32
+        ],
+        "headroomMetres": 1.028,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.631,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1,
+          0.354,
+          -0.393
+        ],
+        "headroomMetres": 1.034,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.435,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1,
+          0.354,
+          0
+        ],
+        "headroomMetres": 1.034,
+        "legroomMetres": 0.985,
+        "widthMetres": 0.393,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1,
+          0.354,
+          0.393
+        ],
+        "headroomMetres": 1.034,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.435,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.11,
+        "heightMetres": 1.11
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.714,
+        "heightMetres": 1.11
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.11,
+        "heightMetres": 1.11
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.714,
+        "heightMetres": 1.11
+      }
+    ]
+  },
+  "family_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.18,
+          0.37,
+          -0.335
+        ],
+        "headroomMetres": 1.029,
+        "legroomMetres": 0.96,
+        "widthMetres": 0.647,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.18,
+          0.37,
+          0.335
+        ],
+        "headroomMetres": 1.029,
+        "legroomMetres": 0.96,
+        "widthMetres": 0.647,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.9,
+          0.364,
+          -0.413
+        ],
+        "headroomMetres": 1.049,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.9,
+          0.364,
+          0
+        ],
+        "headroomMetres": 1.049,
+        "legroomMetres": 0.985,
+        "widthMetres": 0.413,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.9,
+          0.364,
+          0.413
+        ],
+        "headroomMetres": 1.049,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.15,
+        "heightMetres": 1.125
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.7,
+        "heightMetres": 1.125
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.15,
+        "heightMetres": 1.125
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.7,
+        "heightMetres": 1.125
+      }
+    ]
+  },
+  "rideshare_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.18,
+          0.38,
+          -0.355
+        ],
+        "headroomMetres": 1.02,
+        "legroomMetres": 0.96,
+        "widthMetres": 0.685,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.18,
+          0.38,
+          0.355
+        ],
+        "headroomMetres": 1.02,
+        "legroomMetres": 0.96,
+        "widthMetres": 0.685,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.9,
+          0.374,
+          -0.44
+        ],
+        "headroomMetres": 1.044,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.9,
+          0.374,
+          0
+        ],
+        "headroomMetres": 1.044,
+        "legroomMetres": 0.985,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.9,
+          0.374,
+          0.44
+        ],
+        "headroomMetres": 1.044,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.12,
+        "heightMetres": 1.12
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.77,
+        "heightMetres": 1.12
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.12,
+        "heightMetres": 1.12
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.77,
+        "heightMetres": 1.12
+      }
+    ]
+  },
+  "turbo_hatch": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.14,
+          0.37,
+          -0.355
+        ],
+        "headroomMetres": 1.03,
+        "legroomMetres": 0.96,
+        "widthMetres": 0.685,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.14,
+          0.37,
+          0.355
+        ],
+        "headroomMetres": 1.03,
+        "legroomMetres": 0.96,
+        "widthMetres": 0.685,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -0.86,
+          0.364,
+          -0.44
+        ],
+        "headroomMetres": 1.054,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.86,
+          0.364,
+          0
+        ],
+        "headroomMetres": 1.054,
+        "legroomMetres": 0.985,
+        "widthMetres": 0.44,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -0.86,
+          0.364,
+          0.44
+        ],
+        "headroomMetres": 1.054,
+        "legroomMetres": 0.414,
+        "widthMetres": 0.465,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.17,
+        "heightMetres": 1.13
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.774,
+        "heightMetres": 1.13
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.17,
+        "heightMetres": 1.13
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.774,
+        "heightMetres": 1.13
+      }
+    ]
+  },
+  "fastback_sedan": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.18,
+          0.35,
+          -0.36
+        ],
+        "headroomMetres": 1.014,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.7,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.18,
+          0.35,
+          0.36
+        ],
+        "headroomMetres": 1.014,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.7,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.06,
+          0.344,
+          -0.447
+        ],
+        "headroomMetres": 0.966,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.477,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.06,
+          0.344,
+          0
+        ],
+        "headroomMetres": 0.989,
+        "legroomMetres": 1.145,
+        "widthMetres": 0.447,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.06,
+          0.344,
+          0.447
+        ],
+        "headroomMetres": 0.966,
+        "legroomMetres": 0.574,
+        "widthMetres": 0.477,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.24,
+        "heightMetres": 1.11
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.67,
+        "heightMetres": 1.11
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.24,
+        "heightMetres": 1.11
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.67,
+        "heightMetres": 1.11
+      }
+    ]
+  },
+  "classic_six_sedan": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.32,
+          0.39,
+          -0.36
+        ],
+        "headroomMetres": 0.963,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.71,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.32,
+          0.39,
+          0.36
+        ],
+        "headroomMetres": 0.963,
+        "legroomMetres": 1.1,
+        "widthMetres": 0.71,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.14,
+          0.384,
+          -0.447
+        ],
+        "headroomMetres": 0.969,
+        "legroomMetres": 0.514,
+        "widthMetres": 0.487,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.14,
+          0.384,
+          0
+        ],
+        "headroomMetres": 0.969,
+        "legroomMetres": 1.085,
+        "widthMetres": 0.447,
+        "doorId": "door_rear_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.14,
+          0.384,
+          0.447
+        ],
+        "headroomMetres": 0.969,
+        "legroomMetres": 0.514,
+        "widthMetres": 0.487,
+        "doorId": "door_rear_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.17,
+        "heightMetres": 1.045
+      },
+      {
+        "id": "door_rear_left",
+        "widthMetres": 0.74,
+        "heightMetres": 1.045
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.17,
+        "heightMetres": 1.045
+      },
+      {
+        "id": "door_rear_right",
+        "widthMetres": 0.74,
+        "heightMetres": 1.045
+      }
+    ]
+  },
+  "v8_coupe": {
+    "category": "passenger_car",
+    "seats": [
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -0.46,
+          0.35,
+          -0.37
+        ],
+        "headroomMetres": 0.974,
+        "legroomMetres": 1.06,
+        "widthMetres": 0.687,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -0.46,
+          0.35,
+          0.37
+        ],
+        "headroomMetres": 0.974,
+        "legroomMetres": 1.06,
+        "widthMetres": 0.687,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.344,
+          -0.46
+        ],
+        "headroomMetres": 0.909,
+        "legroomMetres": 0.314,
+        "widthMetres": 0.476,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.344,
+          0
+        ],
+        "headroomMetres": 0.934,
+        "legroomMetres": 0.885,
+        "widthMetres": 0.46,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.08,
+          0.344,
+          0.46
+        ],
+        "headroomMetres": 0.909,
+        "legroomMetres": 0.314,
+        "widthMetres": 0.476,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 1.5,
+        "heightMetres": 1.074
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 1.5,
+        "heightMetres": 1.074
+      }
+    ]
+  },
+  "jet_ski": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.75,
+          0.64,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "rear_center_2",
+        "role": "rear",
+        "hipPoint": [
+          -0.35,
+          0.66,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.05,
+          0.7,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "sailboat": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          -2.6,
+          0.9,
+          0.82
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          -2.6,
+          0.9,
+          -0.82
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "rescue_dinghy": {
+    "category": "open_vehicle",
+    "seats": [
+      {
+        "id": "rear_center",
+        "role": "rear",
+        "hipPoint": [
+          -0.25,
+          0.43,
+          0
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.6,
+          0.47,
+          0.705
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.6,
+          0.47,
+          -0.705
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "rear_right",
+        "role": "rear",
+        "hipPoint": [
+          -1.1,
+          0.47,
+          0.705
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      },
+      {
+        "id": "rear_left",
+        "role": "rear",
+        "hipPoint": [
+          -1.1,
+          0.47,
+          -0.705
+        ],
+        "headroomMetres": "Infinity",
+        "legroomMetres": "Infinity",
+        "widthMetres": "Infinity"
+      }
+    ],
+    "doors": []
+  },
+  "patrol_boat": {
+    "category": "boat_cabin",
+    "seats": [
+      {
+        "id": "front_right",
+        "role": "front_passenger",
+        "hipPoint": [
+          0.95,
+          1.889,
+          0.45
+        ],
+        "headroomMetres": 1.13,
+        "legroomMetres": 0.8,
+        "widthMetres": 1.099,
+        "doorId": "cabin_door"
+      },
+      {
+        "id": "driver",
+        "role": "driver",
+        "hipPoint": [
+          0.95,
+          1.889,
+          -0.45
+        ],
+        "headroomMetres": 1.13,
+        "legroomMetres": 0.8,
+        "widthMetres": 1.099,
+        "doorId": "cabin_door"
+      }
+    ],
+    "doors": [
+      {
+        "id": "cabin_door",
+        "widthMetres": 0.72,
+        "heightMetres": 1.65
+      }
+    ]
+  },
+  "tandem_trainer": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_center",
+        "role": "pilot",
+        "hipPoint": [
+          0.646,
+          0.655,
+          0
+        ],
+        "headroomMetres": 0.982,
+        "legroomMetres": 1.966,
+        "widthMetres": 0.697,
+        "doorId": "canopy_door"
+      },
+      {
+        "id": "crew_center",
+        "role": "crew",
+        "hipPoint": [
+          -0.191,
+          0.577,
+          0
+        ],
+        "headroomMetres": 0.936,
+        "legroomMetres": 0.532,
+        "widthMetres": 0.684,
+        "doorId": "canopy_door"
+      }
+    ],
+    "doors": [
+      {
+        "id": "canopy_door",
+        "widthMetres": 0.7,
+        "heightMetres": 0.85
+      }
+    ]
+  },
+  "regional_turboprop": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          4.95,
+          1.37,
+          0.38
+        ],
+        "headroomMetres": 1.239,
+        "legroomMetres": 2.214,
+        "widthMetres": 0.857,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          4.95,
+          1.37,
+          -0.38
+        ],
+        "headroomMetres": 1.239,
+        "legroomMetres": 2.214,
+        "widthMetres": 0.857,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          3.62,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.81,
+        "widthMetres": 0.862,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          3.62,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.81,
+        "widthMetres": 0.862,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_2",
+        "role": "crew",
+        "hipPoint": [
+          2.8,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.863,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_2",
+        "role": "crew",
+        "hipPoint": [
+          2.8,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.863,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_3",
+        "role": "crew",
+        "hipPoint": [
+          1.98,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.864,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_3",
+        "role": "crew",
+        "hipPoint": [
+          1.98,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.864,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_4",
+        "role": "crew",
+        "hipPoint": [
+          1.16,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.865,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_4",
+        "role": "crew",
+        "hipPoint": [
+          1.16,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.865,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_5",
+        "role": "crew",
+        "hipPoint": [
+          0.34,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.865,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_5",
+        "role": "crew",
+        "hipPoint": [
+          0.34,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.865,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_6",
+        "role": "crew",
+        "hipPoint": [
+          -0.48,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.865,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_6",
+        "role": "crew",
+        "hipPoint": [
+          -0.48,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.865,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_7",
+        "role": "crew",
+        "hipPoint": [
+          -1.3,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.864,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_7",
+        "role": "crew",
+        "hipPoint": [
+          -1.3,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.864,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_8",
+        "role": "crew",
+        "hipPoint": [
+          -2.12,
+          1.37,
+          0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.861,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_8",
+        "role": "crew",
+        "hipPoint": [
+          -2.12,
+          1.37,
+          -0.5
+        ],
+        "headroomMetres": 1.1,
+        "legroomMetres": 0.527,
+        "widthMetres": 0.861,
+        "doorId": "cabin_door_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "cabin_door_left",
+        "widthMetres": 0.78,
+        "heightMetres": 1.55
+      }
+    ]
+  },
+  "amphibian_turboprop": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          0.95,
+          2.45,
+          0.38
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 3.983,
+        "widthMetres": 0.84,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          0.95,
+          2.45,
+          -0.38
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 3.983,
+        "widthMetres": 0.834,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          0.05,
+          2.45,
+          -0.575
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.607,
+        "widthMetres": 0.507,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_2",
+        "role": "crew",
+        "hipPoint": [
+          0.05,
+          2.45,
+          -0.125
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 4.95,
+        "widthMetres": 0.538,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          0.05,
+          2.45,
+          0.5
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.607,
+        "widthMetres": 0.669,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_3",
+        "role": "crew",
+        "hipPoint": [
+          -0.75,
+          2.45,
+          -0.575
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.507,
+        "widthMetres": 0.508,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_4",
+        "role": "crew",
+        "hipPoint": [
+          -0.75,
+          2.45,
+          -0.125
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.507,
+        "widthMetres": 0.538,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_2",
+        "role": "crew",
+        "hipPoint": [
+          -0.75,
+          2.45,
+          0.5
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.507,
+        "widthMetres": 0.67,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_5",
+        "role": "crew",
+        "hipPoint": [
+          -1.55,
+          2.45,
+          -0.575
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.507,
+        "widthMetres": 0.506,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_6",
+        "role": "crew",
+        "hipPoint": [
+          -1.55,
+          2.45,
+          -0.125
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.507,
+        "widthMetres": 0.538,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_3",
+        "role": "crew",
+        "hipPoint": [
+          -1.55,
+          2.45,
+          0.5
+        ],
+        "headroomMetres": 1.04,
+        "legroomMetres": 0.507,
+        "widthMetres": 0.669,
+        "doorId": "cabin_door_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "cabin_door_left",
+        "widthMetres": 0.78,
+        "heightMetres": 1.4
+      }
+    ]
+  },
+  "light_jet": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          3.55,
+          1.17,
+          0.36
+        ],
+        "headroomMetres": 1.07,
+        "legroomMetres": 2.285,
+        "widthMetres": 0.815,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          3.55,
+          1.17,
+          -0.36
+        ],
+        "headroomMetres": 1.07,
+        "legroomMetres": 2.286,
+        "widthMetres": 0.815,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          2.25,
+          1.21,
+          0.42
+        ],
+        "headroomMetres": 1.03,
+        "legroomMetres": 1.001,
+        "widthMetres": 0.812,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          2.25,
+          1.21,
+          -0.42
+        ],
+        "headroomMetres": 1.03,
+        "legroomMetres": 1.001,
+        "widthMetres": 0.809,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_right_2",
+        "role": "crew",
+        "hipPoint": [
+          1.05,
+          1.21,
+          0.42
+        ],
+        "headroomMetres": 1.03,
+        "legroomMetres": 5.215,
+        "widthMetres": 0.83,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "crew_left_2",
+        "role": "crew",
+        "hipPoint": [
+          1.05,
+          1.21,
+          -0.42
+        ],
+        "headroomMetres": 1.03,
+        "legroomMetres": 5.216,
+        "widthMetres": 0.83,
+        "doorId": "cabin_door_left"
+      },
+      {
+        "id": "cargo_left",
+        "role": "cargo",
+        "hipPoint": [
+          0.1,
+          1.21,
+          -0.5
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 1.327,
+        "widthMetres": 4.97,
+        "doorId": "cabin_door_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "cabin_door_left",
+        "widthMetres": 0.72,
+        "heightMetres": 1.35
+      }
+    ]
+  },
+  "light_attack_turboprop": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_center",
+        "role": "pilot",
+        "hipPoint": [
+          1.55,
+          1.57,
+          0
+        ],
+        "headroomMetres": 1.048,
+        "legroomMetres": 3.585,
+        "widthMetres": 0.5,
+        "doorId": "canopy_door"
+      },
+      {
+        "id": "crew_center",
+        "role": "crew",
+        "hipPoint": [
+          0.2,
+          1.79,
+          0
+        ],
+        "headroomMetres": 1.075,
+        "legroomMetres": 0.985,
+        "widthMetres": 0.729,
+        "doorId": "canopy_door"
+      }
+    ],
+    "doors": [
+      {
+        "id": "canopy_door",
+        "widthMetres": 0.68,
+        "heightMetres": 0.85
+      }
+    ]
+  },
+  "trainer_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          0.05,
+          0.73,
+          0.26
+        ],
+        "headroomMetres": 0.958,
+        "legroomMetres": 1.482,
+        "widthMetres": 0.546,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          0.05,
+          0.73,
+          -0.26
+        ],
+        "headroomMetres": 0.958,
+        "legroomMetres": 1.482,
+        "widthMetres": 0.544,
+        "doorId": "door_front_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.68,
+        "heightMetres": 0.95
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.68,
+        "heightMetres": 0.95
+      }
+    ]
+  },
+  "turbine_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          1.05,
+          0.97,
+          0.3
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 1.496,
+        "widthMetres": 0.63,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          1.05,
+          0.97,
+          -0.3
+        ],
+        "headroomMetres": 1,
+        "legroomMetres": 1.496,
+        "widthMetres": 0.626,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -0.3,
+          1.11,
+          -0.38
+        ],
+        "headroomMetres": 0.837,
+        "legroomMetres": 1.043,
+        "widthMetres": 0.429,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_center",
+        "role": "crew",
+        "hipPoint": [
+          -0.3,
+          1.11,
+          0
+        ],
+        "headroomMetres": 0.86,
+        "legroomMetres": 2.632,
+        "widthMetres": 0.38,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -0.3,
+          1.11,
+          0.38
+        ],
+        "headroomMetres": 0.837,
+        "legroomMetres": 1.043,
+        "widthMetres": 0.424,
+        "doorId": "door_front_right"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.75,
+        "heightMetres": 1.05
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.75,
+        "heightMetres": 1.05
+      }
+    ]
+  },
+  "police_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_right",
+        "role": "pilot",
+        "hipPoint": [
+          1.55,
+          1.11,
+          0.42
+        ],
+        "headroomMetres": 1.162,
+        "legroomMetres": 1.697,
+        "widthMetres": 0.849,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "pilot_left",
+        "role": "pilot",
+        "hipPoint": [
+          1.55,
+          1.11,
+          -0.42
+        ],
+        "headroomMetres": 1.162,
+        "legroomMetres": 1.697,
+        "widthMetres": 0.843,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "cargo_right",
+        "role": "cargo",
+        "hipPoint": [
+          0.3,
+          1.11,
+          0.55
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 1.266,
+        "widthMetres": 0.975,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "cargo_right_2",
+        "role": "cargo",
+        "hipPoint": [
+          -0.4,
+          1.11,
+          0.55
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 1.266,
+        "widthMetres": 0.95,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "cargo_left",
+        "role": "cargo",
+        "hipPoint": [
+          0.3,
+          1.11,
+          -0.55
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 1.266,
+        "widthMetres": 0.975,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "cargo_left_2",
+        "role": "cargo",
+        "hipPoint": [
+          -0.4,
+          1.11,
+          -0.55
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 1.266,
+        "widthMetres": 0.95,
+        "doorId": "door_front_left"
+      },
+      {
+        "id": "crew_right",
+        "role": "crew",
+        "hipPoint": [
+          -1.6,
+          1.11,
+          0.3
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 2.86,
+        "widthMetres": 0.865,
+        "doorId": "door_front_right"
+      },
+      {
+        "id": "crew_left",
+        "role": "crew",
+        "hipPoint": [
+          -1.6,
+          1.11,
+          -0.3
+        ],
+        "headroomMetres": 1.16,
+        "legroomMetres": 0.45,
+        "widthMetres": 0.865,
+        "doorId": "door_front_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "door_front_left",
+        "widthMetres": 0.78,
+        "heightMetres": 1.15
+      },
+      {
+        "id": "door_front_right",
+        "widthMetres": 0.78,
+        "heightMetres": 1.15
+      }
+    ]
+  },
+  "attack_helicopter": {
+    "category": "aircraft_enclosed",
+    "seats": [
+      {
+        "id": "pilot_center",
+        "role": "pilot",
+        "hipPoint": [
+          4.75,
+          1.66,
+          0
+        ],
+        "headroomMetres": 0.968,
+        "legroomMetres": 1.207,
+        "widthMetres": 0.965,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "pilot_center_2",
+        "role": "pilot",
+        "hipPoint": [
+          3.2,
+          2.23,
+          0
+        ],
+        "headroomMetres": 1.058,
+        "legroomMetres": 0.964,
+        "widthMetres": 1.047,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_right",
+        "role": "cargo",
+        "hipPoint": [
+          0.3,
+          1.36,
+          0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 0.675,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_left",
+        "role": "cargo",
+        "hipPoint": [
+          0.3,
+          1.36,
+          -0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 0.675,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_right_2",
+        "role": "cargo",
+        "hipPoint": [
+          1,
+          1.36,
+          0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 0.7,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_left_2",
+        "role": "cargo",
+        "hipPoint": [
+          1,
+          1.36,
+          -0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 0.7,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_right_3",
+        "role": "cargo",
+        "hipPoint": [
+          1.7,
+          1.36,
+          0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 3.968,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_left_3",
+        "role": "cargo",
+        "hipPoint": [
+          1.7,
+          1.36,
+          -0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 3.969,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_right_4",
+        "role": "cargo",
+        "hipPoint": [
+          -0.35,
+          1.36,
+          0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 3.446,
+        "doorId": "canopy_left"
+      },
+      {
+        "id": "cargo_left_4",
+        "role": "cargo",
+        "hipPoint": [
+          -0.35,
+          1.36,
+          -0.5
+        ],
+        "headroomMetres": 1.38,
+        "legroomMetres": 1.16,
+        "widthMetres": 3.446,
+        "doorId": "canopy_left"
+      }
+    ],
+    "doors": [
+      {
+        "id": "canopy_left",
+        "widthMetres": 0.72,
+        "heightMetres": 0.95
+      },
+      {
+        "id": "door_cargo_left",
+        "widthMetres": 0.9,
+        "heightMetres": 1.15
+      }
+    ]
+  }
+}

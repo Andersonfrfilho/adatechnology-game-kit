@@ -1199,8 +1199,9 @@ export function installBoatsExtra(fx: FleetContext): void {
         c.rod(new V3(hx + 0.88, ih + 0.97, z - 0.05), new V3(hx + 0.78, ih + 1.12, z - 0.05), 0.012, MT.chrome)
         c.sphere(0.025, MT.plastic, hx + 0.78, ih + 1.12, z - 0.05)
       })
-      kit.seat(c, hx + 0.05, ih, 0.45, { w: 0.52, h: 0.62, back: 0.6, lean: 0.12, mat: CM('#25282b', { roughness: 0.8 }) })
-      kit.seat(c, hx + 0.05, ih, -0.45, { w: 0.52, h: 0.62, back: 0.6, lean: 0.12, mat: CM('#25282b', { roughness: 0.8 }) })
+      kit.seat(c, hx + 0.05, ih, 0.45, { w: 0.52, h: 0.62, back: 0.6, lean: 0.12, mat: CM('#25282b', { roughness: 0.8 }), role: 'front_passenger' })
+      kit.seat(c, hx + 0.05, ih, -0.45, { w: 0.52, h: 0.62, back: 0.6, lean: 0.12, mat: CM('#25282b', { roughness: 0.8 }), id: 'driver', role: 'driver' })
+      c.addDoor({ id: 'cabin_door', widthMetres: 0.72, heightMetres: 1.65 })
       c.roundBox(0.45, 0.42, 1.9, 0.04, CM('#25282b', { roughness: 0.8 }), hx - 1.35, ih + 0.21, 0.1)
       c.seatTops.push({ x: hx - 1.35, y: ih + 0.44, z: 0.1, w: 1.8, l: 0.4 })
       c.roundBox(3.0, 0.02, 2.0, 0.01, CM('#3a3f44', { roughness: 0.9 }), hx, hy0 + hh - 0.06, 0).castShadow = false
