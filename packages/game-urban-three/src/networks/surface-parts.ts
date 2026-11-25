@@ -44,7 +44,7 @@ function cover(piece: SurfacePiece): SurfacePart[] {
 /** A grate at the kerb: the iron frame, the open slot dark under it, five bars along the kerb and a brace across them. */
 function grate(): SurfacePart[] {
   const bars = [-0.2, -0.1, 0, 0.1, 0.2].map((z): SurfacePart => ({ shape: 'box', centre: [0, RIB_TOP - 0.006, z], size: [0.9, 0.012, 0.025], color: IRON_WORN }))
-  const brace: SurfacePart = { shape: 'box', centre: [0, 0.0065, 0], size: [0.03, 0.003, 0.5], color: IRON }
+  const brace: SurfacePart = { shape: 'box', centre: [0, 0.0055, 0], size: [0.03, 0.003, 0.5], color: IRON }
   return [
     { shape: 'box', centre: [0, FRAME_TOP - THICK / 2, 0], size: [1, THICK, 0.6], color: IRON },
     { shape: 'box', centre: [0, 0.0025, 0], size: [0.9, 0.001, 0.5], color: VOID },

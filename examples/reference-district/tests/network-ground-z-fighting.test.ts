@@ -64,8 +64,8 @@ describe('the network surface and the ground it rests on', () => {
     const root = new THREE.Group()
     root.add(draw(), ...pieces.map((piece) => groundPatchOf(terrain, piece)))
     root.updateMatrixWorld(true)
-    // only a piece against the ground: the patches of two neighbouring pieces overlap each other (the test's doing), and a piece against itself is the catalog's guard
-    const hits = coincidentFacesOf(root as never, { maxHits: Number.POSITIVE_INFINITY }).filter((hit) => hit.labelA.startsWith('ground:') !== hit.labelB.startsWith('ground:'))
+    // the patches of two neighbouring pieces overlap each other (the test's doing): only those pairs are left out
+    const hits = coincidentFacesOf(root as never, { maxHits: Number.POSITIVE_INFINITY }).filter((hit) => !(hit.labelA.startsWith('ground:') && hit.labelB.startsWith('ground:')))
     expect(hits.length, describeCoincidentFaces(hits, 6)).toBe(0)
   })
 })
