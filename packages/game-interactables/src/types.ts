@@ -11,7 +11,7 @@
  * (front = +z, origin at the center of the footprint on the floor, meters). `World` converts them with the object's `Transform`.
  */
 
-import type { Thumbnail } from '@adatechnology/game-contracts'
+import type { CarryHands, Thumbnail } from '@adatechnology/game-contracts'
 
 export type Vec3 = [number, number, number]
 
@@ -521,8 +521,8 @@ export interface Interactable {
   /** Localized thing the verb applies to, e.g. "the fridge" / "a geladeira" (falls back to the object type name). Named `noun` because `object` is the owning object's id. */
   noun: string
   /** False when the interaction cannot be used right now (see `reason`). `world.target` skips these unless `includeUnavailable`. */
-  /** Hands the thing taken needs (an item inside a piece of furniture: 1, the other hand stays free); the same 1 | 2 as `CarryHands` of the destruction parts. Only on `take` of a contained item. */
-  hands?: 1 | 2
+  /** Hands the thing taken needs (an item inside a piece of furniture: 1, the other hand stays free), as a destruction part taken by hand. Only on `take` of a contained item. */
+  hands?: CarryHands
   available: boolean
   /** Locale key explaining why it is unavailable (`requires_open`, `no_power`, `locked`, `already_lit`, `needs_ignition`, `turn_on_first`); `world.t(reason)` is the text. */
   reason?: string
