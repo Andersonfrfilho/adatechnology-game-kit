@@ -1,4 +1,5 @@
 import { inferJoints } from '@adatechnology/game-destruction'
+import { holdLooseGroups } from './hold-loose.js'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-contracts'
 
@@ -50,6 +51,11 @@ export interface FurnitureSpecResult {
   size: { w: number; d: number; h: number }
   /** Where the water leaves the taps the builder drew (a sink, a tub), in the space of the spec; empty for furniture without a tap. */
   spouts: Array<[number, number, number]>
+  /**
+   * The piece is fixed where it is laid, not a loose body: a part hangs on the wall behind it (a range hood, a shower head, a curtain rod), it is set into the ground
+   * (the legs of a swing), or it is a tree standing in the ground by its trunk.
+   */
+  fixed: boolean
 }
 
 interface Drawn {
@@ -160,7 +166,7 @@ interface RecordOptions {
 }
 
 /** Runs `run` with a recording stand-in for the drawing api and turns what it drew into a spec, a drawing and the top. `root` is the frame of the piece (the builder's `M`). */
-function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureApi) => void, opts: RecordOptions): { spec: DestructibleSpec; build: (T3: Three) => THREE_NS.Group; top: FurnitureSpecResult['top'] } {
+function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureApi) => void, opts: RecordOptions): Pick<FurnitureSpecResult, 'spec' | 'build' | 'top' | 'fixed'> {
   const o = { chairs: opts.chairs }
   const materialOf = { ...BASE_MATERIAL, ...opts.materials }
   const drawn: Drawn[] = []
@@ -251,6 +257,12 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
     }
     joints.push(j)
   }
+  holdLooseGroups({ parts, joints, boxOf: (id) => byId.get(id) as Drawn })
+  const low = (part: PartSpec): number => (byId.get(part.id) as Drawn).min[1]
+  const wallMounted = parts.some((part) => part.anchored && low(part) > FLOOR_TOUCH)
+  const sunk = parts.some((part) => low(part) < -FLOOR_TOUCH)
+  const rooted = parts.some((part) => part.material === 'foliage') && parts.some((part) => part.material.startsWith('wood') && low(part) <= FLOOR_TOUCH)
+  const fixed = wallMounted || sunk || rooted
 
   // the top: among the boxes that cover most of the footprint, the highest upper face (not fabric: a cloth lies on the top)
   const all = drawn.reduce(
@@ -275,7 +287,7 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
   }
 
   if (opts.carcass) carcass(parts, byId)
-  const spec: DestructibleSpec = { name, parts, joints, tags: ['furniture'] }
+  const spec: DestructibleSpec = { name, parts, joints, tags: ['furniture'], ...(fixed ? { fixed } : {}) }
   const colors = new Map(drawn.map((p) => [p.id, p.color]))
 
   const build = (T3: Three): THREE_NS.Group => {
@@ -307,7 +319,7 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
     return group
   }
 
-  return { spec, build, top }
+  return { spec, build, top, fixed }
 }
 
 /**
@@ -319,7 +331,8 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
  * Materials: `wood` is `wood_hard`, and `wood_soft` for thin boards and panels (under 3.5 cm); `metal` is `steel`; `fabric`, `glass` and `plant` keep
  * their name; `plain` is `plastic`, or `paper` for shelves and racks (their books and boxes). Parts that touch the floor are anchored. Joints come from
  * `inferJoints` (screws between wood, welds or bolts between metal...), except that paper rests on what it lies on with a `resting` joint (weak: it falls when
- * the board breaks) and is not joined to its neighbours. Shelves and racks stand as a carcass: the sides carry, each shelf needs both of its ends
+ * the board breaks) and is not joined to its neighbours. Nothing is left hanging when the piece is laid (`holdLooseGroups`): a part drawn a little apart is joined
+ * to what holds it, and one at the back of the piece (a shower head, a range hood, a curtain rod) is screwed to the wall behind it. Shelves and racks stand as a carcass: the sides carry, each shelf needs both of its ends
  * held, and the back panel carries nothing, so a broken side drops the shelves it held, with their books.
  *
  * @example
@@ -361,7 +374,7 @@ export function furnitureSpec(THREE: Three, type: string, opts: FurnitureSpecOpt
     .filter((p) => p.type === 'water_tap')
     .map((p): [number, number, number] => [p.pos[0] - root.x, p.pos[1], p.pos[2] - root.z])
   K.PARTS.length = before
-  return { spec: made.spec, build: made.build, top: made.top, size: { w, d, h }, spouts }
+  return { spec: made.spec, build: made.build, top: made.top, size: { w, d, h }, spouts, fixed: made.fixed }
 }
 
 export interface TapSpecOptions {

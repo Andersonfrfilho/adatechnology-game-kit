@@ -215,7 +215,8 @@
     "h": 4.4,
     "y": 0,
     "solid": true,
-    "massKg": 14
+    "massKg": 14,
+    "fixed": true
   },
   {
     "id": "electrical_panel",
