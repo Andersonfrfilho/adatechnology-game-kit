@@ -21,6 +21,7 @@ import type * as THREE_NS from 'three'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { DoorLeaf, Eye, RoomLighting, Three } from '../kernel-types.js'
 import type { House, HouseRenderer } from '../types.js'
+import { addHouseRainCover } from '../rain-cover.js'
 
 export const FLOORPLAN_AREA_ID = 'floorplan_area'
 
@@ -155,7 +156,9 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     roomLights = null
   }
 
+  const removeCovers: Array<() => void> = []
   const clearHouses = (): void => {
+    for (const remove of removeCovers.splice(0)) remove()
     for (const p of placed) p.house.dispose()
     placed.length = 0
     lastSheet = ''
@@ -269,6 +272,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     }
     layout()
     for (const p of placed) if (options.world) p.house.destruction.activate()
+    if (host.rainCover) for (const p of placed) removeCovers.push(addHouseRainCover(host.rainCover, p.house))
     showAll()
     applyLod()
     updateBlueprintCorner()

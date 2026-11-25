@@ -1,3 +1,5 @@
+import { createRainCover } from '@adatechnology/game-contracts'
+
 import { createDestructionHost, createWorld, withEngineWarmUp } from './destruction'
 import { createDispose } from './dispose'
 import { createEffects } from './effects'
@@ -89,6 +91,7 @@ function assembleKitWorld<TRecord>({ THREE, options, physics }: { readonly THREE
     blastPacing: frame.blastPacing,
     info: createInfo({ physics, frame, debris, workers }),
     random: options.random ?? seeded.next,
+    rainCover: createRainCover(),
     setQuality: (next) => {
       view.setQuality(next)
       light.setShadowQuality(next)

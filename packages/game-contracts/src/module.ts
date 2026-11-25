@@ -6,6 +6,7 @@ import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './be
 import type { CarryHands, DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
+import type { RainCover } from './rain-cover'
 import type { EffectSink } from './effects'
 import type { HandPose, HandTargetSource, MuzzleSource, ToolHand } from './hands'
 import type { GaitId, SurfaceId } from './foley'
@@ -546,6 +547,8 @@ export interface ModuleHost {
   audio?: AudioSink
   /** The host's weather, light and ground; a module that reacts to rain, wind or night reads it. */
   environment?: EnvironmentBus
+  /** What is roofed over in the host: houses, sheds and the like add their covers here, and the rain keeps off what they cover. A host that does not know leaves it out. */
+  rainCover?: RainCover
   /** The host's effects (smoke, sparks, blast, impacts): a module asks for them by id instead of drawing its own. Absent when the host has none. */
   effects?: EffectSink
   /** The most loose bodies a module may keep alive at once (ejected casings, dropped magazines), read at each spawn: the host's one budget. Absent when the host keeps no budget of its own. */

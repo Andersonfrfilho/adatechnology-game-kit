@@ -5,7 +5,7 @@
  */
 export { createWeatherRenderer, WEATHER_LAYERS } from './renderer'
 export type { WeatherLayerId, WeatherRenderer, WeatherRendererOptions } from './renderer'
-export { createRainCurtain, rainCurtainPositions, RAIN_CURTAIN, RAIN_CURTAIN_FRAGMENT, RAIN_CURTAIN_FULL_AT, RAIN_CURTAIN_PROFILES, RAIN_CURTAIN_VERTEX } from './rain-curtain'
+export { createRainCurtain, rainCurtainPositions, RAIN_CURTAIN, RAIN_CURTAIN_FRAGMENT, RAIN_CURTAIN_FULL_AT, RAIN_CURTAIN_PROFILES, RAIN_CURTAIN_VERTEX, RAIN_CURTAIN_COVERED_VERTEX, RAIN_COVER_CELL, RAIN_COVER_CELLS } from './rain-curtain'
 export type { RainCurtain, RainCurtainOptions } from './rain-curtain'
 export { createNearRain, SPLASH_FROM_MM } from './rain-near'
 export type { NearRain, NearRainOptions } from './rain-near'

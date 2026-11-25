@@ -135,6 +135,8 @@ export type { CategorizedOptions, CategorizedReport, CategoryDef, CategoryOption
 export { KIT_ORIGIN_KEY, kitOriginOf, markKitOrigin, unmarkedDrawings } from './origin'
 export type { KitOrigin, UnmarkedDrawing } from './origin'
 export { footprintBlocker } from './footprint'
+export { createGridRainCover, createRainCover, rainCoverTopOf } from './rain-cover'
+export type { GridRainCoverOptions, GridRainCoverSource, RainCover, RainCoverBounds, RainCoverHole, RainCoverRect, RainCoverSource } from './rain-cover'
 export type { UtilityConnection, UtilityNetwork } from './utility'
 export type { Footprint, FootprintObject } from './footprint'
 export {

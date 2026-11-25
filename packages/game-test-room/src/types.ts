@@ -29,7 +29,7 @@ import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } fr
 import type { RoomSeat } from './seating'
 import type { ToolCondition } from './shovel'
 import type { BagResult, InventorySnapshot } from './inventory-types'
-import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, RainCover, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -451,6 +451,8 @@ export interface TestRoom {
   readonly audio: AudioEngine | null
   /** The environment store lent to modules as `host.environment`. */
   readonly environment: EnvironmentBus
+  /** What is roofed over in the room, lent to modules as `host.rainCover`. */
+  readonly rainCover: RainCover
   readonly world: DestructionWorld
   readonly renderer: DestructionRenderer
   readonly scene: THREE_NS.Scene
