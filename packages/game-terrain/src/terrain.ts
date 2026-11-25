@@ -1354,6 +1354,11 @@ export function createTerrain(options: TerrainOptions): Terrain {
     raycast,
     strike,
     burn,
+    open(excavation) {
+      excavate(excavation)
+      const [ex0, ez0, ex1, ez1] = excavation.rect
+      emitDeform((ex0 + ex1) / 2, (ez0 + ez1) / 2, Math.hypot(ex1 - ex0, ez1 - ez0) / 2 + cellSize * 2)
+    },
     dig,
     fill,
     applyHit,

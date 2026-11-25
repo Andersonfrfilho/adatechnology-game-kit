@@ -403,6 +403,28 @@
     ]
   },
   {
+    "id": "sewage",
+    "color": 5921582,
+    "opacity": 0.92,
+    "stainColor": 3093273,
+    "viscosity": 4,
+    "density": 1010,
+    "dryTime": 1800,
+    "gloss": 0.8,
+    "leavesMark": true,
+    "drink": {
+      "thirst": 0,
+      "effects": [
+        "disgust",
+        "poison"
+      ]
+    },
+    "tags": [
+      "organic",
+      "waste"
+    ]
+  },
+  {
     "id": "honey",
     "color": 14193162,
     "opacity": 0.9,

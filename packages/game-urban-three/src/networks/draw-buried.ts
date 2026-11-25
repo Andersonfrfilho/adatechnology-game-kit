@@ -24,6 +24,8 @@ export type DrawnBuried = {
   drawCalls(): number
   /** Breaks a pipe at a share of its length: the two halves stop short of the break, `BREAK_GAP` apart. */
   sever(id: string, share: number): void
+  /** Joins the two halves of a broken pipe again (the world is reset). */
+  mend(id: string): void
   dispose(): void
 }
 
@@ -108,6 +110,13 @@ export function drawBuried(THREE: Three, { networks, root, options }: { readonly
       const length = Math.hypot(pipe.to[0] - pipe.from[0], pipe.to[1] - pipe.from[1], pipe.to[2] - pipe.from[2])
       const half = Math.min(0.5, BREAK_GAP / 2 / Math.max(length, 1e-6))
       halves(pipe, index, [Math.max(0, share - half), Math.min(1, share + half)])
+      pipeMesh.instanceMatrix.needsUpdate = true
+    },
+    mend(id) {
+      const index = slotOf.get(id)
+      const pipe = index === undefined ? undefined : pipes[index]
+      if (index === undefined || pipe === undefined) return
+      halves(pipe, index, [0.5, 0.5])
       pipeMesh.instanceMatrix.needsUpdate = true
     },
     dispose() {

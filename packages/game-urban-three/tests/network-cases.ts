@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 
-import { generateNetworks } from '@adatechnology/game-urban/networks'
+import { generateNetworks, surfacePiecesOf } from '@adatechnology/game-urban/networks'
 import type { NetworkLot } from '@adatechnology/game-urban/networks'
 import type { CityPlanInput } from '@adatechnology/game-urban'
 
@@ -33,5 +33,16 @@ export function networkCases(THREE: typeof THREE_NS): Array<[string, () => THREE
     ['networks/night_failing', () => draw({ isNight: true, lamps: { lit: 0.7, flicker: 0.3 } })],
     ['networks/surface', () => urban.drawNetworkSurface(generated.networks, { surfaceAt: generated.surfaceAt }).root],
     ['networks/buried', () => urban.drawBuriedNetworks(generated.networks, { surfaceAt: generated.surfaceAt }).root],
+    ['networks/lids', () => {
+      const lids = surfacePiecesOf(generated.networks).filter((piece) => piece.kind === 'manhole_cover' || piece.kind === 'inspection_cover' || piece.kind === 'inlet_grate')
+      const group = new THREE.Group()
+      for (const piece of lids) {
+        const lid = urban.drawCoverLid(piece).root
+        lid.position.set(...piece.at)
+        lid.rotation.y = piece.ry
+        group.add(lid)
+      }
+      return group
+    }],
   ]
 }

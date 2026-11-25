@@ -133,3 +133,18 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
   e o ramal de boca de lobo (1,0 a 1,2 m, ou mais fundo onde há elevatória) pedem carga forte. Meio-fio com altura e sarjeta própria são da T3.9.
 - **Dados**: o hash das redes (`generate.test.ts` do `game-urban`, `networks.test.ts` do exemplo) mudou só porque `rules` ganhou `sewer.turnTolerance`,
   `sewer.branchMaxSkew` e `storm`; nós e arestas iguais. Custo: `urban/network-surface` 2 chamadas, 5.772 triângulos; `urban/network-buried` 3 chamadas, 6.580.
+
+## T2.8f — vazamento e queda de tampa (2026-11-25)
+
+- **Dado** (`game-urban/networks`): `leaksOf` (cano rompido vira `NetworkLeak`: água sob pressão 6 l/s no tronco e 0,8 no ramal, esgoto 0,5 e 0,15, drenagem 2 e 0,6 só com
+  chuva; cada um é finito, `rate` vezes `seconds`, e `drainLeak` solta até esvaziar), `waterOutageOf` (casas a jusante da ruptura, só o que é novo), `openingOf` (o poço da tampa como
+  `GroundExcavation`), `coverBodyOf` (a tampa como placa de ferro fundido do `DestructibleSpec`), `coverThrowOf` (a velocidade do arremesso, pura) e `NetworkEvent`
+  (`network_leak`, `network_outage`, `network_hole`).
+- **Terreno**: `Terrain.open(excavation)` abre um poço no chão como está (sem perda de chão; o `reset` fecha junto com as crateras). **Fluidos**: o líquido `sewage` entrou em `game-fluids`.
+- **Desenho** (`game-urban-three`): `drawCoverLid` (a tampa solta: placa e nervuras, ou a grelha inteira), `DrawnSurface.restore` e `DrawnBuried.mend` (o `reset` devolve tampa e cano).
+- **Cena** (`assemble/leaks.ts`): cada cratera que quebra cano vira torneira do `game-fluids` na ruptura (água sobe e espirra, esgoto escorre pela linha do cano) e some quando o volume acaba;
+  cada tampa arrancada abre o poço no terreno, vira peça solta do mundo de destruição (`makePiece`, ferro fundido) e pousa; `leaks.events`, `leaks.dryLots`, `leaks.lids`.
+- **Limites ditos**: a borda do poço colide como o próprio terreno (campo de alturas, célula de 0,47 m neste recorte), não como aro à parte; o poço de 0,9 m fica grosseiro. As casas **não** cortam a torneira
+  ainda: o mundo de interativos de cada casa nasce dentro do `game-floorplan-three` sem `WaterNetwork` (T2.8f só emite e expõe `dryLots`). A chuva só entra por `isRaining`.
+- **Pendências de golden** (nenhum regravado): `networks/lids` (novo) e `networks/surface`, `networks/buried` (já faltavam desde a T2.8e) em `game-urban-three/tests/fixtures/exact-urban.json`.
+  O banco de custo (`--cost-check`) passou sem entrada nova. Prints: `vazamento-agua`, `vazamento-esgoto`, `vazamento-poco`, `vazamento-primeira-pessoa` na pasta de rascunho da sessão.

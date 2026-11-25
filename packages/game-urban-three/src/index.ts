@@ -3,6 +3,7 @@ export type { BudgetedLamp, DrawnLight, DrawnUrban, DrawOptions, UrbanLight, Urb
 export { flickerGroupOf, flickerGroupPhase, flickerLevel, LAMP_FLICKER, physicalIntensityOf } from './lamp-light'
 export type { DrawnNetworks, NetworkDrawOptions, NetworkLight } from './networks/draw-networks'
 export type { DrawnBuried } from './networks/draw-buried'
+export type { DrawnLid } from './networks/draw-lid'
 export type { DrawnSurface } from './networks/draw-surface'
 export type { SpanRange } from './networks/draw-wires'
 export { WIRE_STYLE } from './networks/draw-wires'

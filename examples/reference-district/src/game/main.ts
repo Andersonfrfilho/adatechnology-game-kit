@@ -9,6 +9,7 @@ import { createHouses, planLots } from './assemble/houses'
 import { createDistrictHud } from './assemble/hud'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
+import { createDistrictLeaks } from './assemble/leaks'
 import { buildNetworks, drawDistrictNetworks, drawDistrictSewers } from './assemble/networks'
 import { drawStreets } from './assemble/streets'
 import { createDistrictWeather } from './assemble/weather'
@@ -110,6 +111,8 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   })
   const weather = createDistrictWeather({ THREE, world, state: options.weather, hour: options.hour, seed: site.seed, ...(options.fog === undefined ? {} : { fog: options.fog }) })
 
+  const leaks = createDistrictLeaks({ world, scene, generated: networks, sewers, isRaining: () => weather.weather.sample().rain > 0 })
+
   const nightFactor = isNight ? 1 : 0
   const stops = [
     world.frame.add(
@@ -119,6 +122,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
       },
       { phase: 'fixedSimulate', order: 500, id: 'district.player' },
     ),
+    world.frame.add((context) => leaks.step(context.dt), { phase: 'fixedSimulate', order: 600, id: 'district.leaks' }),
     world.frame.add((context) => horde.step(context.dt, { nightFactor, viewYaw: player.view.yaw }), { phase: 'fixedSimulate', order: 1500, id: 'district.horde' }),
     world.frame.add(
       (context) => {
@@ -142,6 +146,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
     site,
     networks: networks.networks,
     sewers,
+    leaks,
     houses,
     horde,
     player,
@@ -158,6 +163,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
       houses.dispose()
       streets.drawn.dispose()
       lines.drawn.dispose()
+      leaks.dispose()
       sewers.dispose()
       world.dispose()
     },

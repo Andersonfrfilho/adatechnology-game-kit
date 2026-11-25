@@ -21,6 +21,8 @@ export type DrawnSurface = {
   drawCalls(): number
   /** Takes a piece off the ground (a cover thrown by a blast): its parts are hidden, nothing else moves. */
   remove(id: string): void
+  /** Puts a piece taken off back where it was (the world is reset). */
+  restore(id: string): void
   dispose(): void
 }
 
@@ -54,15 +56,16 @@ export function drawSurface(THREE: Three, { networks, pieces, root, options }: {
   const local = new THREE.Matrix4()
   const color = new THREE.Color()
   const axisTurn: Record<'x' | 'y' | 'z', THREE_NS.Quaternion> = { x: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2), y: new THREE.Quaternion(), z: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2) }
-  const fill = (mesh: THREE_NS.InstancedMesh, items: typeof boxes): void => {
-    items.forEach(({ piece, part }, slot) => {
+  const fill = (mesh: THREE_NS.InstancedMesh, items: typeof boxes, [start, count]: readonly [number, number] = [0, items.length]): void => {
+    for (let slot = start; slot < start + count; slot++) {
+      const { piece, part } = items[slot] as (typeof boxes)[number]
       turn.setFromAxisAngle(new THREE.Vector3(0, 1, 0), piece.ry)
       matrix.compose(new THREE.Vector3(piece.at[0], piece.at[1], piece.at[2]), turn, new THREE.Vector3(1, 1, 1))
       spin.copy(axisTurn[part.axis ?? 'y'])
       local.compose(new THREE.Vector3(...part.centre), spin, new THREE.Vector3(...part.size))
       mesh.setMatrixAt(slot, matrix.multiply(local))
       mesh.setColorAt(slot, color.set(part.color))
-    })
+    }
   }
   const make = (geometry: THREE_NS.BufferGeometry, items: typeof boxes, name: string): THREE_NS.InstancedMesh => {
     const mesh = new THREE.InstancedMesh(geometry, material, Math.max(items.length, 1))
@@ -89,6 +92,14 @@ export function drawSurface(THREE: Three, { networks, pieces, root, options }: {
       if (range === undefined) return
       hide(boxMesh, range.box)
       hide(cylinderMesh, range.cylinder)
+    },
+    restore(id) {
+      const range = ranges.get(id)
+      if (range === undefined) return
+      fill(boxMesh, boxes, range.box)
+      fill(cylinderMesh, cylinders, range.cylinder)
+      boxMesh.instanceMatrix.needsUpdate = true
+      cylinderMesh.instanceMatrix.needsUpdate = true
     },
     dispose() {
       group.parent?.remove(group)
