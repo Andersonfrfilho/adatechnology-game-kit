@@ -1263,7 +1263,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     root.updateMatrixWorld(true)
     const mass = spec.parts.reduce((m, p) => m + (p.mass ?? 0), 0)
     const heavy = (mass || massGuess(spec)) > maxCarry
-    const movable = own || fixed ? false : (item.movable ?? !heavy)
+    const movable = own || fixed || spec.fixed ? false : (item.movable ?? !heavy)
     if (movable) {
       // things that can fall rest on the floor or the table by the bottom of their bounding box (or hang at the height asked for): no drop on spawn
       // (a drawing with no mesh has an empty box: it stays where it was asked, instead of going to minus infinity)

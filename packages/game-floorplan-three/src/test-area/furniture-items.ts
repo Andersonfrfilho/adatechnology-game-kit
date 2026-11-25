@@ -22,7 +22,7 @@ export type FurnitureItemsOptions = {
 /**
  * The furniture of the plans as catalogue items of the room: each is the builder's drawing with its destructible spec (`furnitureSpec`), every leg,
  * board and top a part of its own, so a shot or a kick breaks the leg it hits and the rest stands or goes over on what is left. Chairs around a table
- * are left out: in a house they are objects of their own.
+ * are left out: in a house they are objects of their own. A piece fixed where it is laid (`DestructibleSpec.fixed`: on a wall, set in the ground, a tree) the room keeps where it is laid.
  */
 export const furnitureItems = (options: FurnitureItemsOptions): TestableItem[] =>
   options.types.map((type) => ({

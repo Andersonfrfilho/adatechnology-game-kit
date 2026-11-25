@@ -647,7 +647,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         if (a.spec.seats?.length) item.seats = a.spec.seats
         const fluid = fluidOf(loc, t.id, a)
         if (fluid) item.fluid = fluid
-        if (!t.solid || t.group === 'window') item.movable = false
+        if (!t.solid || t.group === 'window' || t.fixed) item.movable = false
         if (t.pushable) item.pushable = true
         if (t.sounds) item.sounds = t.sounds
         return item

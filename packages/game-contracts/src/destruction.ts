@@ -343,6 +343,11 @@ export interface DestructibleSpec {
   /** Free tags (`furniture`, `vehicle`, `plant`, `structure`, `weapon`, `item`...). */
   tags?: string[]
   /**
+   * The object is fixed where it is laid, never a loose body a host hands to its physics: it hangs on a wall (a range hood, a curtain rod), is set into the ground
+   * (the legs of a swing) or is rooted (a tree). Its parts still break and come off as pieces. Default false.
+   */
+  fixed?: boolean
+  /**
    * The ground the object stands on: a soil class id (one layer) or a profile. With it the foundations bear on the soil: the object settles, tilts
    * and, when the soil cannot carry it, sinks and tips over (`ObjectState.soil`, `settle` events). Without it the foundations are fixed as before.
    */
