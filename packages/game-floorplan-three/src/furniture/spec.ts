@@ -226,6 +226,8 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
     if (p.rotation) part.rotation = p.rotation
     if (!LOOSE.has(material) && p.min[1] <= FLOOR_TOUCH) part.anchored = true
+    // a book or a box on a shelf is taken off it with one hand
+    if (opts.carcass && LOOSE.has(material)) part.hands = 1
     return part
   })
   const byId = new Map(drawn.map((p) => [p.id, p]))

@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import { JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
-import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3 } from '@adatechnology/game-destruction'
+import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3, CarryHands } from '@adatechnology/game-destruction'
 import { createAudioSink } from '@adatechnology/game-audio'
 import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, probeOf } from '@adatechnology/game-kit-defaults/world'
 import { MIN_PIECE_MASS_KG, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
@@ -60,6 +60,7 @@ import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
 import { createRoomBag } from './inventory-room'
+import { createHandTake } from './hand-take'
 import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -436,16 +437,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     }
     if (best) splitOf.set(piece.objectId, best)
+    handTake.arrived(piece)
   })
   // a module let an object go for good (a house replaced) and the renderer took its pieces out of the world: the room forgets them too
   kit.destruction.on('released', (pieceIds) => {
-    for (const id of pieceIds) {
-      rendererPieces.delete(id)
-      splitOf.delete(id)
-      bodyBoxes.delete(id)
-      inWater.delete(id)
-      prevVy.delete(id)
-    }
+    for (const id of pieceIds) for (const forget of [rendererPieces, splitOf, bodyBoxes, inWater, prevVy]) forget.delete(id)
   })
 
   // the ground is an object of the world: shots, blows, blasts and flames reach it like anything else
@@ -3131,6 +3127,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (open && document.pointerLockElement) document.exitPointerLock?.()
     },
   }
+  const handTake = createHandTake(world, (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands))
   const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
   if (bagEnabled) container.appendChild(bag.element)
   const grab = (): boolean => {
@@ -3154,25 +3151,27 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return false
     }
     const piece = rendererPieces.get(r.object)
-    if (!piece) {
-      say(t('hud.cannot_grab', { name: nameOf(r.object) }))
-      return false
-    }
+    if (piece) return grabPiece(r.object, piece, r.point as Vec3)
+    if (handTake.take(r.object, r.part, r.point as Vec3) !== null) return true
+    say(t('hud.cannot_grab', { name: nameOf(r.object) }))
+    return false
+  }
+  const grabPiece = (objectId: string, piece: Piece, point: Vec3, hands?: CarryHands): boolean => {
     const kg = piece.mass
     if (kg > maxCarry) {
-      say(t('hud.too_heavy', { name: nameOf(r.object), kg: num(kg, 0) }))
+      say(t('hud.too_heavy', { name: nameOf(objectId), kg: num(kg, 0) }))
       return false
     }
-    const toolWeapon = entryOf(r.object)?.item?.weapon
-    const toolEntry = entries.get(r.object)
+    const toolWeapon = entryOf(objectId)?.item?.weapon
+    const toolEntry = entries.get(objectId)
     if (toolWeapon && toolEntry && arsenal.weapons.has(toolWeapon)) {
-      const picked = pickUpTool(r.object, toolEntry, toolWeapon)
-      if (picked) fire('grab', { held: true, objectId: r.object })
+      const picked = pickUpTool(objectId, toolEntry, toolWeapon)
+      if (picked) fire('grab', { held: true, objectId })
       return picked
     }
     heldPiece = piece
-    entries.hold(r.object)
-    heldName = nameOf(r.object)
+    entries.hold(objectId)
+    heldName = nameOf(objectId)
     piece.held = true
     piece.sleeping = false
     // centre and unrotated size of the object's bounding box in its own space, to hold it by its middle or cylindrical side
@@ -3187,9 +3186,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
-    playSound(pickupSoundOf(entries.held?.item?.sounds, world.materials.get(heaviestMaterial(r.object) ?? '')), r.point as Vec3, Math.min(1, 0.45 + kg * 0.1))
-    action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId: r.object, itemId: entryOf(r.object)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10 } })
-    fire('grab', { held: true, objectId: r.object })
+    playSound(pickupSoundOf(entries.held?.item?.sounds, world.materials.get(heaviestMaterial(objectId) ?? '')), point, Math.min(1, 0.45 + kg * 0.1))
+    action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId, itemId: entryOf(objectId)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10, ...(hands ? { hands } : {}) } })
+    fire('grab', { held: true, objectId })
     return true
   }
 

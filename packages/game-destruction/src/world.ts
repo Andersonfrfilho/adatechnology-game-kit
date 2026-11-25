@@ -38,7 +38,7 @@ import type {
   DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastCharge, BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
-  BallisticExtras, ExplosionJob, SweepProbe,
+  BallisticExtras, ExplosionJob, SweepProbe, CarryHands,
 } from './types'
 import { bodyImpulse, chargeFireball, DEFAULT_BLAST_IMPULSE, fireballDose, fuelFireball, ignitionChance, ignitionDose, resolveIgnitionRules, sideOnOverpressure, sparkTargetFactor } from '@adatechnology/game-contracts'
 import type { Fireball } from '@adatechnology/game-contracts'
@@ -6370,6 +6370,25 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
         }
         return j.st.progress
       }).value
+    },
+    take(objectId, partId): CarryHands | null {
+      if (impls.has(objectId)) return null
+      const o = getObj(objectId)
+      const part = o.byId.get(partId)
+      const hands = part?.spec.hands
+      if (!part || !hands || isLost(part)) return null
+      const holding = (o.byPart.get(partId) ?? []).filter((j) => !j.st.open)
+      if (holding.length === 0 || holding.some((j) => !j.spec.tools.includes('hand'))) return null
+      run(() => {
+        for (const j of holding) {
+          j.st.progress = 1
+          j.st.open = true
+          j.st.openedBy = 'tool'
+        }
+        loosened(o, holding, 'tool')
+        collapseCheck(o)
+      })
+      return hands
     },
     workableJoints(objectId, tool) {
       const im = impls.get(objectId)
