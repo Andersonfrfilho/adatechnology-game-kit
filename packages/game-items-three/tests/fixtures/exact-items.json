@@ -6306,41 +6306,41 @@
   ]
  },
  "model/nails": {
-  "hash": "1a4fe050",
+  "hash": "8ab7546d",
   "nodes": [
    "0 Group 811150da",
-   "0/0 Group 2dcd35b9",
-   "0/0/0 Mesh 367b1258",
-   "0/0/1 Mesh 5d3a61ea",
-   "0/0/2 Mesh 415c0e20",
-   "0/0/3 Mesh 2ff381b3",
-   "0/0/4 Mesh 1fc14057",
-   "0/0/5 Mesh 3fe7a59a",
-   "0/0/6 Mesh 524ae68a",
-   "0/0/7 Mesh 61220296",
-   "0/0/8 Mesh a6e9800f",
-   "0/0/9 Mesh 225b24af",
-   "0/0/10 Mesh a72ee144",
-   "0/0/11 Mesh 77e084e4"
+   "0/0 Group 4ee9b294",
+   "0/0/0 Mesh 757a6e9e",
+   "0/0/1 Mesh dda81b74",
+   "0/0/2 Mesh 2c7371a2",
+   "0/0/3 Mesh 45d8896d",
+   "0/0/4 Mesh 9cfb75ad",
+   "0/0/5 Mesh 3e7ad4e4",
+   "0/0/6 Mesh c44bf440",
+   "0/0/7 Mesh 87b5adf0",
+   "0/0/8 Mesh f11132bd",
+   "0/0/9 Mesh 7a085269",
+   "0/0/10 Mesh d6d9db04",
+   "0/0/11 Mesh e8f79524"
   ]
  },
  "model/nails:merged": {
-  "hash": "e5569aa6",
+  "hash": "d7111f13",
   "nodes": [
    "0 Group 811150da",
-   "0/0 Mesh 51e6c637"
+   "0/0 Mesh 746e58dc"
   ]
  },
  "model/nails:lod": {
-  "hash": "d0863bb",
+  "hash": "4bd4b456",
   "nodes": [
    "0 LOD 260778b6",
    "0/0 Group 44035b3e",
-   "0/0/0 Mesh 42458cc2",
+   "0/0/0 Mesh c52e5cef",
    "0/1 Group 3fefef5",
-   "0/1/0 Mesh dfae68d7",
-   "0/1/1 Mesh 8e378f75",
-   "0/1/2 Mesh 6e851035",
+   "0/1/0 Mesh f37e47a5",
+   "0/1/1 Mesh 36a6c43f",
+   "0/1/2 Mesh 2c8bdc8d",
    "0/2 Group 55dd014c"
   ]
  },
