@@ -47,7 +47,7 @@ createUrban({
 
 ## Streets, blocks and props
 
-- `streets.road(b, x, z, w, l, 'x' | 'z')`: a plane at 2 cm with a dash (1.8 x 0.16 m) every 5 m from 2 m after the start, as instances. `walk`, `ground` and `grid({ block, count, width })` (2n+1 roads each way and a sidewalk slab on each of the 2n x 2n blocks).
+- `streets.road(b, x, z, w, l, 'x' | 'z')`: a plane at 2 cm (`road.plane: false` leaves it out, for a host whose terrain has a road layer a blast can dig) with a dash (1.8 x 0.16 m) every 5 m from 2 m after the start, as instances. `walk`, `ground` and `grid({ block, count, width })` (2n+1 roads each way and a sidewalk slab on each of the 2n x 2n blocks).
 - `block.fill(b, { cx, cz, size, minHeight, maxHeight, k, gap, lit, shop })`: a `k x k` split of the block less 2 m of street; a building a little smaller than its lot, as tall as `lerp(min, max, random^1.6)` (more low buildings than tall ones), drawn by `createCityBuilding` of game-floorplan with the shared generator. Returns the buildings for the game's bookkeeping. `block.building` places one.
 - `props`: `fence`, `tent`, `pine`, `tree`, `container`, `watchtower` (with a searchlight whose beam circles the ground), `sandbags` (instances), `label` (two lines on a 22 x 4.4 m board) and `wires`.
 
@@ -227,6 +227,17 @@ the road, z along the line) with every fixing point read from its `slots`, the s
   diameter 0) to the nearest inlet of its kerb.
 - **Water**: DN 75 under the sidewalk opposite the poles from a reservoir at the border, a valve and a pillar hydrant at every crossing, a
   DN 20 service from a tee to every lot.
+- **What the validator asks of the street's plan** (`validateSurface`): a manhole wherever three mains meet or two turn (`pv_missing`), at most
+  `storm.inletSpacing` (60 m) between the inlets of a kerb (`inlet_spacing`), an inlet within `storm.cornerReach` of every corner of a crossing
+  (`inlet_at_corner`), and each house lateral and each inlet's lateral within `sewer.branchMaxSkew` (5°) of square to the street (`branch_skewed`).
+- **What shows and what is under it** (`surfacePiecesOf`, `pipePiecesOf`): a piece at each node that has a face on the ground (the PV and
+  gallery box covers, cleanout and valve covers, the inlets' grates, hydrants, the outfalls' wing walls, and at every lot the inspection box
+  cover, the meter box and the downspout's mouth), each with the pit down to its pipe's bottom (`shaft`), and every pipe laid as a body in the
+  ground at the depths of the rules (`coverOf`). `surfaceAt` lifts the pieces on the road to the asphalt (`ROAD_SURFACE_LEVEL`, 2 cm). The materials
+  are ids of `game-destruction`; a cover and a grate are ground (`solid: false`), a hydrant, wing wall and meter box stand (`solid: true`).
+- **A crater over them** (`breachOf(pieces, { x, z, radius, depth })`): the bowl is a paraboloid; a pipe whose top the bowl gets down to is
+  `reached`, one whose centre line it gets to is `severed` and says what leaks (`sewage`, `stormwater`, `water`); the covers inside the bowl are
+  listed to be thrown. Pure: the same answer for the same bowl.
 - Limits: straight streets along x or z only (another stretch throws); the ground defaults to flat (`groundAt` for terrain). The pole tree
   and the line trees are plain Dijkstra (tens of nodes a system); the nearest pole and the crossings are found by 20-40 m cells.
 

@@ -2946,6 +2946,16 @@
       "triangles": 12272,
       "materials": 9
     },
+    "urban/network-surface": {
+      "draws": 2,
+      "triangles": 5772,
+      "materials": 1
+    },
+    "urban/network-buried": {
+      "draws": 3,
+      "triangles": 6580,
+      "materials": 2
+    },
     "houses/single_storey_a": {
       "draws": 253,
       "triangles": 72374,

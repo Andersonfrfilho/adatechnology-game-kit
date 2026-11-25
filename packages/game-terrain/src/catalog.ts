@@ -296,6 +296,8 @@ export const TERRAIN_PROFILES: readonly TerrainProfile[] = [
   { id: 'dirt', strata: [{ material: 'soil', thickness: 1.8 }, { material: 'stone', thickness: 0.5 }] },
   { id: 'sand', strata: [{ material: 'sand', thickness: 2.5 }] },
   { id: 'road', strata: [{ material: 'asphalt', thickness: 0.05 }, { material: 'gravel', thickness: 0.25 }, { material: 'soil', thickness: 1.5 }] },
+  // a pavement for walking: concrete over its gravel bed over the soil, as the road's layers (a blast digs down to the pipes under it)
+  { id: 'sidewalk', strata: [{ material: 'concrete', thickness: 0.08 }, { material: 'gravel', thickness: 0.22 }, { material: 'soil', thickness: 1.5 }] },
   { id: 'concrete_slab', strata: [{ material: 'concrete', thickness: 0.12, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'suspended_slab', drop: 3, strata: [{ material: 'concrete', thickness: 0.12, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },
   { id: 'tile_floor', strata: [{ material: 'ceramic', thickness: 0.008 }, { material: 'mortar', thickness: 0.03 }, { material: 'concrete', thickness: 0.1, reinforcement: { material: 'steel', cover: 0.03, spacing: 0.15, resistance: 4 } }] },

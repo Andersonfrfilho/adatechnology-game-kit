@@ -18,7 +18,8 @@ const generated = buildNetworks({ plan, site, lots, avoid })
 const { nodes, edges } = generated.networks
 /** The bytes of the recorte's networks: a change that moves anything shows here, and is recorded on purpose. */
 // re-recorded when every house declared its own connections (T2.8c: meter post or facade mast anchor, inspection box clear of the wall, downspout at the kerb, water meter)
-const RECORDED = '29b150ab58a55e21f5c27ea7323bed0a00c27062369243cab3f4f874aef99601'
+// re-recorded when the rules the networks carry gained `sewer.turnTolerance`, `sewer.branchMaxSkew` and `storm` (T2.8e; nodes and edges unchanged)
+const RECORDED = '5aad36774c07b22570d77a5f6515c5b8b5d0643fee90b62f6a2a4da6937cf304'
 
 describe('the networks of the recorte', () => {
   it('pass every rule of validateNetworks, laid with no warning', () => {
