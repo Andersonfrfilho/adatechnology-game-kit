@@ -11,12 +11,15 @@ import { openRoomPage } from '../check-area/contact-sheet.mjs'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const outDir = resolve(process.argv[2] ?? join(root, 'examples/weather-test-area/shots'))
 const require = createRequire(import.meta.url)
-const { chromium } = /** @type {Partial<typeof import('playwright')>} */ (['playwright', 'playwright-core'].map((id) => { try { return require(id) } catch { return undefined } }).find(Boolean) ?? {})
+const { chromium } = /** @type {{ chromium?: any }} */ (['playwright', 'playwright-core'].map((id) => { try { return require(id) } catch { return undefined } }).find(Boolean) ?? {})
 if (!chromium) throw new Error('playwright not found')
 mkdirSync(outDir, { recursive: true })
 const only = process.argv[3]
 
-/** Opens a room page, loads the weather area into it and makes it storm. */
+/**
+ * Opens a room page, loads the weather area into it and makes it storm.
+ * @param {string} pageFile
+ */
 async function stormyPage(pageFile) {
   const opened = await openRoomPage({ chromium, pageFile })
   // the machine is busy and the swiftshader frame slow: a smaller picture
@@ -37,8 +40,16 @@ async function stormyPage(pageFile) {
  * Stands the player at `stand` (the rain falls round the player's camera), steps the room for `seconds`, then draws it from `eye` looking at `target`
  * (the debug camera: the player's camera and the rain round it stay) and takes the picture without the panels.
  */
+/**
+ * @param {any} page
+ * @param {string} file
+ * @param {number[]} stand
+ * @param {number[]} eye
+ * @param {number[]} target
+ * @param {number} [seconds]
+ */
 async function shoot(page, file, stand, eye, target, seconds = 6) {
-  await page.evaluate(([at, from, to, run]) => {
+  await page.evaluate((/** @type {[number[], number[], number[], number]} */ [at, from, to, run]) => {
     const room = /** @type {any} */ (window).__testRoom
     for (const element of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('body *'))) {
       if (element.tagName !== 'CANVAS' && !element.querySelector('canvas') && ['fixed', 'absolute'].includes(getComputedStyle(element).position)) element.style.display = 'none'
