@@ -23,6 +23,8 @@
     "@adatechnology/game-interactables": "workspace:*",
     "@adatechnology/game-interactables-household": "workspace:*",
     "@adatechnology/game-interactables-three": "workspace:*",
-    "@adatechnology/game-props3d": "workspace:*"
+    "@adatechnology/game-props3d": "workspace:*",
+    "@adatechnology/game-weather": "workspace:*",
+    "@adatechnology/game-weather-three": "workspace:*"
   }
 }

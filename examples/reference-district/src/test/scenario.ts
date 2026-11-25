@@ -11,6 +11,9 @@ export type PageChoice = {
   readonly physics: 'jolt' | 'own'
   /** `?roteiro=1`: the page starts with an empty street and the script releases the horde (the determinism run). */
   readonly isScripted: boolean
+  /** `?estado=clear` and `?hora=21.5`: hold another weather state and hour than the scenario's (the prints of the sky). */
+  readonly weather: string | undefined
+  readonly hour: number | undefined
 }
 
 export const DEFAULT_SCENARIO: ScenarioId = 'tipico'
@@ -25,6 +28,11 @@ const SCENARIO_TITLE: Readonly<Record<'pt-BR' | 'en', Readonly<Record<ScenarioId
 /** The scenario's name the HUD shows, in `pt-BR` (default) or `en`. */
 export const scenarioTitleOf = (scenario: ScenarioId, locale = 'pt-BR'): string => SCENARIO_TITLE[locale.toLowerCase().startsWith('en') ? 'en' : 'pt-BR'][scenario]
 
+const hourOf = (value: string | null): number | undefined => {
+  const hour = value === null ? Number.NaN : Number(value)
+  return hour >= 0 && hour <= 24 ? hour : undefined
+}
+
 const isScenario = (value: string | null): value is ScenarioId => SCENARIO_IDS.some((id) => id === value)
 
 /** Reads the address; an unknown scenario or camera falls back to the default one (the page always opens). */
@@ -37,6 +45,8 @@ export function parsePageChoice(search: string): PageChoice {
     camera: query.get('camera') === 'first' ? 'first' : 'shoulder',
     physics: query.get('solver') === 'own' ? 'own' : 'jolt',
     isScripted: query.get('roteiro') === '1',
+    weather: query.get('estado') ?? undefined,
+    hour: hourOf(query.get('hora')),
   }
 }
 
@@ -67,8 +77,8 @@ export function districtOptionsOf({ scripts, choice, container }: { readonly scr
     zombies: choice.isScripted ? 0 : settings.zombies,
     hordeReserve: choice.isScripted ? settings.zombies : 0,
     hordeZones: zonesOfScript(script),
-    weather: WEATHER_OF[settings.weather],
-    hour: HOUR_OF[settings.timeOfDay],
+    weather: choice.weather ?? WEATHER_OF[settings.weather],
+    hour: choice.hour ?? HOUR_OF[settings.timeOfDay],
     ...(settings.lights === undefined ? {} : { lights: settings.lights }),
     ...(settings.fog === undefined ? {} : { fog: settings.fog }),
     camera: choice.camera,
