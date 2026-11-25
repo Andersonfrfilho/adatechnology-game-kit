@@ -1,5 +1,12 @@
 # @adatechnology/game-player
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+
 ## 0.8.0
 
 ### Minor Changes

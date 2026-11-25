@@ -1,5 +1,12 @@
 # @adatechnology/game-floorplan-interactables
 
+## 5.0.0
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-interactables@0.5.0
+
 ## 4.0.0
 
 ### Minor Changes

@@ -1,5 +1,29 @@
 # @adatechnology/game-test-room
 
+## 0.38.0
+
+### Minor Changes
+
+- 5682afd: O item tirado de um móvel vai para a mão: `ModuleHost.takeInHand` (`HostTakenItem`) leva o item com as mãos que ele pede; o `take` de um item guardado diz qual é (`Interactable.itemType`); a área de casas entrega o item ao apertar E, e a sala fecha a mão nele com a regra de mãos e coldre (uma mão: a arma fica na outra). A sala passa a respeitar as mãos que a peça pede em vez de deduzi-las da massa.
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-audio@0.15.2
+  - @adatechnology/game-destruction@0.29.2
+  - @adatechnology/game-destruction-three@0.26.2
+  - @adatechnology/game-fluids@0.6.7
+  - @adatechnology/game-fluids-three@0.6.2
+  - @adatechnology/game-items@0.2.19
+  - @adatechnology/game-kit-defaults@0.3.4
+  - @adatechnology/game-player@0.8.1
+  - @adatechnology/game-render-three@0.4.2
+  - @adatechnology/game-runtime@0.3.2
+  - @adatechnology/game-terrain@0.9.2
+  - @adatechnology/game-terrain-three@0.6.4
+  - @adatechnology/game-weapons@0.13.1
+
 ## 0.37.0
 
 ### Minor Changes

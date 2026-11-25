@@ -1,5 +1,13 @@
 # @adatechnology/game-vfx-three
 
+## 0.10.6
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-contracts@0.38.0
+  - @adatechnology/game-render-three@0.4.2
+
 ## 0.10.5
 
 ### Patch Changes

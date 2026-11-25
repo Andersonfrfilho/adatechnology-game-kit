@@ -1,5 +1,13 @@
 # @adatechnology/game-interactables-household
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [5682afd]
+  - @adatechnology/game-interactables@0.5.0
+  - @adatechnology/game-items-goods@0.4.2
+
 ## 0.7.1
 
 ### Patch Changes
