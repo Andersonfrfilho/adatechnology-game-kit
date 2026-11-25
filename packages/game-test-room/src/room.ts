@@ -22,6 +22,8 @@ import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, Muzzle
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { createTopStains } from './top-stains'
+import { createVessels } from './vessels'
+import { createPartLeaks } from './part-leaks'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
@@ -358,24 +360,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   kit.ground.addProvider(() => restingTopAt)
   const defaultGround = options.ground ?? DEFAULT_GROUND_LAYOUT
 
-  // what was spilt on a top goes with it: pushed, tipped over, broken or burnt away
-  const restOfArena = new Map(arena.objects.map((o) => [o.id, { position: o.position, rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as Quat }]))
-  const poseV = new THREE.Vector3()
-  const poseQ = new THREE.Quaternion()
-  const poseScale = new THREE.Vector3()
-  const topStains = createTopStains({
-    world,
-    fluids,
-    tops: arena.tops,
-    restOf: (objectId) => restOfArena.get(objectId),
-    poseOf: (objectId) => {
-      const root = renderer.piece(objectId)?.root ?? entries.get(objectId)?.so.root
-      if (!root) return undefined
-      root.updateWorldMatrix(true, false)
-      root.matrixWorld.decompose(poseV, poseQ, poseScale)
-      return { position: [poseV.x, poseV.y, poseV.z], rotation: [poseQ.x, poseQ.y, poseQ.z, poseQ.w] }
-    },
-  })
+  // what was spilt on a top goes with it (pushed, tipped over, broken or burnt away); a vessel that breaks and a part that leaks let their liquid fall
+  const rootOf = (id: string): THREE_NS.Object3D | undefined => renderer.piece(id)?.root ?? entries.get(id)?.so.root
+  const vessels = createVessels({ world, fluids, view: fluidView })
+  const partLeaks = createPartLeaks({ THREE, world, fluids, rootOf })
+  const topStains = createTopStains({ THREE, world, fluids, tops: arena.tops, objects: arena.objects, rootOf })
   const itemUseDefs = [...ITEM_USES, ...(options.itemUses ?? [])]
 
   const rendererPieces = new Map<string, Piece>()
@@ -564,7 +553,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const puncture = (ev: Extract<DestructionEvent, { type: 'leak' }>): void => {
     const e = entryOf(ev.object)
-    if (!e?.containerId || e.fluidPart !== ev.part) return
+    if (!e?.containerId || e.fluidPart !== ev.part) return partLeaks.start(ev)
     const host = hostOf(e)
     host.root.updateMatrixWorld(true)
     tmpM.copy(host.root.matrixWorld).invert()
@@ -1430,10 +1419,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!e) return
     if (entries.held === e) releaseHeld()
     for (let i = playing.length - 1; i >= 0; i--) if (playing[i].entry === e) playing.splice(i, 1)
-    if (e.containerId) {
-      fluidView.unbindContainer(e.containerId)
-      fluids.removeContainer(e.containerId)
-    }
+    vessels.remove(e)
     try {
       renderer.unbind(id)
     } catch {
@@ -1554,6 +1540,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (kit.liquids.isOwned) {
       kit.liquids.reset()
       topStains.reset()
+      partLeaks.clear()
     }
     pending = []
     strikes = []
@@ -3940,7 +3927,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const syncLiters = (): void => {
     for (const e of entries.values()) {
-      if (!e.containerId) continue
+      if (!e.containerId || vessels.shatterIfBroken(e, hostOf(e).objectId)) continue
       const c = fluids.container(e.containerId)
       if (!c) continue
       if (e.fluidPart) {
@@ -3979,6 +3966,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     rockPlayer(dt)
     updateLoads(dt)
     topStains.update()
+    partLeaks.update()
     flush()
   })
 

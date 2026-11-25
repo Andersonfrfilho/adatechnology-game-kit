@@ -173,7 +173,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     impl: (root: unknown, id: string) => {
       const r = root as { userData: Record<string, unknown> }
       const kit = r.userData.kit as VehicleKit
-      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue })
+      // the host's fluid world lays what leaks, as much as came out: the car draws no puddle of its own
+      const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue, puddles: false })
       tapEffects(d)
       // an engine collides with what the vehicle draws, piece by piece, not with its damage-zone boxes
       // (a vehicle that just spawned fills in over several updates)

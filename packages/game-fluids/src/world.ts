@@ -697,6 +697,16 @@ export function createFluids(options: FluidOptions = {}): FluidWorld {
       containers.delete(id)
     },
 
+    shatter(id) {
+      const c = containers.get(id)
+      if (!c) return
+      const liquid = c.liquid
+      const liters = c.liters
+      const at = add(c.position, scale(c.normal, c.liters > 0 ? c.d : 0))
+      world.removeContainer(id)
+      if (liquid && liters > 0) world.splash(liquid, at, liters, c.velocity)
+    },
+
     setTransform(id, position, rotation, velocity) {
       const c = containers.get(id)
       if (!c) return

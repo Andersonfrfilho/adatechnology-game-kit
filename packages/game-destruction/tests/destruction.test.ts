@@ -267,6 +267,18 @@ describe('ballistic', () => {
     w.setLiters(id, 'tank', -5)
     expect(w.part(id, 'tank')!.liters).toBe(0)
   })
+
+  it('a tank shot after the world has let it rest still leaks: the level drops in update', () => {
+    const w = createDestruction()
+    const id = w.add({
+      parts: [{ id: 'tank', material: 'steel', shape: { kind: 'box', size: [0.5, 0.5, 0.5] }, position: [0, 0, 0], thickness: 0.001, contains: { fluid: 'fuel', liters: 20 } }],
+    })
+    // nothing burns, nothing leaks: the world stops looking at the tank
+    w.update(1)
+    w.hit(id, bullet)
+    w.update(1)
+    expect(w.part(id, 'tank')!.liters!).toBeLessThan(20)
+  })
 })
 
 describe('chair and joints', () => {

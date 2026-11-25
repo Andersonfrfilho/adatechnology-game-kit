@@ -213,6 +213,11 @@ export interface FluidWorld {
   describe(event: FluidEvent): string
   addContainer(spec: ContainerSpec, options?: { id?: string; position?: Vec3; rotation?: Quat }): string
   removeContainer(id: string): void
+  /**
+   * The vessel broke (shot through, smashed, melted): it holds nothing any more, so all its liquid falls from where it is, with the vessel's velocity, and lands
+   * on what is under it (a top, the floor) as one splash; the container is gone. Unknown ids are ignored.
+   */
+  shatter(id: string): void
   /** Keep in sync with the object that carries it (tilt decides spilling and the surface plane; velocity makes it slosh). */
   setTransform(id: string, position: Vec3, rotation: Quat, velocity?: Vec3): void
   open(id: string): void

@@ -1,4 +1,5 @@
 // What was spilt on the tops of the scenery follows the top: moved, tipped over, broken or burnt away.
+import type * as THREE_NS from 'three'
 import type { DestructionWorld, Quat, Vec3 } from '@adatechnology/game-destruction'
 import type { FluidWorld } from '@adatechnology/game-fluids'
 
@@ -11,13 +12,14 @@ export interface ObjectPose {
 }
 
 export interface TopStainsDeps {
+  readonly THREE: { Vector3: typeof THREE_NS.Vector3; Quaternion: typeof THREE_NS.Quaternion }
   readonly world: DestructionWorld
   readonly fluids: FluidWorld
   readonly tops: readonly ArenaTop[]
-  /** Where each top's object stood when the room laid it. */
-  readonly restOf: (objectId: string) => ObjectPose | undefined
-  /** Where it stands now (the piece it became, once it moves), or undefined when it is not drawn. */
-  readonly poseOf: (objectId: string) => ObjectPose | undefined
+  /** The objects of the tops where the room laid them. */
+  readonly objects: readonly { readonly id: string; readonly position: Vec3; readonly rotationY: number }[]
+  /** The drawn root of an object (the piece it became, once it moves), or undefined when it is not drawn. */
+  readonly rootOf: (objectId: string) => THREE_NS.Object3D | undefined
 }
 
 export interface TopStains {
@@ -66,6 +68,17 @@ export function createTopStains(deps: TopStainsDeps): TopStains {
   const { world, fluids, tops } = deps
   const fallen = new Set<string>()
   const posed = new Map<string, ObjectPose>()
+  const rests = new Map<string, ObjectPose>(deps.objects.map((o) => [o.id, { position: o.position, rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] }]))
+  const at = new deps.THREE.Vector3()
+  const turn = new deps.THREE.Quaternion()
+  const size = new deps.THREE.Vector3()
+  const poseOf = (objectId: string): ObjectPose | undefined => {
+    const root = deps.rootOf(objectId)
+    if (!root) return undefined
+    root.updateWorldMatrix(true, false)
+    root.matrixWorld.decompose(at, turn, size)
+    return { position: [at.x, at.y, at.z], rotation: [turn.x, turn.y, turn.z, turn.w] }
+  }
 
   const lost = (object: string, part: string): boolean => {
     const p = world.part(object, part)
@@ -80,8 +93,8 @@ export function createTopStains(deps: TopStainsDeps): TopStains {
     }
   }
   const follow = (t: ArenaTop): void => {
-    const rest = deps.restOf(t.id)
-    const now = deps.poseOf(t.id)
+    const rest = rests.get(t.id)
+    const now = poseOf(t.id)
     if (!rest || !now) return
     const pose = poseFromRest(rest, now)
     if (samePose(posed.get(t.id) ?? REST_POSE, pose)) return

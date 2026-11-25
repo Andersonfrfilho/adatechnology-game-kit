@@ -4,7 +4,8 @@ import type { EffectDef } from '../types'
 import { VEHICLE_BOOM } from './boom'
 import { carDirection, carPoint } from './car'
 
-const TANK = carPoint(-0.6, 0.25, -1.3)
+/** The hole in the tank the drips fall from, on the Workshop's car. */
+export const TANK = carPoint(-0.6, 0.25, -1.3)
 const TANK_FLOOR = [TANK[0], 0, TANK[2]] as const
 const POOL = [TANK_FLOOR[0] - 1.2, 0, TANK_FLOOR[2] - 0.6] as const
 const BOOM_AT = 7.2
