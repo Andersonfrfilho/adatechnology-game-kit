@@ -74,6 +74,8 @@ export interface Player {
   readonly x: number
   readonly z: number
   readonly feet: number
+  /** The feet as the body is drawn: after a step up (a sill, a heap) they climb it over a few frames while `feet` is on it at once. */
+  readonly drawnFeet: number
   /** Feet position. */
   readonly position: Vec3
   /** Horizontal metres per second walked in the last update. */
@@ -147,6 +149,8 @@ const JUMP = 4.6
 const GRAVITY = 13
 const FLOOR_CLIMB_SPEED = 3
 const FLOOR_FALL_SPEED = 6
+/** Per second, how fast the eye settles after the feet stepped up onto a sill or a heap (about a tenth of a second to take most of it). */
+const STEP_EASE_RATE = 20
 const LOOK = 0.0022
 /** Height of the eye (m above the floor) of a body lying on its back, where the view turns up to (radians above the level), and how far it rolls to one side. */
 const LYING_EYE = 0.3
@@ -209,11 +213,17 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
   const floorHere = (): number => o.floorAt?.(px.x, px.z) ?? 0
   let floorLevel = 0
+  // metres the eye still lags below the feet after a step up: the feet are on the sill at once, the view climbs it over a few frames instead of popping
+  let stepLag = 0
   // the eye eases over a rim and falls into a hole instead of jumping with every cell of the ground
   const followFloor = (dt: number): void => {
+    stepLag *= Math.exp(-STEP_EASE_RATE * dt)
+    if (stepLag < 1e-4) stepLag = 0
     const gap = floorHere() - floorLevel
     const reach = (gap > 0 ? FLOOR_CLIMB_SPEED : FLOOR_FALL_SPEED) * dt
-    floorLevel += Math.max(-reach, Math.min(reach, gap))
+    const move = Math.max(-reach, Math.min(reach, gap))
+    floorLevel += move
+    if (move > 0) stepLag += move
   }
 
   /** The knock of a blast on the body, while it lasts. */
@@ -257,7 +267,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     euler.set(pitch + ((knockedForward ? LYING_PITCH_FACE_DOWN : LYING_PITCH) - pitch) * fallen + swayPitch, yaw, LYING_ROLL * rollSide * fallen + swayRoll, 'YXZ')
     cam.quaternion.setFromEuler(euler)
     const standing = eye - CROUCH_DROP * crouch - bend
-    const posY = flying ? flyY + standing : floorLevel + y + standing + (LYING_EYE - standing) * fallen
+    const posY = flying ? flyY + standing : floorLevel + y + standing + (LYING_EYE - standing) * fallen - stepLag
     cam.position.set(px.x, posY, px.z)
     cam.updateMatrixWorld(true)
   }
@@ -530,6 +540,9 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get feet() {
       return flying ? flyY : floorLevel + y
     },
+    get drawnFeet() {
+      return flying ? flyY : floorLevel + y - stepLag
+    },
     get position() {
       return [px.x, flying ? flyY : floorLevel + y, px.z] as Vec3
     },
@@ -632,7 +645,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       const solidFloor = solidFoot && Number.isFinite(solidFoot.floor) ? solidFoot.floor - floorLevel : -Infinity
       const floor = Math.max(0, solidFloor)
       floorUnder = floor
-      if (y < floor && vy <= 0) y = floor
+      if (y < floor && vy <= 0) {
+        stepLag += floor - y
+        y = floor
+      }
       if (y <= floor && keys.has('Space') && !walkHeld) {
         vy = JUMP
         o.onFeet?.({ type: 'jump' })
@@ -658,6 +674,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       px.z = position[2]
       floorLevel = floorHere()
       eye = position[1] - floorLevel
+      stepLag = 0
       y = 0
       flyY = position[1]
       vy = 0
@@ -674,6 +691,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       px.z = position[2]
       floorLevel = floorHere()
       eye = position[1] - floorLevel
+      stepLag = 0
       y = 0
       flyY = position[1]
       vy = 0

@@ -1695,7 +1695,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const tmpHand = new THREE.Vector3()
 
   const thirdPose = (dt: number): ThirdPersonPose => {
-    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.feet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
+    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
       withoutHeld(() => world.raycast(o, d, max))?.distance ?? null,
     )
     // a wall pulls the camera in at once, the way back is slow (`view.cd`, line 76559 of the team game)
@@ -1775,12 +1775,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       : heldPiece && heldTilt > 0.01
         ? { id: 'tilt', position: [0.2, -0.1, -0.38], rotation: [-heldTilt, 0, 0] }
         : null
-    avatar.root.position.set(x, player.feet, z)
+    avatar.root.position.set(x, player.drawnFeet, z)
     avatar.root.rotation.set(0, player.yaw + Math.PI, 0) // the body's front is +z (the three.js way, as the catalogue items), the view looks down -z at yaw 0
     avatarState.clipRate = scheduler.timeScale
     avatar.update(dt, avatarState)
     avatar.root.updateMatrixWorld(true)
     placeEye()
+    if (dt > 0 && thirdActive()) thirdPose(dt) // the boom eases back out only here: the render and the aim read it with dt 0
   }
   /**
    * A view a script asked for (`room.look`: scenarios, the test table, the view an area opens on) is kept exactly until the player moves: the body's eye stands ahead and at the

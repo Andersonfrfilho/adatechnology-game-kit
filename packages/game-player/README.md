@@ -79,6 +79,10 @@ death.update({ alive: player.state.alive, deathTime: player.state.deathTime, cau
 `examples/player-test-area` loads it into the shared test room (`PlayerArea.loadInto(room)`, `sala-jogador.html`), and `examples/interactables-test-area`
 carries it too.
 
+## Drawing between fixed steps
+
+A body moved in fixed steps and drawn at the last step stutters on any display that is not the step's rate (0, 1 or 2 steps a frame). `createStepPose(start)` keeps the last two step poses: `record(position)` after each step, `blend(context.alpha)` when drawing the body and placing the camera; `reset(position)` after a respawn or a placed body (a step longer than `teleportDistance`, default 3 m, is a teleport and is not swept).
+
 ## Pushing furniture
 
 `createFurniturePush(rules?)` is the logic of pushing a heavy thing on foot: `begin({ massKg, material })`, then `update(dt, { walk, isFree })` every frame answers the step and says the `phase` (`grip` while the hold timer fills, `push`, `strain`), the `progress` of the timer and the `block` (`too_heavy`, `obstacle`). The host answers `isFree` by sweeping the volume of the piece and draws the rest. `gripSecondsFor`, `pushSpeedFor` and `canPush` give the numbers; the force of the legs, the friction by material, the times and the speeds are all in `FurniturePushRules` (`FURNITURE_PUSH_DEFAULTS`).

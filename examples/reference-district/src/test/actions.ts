@@ -104,6 +104,7 @@ export function createScriptWorld(district: District, { seed }: ScriptWorldParam
       state.z = spot.z
       state.vx = spot.vx
       state.vz = spot.vz
+      rig.snap()
       rig.view.yaw = spot.yaw
     },
     setCamera(mode) {
