@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 
 import { createKitWorkers } from '@adatechnology/game-kit-defaults'
-import { createKitWorld } from '@adatechnology/game-kit-defaults/world'
+import { createKitWorld, createLoading } from '@adatechnology/game-kit-defaults/world'
 import { sourceSpawn } from '@adatechnology/game-workers'
 
 import { createDistrictGrid, createHorde } from './assemble/horde'
@@ -13,6 +13,8 @@ import { buildNetworks } from './assemble/networks'
 import { drawStreets } from './assemble/streets'
 import { createDistrictWeather } from './assemble/weather'
 import { groundLayoutOf, terrainBoundsOf } from './ground'
+import { DISTRICT_LOADING_TEXT, startDistrictProgress } from './loading'
+import type { DistrictStep } from './loading'
 import { createMissingBoxes } from './missing'
 import type { District, DistrictOptions } from './options'
 import { createReferenceUrban, referencePlan } from './plan'
@@ -35,11 +37,31 @@ const embeddedWorkerSource = (): string | undefined => {
  * The reference district: the example a game copies. One call makes the world (`createKitWorld`: renderer, sun, terrain, destruction, physics, sound, workers, the loop) and
  * puts the district in it through the packages that own each piece, reading only the three data files: the streets and blocks of the plan (`game-urban`), a house on every lot of the site
  * (`game-floorplan`), the parked vehicles and props, the horde, the weather, the player and its camera, and a warning box where a piece is still missing.
+ * The kit's loading card covers the container from the first line until the world is assembled and warmed up, one notch per step (`loading: false` shows none).
  */
 export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOptions): Promise<District> {
+  const text = options.loading === false ? DISTRICT_LOADING_TEXT : (options.loading ?? DISTRICT_LOADING_TEXT)
+  const loading = options.loading === false ? undefined : createLoading({ container: options.container, working: text.working })
+  const progress = startDistrictProgress(loading, text)
+  try {
+    const district = await assembleDistrict(THREE, options, progress.step)
+    return {
+      ...district,
+      dispose() {
+        district.dispose()
+        loading?.dispose()
+      },
+    }
+  } finally {
+    progress.end()
+  }
+}
+
+async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions, step: (name: DistrictStep) => Promise<void>): Promise<District> {
   const site = referenceSite
   const plan = referencePlan
   const source = embeddedWorkerSource()
+  await step('world')
   const workers = options.workers === 0 ? 0 : createKitWorkers({ spawn: source !== undefined && typeof Worker !== 'undefined' ? sourceSpawn(source, { type: 'classic', name: 'kit-worker' }) : null, workers: options.workers ?? 'auto' })
   const world = await createKitWorld(THREE, {
     container: options.container,
@@ -52,17 +74,20 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
   const scene = world.view.scene
   const isNight = options.hour >= NIGHT_FROM_HOUR || options.hour < NIGHT_UNTIL_HOUR
 
+  await step('streets')
   const lots = planLots(site)
   const avoid = keepOutOf(lots, POLE_MIN_GAP)
   const poles = polePointsOf({ plan, spacing: POLE_SPACING, setback: STREET_LIGHT_CURB_SETBACK, avoid })
   const networks = buildNetworks({ plan, site, avoid })
   const streets = drawStreets({ THREE, urban: createReferenceUrban({ hostLights: true }), plan, site, poles, lights: world.lights, seed: site.seed, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(streets.drawn.root)
+  await step('houses')
   const houses = createHouses({ THREE, world, scene, lots, poles })
   const props = createProps({ THREE, world, scene, site })
   const missing = createMissingBoxes(THREE, site.missing)
   scene.add(missing.group)
 
+  await step('horde')
   const grid = createDistrictGrid({ houses: houses.list.map((placed) => placed.footprint), buildings: streets.buildings, vehicles: props.footprints })
   const player = createPlayerRig({ THREE, world, grid, start: options.start ?? DEFAULT_START, mode: options.camera, seed: site.seed })
   const zones = options.hordeZones ?? site.hordes.map((zone) => zone.id)
@@ -100,6 +125,7 @@ export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOpt
       { phase: 'lateSimulate', order: 100, id: 'district.frame' },
     ),
   ]
+  await step('warmUp')
   world.warmUp()
   const stopLoop = world.start()
   return {
