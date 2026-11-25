@@ -8,8 +8,8 @@ import { register as registerPostApocalyptic } from '@adatechnology/game-floorpl
 import { register as registerResidential } from '@adatechnology/game-floorplan-residential'
 import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 import { register as registerStructure } from '@adatechnology/game-floorplan-structure'
-import { addHouseRainCover, create as createHouseRenderer, planLod, registerHouseQueues } from '@adatechnology/game-floorplan-three'
-import type { House, HouseRendererOptions } from '@adatechnology/game-floorplan-three'
+import { addHouseRainCover, create as createHouseRenderer, createHouseNavObstacles, planLod, registerHouseQueues } from '@adatechnology/game-floorplan-three'
+import type { House, HouseNavObstacles, HouseRendererOptions } from '@adatechnology/game-floorplan-three'
 import * as GameInteractables from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
@@ -43,6 +43,8 @@ export type PlacedHouse = {
 export type Houses = {
   readonly list: readonly PlacedHouse[]
   readonly renderer: ReturnType<typeof createHouseRenderer>
+  /** What the houses put on the ground for the horde's grid: walls, lot walls, doors and gates, followed as doors open and walls are cut. */
+  readonly obstacles: HouseNavObstacles
   /** Cuts or restores the grid of one lot's house (an outage of its circuit): each house has its own interactables world. False for a lot with no house or no interactables. */
   setLotGrid(lot: string, on: boolean): boolean
   /** Cuts or restores the water of one lot's house (a main broke upstream): its tank runs dry, so the taps, showers and hoses of its interactables world deliver nothing; restoring fills the tank. False for a lot with no house or no plumbing. */
@@ -137,7 +139,10 @@ export type HousesParams = {
  * complete: the others lose their interior and, far away, vanish.
  */
 export function createHouses({ THREE, world, scene, lots }: HousesParams): Houses {
+  // made once the houses stand (it reads their placed walls); a door that opens before then has nothing to tell yet
+  const route: { obstacles?: HouseNavObstacles } = {}
   const options: HouseRendererOptions = {
+    onCollider: (collider) => route.obstacles?.colliderChanged(collider),
     locale: 'pt-BR',
     quality: 'game',
     lod: HOUSE_LOD_DISTANCE,
@@ -159,6 +164,8 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     removeCovers.push(addHouseRainCover(world.rainCover, house))
     return { lot, plan, house, placement, footprint: footprintOf(placement, size), overflow: overflowOf(lot.rect, lot.front, size) }
   })
+  const navObstacles = createHouseNavObstacles(list.map((placed) => placed.house))
+  route.obstacles = navObstacles
   // after the budget placed this frame's lights: a street lamp lights the outside of the houses and gets in only through a window or an open door that faces it
   const houseLights = renderer.effectLights?.({ budget: world.lights })
   const houseObjects = list.map((placed) => placed.house)
@@ -169,6 +176,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
   return {
     list,
     renderer,
+    obstacles: navObstacles,
     setLotGrid(lot, on) {
       return setLotGrid({ list, lot, on })
     },
@@ -185,6 +193,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     },
     dispose() {
       stopHouseLights?.()
+      navObstacles.dispose()
       unregister()
       for (const remove of removeCovers) remove()
       for (const placed of list) placed.house.dispose()
