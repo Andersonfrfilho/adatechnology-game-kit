@@ -97,7 +97,7 @@ function makeStubDocument() {
 }
 
 describe('fleet cabin spaces (Spec 012 Criterion 3, R5 & R6)', () => {
-  it('covers all 69 fleet vehicles against the R6 cabin table and matches the cabin-spaces golden', () => {
+  it('covers all 69 fleet vehicles against the R6 cabin table and matches the cabin-spaces golden', async () => {
     expect(fleetVehicleIds).toHaveLength(69)
     const kit = createVehicleKit({ THREE, locale: 'en', document: makeStubDocument() })
     installFleet(kit)
@@ -106,6 +106,7 @@ describe('fleet cabin spaces (Spec 012 Criterion 3, R5 & R6)', () => {
     const problems: string[] = []
 
     for (const id of fleetVehicleIds as readonly FleetVehicleId[]) {
+      await new Promise((resolve) => setImmediate(resolve))
       const c = kit.build(id, 'intact')
       const category = fleetCabinCategoryOf(id)
       const min = cabinMinimumOf(category)
