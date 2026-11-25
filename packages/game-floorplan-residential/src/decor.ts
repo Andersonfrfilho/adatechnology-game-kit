@@ -2,6 +2,9 @@ import { visorLayout } from '@adatechnology/game-floorplan'
 import type { DecorPass, DecorPassContext, PlacedItem, Rect, Room, Vec2 } from '@adatechnology/game-floorplan'
 import type { DecorProfile } from './decor-profiles'
 
+/** Step of the grid a light looks for a free spot of the ceiling on, metres. */
+const CEILING_STEP = 0.25
+
 const NO_CEILING_TYPES = new Set(['void', 'elevator', 'balcony', 'terrace', 'porch', 'tent'])
 const PICTURE_BASE: Record<string, number> = { living: 1, dining: 0.8, bedroom: 0.8, hall: 0.8, office: 0.5, corridor: 0.4, cinema: 0.5, bathroom: 0.4, kitchen: 0.3 }
 const SUPPORT_CATEGORIES = new Set(['coffee_table', 'sideboard', 'console_table', 'tv_unit', 'dining_table', 'dining_table_large', 'dresser', 'nightstand', 'buffet', 'desk', 'office_desk', 'bench'])
@@ -73,6 +76,22 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
       const strip = frontStrip(m)
       return !!strip && overlaps(r, strip) && (m.y || 0) < y1 && topOf(m) > y0
     })
+
+  /** The spot of the ceiling nearest `at` where a light of `size` hangs `y`..`y + h` clear of what is under it, on a grid of `CEILING_STEP`, or null. */
+  const freeCeilingSpot = ({ room, at, size, y, h }: { room: Room; at: Vec2; size: Vec2; y: number; h: number }): Rect | null => {
+    const rectAt = (x: number, z: number): Rect => [x - size[0] / 2, z - size[1] / 2, x + size[0] / 2, z + size[1] / 2]
+    const free = (x: number, z: number): boolean => !occupiedAt(room, inflate(rectAt(x, z), 0.05), y, y + h)
+    if (free(at[0], at[1])) return rectAt(at[0], at[1])
+    const [u0, v0, u1, v1] = room.parts[0]!
+    let best: { d: number; x: number; z: number } | null = null
+    for (let x = u0 + size[0] / 2 + CEILING_STEP; x <= u1 - size[0] / 2 - CEILING_STEP + 1e-9; x += CEILING_STEP) {
+      for (let z = v0 + size[1] / 2 + CEILING_STEP; z <= v1 - size[1] / 2 - CEILING_STEP + 1e-9; z += CEILING_STEP) {
+        const d = (x - at[0]) ** 2 + (z - at[1]) ** 2
+        if ((!best || d < best.d) && free(x, z)) best = { d, x: r2(x), z: r2(z) }
+      }
+    }
+    return best ? rectAt(best.x, best.z) : null
+  }
 
   // ---- condensers (declared first: used by the per-room loop) ----
   const condenserOutside = (room: Room, seg: WallRun, c0: number, _split: PlacedItem): PlacedItem | null => {
@@ -182,9 +201,9 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
         if (i === 0 && ceiling > 4 && isHigh) type = 'chandelier'
         const it = CATALOG[type]
         const y = r2(ceiling - it.h - (ceiling > 4 && (type === 'chandelier' || type === 'pendant') ? 1.2 : 0))
-        const rect: Rect = [cx - it.w / 2, cz - it.d / 2, cx + it.w / 2, cz + it.d / 2]
-        // a light never hangs into another (the pendant over the table took this spot) nor into what reaches the ceiling (a flight of stairs)
-        if (occupiedAt(room, inflate(rect, 0.05), y, y + it.h)) continue
+        // a light never hangs into another (the pendant over the table took this spot) nor into what reaches the ceiling (a flight of stairs): it goes to the nearest free spot of the ceiling
+        const rect = freeCeilingSpot({ room, at: [cx, cz], size: [it.w, it.d], y, h: it.h })
+        if (!rect) continue
         add(make(room, type, rect, [0, 1], { y, h: it.h }))
       }
     }
@@ -284,8 +303,9 @@ export const decorPass: DecorPass = (c: DecorPassContext) => {
         // a curtain down to the floor needs the wall under the window free; with furniture there (or the swing of its doors) the window gets blinds, and none when they would not fit either
         const curtainY = 0.05
         const curtainH = r2(Math.min(ceiling - 0.1, j.y1 + 0.25))
-        const blindsY = r2(j.y0 - 0.1)
-        const blindsH = r2(j.y1 - j.y0 + 0.2)
+        // blinds hang from a cassette over the window down to its sill, not past it into what stands under the window (the Visor hung them 10 cm past both)
+        const blindsY = visorLayout() ? r2(j.y0 - 0.1) : j.y0
+        const blindsH = visorLayout() ? r2(j.y1 - j.y0 + 0.2) : r2(j.y1 - j.y0 + 0.1)
         const chosen = type === 'curtain' && !occupiedAt(room, r, curtainY, curtainY + curtainH) ? 'curtain' : occupiedAt(room, r, blindsY, blindsY + blindsH) ? null : 'blinds'
         if (!chosen) continue
         const d2 = CATALOG[chosen].d
