@@ -46,6 +46,11 @@ export interface VehicleDestructibleOptions {
   hitch?: boolean
   /** Do not create or move any mesh (logic only, for servers and tests that need no scene). */
   headless?: boolean
+  /**
+   * Draw a puddle of its own under each leak (default true). A host whose fluid world lays what leaks (the `leak` event carries the part, the fluid, the hole
+   * and the rate) passes false, so the liquid shows once, as much as came out, instead of a drawing of a fixed size on top of it.
+   */
+  puddles?: boolean
   /** Extra seed for the choices that are random in the real world (which way a broken steering pulls). */
   seed?: number
   /** How full the fuel tank starts, 0 to 1 (default 1). A nearly empty tank leaks little and lights easily (see `ignition`). */
@@ -591,7 +596,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
         const pos = new V3(d.box.center[0], Math.max(0.2, (c.meta.clearance ?? 0.3) * 0.8), d.box.center[2])
         // hot coolant also steams out of the front; every liquid runs down into a puddle of its own colour
         if (fluid === 'coolant') kit.addEmitter(c, new V3(d.box.center[0], d.box.center[1] + 0.2, d.box.center[2]), 'white', { rate: 5, s: 0.8 })
-        if ((c.meta.kind ?? 'car') !== 'boat') l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : fluid === 'brake_fluid' ? 0.4 : 1.1)
+        if ((c.meta.kind ?? 'car') !== 'boat' && options.puddles !== false) l.pud = I.puddle(c, fluidKind(fluid), pos, fluid === 'oil' ? 0.8 : fluid === 'brake_fluid' ? 0.4 : 1.1)
       }
     }
     const out3 = dirToWorld(new V3(dirLocal.x * 0.5, dirLocal.y * 0.5 - 0.6, dirLocal.z * 0.5))

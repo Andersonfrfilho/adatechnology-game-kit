@@ -1,6 +1,6 @@
 import { CAR_ORIGIN } from './car'
 import { ENGINE_SMOKE } from './engine-smoke'
-import { FUEL_LEAK, FUEL_LEAK_ONLY } from './fuel-leak'
+import { FUEL_LEAK, FUEL_LEAK_ONLY, TANK } from './fuel-leak'
 import type { EffectDef } from '../types'
 
 /**
@@ -16,8 +16,11 @@ export const VEHICLE_EFFECTS: readonly EffectDef[] = [
   aliasOf(ENGINE_SMOKE, 'vehicle_fire', { params: { id: 'condition', options: ['100', '60', '30', '10'], default: 3 }, loop: 12 }),
   /** The exhaust of a car under way: `engine_smoke` in the best condition, for half a second so a moving car asks again. */
   aliasOf(ENGINE_SMOKE, 'vehicle_exhaust', { params: { id: 'condition', options: ['100', '60', '30', '10'], default: 0 }, loop: 0.5 }),
-  /** A hole in the tank: the page's petrol leak without the fire and the blast (the pool and the drips). A normal bullet does only this. */
-  aliasOf(FUEL_LEAK_ONLY, 'vehicle_leak', {}),
+  /**
+   * A hole in a tank: the page's drips, falling from the point it is played at (the hole). No pool of its own: the pool is the liquid that came out, laid by the
+   * host's fluid world as it leaks (it grows with the volume and spreads by the liquid's own kind), not a drawing of a size the page chose.
+   */
+  aliasOf(FUEL_LEAK_ONLY, 'vehicle_leak', { anchor: TANK, timeline: [] }),
   /** The leak caught fire (an incendiary or tracer round, a spark, a fire near): the page's whole sequence, the fire running along the pool to the tank and the blast. */
   aliasOf(FUEL_LEAK, 'vehicle_leak_ignited', {}),
 ]

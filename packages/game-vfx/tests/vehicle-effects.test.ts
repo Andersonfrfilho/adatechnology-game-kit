@@ -10,7 +10,9 @@ const run = (vfx: ReturnType<typeof world>, seconds: number): void => {
 
 describe('vehicle effects', () => {
   it('keeps the aliases next to the Workshop recipes and the point-based entries the vehicles use', () => {
-    for (const id of ['vehicle_fire', 'vehicle_exhaust', 'vehicle_leak', 'vehicle_leak_ignited']) expect(GAME_EFFECTS[id]?.anchor).toEqual([5.6, 0, 0.8])
+    for (const id of ['vehicle_fire', 'vehicle_exhaust', 'vehicle_leak_ignited']) expect(GAME_EFFECTS[id]?.anchor).toEqual([5.6, 0, 0.8])
+    // the leak lands on the hole: its anchor is the hole of the Workshop's tank
+    expect(GAME_EFFECTS.vehicle_leak?.anchor).not.toEqual([5.6, 0, 0.8])
     expect(GAME_EFFECTS.engine_smoke?.anchor).toBeUndefined()
     const vfx = world()
     expect(vfx.catalog()).toContain('car_fuel_tank')
@@ -47,9 +49,9 @@ describe('vehicle effects', () => {
     const full = GAME_EFFECTS.vehicle_leak_ignited
     expect(only).toBeDefined()
     expect(full).toBeDefined()
-    // the leak is the pool and the drips: no light (fire), no cue of the blast and nothing that happens at a later time than the pool
+    // the leak is the drips: no light (fire), no cue of the blast, and no pool of its own (the host's fluid world lays what leaks)
     expect(only?.budget.lights).toBe(0)
-    expect(only?.timeline).toHaveLength(1)
+    expect(only?.timeline).toHaveLength(0)
     expect(full?.timeline.length).toBeGreaterThan(only?.timeline.length ?? 0)
     expect(full?.budget.lights).toBeGreaterThan(0)
     // 9 s is past the 7.2 s of the blast of the whole sequence: the leak is still a few drips, the whole sequence is a fire with its smoke
@@ -71,22 +73,27 @@ describe('vehicle effects', () => {
   })
 })
 
-describe('the pool of a leak lies on the ground under it', () => {
+describe('a leak drips from the hole and draws no pool of its size', () => {
   const pools = (vfx: ReturnType<typeof createVfx>) => vfx.workshop().decals.decals.filter((d) => d.on)
 
-  it('a hole in a tank half a metre up spreads its pool on the floor, not at the height of the hole', () => {
+  it('a hole in a tank half a metre up: drips start at the hole, and no 2 m pool is drawn at once', () => {
     const vfx = world()
     expect(vfx.play('vehicle_leak', [1.6, 0.45, -1.3])).not.toBeNull()
-    run(vfx, 1)
-    const pool = pools(vfx)
-    expect(pool.length).toBeGreaterThan(0)
-    for (const d of pool) expect(d.y).toBeLessThan(0.05)
+    run(vfx, 0.5)
+    expect(pools(vfx)).toHaveLength(0)
+    const drips = vfx.workshop().normal
+    expect(drips.count).toBeGreaterThan(0)
+    for (let i = 0; i < drips.count; i++) {
+      expect(Math.hypot((drips.position[i * 3] ?? 0) - 1.6, (drips.position[i * 3 + 2] ?? 0) + 1.3)).toBeLessThan(0.15)
+      expect(drips.position[i * 3 + 1] ?? 0).toBeLessThanOrEqual(0.46)
+    }
   })
 
-  it('on a raised floor the pool lies on that floor, wherever the hole is', () => {
+  it('the leak that caught fire lays its burning pool on the floor under it, not at the height of the hole', () => {
     const vfx = createVfx({ seed: 5, randomMode: 'shared', effects: GAME_EFFECTS, groundAt: () => 1.2 })
-    vfx.play('vehicle_leak', [0, 1.7, 0])
+    vfx.play('vehicle_leak_ignited', [0, 1.7, 0])
     run(vfx, 1)
+    expect(pools(vfx).length).toBeGreaterThan(0)
     for (const d of pools(vfx)) expect(d.y).toBeCloseTo(1.2, 1)
   })
 })

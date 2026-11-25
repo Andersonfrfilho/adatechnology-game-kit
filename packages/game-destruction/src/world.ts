@@ -4590,6 +4590,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (mat.ductility >= 0.5 && p.thickness <= THIN_SHEET_DISHING) addDent(o, p, entry, n, Math.max((caliber * 3) / 1000, 0.012), clamp(E * 0.00002, 0.001, 0.03), src)
       if (brittle && mat.fracture === 'shatter') addCrack(o, p, entry, n, crackLen, src)
       if (p.spec.contains && (p.st.liters ?? 0) > 1e-4) {
+        // the level drops in `update` from now on, also for an object the world had let rest
+        o.active = true
         emit({
           ...base(o, src), type: 'leak', part: id, fluid: p.spec.contains.fluid, point: entry,
           direction: p.spec.contains.outflow ? vec.normalize(rotateVec(o.st.rotation, rotateVec(p.q, p.spec.contains.outflow))) : n, rate: holeRate(hole, !!p.spec.contains.pressurized),
