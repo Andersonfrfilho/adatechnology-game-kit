@@ -129,6 +129,8 @@ export function installDestructionPieces(K: Kernel, shared: Shared): void {
           for (const next of Array.isArray(p.chain) ? p.chain as string[] : []) if (byId.has(next)) supports.push({ part: p.id, on: next, joint: 'glue', bears: false, extra: true });
           if (p.holder === 'ground') { supports.push(toGround(p)); continue; }
           if (typeof p.holder === 'string' && (byId.has(p.holder) || panelIds.has(p.holder))) { supports.push({ part: p.id, on: p.holder, joint: p.holdJoint ?? 'clip', bears: false, extra: true, ...(p.tears ? { tears: true as const } : {}) }); continue; }
+          // a holder that was never built (a pole the kit draws, one left out) holds nothing: reported, never a loose piece at the start
+          if (typeof p.holder === 'string') { unheld.push(p.id); continue; }
           // held where it stands or hangs; with nothing there, the ground when it stands on it (a mailbox on its own post), else it is reported (`unheld`)
           if (p.holdOn) {
             const on = p.holdOn === 'floor' ? floorUnder(p) : wallBeside(p, p.holdReach ?? HOLD_REACH);
