@@ -99,3 +99,11 @@ weapon hand, and the weapon stays in its hand; one of both hands (a big thing ca
 the hip for a pistol, a sling on the back for a rifle) and, with none, drops it to the ground. A two-handed weapon (a rifle, a shotgun) leaves no hand free, so any interaction puts it
 away or drops it. `drawBackOf(plan)` says what comes back to the hands when the interaction ends: what was put away, never what fell. `interactionHandsFor({ massKg, size })` says
 whether a thing goes in one hand (up to 4 kg and 0.7 m, `HANDS_DEFAULTS`). The hands and slot of each weapon come from `weaponHandsOf` of `@adatechnology/game-weapons`.
+
+A long gun on its sling (owner, 2026-11-25) is not dropped: its slot is `sling` (`move: 'sling'`), it hangs on the body and stays there after the interaction until the player
+brings it back; with no sling worn it goes to the next slot that takes it (`SLOT_FALLBACKS`: the back). Every move is seen: `planTakeSequence(plan)` lays the steps (each weapon
+`stow`, `sling` or `drop`, the off hand first, then `reach`, `close`, `lift`; `HANDS_TIMING` in seconds), `planDrawSequence(moves)` the way back (`draw`), and
+`createTakeTimeline(sequence).advance(dt)` says which steps began and ended in the host's frame and how far into the current one (eased). `gripOfItem(size, hand)` is how a hand closes on
+a thing: its longest side through the fist along the thumb, its thinnest across the palm, its middle a palm's thickness plus half that side under the middle of the palm, the
+fingers closed by its thickness; `itemPoseInHand(hand, grip)` and `handPoseOnItem(item, grip)` turn one into the other (the hand reaches the thing where it lies, and carries it in the
+palm). The pose algebra they use is exported too (`composePose`, `poseHolding`, `blendPoses`, `quaternionOfBasis`).

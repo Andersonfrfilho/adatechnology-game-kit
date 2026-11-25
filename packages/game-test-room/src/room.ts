@@ -43,8 +43,9 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
-import { bodySlotPose } from './carry-poses'
-import { createHeldHands } from './held-hands'
+import { bodySlotPose, itemPoseOf } from './carry-poses'
+import { followHeldTarget } from './held-follow'
+import { createHeldHands, holsterEventOf } from './held-hands'
 import { twistTargets } from './twist-hand'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
@@ -1679,7 +1680,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** `armed` forced by a module (the bench); null follows the tool in hand. */
   let armedForced: boolean | null = null
   let camDistance = Infinity
-  const tmpHand = new THREE.Vector3()
 
   const thirdPose = (dt: number): ThirdPersonPose => {
     const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
@@ -1875,8 +1875,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
-    const carry = heldPiece ? heldHands.carry({ shoulder: (side) => avatar?.shoulder?.(side).getWorldPosition(pocketAt).toArray() ?? null, yaw: player.yaw, size: [heldSize.x, heldSize.y, heldSize.z], tool: handSource?.() ?? null }) : null
-    const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? carry) : (handSource?.() ?? null)))
+    // a thing used in the weapon hand (a drink) moves the arm by its own pose
+    const carry = useItemPlayer && heldHands.hand === 'R' ? null : heldHands.targets
+    const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? carry) : (carry ?? handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
       triggerFinger: targets?.fingers?.index ?? null,
@@ -3117,16 +3118,19 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     catalog,
     inHand: () => ({ R: toolId, L: offToolId }),
     equip: (hand, weapon) => (hand === 'L' ? setOffTool(weapon) : equip(weapon ?? 'hand')),
+    handPose: (hand) => handSource?.()?.[hand] ?? null,
+    instant: () => !avatar?.shoulder,
     carried: { get: () => carriedTool, set: (carried) => (carriedTool = carried), putDown: () => putDownTool() },
     place: (item) => bagHost.placeBack({ ...item, state: {} }),
     report: (e) => {
-      if (e.type !== 'drop') emitHost({ type: 'holster', weapon: e.weapon, slot: e.slot ?? '', on: e.type === 'holster' })
-      action(`hands_${e.type}`, t(`act.hands_${e.type}${e.fell === false ? '_lost' : ''}`, { weapon: toolName(e.weapon), slot: t(`hands.slot.${e.slot ?? ''}`) }), { data: { ...e } })
+      const event = holsterEventOf(e)
+      if (event) emitHost(event)
+      if (e.type !== 'toss') action(`hands_${e.type}`, t(`act.hands_${e.type}${e.fell === false ? '_lost' : ''}`, { weapon: toolName(e.weapon), slot: t(`hands.slot.${e.slot ?? ''}`) }), { data: { ...e } })
     },
     slots: options.bodySlots,
   })
   const grab = (): boolean => {
-    if (push.active) return false
+    if (push.active || heldHands.busy) return false
     if (!heldPiece && carriedTool) {
       putDownTool()
       fire('grab', { held: false })
@@ -3164,11 +3168,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (picked) fire('grab', { held: true, objectId })
       return picked
     }
-    heldPiece = piece
-    entries.hold(objectId)
-    heldName = nameOf(objectId)
-    piece.held = true
-    piece.sleeping = false
     // centre and unrotated size of the object's bounding box in its own space, to hold it by its middle or cylindrical side
     const savedQ = piece.root.quaternion.clone()
     piece.root.quaternion.identity()
@@ -3178,14 +3177,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     box.getSize(heldSize)
     piece.root.quaternion.copy(savedQ)
     piece.root.updateMatrixWorld(true)
-    heldHands.begin(hands ?? { massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] })
+    // the weapons go off the hands, the hand reaches the thing and closes on it: only then is it held
+    heldHands.begin(hands ?? { massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] }, { size: [heldSize.x, heldSize.y, heldSize.z], item: () => itemPoseOf(piece.root, heldLocal), taken: () => holdPiece(objectId, piece, point, hands) })
+    return true
+  }
+  const holdPiece = (objectId: string, piece: Piece, point: Vec3, hands?: CarryHands): void => {
+    const kg = piece.mass
+    heldPiece = piece
+    entries.hold(objectId)
+    heldName = nameOf(objectId)
+    piece.held = true
+    piece.sleeping = false
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
     playSound(pickupSoundOf(entries.held?.item?.sounds, world.materials.get(heaviestMaterial(objectId) ?? '')), point, Math.min(1, 0.45 + kg * 0.1))
     action('grab', t('act.grab', { name: heldName, kg: num(kg, 1) }), { objectId, itemId: entryOf(objectId)?.so.itemId, data: { massKg: Math.round(kg * 10) / 10, ...(hands ? { hands } : {}) } })
     fire('grab', { held: true, objectId })
-    return true
   }
 
   const throwHeld = (speed = 9): boolean => {
@@ -3211,53 +3219,28 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const followHeld = (dt: number): void => {
     const piece = heldPiece
     twistHand = null
+    heldHands.update(dt)
+    heldHands.carry({ shoulder: (side) => avatar?.shoulder?.(side).getWorldPosition(pocketAt).toArray() ?? null, yaw: player.yaw, tool: () => handSource?.() ?? null, turn: { yaw: heldYaw, tilt: heldTilt } })
     if (!piece) return
     camera.updateMatrixWorld(true)
     const root = piece.root
-    let pos: THREE_NS.Vector3
     const targetQ = tmpQ
     const hand = avatar?.hand?.(heldHands.hand === 'L' ? 'L' : 'R')
     const isDrink = useItemName === 'drink' || useItemName === 'sip' || useItemName === 'chug'
-    if (hand) {
-      // with a body the item rides its weapon hand in both views, and tilts with `useItemPlayer` or `heldTilt`
-      const handWorld = heldHands.carryAt(tmpHand) ?? hand.getWorldPosition(tmpHand)
-      heldHands.drawOn(root, cameraMode === 'first' && (heldHands.hand === 'L' || heldHands.hand === 'both') ? FIRST_PERSON_LAYER : 0)
-      const yawQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
-      const pose = useItemPlayer?.pose()
-      const rx = pose ? (isDrink ? Math.abs(pose.rotation[0]) * 0.9 : pose.rotation[0]) : -heldTilt
-      const ry = pose ? pose.rotation[1] : 0
-      const rz = pose ? pose.rotation[2] : 0
-      gripQuat.copy(yawQ).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.max(-1.35, Math.min(1.25, rx)), ry, rz, 'XYZ')))
-      targetQ.copy(yawQ).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'XYZ')))
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
-      const gripOffset = new THREE.Vector3(-0.02, 0.015, -0.04).applyQuaternion(gripQuat)
-      pos = tmpV.copy(handWorld).add(gripOffset)
-    } else if (useItemPlayer) {
-      const pose = useItemPlayer.pose()
-      const frameQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw)
-      const raise = isDrink ? Math.max(0, Math.min(1, (pose.position[1] + 0.2) / 0.22)) : 0
-      const px = pose.position[0] + (isDrink ? 0.02 * raise : 0)
-      const py = pose.position[1] - (isDrink ? 0.08 * raise : 0)
-      const pz = pose.position[2] - (isDrink ? 0.05 * raise : 0)
-      pos = tmpV.set(px, py, pz).applyQuaternion(frameQ).add(camera.position)
-      const rx = isDrink ? Math.abs(pose.rotation[0]) * 0.85 : pose.rotation[0]
-      const eq = new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, pose.rotation[1], pose.rotation[2], 'XYZ'))
-      const wristEq = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.max(-1.35, Math.min(1.25, rx)), pose.rotation[1], pose.rotation[2], 'XYZ'))
-      gripQuat.copy(frameQ).multiply(wristEq)
-      targetQ.copy(frameQ).multiply(eq)
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), heldYaw))
-    } else {
-      // no body to hold it: the item floats in front of the eye
-      pos = tmpV.set(0.05, -0.28, -1.15).applyMatrix4(camera.matrixWorld)
-      gripQuat.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.max(-1.35, -heldTilt)))
-      targetQ.setFromAxisAngle(new THREE.Vector3(0, 1, 0), player.yaw + heldYaw)
-      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -heldTilt))
-    }
-    const k = Math.min(1, (useItemPlayer ? 30 : 16) * dt)
+    // held in the palm (`HeldHands.item`): exactly where the hand's grip puts it; a thing being used rides the hand by its own pose
+    const placed = useItemPlayer || twisting ? null : heldHands.item
+    if (hand) heldHands.drawOn(root, cameraMode === 'first' && (heldHands.hand === 'L' || heldHands.hand === 'both') ? FIRST_PERSON_LAYER : 0)
+    if (hand && placed) {
+      targetQ.set(placed.quaternion[0], placed.quaternion[1], placed.quaternion[2], placed.quaternion[3])
+      gripQuat.copy(targetQ)
+      tmpV.set(placed.position[0], placed.position[1], placed.position[2])
+    } else followHeldTarget({ THREE, hand: hand ?? null, carried: heldHands.hand === 'R' ? null : (heldHands.item?.position ?? null), use: useItemPlayer?.pose() ?? null, isDrink, yaw: player.yaw, turn: { yaw: heldYaw, tilt: heldTilt }, camera }, { position: tmpV, target: targetQ, grip: gripQuat })
+    const pos = tmpV
+    const k = placed ? 1 : Math.min(1, (useItemPlayer ? 30 : 16) * dt)
     const px = root.position.x
     const py = root.position.y
     const pz = root.position.z
-    root.quaternion.slerp(targetQ, Math.min(1, k * 0.9))
+    root.quaternion.slerp(targetQ, placed ? 1 : Math.min(1, k * 0.9))
     // the middle of the carried object follows the target; the offset uses the current rotation so it does not orbit
     const off2 = tmpV2.copy(heldLocal).applyQuaternion(root.quaternion)
     root.position.set(root.position.x + (pos.x - off2.x - root.position.x) * k, root.position.y + (pos.y - off2.y - root.position.y) * k, root.position.z + (pos.z - off2.z - root.position.z) * k)
@@ -3690,6 +3673,12 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       case 'KeyH': {
         const w = (entries.held ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
         if (w) equip(w)
+        // H with no weapon item at hand: the weapon on the body back to the hands, letting go of what they hold
+        else if (heldHands.away.length === 0) say(t('act.hands_nothing_to_draw'))
+        else {
+          if (heldPiece) releaseHeld()
+          heldHands.drawBack()
+        }
         break
       }
       case 'BracketRight':
@@ -4480,7 +4469,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
-    bodySlot: (slot) => (slot === 'hip' || slot === 'back' ? bodySlotPose(avatar?.slot?.(slot)) : null),
+    bodySlot: (slot) => (slot === 'hip' || slot === 'back' || slot === 'sling' ? bodySlotPose(avatar?.slot?.(slot)) : null),
     reachFor: (reach) => (avatar ? doors.reachFor(reach) : reach.onGrip?.()),
     takeInHand: (item) => takeInHand(item),
     setHandTargets(source) {

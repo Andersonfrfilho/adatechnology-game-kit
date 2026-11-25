@@ -5,10 +5,10 @@ import { createArsenal, weaponHandsOf } from '../src'
 describe('the hands of a weapon', () => {
   const arsenal = createArsenal()
 
-  it('a handgun takes one hand and goes in the hip holster; a long gun takes both and goes on the back', () => {
+  it('a handgun takes one hand and goes in the hip holster; a rifle or a shotgun takes both and hangs on its sling', () => {
     expect(weaponHandsOf(arsenal, 'glock_17')).toEqual({ hands: 1, slot: 'hip' })
     expect(weaponHandsOf(arsenal, 'pistol_9mm')).toEqual({ hands: 1, slot: 'hip' })
-    for (const id of ['ak_47', 'colt_m4a1', 'shotgun_pump_12', 'rifle_bolt_308']) expect(weaponHandsOf(arsenal, id), id).toEqual({ hands: 2, slot: 'back' })
+    for (const id of ['ak_47', 'colt_m4a1', 'shotgun_pump_12', 'rifle_bolt_308']) expect(weaponHandsOf(arsenal, id), id).toEqual({ hands: 2, slot: 'sling' })
   })
 
   it('a machine pistol that goes one in each hand takes one hand; a two-handed tool takes both', () => {

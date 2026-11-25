@@ -67,3 +67,28 @@ describe('hands and holster', () => {
     expect(interactionHandsFor({ massKg: 3 }, { oneHand: { maxKg: 2, maxLength: 1 } })).toBe(2)
   })
 })
+
+describe('the sling (owner, 2026-11-25)', () => {
+  const slungRifle: HandWeapon = { id: 'm4a1', hands: 2, slot: 'sling' }
+
+  it('a rifle on its sling swings onto it for a one-hand pick-up and does not come back by itself', () => {
+    const plan = planHands({ hands: 1, weapons: { R: slungRifle }, slots: ['hip', 'sling'] })
+    expect(plan).toEqual({ hand: 'L', moves: [{ hand: 'R', weapon: 'm4a1', move: 'sling', slot: 'sling' }] })
+    expect(drawBackOf(plan)).toEqual([])
+  })
+
+  it('with no sling worn the rifle goes across the back and comes back after', () => {
+    const plan = planHands({ hands: 1, weapons: { R: slungRifle }, slots: ['hip', 'back'] })
+    expect(plan.moves).toEqual([{ hand: 'R', weapon: 'm4a1', move: 'holster', slot: 'back' }])
+    expect(drawBackOf(plan)).toEqual([{ hand: 'R', weapon: 'm4a1' }])
+  })
+
+  it('with neither sling nor back slot the rifle drops', () => {
+    expect(planHands({ hands: 1, weapons: { R: slungRifle }, slots: ['hip'] }).moves[0]?.move).toBe('drop')
+  })
+
+  it('a host can name its own fallbacks', () => {
+    const plan = planHands({ hands: 1, weapons: { R: slungRifle }, slots: ['hip'], fallbacks: { sling: ['hip'] } })
+    expect(plan.moves[0]).toEqual({ hand: 'R', weapon: 'm4a1', move: 'holster', slot: 'hip' })
+  })
+})

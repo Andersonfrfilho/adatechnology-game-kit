@@ -256,10 +256,11 @@ export type HostEvent =
    */
   | { type: 'stow'; weapon: string; on: boolean; duration?: number; hand?: ToolHand }
   /**
-   * A weapon put away on the body (`on`) in the place that takes it (`slot`: `hip` a holster, `back` a sling) while the hands do something else, or taken back in hand. A module that
-   * draws weapons draws it there (`ModuleHost.bodySlot`) until it comes back.
+   * A weapon put away on the body (`on`) in the place that takes it (`slot`: `hip` a holster, `back` across the back, `sling` hanging on its sling; `ground` tossed to the floor)
+   * while the hands do something else, or taken back in hand. A module that draws weapons draws it there (`ModuleHost.bodySlot`) until it comes back. With `seconds` the move is
+   * seen: the weapon goes from `from` (the weapon hand on its grip as it leaves the hand) to the slot in that time, the hand on it, and comes back the same way.
    */
-  | { type: 'holster'; weapon: string; slot: string; on: boolean }
+  | { type: 'holster'; weapon: string; slot: string; on: boolean; from?: HandPose; seconds?: number }
   /** The player crouched or stood up, or the camera mode changed; read the new state with `host.player()`. */
   | { type: 'player' }
   /**
