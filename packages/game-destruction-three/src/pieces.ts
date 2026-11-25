@@ -139,6 +139,10 @@ const SUPPORT_MARGIN = 0.05
 const TOPPLE = 3
 /** Angular acceleration (rad/s^2) of a piece that falls over (`tip`), beyond what the box of its bounds would allow, and the height of the centre of mass (m) at which it lies. */
 const TIP_ACCELERATION = 30
+/** Speed (m/s) the centre of a tipping piece may rise at: faster, the push is lifting it, not making it fall. */
+const TIP_RISING = 0.02
+/** Seconds into a tip after which a rising centre ends it. */
+const TIP_RISE_AFTER = 0.5
 const TIP_LYING = 0.25
 const TIP_SECONDS = 3
 /** How far (m) above a corner a top may be and still catch it (on top of what the corner falls in one sub-step): higher is beside it, not under it. */
@@ -1641,7 +1645,10 @@ export class PieceSystem {
         // lying is measured on the box as it is turned: a top corner held from above (a board it was joined to) says nothing of how it stands
         const [hx, hy, hz] = b.halfExtents
         const upHalf = Math.abs(e[1]) * hx + Math.abs(e[5]) * hy + Math.abs(e[9]) * hz
-        if (upHalf < TIP_LYING || b.tipping.seconds <= 0) b.tipping = null
+        // past its first moments (going over an edge lifts the centre a little) the start of a fall only takes the centre down: once it lifts it (the piece landed
+        // leaning on something and the push turns it back up), the fall is over
+        const rising = TIP_SECONDS - b.tipping.seconds > TIP_RISE_AFTER && v[1] > TIP_RISING
+        if (upHalf < TIP_LYING || b.tipping.seconds <= 0 || rising) b.tipping = null
         else {
           w[0] += b.tipping.x * TIP_ACCELERATION * h
           w[2] += b.tipping.z * TIP_ACCELERATION * h
@@ -2193,6 +2200,15 @@ export class PieceSystem {
     if (resting) return
     const [upper, c, up]: [PieceBody, Vec3, Vec3] = n[1] > 0 ? [a, ca, n] : [b, cb, [-n[0], -n[1], -n[2]]]
     if (upper.held || upper.sleeping) return
+    // only what lies on the other is lifted out of it: a body whose centre is under the other's (a book under the end of a tilted board) is put apart along the
+    // ground instead, or a pile whose contacts point every way (the book lifted into the board, the board out of the next book, that book into the first) lifts
+    // itself step after step and shakes
+    const otherCentre = upper === a ? cb : ca
+    if (c[1] < otherCentre[1] - SLOP) {
+      const level = boxesApartAlongGround(sa, sb)
+      if (level) this.slideApart(a, b, ima, imb, level)
+      return
+    }
     upper.propped = up
     const e = this.m.makeRotationFromQuaternion(upper.root.quaternion).elements
     const r: Vec3 = [hit.point[0] - c[0], hit.point[1] - c[1], hit.point[2] - c[2]]

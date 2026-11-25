@@ -90,8 +90,13 @@ function carcass(parts: PartSpec[], drawn: Map<string, Drawn>): void {
     if (LOOSE.has(part.material) || part.shape.kind !== 'box' || part.rotation) continue
     const [x, y, z] = part.shape.size
     if (y >= x && y >= z) {
-      // upright: a side (thin across the width) carries; a back or front panel (thin in depth, as wide as the piece) does not
-      if (z < x && x >= 0.6 * width) continue
+      // upright: a side (thin across the width) carries; a back or front panel (thin in depth, as wide as the piece) carries nothing and is nailed to the sides,
+      // not to the floor: it needs both of them, as a shelf does (a back left on one side tears off it and falls, it does not stand as an L with that side)
+      if (z < x && x >= 0.6 * width) {
+        part.anchored = false
+        part.structure = { role: 'beam', maxSpan: SHELF_SPAN * x }
+        continue
+      }
       part.structure = { role: 'column' }
     } else if (y <= x && y <= z) part.structure = { role: 'beam', maxSpan: SHELF_SPAN * Math.max(x, z) }
   }
