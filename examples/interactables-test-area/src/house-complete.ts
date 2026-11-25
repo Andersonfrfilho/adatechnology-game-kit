@@ -22,7 +22,8 @@ const SHOT_TOOL = 'pistol_9mm'
 const HAND_TOOL = 'hand'
 const BLOW_ENERGY = 4000
 const MAX_BLOWS = 16
-const SHOT_PULLS = 10
+const SHOT_PULLS = 20
+const SHOTS = 3
 
 export interface HouseCompleteOptions {
   readonly locale?: string
@@ -65,37 +66,46 @@ function boxOf(THREE: Three, so: SpawnedObject): { centre: Triple; size: Triple 
   return { centre: [centre.x, centre.y, centre.z], size: [size.x, size.y, size.z] }
 }
 
-/** Where to look from at a piece: in front of it (+z, the player's side), a little above its middle, close enough to reach it. */
-function eyeOf(THREE: Three, so: SpawnedObject): Triple {
+/**
+ * Where to look from at a piece: in front of it (+z, the player's side) a little above its middle, close enough to reach it; then from above, for what lies flat or
+ * sinks in the floor (a rug, a pool) or is thin against the sky (a clothesline, a pergola).
+ */
+function eyesOf(THREE: Three, so: SpawnedObject): Triple[] {
   const { centre, size } = boxOf(THREE, so)
-  return [centre[0], Math.max(centre[1], 0.4) + 0.35, centre[2] + size[2] / 2 + 1.1]
+  const front = centre[2] + size[2] / 2 + 1.1
+  return [
+    [centre[0], Math.max(centre[1], 0.4) + 0.35, front],
+    [centre[0], centre[1] + size[1] / 2 + 1.4, front - 0.6],
+  ]
 }
 
 const GRID = [0.5, 0.3, 0.7, 0.1, 0.9] as const
 const HEIGHTS = [0.5, 0.95, 0.8, 0.3, 0.1] as const
 
 /**
- * A point of the piece the player's aim lands on: the room's own aim (`inspect`, what the crosshair names) tried over a grid of its box until it names the piece (a
- * table's middle is the air under its top, a pool's is water). The middle of the box when none does.
+ * Where the player's aim lands on the piece: the room's own aim (`inspect`, what the crosshair names) tried from each eye over a grid of its box until it names the
+ * piece (a table's middle is the air under its top, a pool's is water). The front eye at the middle of the box when none does.
  */
-function targetOf({ room, THREE }: Trial, so: SpawnedObject, eye: Triple): Triple {
+function sightOf({ room, THREE }: Trial, so: SpawnedObject): { eye: Triple; target: Triple } {
   const box = new THREE.Box3().setFromObject(so.root)
   const z = (box.min.z + box.max.z) / 2
-  for (const fy of HEIGHTS) {
-    for (const fx of GRID) {
-      const at: Triple = [box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), z]
-      room.look(eye, at)
-      if (room.inspect()?.objectId === so.objectId) return at
+  const eyes = eyesOf(THREE, so)
+  for (const eye of eyes) {
+    for (const fy of HEIGHTS) {
+      for (const fx of GRID) {
+        const target: Triple = [box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), z]
+        room.look(eye, target)
+        if (room.inspect()?.objectId === so.objectId) return { eye, target }
+      }
     }
   }
   const centre = box.getCenter(new THREE.Vector3())
-  return [centre.x, centre.y, centre.z]
+  return { eye: eyes[0] as Triple, target: [centre.x, centre.y, centre.z] }
 }
 
-/** Looks at the piece from in front of it, at a point the eye sees of it; returns that point. */
+/** Looks at the piece where the aim names it; returns the point aimed at. */
 function aimAt(trial: Trial, so: SpawnedObject): Triple {
-  const eye = eyeOf(trial.THREE, so)
-  const target = targetOf(trial, so, eye)
+  const { eye, target } = sightOf(trial, so)
   trial.room.look(eye, target)
   return target
 }
@@ -130,18 +140,28 @@ function tryPick(trial: Trial, so: SpawnedObject): boolean {
   return true
 }
 
+/** Pulls the trigger until the pistol fires: it waits for its draw, and is reloaded (as the R key does) when its magazine is empty. */
+function fire({ room, step }: Trial): void {
+  for (let pull = 0; pull < SHOT_PULLS; pull++) {
+    const status = room.use()
+    if (status === 'ok') return
+    if (status === 'empty') room.reload()
+    step(0.4)
+  }
+}
+
 function tryShot(trial: Trial, so: SpawnedObject): boolean {
   const { room, step } = trial
   const before = entriesOf(room, so.objectId)
+  const reached = (): boolean => !isLive(room, so.objectId) || isHurt(room, so.objectId) || entriesOf(room, so.objectId) > before
   room.setTool(SHOT_TOOL)
-  aimAt(trial, so)
-  // the trigger waits for the draw of the pistol: pull it until it fires
-  for (let pull = 0; pull < SHOT_PULLS; pull++) {
-    if (room.use() === 'ok') break
-    step(0.2)
+  // the round leaves the muzzle, a hand below the eye: a thin or low piece can take a second or third shot to be hit, as for a player
+  for (let shot = 0; shot < SHOTS && !reached(); shot++) {
+    aimAt(trial, so)
+    fire(trial)
+    step(0.35)
   }
-  step(0.35)
-  return !isLive(room, so.objectId) || isHurt(room, so.objectId) || entriesOf(room, so.objectId) > before
+  return reached()
 }
 
 const isBroken = (room: Room, objectId: string): boolean => !isLive(room, objectId) || (room.world.state(objectId)?.parts ?? []).some((part) => part.status !== 'intact')
