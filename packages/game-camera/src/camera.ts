@@ -23,7 +23,7 @@ export const DEFAULTS: Omit<CameraConfig, 'labels'> = {
   smoothing: 12,
   aim: { fov: 65, fovPower: 1, zoomPower: 0.5, sensitivity: 0.0022, fovTolerance: 0.1 },
   wallRecovery: 4,
-  deathOrbit: { radius: 6, height: 3.5, speed: 0.2, lookHeight: 1 },
+  deathOrbit: { radius: 6, height: 3.5, speed: 0.2, lookHeight: 1, minHeight: 1.5 },
   look: { pitchMin: -0.55, pitchMax: 1.2 },
   shake: { fever: { yawSpeed: 1.3, yaw: 0.0015, pitchSpeed: 1.7, pitch: 0.001 }, panic: { amplitude: 0.002 } },
   wallClearance: 0.3,
@@ -129,8 +129,11 @@ export function create(THREE: ThreeLib, options?: CameraOptions): CameraRig {
         // the camera circles the body and looks at it; the eased boom and the field of view stay as they were
         const orbit = C.deathOrbit
         const t = (a.deathT ?? 0) * orbit.speed
-        cam.position.set(a.x + Math.sin(t) * orbit.radius, orbit.height, a.z + Math.cos(t) * orbit.radius)
-        cam.lookAt(_t.set(a.x, orbit.lookHeight, a.z))
+        const cx = a.x + Math.sin(t) * orbit.radius
+        const cz = a.z + Math.cos(t) * orbit.radius
+        const floor = (a.groundAt ? a.groundAt(cx, cz) : a.y) + orbit.minHeight
+        cam.position.set(cx, Math.max(a.y + orbit.height, floor), cz)
+        cam.lookAt(_t.set(a.x, a.y + orbit.lookHeight, a.z))
         return
       }
       const fx = -Math.sin(a.yaw)

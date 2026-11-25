@@ -2,65 +2,33 @@
   {
     "id": "child",
     "count": 5,
-    "height": [
-      0.52,
-      0.7
-    ],
-    "build": [
-      0.68,
-      0.76
-    ],
-    "hunch": [
-      0,
-      0
-    ]
+    "height": [0.52, 0.7],
+    "heightMetres": [0.94, 1.26],
+    "build": [0.68, 0.76],
+    "hunch": [0, 0]
   },
   {
     "id": "young",
     "count": 12,
-    "height": [
-      0.97,
-      1
-    ],
-    "build": [
-      0.88,
-      1
-    ],
-    "hunch": [
-      0,
-      0
-    ]
+    "height": [0.97, 1],
+    "heightMetres": [1.75, 1.8],
+    "build": [0.88, 1],
+    "hunch": [0, 0]
   },
   {
     "id": "adult",
     "count": 20,
-    "height": [
-      0.97,
-      1.07
-    ],
-    "build": [
-      1,
-      1.18
-    ],
-    "hunch": [
-      0,
-      0.12
-    ]
+    "height": [0.97, 1.07],
+    "heightMetres": [1.75, 1.93],
+    "build": [1, 1.18],
+    "hunch": [0, 0.12]
   },
   {
     "id": "elder",
     "count": 6,
-    "height": [
-      0.9,
-      1
-    ],
-    "build": [
-      1,
-      1.12
-    ],
-    "hunch": [
-      0,
-      0.1
-    ]
+    "height": [0.9, 1],
+    "heightMetres": [1.62, 1.8],
+    "build": [1, 1.12],
+    "hunch": [0, 0.1]
   }
 ]

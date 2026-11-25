@@ -70,3 +70,23 @@ describe('vehicle effects', () => {
     expect(vfx.stats().puffs).toBeGreaterThan(0)
   })
 })
+
+describe('the pool of a leak lies on the ground under it', () => {
+  const pools = (vfx: ReturnType<typeof createVfx>) => vfx.workshop().decals.decals.filter((d) => d.on)
+
+  it('a hole in a tank half a metre up spreads its pool on the floor, not at the height of the hole', () => {
+    const vfx = world()
+    expect(vfx.play('vehicle_leak', [1.6, 0.45, -1.3])).not.toBeNull()
+    run(vfx, 1)
+    const pool = pools(vfx)
+    expect(pool.length).toBeGreaterThan(0)
+    for (const d of pool) expect(d.y).toBeLessThan(0.05)
+  })
+
+  it('on a raised floor the pool lies on that floor, wherever the hole is', () => {
+    const vfx = createVfx({ seed: 5, randomMode: 'shared', effects: GAME_EFFECTS, groundAt: () => 1.2 })
+    vfx.play('vehicle_leak', [0, 1.7, 0])
+    run(vfx, 1)
+    for (const d of pools(vfx)) expect(d.y).toBeCloseTo(1.2, 1)
+  })
+})

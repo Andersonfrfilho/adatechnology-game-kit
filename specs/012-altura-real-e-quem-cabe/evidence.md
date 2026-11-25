@@ -6,7 +6,14 @@ Worktree: `../adatechnology-game-kit-wt/spec-012` · Branch: `spec/012-altura-re
 
 | Task | Commit | Comandos e códigos de saída | Números medidos / Prints |
 |---|---|---|---|
-| T0.1 | _(a preencher após commit)_ | `pnpm --filter @adatechnology/game-characters-three... --filter @adatechnology/game-vehicles-fleet... --filter @adatechnology/game-vehicles-three... build` (exit 0); `node tools/measure-body-and-cabin.mjs` (exit 0); `pnpm check:layers` (exit 0); `node tools/kit-audit/audit.mjs` (exit 0); `pnpm lint` (exit 0) | Ver tabelas abaixo (14 tipos Bestiário, 10 casos Sobreviventes, 6 casos Instanciado, 13 Assados, 69 veículos da frota). Sem prints (task de medição em Node). |
+| T0.1 | `59fb86730` (PR #426) | `pnpm --filter @adatechnology/game-characters-three... --filter @adatechnology/game-vehicles-fleet... --filter @adatechnology/game-vehicles-three... build` (exit 0); `node tools/measure-body-and-cabin.mjs` (exit 0); `pnpm check:layers` (exit 0); `node tools/kit-audit/audit.mjs` (exit 0); `pnpm lint` (exit 0) | Ver tabelas abaixo (14 tipos Bestiário, 10 casos Sobreviventes, 6 casos Instanciado, 13 Assados, 69 veículos da frota). Sem prints (task de medição em Node). |
+| T0.2 🧠 | `71ca55a` (PR #452) | `pnpm --filter @adatechnology/game-contracts build && typecheck && test` (exit 0, 19 arquivos / 122 testes); `pnpm --filter "@adatechnology/game-vehicles..." build && pnpm --filter @adatechnology/game-vehicles typecheck && test` (exit 0, 25 arquivos / 352 testes); `pnpm check:layers` (exit 0, 0 violações novas); `pnpm check:packages` (exit 0, 66 pacotes); `node tools/kit-audit/audit.mjs --check` (exit 0); `pnpm lint` (exit 0, 0 erros) | Contratos `BodyMeasures`, `SeatRole`, `SeatSpace`, `DoorOpening`, `FitRejectReason`, `FitResult` em `game-contracts/src/body-measures.ts`; tabela R6 (11 categorias, `entryDuckFactor = 0.44`) em `game-vehicles/src/data/cabin.json` + `src/cabin.ts`. Aprovado pelo dono em 2026-11-24. Sem prints (só contratos e dados). |
+| T1.1 | `6af8543` | `pnpm --filter "@adatechnology/game-characters..." build` (exit 0); `pnpm --filter @adatechnology/game-characters typecheck` (exit 0); `pnpm --filter @adatechnology/game-characters test` (exit 0, 17 arquivos / 387 testes); `pnpm check:layers` (exit 0) | `heightRangeMetres` (`0.8..3.0 m`) e `heightsByTypeMetres` (14 tipos) em `body.json`; `heightFactor`, `assertHeight`, `defaultHeightMetres`, `InvalidHeightError` em `game-characters/src/body/height.ts`. |
+| T1.2 + T1.3 | `fd312dc` | `pnpm --filter @adatechnology/game-characters-three typecheck` (exit 0); `vitest run` (26 arquivos não-golden / 273 testes verdes, incluindo `height-normalization.test.ts` R1 nos 3 caminhos e `z-fighting.test.ts` §13) | Normalização no `best-builder`, `person-builder` (`RICH_HEIGHT_NORM = 1.8 / 1.9815 = 0.9084027`) e `body-geometry` (`INSTANCED_HEIGHT_NORM = 1.8 / 1.813 = 0.9928296`); desvios registrados em `rich/deviations.ts`; correção §13 na faixa de `extra/mapfold` (`.027` → `.031`). |
+| T1.4 | `949d22a` (PR #468) | `UPDATE_EXACT=1 vitest run tests/exact-golden.test.ts` (exit 0); `pnpm --filter @adatechnology/game-characters-three build && test` (exit 0, 27 arquivos / 555 testes); `node tools/shapes-bench/dist/cli.js --cost-check` (exit 0); `pnpm --filter @adatechnology/game-crowd-three test` (exit 0); `pnpm --filter @adatechnology/game-weapons-three test` (exit 0, 56 arquivos / 2064 testes); `pnpm check:layers && pnpm check:packages && node tools/kit-audit/audit.mjs --check && pnpm lint` (exit 0) | `tests/fixtures/exact-characters.json` regerado em commit isolado pelos fatores `RICH_HEIGHT_NORM = 0.9084027` (`1.8 / 1.9815`) e `INSTANCED_HEIGHT_NORM = 0.9928296` (`1.8 / 1.813`). Todos os tipos (rico, instanciado, assado) medem `heightMetres ± 1 cm`. CI PR #468: 42/42 verde. |
+| T2.1 | _(commit T2.1)_ | `pnpm --filter "@adatechnology/game-characters..." build && typecheck && test` (exit 0, 18 arquivos / 391 testes); `pnpm check:layers` (exit 0) | `bodyMeasures({ heightMetres, build })` em `game-characters/src/body/measures.ts` com razões ISO 7250-1 / NASA-STD-3000 / ANSUR II em `data/body.json`. |
+| T2.2 | _(commit T2.2)_ | `pnpm --filter "@adatechnology/game-characters-people..." build && typecheck && test` (exit 0, 5 arquivos / 72 testes) | `heightMetres` por faixa etária em `ages.json` (`child` 0,94–1,26; `young` 1,75–1,80; `adult` 1,75–1,93; `elder` 1,62–1,80) e `drawHeightMetres(age, seed)` determinístico. |
+| T2.3 + T2.4 + T2.5 | _(commit T2.3–T2.5)_ | `pnpm --filter @adatechnology/game-player typecheck && test` (exit 0); `pnpm --filter @adatechnology/game-characters-three typecheck && test` (exit 0, 28 arquivos / 558 testes); `pnpm check:layers && pnpm check:packages && node tools/kit-audit/audit.mjs --check && pnpm lint` (exit 0) | `avatar.ts` sem `HIP_HEIGHT`/`DOOR_SHOULDER`/`DOOR_ARM` fixos (medidos do rig; `height-sweep.test.ts` 1,40–2,10 m + `footfall` verde); `accessory.ts` via `PORT_ACCESSORY_REFERENCE`; `game-player` com `heightMetres` + `collider()` escalado; varredura T2.5 (`1.8`/`0.95`/`1.64`) 100% auditada (restam só dados JSON, ângulos/amortecimento em rad/s e coordenadas literais do porte normalizadas na raiz). |
 
 ---
 
@@ -152,3 +159,138 @@ Medição por 5 raios verticais a partir do topo da almofada (`offset ±0.06 m` 
 | `turbine_helicopter` | air | heli | 3 | 1.050 | 0.920 | 0.301 | 0.480 | — |
 | `police_helicopter` | air | heli | 8 | 1.110 | 1.162 | 0.348 | 0.500 | — |
 | 12 motos/quad (`bicycle`, `scooter`, `commuter_motorcycle`, `trail_bike`, `adventure_bike`, `highway_police_bike`, `quad_bike`, `step_through_scooter`, `naked_bike`, `sport_bike`, `cruiser`, `delivery_bike`) | motorcycles | bike/quad | 0 | — | — | — | — | — |
+
+---
+
+## Decisão T0.2 🧠 — Contratos, arquitetura de `fits` e tabela de cabine (aprovado em 2026-11-24)
+
+Worktree desta etapa: `../adatechnology-game-kit-wt/spec-012-fase0` · Branch: `spec/012-fase0` (base `origin/main` `923fa511f`).
+
+### 1. Tipos em `@adatechnology/game-contracts` (`packages/game-contracts/src/body-measures.ts`)
+
+Somente tipos puros (zero runtime, zero `three.js`, zero dependência de pacote de domínio), re-exportados de `packages/game-contracts/src/index.ts`. Todas as medidas em **metros** (`Infinity` representa vão/espaço aberto sem obstrução).
+
+```ts
+import type { Vec3 } from './destruction'
+
+/** Anthropometric measures of a standing/seated body derived from stature and lateral build (metres). */
+export type BodyMeasures = {
+  /** Standing stature from sole to top of skull (excluding hair/hat), in metres. */
+  readonly heightMetres: number
+  /** Lateral build multiplier (1.0 = reference adult). */
+  readonly build: number
+  /** Vertical distance from seat surface (H-point) to top of skull, in metres. */
+  readonly seatedHeightMetres: number
+  /** Vertical distance from seat surface (H-point) to eye level, in metres. */
+  readonly seatedEyeHeightMetres: number
+  /** Bideltoid shoulder width, in metres. */
+  readonly shoulderWidthMetres: number
+  /** Horizontal buttock-to-knee length (hip to front of knee), in metres. */
+  readonly thighLengthMetres: number
+  /** Vertical knee-to-sole length (popliteal/knee height), in metres. */
+  readonly shinLengthMetres: number
+}
+
+/** Functional role of a vehicle seat. */
+export type SeatRole = 'driver' | 'front_passenger' | 'rear' | 'cargo' | 'rider' | 'pilot' | 'crew'
+
+/** Usable interior clearance of one seat in vehicle local coordinates (+x front, +y up, +z right), in metres. */
+export type SeatSpace = {
+  /** Stable seat identifier within the vehicle (e.g. 'driver', 'front_right', 'rear_left', 'rider'). */
+  readonly id: string
+  /** Functional role of the seat. */
+  readonly role: SeatRole
+  /** Seat hip point (H-point, cushion top centre) in vehicle local coordinates, in metres. */
+  readonly hipPoint: Vec3
+  /** Clear vertical height from hipPoint to headliner/roof (min of 5 rays). `Infinity` for open vehicles/bikes/boats. */
+  readonly headroomMetres: number
+  /** Clear longitudinal knee/leg space from hipPoint along seat facing direction to first obstruction. `Infinity` if open. */
+  readonly legroomMetres: number
+  /** Available lateral width at shoulder height for this seat, in metres. `Infinity` for open-sided seats. */
+  readonly widthMetres: number
+  /** Id of the door opening that serves this seat (matches `DoorOpening.id`); `undefined` for open entry. */
+  readonly doorId?: string
+}
+
+/** Clear opening of a vehicle door or hatch, in metres. */
+export type DoorOpening = {
+  /** Matches the vehicle door zone id (e.g. 'door_front_left', 'hatch_commander'). */
+  readonly id: string
+  /** Clear horizontal opening width, in metres. `Infinity` if open entry. */
+  readonly widthMetres: number
+  /** Clear vertical opening height, in metres. `Infinity` if open entry. */
+  readonly heightMetres: number
+}
+
+/** Why a body does not fit a seat/door pair (D2: binary with reason). */
+export type FitRejectReason = 'head' | 'legs' | 'shoulders' | 'door'
+
+/** Result of checking whether a body fits a seat (and optionally its access door). */
+export type FitResult =
+  | { readonly fits: true }
+  | { readonly fits: false; readonly reason: FitRejectReason }
+```
+
+### 2. Onde mora `fits` e validação contra `check:layers` e regras §2 / §3
+
+| Pacote | Camada (`depcruise`) | Responsabilidade na Spec 012 | Dependências |
+|---|---|---|---|
+| `@adatechnology/game-contracts` | L0 (contracts) | `src/body-measures.ts`: tipos `BodyMeasures`, `SeatRole`, `SeatSpace`, `DoorOpening`, `FitRejectReason`, `FitResult` | nenhuma |
+| `@adatechnology/game-characters` | L2 (core) | `src/data/body.json` (razões antropométricas com fonte + `heightMetres` por tipo + faixa suportada), `src/body/height.ts`, `src/body/measures.ts` (`bodyMeasures`) | `game-contracts` (já existe) |
+| `@adatechnology/game-vehicles` | L2 (core) | `src/data/cabin.json` (mínimos por categoria + fatores de entrada), `src/fit.ts` (`fits({ body, seat, door? }): FitResult`), `interior.ts`/`context.ts` gravando `SeatSpace` e `DoorOpening` | `game-contracts` (já existe). `fit.ts` é **100% puro, sem `three.js`**, sem importar `game-characters` (respeita `core-no-three` e `no-circular`) |
+| `@adatechnology/game-vehicles-fleet` | L3 (content) | Cabines corrigidas, mapeamento modelo → categoria de cabine, teste de aceitação da frota (69) e goldens de espaço/`fits` | `game-vehicles`, `game-contracts` |
+| `@adatechnology/game-vehicles-three` | L4 (adapter) | `driverEye` derivado de `BodyMeasures` + `SeatSpace`; cenário "quem cabe" em `src/test-area/` | `game-vehicles`, `game-contracts` |
+
+**Por que `fits` fica em `game-vehicles` (e não em `game-contracts`):**
+- `game-contracts` guarda contratos entre pacotes (§4), não heurísticas de ergonomia veicular (fator de inclinação ao entrar na porta do carro, tolerâncias de cabine).
+- `game-vehicles` não importa `game-characters` (recebe `BodyMeasures` via `game-contracts`), mantendo os dois domínios desacoplados e 100% compatíveis com `pnpm check:layers`.
+- Quando existir `passesOpening` para portas de casa (fora do escopo desta spec), ele morará em `game-floorplan-structure` consumindo o mesmo `BodyMeasures` de `game-contracts`.
+
+### 3. Razões antropométricas (para T2.1) e regra de avaliação de `fits` (para T4.1)
+
+Fonte antropométrica (para citar em `packages/game-characters/src/data/body.json`): **ISO 7250-1 / NASA-STD-3000 (Vol. I §3.3) / ANSUR II (adulto p50)**.
+
+| Medida | Razão sobre `heightMetres` | 1,55 m (`build=1`) | 1,80 m (`build=1`) | 2,05 m (`build=1`) |
+|---|---:|---:|---:|---:|
+| `seatedHeightMetres` | `0.520` | 0,806 m | **0,936 m** | 1,066 m |
+| `seatedEyeHeightMetres` | `0.455` | 0,705 m | **0,819 m** | 0,933 m |
+| `shoulderWidthMetres` | `0.260 × build` | 0,403 m | **0,468 m** | 0,533 m |
+| `thighLengthMetres` (quadril–joelho) | `0.340` | 0,527 m | **0,612 m** | 0,697 m |
+| `shinLengthMetres` (joelho–sola) | `0.285` | 0,442 m | **0,513 m** | 0,584 m |
+
+**Ordem de avaliação em `fits({ body, seat, door })`** (todas as constantes de margem em `packages/game-vehicles/src/data/cabin.json`, nenhuma mágica no código):
+1. **`'door'`** (se `door` definido):
+   - Largura: `body.shoulderWidthMetres <= door.widthMetres`
+   - Altura (pessoa inclina o tronco ao entrar pela porta do veículo — fator `entryDuckFactor = 0.44` sobre `heightMetres`, fonte: ergonomia automotiva SAE J1100 / acesso por porta lateral; a 1,80 m = `0,792 m`, a 2,05 m = `0,902 m`): `body.heightMetres * entryDuckFactor <= door.heightMetres`.
+   - _Justificativa com dados T0.1:_ portas dianteiras de carro na frota medem `0,82–0,92 m` de altura (`classic_six_sedan` 0,82 m, `compact_hatch` 0,89 m). Usar `seatedHeightMetres` (0,936 m) reprovaria 1,80 m em todo carro; com `0.44`, 1,80 m passa (`0,792 ≤ 0,82`) e 2,05 m (`0,902 m`) é barrado por `'door'` em portas baixas (`≤ 0,89 m`) como cupês e hatches compactos.
+2. **`'head'`**: `body.seatedHeightMetres <= seat.headroomMetres` (a 1,80 m = `0,936 ≤ 0,95`; a 2,05 m = `1,066 > 0,95` → recusa `'head'` em carros, cabe em van `1,19 m` e motos/abertos `Infinity`).
+3. **`'legs'`**: `body.thighLengthMetres <= seat.legroomMetres`.
+   - _Achado importante da T0.1:_ em `interior.ts`, o painel tem `d = 0.5` em `x0 - 0.07` e o banco fica em `x0 - 1.0`, então o raio na altura `seat.y + 0.12` bateu na face do painel em exatos `0,430 m` em quase todos os carros (enquanto o vão dos pés/joelhos abaixo do painel vai até a parede corta-fogo). Na T3.1/T3.2, `legroomMetres` mede a folga real de joelho a partir do `hipPoint` até a primeira obstrução à frente (abaixo da borda superior do painel ou encosto do banco da frente na fila traseira), exigindo `≥ 0,62 m` nos bancos dianteiros de carro (1,80 m precisa de `0,612 m`).
+4. **`'shoulders'`**: `body.shoulderWidthMetres <= seat.widthMetres`.
+   - _Convenção:_ `seat.widthMetres` é a **largura útil na altura dos ombros** (da forração da porta até o console/limite do assento vizinho), não apenas a largura da espuma do assento (`beetle` tem espuma de `0,44 m`, mas a cabine tem largura lateral útil maior).
+
+### 4. Tabela de cabine por categoria (`packages/game-vehicles/src/data/cabin.json` — R6)
+
+Sem alterar nenhuma medida externa de veículo. Cobertura dos 69 modelos da frota:
+
+| Categoria (`CabinCategory`) | Modelos da frota (69) | Headroom mín. dianteiro (m) | Headroom mín. traseiro (m) | Legroom mín. dianteiro (m) | Largura útil mín. (m) | Porta mín. L × A (m) | Situação no baseline T0.1 |
+|---|---|---:|---:|---:|---:|---|---|
+| `passenger_car` | `cars` (15) | **0,95** (R6) | **0,90** | **0,62** | **0,52** | `0,65 × 0,80` | Headroom 0,519–0,802 m → corrigir piso/almofada/forro na T3.2 |
+| `suv_pickup` | `suvs` (4) + `pickups` (4) | **0,98** | **0,93** | **0,64** | **0,54** | `0,70 × 0,82` | Headroom 0,713–0,878 m → corrigir na T3.2 |
+| `van` | `vans` (2: `cargo_van`, `ambulance`) | **1,05** | **1,05** | **0,65** | **0,54** | `0,75 × 0,95` | Headroom 1,128–1,196 m (OK); ajustar legroom |
+| `truck` | `box_truck`, `tanker_truck`, `armored_truck`, `troop_truck` (4) | **1,00** | **1,00** | **0,62** | **0,52** | `0,65 × 0,85` | `box_truck` 0,820 m (corrigir); gravar portas na T3.3 |
+| `bus` | `school_bus`, `city_bus` (2) | **1,20** | **1,20** | **0,62** | **0,50** | `0,70 × 1,75` | Headroom 1,54–2,09 m (OK); gravar portas na T3.3 |
+| `agricultural` | `tractor` (1) | **1,05** | — | **0,62** | **0,52** | `0,65 × 0,90` | Headroom 1,105 m (OK) |
+| `military_light` | `light_4x4`, `apc_6x6` (2) | **0,95** | **0,92** | **0,62** | **0,50** | `0,60 × 0,80` | `light_4x4` 0,858 m (corrigir) |
+| `military_armored` | `armored_car_6x6`, `battle_tank` (2) | **0,88** *(ver ponto 5)* | **0,88** | **0,58** | **0,46** | `0,50 × 0,55` | Baseline 0,335–0,435 m → corrigir assento interno na T3.3 |
+| `open_vehicle` | `motorcycles` (12) + 5 barcos abertos (`river_skiff`, `speedboat`, `jet_ski`, `sailboat`, `rescue_dinghy`) | `Infinity` | `Infinity` | `Infinity` | `Infinity` | sem porta | R5; motos/quad ganham assento `rider` na T3.1 |
+| `boat_cabin` | `fishing_boat`, `patrol_boat` (2) | **1,05** | **1,05** | **0,62** | **0,52** | `0,60 × 0,90` | Headroom 1,130–1,268 m (OK) |
+| `aircraft_enclosed` | `air` (11) + `transport_helicopter`, `attack_helicopter`, `light_attack_turboprop` (3) | **0,95** | **0,92** | **0,62** | **0,48** | `0,55 × 0,80` | `crop_duster` (0,416 m, y=-0,03), `tandem_trainer` (0,492 m, y=-0,09), `attack_helicopter` (0,747 m), `trainer_helicopter` (0,738 m), `piston_helicopter` (0,844 m) → corrigir na T3.3 |
+
+### 5. Pontos para aprovação do dono antes de fechar a Fase 0 e abrir a Fase 1
+
+1. **Contratos (`game-contracts/src/body-measures.ts`) e local de `fits` (`game-vehicles/src/fit.ts`):** aprova os campos acima e `fits` morando em `game-vehicles` (puro, sem `three.js` e sem importar `game-characters`)?
+2. **`military_armored` (`battle_tank`, `armored_car_6x6`):** manter cabine blindada realista mais apertada (`headroom >= 0,88 m`, onde 1,80 m é barrado por `'head'` e entra quem tem até ~1,69 m) ou subir o mínimo para `0,95 m` para 1,80 m também caber no tanque?
+3. **Banco traseiro de carro (`passenger_car`):** aprova `0,95 m` nos dianteiros (R6) e `0,90 m` nos traseiros (evita violar o teto caído de cupê/fastback sem mudar altura externa)?
+4. **Fator de inclinação na porta (`entryDuckFactor = 0.44`):** aprova esse valor em `cabin.json` (1,80 m entra em porta de `0,80 m+`; 2,05 m é barrado por `'door'` em portas `≤ 0,89 m`)?
+5. **Fechamento da Fase 0:** após aprovação, commitar os tipos em `packages/game-contracts/src/body-measures.ts` + `packages/game-vehicles/src/data/cabin.json` + `evidence.md` e abrir o PR da Fase 0 antes de iniciar a Fase 1 (ou levar T0.2 já para o PR da Fase 1)?

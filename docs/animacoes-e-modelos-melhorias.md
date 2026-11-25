@@ -159,12 +159,11 @@ que depende da altura em metros (H1, H2) e da cabine corrigida (V2).
 1. **Altura (A1): decidido em 2026-11-19 — a altura é customizável por personagem, em metros reais, e tem consequência no jogo**
    (quem não cabe no veículo não entra; ver seção 3.4). Falta decidir só o detalhe: a malha base passa a medir exatamente a
    `heightMetres` declarada (muda os goldens literais do Bestiário v17, com a razão registrada), e toda altura vira fator sobre ela.
-2. **Juntas (M3):** cápsulas e esfera no quadril (barato, mantém o porte) ou skinning com 2 pesos (melhor, reescreve o corpo
-   instanciado e o assado).
-3. **Bestiário é porte literal:** tornozelo, dedos e rosto alteram o que o time entregou. Vale a regra §1: perguntar ao time ou
-   registrar o desvio.
-4. **Clipes de golpe (A2):** nenhum time entregou pose de golpe além das 11 atuais. Autorar no kit ou pedir ao time?
-5. **Spec 004 T5.1:** os braços de primeira pessoa ficaram de propósito? Não há registro da decisão.
+2. **Juntas (M3): decidido em 2026-11-24 — malha low-poly contínua (skinning com 2 pesos por junta) + leitura por textura/sujeira**
+   (roupas variadas, sangue, mochila, rosto simples pintado), mantendo baixo custo de GPU para hordas grandes sem esferas salientes nem cilindros separados.
+3. **Bestiário é porte literal: decidido em 2026-11-24 — desvio formal registrado** para adotar a malha low-poly contínua e texturizada da decisão 2 na spec 014 (mantendo a normalização de altura em metros na spec 012).
+4. **Clipes de golpe (A2): decidido em 2026-11-24 — priorizar clipes de golpe corpo a corpo no kit** (1 mão, 2 mãos, empurrão), junto com ragdoll no Jolt (A3) e variação de poses na horda (B1).
+5. **Câmeras (M6 / Spec 004 T5.1): decidido em 2026-11-24 — manter primeira pessoa e terceira pessoa no molde OTS (sobre o ombro direito)**, com jogador + mochila no quadrante inferior esquerdo e combate/horda ao centro-direita; ambas as câmeras são obrigatórias na validação §5. Falta confirmar apenas o descarte do rig legado `first-person/arms.ts` na spec 013.
 
 ## 6. O que este levantamento não cobre
 

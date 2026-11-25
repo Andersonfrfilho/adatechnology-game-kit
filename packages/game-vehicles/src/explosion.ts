@@ -39,15 +39,32 @@ export function installExplosion(kit: Kit) {
     const m = c.meta
     return new V3(m.front - 0.6, (m.clearance || 0.3) + 0.3, 0)
   }
-  kit.explode = function (c: BuildContext, o?: { now?: boolean; delay?: number | null } | null) {
+  function worldPointOf(c: BuildContext, local: Vector3): [number, number, number] {
+    c.vehicle.updateWorldMatrix(true, false)
+    const wp = local.clone().applyMatrix4(c.vehicle.matrixWorld)
+    return [wp.x, wp.y, wp.z]
+  }
+  function startVehicleFire(c: BuildContext, local: Vector3, radius: number, life: number): boolean {
+    const effects = kit.effects?.()
+    if (!effects) return false
+    const handle = effects.play({ effect: 'volumetric_fire', point: worldPointOf(c, local), values: { radius, life } })
+    if (handle != null) {
+      c.vfxHandles = c.vfxHandles || []
+      c.vfxHandles.push(handle)
+    }
+    return true
+  }
+  kit.explode = function (c: BuildContext, o?: { now?: boolean; delay?: number | null; skipBlastEffect?: boolean } | null) {
     o = o || {}
     if (c.blast || c.exploded) return false
     const fuse = o.now ? 0 : o.delay != null ? o.delay : 3 + c.rand() * 5
-    c.blast = { phase: 'fire', t: 0, T: fuse }
+    c.blast = { phase: 'fire', t: 0, T: fuse, skipBlastEffect: !!o.skipBlastEffect }
     if (fuse > 0) {
       const ep = enginePos(c)
-      kit.addEmitter(c, ep.clone().add(new V3(0, 0.25, 0)), 'fire', { rate: 10, s: 0.9 })
-      kit.addEmitter(c, ep.clone().add(new V3(0, 0.6, 0)), 'black', { rate: 6, s: 1.2 })
+      if (!startVehicleFire(c, ep.clone().add(new V3(0, 0.25, 0)), 0.55, fuse + 2)) {
+        kit.addEmitter(c, ep.clone().add(new V3(0, 0.25, 0)), 'fire', { rate: 10, s: 0.9 })
+        kit.addEmitter(c, ep.clone().add(new V3(0, 0.6, 0)), 'black', { rate: 6, s: 1.2 })
+      }
       I.hurtEngine(c, 0.1)
     }
     if (c.hood) c.hood.target = 0
@@ -66,8 +83,10 @@ export function installExplosion(kit: Kit) {
         return p.kind === 'fuel_tank'
       })
       const tp = tk ? tk.pos.clone() : enginePos(c)
-      kit.addEmitter(c, tp.clone().setY(Math.max(0.15, tp.y)), 'fire', { rate: 12, s: 1.1 })
-      kit.addEmitter(c, tp.clone().setY(tp.y + 0.8), 'black', { rate: 5, s: 1.4 })
+      if (!startVehicleFire(c, tp.clone().setY(Math.max(0.15, tp.y)), 0.65, 25)) {
+        kit.addEmitter(c, tp.clone().setY(Math.max(0.15, tp.y)), 'fire', { rate: 12, s: 1.1 })
+        kit.addEmitter(c, tp.clone().setY(tp.y + 0.8), 'black', { rate: 5, s: 1.4 })
+      }
       return 'fire'
     }
     return null
@@ -174,42 +193,51 @@ export function installExplosion(kit: Kit) {
     c.emitters = c.emitters.filter(function (e) {
       return e.kind !== 'exhaust'
     })
-    /* flash, fireball, smoke, shock wave on the ground */
-    const fl = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: I.glowTexture(),
-        color: 0xffd9a0,
-        blending: THREE.AdditiveBlending,
-        transparent: true,
-        depthWrite: false,
-        fog: false,
-      }),
-    )
-    fl.raycast = function () {}
-    fl.position.copy(cen)
-    fl.scale.setScalar(0.1)
-    c.effects.add(fl)
-    B.flash = fl
-    const sw = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 64), boomMat('#ffcf8a', 0.6, true))
-    sw.rotation.x = -PI / 2
-    sw.position.set(cen.x, 0.07, cen.z)
-    c.effects.add(sw)
-    B.shock = sw
-    const k = big ? 1.8 : 1
-    for (let i = 0; i < (big ? 70 : 46); i++) {
-      const d = new V3(c.rand() - 0.5, c.rand() * 0.9, c.rand() - 0.5).normalize()
-      kit.spawn(c, 'fire', cen.clone().addScaledVector(d, 0.3), d.multiplyScalar((2.5 + c.rand() * 4) * k), {
-        s: (1.0 + c.rand() * 1.4) * k,
-        life: 0.8 + c.rand() * 0.7,
-      })
-    }
-    for (let j = 0; j < (big ? 30 : 18); j++) {
-      const d2 = new V3(c.rand() - 0.5, 0.4 + c.rand(), c.rand() - 0.5).normalize()
-      kit.spawn(c, 'smoke', cen.clone().addScaledVector(d2, 0.6), d2.multiplyScalar(1.5 + c.rand() * 2), {
-        variant: 'black',
-        s: (1.4 + c.rand()) * k,
-        life: 4 + c.rand() * 2,
-      })
+    /* flash, fireball, smoke, shock wave: delegated to the host's 3D VFX SDK (`game-vfx`) when present; legacy 2D sprite fallback only standalone */
+    const effects = kit.effects?.()
+    if (effects) {
+      if (!B.skipBlastEffect) {
+        c.effects.updateWorldMatrix(true, false)
+        const worldCen = cen.clone().applyMatrix4(c.effects.matrixWorld)
+        effects.play({ effect: big ? 'fuel_station_tank' : 'car_fuel_tank', point: [worldCen.x, worldCen.y, worldCen.z], values: {} })
+      }
+    } else {
+      const fl = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: I.glowTexture(),
+          color: 0xffd9a0,
+          blending: THREE.AdditiveBlending,
+          transparent: true,
+          depthWrite: false,
+          fog: false,
+        }),
+      )
+      fl.raycast = function () {}
+      fl.position.copy(cen)
+      fl.scale.setScalar(0.1)
+      c.effects.add(fl)
+      B.flash = fl
+      const sw = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 64), boomMat('#ffcf8a', 0.6, true))
+      sw.rotation.x = -PI / 2
+      sw.position.set(cen.x, 0.07, cen.z)
+      c.effects.add(sw)
+      B.shock = sw
+      const k = big ? 1.8 : 1
+      for (let i = 0; i < (big ? 70 : 46); i++) {
+        const d = new V3(c.rand() - 0.5, c.rand() * 0.9, c.rand() - 0.5).normalize()
+        kit.spawn(c, 'fire', cen.clone().addScaledVector(d, 0.3), d.multiplyScalar((2.5 + c.rand() * 4) * k), {
+          s: (1.0 + c.rand() * 1.4) * k,
+          life: 0.8 + c.rand() * 0.7,
+        })
+      }
+      for (let j = 0; j < (big ? 30 : 18); j++) {
+        const d2 = new V3(c.rand() - 0.5, 0.4 + c.rand(), c.rand() - 0.5).normalize()
+        kit.spawn(c, 'smoke', cen.clone().addScaledVector(d2, 0.6), d2.multiplyScalar(1.5 + c.rand() * 2), {
+          variant: 'black',
+          s: (1.4 + c.rand()) * k,
+          life: 4 + c.rand() * 2,
+        })
+      }
     }
     I.burst(c, 'spark', cen, 40, { speed: 7, spread: 1.6 })
     I.burst(c, 'scrap', cen, 14, {
@@ -254,14 +282,19 @@ export function installExplosion(kit: Kit) {
     c.emitters.forEach(function (e) {
       if (e.kind === 'fire') e.rate = Math.min(e.rate, 7)
     })
-    kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 8, s: 0.8 })
-    kit.addEmitter(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 'fire', { rate: 6, s: 0.7 })
-    kit.addEmitter(c, ep.clone().add(new V3(0, 0.9, 0)), 'black', { rate: 4, s: 1.4 })
+    if (effects) {
+      startVehicleFire(c, ep.clone().add(new V3(0, 0.15, 0)), 0.55, 30)
+      startVehicleFire(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 0.45, 25)
+    } else {
+      kit.addEmitter(c, ep.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 8, s: 0.8 })
+      kit.addEmitter(c, new V3(((m.front || 1) + (m.rear || -1)) / 2, (m.clearance || 0.3) + 0.35, 0), 'fire', { rate: 6, s: 0.7 })
+      kit.addEmitter(c, ep.clone().add(new V3(0, 0.9, 0)), 'black', { rate: 4, s: 1.4 })
+    }
     c.parts.forEach(function (p) {
       if (p.kind === 'glass' || p.kind === 'headlight' || p.kind === 'taillight' || p.kind === 'hood') p.done = true
     })
     c.log.push({ kind: 'explosion', label: kit.t(big ? 'blast.tank_explosion' : 'blast.explosion') })
-    if (big) bigBoomFx(c)
+    if (big && !effects) bigBoomFx(c)
   }
   function tickBoom(c: BuildContext, dt: number) {
     const B = c.blast

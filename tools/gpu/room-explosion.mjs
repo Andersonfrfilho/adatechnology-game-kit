@@ -33,8 +33,8 @@
 //   ROOM_EXPLOSION_P99_MS=4  ROOM_EXPLOSION_MAX_MS=5   the B6 goal (a warning, not a block)
 //   ROOM_EXPLOSION_BASE=<file.json>        the base report (the nightly keeps, per metric, the best of its passing ROOM_EXPLOSION_OUT reports: room-explosion-base.mjs): the gated cells block only when worse than it (REGRESSION), and so does the explosion frame (below).
 //                                          A base measured in another frame budget mode (or without `budgetMode`) is not compared: the run says so, does not block, and becomes the new base
-//   ROOM_EXPLOSION_EXPLOSIVE=c4            the explosive the blast, crater and water kinds detonate (`hammer` ignores it; an id of the arsenal, packages/game-weapons/src/data/explosives.json; an unknown id, or one that does not blast the house (no energy, smoke, cone), stops the run). Only c4 is
-//                                          compared with a base: any other explosive is for reading the typical case, prints SEM COMPARAÇÃO NESTA RODADA, never blocks, and is never saved as the base
+//   ROOM_EXPLOSION_EXPLOSIVE=c4            the explosive the blast, crater and water kinds detonate (`hammer` ignores it; an id of the arsenal, packages/game-weapons/src/data/explosives.json; an unknown id, or one that does not blast the house (no energy, smoke, cone), stops the run). Only c4 and m67
+//                                          (GATED_EXPLOSIVES) are compared with a base of the same explosive: any other is for reading the typical case, prints SEM COMPARAÇÃO NESTA RODADA, never blocks, and is never saved as the base
 //   ROOM_EXPLOSION_OUT=<file.json>         the full report
 //   ROOM_EXPLOSION_PAGE=<test-room.html>   a saved page to open instead of the one this run builds (the run rebuilds examples/test-room/dist/test-room.html before opening it, so a page copied over it is lost)
 //   ROOM_EXPLOSION_OTHER_PAGE=<file.html>  the other build of a before/after pair: the run stops when both pages are the same bytes. The report carries `pageSha256`
@@ -75,7 +75,7 @@ import { assertGpuIsHardware, driverVerdictOf, gpuMismatchReasons, readDriverHea
 import { savedPagesOf } from './room-explosion-base.mjs'
 import { assertStampIsHead, pageHashOf, parsePageStamp } from './page-stamp.mjs'
 import { assertDistsAreFresh } from './stale-dist.mjs'
-import { DEFAULT_EXPLOSIVE, frameGate, frameKey, frameMetricsOf, isBaseComparable } from './room-explosion-frame.mjs'
+import { DEFAULT_EXPLOSIVE, GATED_EXPLOSIVES, frameGate, frameKey, frameMetricsOf, isBaseComparable, isGatedExplosive } from './room-explosion-frame.mjs'
 
 const FRAME_SECONDS = 1 / 60
 const QUIET_LOAD = 4
@@ -117,7 +117,7 @@ export const pagePairOf = ({ page, otherPage }) => {
  */
 export const baseOverwriteError = ({ explosive, savedPage, reportOut, baseFile }) => {
   if (!reportOut || !baseFile || resolve(reportOut) !== resolve(baseFile)) return undefined
-  if (explosive !== DEFAULT_EXPLOSIVE) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite the c4 base`
+  if (!isGatedExplosive(explosive)) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with ${explosive} would overwrite a base (only ${GATED_EXPLOSIVES.join(' and ')} have one)`
   if (savedPage !== undefined) return `room-explosion: ROOM_EXPLOSION_OUT is the base file (${baseFile}): a run with a saved page (ROOM_EXPLOSION_PAGE) would overwrite the base with another build's numbers`
   return undefined
 }
@@ -811,7 +811,7 @@ export async function runRoomExplosion({ playwright, chrome, root }) {
   const savedBase = baseReportOf(process.env.ROOM_EXPLOSION_BASE)
   const frameMeasure = frameMetricsOf(stageFrames)
   const { isBaseInMode, gpuReason, frameVerdict } = explosionGateOf({ measure: frameMeasure, savedBase, mode, explosive, gated, gpu })
-  if (explosive !== DEFAULT_EXPLOSIVE) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosivo ${explosive} (a referência é c4): nada é comparado, não bloqueia nem vira a referência`)
+  if (!isGatedExplosive(explosive)) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: explosivo ${explosive} (só ${GATED_EXPLOSIVES.join(' e ')} têm referência): nada é comparado, não bloqueia nem vira a referência`)
   else if (savedBase && (savedBase.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) console.log(`room-explosion: base com outro explosivo (${savedBase.explosive}, esta rodada ${explosive}): nada é comparado nem bloqueia`)
   else if (gpuReason) console.log(`room-explosion: SEM COMPARAÇÃO NESTA RODADA: ${gpuReason}: nada é comparado nem bloqueia, e a referência fica como está (trocar a referência é procedimento manual, ver docs/desempenho-explosoes.md)`)
   else if (savedBase && !isBaseInMode) console.log(`room-explosion: base em outro modo (${savedBase.budgetMode ?? 'sem modo'}, esta rodada ${mode}): regravando a referência; nada é comparado nem bloqueia`)

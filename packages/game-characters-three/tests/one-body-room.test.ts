@@ -89,7 +89,7 @@ describe('one body for both views (spec 004, R7)', () => {
     frames(room, 30)
     const eye = avatar.eye()
     expect(room.camera.position.distanceTo(eye)).toBeLessThan(1e-6)
-    expect(room.camera.position.y).toBeCloseTo(1.7, 1)
+    expect(room.camera.position.y).toBeCloseTo(1.55, 1)
     expect(avatar.root.visible).toBe(true)
   })
 
@@ -142,11 +142,11 @@ describe('one body for both views (spec 004, R7)', () => {
     room.setAvatarState({ crouch: true })
     frames(room, 60)
     expect(room.camera.position.distanceTo(avatar.eye())).toBeLessThan(1e-6)
-    expect(room.camera.position.y).toBeGreaterThan(1.25)
-    expect(room.camera.position.y).toBeLessThan(1.45)
+    expect(room.camera.position.y).toBeGreaterThan(1.1)
+    expect(room.camera.position.y).toBeLessThan(1.3)
     room.setAvatarState({ crouch: false })
     frames(room, 60)
-    expect(room.camera.position.y).toBeCloseTo(1.7, 1)
+    expect(room.camera.position.y).toBeCloseTo(1.55, 1)
   })
 
   it('pushing a low piece, the camera follows the body\'s bend and the player\'s own eye is not lowered', () => {

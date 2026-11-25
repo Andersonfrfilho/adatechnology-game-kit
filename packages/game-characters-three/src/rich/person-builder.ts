@@ -5,9 +5,11 @@
 // stream and the canvas come in as options; the walk blend is the engine's `MOVES`.
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import { shapeGeometries } from '@adatechnology/game-shapes-three'
-import { MOVES, createRng } from '@adatechnology/game-characters'
+import { MOVES, createRng, heightFactor } from '@adatechnology/game-characters'
 
 import type { Three, THREE_NS } from '../three'
+
+import { RICH_HEIGHT_NORM } from './deviations'
 
 import { FACE_FEATURES } from './accessories/face-features'
 import { buildHand } from './accessories/hands'
@@ -52,8 +54,9 @@ export const createPersonBuilder = (host: Three, options: PersonBuilderOptions =
   const ZSKIN2 = new T.Color(0x6f7a5c)
   function build(sp: PersonSpec, idx?: number): PersonCharacter {
   const root=new THREE.Group();
-  const H=sp.h||1,B=sp.bulk||1,fem=!!sp.fem;
-  const fig=new THREE.Group();fig.scale.set(B,H,Math.min(1.12,B));root.add(fig);
+  const rawH=sp.heightMetres!=null?heightFactor(sp.heightMetres):(sp.h||1);
+  const H=rawH*RICH_HEIGHT_NORM,rawB=sp.bulk||1,B=rawB*RICH_HEIGHT_NORM,fem=!!sp.fem;
+  const fig=new THREE.Group();fig.scale.set(B,H,Math.min(1.12,rawB)*RICH_HEIGHT_NORM);root.add(fig);
   const skinM=new THREE.MeshStandardMaterial({color:sp.skin,roughness:.8,flatShading:false});
   const topM=sp.top.plaid?new THREE.MeshStandardMaterial({map:chessTex(sp.top.c,sp.top.plaid),roughness:.9,flatShading:false}):cmat(sp.top.c);
   const pantsM=cmat(sp.pants.c),shoeM=cmat(sp.shoes);

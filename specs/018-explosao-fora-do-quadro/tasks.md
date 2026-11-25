@@ -40,15 +40,32 @@ código de simulação. Esta fase não altera código.
 
 Fases de implementação: só existem depois da escolha da T1.2.
 
+Estado em 2026-11-24: a proposta de espalhar a explosão foi entregue (`proposta-d2.md` e `evidence.md`), o dono escolheu o plano recomendado em 2026-11-23 e a explosão espalhada entrou
+na `main` (#443, #444, #447, #448). A Fase 2 fecha o que ficou de fora (`spec.md` §6).
+
+## Fase 2 — Fechar a explosão espalhada
+> 🤖 Modelo: `sonnet` (T2.3 é 🧠 — validar com `opus` antes, porque muda em que quadro cada etapa roda)
+
+- **T2.1** A M67 entra no portão da rodada diária ao lado do C4 (`tools/gpu/nightly-gpu.mjs`, `room-explosion`), com base gravada nesta máquina.
+- **T2.2** Medir bomba de cano, C4 e M79 com o marca-passo ligado (régua `room-explosion`, `FRAME_SERIES=24`, pares alternados `blastPacing=0`
+  e `1`), e registrar em `evidence.md`.
+- **T2.3 🧠** Emendar as etapas do marca-passo: conferir no código em que quadro cada etapa (raios, onda, eventos) começa e, se uma etapa
+  espera o quadro seguinte com folga, começar a próxima no mesmo quadro. Aceite: mesmos bytes com e sem pausa (`room-determinism.mjs`) e
+  menos quadros segurados na M67.
+- **T2.4** Decisão do dono: orçamento por custo medido em vez de contagem fixa, e o marca-passo ligado por padrão no kit
+  (`game-kit-defaults`). Medir numa máquina AMD antes de fechar.
+- **T2.5** Conferir qual solver a régua da rajada usa e, se for o solver próprio, medir no Jolt.
+
 ## Fases seguintes
 
-Só existem depois da T1.2 (e da D2, para os cortes que atrasam o dano). O que qualquer caminho herda da 017 está em
-`specs/017-quadro-da-explosao/design-onda.md` (§2.2 a §2.6, §3 e a lista de testes do §5).
+O que qualquer caminho herda da 017 está em `specs/017-quadro-da-explosao/design-onda.md` (§2.2 a §2.6, §3 e a lista de testes do §5).
 
 ## Prompt de execução
 
-Não há prompt de execução: a spec tem [NEEDS CLARIFICATION] aberto (D2) e a T1.2 depende da escolha do dono. A D2 só bloqueia cortes que atrasam o dano. O prompt da Fase 0 já foi
-executado e está no histórico do git. Perguntas pendentes:
-
-- **D2:** quantos quadros de latência entre o clarão e o dano são aceitáveis? (o dono decide vendo na sala; só para cortes que atrasam o dano)
-- **T1.2:** qual dos cortes propostos na T1.1 entra, e com que latência.
+```text
+/oh-my-claudecode:autopilot Execute a Fase 2 da spec specs/018-explosao-fora-do-quadro/ (leia spec.md, §6, e tasks.md antes de começar).
+Uma task por vez, na ordem do tasks.md. Modelos: T2.1, T2.2 e T2.5 → executor model=sonnet · T2.3 🧠 → validar o desenho com architect
+model=opus antes de implementar · revisão final → code-reviewer model=sonnet. Escalada: gate falhou 2x → sobe um nível e registra em evidence.md.
+Cada task fecha com typecheck + testes + commit isolado; medições sob flock ~/.cache/adatechnology-game-kit/perf-measure.lock com a máquina
+quieta, evidência em evidence.md. Pare e pergunte antes de: a T2.4 (decisão do dono), deploy, regravar golden ou fixture.
+```

@@ -82,6 +82,8 @@
     "regenMoving": 4,
     "regenStill": 8,
     "acceleration": 10,
+    "heightMetres": 1.8,
+    "crouchHeightRatio": 0.65,
     "radius": 0.3,
     "blockHeight": 0.4,
     "pushApartRadius": 0.55,

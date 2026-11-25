@@ -49,11 +49,23 @@ export type PlayerOptions = {
   readonly numbers?: Partial<PlayerNumbers>
   readonly fist?: MeleeItem
   readonly position?: { readonly x?: number; readonly z?: number; readonly yaw?: number }
+  /** Standing skull-top height in metres (default `numbers.heightMetres`, 1.80 m). Scales collider height and radius (Spec 012 R3/H5). */
+  readonly heightMetres?: number
   readonly world?: PlayerWorld
+}
+
+/** Player capsule/cylinder collider dimensions in metres (follows standing vs crouched state and `heightMetres`). */
+export type PlayerCollider = {
+  readonly heightMetres: number
+  readonly radiusMetres: number
 }
 
 export type Player = {
   readonly state: PlayerState
+  /** Declared standing height in metres. */
+  readonly heightMetres: number
+  /** Current collider height and radius in metres (adapts to crouch and `heightMetres`). */
+  collider(): PlayerCollider
   readonly attributes: Attributes
   readonly derived: Derived
   readonly numbers: PlayerNumbers
@@ -165,6 +177,11 @@ export function createPlayer(options: PlayerOptions = {}): Player {
   const formulas: DerivedFormulas = { ...PLAYER_DEFAULTS.derived, ...options.derived }
   const derived = deriveVitals(attributes, formulas)
   const numbers: PlayerNumbers = { ...PLAYER_DEFAULTS.numbers, ...options.numbers }
+  const heightMetres = options.heightMetres ?? numbers.heightMetres
+  if (!Number.isFinite(heightMetres) || heightMetres < 0.8 || heightMetres > 3.0) {
+    throw new RangeError(`Player height ${String(heightMetres)} m is outside supported range [0.8, 3.0] m.`)
+  }
+  const heightScale = heightMetres / numbers.heightMetres
   const wounds = options.wounds ?? PLAYER_DEFAULTS.wounds
   const infection: InfectionRule | null =
     options.infection === undefined || options.infection === false ? null : options.infection === true ? PLAYER_DEFAULTS.infection : { ...PLAYER_DEFAULTS.infection, ...options.infection }
@@ -473,7 +490,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     const tvz = want ? (mz / ml) * sp : 0
     P.vx = lerp(P.vx, tvx, Math.min(1, dt * numbers.acceleration))
     P.vz = lerp(P.vz, tvz, Math.min(1, dt * numbers.acceleration))
-    const r = numbers.radius
+    const r = numbers.radius * heightScale
     const nx = P.x + P.vx * dt
     const nz = P.z + P.vz * dt
     if (!blocked(nx + Math.sign(P.vx) * r, P.z)) P.x = nx
@@ -553,6 +570,11 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     get state() {
       return P
     },
+    heightMetres,
+    collider: () => ({
+      heightMetres: P.crouch ? heightMetres * numbers.crouchHeightRatio : heightMetres,
+      radiusMetres: numbers.radius * heightScale,
+    }),
     attributes,
     derived,
     numbers,
