@@ -1,5 +1,19 @@
 # @adatechnology/game-floorplan-three
 
+## 3.1.0
+
+### Minor Changes
+
+- 2e803a4: Zumbis não atravessam mais paredes: as casas publicam paredes do térreo, muros, grades, portas e portões (`createHouseNavObstacles`, contrato `NavObstacleSource`) e a horda os grava na sua grade (`bindNavObstacles`). Contornam a parede, entram por porta ou portão aberto e pelo buraco de uma explosão, e batem na porta fechada até quebrá-la (a casa a mostra aberta).
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-destruction@0.29.3
+  - @adatechnology/game-floorplan-structure@4.0.2
+  - @adatechnology/game-render-three@0.4.3
+
 ## 3.0.1
 
 ### Patch Changes

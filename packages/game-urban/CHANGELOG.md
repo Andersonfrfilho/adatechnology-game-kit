@@ -1,5 +1,13 @@
 # @adatechnology/game-urban
 
+## 0.5.4
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+  - @adatechnology/game-floorplan@0.5.2
+
 ## 0.5.3
 
 ### Patch Changes

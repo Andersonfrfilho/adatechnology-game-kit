@@ -1,5 +1,12 @@
 # @adatechnology/game-vegetation-three
 
+## 0.3.18
+
+### Patch Changes
+
+- Updated dependencies [2e803a4]
+  - @adatechnology/game-contracts@0.39.0
+
 ## 0.3.17
 
 ### Patch Changes
