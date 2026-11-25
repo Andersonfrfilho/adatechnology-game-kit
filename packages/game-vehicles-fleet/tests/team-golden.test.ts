@@ -9,9 +9,9 @@ import popularGolden from './fixtures/team-golden/garage-popular.json'
 import sedaGolden from './fixtures/team-golden/garage-seda.json'
 import { makeFleetKit } from './helpers/kit'
 
-// Owner decision (2026-11-12, CLAUDE.md §13): the spokes of a wheel cross at the hub, so each one is a little thinner than the one before and none shares a plane with another.
-// The scene keeps every object, material and size of the page; only the thickness of the spokes moved, so the node-by-node hash differs.
-const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['compact_hatch', 'midsize_sedan', 'fastback_sedan'])
+// Owner decision (2026-11-12 §13 & 2026-11-24 Spec 012 R6): flush parts moved 1-3 mm to remove z-fighting and cabin cushions/headliner/dash moved to real R6 clearances.
+// The scene keeps every object, material, event and external dimension of the page; only interior/flush node hashes differ.
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['compact_hatch', 'entry_hatch', 'midsize_sedan', 'fastback_sedan'])
 const objectsOf = (record: GoldenRecord): Record<string, number> => Object.fromEntries(Object.entries(record.scenes).map(([state, scene]) => [state, scene.objects]))
 
 function expectSameScenes(vehicleKey: string, golden: GoldenRecord, sdk: GoldenRecord): void {
