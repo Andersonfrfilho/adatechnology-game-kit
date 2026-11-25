@@ -281,3 +281,34 @@ são regravados nesse PR, com a mudança dita no `evidence.md`.
    em armação de 4 fios (bairro antigo) ou MT compacta com espaçador; todas são estilo do poste no registro.
 3. **Quanto de "periferia de verdade".** Padrão: centro limpo; no bairro popular, feixe de 3 a 5 cabos de telecom com rolos e alguns gatos
    (ramal sem medidor: a casa fica ligada no grafo e soma na demanda do trafo, sem medidor, ~1 em 10 lotes, pela semente). Alternativa: tudo limpo, ou mais bagunça.
+
+## 12. Energia enterrada (decisão do dono, 2026-11-25)
+
+Pergunta do dono: "vamos ter opção de energia passando por de baixo?". Sim: cada rua escolhe **aérea** (padrão) ou **enterrada**, no
+`generateNetworks({ power: { default, lines, districts } })` (por linha, por distrito pelo id ou tipo, e o resto). Prática brasileira como
+referência geral, sem marca (NBR 14039 e NBR 5410, padrões de rede subterrânea das distribuidoras: dutos PEAD corrugado em envelope de concreto).
+
+| Peça | Como fica |
+|---|---|
+| Banco de dutos | sob a calçada do lado da água, entre o meio-fio e a rede de água (`bankFromKerb` 0,35 m, 0,26 m de largura): BT em cima (topo 0,975 m, logo abaixo dos cruzamentos da água), telecom no meio, MT no fundo (1,27 a 1,42 m), 2 cm de concreto entre as camadas |
+| Caixa de passagem | em cada lote, em cada cruzamento, junto de cada trafo e de cada coluna de luz, e a cada ≤ 40 m (o validador aceita até 50); tampa de concreto na calçada |
+| Trafo | em pedestal (`mount: 'pad'`), na calçada do lado do banco, entre os dois lotes do meio do circuito; MT e BT por eletrodutos do banco até a base. Circuito: os lotes em ordem enquanto o maior trafo carrega e a BT cabe nos 200 m; nunca atravessa um cruzamento |
+| Iluminação | colunas na calçada do outro lado, a ~35 m, alimentadas por cabo enterrado que atravessa a rua; nenhum fio aéreo, nenhum poste de distribuição na rua enterrada |
+| Lote | ramal de energia e de telecom da caixa até o padrão; do lado do banco no nível do banco, do outro lado subindo a 0,6 m de cobertura. A casa (`street: 'network_underground'`) não tem poste nem pontalete: caixa do medidor baixa no pilar ou na fachada, eletroduto do chão até ela, telecom ao lado |
+
+**Separação** (`rules.underground`, `rules.crossing.rank`): água por cima (≥ 0,2 m), energia e telecom no meio, esgoto e galeria por baixo
+(energia **nunca** abaixo do esgoto: `POWER_BELOW_SEWER`); ≥ 0,3 m livres ao lado de água, esgoto e drenagem que correm paralelos
+(`PARALLEL_TOO_CLOSE`); caixa a cada ≤ 50 m (`BOX_SPACING`); nada aéreo sobre a rua enterrada (`AERIAL_ON_UNDERGROUND`); coberturas por
+classe (`COVER`). O esgoto do lado do banco desce numa caixa com queda (`spec: 'fall'`) antes do banco; galeria e coletor passam por baixo
+dos dutos (`solveDrainInverts` com os dutos em `above`); a caixa de cada lote sai da frente de canos que cruzam a rua a menos de 1 m.
+
+**Destruição:** cratera que alcança o banco corta os cabos (`breachOf`, conteúdo `power`/`telecom`, nada vaza); `powerOutageOf` dá os lotes e
+as luminárias a jusante (MT cortada apaga todos os circuitos depois dela). A cena liga isso ao `setLotGrid` de cada casa e ao
+`setLampsPowered` do desenho; o reset devolve.
+
+**Desenho:** banco como caixa instanciada (uma chamada a mais no `drawBuriedNetworks`), ramais como os canos; tampa da caixa e trafo em
+pedestal como peças de superfície; coluna de luz é o poste de distribuição só com braço e luminária. Custos novos aceitos por nome:
+`urban/networks-underground`, `urban/network-surface-underground`, `urban/network-buried-underground`.
+
+**Cena:** `?energia=enterrada` põe o centro (`downtown_edge`) enterrado e mantém a periferia aérea. Limite conhecido: uma rua enterrada sem
+saída na borda do mapa não é alimentada por poste de transição de uma rua aérea vizinha (fica aviso); no recorte o centro sai pela borda oeste.
