@@ -27,7 +27,7 @@ export type VehicleEffectIds = {
 }
 
 export const defaultEffectIds: VehicleEffectIds = {
-  ignite: 'vehicle_fire',
+  ignite: 'volumetric_fire',
   explode: 'car_fuel_tank',
   glass: 'glass_burst',
   sparks: 'impact_metal',

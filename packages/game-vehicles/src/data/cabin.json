@@ -1,0 +1,83 @@
+{
+  "source": "Spec 012 (R6, T0.2) — SAE J1100 interior packaging & ISO 7250-1 / NASA-STD-3000 adult anthropometry (1.80 m seated height = 0.936 m, buttock-knee = 0.612 m, shoulder = 0.468 m)",
+  "entryDuckFactor": 0.44,
+  "categories": {
+    "passenger_car": {
+      "frontHeadroomMetres": 0.95,
+      "rearHeadroomMetres": 0.9,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.52,
+      "door": { "widthMetres": 0.65, "heightMetres": 0.8 }
+    },
+    "suv_pickup": {
+      "frontHeadroomMetres": 0.98,
+      "rearHeadroomMetres": 0.93,
+      "frontLegroomMetres": 0.64,
+      "widthMetres": 0.54,
+      "door": { "widthMetres": 0.7, "heightMetres": 0.82 }
+    },
+    "van": {
+      "frontHeadroomMetres": 1.05,
+      "rearHeadroomMetres": 1.05,
+      "frontLegroomMetres": 0.65,
+      "widthMetres": 0.54,
+      "door": { "widthMetres": 0.75, "heightMetres": 0.95 }
+    },
+    "truck": {
+      "frontHeadroomMetres": 1.0,
+      "rearHeadroomMetres": 1.0,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.52,
+      "door": { "widthMetres": 0.65, "heightMetres": 0.85 }
+    },
+    "bus": {
+      "frontHeadroomMetres": 1.2,
+      "rearHeadroomMetres": 1.2,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.5,
+      "door": { "widthMetres": 0.7, "heightMetres": 1.75 }
+    },
+    "agricultural": {
+      "frontHeadroomMetres": 1.05,
+      "rearHeadroomMetres": null,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.52,
+      "door": { "widthMetres": 0.65, "heightMetres": 0.9 }
+    },
+    "military_light": {
+      "frontHeadroomMetres": 0.95,
+      "rearHeadroomMetres": 0.92,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.5,
+      "door": { "widthMetres": 0.6, "heightMetres": 0.8 }
+    },
+    "military_armored": {
+      "frontHeadroomMetres": 0.88,
+      "rearHeadroomMetres": 0.88,
+      "frontLegroomMetres": 0.58,
+      "widthMetres": 0.46,
+      "door": { "widthMetres": 0.5, "heightMetres": 0.55 }
+    },
+    "open_vehicle": {
+      "frontHeadroomMetres": null,
+      "rearHeadroomMetres": null,
+      "frontLegroomMetres": null,
+      "widthMetres": null,
+      "door": null
+    },
+    "boat_cabin": {
+      "frontHeadroomMetres": 1.05,
+      "rearHeadroomMetres": 1.05,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.52,
+      "door": { "widthMetres": 0.6, "heightMetres": 0.9 }
+    },
+    "aircraft_enclosed": {
+      "frontHeadroomMetres": 0.95,
+      "rearHeadroomMetres": 0.92,
+      "frontLegroomMetres": 0.62,
+      "widthMetres": 0.48,
+      "door": { "widthMetres": 0.55, "heightMetres": 0.8 }
+    }
+  }
+}

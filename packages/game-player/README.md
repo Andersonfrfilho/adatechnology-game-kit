@@ -50,6 +50,29 @@ player.grab(agentIndex) // 3 s to break free
 player.knock(1.5)
 ```
 
+## HUD and death screen (`./hud`)
+
+`@adatechnology/game-player/hud` is the body's screen, in DOM and with no three.js, laid over the game's view: the health and stamina bars with the
+bleeding, the infection stage and the wounds under them (bottom left), the weapon in the hand and its rounds (bottom right, only when the hand holds
+one), a name at the top left, the body's `message` events at the top centre and the crosshair in the first person. Nothing in it takes the mouse.
+The death screen opens once the body has been dead `delaySeconds` (1.5 s: the death camera settles first), frees the pointer lock and shows the
+cause, the time survived and two buttons: restart the scene (also Enter or R) and back to the start. Each hook fires once until the body lives
+again. The words are `pt-BR` (default) and `en`.
+
+```ts
+import { createDeathScreen, createPlayerHud, playerHudViewOf } from '@adatechnology/game-player/hud'
+
+const hud = createPlayerHud({ container, locale: 'pt-BR', title: 'Level 1' })
+const death = createDeathScreen({ container, onRestart: rebuildFromSeed, onBackToStart: () => player.load(startSave) })
+player.on('message', ({ id, seconds }) => hud.message(playerTextOf(id), seconds))
+
+// every frame
+hud.update(playerHudViewOf(player))
+hud.setView(camera.isFirstPerson() ? 'first' : 'third')
+hud.setWeapon(gun ? { name: gun.name, ammo: `${gun.mag} / ${gun.reserve}` } : null)
+death.update({ alive: player.state.alive, deathTime: player.state.deathTime, cause: player.state.cause, survivedSeconds })
+```
+
 ## Test area
 
 `createPlayerTestModule()` (`player_area`, only the generic contracts) makes the room's camera the player body and puts the vitals on the bench;

@@ -314,6 +314,21 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
   return {
     hostGroundAt: options.groundAt,
     play(id, point, playOptions = {}) {
+      if (id === 'volumetric_fire') {
+        const values = playOptions.values
+        const handle = ++handles.next
+        addFire(core, streamOf(playOptions.seed), {
+          x: point[0],
+          y: point[1],
+          z: point[2],
+          r: values?.radius ?? 0.55,
+          life: values?.life ?? 24,
+          ...(values?.rate !== undefined ? { rate: values.rate } : {}),
+          ...(values?.smoke !== undefined ? { smoke: values.smoke } : {}),
+          ...(values?.smokeColor !== undefined ? { color: hexToLinearRgb(values.smokeColor) } : {}),
+        }, handle)
+        return handle
+      }
       if (!(id in effects)) return null
       const seed = playOptions.seed ?? (randomMode === 'shared' ? undefined : Math.imul(++handles.events, AUTO_SEED) + (options.seed ?? 0))
       return effectPlayer().play(id, [point[0], point[1], point[2]], { ...playOptions, ...(seed !== undefined ? { seed } : {}) })
@@ -330,7 +345,7 @@ export function createVfx(options: VfxOptions = {}): VfxWorld {
     sprites: () => spriteSystem,
     workshop,
     peekWorkshop: () => engine,
-    effectIds: () => Object.keys(effects),
+    effectIds: () => ('volumetric_fire' in effects ? Object.keys(effects) : [...Object.keys(effects), 'volumetric_fire']),
     explosion(id, point, explosionOptions = {}) {
       const base = definitionOf(id)
       if (!base) return null

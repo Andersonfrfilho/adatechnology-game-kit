@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 // ESM + d.ts for bundlers, and an IIFE (dist/index.global.js) exposing the `GamePlayer` global.
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/testing.ts'],
+    entry: ['src/index.ts', 'src/testing.ts', 'src/hud.ts'],
     format: ['esm'],
     dts: true,
     // one copy of the registries and module state, shared by the root and the ./testing entries

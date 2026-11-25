@@ -3,6 +3,7 @@ import { TEAM_GAME } from '@adatechnology/game-characters'
 import type { BodySpec, JointId } from '@adatechnology/game-characters'
 
 import type { Three, THREE_NS } from '../three'
+import { INSTANCED_PORT_SKULL_TOP_METRES } from '../rich/deviations'
 
 type Vec3 = readonly [number, number, number]
 
@@ -68,8 +69,10 @@ const tagGeometry = (geometry: Geometry, bone: number, pivot: Vec3, material: nu
 
 const MERGED_ATTRIBUTES: readonly (readonly [string, number])[] = [['position', 3], ['normal', 3], ['bone', 1], ['vcol', 4], ['pivot', 3], ['ppivot', 3]]
 
-/** The parts as one geometry (G 65354 `mergeBody`). */
-const mergeBody = (list: readonly Geometry[], three: Three): Geometry => {
+const SCALED_ATTRIBUTES: ReadonlySet<string> = new Set(['position', 'pivot', 'ppivot'])
+
+/** The parts as one geometry (G 65354 `mergeBody`), uniformly normalised by `scale` so skull top matches `body.heightMetres`. */
+const mergeBody = (list: readonly Geometry[], three: Three, scale: number): Geometry => {
   const total = list.reduce((sum, geometry) => sum + geometry.attributes.position!.count, 0)
   const merged = new three.BufferGeometry()
   for (const [name, size] of MERGED_ATTRIBUTES) {
@@ -79,6 +82,9 @@ const mergeBody = (list: readonly Geometry[], three: Three): Geometry => {
       const part = geometry.attributes[name]!.array as Float32Array
       array.set(part, offset)
       offset += part.length
+    }
+    if (scale !== 1 && SCALED_ATTRIBUTES.has(name)) {
+      for (let i = 0; i < array.length; i++) array[i] *= scale
     }
     merged.setAttribute(name, new three.BufferAttribute(array, size))
   }
@@ -175,5 +181,5 @@ export const buildInstancedBody = (host: Three, { segments, body = TEAM_GAME }: 
     foot.translate(knee[0], 0.06, 0.05)
     tag(foot, shinBone, knee, 5, hipJoint)
   }
-  return mergeBody(parts, three)
+  return mergeBody(parts, three, body.heightMetres / INSTANCED_PORT_SKULL_TOP_METRES)
 }

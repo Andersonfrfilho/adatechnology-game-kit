@@ -8,6 +8,19 @@ export type { CharacterKit } from './kit'
 export type { Character, ResolvedCharacterSpec } from './character'
 export { GUIDE, TEAM_GAME, JOINT_IDS, createBodySpec } from './body/body-spec'
 export type { BodySpec, JointId } from './body/body-spec'
+export {
+  BODY_TYPE_IDS,
+  HEIGHTS_BY_TYPE_METRES,
+  HEIGHT_RANGE_METRES,
+  InvalidHeightError,
+  REFERENCE_HEIGHT_METRES,
+  assertHeight,
+  defaultHeightMetres,
+  heightFactor,
+} from './body/height'
+export type { BodyTypeId } from './body/height'
+export { ANTHROPOMETRY_RATIOS, ANTHROPOMETRY_SOURCE, bodyMeasures } from './body/measures'
+export type { BodyMeasuresParams } from './body/measures'
 export { createRig, GAME_BONES, JOINT_PARENTS } from './body/rig'
 export type { CreateRigParams, Rig } from './body/rig'
 export { SEGMENT_TREE, SEGMENT_IDS, SEGMENT_NUMBERS, segmentNode, segmentsBelow, isSegmentId } from './body/segment-tree'

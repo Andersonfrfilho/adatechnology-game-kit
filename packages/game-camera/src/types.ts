@@ -99,11 +99,13 @@ export interface AimConfig {
 export interface DeathOrbitConfig {
   /** Distance from the body. */
   radius: number
-  /** Height of the camera. */
+  /** Height of the camera over the body (the body's `y` plus this). */
   height: number
+  /** The camera never goes lower than this over the ground under it (`groundAt`) or, without it, over the body. */
+  minHeight: number
   /** Radians per second of `deathT` (the angle is `deathT * speed`). */
   speed: number
-  /** Height the camera looks at on the body. */
+  /** Height the camera looks at on the body (over the body's `y`). */
   lookHeight: number
 }
 
@@ -172,6 +174,8 @@ export interface CameraTarget {
   alive?: boolean
   /** Seconds since the death, for the orbit. */
   deathT?: number
+  /** The ground's height at a point: the death orbit stays `deathOrbit.minHeight` over it. Absent, it stays that much over the body. */
+  groundAt?: (x: number, z: number) => number
 }
 
 /** What the player did with the mouse and what shakes the look this frame (see `CameraRig.look`). */

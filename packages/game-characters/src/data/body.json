@@ -70,5 +70,34 @@
     "lod0": 2500,
     "lod1": 800,
     "lod2": 250
+  },
+  "heightRangeMetres": {
+    "min": 0.8,
+    "max": 3.0,
+    "source": "Spec 012 (R1/R2): covers children (~0.94 m), adults (1.40-2.10 m) and Brutamonte (2.56 m)"
+  },
+  "heightsByTypeMetres": {
+    "human": 1.8,
+    "Lento": 1.8,
+    "Corredor": 1.75,
+    "Brutamonte": 2.56,
+    "Rastejante": 1.8,
+    "Gritador": 1.8,
+    "Inchado": 1.85,
+    "Espreitador": 1.8,
+    "Farejador": 1.8,
+    "Saltador": 1.8,
+    "Cego": 1.8,
+    "Afogado": 1.8,
+    "Carbonizado": 1.8,
+    "Devorador": 1.8
+  },
+  "anthropometry": {
+    "source": "ISO 7250-1 / NASA-STD-3000 (Vol. I §3.3) / ANSUR II (adult p50): sitting height 0.520, sitting eye 0.455, bideltoid shoulder width 0.260, buttock-knee thigh 0.340, knee-sole shin 0.285",
+    "seatedHeightRatio": 0.52,
+    "seatedEyeHeightRatio": 0.455,
+    "shoulderWidthRatio": 0.26,
+    "thighLengthRatio": 0.34,
+    "shinLengthRatio": 0.285
   }
 }

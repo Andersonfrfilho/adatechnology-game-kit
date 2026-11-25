@@ -10,8 +10,10 @@ export type PersonExtra = readonly [id: string, color?: number, ...more: number[
 
 /** A survivor as the page describes one (`sp`): colours are hex numbers, the short names are the page's. */
 export type PersonSpec = {
-  /** Height scale (default 1). */
+  /** Height scale (default 1). Ignored when `heightMetres` is provided. */
   readonly h?: number
+  /** Standing skull-top height in metres (validated by `assertHeight`). Wins over `h`. */
+  readonly heightMetres?: number
   /** Width scale (default 1). */
   readonly bulk?: number
   /** Female body. */
@@ -168,6 +170,8 @@ export type BestSpec = {
   readonly life?: number
   readonly cut?: BestCuts
   readonly h?: number
+  /** Standing skull-top height in metres (validated by `assertHeight`). Wins over `h` and type default height. */
+  readonly heightMetres?: number
   readonly bulk?: number
   readonly lying?: boolean
   readonly opacity?: number

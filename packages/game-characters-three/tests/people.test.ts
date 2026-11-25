@@ -18,12 +18,11 @@ const scenes = golden.scenes as unknown as Record<string, Scene>
 
 // The page had already drawn 8606 numbers from its shared `rng(77)` when the capture ran: it builds a portrait, a base diorama and the first thumbnail on load.
 const PAGE_STREAM_OFFSET = 8606
-// Owner decision (2026-11-12, CLAUDE.md §13): the hand items, extras and hat photo these people carry had parts flush with each other and flickered; the
-// parts now sit 2 to 4 mm apart, so their scene hash is no longer the page's. Their node count is still checked.
-const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['zilda', 'bigode', 'rafa', 'rosa', 'nicole', 'biel', 'neide', 'vinicius', 'lince', 'paula', 'kevin'])
+// Owner decision (2026-11-19, Spec 012 D3): survivor root scale is normalised by `RICH_HEIGHT_NORM` (1.80 / 1.9815) so factor 1 measures 1.80 m
+// instead of 1.982 m; scene node counts stay identical to the Retratos do Vale page, and bit-for-bit snapshots live in `exact-characters.json`.
 
 describe('G-people: the Retratos do Vale survivors', () => {
-  it('builds the 44 recorded people in order with the same node count and scene hash', () => {
+  it('builds the 44 recorded people in order with the same node count (Spec 012 D3 height-normalised)', () => {
     const restore = installPortableMath()
     const random = createRng(77)
     for (let drawn = 0; drawn < PAGE_STREAM_OFFSET; drawn++) random()
@@ -33,8 +32,7 @@ describe('G-people: the Retratos do Vale survivors', () => {
       const built = builder.buildPerson(person, false)
       const snapshot = snapshotScene(built.root)
       const expected = scenes[`person_${person.id}`]!
-      const hashMoved = Z_FIGHTING_FIXES.has(person.id) ? false : snapshot.hash !== expected.hash
-      if (hashMoved || snapshot.objects !== expected.objects) mismatches.push(`${person.id}: ${expected.hash}/${expected.objects} -> ${snapshot.hash}/${snapshot.objects}`)
+      if (snapshot.objects !== expected.objects) mismatches.push(`${person.id}: ${expected.objects} -> ${snapshot.objects}`)
     }
     restore()
     expect(PEOPLE).toHaveLength(44)

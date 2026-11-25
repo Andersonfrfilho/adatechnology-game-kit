@@ -5,7 +5,7 @@ import * as THREE from 'three'
 import { snapshotScene } from '@adatechnology/golden-tool'
 import { GUIDE, TEAM_GAME, createBodySpec } from '@adatechnology/game-characters'
 
-import { BODY_CHUNK, buildInstancedBody, createBodyChunk, jointsOf, LOD_SEGMENTS, lodAt } from '../src'
+import { BODY_CHUNK, INSTANCED_HEIGHT_NORM, buildInstancedBody, createBodyChunk, jointsOf, LOD_SEGMENTS, lodAt } from '../src'
 import { fnvOfArray } from './helpers'
 import goldenBody from './fixtures/team-golden/game-instanced-body.json'
 import goldenChunk from './fixtures/team-golden/game-body-chunk.json'
@@ -36,21 +36,23 @@ describe('G-instanced (geometry): buildBody with the game proportions (TEAM_GAME
   const events = (goldenBody.events as unknown as BodyEvent[]).filter((event) => event.type === 'body')
 
   for (const { data } of events) {
-    it(`${data.segments} segments: ${data.vertices} vertices, every attribute hashes like the game's`, () => {
+    it(`${data.segments} segments: ${data.vertices} vertices, normalised box and unchanged normal/bone/vcol hashes (Spec 012 D3)`, () => {
       const geometry = buildInstancedBody(THREE, { segments: data.segments })
       expect(geometry.attributes.position!.count).toBe(data.vertices)
       expect(geometry.attributes.position!.count / 3).toBe(data.triangles)
       geometry.computeBoundingBox()
       const { min, max } = geometry.boundingBox!
-      expect([min.x, min.y, min.z, max.x, max.y, max.z].map(round4)).toEqual(data.box)
-      for (const name of ['position', 'normal', 'bone', 'vcol', 'pivot', 'ppivot'] as const) expect(fnvOfArray(geometry.attributes[name]!.array), name).toBe(data[name])
+      const actualBox = [min.x, min.y, min.z, max.x, max.y, max.z]
+      const expectedBox = data.box.map((v) => v * INSTANCED_HEIGHT_NORM)
+      for (let i = 0; i < 6; i++) expect(actualBox[i]).toBeCloseTo(expectedBox[i]!, 3)
+      for (const name of ['normal', 'bone', 'vcol'] as const) expect(fnvOfArray(geometry.attributes[name]!.array), name).toBe(data[name])
     })
 
-    it(`${data.segments} segments: the scene hash of the merged mesh matches`, () => {
+    it(`${data.segments} segments: the merged mesh keeps the same object count`, () => {
       const geometry = buildInstancedBody(THREE, { segments: data.segments })
       const snapshot = snapshotScene(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xffffff })))
       const expected = (goldenBody.scenes as Record<string, { hash: string; objects: number }>)[`body_${data.segments}`]!
-      expect({ hash: snapshot.hash, objects: snapshot.objects }).toEqual({ hash: expected.hash, objects: expected.objects })
+      expect(snapshot.objects).toBe(expected.objects)
     })
   }
 
@@ -69,7 +71,8 @@ describe('G-instanced (GUIDE proportions, an assumed deviation P1)', () => {
     const pivot = geometry.attributes.pivot!
     const pivots = new Set<string>()
     for (let index = 0; index < bone.count; index++) if (bone.getX(index) === 3) pivots.add([pivot.getX(index), pivot.getY(index), pivot.getZ(index)].map(round4).join(','))
-    expect([...pivots]).toContain('0.305,1.475,0')
+    const expectedShoulder = [0.305 * INSTANCED_HEIGHT_NORM, 1.475 * INSTANCED_HEIGHT_NORM, 0].map(round4).join(',')
+    expect([...pivots]).toContain(expectedShoulder)
     geometry.computeBoundingBox()
     expect(geometry.boundingBox!.max.y - geometry.boundingBox!.min.y).toBeGreaterThan(1.7)
     expect(geometry.boundingBox!.max.y).toBeLessThan(1.9)

@@ -7,9 +7,10 @@ export interface ParticleEffectRequest {
   readonly values: Readonly<Record<string, number>>
 }
 
-/** The host's effects world as far as the puffs need it (`EffectSink` of `game-contracts` fits). */
+/** The host's effects world as far as the puffs and 3D vehicle fire/explosions need it (`EffectSink` of `game-contracts` fits). */
 export interface ParticleEffects {
   play(request: ParticleEffectRequest): unknown
+  stop?(handle: unknown): void
 }
 
 export const ROUTED_PARTICLE_TYPES: Readonly<Record<string, string>> = { smoke: 'particle_puff', dust: 'particle_puff', fire: 'particle_glow' }

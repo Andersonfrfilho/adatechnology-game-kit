@@ -1,6 +1,7 @@
 /**
- * The look of the loading indicator, with no dependency: a card with a title, a bar and a line of text over a dim backdrop. The room draws it (`createLoading`), and a page that must show it before any
- * script has run (the default test room's first frame) writes the same markup and styles from `loadingMarkup` and `LOADING_CSS`, so the screen the page starts with and the one the room shows later are one.
+ * The look of the loading indicator, with no dependency: a card with a title, a bar and a line of text over a dim backdrop. `createLoading` draws it, and a page that must show it before any
+ * script has run (the first frame of the default test room or of the reference district) writes the same markup and styles from `loadingMarkup` and `LOADING_CSS`, so the screen the page starts with
+ * and the one the indicator shows later are one.
  */
 export const LOADING_CLASS = 'tr-loading'
 
@@ -23,7 +24,7 @@ export const LOADING_CSS = [
 
 const escape = (text: string): string => text.replace(/[&<>"]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : '&quot;'))
 
-/** The markup of the indicator as a string, for a page that writes it into its HTML. `solid` is the opaque backdrop of a first screen, `fixed` covers the window instead of the room. */
+/** The markup of the indicator as a string, for a page that writes it into its HTML. `solid` is the opaque backdrop of a first screen, `fixed` covers the window instead of its container. */
 export function loadingMarkup(options: { title: string; step?: string; solid?: boolean; fixed?: boolean; id?: string }): string {
   const classes = [LOADING_CLASS, options.solid ? 'tr-loading-solid' : '', options.fixed ? 'tr-loading-fixed' : ''].filter(Boolean).join(' ')
   const id = options.id ? ` id="${escape(options.id)}"` : ''

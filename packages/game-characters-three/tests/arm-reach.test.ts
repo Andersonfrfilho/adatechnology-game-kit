@@ -4,20 +4,24 @@ import type { HandPose, HandTargets } from '@adatechnology/game-contracts'
 
 import { ATTACK_CLIPS } from '@adatechnology/game-characters-people'
 
-import { createPlayerAvatar, type ReachView } from '../src'
+import { RICH_HEIGHT_NORM, createPlayerAvatar, type ReachView } from '../src'
 
-// Hand targets the weapons module of game-weapons-three gives the room (world space), taken with the eye at 1.70 m over the feet at the origin, looking down -z.
-const EYE = new THREE.Vector3(0, 1.7, 0)
+// Hand targets the weapons module of game-weapons-three gives the room (world space), scaled to the normalised 1.80 m body (Spec 012 R1).
+const EYE = new THREE.Vector3(0, 1.7 * RICH_HEIGHT_NORM, 0)
+const scalePose = (p: HandPose): HandPose => ({
+  position: [p.position[0] * RICH_HEIGHT_NORM, p.position[1] * RICH_HEIGHT_NORM, p.position[2] * RICH_HEIGHT_NORM],
+  quaternion: p.quaternion,
+})
 const HOLDS: Record<string, HandTargets> = {
   glock_17: {
-    R: { position: [0.1255, 1.5236, -0.4301], quaternion: [0.4024, 0.4024, -0.5814, 0.5814] },
-    L: { position: [0.0745, 1.4843, -0.4153], quaternion: [-0.5814, 0.5814, 0.4024, 0.4024] },
+    R: scalePose({ position: [0.1255, 1.5236, -0.4301], quaternion: [0.4024, 0.4024, -0.5814, 0.5814] }),
+    L: scalePose({ position: [0.0745, 1.4843, -0.4153], quaternion: [-0.5814, 0.5814, 0.4024, 0.4024] }),
   },
   shotgun_pump_12: {
-    R: { position: [0.214, 1.4634, -0.4806], quaternion: [0.4197, 0.4197, -0.5691, 0.5691] },
-    L: { position: [0.2, 1.47, -0.666], quaternion: [1, 0, 0, 0] },
+    R: scalePose({ position: [0.214, 1.4634, -0.4806], quaternion: [0.4197, 0.4197, -0.5691, 0.5691] }),
+    L: scalePose({ position: [0.2, 1.47, -0.666], quaternion: [1, 0, 0, 0] }),
   },
-  axe: { R: { position: [0.2, 1.5015, -0.2362], quaternion: [0.7071, 0.7071, 0, 0] }, L: null },
+  axe: { R: scalePose({ position: [0.2, 1.5015, -0.2362], quaternion: [0.7071, 0.7071, 0, 0] }), L: null },
 }
 
 /** The same hold with the look turned up (positive) or down about the eye, as the weapon follows the camera. */

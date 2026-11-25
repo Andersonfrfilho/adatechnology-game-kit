@@ -30,8 +30,12 @@ const PUSH_KINDS: ReadonlyArray<{ readonly kind: 'can' | 'bottle' | 'chair'; rea
 const PUSH_READ_AT = 0.8
 /** Metres a body inside half the reach must move to count as moved. */
 const MOVED = 0.15
-/** Metres a body in the outer half of the reach must move: the wave's impulse falls with distance (P-I), so a can at 8 m from an M67 slides a few centimetres, not 15. */
-const MOVED_FAR = 0.03
+/**
+ * Metres a body in the outer half of the reach must move: the wave's impulse falls with distance (P-I). Since the shove is the Kinney-Graham reflected impulse over the
+ * area a body shows divided by its mass, a full can standing 5 m from an M67 (26 Pa·s on ~0.008 m²) leaves at ~0.55 m/s and slides v²/2μg ≈ 2 to 3 cm:
+ * moved, but less than 3 cm. Not moving at all is what this catches.
+ */
+const MOVED_FAR = 0.01
 /** Below this share of the blast getting through the cover (a stove, a cupboard, a fridge between), a body is sheltered: it is not expected to fly, only to move less than in the open. */
 const SHELTERED = 0.5
 /** Least bound (m) on how far a sheltered body may move outward: behind solid cover the blast barely reaches it. */
