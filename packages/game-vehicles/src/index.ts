@@ -8,6 +8,8 @@ export type { SceneNode } from './types'
 export { defaultDamageableKinds } from './damageables'
 export type { DamageableKind, DamageableMaterial, DamageableSide } from './damageables'
 export { hash, clamp, smooth, rng, strHash } from './util'
+export { SMOKE_LOOKS, SMOKE_WIND, SmokeCause, engineBayVent, smokeCauseOfEmitter, smokePuff, smokeRate } from './engine-smoke'
+export type { BayBox, SmokeLook, SmokePuff, SmokePuffParams } from './engine-smoke'
 export type {
   Band,
   BandId,

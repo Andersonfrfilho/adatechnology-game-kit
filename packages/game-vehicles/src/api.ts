@@ -178,6 +178,8 @@ export interface VehicleEmitter {
   s: number
   dir: Vector3 | null
   gap: number
+  /** How wrecked the source is (0 intact, 1 wrecked): smoke thickens with it (`smokeRate` of `engine-smoke.ts`). */
+  damage?: () => number
 }
 
 /** A lamp the kit drew (`c.lights`): its group, the lens and the inner meshes (bulb, reflector), its tint and what happened to it. */

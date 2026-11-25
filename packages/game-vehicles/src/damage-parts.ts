@@ -320,7 +320,7 @@ export function installDamageParts(kit: Kit) {
       }
       if (b >= 3) {
         I.hurtEngine(c, b === 4 ? 0.05 : 0.25)
-        kit.addEmitter(c, p.clone().add(new V3(0, 0.3, 0)), 'black', { rate: b === 4 ? 6 : 4 })
+        kit.addEmitter(c, p.clone().add(new V3(0, 0.3, 0)), 'oil', { rate: 3, damage: () => 1 - (c.engineHealth ?? 1) })
         if (land) I.puddle(c, 'oil', p.clone().setY(Math.max(0.2, m.clearance || 0.3)), b === 4 ? 0.9 : 0.6)
       }
       if (b === 4) kit.addEmitter(c, p.clone().add(new V3(0, 0.15, 0)), 'fire', { rate: 7, s: 0.7 })
