@@ -178,6 +178,8 @@ const edgeFractions = (half: number, thin: number): readonly number[] => {
 const SUPPORT_CHECKS = 16
 /** A sleeping piece none of whose lowest points has a support within this many metres under it wakes and falls. */
 const SUPPORT_GAP = 0.02
+/** A slope steeper than the friction holds by this much (tan over the static coefficient) makes what lies on it slide: the margin keeps a piece at the edge of holding from waking and sleeping in turn. */
+const STEEP_MARGIN = 1.1
 /** A piece moving faster than this (m/s) or turning faster than this (rad/s) wakes what lies asleep on it. */
 /** How often (s) the far and old rule looks at the pieces. */
 const KEEP_EVERY = 0.5
@@ -589,6 +591,11 @@ export class PieceSystem {
 
   get(objectId: string): PieceBody | null {
     return this.list.find((b) => b.objectId === objectId) ?? null
+  }
+
+  /** Whether `upper` lies on a top of `lower` (a corner of it within a step of one of its parts): what holds it up, which it slides on, not a wall in its way. */
+  liesOn(upper: PieceBody, lower: PieceBody): boolean {
+    return this.restsOn(upper, lower, false)
   }
 
   /** Sets a piece falling over, about the world axes x and z (a unit axis): its feet are thinner than the box that stands for it, so the box alone would hold it up. */
@@ -1133,10 +1140,13 @@ export class PieceSystem {
     for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
       this.supportTurn = (this.supportTurn + 1) % n
       const b = this.list[this.supportTurn]
-      if (!b.sleeping || b.held || (onlyBudget && !b.restPoints?.length)) continue
-      // one put to sleep by the budget needs every point it went to sleep on: a board leaning on a step whose step is gone comes down, though its foot is still on the floor
+      if (!b.sleeping || b.held) continue
+      // one put to sleep by the budget needs every point it went to sleep on: a board leaning on a step whose step is gone comes down, though its foot is still on the floor;
+      // one the engine put to sleep is the engine's to hold up, unless the slope it lies on has grown steeper than its friction holds (the top under it went over)
       const rest = b.restPoints
-      if (rest && rest.length > 0 ? rest.every((point) => this.supportsPoint(b, point)) : this.supported(b, false) || this.supported(b, true)) continue
+      const budgeted = !!rest && rest.length > 0
+      const held = onlyBudget && !budgeted ? true : budgeted ? rest.every((point) => this.supportsPoint(b, point)) : this.supported(b, false) || this.supported(b, true)
+      if (held && !this.onSteepSupport(b)) continue
       b.sleeping = false
       b.still = 0
       b.calmAt = null
@@ -1710,7 +1720,26 @@ export class PieceSystem {
     this.keepsTilt(b, q, dt)
     // held up through its overlap with what is under it (`propped`) it touches too: it may sleep where it stays, as a piece on its corners does
     const held = (touched || propped !== undefined) && !b.tipping
-    if (!b.hinge && (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt))) this.sleep(b)
+    if (!b.hinge && (b.still >= SLEEP_AFTER || this.staysInPlace(b, held, pos, q, dt)) && !this.onSteepSupport(b)) this.sleep(b)
+  }
+
+  /**
+   * Whether what holds `b` up, under its lowest corner, is a face tilted past what the friction of the two holds (a laptop on a table top gone over at 42 degrees, held
+   * by 0.49 up to 26): it slides, it does not sleep there, and one asleep there wakes.
+   */
+  private onSteepSupport(b: PieceBody): boolean {
+    const c = this.centerOf(b, this.p)
+    const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
+    let low: Vec3 | null = null
+    for (const [sx, sy, sz] of this.samples(b, false)) {
+      const y = c.y + e[1] * sx + e[5] * sy + e[9] * sz
+      if (!low || y < low[1]) low = [c.x + e[0] * sx + e[4] * sy + e[8] * sz, y, c.z + e[2] * sx + e[6] * sy + e[10] * sz]
+    }
+    if (!low || this.supportAt(b, low[0], low[1], low[2], STEP) < low[1] - SUPPORT_GAP) return false
+    const ny = this.supportNormal[1]
+    if (ny >= 1 - 1e-6) return false
+    const holds = pairFriction(b.friction, this.supportFriction).static
+    return Math.sqrt(Math.max(0, 1 - ny * ny)) / Math.max(ny, 1e-6) > holds * STEEP_MARGIN
   }
 
   /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
