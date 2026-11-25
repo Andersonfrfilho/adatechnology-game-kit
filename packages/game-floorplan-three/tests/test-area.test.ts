@@ -306,7 +306,7 @@ describe('houses in the room', () => {
     await scenario.run({ room: r.room, step: r.step, expect: (ok, label) => checks.push([ok, label]) })
     expect(checks.length).toBeGreaterThanOrEqual(10)
     expect(checks.filter(([ok]) => !ok)).toEqual([])
-  })
+  }, 600_000) // builds every typology: ~118 s alone, past the 120 s default when the machine is loaded
 })
 
 describe('the scenarios stop listening when they end (CLAUDE.md, "Memória")', () => {
