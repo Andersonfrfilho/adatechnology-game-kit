@@ -562,7 +562,8 @@
     },
     "mass": 5.5,
     "tags": [
-      "heavy"
+      "heavy",
+      "two_handed"
     ]
   },
   {
@@ -646,7 +647,10 @@
       "rpm": 45,
       "noise": 8
     },
-    "mass": 1.6
+    "mass": 1.6,
+    "tags": [
+      "two_handed"
+    ]
   },
   {
     "id": "knife",

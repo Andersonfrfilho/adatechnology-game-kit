@@ -94,7 +94,8 @@ export const DEFAULT_RULES: WeaponRules = {
   hands: {
     twoHanded: { categories: ['smg', 'rifle', 'carbine', 'sniper', 'dmr', 'hunting', 'machine_gun', 'launcher', 'shotgun', 'bow', 'crossbow', 'extinguisher'], weapons: ['flamethrower'] },
     slots: { pistol: 'hip', revolver: 'hip', melee_blade: 'hip', melee_blunt: 'hip', tool: 'hip', throwable: 'hip', heat: 'hip', smg: 'back', rifle: 'back', carbine: 'back', sniper: 'back', dmr: 'back', hunting: 'back', shotgun: 'back', bow: 'back', crossbow: 'back', machine_gun: 'back', launcher: 'back' },
-    weaponSlots: { lighter: 'hip', flamethrower: 'back' },
+    // the long-handled tools and the long blade hang across the back; a chainsaw has no place on the body
+    weaponSlots: { lighter: 'hip', flamethrower: 'back', axe: 'back', sledgehammer: 'back', pickaxe: 'back', shovel: 'back', katana: 'back', chainsaw: null },
     bare: ['kick', 'shove', 'fists'],
   },
   // Arsenal §08/§11: coronha retrátil saca mais rápido, mais recuo; os números são padrões aprovados pelo dono (2026-10-24)
