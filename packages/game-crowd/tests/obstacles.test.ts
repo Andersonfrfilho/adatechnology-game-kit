@@ -81,7 +81,7 @@ function hunt(options: { readonly open: boolean; readonly seconds: number; reado
     crowd.update(STEP)
     options.onStep?.(step, crowd)
     for (let i = 0; i < crowd.store.n; i++) {
-      if (!crowd.store.hp[i]! > 0) continue
+      if (!(crowd.store.hp[i]! > 0)) continue
       const kind = grid.cellKind(crowd.store.x[i]!, crowd.store.z[i]!)
       if (kind === CELL.SOLID) onWall++
       if (firstInside < 0 && isInside(crowd, i)) firstInside = step
