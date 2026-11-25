@@ -2,6 +2,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 import type { ItemBox, LightPart, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
+import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 import { shapeGeometries, standOutCoincident } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
@@ -10,6 +11,8 @@ import { createPrism, createRoundedBox } from './rounded-box'
 import { createTextTexture } from './text'
 import type { CanvasFactory } from './text'
 import type { PlacementResolver } from './resolvers'
+import { drawNetworks } from './networks/draw-networks'
+import type { DrawnNetworks, NetworkDrawOptions } from './networks/draw-networks'
 
 type Three = typeof THREE_NS
 type Obj = THREE_NS.Object3D
@@ -446,7 +449,11 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
   }
 
-  return { THREE, draw }
+  /** Draws the aerial utility networks of `game-urban/networks` (`drawNetworks`), lit through this drawer's light budget. */
+  const networks = (data: UtilityNetworks, drawOptions: NetworkDrawOptions = {}): DrawnNetworks =>
+    drawNetworks(THREE, { networks: data, options: drawOptions, ...(options.lights ? { budget: options.lights } : {}), ...(options.physicalLights ? { physicalLights: true } : {}) })
+
+  return { THREE, draw, drawNetworks: networks }
 }
 
 export type UrbanThree = ReturnType<typeof createUrbanThree>

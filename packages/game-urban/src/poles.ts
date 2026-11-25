@@ -112,7 +112,7 @@ const floodTower: PoleShapeBuilder = (b, spec: FloodTowerSpec, o) => {
   spendLight(b, spec.light, o.x, o.z, o)
 }
 
-/** The distribution pole draws as its single arm (mast, arm, lamp, drum) until its crossarm, insulators and clamps get their drawing (spec 011, T2.8d). */
+/** The distribution pole alone draws as its single arm (mast, arm, lamp, drum), the golden of the test area's item; a network draws its poles with their hardware (`distributionHardwareOf`, game-urban-three's `drawNetworks`). */
 const distribution: PoleShapeBuilder = (b, spec: DistributionSpec, o) => singleArm(b, spec, o)
 
 /** The shape builders the default poles use; a game adds its own through `createUrban({ shapes })`. */
