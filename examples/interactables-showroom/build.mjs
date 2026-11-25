@@ -58,4 +58,6 @@ const html = readFileSync(join(here, 'index.html'), 'utf8')
 
 mkdirSync(join(here, 'dist'), { recursive: true })
 writeFileSync(join(here, 'dist/showroom.html'), html)
+// the 4280 index and the site catalogue open the folder (interactables-showroom/), so the page is its index too
+writeFileSync(join(here, 'dist/index.html'), html)
 console.log(`dist/showroom.html ${(html.length / 1024).toFixed(0)} KB`)
