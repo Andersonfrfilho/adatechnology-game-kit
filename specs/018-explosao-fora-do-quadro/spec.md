@@ -1,6 +1,6 @@
 # Spec 018 — a explosão fora do quadro principal
 
-> Estado: **Fase 0 concluída; D1 e D3 decididas em 2026-11-21, D2 aberta** (números da Fase 0 e recomendação em `relatorio-fase-0.md`; a medição que mudou o caso de referência está na seção "Depois da Fase 0" do mesmo arquivo). Nasce do fecho da spec 017: o quadro do impacto de uma explosão grande ficou em ~65 ms
+> Estado (atualizado em 2026-11-24): **Fase 0 concluída; D1 e D3 decididas em 2026-11-21; caminho da D2 escolhido pelo dono em 2026-11-23 e implementado na `main` (#443, com #444, #447 e #448).** Na M67 com a explosão espalhada (`blastPacing`), o quadro da explosão caiu de ~101 para ~19–22 ms e o pior quadro da janela ficou em 23,1 ms de mediana (máximo 28,9), abaixo da meta de 33,3 ms. O que ainda falta está no §6. Nasce do fecho da spec 017: o quadro do impacto de uma explosão grande ficou em ~65 ms
 > contra a meta de 33,3 ms, e as duas formas de dividir o trabalho no tempo foram medidas e não bastam (`specs/017-quadro-da-explosao/
 > design-onda.md` §1 e §9). Esta spec **não promete 33,3 ms**: a Fase 0 é um experimento que mede se o caminho existe.
 
@@ -65,7 +65,7 @@ pedaços que nascem depois, invariantes estruturais por tique).
 | # | Decisão | Estado |
 |---|---|---|
 | D1 | A, B ou C, ou desistir da meta de 33,3 ms | **Decidida em 2026-11-21:** não abrir caminho de worker (A, B ou C) agora. Primeiro se ataca, na thread principal, o custo dos explosivos de fragmentação. O dono pediu antes uma **proposta de cortes na simulação de fragmentos** (quanto cada corte rende e quais goldens mudam), antes de qualquer mudança de código de simulação. A proposta está pendente (T1.1 em `tasks.md`). Ver §4.1 |
-| D2 | [NEEDS CLARIFICATION] Quantos quadros de latência entre o clarão e o dano são aceitáveis (a 017 fixou clarão, som e empurrão no primeiro tique; o dano no mundo 1–2 quadros depois muda a sensação). **Pesa mais agora:** espalhar os impactos dos fragmentos por 2 ou 3 tiques é um dos cortes candidatos da T1.1 e é exatamente latência entre clarão e dano. Proposta medida em [`proposta-d2.md`](proposta-d2.md) (2026-11-22) | o dono, vendo na sala; exigida só para cortes que atrasam o dano (§4.1) |
+| D2 | Quantos quadros de latência entre o clarão e o dano são aceitáveis | **Caminho escolhido pelo dono em 2026-11-23** ([`proposta-d2.md`](proposta-d2.md), plano recomendado) e **implementado no #443**: a explosão é espalhada em quadros com o mundo segurado, com os mesmos bytes da explosão inteira (clarão, som e câmera seguem no primeiro quadro). Medido na M67: o mundo fica parado 8 quadros (~133 ms a 60 Hz) entre o clarão e o dano. O marca-passo está ligado só na página da sala (§6) |
 | D3 | A meta vale para o pior caso ou para um caso típico | **Decidida em 2026-11-21:** o caso de referência da meta passa a ser a **granada M67** (o explosivo de fragmentação comum), não o C4 contra a casa inteira. Ver §4.1 |
 
 ### 4.1 O que a medição de 2026-11-21 mudou
@@ -88,12 +88,29 @@ A tabela completa e as condições estão em `relatorio-fase-0.md`, seção "Dep
   Nenhum corte entra sem a proposta aprovada pelo dono (T1.1).
 - **Regra da D2:** a D2 é exigida só para corte que atrasa o dano em relação ao clarão (por exemplo, espalhar impactos de fragmentos por tiques). Corte que mantém o dano no tique da explosão não espera a D2.
 
-## 5. Critérios de aceite (provisórios, fecham com a D2, para os cortes que atrasam o dano)
+## 5. Critérios de aceite
 
 - C1. Quadro do impacto da **granada M67** ≤ 33,3 ms na régua `room-explosion` (modo de prazo, 1x, casa da sala), conforme a D3 de 2026-11-21.
-  **Este número ainda não é alcançável com a evidência que existe:** o valor medido hoje é ~120 ms (120,5 e 120,6 na última sessão), contra 33,3 ms.
-  Está longe, e nenhum corte medido até agora aproxima a M67 da meta. O critério fica escrito como alvo, não como previsão.
+  **Atingido na M67 com a explosão espalhada (2026-11-23):** quadro da explosão ~19–22 ms (era ~101 ms; #443) e pior quadro da janela 23,1 ms de
+  mediana, máximo 28,9 ms (#448), régua `room-explosion` com `FRAME_SERIES=24`, RTX 5070 Laptop (`evidence.md`). Só a M67 foi medida assim e só nesta
+  máquina (§6). Até 2026-11-21 o valor era ~120 ms e este critério estava escrito como alvo, não como previsão.
 - C2. Mesmos bytes a 30/60/120/144 Hz (`step-equivalence-window`); com 0, 1 e 8 workers (`checkTaskKind`) só se algum caminho de worker for aberto (D1 de 2026-11-21 não abre nenhum agora).
 - C3. Nenhum quadro da janela acima de 33,3 ms (mesmo caso de referência do C1, a M67); soma da janela ≤ 110% da de hoje.
 - C4. Portão completo contra a `main` sem regressão, com a máquina quieta.
 - C5. Nenhum golden ou fixture existente regravado sem decisão do dono.
+
+## 6. O que ainda falta (levantado em 2026-11-24)
+
+O C1 vale só no caso medido. Antes de dar a spec por fechada:
+
+1. **Portão diário só do C4.** A régua da rodada diária (`room-explosion`) compara o C4; uma regressão no quadro da M67 passa sem aviso. A M67 entra no portão (T2.1).
+2. **Medido em 2026-11-24 (T2.2, `evidence.md`):** bomba de cano 23,2 ms, M79 21,8 ms e M67 20,1 ms no quadro da explosão. **O C4 não é espalhado** (sem raios, cabe numa fatia) e fica em 74–83 ms: é o caso que hoje passa da meta.
+3. **O kit não liga o marca-passo.** `blastPacing` vem desligado no `game-test-room` e não está no `game-kit-defaults`; só a página
+   `examples/test-room` liga. Um jogo que usa o kit não recebe o ganho sem ligar à mão (T2.4, decisão do dono).
+4. **Orçamentos por contagem fixa, ajustados nesta máquina.** 64 raios, 128 peças da onda e 1000 unidades de eventos por quadro; os quadros
+   segurados custam ~19 ms aqui e passariam de 33 ms numa máquina mais lenta. Não houve medição em AMD (T2.4).
+5. **Quadros segurados quase vazios.** O mundo fica parado 8 quadros e dois deles custam pouco (f3 ~5 ms, f7 ~8 ms): cada etapa (raios,
+   onda, eventos) pode estar esperando o quadro seguinte com folga. Se for isso, emendar as etapas tira 1 a 2 quadros de pausa sem mudar
+   bytes (T2.3).
+6. **Régua da rajada.** "O que sobra vem do solver próprio" precisa ser conferido contra qual solver a régua da rajada roda, já que a sala usa
+   o Jolt, antes de aceitar 176 MB/s como piso (T2.5).
