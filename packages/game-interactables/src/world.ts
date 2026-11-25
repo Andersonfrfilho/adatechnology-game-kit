@@ -1179,6 +1179,7 @@ export function createWorld(options: WorldOptions = {}): World {
           verb,
           noun,
           hands: 1,
+          itemType: stack.type,
           available: true,
           act: (actor) => takeAt(o.id, c.id, slot, actor ?? DEFAULT_ACTOR),
         }

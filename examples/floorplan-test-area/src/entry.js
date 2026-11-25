@@ -73,8 +73,9 @@ export function createModule(options = {}) {
     furniture: options.furniture ?? TEST_ROOM_FURNITURE,
     ...options,
     house: {
-      // what the furniture holds is drawn as the catalogue's real items (game-items-three), riding the drawer or door from its first frame
-      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree, itemModel: createContainedItemModel(GOODS_ITEMS) },
+      // what the furniture holds is drawn as the catalogue's real items (game-items-three), riding the drawer or door from its first frame;
+      // `destructible` tags the drawing with the item's real weight, so one taken in the hand weighs what the catalogue says
+      interactives: { GameInteractables, GameInteractablesHousehold, GameInteractablesThree, itemModel: createContainedItemModel(GOODS_ITEMS, { destructible: true }) },
       vegetation: { GameVegetation: { ...GameVegetation, ...GameVegetationThree }, GameVegetationSpecies },
       ...options.house,
     },
