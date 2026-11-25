@@ -64,6 +64,7 @@ export function installContext(kit: Kit) {
     declare _rawSeats: RawSeatEntry[]
     declare _explicitSeats: SeatSpace[]
     declare _explicitDoors: DoorOpening[]
+    declare _noCabinRayObjs: Set<Object3D>
     declare flipped: boolean
     declare rollState: RollState | null
     declare quads: GlassQuad[]
@@ -102,6 +103,7 @@ export function installContext(kit: Kit) {
       this._rawSeats = []
       this._explicitSeats = []
       this._explicitDoors = []
+      this._noCabinRayObjs = new Set()
       this.hood = null
       this.rollState = null
       this.flipped = false

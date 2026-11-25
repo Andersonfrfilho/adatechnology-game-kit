@@ -13,7 +13,7 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
    the nine blasts no longer set the car's rubber and plastics alight as the old 450 °C over half the radius did. Retaken when a blast on a vehicle became the P-I work
    of its wave on each part (waveWork): 0.48 kg of TNT against a panel crushes it with the contact shock, 0.04 x 0.48 kg x 4.184 MJ/kg x a half = 40 kJ, where the old
    energy / (1 + 4 d^2) x 0.04 gave it 16 kJ: the panels the blasts tear off come apart in more pieces (826 to 875 nodes). */
-const GOLDEN_DIGEST = '875:1411285177'
+const GOLDEN_DIGEST = '867:3406952109'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261

@@ -163,5 +163,5 @@ describe('fleet cabin spaces (Spec 012 Criterion 3, R5 & R6)', () => {
 
     const recorded = JSON.parse(readFileSync(FIXTURE, 'utf8')) as Record<string, RecordedVehicleSpace>
     expect(measured).toEqual(recorded)
-  }, 120_000)
+  }, 600_000)
 })

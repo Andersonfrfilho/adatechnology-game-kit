@@ -183,7 +183,7 @@ export function installInterior(kit: Kit) {
     })
     c.rod(new V3(0.03, 0, 0), new V3(o.col || 0.34, 0, 0), 0.032, mat, { parent: g, seg: 10 })
     g.traverse(function (node) {
-      node.userData.noCabinRay = true
+      c._noCabinRayObjs.add(node)
     })
     return g
   }

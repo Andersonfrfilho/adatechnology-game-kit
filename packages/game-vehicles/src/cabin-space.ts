@@ -58,15 +58,25 @@ export function installCabinSpace(kit: Kit) {
   const originVec = new V3()
   const dirVec = new V3()
 
-  function castFirst(root: BuildContext['vehicle'], ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, minDist: number): number {
+  function castFirst(
+    c: BuildContext,
+    ox: number,
+    oy: number,
+    oz: number,
+    dx: number,
+    dy: number,
+    dz: number,
+    minDist: number,
+  ): number {
     originVec.set(ox, oy, oz)
     dirVec.set(dx, dy, dz)
     raycaster.set(originVec, dirVec)
-    const hits = raycaster.intersectObject(root, true)
+    const hits = raycaster.intersectObject(c.vehicle, true)
+    const ignored = c._noCabinRayObjs
     for (let i = 0; i < hits.length; i++) {
       const h = hits[i]
       if (!h) continue
-      if (h.object.visible === false || h.object.userData?.noCabinRay === true) continue
+      if (h.object.visible === false || h.object.userData?.noCabinRay === true || ignored?.has(h.object)) continue
       if (h.distance >= minDist) return h.distance
     }
     return Number.POSITIVE_INFINITY
@@ -76,7 +86,7 @@ export function installCabinSpace(kit: Kit) {
     let minClearance = Number.POSITIVE_INFINITY
     for (let i = 0; i < HEADROOM_RAY_OFFSETS.length; i++) {
       const offset = HEADROOM_RAY_OFFSETS[i]!
-      const dist = castFirst(c.vehicle, hip[0] + offset[0], hip[1] + HEADROOM_START_OFFSET, hip[2] + offset[1], 0, 1, 0, HEADROOM_MIN_HIT)
+      const dist = castFirst(c, hip[0] + offset[0], hip[1] + HEADROOM_START_OFFSET, hip[2] + offset[1], 0, 1, 0, HEADROOM_MIN_HIT)
       const clear = Number.isFinite(dist) ? dist + HEADROOM_START_OFFSET : Number.POSITIVE_INFINITY
       if (clear < minClearance) minClearance = clear
     }
@@ -86,7 +96,7 @@ export function installCabinSpace(kit: Kit) {
   function measureLegroom(c: BuildContext, hip: Vec3, facing: Vec3, seatLen: number): number {
     const startOffset = seatLen / 2 + LEGROOM_START_PAD
     const dist = castFirst(
-      c.vehicle,
+      c,
       hip[0] + facing[0] * startOffset,
       hip[1] + LEGROOM_KNEE_OFFSET,
       hip[2] + facing[2] * startOffset,
@@ -107,8 +117,8 @@ export function installCabinSpace(kit: Kit) {
     const lz = fx
     const sy = hip[1] + SHOULDER_HEIGHT_OFFSET
 
-    const wallPos = castFirst(c.vehicle, hip[0], sy, hip[2], lx, 0, lz, SHOULDER_MIN_HIT)
-    const wallNeg = castFirst(c.vehicle, hip[0], sy, hip[2], -lx, 0, -lz, SHOULDER_MIN_HIT)
+    const wallPos = castFirst(c, hip[0], sy, hip[2], lx, 0, lz, SHOULDER_MIN_HIT)
+    const wallNeg = castFirst(c, hip[0], sy, hip[2], -lx, 0, -lz, SHOULDER_MIN_HIT)
 
     let neighborPos = Number.POSITIVE_INFINITY
     let neighborNeg = Number.POSITIVE_INFINITY
