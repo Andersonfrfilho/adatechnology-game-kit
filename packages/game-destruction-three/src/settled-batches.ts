@@ -129,6 +129,8 @@ export class SettledBatches {
     this.batcher?.update()
     this.sinceMade += dt
     if (!this.options.enabled || this.sinceMade < this.options.intervalSeconds) return
+    // batches still being merged are not made again: with a few thousand meshes the merge outlasts the interval and would start over every time, never done
+    if (this.queue.pending() > 0) return
     const meshes = atRest().filter((mesh) => isBatchableDebris(mesh, this.options.maxVertices) || this.batched(mesh))
     const outside = meshes.length - (this.batcher?.stats().batched ?? 0)
     if (outside < this.options.minMeshes) return

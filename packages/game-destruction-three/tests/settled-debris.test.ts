@@ -414,3 +414,28 @@ describe('the release of the batches on an event', () => {
     expect(withMembers.meshesOf - withoutMembers.meshesOf).toBe(1)
   })
 })
+
+describe('settled batches of a crowded room', () => {
+  it('a merge that takes longer than the interval is finished, not started over every interval (the whole house: 2149 meshes, fps 10 to 25)', () => {
+    const scene = new THREE.Scene()
+    // one colour each: every mesh is a batch of its own, a unit of the queue, and one unit is merged per update
+    const meshes = Array.from({ length: 60 }, (_, index) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshLambertMaterial({ color: 0x101010 * (index + 1) }))
+      mesh.position.set(index, 0.1, 0)
+      scene.add(mesh)
+      return mesh
+    })
+    // two copies of each colour, so each material key has something to batch with
+    const twins = meshes.map((mesh) => {
+      const twin = new THREE.Mesh(mesh.geometry, (mesh.material as THREE.Material).clone())
+      twin.position.set(mesh.position.x, 0.5, 0)
+      scene.add(twin)
+      return twin
+    })
+    scene.updateMatrixWorld(true)
+    const all = [...meshes, ...twins]
+    const batches = new SettledBatches(THREE, scene, { minMeshes: 1, intervalSeconds: 0.05, budgetMs: 0 })
+    for (let frame = 0; frame < 400; frame++) batches.update(DT, () => all)
+    expect(batches.stats().batched).toBe(all.length)
+  })
+})
