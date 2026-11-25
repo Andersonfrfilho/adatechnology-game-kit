@@ -7,7 +7,7 @@ import ptBR from './data/locales/pt-BR.json'
 import br from './data/regions/br.json'
 import us from './data/regions/us.json'
 import typesJson from './data/types.json'
-import { conduitRun, electricalPanel, powerMeter, serviceEntrance, tv, microwave, wallSocket, wallSwitch, washingMachine } from './builders/electrical'
+import { conduitRun, electricalPanel, powerMeter, serviceEntrance, serviceMast, tv, microwave, wallSocket, wallSwitch, washingMachine } from './builders/electrical'
 import { gasBottle, shower, sinkBathroom, sinkKitchen, stove, toilet, utilitySink } from './builders/kitchen'
 import { armchair, bedDouble, bunkBed, bedSingle, bench, diningChair, sofa } from './builders/seating'
 import { bathroomCabinet, dresser, fridge, fridgeCompact, kitchenCabinetBase, kitchenCabinetWall, nightstand, pantry, wardrobe } from './builders/storage'
@@ -39,6 +39,7 @@ const BUILDERS: Record<string, BuilderFn> = {
   wall_switch: wallSwitch,
   service_entrance: serviceEntrance,
   conduit_run: conduitRun,
+  service_mast: serviceMast,
   electrical_panel: electricalPanel,
   power_meter: powerMeter,
   tv,

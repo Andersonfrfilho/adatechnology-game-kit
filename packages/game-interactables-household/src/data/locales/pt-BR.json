@@ -18,6 +18,7 @@
   "type.wall_socket": "Tomada",
   "type.wall_switch": "Interruptor",
   "type.service_entrance": "Poste de entrada de energia",
+  "type.service_mast": "Pontalete de entrada de energia",
   "type.conduit_run": "Eletroduto",
   "type.tv": "Televisão",
   "type.microwave": "Micro-ondas",

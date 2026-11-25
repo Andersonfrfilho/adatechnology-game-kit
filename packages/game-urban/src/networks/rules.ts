@@ -16,6 +16,12 @@ export type TransformerRating = { readonly id: string; readonly kva: number }
 export type PowerRules = {
   /** Longest service drop, metres (horizontal). */
   readonly dropMaxLength: number
+  /** A drop that crosses the street goes straight across: its horizontal direction at most this far from the street's normal, degrees. */
+  readonly dropMaxSkew: number
+  /** A drop on the pole's own side comes from a pole in front of the lot: its station at most this far past the lot's frontage, metres. */
+  readonly dropFrontageSlack: number
+  /** Most service drops one pole holds. */
+  readonly dropsPerPole: number
   /** Longest low voltage path from the transformer to its farthest node, each way, metres. */
   readonly lvCircuitMaxLength: number
   /** Highest demand over the rating. */
@@ -74,6 +80,9 @@ export const DEFAULT_NETWORK_RULES: NetworkRules = {
   catenarySamples: 16,
   power: {
     dropMaxLength: 30,
+    dropMaxSkew: 30,
+    dropFrontageSlack: 0.5,
+    dropsPerPole: 4,
     lvCircuitMaxLength: 200,
     maxLoading: 0.8,
     transformers: [

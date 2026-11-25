@@ -11,6 +11,8 @@
 //
 // What the adapter reads of the plan (the result of `engine.generate` with the structure pack): `items` (and `contents`, `utilities`, `floors`, `rooms`, `walls`,
 // `colors`, `state`, `seed`, `template`, `structureExtras`). It never reads a global.
+import { mastPathOf } from '@adatechnology/game-floorplan-structure'
+
 import { createTranslator } from './locale.js'
 import type { MessageKey } from './locale.js'
 import {
@@ -705,12 +707,22 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
           house: [r3(K.x(end[0]!) - px), end[2]!, r3(K.z(end[1]!) - pz)],
         }
         if (ee.tap || electrical.mode === 'tap') item.variant = 'gato' // illegal tap: the drop leaves the pole straight to the house, with no meter box
+        else if (ee.street === 'network') item.variant = 'network' // the padrão of a network: a slim post, the meter box and the conduit are objects of their own
         const e = entry('service_entrance', 'service_entrance', item, 'service_entrance', -1)
         push(e)
         result.serviceEntrance = e.id
       }
-      // the descent from where the drop lands to the meter: under the post's head, or down the facade when the street's drop lands on it (no post)
-      if (ee && ee.descent && ee.descent.length > 1 && onFloor(-1, true)) conduit('conduit_descent', ee.descent, -1)
+      // on a street network with no front yard the drop lands on a mast up the facade (pontalete), which is also the descent
+      if (ee && ee.mast && onFloor(-1, true)) {
+        const path = mastPathOf(ee.mast)
+        const x0 = K.x(ee.mast.u)
+        const z0 = K.z(ee.mast.v)
+        const item: EntryItem = { x: x0, z: z0, ry: 0, seed: seedOf('service_mast'), points: path.map((p): [number, number, number] => [r3(K.x(p[0]) - x0), p[2], r3(K.z(p[1]) - z0)]) }
+        const e = entry('service_mast', 'service_mast', item, 'service_mast', -1)
+        e.floorY = o.base
+        push(e)
+        result.serviceMast = e.id
+      } else if (ee && ee.descent && ee.descent.length > 1 && onFloor(-1, true)) conduit('conduit_descent', ee.descent, -1) // the descent from where the drop lands to the meter: under the post's head, or down the facade when the street's drop lands on it (no post)
       // distribution board: one breaker per circuit of the plan (the label is the room); against the wall (u, v is the plane of it)
       const q = electrical.panel
       if (q && onFloor(q.floor, false)) {

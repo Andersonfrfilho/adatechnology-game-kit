@@ -55,7 +55,23 @@ export function wallSwitch(c: Ctx): void {
   c.spec.colliders = []
 }
 
+/** The padrão of a street with a utility network (variant `network`): a slim square concrete post and the drop's bracket on its street face (-z). */
+const NETWORK_POST = { half: 0.07, anchor: 5.7, bracket: 0.06 } as const
+
+function networkPost(c: Ctx): void {
+  const { h } = c
+  const { half, anchor, bracket } = NETWORK_POST
+  c.b('plain', -half, 0, -half, half, h, half, c.main(0xa9a9a1))
+  c.b('metal', -0.02, anchor - 0.06, -half - bracket, 0.02, anchor + 0.04, -half - 0.002, 0x4a4c50)
+  c.add('wires', { id: 'earth', kind: 'cable', radius: 0.006, points: [[0.04, 1.2, -half - 0.01], [0.04, 0.9, -half - 0.05], [0.04, 0.05, -half - 0.12]] })
+  c.cyl('metal', 0.04, 0.001, -half - 0.12, 0.01, 0.3, 0xb87333, 'cyl6') // earth rod
+  c.spec.colliders = []
+  c.collider('pole', -half, 0, -half, half, h, half)
+  c.add('damage', { target: 'self', kind: 'masonry', hp: 400 })
+}
+
 export function serviceEntrance(c: Ctx): void {
+  if (c.M.variant === 'network') return networkPost(c)
   const { hw, h } = c
   const pole = c.main(0xa9a9a1)
   const top = h - 0.1
@@ -133,6 +149,44 @@ export function conduitRun(c: Ctx): void {
   const pts: Vec3[] = c.M.points && c.M.points.length >= 2 ? c.M.points.map((p) => [...p] as Vec3) : [[-0.05, 0.1, 0], [0.05, 0.1, 0]]
   c.add('wires', { id: 'conduit', kind: 'conduit', radius: 0.012, points: pts })
   c.spec.colliders = []
+}
+
+/** The mast's galvanised pipe (outer radius) and its weatherhead: the half circle over the top and the cap on its open end (metres). */
+const MAST = { radius: 0.021, bend: 0.08, capRadius: 0.032, capLength: 0.06, color: 0xa9aeb3 } as const
+
+/** The default axis of a mast centred on the origin: up the item's height, then half a circle toward +z with its open end pointing down. */
+function mastAxis(h: number): Vec3[] {
+  const top = h - MAST.bend - MAST.radius * 1.2
+  const arc = Array.from({ length: 8 }, (_, index): Vec3 => {
+    const angle = (Math.PI * (index + 1)) / 8
+    return [0, round3(top + MAST.bend * Math.sin(angle)), round3(-MAST.bend * Math.cos(angle))]
+  })
+  return [[0, 0, -MAST.bend], [0, top, -MAST.bend], ...arc]
+}
+
+/** One straight stretch of the mast's pipe in its vertical plane (x fixed), each end reaching a little past the point so the bends close. */
+function pipeSegment(c: Ctx, a: Vec3, b: Vec3): void {
+  const dy = b[1] - a[1]
+  const dz = b[2] - a[2]
+  const length = Math.hypot(dy, dz)
+  if (length < 1e-4) return
+  if (Math.abs(dz) < 1e-6 && dy > 0) return void c.cyl('metal', a[0], a[1], a[2], MAST.radius, length, MAST.color, 'cyl')
+  const reach = length + MAST.radius * 0.4
+  c.cyl('metal', a[0], (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, MAST.radius, reach, MAST.color, 'cyl', Math.atan2(dz, dy), 0)
+}
+
+/**
+ * A service mast (pontalete): a galvanised pipe up a facade that takes the drop of a street network, crowned by a weatherhead (the pipe bent over toward the street and a cap
+ * on its open end, pointing down) so the rain does not run into it. The pipe runs along `points` (from the plan, in one vertical plane) or the default axis.
+ */
+export function serviceMast(c: Ctx): void {
+  const points: Vec3[] = c.M.points && c.M.points.length >= 2 ? c.M.points.map((p) => [...p] as Vec3) : mastAxis(c.h)
+  for (let index = 0; index + 1 < points.length; index++) pipeSegment(c, points[index]!, points[index + 1]!)
+  const end = points[points.length - 1]!
+  c.cyl('metal', end[0], end[1] - MAST.capLength, end[2], MAST.capRadius, MAST.capLength, MAST.color, 'cyl')
+  c.spec.colliders = []
+  const foot = points[0]!
+  c.collider('mast', foot[0] - MAST.radius, foot[1], foot[2] - MAST.radius, foot[0] + MAST.radius, end[1], foot[2] + MAST.radius)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------

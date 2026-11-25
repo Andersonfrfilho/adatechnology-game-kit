@@ -30,6 +30,8 @@ export type AerialParams = {
   readonly pole: { readonly id: string; readonly lampReach: number }
   /** Lots with a drop and no meter (illegal hookups): linked as any other, counted in the load. */
   readonly unmetered: ReadonlySet<string>
+  /** The pole each lot's drop leaves from (`reachLots`): in front of the lot or straight across, at most `dropsPerPole` a pole. */
+  readonly feeds: ReadonlyMap<string, { readonly x: number; readonly z: number }>
   readonly sink: NetworkSink
 }
 
@@ -52,33 +54,21 @@ export function lampOf({ pole, rules, lampReach }: { readonly pole: NetworkPole;
   return worldOf({ frame: run, u, v: side * (run.width / 2 + rules.layout.poles.curbSetback - lampReach) })
 }
 
-/** Each lot's drop from its nearest pole; a pole whose own consumers no transformer takes hands its farthest ones to their next pole in reach. */
+/** The pole that stands at a point, or none. */
+export function poleAt(tree: PoleTree, at: { readonly x: number; readonly z: number } | undefined): NetworkPole | undefined {
+  if (at === undefined) return undefined
+  return [...tree.poles.values()].find((pole) => Math.hypot(pole.station.x - at.x, pole.station.z - at.z) < 1e-6)
+}
+
+/** Each lot's drop from the pole `reachLots` chose for it (the nearest one in reach when it chose none). */
 function dropsOf(params: AerialParams): Map<string, UtilityConnection[]> {
   const find = poleFinder(params.tree)
-  const choices = new Map(params.connections.map((connection) => [connection, find({ x: connection.at[0], z: connection.at[2], radius: params.rules.power.dropMaxLength })]))
-  const pick = new Map(params.connections.map((connection) => [connection, 0]))
-  const drops = (): Map<string, UtilityConnection[]> => {
-    const out = new Map<string, UtilityConnection[]>()
-    for (const [connection, index] of pick) {
-      const pole = choices.get(connection)?.[index]
-      if (pole !== undefined) out.set(pole.id, [...(out.get(pole.id) ?? []), connection])
-    }
-    return out
+  const out = new Map<string, UtilityConnection[]>()
+  for (const connection of params.connections) {
+    const pole = poleAt(params.tree, params.feeds.get(`${connection.lot}:power`)) ?? find({ x: connection.at[0], z: connection.at[2], radius: params.rules.power.dropMaxLength })[0]
+    if (pole !== undefined) out.set(pole.id, [...(out.get(pole.id) ?? []), connection])
   }
-  for (let round = 0; round < params.connections.length; round++) {
-    const over = powerPlanOf({ params, drops: drops() }).flatMap((plan) => plan.circuits.filter((circuit) => circuit.over && circuit.poles.length === 1))
-    const pole = over[0]?.poles[0]
-    const moving = (drops().get(pole ?? '') ?? []).filter((connection) => {
-      const next = choices.get(connection)?.[(pick.get(connection) ?? 0) + 1]
-      return next !== undefined && Math.hypot(next.station.x - connection.at[0], next.station.z - connection.at[2]) <= params.rules.power.dropMaxLength
-    })
-    const at = params.tree.poles.get(pole ?? '')?.station
-    const away = (connection: UtilityConnection): number => (at === undefined ? 0 : Math.hypot(connection.at[0] - at.x, connection.at[2] - at.z))
-    const farthest = moving.sort((a, b) => away(b) - away(a))[0]
-    if (farthest === undefined) break
-    pick.set(farthest, (pick.get(farthest) ?? 0) + 1)
-  }
-  return drops()
+  return out
 }
 
 /** The circuits of every system, with the poles the medium voltage must reach (the path from the feed to each transformer). */
@@ -88,7 +78,8 @@ export function powerPlanOf({ params, drops }: { readonly params: AerialParams; 
   return params.tree.systems.map((system) => {
     const consumers = new Map(system.poles.map((pole) => [pole, (drops.get(pole) ?? []).map((connection) => connection.installedKva ?? 0)]))
     const circuits = circuitsOf({ system, consumers, span, rules: params.rules, isService })
-    const medium = new Set<string>()
+    // the medium voltage runs along every street pole of the feeder (a street with poles and no medium voltage reads wrong), and to each transformer
+    const medium = new Set(system.poles.filter((pole) => !isService(pole)))
     for (const circuit of circuits) {
       for (let pole: string | undefined = circuit.transformer; pole !== undefined && !medium.has(pole); pole = system.parent.get(pole)) medium.add(pole)
     }

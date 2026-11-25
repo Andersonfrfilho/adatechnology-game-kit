@@ -198,6 +198,11 @@ const { networks, connections, surfaceAt, warnings } = generateNetworks({
 validateNetworks(networks, { connections, surfaceAt }) // [] for a plan the generator can lay
 ```
 
+`distributionHardwareOf(spec, { mv, transformer, lamp, cables, cableGap })` gives the hardware of a distribution pole in its own frame (x toward
+the road, z along the line) with every fixing point read from its `slots`, the same heights the generator hangs the conductors at;
+`networkLampsOf({ networks, shares, isNight })` gives every `light` node with its lamp's state (`lampStateOf` by the seed and the node's place).
+`game-urban-three`'s `drawNetworks` draws both.
+
 - **Poles** on one side of each street (the side with more lots; on a tie north or west), 0.4 m from the kerb, 30 to 40 m apart on lot
   boundaries when one is in reach, slid clear of `avoid` (else the next boundary in reach, never past 40 m); a guyed pole at each corner (the
   end of a street at another, a T, is a corner too) and each end of line, the corners of two streets joined by a span; an in-line pole at
@@ -205,9 +210,12 @@ validateNetworks(networks, { connections, surfaceAt }) // [] for a plan the gene
   stands farther back. Each street pole carries a lamp on its arm over the road (`light_feed` from its low voltage).
 - **Power**: one system per feed where a street leaves the map (no span over a river); circuits cut on the pole tree so that the line each way
   from the transformer stays within 200 m and the diversified demand (plus the lamps) within the largest rating; each transformer on its
-  circuit's centre, sized by `pickTransformer`, a circuit over the largest rating split into more; medium voltage only from the feed to the
-  transformers; a drop from the nearest pole to every lot.
+  circuit's centre, sized by `pickTransformer`, a circuit over the largest rating split into more; medium voltage on every street pole of the feeder
+  and to each transformer; a drop from the nearest pole to every lot.
   Lots of the periphery (`layout.periphery.kinds`) get a few hookups with no meter (`spec: 'unmetered'`), counted in the load.
+- **Drops** follow the street's practice: from the pole in front of the lot, or straight across the street (within `power.dropMaxSkew`, 30°, of
+  its normal), never over another lot, at most `power.dropsPerPole` (4) on a pole; a lot no pole can feed so gets an in-line pole at its station.
+  `validateNetworks(..., { frontages })` checks it (`drop_skewed`, `drop_off_frontage`, `drop_over_other_lot`, `pole_too_many_drops`).
 - **Telecom** on every pole from its own feed, 1-2 cables in the centre and 3-5 in the periphery, a splice box with its reserve coil every 4 spans.
 - **Sewer**: DN 150 under the axis, a manhole at every crossing and at most 80 m apart, a cleanout at each dry head, falling at least 0.5 %
   to the river bank, then an interceptor along the bank to a `treatment` node where the river leaves the map (with no river, from the line's

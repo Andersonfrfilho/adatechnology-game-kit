@@ -18,6 +18,7 @@
   "type.wall_socket": "Wall socket",
   "type.wall_switch": "Light switch",
   "type.service_entrance": "Service entrance pole",
+  "type.service_mast": "Service mast (pontalete)",
   "type.conduit_run": "Conduit run",
   "type.tv": "Television",
   "type.microwave": "Microwave",

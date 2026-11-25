@@ -141,6 +141,8 @@ export interface AdapterPlan {
   lanterns: string[]
   canisters: string[]
   serviceEntrance: string | null
+  /** The mast up the facade (`service_mast`) that takes a street network's drop on a building with no front yard; absent otherwise. */
+  serviceMast?: string
   panel: string | null
   meter: string | null
   conduits: string[]

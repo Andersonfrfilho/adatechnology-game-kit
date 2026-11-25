@@ -1,15 +1,11 @@
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { StructuredResult } from '@adatechnology/game-floorplan-structure'
 import type { PlanRect } from '@adatechnology/game-urban'
+import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 
 import { SIDEWALK_WIDTH } from './ground'
 import type { HousePlacement } from './placement'
-import type { PolePoint } from './roads'
 
-/** The height (metres) where a house's service drop leaves the street pole: the low-voltage rack under the lamp's arm. */
-export const SERVICE_DROP_HEIGHT = 6.8
-/** The longest service drop a utility runs (metres): a lot farther than this from every street pole (one on no street of the plan) gets none. */
-export const SERVICE_DROP_MAX = 30
 /** A pole keeps this clear (metres) of each side of a door or a gate it would stand in front of. */
 const ENTRANCE_MARGIN = 0.5
 
@@ -65,16 +61,19 @@ export function entranceRectsOf(houses: readonly PlannedHouse[]): PlanRect[] {
   })
 }
 
-/** A house's service drop: from the nearest street pole (`from`, world) to where the plan's entrance takes it (`to`, world: the post's head or the facade meter), and `from` in the house's frame. */
+/** A house's service drop: from the street pole (`from`, world, at the low voltage's height on it) to the anchor of the lot's power connection (`to`, world), and `from` in the house's frame. */
 export type ServiceDrop = { readonly from: readonly [number, number, number]; readonly to: readonly [number, number, number]; readonly fromInHouse: readonly [number, number, number] }
 
-/** The service drop of a placed house from the nearest of the street's poles; `undefined` when the plan has no entrance or no pole is within `SERVICE_DROP_MAX`. */
-export function serviceDropOf(house: PlannedHouse, poles: readonly PolePoint[]): ServiceDrop | undefined {
-  const landing = (house.plan as StructuredResult).utilities?.electrical.serviceEntrance?.drop[0]
-  if (!landing) return undefined
-  const [x, z] = toWorld(house.placement, landing[0], landing[1])
-  const nearest = poles.reduce<PolePoint | undefined>((best, pole) => (best === undefined || Math.hypot(pole.x - x, pole.z - z) < Math.hypot(best.x - x, best.z - z) ? pole : best), undefined)
-  if (!nearest || Math.hypot(nearest.x - x, nearest.z - z) > SERVICE_DROP_MAX) return undefined
-  const [u, v] = toHouseFrame(house.placement, nearest.x, nearest.z)
-  return { from: [nearest.x, SERVICE_DROP_HEIGHT, nearest.z], to: [x, landing[2], z], fromInHouse: [u, SERVICE_DROP_HEIGHT, v] }
+/**
+ * The service drop the utility network laid to a lot (its `service_drop` edge, `drop:<lot>`): from its pole to the lot's power connection, which is the anchor of
+ * the house's meter post (or facade). `undefined` for a lot the network does not feed.
+ */
+export function networkDropOf({ house, lot, networks }: { readonly house: PlannedHouse; readonly lot: string; readonly networks: UtilityNetworks }): ServiceDrop | undefined {
+  const edge = networks.edges.find((item) => item.kind === 'service_drop' && item.id === `drop:${lot}`)
+  const pole = edge && networks.nodes.find((node) => node.id === edge.from)
+  const end = edge && networks.nodes.find((node) => node.id === edge.to)
+  if (!edge || !pole || !end) return undefined
+  const height = edge.heights?.[0] ?? pole.at[1]
+  const [u, v] = toHouseFrame(house.placement, pole.at[0], pole.at[2])
+  return { from: [pole.at[0], height, pole.at[2]], to: end.at, fromInHouse: [u, height, v] }
 }

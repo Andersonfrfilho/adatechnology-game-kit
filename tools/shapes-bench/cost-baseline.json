@@ -441,6 +441,11 @@
       "triangles": 1022,
       "materials": 4
     },
+    "household/service_mast": {
+      "draws": 2,
+      "triangles": 480,
+      "materials": 1
+    },
     "household/electrical_panel": {
       "draws": 8,
       "triangles": 288,
@@ -2935,6 +2940,11 @@
       "draws": 6,
       "triangles": 400,
       "materials": 3
+    },
+    "urban/networks": {
+      "draws": 17,
+      "triangles": 12272,
+      "materials": 9
     },
     "houses/single_storey_a": {
       "draws": 253,
