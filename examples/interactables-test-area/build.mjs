@@ -117,7 +117,12 @@ if (existsSync(roomHtml)) {
   const at = page.lastIndexOf('</body>')
   if (at < 0) throw new Error('the room page has no </body>')
   // the room page sets window.__testRoom synchronously; our script runs right after it and loads the module into that room
-  const boot = `window.__furnitureReport = FurnitureArea.loadInto(window.__testRoom)`
+  // the room opened ?area= before the modules were in: an area a loaded module brings (`?area=house_complete`) is opened once they are
+  const boot = `window.__furnitureReport = FurnitureArea.loadInto(window.__testRoom)
+;(() => {
+  const area = new URLSearchParams(location.search).get('area')
+  if (area && window.__testRoom.modules().some((m) => m.id === area && m.hasArea)) window.__testRoom.openAreaAsync(area)
+})()`
   const html = `${page.slice(0, at)}<script>${safe(bundle)}\n${boot}</script>\n${page.slice(at)}`
   writeFileSync(join(here, 'dist/sala-moveis.html'), html)
   console.log(`dist/sala-moveis.html ${(html.length / 1024).toFixed(0)} KB`)

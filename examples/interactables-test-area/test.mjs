@@ -321,6 +321,20 @@ if (PART === 'all' || PART === 'shots') {
   await page.close()
 }
 
+// the whole house (`?area=house_complete`): every house item of the SDK (household types, the furniture of the house plans, the goods a house keeps) is laid with
+// its name on the floor, and each piece is looked at, opened, picked up, shot and broken. A piece added to the SDK that does not reach the room fails here.
+if (PART === 'all' || PART === 'house') {
+  const page = await open('?lang=pt-BR&ui=0&area=house_complete')
+  await page.waitForFunction(() => window.__testRoom.spawned().length > 50, null, { timeout: 600000, polling: 2000 })
+  const report = await page.evaluate(async () => {
+    const room = window.__testRoom
+    return room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('house_complete_')))
+  })
+  for (const result of report.results) check(`house_complete: ${result.name}`, result.ok, result.checks.filter((c) => !c.ok).map((c) => c.label))
+  await page.screenshot({ path: join(shots, '06-whole-house-after-trials.png'), timeout: 300000 })
+  await page.close()
+}
+
 if (PART === 'all' || PART === 'shots') {
   const p = await open('?lang=pt-BR&ui=0')
   const shot = async (/** @type {string} */ name, /** @type {string} */ setup) => {

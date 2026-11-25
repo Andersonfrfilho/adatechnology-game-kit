@@ -39,6 +39,8 @@ import { createModule as createPlayerModule } from '../../player-test-area/src/e
 import { createModule as createStoriesModule } from '../../stories-test-area/src/entry.js'
 import { createFurnitureArea as create } from './area.js'
 import { createHouseTablesAreas } from './house-tables.js'
+import { createHouseCompleteArea } from './house-complete.js'
+import { planFurnitureTypes } from './house-complete-layout.js'
 
 /** @typedef {import('@adatechnology/game-test-room').TestRoom} TestRoom */
 /** @typedef {import('@adatechnology/game-test-room').ModuleReport} ModuleReport */
@@ -184,7 +186,8 @@ function loadSteps(room, options, lang) {
   // the houses use the room's destruction world and renderer (a shot, a blow or a blast of the room reaches their walls); they are built from the houses area (the bench's Build), not on load
   // ?shadowBatches=0: each mesh of the house casts its own shadow, as before the shadow batches (to compare the two)
   const shadowBatches = new URLSearchParams(globalThis.location?.search ?? '').get('shadowBatches') === '0' ? { shadowBatches: false } : {}
-  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang, ...shadowBatches }))
+  // every furniture type of the house plans is a catalogue item here (`furniture_<type>`), so the whole house (`?area=house_complete`) can lay each one
+  mod('floorplan', () => createFloorplanModule({ world: room.world, renderer: room.renderer, locale: lang, furniture: planFurnitureTypes(), ...shadowBatches }))
   // the vehicles: the sedan of the cross scenario `car_in_the_yard` and the rest of the Frota test, in the same world as the furniture
   // ?vehicles=midsize_sedan,compact_suv lays those models of the fleet instead of the Frota test (one model at a time for a check)
   const vehicleKeys = new URLSearchParams(globalThis.location?.search ?? '').get('vehicles')
@@ -206,6 +209,11 @@ function loadSteps(room, options, lang) {
   const [houseTables, houseTablesKitchen] = createHouseTablesAreas({ locale: lang, measure: (itemId) => room.measure(itemId), floorFront: () => room.terrain.bounds[3] })
   mod('houseTables', () => houseTables)
   mod('houseTablesKitchen', () => houseTablesKitchen)
+  // the whole house (`?area=house_complete`): every catalogue id of what a house of the kit holds, each with its name on the floor, to look at, open, pick up, shoot and break
+  const names = () => new Map(room.testTable.items().map((item) => [item.id, item.name]))
+  /** @type {Map<string, string> | null} */
+  let named = null
+  mod('houseComplete', () => createHouseCompleteArea({ locale: lang, measure: (itemId) => room.measure(itemId), nameOf: (itemId) => (named ??= names()).get(itemId) ?? itemId, floorFront: () => room.terrain.bounds[3] }))
   // the furniture comes last: its report is the base of the whole one
   steps.push({
     key: 'furniture',

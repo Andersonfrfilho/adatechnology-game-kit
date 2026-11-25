@@ -8,7 +8,8 @@
 //   ?scene=push        pushing furniture: a light piece, one too heavy and one against the wall
 //   ?scene=doors       opening by hand (E): fridge, wardrobe, microwave, a car, a locked wardrobe and a door that hits a barbecue
 //   ?pushForce=2000     the force of the player's legs when pushing furniture, newtons
-//   ?area=furniture     open on one catalogue group (the groups the loaded modules add); ?area=house_tables: the house and the yard on tables
+//   ?area=furniture     open on one catalogue group (the groups the loaded modules add); ?area=house_tables: the house and the yard on tables;
+//                       ?area=house_complete: every house item of the SDK, labelled one by one
 //   ?quality=low|medium|high   the effects' budgets (particles, debris) the room is made with
 //   ?graphics=0|1       the player's graphics settings (the Gráficos button: presets, options, automatic mode, the 3 s calibration of the first load, kept in the
 //                       browser). On by default; off by default under automation (navigator.webdriver), so the checks keep the fixed look; ?graphics=1 turns it on there
@@ -62,8 +63,10 @@ document.title = locale === 'en' ? 'Test room' : 'Sala de testes'
 
 const isFloorplan = params.get('area') === 'floorplan_area' || location.pathname.includes('sala-casas')
 // the house and the yard on tables lays every room of a house in rows: it needs a wider floor and only the target wall (what hangs on a wall hangs on it)
-const isHouseTables = params.get('area') === 'house_tables'
-const arena = Number(params.get('arena')) || (isFloorplan ? 40 : isHouseTables ? 24 : 0)
+// the whole house (house_complete) lays every house item of the SDK in labelled lines: a floor 40 m each way, with only the target wall as well
+const isWholeHouse = params.get('area') === 'house_complete'
+const isHouseTables = params.get('area') === 'house_tables' || isWholeHouse
+const arena = Number(params.get('arena')) || (isFloorplan || isWholeHouse ? 40 : isHouseTables ? 24 : 0)
 const quality = /** @type {import('@adatechnology/game-test-room').TestRoomOptions['quality']} */ (['low', 'medium', 'high'].includes(/** @type {string} */ (params.get('quality'))) ? params.get('quality') : 'medium')
 const items = params.get('items')
 
