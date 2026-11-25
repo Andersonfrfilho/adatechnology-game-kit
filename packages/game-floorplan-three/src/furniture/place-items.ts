@@ -52,6 +52,8 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
       if (shared.ctx.veg && vegItem(m, M, exterior ? 'lot' : 'f' + f)) continue;
       // the outdoor shelter of a gas cylinder (NBR 13523) and its copper line are the house's, whoever draws the cylinder in it
       if (m.type === 'cooking_gas_cylinder' && m.shelter && T.gas_shelter) { const st = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'installations'; try { buildItem(m, M, T.gas_shelter, api, cursor.group); } finally { cursor.stage = st; } }
+      // the hose from the valve to the stove goes in with the stove
+      if (m.type === 'cooking_gas_cylinder' && m.shelter && T.gas_hose) { const st = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'furniture'; try { buildItem(m, M, T.gas_hose, api, cursor.group); } finally { cursor.stage = st; } }
       if (shared.ctx.iv && shared.ctx.iv.replace.has(m.id)) { registerCollision(m, M); continue; } // the interactables kit draws this furniture (the collision is still a single one)
       const ent = T[m.type];
       const st0 = cursor.stage;

@@ -135,6 +135,9 @@ function stageVisible(stage: string, level: number, opts: ApplyConstructionLevel
       return level >= 8 && opts.roofLayer !== false
     case 'furniture':
       return level >= 8
+    // the facade's tiled band and the protective sidewalk round the house: the last of the work outside
+    case 'exterior':
+      return level >= 8
     case 'perimeter':
       return level >= 8 && opts.lotLayer !== false
     default:

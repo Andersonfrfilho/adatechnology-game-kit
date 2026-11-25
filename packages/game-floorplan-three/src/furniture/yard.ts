@@ -125,12 +125,21 @@ export function installFurnitureYard(K: Kernel, shared: Shared): void {
     const copper = 0xb87333;
     for (let k = 0; k + 1 < shelter.route.length; k++) K.t('metal', local(shelter.route[k]!), local(shelter.route[k + 1]!), 0.0075, copper);
     if (shelter.hose.length > 1) {
-      const valve = local(shelter.hose[0]!), stove = local(shelter.hose[shelter.hose.length - 1]!);
+      const valve = local(shelter.hose[0]!);
       K.b('metal', valve[0], valve[1] - 0.02, valve[2], 0.04, 0.04, 0.04, 0xc9a24a); // the valve (registro) where the line ends
-      const sag = [(valve[0] + stove[0]) / 2, Math.max(0.1, Math.min(valve[1], stove[1]) - 0.15), (valve[2] + stove[2]) / 2];
-      K.t('plain', [valve[0], valve[1] - 0.02, valve[2]], sag, 0.011, 0xb8321e); K.t('plain', sag, stove, 0.011, 0xb8321e);
     }
   }
+  /** The LPG hose from the valve to the stove (NBR 8613: clear PVC with a yellow stripe): it comes with the stove, so it is drawn on its own. */
+  const GAS_HOSE_COLOR = 0xd9b43c;
+  FURNITURE.gas_hose = function (M, A) {
+    const shelter = shelterOf(M);
+    if (!shelter || shelter.hose.length < 2) return;
+    const K = kit2(M, A);
+    const local = (p: readonly number[]): [number, number, number] => [p[0]! - M.x, p[2]! - (typeof M.y === 'number' ? M.y : 0), p[1]! - M.z];
+    const valve = local(shelter.hose[0]!), stove = local(shelter.hose[shelter.hose.length - 1]!);
+    const sag = [(valve[0] + stove[0]) / 2, Math.max(0.1, Math.min(valve[1], stove[1]) - 0.15), (valve[2] + stove[2]) / 2];
+    K.t('plain', [valve[0], valve[1] - 0.02, valve[2]], sag, 0.011, GAS_HOSE_COLOR); K.t('plain', sag, stove, 0.011, GAS_HOSE_COLOR);
+  };
   // ---------- mailbox: metal box with hinged lid (part), slot, number and pillar ----------
   FURNITURE.mailbox = function (M, A) {
     const K = kit2(M, A, 0), w = M.w || 0.3, d = M.d || 0.22, h = M.h || 0.3, y = M.y != null && M.y > 0 ? M.y : 1.0, structure = STYLE(), pc = structure === 'high' ? 0x2a2c30 : structure === 'mid' ? 0xd0b060 : 0xc84a3a, rnd = rngString(SEED() + '|' + seedKey(M.seed) + '|correio');

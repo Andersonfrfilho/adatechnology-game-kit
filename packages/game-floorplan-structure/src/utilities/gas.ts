@@ -30,8 +30,6 @@ const PIPE_DIAMETER_MM = 15
 const SHELTER = { side: 0.56, h: 0.7 }
 const VALVE_HEIGHT = 0.55
 const PIPE_WALL_HEIGHT = 0.6
-/** How far the line stands off the wall it runs along, metres. */
-const PIPE_CLEARANCE = 0.03
 
 export interface Gas {
   type: 'piped' | 'cylinder'
@@ -165,21 +163,50 @@ function valveOf(stove: ResultItem): GasValve {
   return { id: `${stove.id}.gas_valve`, x: round2(stove.x - (stove.frontU ?? 0) * back), z: round2(stove.z - (stove.frontV ?? 1) * back), y: VALVE_HEIGHT }
 }
 
-/** The copper line from the shelter's outlet, through the wall and along its inner face at the height of the valve, to the stove's valve: points of plan (x, z) and height. */
-function copperLine(spot: Spot, valve: GasValve): [number, number, number][] {
-  const wall = spot.wall!
-  const inward = outwardOf(wall).map((component) => -component)
-  const face = HALF_WALL + PIPE_CLEARANCE
-  const outlet: [number, number, number] = [round2(spot.x), round2(spot.z), CYLINDER.h]
-  if (wall.axis === 'u') {
-    const faceZ = round2(wall.v0 + inward[1]! * face)
-    return [outlet, [round2(spot.x), wall.v0, PIPE_WALL_HEIGHT], [round2(spot.x), faceZ, PIPE_WALL_HEIGHT], [valve.x, faceZ, PIPE_WALL_HEIGHT], [valve.x, valve.z, valve.y]]
-  }
-  const faceX = round2(wall.u0 + inward[0]! * face)
-  return [outlet, [wall.u0, round2(spot.z), PIPE_WALL_HEIGHT], [faceX, round2(spot.z), PIPE_WALL_HEIGHT], [faceX, valve.z, PIPE_WALL_HEIGHT], [valve.x, valve.z, valve.y]]
+/** How far inside the wall's planned face the copper line lies, metres: in a chase cut in the masonry, under the render (NBR 15526, embedded). */
+const PIPE_IN_WALL = 0.02
+/** Where the line passes under a doorway, metres: in the subfloor under the threshold, never across the opening. */
+const PIPE_UNDER_FLOOR = -0.05
+/** A door's opening is clear up to this height, metres: a line in the wall under it would cross the doorway. */
+const DOOR_HEIGHT = 2.1
+
+/** True when a stretch of the line, laid at `height` in plan from a to b, runs through a door's opening of the ground floor. */
+function crossesDoor(plan: Plan, a: readonly [number, number], b: readonly [number, number], height: number): boolean {
+  if (height >= DOOR_HEIGHT || height < 0) return false
+  return plan.doors.some((door) => {
+    if (door.floor !== 0) return false
+    const alongU = door.axis === 'u'
+    const [p0, p1] = alongU ? [a[1], b[1]] : [a[0], b[0]]
+    const [q0, q1] = alongU ? [a[0], b[0]] : [a[1], b[1]]
+    const across = Math.max(Math.min(p0, p1), door.pos - HALF_WALL) <= Math.min(Math.max(p0, p1), door.pos + HALF_WALL)
+    const along = Math.max(Math.min(q0, q1), door.at - door.width / 2) < Math.min(Math.max(q0, q1), door.at + door.width / 2)
+    return across && along
+  })
 }
 
-function cylinderItem(stove: ResultItem, spot: Spot): ResultItem {
+/**
+ * The copper line from the shelter's outlet, through the wall and in a chase inside it at the height of the valve, to the stove's valve: points of plan (x, z)
+ * and height. Where a door stands on its way, the line goes down into the subfloor and passes under the threshold (it never crosses an opening).
+ */
+function copperLine(plan: Plan, spot: Spot, valve: GasValve): [number, number, number][] {
+  const wall = spot.wall!
+  const inward = outwardOf(wall).map((component) => -component)
+  const inset = HALF_WALL - PIPE_IN_WALL
+  const outlet: [number, number, number] = [round2(spot.x), round2(spot.z), CYLINDER.h]
+  const through: [number, number] = wall.axis === 'u' ? [round2(spot.x), wall.v0] : [wall.u0, round2(spot.z)]
+  const chase: [number, number] = wall.axis === 'u' ? [round2(spot.x), round2(wall.v0 + inward[1]! * inset)] : [round2(wall.u0 + inward[0]! * inset), round2(spot.z)]
+  const corner: [number, number] = wall.axis === 'u' ? [valve.x, chase[1]] : [chase[0], valve.z]
+  const blocked = crossesDoor(plan, chase, corner, PIPE_WALL_HEIGHT) || crossesDoor(plan, corner, [valve.x, valve.z], PIPE_WALL_HEIGHT)
+  const height = blocked ? PIPE_UNDER_FLOOR : PIPE_WALL_HEIGHT
+  const line: [number, number, number][] = [outlet, [through[0], through[1], PIPE_WALL_HEIGHT], [chase[0], chase[1], PIPE_WALL_HEIGHT]]
+  if (blocked) line.push([chase[0], chase[1], height])
+  line.push([corner[0], corner[1], height])
+  if (blocked) line.push([valve.x, valve.z, height])
+  line.push([valve.x, valve.z, valve.y])
+  return line
+}
+
+function cylinderItem(plan: Plan, stove: ResultItem, spot: Spot): ResultItem {
   const item: ResultItem = {
     id: `${stove.room}.${CYLINDER_TYPE}`, type: CYLINDER_TYPE, category: CYLINDER_TYPE, x: round2(spot.x), z: round2(spot.z), ry: 0, w: CYLINDER.w, d: CYLINDER.d, h: CYLINDER.h, y: 0,
     frontU: -(stove.frontU ?? 0), frontV: -(stove.frontV ?? 1), room: stove.room, floor: stove.floor, outdoor: !!spot.outdoor, slot: 'cylinder', on: null, mode: null, clearance: 0, flat: false, low: false,
@@ -193,7 +220,7 @@ function cylinderItem(stove: ResultItem, spot: Spot): ResultItem {
     const valve = valveOf(stove)
     item.placement = OUTDOOR_SHELTER_PLACEMENT
     item.shelter = { standard: SHELTER_STANDARD, ventilated: true, ventilation: { low: true, high: true }, aabb: spot.shelter, h: SHELTER.h }
-    item.pipe = { material: 'copper', diameterMm: PIPE_DIAMETER_MM, route: copperLine(spot, valve), valve: valve.id }
+    item.pipe = { material: 'copper', diameterMm: PIPE_DIAMETER_MM, route: copperLine(plan, spot, valve), valve: valve.id }
     item.valve = valve
     item.hose = [[valve.x, valve.z, valve.y], [stove.x, stove.z, 0.5]]
     stove.gasValve = valve
@@ -248,7 +275,7 @@ export function planGas(context: Context): Gas | null {
       stove.gasMeter = 'gas.meter'
       continue
     }
-    const cylinder = cylinderItem(stove, spot)
+    const cylinder = cylinderItem(context.plan, stove, spot)
     items.push(cylinder)
     stove.cylinder = cylinder.id
   }

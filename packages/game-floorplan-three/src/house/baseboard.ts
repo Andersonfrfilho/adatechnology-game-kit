@@ -36,6 +36,9 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
     const R: HouseRecord = shared.ctx.r, W = 0.6, t = 0.012, ht = 0.35, color = sh(shared.ctx.colors.facade != null ? shared.ctx.colors.facade : 0xd8d0c0, 0.62), y0 = Y0(0), cal = 0xd4d0c6;
     const ws: Run[] = R.walls.filter(w => w.floor === 0 && w.type === 'wall').map(w => { const au = w.axis === 'u'; return { w, au, L: au ? w.v0 : w.u0, a: Math.min(au ? w.u0 : w.v0, au ? w.u1 : w.v1), b: Math.max(au ? w.u0 : w.v0, au ? w.u1 : w.v1), th: w.thickness || 0.15 }; });
     cursor.group = 'f0';
+    // the facade's tiled band and the protective sidewalk are the last of the work outside (the sidewalk is cast once the scaffolds are down): built by stage, they come at the end
+    const stage = cursor.stage;
+    if (shared.ctx.constructionStages) cursor.stage = 'exterior';
     // what meets the end of a wall (point e = position along the axis, L = line): +1 convex (another wall moves away on the outside), -1 concave or in a T, 0 free end
     const junction = (A: Run, e: number, sd: number): number => {
       let r = 0;
@@ -77,6 +80,7 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
       strip(W, y0, y0 + SIDEWALK_TOP, 0, W, 'sidewalk', cal, A.w.id ? `sidewalk:${A.w.id}:${sd < 0 ? 0 : 1}` : undefined, SIDEWALK_SLABS); // 60 cm protective sidewalk with filled corners
     }
     if (!shared.ctx.baseboardBand) doorways(ws, W, y0, cal);
+    cursor.stage = stage;
   }
   /**
    * The stretch of a doorway a threshold can fill: between the door's posts and clear of the walls, pillars and beams of the structure that reach into the opening,
@@ -113,10 +117,12 @@ export function installHouseBaseboard(K: Kernel, shared: Shared): void {
       const slab: Aabb = au ? [a, y0, lo, b, y0 + SIDEWALK_TOP, hi] : [lo, y0, a, hi, y0 + SIDEWALK_TOP, b];
       bx('sidewalk', slab[0], slab[1], slab[2], slab[3], slab[4], slab[5], cal); if (!shared.ctx.visorScene) shared.ctx.paving?.push(slab);
       // the threshold: through the wall, its top level with the floor inside
+      const paving = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'finishes';
       const top = y0 + (shared.ctx.constructionStages ? FLOOR_OVER_GROUND : 0) + 0.002, t0 = d.pos - th / 2, t1 = d.pos + th / 2;
       const [from, to] = clearSpan({ a: a + DOOR_JAMB_WIDTH, b: b - DOOR_JAMB_WIDTH, au, across: [t0, t1], rise: [y0, top] });
       cursor.pc = pieceRecord(`threshold:${d.id}`, THRESHOLD.material, null, { floor: 0, mass: Math.round((to - from) * th * (top - y0) * THRESHOLD.density * 100) / 100, tags: ['threshold'], holdOn: 'floor', holdJoint: footingJointOf(THRESHOLD.material) }); // bedded in mortar on the ground beam under the door
       if (au) bx('plain', from, y0, t0, to, top, t1, THRESHOLD.color); else bx('plain', t0, y0, from, t1, top, to, THRESHOLD.color);
+      cursor.stage = paving;
     }
     cursor.pc = null;
   }
