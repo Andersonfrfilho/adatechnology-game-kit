@@ -31,10 +31,10 @@ const check = (/** @type {unknown} */ ok, /** @type {string} */ label) => {
 }
 const shot = (/** @type {string} */ name) => page.screenshot({ path: join(shots, `hands-${name}.png`), timeout: 60000 })
 /** Runs `code` with the room as `r` and `arg` as `a`. */
-const room = (/** @type {string} */ code, /** @type {unknown} */ arg) => page.evaluate(([c, a]) => new Function('r', 'a', c)(window.__testRoom, a), [code, arg])
+const room = (/** @type {string} */ code, /** @type {unknown} */ arg = undefined) => page.evaluate(({ c, a }) => new Function('r', 'a', c)(window.__testRoom, a), { c: code, a: arg })
 /** The first of `ids` the catalogue has, once the teams' modules loaded it. */
 const pick = async (/** @type {string[]} */ ids) => {
-  const found = await page.waitForFunction((list) => list.find((id) => window.__testRoom.measure(id)), ids, { timeout: 240000, polling: 500 }).catch(() => null)
+  const found = await page.waitForFunction((/** @type {string[]} */ list) => list.find((id) => window.__testRoom.measure(id)), ids, { timeout: 240000, polling: 500 }).catch(() => null)
   const id = found ? await found.jsonValue() : null
   if (typeof id !== 'string') throw new Error(`none of ${ids.join(', ')} in the catalogue`)
   return id
