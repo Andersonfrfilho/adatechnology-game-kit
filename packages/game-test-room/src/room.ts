@@ -21,6 +21,7 @@ import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnviron
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
+import { createTopStains } from './top-stains'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
 import { createBenchStore } from './bench'
@@ -357,35 +358,24 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   kit.ground.addProvider(() => restingTopAt)
   const defaultGround = options.ground ?? DEFAULT_GROUND_LAYOUT
 
-  /** The scenery tops whose surface left the fluid world: the top broke or came off, and what was spilt on it went with it. */
-  const fallenTops = new Set<string>()
-  /**
-   * A stain lies on the top it was spilt on: when the top breaks, melts or burns away, the stain goes with it, not left in the air where
-   * the top was; a top of boards loses the stains of each board that went. A top that is gone takes no more liquid (it is no surface any more).
-   */
-  const dropStainsOffFallenTops = (): void => {
-    // a top pushed along the floor is still a top (its stains move with it, `pushMoved`): only the board that broke, melted or burnt away is gone
-    const lost = (object: string, part: string): boolean => {
-      const p = world.part(object, part)
-      return !p || p.status === 'broken' || p.status === 'melted' || p.status === 'ashes'
-    }
-    for (const t of arena.tops) {
-      if (fallenTops.has(t.id)) continue
-      if (t.boards ? t.boards.every((b) => lost(t.id, b.part)) : lost(t.id, t.topPart)) {
-        fluids.removeSurface(t.id)
-        fallenTops.add(t.id)
-        continue
-      }
-      if (!t.boards) continue
-      const gone = t.boards.filter((b) => lost(t.id, b.part))
-      if (gone.length === 0) continue
-      for (const st of fluids.stains()) {
-        if (st.surface !== t.id) continue
-        const [x, , z] = st.center
-        if (gone.some((b) => x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ)) fluids.clearStains(st.center, 1e-3)
-      }
-    }
-  }
+  // what was spilt on a top goes with it: pushed, tipped over, broken or burnt away
+  const restOfArena = new Map(arena.objects.map((o) => [o.id, { position: o.position, rotation: [0, Math.sin(o.rotationY / 2), 0, Math.cos(o.rotationY / 2)] as Quat }]))
+  const poseV = new THREE.Vector3()
+  const poseQ = new THREE.Quaternion()
+  const poseScale = new THREE.Vector3()
+  const topStains = createTopStains({
+    world,
+    fluids,
+    tops: arena.tops,
+    restOf: (objectId) => restOfArena.get(objectId),
+    poseOf: (objectId) => {
+      const root = renderer.piece(objectId)?.root ?? entries.get(objectId)?.so.root
+      if (!root) return undefined
+      root.updateWorldMatrix(true, false)
+      root.matrixWorld.decompose(poseV, poseQ, poseScale)
+      return { position: [poseV.x, poseV.y, poseV.z], rotation: [poseQ.x, poseQ.y, poseQ.z, poseQ.w] }
+    },
+  })
   const itemUseDefs = [...ITEM_USES, ...(options.itemUses ?? [])]
 
   const rendererPieces = new Map<string, Piece>()
@@ -1566,7 +1556,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     if (kit.liquids.isOwned) {
       kit.liquids.reset()
-      fallenTops.clear()
+      topStains.reset()
     }
     pending = []
     strikes = []
@@ -3991,7 +3981,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     updateWater(dt)
     rockPlayer(dt)
     updateLoads(dt)
-    dropStainsOffFallenTops()
+    topStains.update()
     flush()
   })
 
