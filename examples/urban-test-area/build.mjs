@@ -38,6 +38,8 @@ const result = await esbuild.build({
   legalComments: 'none',
   alias: {
     '@adatechnology/game-urban-three/testing': join(pkg('game-urban-three'), 'dist/testing.js'),
+    // a second entry of the package: the generic alias below would resolve it under dist/index.js
+    '@adatechnology/game-urban/networks': join(pkg('game-urban'), 'dist/networks/index.js'),
     ...Object.fromEntries([...packages, 'game-contracts'].map((p) => [`@adatechnology/${p}`, join(pkg(p), 'dist/index.js')])),
     // the engine's three.js adapter is a second entry of the same package
     '@adatechnology/game-vegetation/three': join(pkg('game-vegetation'), 'dist/three.js'),
