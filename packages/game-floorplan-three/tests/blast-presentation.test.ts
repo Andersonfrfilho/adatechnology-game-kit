@@ -36,7 +36,7 @@ const BLAST_RADIUS = 6
 // Recorded again on the merge of both: the 4 mm panes and the parts held in the ground
 // Recorded again on the merge with the moulded members, pier and pillar corners of main: both changes meet in the blast
 // Recorded again when the world came to solve the structure once per operation: every detach comes at the end of the blast, with the groups it left; every part ends as it did
-const RECORDED_BLAST_OUTCOME = '6a4a72aa533489232b4094f3b1ec417c65652e9d'
+const RECORDED_BLAST_OUTCOME = '4537ca4c2ff0217e74b82b23409881ad98f8bfa4'
 
 function setup(paintBudgetMs?: number, isDrawn = true) {
   const world = createDestruction({ seed: 5 })

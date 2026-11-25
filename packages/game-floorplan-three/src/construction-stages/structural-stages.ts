@@ -47,11 +47,15 @@ function addRebarCage(THREE: Three, parent: THREE_NS.Group, box: readonly [numbe
   for (let y = yBase + 0.08; y < yBase + height - 0.03; y += 0.14) addStageBox(THREE, parent, u0 + inset, y, v0 + inset, u1 - inset, y + 0.006, v1 - inset, rebarMat)
 }
 
+/** How far inside the footprint's outer faces the compacted bed stops, metres: inside the outer ground beams, so none of it shows outside the walls. */
+const DIRT_BED_INSET = 0.03
+
 function createStageMaterials(THREE: Three): Record<string, THREE_NS.Material> {
   return {
     dirt: new THREE.MeshStandardMaterial({ color: 0x8a7250, roughness: 0.96 }),
     footing: new THREE.MeshStandardMaterial({ color: 0x7a766e, roughness: 0.92 }),
-    baldrame: new THREE.MeshStandardMaterial({ color: 0x5c5852, roughness: 0.88 }),
+    // the ground beams are waterproofed (black bitumen on their top and sides) before the masonry goes up on them
+    baldrame: new THREE.MeshStandardMaterial({ color: 0x2c2a27, roughness: 0.7 }),
     slab0: new THREE.MeshStandardMaterial({ color: 0xa6a298, roughness: 0.86 }),
     // pillars, beams and slabs are cast in one concrete: where they meet, they are one surface
     concrete: new THREE.MeshStandardMaterial({ color: 0x9c9890, roughness: 0.82 }),
@@ -377,11 +381,13 @@ export function buildStructuralStageGroups(THREE: Three, rawStructure: PlanStruc
   }
 
   // the excavated, compacted bed under every footprint
-  const footprint = rawStructure.parts.filter((p) => p.floor === 0 || p.y0 <= 0.1)
+  // what stands on the ground (the roof's rafters are of the ground floor too, but they overhang the walls: they are not the footprint)
+  const footprint = rawStructure.parts.filter((p) => p.y0 <= 0.1)
   if (footprint.length) {
-    addStageBox(THREE, foundation, Math.min(...footprint.map((p) => p.aabb[0])) - 0.05, -0.06, Math.min(...footprint.map((p) => p.aabb[1])) - 0.05, Math.max(...footprint.map((p) => p.aabb[2])) + 0.05, 0.006, Math.max(...footprint.map((p) => p.aabb[3])) + 0.05, mats.dirt!, 'foundation_dirt_bed')
+    // under the house only, its edge inside the outer ground beams: the backfill round them leaves no band of it outside the walls
+    addStageBox(THREE, foundation, Math.min(...footprint.map((p) => p.aabb[0])) + DIRT_BED_INSET, -0.06, Math.min(...footprint.map((p) => p.aabb[1])) + DIRT_BED_INSET, Math.max(...footprint.map((p) => p.aabb[2])) - DIRT_BED_INSET, 0.006, Math.max(...footprint.map((p) => p.aabb[3])) - DIRT_BED_INSET, mats.dirt!, 'foundation_dirt_bed')
   }
-  for (const e of outbuildings ?? []) addStageBox(THREE, foundation, e.aabb[0] - 0.15, -0.06, e.aabb[1] - 0.15, e.aabb[2] + 0.15, 0.006, e.aabb[3] + 0.15, mats.dirt!, `${e.id}_dirt_bed`)
+  for (const e of outbuildings ?? []) addStageBox(THREE, foundation, e.aabb[0] + DIRT_BED_INSET, -0.06, e.aabb[1] + DIRT_BED_INSET, e.aabb[2] - DIRT_BED_INSET, 0.006, e.aabb[3] - DIRT_BED_INSET, mats.dirt!, `${e.id}_dirt_bed`)
 
   const seen = new Set<string>()
   const foundations = parts.filter(isFoundation).filter((p) => !seen.has(p.id) && !!seen.add(p.id)).map(foundationSolid)

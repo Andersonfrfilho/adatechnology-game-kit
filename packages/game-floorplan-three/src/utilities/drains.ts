@@ -1,8 +1,7 @@
-import type { PlumbingPoint } from '@adatechnology/game-floorplan-structure';
-
 import { DRAIN_BORE } from '../construction-stages/installations-stage.js';
-import { routingPlanOf, wallDrop } from '../construction-stages/installation-routes.js';
-import type { RoutingPlan } from '../construction-stages/installation-routes.js';
+import { routingPlanOf } from '../construction-stages/installation-routes.js';
+import { drainRoute } from '../construction-stages/drain-route.js';
+export { drainRoute };
 import type { Hex, HouseRecord, Kernel, KernelUtilitiesDrains, Shared } from '../kernel-types.js';
 import { cutRun, drawnEnds, holdersOf, solidsOf } from './segments.js';
 import type { Span, Vec3 } from './segments.js';
@@ -10,10 +9,6 @@ import { pipeMass } from './water.js';
 
 /** The white PVC of the sewer's drains (the colour the rough-in stage lays it in). */
 const SEWER_COLOR = 0xe8e4dc;
-/** Height over its storey's floor where each fixture's drain leaves the fixture, metres: a toilet at the floor, a shower in it, a basin's trap and a machine's standpipe higher up. */
-const MOUTH_HEIGHT: Readonly<Record<string, number>> = { flush: 0.18, shower: 0.03, tap: 0.5, tub: 0.45, machine: 0.5 };
-/** How far under the top of a slab the drain crosses it, metres: through the middle of its thickness. */
-const SLAB_MIDDLE = 0.065;
 /** The nearest wall or pillar a downpipe is clamped to lies within this of it, metres. */
 const CLAMP_REACH = 0.3;
 /** The clamp ring of a downpipe's stretch: its top this far under the stretch's top end (never on the end's plane), its height, metres. It shares the pipe's mesh: no draw call of its own. */
@@ -21,30 +16,8 @@ const CLAMP_DROP = 0.06;
 const CLAMP_HEIGHT = 0.03;
 const CLAMPED_ROLES = new Set(['wall', 'partition', 'column']);
 
-/** The run of one fixture's drain from its mouth into the wall nearest it, then down inside that wall (and through each slab into the wall of the storey below) to the foot of the ground floor's wall, where the buried branch of the sewer takes it. */
-export function drainRoute(plan: RoutingPlan, point: PlumbingPoint): Vec3[] | null {
-  const floor = point.floor;
-  if (floor < 0) return null;
-  const drop = wallDrop(plan, floor, point.u, point.v);
-  if (!drop) return null;
-  const onCentre = (at: { u: number; v: number; wall: { axis: 'u' | 'v'; u0: number; v0: number } }): [number, number] => (at.wall.axis === 'u' ? [at.u, at.wall.v0] : [at.wall.u0, at.v]);
-  const mouth = (plan.floors[floor]?.y0 ?? 0) + (MOUTH_HEIGHT[point.kind] ?? 0.3);
-  let at = onCentre(drop);
-  const points: Vec3[] = [[point.u, mouth, point.v], [at[0], mouth, at[1]]];
-  for (let storey = floor; storey > 0; storey--) {
-    const slabY = (plan.floors[storey]?.y0 ?? 0) - SLAB_MIDDLE;
-    points.push([at[0], slabY, at[1]]);
-    const below = wallDrop(plan, storey - 1, at[0], at[1]);
-    if (!below) continue;
-    at = onCentre(below);
-    points.push([at[0], slabY, at[1]]);
-  }
-  points.push([at[0], plan.floors[0]?.y0 ?? 0, at[1]]);
-  return points;
-}
-
 export function installUtilitiesDrains(K: Kernel, shared: Shared): void {
-  const { part, pipe, cylBase } = K;
+  const { part, pipe, cylBase, cursor } = K;
   const sh = (...a: Parameters<Kernel['sh']>): ReturnType<Kernel['sh']> => K.sh(...a);
 
   /** What a run is: its id, the points it passes, its bore and colour, the group it is drawn in, the longest stretch it detaches in, and (a downpipe) the wall it is clamped to. */
@@ -96,6 +69,9 @@ export function installUtilitiesDrains(K: Kernel, shared: Shared): void {
   /** The round downpipes the gutters hung: the run down the wall and the shoe, in stretches between clamps, each held by the wall it is clamped to. */
   function downpipes(): void {
     const runs = shared.ctx.gutterInfo?.runs ?? [];
+    // the downpipes go up with the gutters they hang from, once the roof is on: never before it
+    const stage = cursor.stage;
+    if (shared.ctx.constructionStages) cursor.stage = 'roof';
     runs.forEach((run, index) => {
       const top = run.points[0]!;
       const points = run.points.map((p): Vec3 => [p[0]!, p[1]!, p[2]!]);
@@ -103,6 +79,7 @@ export function installUtilitiesDrains(K: Kernel, shared: Shared): void {
       const limit = Number.isFinite(shared.ctx.segmentLimits.pipe) ? Math.min(shared.ctx.segmentLimits.pipe, run.clampEvery) : Infinity;
       layRun({ id: `downpipe_${index}`, points, diameter: run.radius * 2, color: run.color, group: `f${run.f}`, limit, ...(clampedTo ? { clampedTo } : {}), clampEvery: run.clampEvery });
     });
+    cursor.stage = stage;
   }
 
   /** Both networks of the finished house; the team's scene (every `visor*` flag) draws neither. */
