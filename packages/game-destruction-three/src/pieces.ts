@@ -155,14 +155,17 @@ const SIDE_BOUNCE = 0.1
  */
 const EDGE_POINTS = [-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75]
 /**
- * Widest gap (m) between two of those points along a long edge: a step between two of them (a crater's rim under a 1.5 m lath) is missed, and the piece sinks over it and
- * rests on the points beside it, balanced in the air. A long edge gets more points (at most `MAX_EDGE_POINTS`).
+ * Widest gap (m) between two of those points along a long edge of a board or a lath (a piece no thicker than twice `THIN_HALF`): a step between two of them (a crater's rim
+ * under a 1.5 m lath) is missed, and the piece sinks over it and rests on the points beside it, balanced in the air. Such an edge gets more points (at most
+ * `MAX_EDGE_POINTS`); a bulky piece (a sofa, a crate) keeps `EDGE_POINTS`, its own weight being what the step holds.
  */
 const EDGE_SPACING = 0.05
 const MAX_EDGE_POINTS = 31
+const THIN_HALF = 0.03
 
-/** Fractions of a half edge of `half` metres where the points along it are: `EDGE_POINTS`, or evenly spaced no wider than `EDGE_SPACING` on a long edge. */
-const edgeFractions = (half: number): readonly number[] => {
+/** Fractions of a half edge of `half` metres, of a piece whose thinnest half extent is `thin`, where the points along it are. */
+const edgeFractions = (half: number, thin: number): readonly number[] => {
+  if (thin > THIN_HALF) return EDGE_POINTS
   const count = Math.min(MAX_EDGE_POINTS, Math.ceil((2 * half) / EDGE_SPACING) - 1)
   if (count <= EDGE_POINTS.length) return EDGE_POINTS
   return Array.from({ length: count }, (_, i) => -1 + (2 * (i + 1)) / (count + 1))
@@ -805,7 +808,7 @@ export class PieceSystem {
     for (let axis = 0; axis < 3; axis++) {
       const a1 = (axis + 1) % 3
       const a2 = (axis + 2) % 3
-      const fractions = edgeFractions(h[axis]!)
+      const fractions = edgeFractions(h[axis]!, Math.min(hx, hy, hz))
       for (let k = 0; k < 4; k++) {
         for (const f of fractions) {
           const p: Vec3 = [0, 0, 0]
