@@ -90,6 +90,13 @@ export const DEFAULT_RULES: WeaponRules = {
     // tucking a pistol in the belt and drawing it back is a short motion of one hand
     stowSeconds: 0.45,
   },
+  // as mãos de cada arma e onde ela vai quando as mãos são pedidas (decisão do dono, 2026-11-24): arma longa pede as duas mãos; a de cinto vai no coldre, a longa na bandoleira ou nas costas
+  hands: {
+    twoHanded: { categories: ['smg', 'rifle', 'carbine', 'sniper', 'dmr', 'hunting', 'machine_gun', 'launcher', 'shotgun', 'bow', 'crossbow', 'extinguisher'], weapons: ['flamethrower'] },
+    slots: { pistol: 'hip', revolver: 'hip', melee_blade: 'hip', melee_blunt: 'hip', tool: 'hip', throwable: 'hip', heat: 'hip', smg: 'back', rifle: 'back', carbine: 'back', sniper: 'back', dmr: 'back', hunting: 'back', shotgun: 'back', bow: 'back', crossbow: 'back', machine_gun: 'back', launcher: 'back' },
+    weaponSlots: { lighter: 'hip', flamethrower: 'back' },
+    bare: ['kick', 'shove', 'fists'],
+  },
   // Arsenal §08/§11: coronha retrátil saca mais rápido, mais recuo; os números são padrões aprovados pelo dono (2026-10-24)
   stock: {
     seconds: 0.6,

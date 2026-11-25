@@ -258,3 +258,18 @@ na P4.
   3. **o corte desta proposta:** T1.6b + T1.7 + T1.8 nas 2 semanas, apertadas (tiro, explosivos, golpe, pegar e arremessar destravam
      `shoot`, `grenade`, `horde`, `caos_fire` e `caos_blast`); a T1.9 vira fase própria depois da Fase 2, e a cena anda pela câmera do roteiro.
 - **P5 (fechada, [B7]).** A pá se parte entre `game-terrain`, `game-weapons` e L5 (§2); o `Terrain` nunca passa pelo `game-contracts`.
+
+## 7. Decisão do dono (2026-11-24): mãos e coldre
+
+Palavras do dono: "quando a gente segura um objeto guardamos a arma no coldre se não tiver coldre ele solta" e "isso serve para qualquer interação que utiliza duas mãos se for uma ele
+pode utilizar a outra mão não mão da arma".
+
+- Interação de **uma mão** (pegar objeto pequeno, abrir porta, apertar interruptor) usa a **mão livre** (a esquerda, não a da arma); a arma continua na mão.
+- Interação de **duas mãos** (carregar objeto grande, empurrar, escalar, item de duas mãos) primeiro **guarda a arma** no lugar do corpo que a aceita (coldre na cintura para pistola,
+  bandoleira/costas para fuzil); **sem lugar que sirva, a arma cai no chão** como item físico que se pega de novo.
+- Arma de **duas mãos** (fuzil, espingarda) não deixa mão livre: qualquer interação a guarda (se houver bandoleira) ou a solta.
+- No fim da interação a arma guardada **volta à mão**; a que caiu fica no chão.
+
+Onde mora: a regra pura em `game-player` (`planHands`, `drawBackOf`, `interactionHandsFor`), as mãos e o lugar de cada arma em `game-weapons` (`rules.hands`, `weaponHandsOf`); a cola da
+sala em `game-test-room/src/held-hands.ts` (pegar/carregar e empurrar; `TestRoomOptions.bodySlots`, padrão `['hip']`). Na T1.8 (pegar e arremessar) a cola vai junto para
+`game-kit-defaults/player` (`hold.ts`).

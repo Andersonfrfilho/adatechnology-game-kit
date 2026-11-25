@@ -271,6 +271,13 @@ optic that is fitted over `aimSeconds`), and only when the click lands on the ro
 a throwable) leaves the button to the room, which grabs with it. The bench's **Supported** switch (`supported_stance`) puts the weapon in the supported stance (deployed or prone), so the bipod effect can be exercised;
 it goes back off when another tool is taken. The laser measures its distance at most 30 times a second and ignores hidden nodes (a hidden ancestor counts) and the weapon in the hands.
 
+### The hands a weapon takes and where it goes
+
+`rules.hands` says how many hands each weapon takes and where on the body it goes when the hands are wanted for something else: `twoHanded` (by category: the SMGs, rifles, carbines,
+shotguns, launchers, bows, the extinguisher; by id: the flamethrower; or a `two_handed` tag) unless it goes one in each hand (`dualWield`), `slots` by category (`hip`: a holster for the
+handguns, knives, tools and throwables; `back`: a sling for the long guns), `weaponSlots` by id over it, and `bare` (the kick, the shove, the fists: nothing in the hand).
+`weaponHandsOf(arsenal, id)` answers `{ hands: 0 | 1 | 2, slot }`; `planHands` of `@adatechnology/game-player` turns it into what happens to the weapon (decision of the owner, 2026-11-24).
+
 ### A weapon in each hand
 
 `rules.dualWield` says which weapons go one in each hand and what that costs: `categories` (`pistol`, `revolver`), `weapons` (the Mini Uzi, Uzi, MAC-10, vz. 61, MP7, the knives, the

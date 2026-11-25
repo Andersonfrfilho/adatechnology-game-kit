@@ -87,3 +87,11 @@ The walk with the piece speeds up and brakes like a person's (`accel`: the force
 ## Opening doors by hand
 
 `createDoorUse(rules?)` is the logic of working a door, lid or drawer by hand: `begin({ opening, massKg, locked })` answers where the leaf goes (1 open, 0 closed; a second `begin` in the middle of a swing turns it round) or null for a locked leaf, which only rattles. `step(dt, isFree, hand?)` then goes through `reach` (the hand to the handle), `swing` (the leaf follows the hand, a little at a time so it stops at the first thing in its way, `block: 'obstacle'`) and `release`. The player does not follow the leaf: when `hand.reaches()` says the handle left the arm (`DOOR_ARM_REACH` from the shoulder), a leaf that goes away gets a shove (`push`, `hand.pull` false) and one that comes toward the body is let go (`release`), and the leaf finishes on its own to its goal. A heavier leaf swings slower (`swingSecondsFor`); every number is in `DoorUseRules` (`DOOR_USE_DEFAULTS`).
+
+## The hands and the weapon
+
+`planHands({ hands, weapons: { R, L }, slots })` is the owner's rule (2026-11-24): an interaction of one hand (a small thing picked up, a door, a switch) takes the free hand, not the
+weapon hand, and the weapon stays in its hand; one of both hands (a big thing carried, a push, a climb) first puts the weapon away in a slot the body wears that takes it (a holster at
+the hip for a pistol, a sling on the back for a rifle) and, with none, drops it to the ground. A two-handed weapon (a rifle, a shotgun) leaves no hand free, so any interaction puts it
+away or drops it. `drawBackOf(plan)` says what comes back to the hands when the interaction ends: what was put away, never what fell. `interactionHandsFor({ massKg, size })` says
+whether a thing goes in one hand (up to 4 kg and 0.7 m, `HANDS_DEFAULTS`). The hands and slot of each weapon come from `weaponHandsOf` of `@adatechnology/game-weapons`.

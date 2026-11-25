@@ -123,3 +123,5 @@ um a um, pane, desobstruir), calor do cano, ruído do Arsenal 150 / 300 / 420 / 
 - Modelos 3D, animação por família e a área com todas as armas (T1.2 a T1.4). Entrou na T1.5: lançador completo, arremessáveis, cargas postas, lança-chamas e a cadeia dos explosivos do mundo.
 - (Feito na T1.3) Teclas X (desobstruir) e B (trava) na sala; a sala usa as panes da regra. Y detona as cargas postas (T1.6).
 - Força de penetração por calibre, para o dano em corpos (P7). O jogo passa a atirar por este pacote (A12).
+
+- `weaponHandsOf(arsenal, id)` → `{ hands: 0|1|2, slot }` (`rules.hands`: duas mãos por categoria/id/tag `two_handed`, lugar no corpo `hip`/`back`); a regra de mãos e coldre é `planHands` do `game-player`.

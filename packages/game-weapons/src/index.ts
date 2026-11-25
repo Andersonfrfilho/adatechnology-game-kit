@@ -23,6 +23,8 @@ export type { MuzzleSmokeProfile, MuzzleSmokeProfileId, MuzzleSmokeParams } from
 export type * from './types'
 export { aimZoomOf } from './aim-zoom'
 export { canDualWield } from './dual-wield'
+export { weaponHandsOf } from './weapon-hands'
+export type { WeaponHands } from './weapon-hands'
 export { weaponMenu, WEAPON_MENU_GROUPS } from './menu'
 export { genericWeapons, realLoadout } from './generics'
 export type { WeaponMenuEntry, WeaponMenuGroup, WeaponMenuGroupDef, WeaponMenuOptions, WeaponMenuSection } from './menu'
