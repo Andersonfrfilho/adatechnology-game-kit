@@ -7,12 +7,15 @@ import { mix, shade } from '../util'
 type Side = 'left' | 'right'
 const sideOf = (c: Ctx, fallback: Side): Side => c.M.hinge ?? fallback
 
-/** Thin ledge tray on the inside of a door, with a front lip. Drawn inside a part. */
+/** Thin ledge tray on the inside of a door, with a front lip. Drawn inside a part. Lip, sides and floor split the volume (no shared faces)
+ * and end 2 mm into the door lining, which sits 4 mm proud of the door's inner face. */
 function doorLedge(c: Ctx, x0: number, x1: number, y: number, zIn: number, depth: number, color: number): void {
-  c.b('plain', x0, y, zIn - depth, x1, y + 0.008, zIn, color)
-  c.b('plain', x0, y, zIn - depth, x1, y + 0.05, zIn - depth + 0.008, mix(color, 0xffffff, 0.3))
-  c.b('plain', x0, y, zIn - depth, x0 + 0.008, y + 0.05, zIn, mix(color, 0xffffff, 0.3))
-  c.b('plain', x1 - 0.008, y, zIn - depth, x1, y + 0.05, zIn, mix(color, 0xffffff, 0.3))
+  const zLip = zIn - depth + 0.008
+  const zEnd = zIn - 0.002
+  c.b('plain', x0 + 0.008, y, zLip, x1 - 0.008, y + 0.008, zEnd, color)
+  c.b('plain', x0, y, zIn - depth, x1, y + 0.05, zLip, mix(color, 0xffffff, 0.3))
+  c.b('plain', x0, y, zLip, x0 + 0.008, y + 0.05, zEnd, mix(color, 0xffffff, 0.3))
+  c.b('plain', x1 - 0.008, y, zLip, x1, y + 0.05, zEnd, mix(color, 0xffffff, 0.3))
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -33,7 +36,7 @@ export function fridge(c: Ctx): void {
   c.b('plain', -hw + 0.03, 0, -hd + 0.03, hw - 0.03, 0.05, zb - 0.04, 0x2c2e30)
   // divider between the compartments
   const yd = h - fh - 0.04
-  c.b('plain', sh.ix0, yd, sh.iz0, sh.ix1, yd + 0.04, zb, shade(body, 0.92))
+  c.b('plain', sh.ix0 + 0.003, yd, sh.iz0, sh.ix1 - 0.003, yd + 0.04, zb, shade(body, 0.92)) // ends on the side linings, not inside them
   c.b('plain', sh.ix0 + 0.003, yd - 0.003, sh.iz0 + 0.003, sh.ix1 - 0.003, yd, zb, lining)
   c.b('plain', sh.ix0 + 0.003, yd + 0.04, sh.iz0 + 0.003, sh.ix1 - 0.003, yd + 0.043, zb, lining)
   const fy0 = sh.iy0
@@ -42,7 +45,7 @@ export function fridge(c: Ctx): void {
   const levels = [fy0, fy0 + 0.28, fy0 + 0.56, fy0 + 0.84]
   for (const y of levels.slice(1)) {
     shelf(c, sh.ix0 + 0.004, sh.ix1 - 0.004, y, sh.iz0 + 0.01, sz1, 0xcfe6ea, 0.016, true)
-    for (const s of [-1, 1]) c.b('plain', s < 0 ? sh.ix0 : sh.ix1 - 0.012, y - 0.03, sh.iz0 + 0.01, s < 0 ? sh.ix0 + 0.012 : sh.ix1, y - 0.006, sz1 - 0.02, 0xe4eef0)
+    for (const s of [-1, 1]) c.b('plain', s < 0 ? sh.ix0 + 0.003 : sh.ix1 - 0.012, y - 0.03, sh.iz0 + 0.01, s < 0 ? sh.ix0 + 0.012 : sh.ix1 - 0.003, y - 0.006, sz1 - 0.02, 0xe4eef0)
   }
   // a crisper bin on the floor, left side (static decoration, low)
   const slotsF = levels.flatMap((y) => c.row(sh.ix0 + 0.02, sh.ix1 - 0.02, y + (y === fy0 ? 0.003 : 0), (sh.iz0 + 0.03 + sz1) / 2, 2, [0.3, 0.26, 0.3]))
@@ -91,7 +94,7 @@ export function fridgeCompact(c: Ctx): void {
   c.b('plain', -hw + 0.03, 0, -hd + 0.03, hw - 0.03, 0.04, zb - 0.04, 0x2c2e30)
   const fz = 0.2 // freezer compartment height
   const yd = h - fz - 0.03
-  c.b('plain', sh.ix0, yd, sh.iz0, sh.ix1, yd + 0.03, zb, shade(body, 0.92))
+  c.b('plain', sh.ix0 + 0.003, yd, sh.iz0, sh.ix1 - 0.003, yd + 0.03, zb, shade(body, 0.92)) // ends on the side linings, not inside them
   c.b('plain', sh.ix0 + 0.003, yd - 0.003, sh.iz0 + 0.003, sh.ix1 - 0.003, yd, zb, lining)
   const fy0 = sh.iy0
   const sz1 = zdi - 0.1
@@ -158,7 +161,7 @@ export function kitchenCabinetBase(c: Ctx): void {
   const info = drawer(c, { id: 'drawer', x0: -hw + 0.003, x1: hw - 0.003, y0: yDr, y1: top - 0.003, zf, zb: sh.iz0, color: front, handle: 'bar_h', handleLen: 0.18 })
   const midY = (0.1 + yDr) / 2
   const shelfY = midY
-  shelf(c, sh.ix0, sh.ix1, shelfY, sh.iz0, sh.iz1 - 0.02, body)
+  shelf(c, sh.ix0 + 0.003, sh.ix1 - 0.003, shelfY, sh.iz0, sh.iz1 - 0.02, body)
   const zc = (sh.iz0 + sh.iz1 - 0.02) / 2
   const n = c.w >= 0.6 ? 2 : 1
   const ids = doorsAcross(c, { x0: -hw + 0.003, x1: hw - 0.003, y0: 0.103, y1: yDr - 0.003, zf, t, color: front, inner: lining, handle: 'bar_v', side: sideOf(c, 'left') })
@@ -184,7 +187,7 @@ export function kitchenCabinetWall(c: Ctx): void {
   const y1 = y0 + h
   const sh = shell(c, { x0: -hw, x1: hw, y0, y1, z0: -hd, z1: zr, color: body, inner: lining, t: 0.018 })
   const shelfY = y0 + h / 2
-  shelf(c, sh.ix0, sh.ix1, shelfY, sh.iz0, sh.iz1 - 0.02, body)
+  shelf(c, sh.ix0 + 0.003, sh.ix1 - 0.003, shelfY, sh.iz0, sh.iz1 - 0.02, body)
   const n = c.w >= 0.6 ? 2 : 1
   const ids = doorsAcross(c, { x0: -hw + 0.003, x1: hw - 0.003, y0: y0 + 0.003, y1: y1 - 0.003, zf, t, color: front, inner: lining, handle: 'knob', side: sideOf(c, 'left') })
   const zc = (sh.iz0 + sh.iz1 - 0.02) / 2
@@ -208,7 +211,7 @@ export function pantry(c: Ctx): void {
   const sh = shell(c, { x0: -hw, x1: hw, y0: 0.08, y1: h, z0: -hd, z1: zr, color: body, inner: lining, t: 0.018, material: garage ? 'metal' : 'wood' })
   c.b('wood', -hw + 0.01, 0, -hd + 0.03, hw - 0.01, 0.08, zr - 0.04, 0x3a3836)
   const ys = [0.45, 0.8, 1.15, 1.5, 1.85].filter((y) => y < h - 0.2)
-  for (const y of ys) shelf(c, sh.ix0, sh.ix1, y, sh.iz0, sh.iz1 - (garage ? 0.02 : 0.025), body)
+  for (const y of ys) shelf(c, sh.ix0 + 0.003, sh.ix1 - 0.003, y, sh.iz0, sh.iz1 - (garage ? 0.02 : 0.025), body)
   const dmax = sh.iz1 - 0.03 - sh.iz0 - 0.05
   const zc = (sh.iz0 + sh.iz1 - 0.03) / 2
   const levels = [sh.iy0, ...ys]
@@ -237,19 +240,19 @@ export function wardrobe(c: Ctx): void {
   const sh = shell(c, { x0: -hw, x1: hw, y0: 0.1, y1: h, z0: -hd, z1: zr, color: body, inner: lining, t: 0.02, tBack: 0.012 })
   c.b('wood', -hw + 0.01, 0, -hd + 0.03, hw - 0.01, 0.1, zr - 0.04, 0x3a3836)
   const yBoard = 0.372
-  c.b('wood', sh.ix0, yBoard, sh.iz0, sh.ix1, yBoard + 0.018, sh.iz1, shade(body, 0.95)) // floor of the hanging space
-  c.b('plain', sh.ix0, yBoard + 0.018, sh.iz0, sh.ix1, yBoard + 0.021, sh.iz1, lining)
+  c.b('wood', sh.ix0 + 0.003, yBoard, sh.iz0, sh.ix1 - 0.003, yBoard + 0.018, sh.iz1, shade(body, 0.95)) // floor of the hanging space, on the side linings
+  c.b('plain', sh.ix0 + 0.003, yBoard + 0.018, sh.iz0, sh.ix1 - 0.003, yBoard + 0.021, sh.iz1, lining)
   const gap = 0.003
   const dw = (c.w - 0.006 - gap * (n - 1)) / n
   const dx = (i: number) => -hw + 0.003 + i * (dw + gap)
   const xs = dx(n - 1) - gap / 2 // start of the shelf section
   // vertical divider
-  c.b('wood', xs - 0.009, yBoard + 0.018, sh.iz0, xs + 0.009, sh.iy1, sh.iz1 - 0.02, shade(body, 0.95))
+  c.b('wood', xs - 0.009, yBoard + 0.021, sh.iz0, xs + 0.009, sh.iy1, sh.iz1 - 0.02, shade(body, 0.95)) // stands on the floor's lining
   // hanging rod with clothes
   const rodY = Math.min(1.82, h - 0.28)
   const zc = (sh.iz0 + sh.iz1) / 2 - 0.02
-  c.rod('metal', 'x', (sh.ix0 + xs - 0.009) / 2, rodY, zc, 0.0125, xs - 0.009 - sh.ix0, 0xb4b8bc)
-  for (const x of [sh.ix0 + 0.01, xs - 0.02]) c.b('metal', x - 0.01, rodY - 0.03, zc - 0.03, x + 0.01, rodY + 0.03, zc + 0.03, 0x8c9096)
+  c.rod('metal', 'x', (sh.ix0 + 0.003 + xs - 0.009) / 2, rodY, zc, 0.0125, xs - 0.009 - sh.ix0 - 0.003, 0xb4b8bc) // from the side lining to the divider
+  for (const x of [sh.ix0 + 0.013, xs - 0.02]) c.b('metal', x - 0.01, rodY - 0.03, zc - 0.03, x + 0.01, rodY + 0.03, zc + 0.03, 0x8c9096)
   const span = xs - 0.009 - sh.ix0 - 0.1
   const count = Math.max(4, Math.floor(span / 0.07))
   const palette = [0x3a5a8a, 0xa84a3a, 0x4a7a4a, 0xd8d0c0, 0x2a2a30, 0x8a6a9a, 0xc8a040]
@@ -267,7 +270,7 @@ export function wardrobe(c: Ctx): void {
   }
   // shelves in the last door's section
   const sy = [0.7, 1.05, 1.4, 1.75].filter((y) => y < h - 0.2)
-  for (const y of sy) shelf(c, xs + 0.009, sh.ix1, y, sh.iz0, sh.iz1 - 0.02, body)
+  for (const y of sy) shelf(c, xs + 0.009, sh.ix1 - 0.003, y, sh.iz0, sh.iz1 - 0.02, body)
   const levels = [yBoard + 0.021, ...sy]
   const cols = sh.ix1 - (xs + 0.02) >= 0.3 ? 2 : 1 // a narrow shelf section holds one column, not two slivers
   const shelfSlots = levels
@@ -378,7 +381,7 @@ export function bathroomCabinet(c: Ctx): void {
   const y1 = y0 + h
   const sh = shell(c, { x0: -hw, x1: hw, y0, y1, z0: -hd, z1: zf - t - 0.003, color: body, inner: lining, t: 0.015, tBack: 0.01, material: 'plain' })
   const shelfYs = [y0 + h / 3, y0 + (2 * h) / 3]
-  for (const y of shelfYs) shelf(c, sh.ix0, sh.ix1, y, sh.iz0, sh.iz1 - 0.01, 0xcfe6ea, 0.016, true)
+  for (const y of shelfYs) shelf(c, sh.ix0 + 0.003, sh.ix1 - 0.003, y, sh.iz0, sh.iz1 - 0.01, 0xcfe6ea, 0.016, true)
   const levels = [sh.iy0, ...shelfYs]
   const zc = (sh.iz0 + sh.iz1) / 2
   const slots = levels.flatMap((y, i) => c.row(sh.ix0 + 0.01, sh.ix1 - 0.01, y, zc, 4, [0.12, (i < levels.length - 1 ? levels[i + 1] - y : sh.iy1 - y) - 0.025, sh.iz1 - sh.iz0 - 0.03]))

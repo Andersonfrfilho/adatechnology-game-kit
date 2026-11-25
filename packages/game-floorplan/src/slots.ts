@@ -50,6 +50,7 @@ export function resolveSlots(plan: Plan): Slot[] {
     for (const def of defs) {
       const s = resolveSlot(plan, room, def, byId, zones)
       byId[def.id] = s
+      if (s.valid && def.group && !byId[def.group]) byId[def.group] = s
       all.push(s)
     }
   }
@@ -81,7 +82,7 @@ export function resolveSlot(plan: Plan, room: Room, def: SlotDef, byId: Record<s
     reason: null,
   }
   const invalid = (m: string): Slot => Object.assign(base, { valid: false, reason: m, x: 0, z: 0, ry: 0, w: 0, d: 0, frontU: 0, frontV: 1, aabb: [0, 0, 0, 0], _cell: null }) as Slot
-  if (def.anchor === 'on' || def.anchor === 'inside') {
+  if (def.anchor === 'on' || def.anchor === 'inside' || def.anchor === 'beside') {
     const parent = def.parent ? byId[def.parent] : undefined
     if (!parent || !parent.valid) return invalid('invalid_parent')
     return Object.assign(base, { x: parent.x, z: parent.z, ry: parent.ry, w: parent.w, d: parent.d, frontU: parent.frontU, frontV: parent.frontV, aabb: parent.aabb, _cell: parent._cell }) as Slot

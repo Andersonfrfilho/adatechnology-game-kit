@@ -7,6 +7,10 @@ import { alongRange, outwardOf, round2 } from './shared'
 import { atDoor, hasWindowAt, wallPointsOf } from './wall-points'
 import type { WallPoint } from './wall-points'
 import type { Circuit, Point3, WallFixture } from './types'
+import { clashes, panelBox, plateBox, spotOf, wallItemBoxesOf } from './wall-reservations'
+
+/** Height of a light switch over the floor, metres. */
+const SWITCH_HEIGHT = 1.1
 
 const LAMP_CATEGORIES = ['ceiling_light', 'lamp', 'table_light']
 
@@ -23,11 +27,16 @@ export function addSwitches(layout: Layout): void {
       .filter((p) => p.floor === room.floor && (p.a === room.id || p.b === room.id))
       .sort((a, b) => (a.opensTo === room.id ? 0 : 1) - (b.opensTo === room.id ? 0 : 1) || (a.width < b.width ? 1 : -1))
     const points = wallPointsOf(plan, room, items, 0.12)
+    // the switch keeps clear of the panel with its door open and of what hangs on the wall
+    const panel = electrical.panel
+    const taken = wallItemBoxesOf(items, room.floor).concat(panel && panel.floor === room.floor ? [panelBox(panel, panel.y)] : [])
+    // (the Visor de casas 3D placed its switches without looking at the wall: its golden keeps that)
+    const free = (q: WallPoint): boolean => !!layout.visor || !taken.some((box) => clashes(box, plateBox(spotOf(q), SWITCH_HEIGHT)))
     for (const tolerance of [0.16, 0.3]) {
       for (const d of doors) {
         for (const direction of [1, -1]) {
           const target = d.at + direction * (d.width / 2 + 0.18)
-          const point = points.filter((q) => q.axis === d.axis && Math.abs(q.pos - d.pos) < 1e-3 && !hasWindowAt(q, 1.1, 0.2)).sort((a, b) => Math.abs(a.c - target) - Math.abs(b.c - target))[0]
+          const point = points.filter((q) => q.axis === d.axis && Math.abs(q.pos - d.pos) < 1e-3 && !hasWindowAt(q, SWITCH_HEIGHT, 0.2) && free(q)).sort((a, b) => Math.abs(a.c - target) - Math.abs(b.c - target))[0]
           if (point && Math.abs(point.c - target) <= tolerance && !atDoor(plan, room, point, 0.0) && Math.abs(point.c - d.at) >= d.width / 2 + 0.12) return { point, door: d, latch: direction === 1 }
         }
       }
@@ -42,7 +51,7 @@ export function addSwitches(layout: Layout): void {
     const found = positionFor(room)
     if (!found) continue
     const p = found.point
-    electrical.switches.push({ id: `switch${++counter}`, room: room.id, floor: room.floor, u: p.u, v: p.v, y: 1.1, c: p.c, axis: p.axis, pos: p.pos, frontU: p.nu, frontV: p.nv, door: found.door.id, latchSide: found.latch, controls: roomLamps.map((m) => m.id).concat(extra) })
+    electrical.switches.push({ id: `switch${++counter}`, room: room.id, floor: room.floor, u: p.u, v: p.v, y: SWITCH_HEIGHT, c: p.c, axis: p.axis, pos: p.pos, frontU: p.nu, frontV: p.nv, door: found.door.id, latchSide: found.latch, controls: roomLamps.map((m) => m.id).concat(extra) })
   }
   if (door && plan.lot) {
     const id = `outdoor_${door.id}`

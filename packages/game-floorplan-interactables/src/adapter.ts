@@ -55,6 +55,9 @@ import type {
   WaterNetwork,
 } from './types.js'
 
+/** Height of the worktop of the kitchen sink (`sink_kitchen` of game-interactables-household draws it at 0.9 m whatever its box): the base cabinet beside it shares it, never higher. */
+const KITCHEN_SINK_WORKTOP = 0.9
+
 /** The plan as the adapter reads it. A `generate` result carries its extensions (`utilities`, `contents`, `structureExtras`) as unknown fields; their shape is the one
  * the structure pack and the finds provider write, so the boundary is here. */
 const sourceOf = (result: SourcePlan): AdapterSource => result as AdapterSource
@@ -525,7 +528,7 @@ export function create(options: AdapterOptions = {}): FloorplanAdapter {
         list.push(sink)
         let cabinet: PlanEntry | null = null
         if (rest >= 0.35) {
-          cabinet = part(m.id + '#cabinet', 'kitchen_cabinet_base', rest, m.d, m.h, 0, left ? width / 2 - rest / 2 : -(width / 2) + rest / 2, 0)
+          cabinet = part(m.id + '#cabinet', 'kitchen_cabinet_base', rest, m.d, opts.visor ? m.h : KITCHEN_SINK_WORKTOP, 0, left ? width / 2 - rest / 2 : -(width / 2) + rest / 2, 0)
           list.push(cabinet)
         }
         if (contents[m.id]) store(cabinet ? [['kitchen_cabinet_base', cabinet.item], ['sink_kitchen', sink.item]] : [['sink_kitchen', sink.item]], contents[m.id])

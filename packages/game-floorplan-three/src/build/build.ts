@@ -125,7 +125,8 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         shared.ctx.apartment = r.template === 'apartment_modern'; shared.ctx.pa = Math.max(3, Math.min(20, pr.floors != null ? pr.floors : 5)); shared.ctx.pf = Math.max(1, Math.min(shared.ctx.pa, pr.floor != null ? pr.floor : 3)); shared.ctx.pu = Math.max(0, pr.unit != null ? pr.unit : 0);
         shared.ctx.showBuilding = shared.ctx.apartment && (pr.showIt == null ? true : !!pr.showIt);
         shared.ctx.limits = { x0: -2, z0: -2, x1: r.w + 2, z1: r.d + 2 };
-        shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { quality: 'high', lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
+        shared.ctx.veg = VEG ? { G: VEG.G, S: VEG.S, mats: vegMaterials, groups: new Map(), ok: new Map(), sizes: new Map(), opts: shared.quality === 'game' ? { quality: 'game' } : { quality: 'high', lod: 0, triangleBudget: 60000 } } : null; shared.ctx.vegInfo = null;
+        shared.ctx.itemBounds = opts.itemBounds ? [] : undefined; shared.ctx.cordPaths = opts.itemBounds ? [] : undefined;
         const cs = !!(opts.constructionStages || opts.constructionLevel != null);
         shared.ctx.constructionStages = cs;
         if (Y0(0) > 0 && !shared.ctx.visorScene) shared.ctx.unitGround = Y0(0); // (a unit standing in its block)

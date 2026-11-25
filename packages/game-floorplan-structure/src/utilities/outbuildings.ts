@@ -83,18 +83,51 @@ function wallsOf(box: Rect, height: number, cutAt: OutbuildingOpening | null): O
   return walls
 }
 
+/** Gap between a nightstand and the bed it stands beside, metres. */
+const BESIDE_BED_GAP = 0.03
+
+const insideRect = (box: Rect, interior: Rect): boolean => box[0] >= interior[0] - 0.011 && box[2] <= interior[2] + 0.011 && box[1] >= interior[1] - 0.011 && box[3] <= interior[3] + 0.011
+
+/** The strip in front of an item that its doors or drawers open into (`opening` of the catalogue), or `null` for an item without one. */
+function frontStrip(box: Rect, facing: [number, number], depth: number | undefined): Rect | null {
+  if (!depth) return null
+  if (facing[1] !== 0) return facing[1] > 0 ? [box[0], box[3], box[2], box[3] + depth] : [box[0], box[1] - depth, box[2], box[1]]
+  return facing[0] > 0 ? [box[2], box[1], box[2] + depth, box[3]] : [box[0] - depth, box[1], box[0], box[3]]
+}
+
+/**
+ * Where each item of the use may stand, `[a, b]` in the frame with its facing, in the order to try: the first item backed on the back wall; a nightstand
+ * beside the head of the bed, backed on the same wall and facing the room as the bed does (its drawer opens to the free side); anything else against
+ * the side wall, facing the middle.
+ */
+function spotsFor(context: OutbuildingContext, frame: Frame, def: FurnitureDef, k: number, placed: readonly OutbuildingItem[]): { a: number; b: number; facing: [number, number] }[] {
+  const back = -frame.depth / 2 + WALL + def.d / 2
+  if (k === 0) return [{ a: back, b: frame.sideToMiddle * -0.4, facing: frame.n }]
+  const bed = placed[0]
+  if (def.category === 'nightstand' && bed?.category === 'bed' && !context.visor) {
+    const bedB = (bed.u - frame.cx) * frame.t[0] + (bed.v - frame.cz) * frame.t[1]
+    const offset = bed.w / 2 + BESIDE_BED_GAP + def.w / 2
+    return [-frame.sideToMiddle, frame.sideToMiddle].map((side) => ({ a: back, b: bedB + side * offset, facing: frame.n }))
+  }
+  return [{ a: -0.1, b: -frame.sideToMiddle * (frame.width / 2 - WALL - def.d / 2), facing: [frame.t[0] * frame.sideToMiddle, frame.t[1] * frame.sideToMiddle] }]
+}
+
 function furnish(context: OutbuildingContext, frame: Frame, use: string, interior: Rect, insideDoor: Rect): OutbuildingItem[] {
   const placed: OutbuildingItem[] = []
   USES[use]!.forEach((type, k) => {
     const def = context.catalog[type]!
-    const facing: [number, number] = k === 0 ? frame.n : [frame.t[0] * frame.sideToMiddle, frame.t[1] * frame.sideToMiddle]
-    const [a, b] = k === 0 ? [-frame.depth / 2 + WALL + def.d / 2, frame.sideToMiddle * -0.4] : [-0.1, -frame.sideToMiddle * (frame.width / 2 - WALL - def.d / 2)]
-    const [u, v] = at(frame, a, b)
-    const eu = Math.abs(facing[0]) === 1 ? def.d : def.w
-    const ev = Math.abs(facing[0]) === 1 ? def.w : def.d
-    const box = [u - eu / 2, v - ev / 2, u + eu / 2, v + ev / 2].map(round2) as Rect
-    if (box[0] < interior[0] - 0.011 || box[2] > interior[2] + 0.011 || box[1] < interior[1] - 0.011 || box[3] > interior[3] + 0.011 || overlaps(box, insideDoor) || placed.some((o) => overlaps(box, o.aabb))) return
-    placed.push({ type, category: def.category, u: round2(u), v: round2(v), w: def.w, d: def.d, h: def.h, ry: Math.atan2(facing[0], facing[1]), frontU: facing[0], frontV: facing[1], aabb: box })
+    for (const { a, b, facing } of spotsFor(context, frame, def, k, placed)) {
+      const [u, v] = at(frame, a, b)
+      const eu = Math.abs(facing[0]) === 1 ? def.d : def.w
+      const ev = Math.abs(facing[0]) === 1 ? def.w : def.d
+      const box = [u - eu / 2, v - ev / 2, u + eu / 2, v + ev / 2].map(round2) as Rect
+      if (!insideRect(box, interior) || overlaps(box, insideDoor) || placed.some((o) => overlaps(box, o.aabb))) continue
+      // the doors and drawers open into free room: inside the walls, clear of the furniture and of the way in
+      const strip = context.visor ? null : frontStrip(box, facing, def.opening) // (the Visor de casas 3D's golden keeps its furniture where it put it)
+      if (strip && (!insideRect(strip, interior) || overlaps(strip, insideDoor) || placed.some((o) => overlaps(strip, o.aabb, 0.011)))) continue
+      placed.push({ type, category: def.category, u: round2(u), v: round2(v), w: def.w, d: def.d, h: def.h, ry: Math.atan2(facing[0], facing[1]), frontU: facing[0], frontV: facing[1], aabb: box })
+      return
+    }
   })
   return placed
 }

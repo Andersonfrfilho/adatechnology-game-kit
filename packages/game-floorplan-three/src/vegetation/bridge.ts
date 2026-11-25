@@ -4,6 +4,11 @@ import type { LotColliderData } from '@adatechnology/game-vegetation';
 import { isMesh } from '@adatechnology/game-shapes-three';
 import type { HouseItem, Kernel, KernelVegetationBridge, Mount, Shared, VegetationContext } from '../kernel-types.js';
 
+/** The radius a species' crown is measured at is taken this much larger: the lot's level of detail draws it a little apart from the measured one. */
+const PLANT_RADIUS_MARGIN = 1.08;
+/** Under this scale a species is not shrunk to fit: a palm a third of its size is no palm. */
+const PLANT_MIN_SCALE = 0.4;
+
 export function installVegetationBridge(K: Kernel, shared: Shared): void {
   const seedKey = (id: unknown): unknown => K.seedKey(id);
   const { THREE, SEED, rngString } = K;
@@ -11,7 +16,7 @@ export function installVegetationBridge(K: Kernel, shared: Shared): void {
   const VEG_POT = ['potted_areca', 'potted_snake_plant', 'potted_fern'], VEG_CACTUS: Record<string, string> = { cactus_mandacaru: 'mandacaru', cactus_palm: 'prickly_pear', cactus_crown: 'crown_cactus', cactus_xique: 'xique_xique', cactus_pot: 'potted_cactus' };
   const VEG_MAP: Record<string, string[]> = {
     tree_small: ['guava_tree', 'lemon_tree', 'pitanga_bush_tree'], tree_large: ['mango_tree', 'oak_like'], fruit_tree: ['mango_tree', 'avocado_tree', 'lemon_tree', 'jabuticaba_tree'], palm_tree: ['coconut_palm'],
-    shrub: ['generic_round_shrub'], flowering_shrub: ['hibiscus_shrub', 'azalea', 'croton'], floor_plant_tall: VEG_POT, floor_plant: VEG_POT, outdoor_pot: VEG_POT, toilet: VEG_POT, floor_plant_low: ['potted_succulents', 'potted_cactus'], table_plant: ['potted_succulents', 'potted_cactus'],
+    shrub: ['generic_round_shrub'], flowering_shrub: ['hibiscus_shrub', 'azalea', 'croton'], floor_plant_tall: VEG_POT, floor_plant: VEG_POT, outdoor_pot: VEG_POT, floor_plant_low: ['potted_succulents', 'potted_cactus'], table_plant: ['potted_succulents', 'potted_cactus'],
     clump: ['lawn_tuft'], banana_plant: ['banana_with_bunch'], ipe_tree: ['yellow_ipe', 'pink_ipe'], climber: ['bougainvillea_vine', 'ivy'], hedge: ['boxwood_hedge', 'ixora_hedge'],
   };
   for (const k of Object.keys(VEG_CACTUS)) VEG_MAP[k] = [VEG_CACTUS[k]];
@@ -29,7 +34,31 @@ export function installVegetationBridge(K: Kernel, shared: Shared): void {
     }
     const lst = ids.filter(ok); if (!lst.length) return false;
     if (m.type === 'hedge') { const n = Math.max(1, Math.round((M.w || 1) / 0.55)), c = Math.cos(M.ry || 0), sn = Math.sin(M.ry || 0), id = pick(lst); for (let i = 0; i < n; i++) { const lx = -M.w / 2 + (i + 0.5) * M.w / n; G.pl.push({ species: id, x: M.x + lx * c, z: M.z - lx * sn, ry: M.ry || 0, scale: 1, seed: sd + i }); } return true; }
-    G.pl.push({ species: pick(lst), x: M.x, z: M.z, ry: M.ry || 0, scale: 1, seed: sd }); return true;
+    if (M.reach != null) { // (a plant with no room for any of its species is left out)
+      const fit = fitted(V, lst, pick(lst), sd, M.reach); if (!fit) return true;
+      G.pl.push({ species: fit.species, x: M.x, z: M.z, ry: M.ry || 0, scale: fit.scale, seed: sd });
+      const r = fit.radius * fit.scale; shared.ctx.itemBounds?.push({ id: m.id, type: m.type, category: m.category ?? null, room: m.room ?? null, floor: m.floor, by: 'vegetation', box: [M.x - r, y, M.z - r, M.x + r, y + fit.height * fit.scale, M.z + r] });
+      return true;
+    }
+    const species = pick(lst); G.pl.push({ species, x: M.x, z: M.z, ry: M.ry || 0, scale: 1, seed: sd });
+    if (shared.ctx.itemBounds) { const size = speciesSize(V, species, sd); shared.ctx.itemBounds.push({ id: m.id, type: m.type, category: m.category ?? null, room: m.room ?? null, floor: m.floor, by: 'vegetation', box: [M.x - size.radius, y, M.z - size.radius, M.x + size.radius, y + size.height, M.z + size.radius] }); }
+    return true;
+  }
+  // the crown radius and height (m) of a species at full size
+  function speciesSize(V: VegetationContext, id: string, seed: number): { radius: number; height: number } {
+    const key = id + '|' + seed; let r = V.sizes.get(key); if (!r) { r = V.G.generate ? V.G.generate(V.S.toSpec(id), { seed }).bounds : { radius: 0, height: 0 }; V.sizes.set(key, r); } return r;
+  }
+  // the species of a potted plant whose crown reaches no further than `reach` from its stem, the one picked first if it fits, scaled down to fit if none does at full size
+  // the species of a potted plant whose crown reaches no further than `reach` from its stem, the one picked first if it fits, scaled down to fit if none does at full size
+  function fitted(V: VegetationContext, species: readonly string[], first: string, seed: number, reach: number): { species: string; scale: number; radius: number; height: number } | null {
+    const sizeOf = (id: string): { radius: number; height: number } => speciesSize(V, id, seed);
+    let best: { species: string; scale: number; radius: number; height: number } | null = null;
+    for (const id of [first, ...species.filter((s) => s !== first)]) {
+      const size = sizeOf(id), r = size.radius * PLANT_RADIUS_MARGIN, scale = r > reach ? reach / r : 1;
+      if (scale === 1) return { species: id, scale, ...size };
+      if (!best || scale > best.scale) best = { species: id, scale, ...size };
+    }
+    return best && best.scale >= PLANT_MIN_SCALE ? best : null;
   }
   function assembleVegetation(groups: Record<string, THREE_NS.Group>): void { // closes the plants collected by vegItem into one merged object per group
     const V: VegetationContext | null = shared.ctx.veg; if (!V) return; let pl = 0, tri = 0; const col: (LotColliderData & { y: number; group: string })[] = [], lod = [0, 0, 0], mats = V.mats();

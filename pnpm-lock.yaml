@@ -1308,6 +1308,12 @@ importers:
       '@adatechnology/game-destruction-three':
         specifier: workspace:^
         version: link:../game-destruction-three
+      '@adatechnology/game-interactables-household':
+        specifier: workspace:^
+        version: link:../game-interactables-household
+      '@adatechnology/game-interactables-three':
+        specifier: workspace:^
+        version: link:../game-interactables-three
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods

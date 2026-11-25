@@ -6,6 +6,8 @@ export { canonicalFrame, drawShape, isShape, shade, shapeOf, SHAPES } from './sh
 export type { ShapeContext, ShapeId, ShapeSubject } from './shapes'
 export { buildItem } from './build-item'
 export type { BuildItemOptions, DrawableItem, ItemModel } from './build-item'
+export { createContainedItemModel } from './contained'
+export type { ContainedItemModel, ContainedStack } from './contained'
 export { DESTRUCTION_MATERIAL_BY_TAG, ITEM_FAMILIES, itemContents, itemDestruction, itemFamily, shapeDestruction, SHELL_PART_ID, tagForDestruction } from './destruction'
 export { itemMakeup, makeupSpec, tagMakeupParts } from './makeup'
 export type { ItemMakeup } from './makeup'

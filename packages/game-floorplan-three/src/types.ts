@@ -7,7 +7,8 @@ import type { DocumentLike, Props3d, Props3dOptions } from '@adatechnology/game-
 import type { DestructionEvent, DestructionWorld } from '@adatechnology/game-destruction'
 import type { HouseDestruction, HouseStructure } from './destruction/types.js'
 import type { FloorplanResult } from '@adatechnology/game-floorplan'
-import type { HouseDestructionRenderer } from './adapter-shapes.js'
+import type { ContainedItemModel, HouseDestructionRenderer } from './adapter-shapes.js'
+export type { ContainedItemModel }
 import type { AdapterOptions, FloorplanAdapter, HouseholdKit } from '@adatechnology/game-floorplan-interactables'
 import type { BoxCollider, BuildContext, DoorLeaf, ElectricalInfo, Eye, GutterInfo, HouseInstance, HouseInteractives, HouseLabel, HouseRecord, HouseRoom, InteractionTarget, CarModel, InteractablesRefs, KitInteractionTarget, ReflectorClass, Three, VegetationLibs, EffectLighting, MaterialTable, RoomLighting, TypeTable, InteractiveState, KitTargetOptions, LightRequest, MirrorState, SavedHouseState, SolarInfo, StairRecord, VegetationInfo, WaterApi } from './kernel-types.js'
 
@@ -47,6 +48,11 @@ export interface HouseInteractivesOptions {
   region?: AdapterOptions['region']
   /** `false`: the kit does not draw the items of the plan. */
   items?: boolean
+  /**
+   * The real model of an item in a container: `createContainedItemModel(GOODS_ITEMS)` of game-items-three (origin at the bottom centre, y up, metres).
+   * The contents hang on the part their slot rides on (a drawer, a door shelf) from the first frame it moves. Without it the contents are not drawn.
+   */
+  itemModel?: ContainedItemModel
   /** `false`: no particle effects. */
   effects?: boolean
   /** () => the host's `EffectSink`: smoke, steam, fire and sparks go through its world. */
@@ -197,6 +203,11 @@ export interface BuildOptions {
    * `'frameless'` (blindex, 8 mm tempered glass). Default: each window's own, else wood in a budget house and aluminium above it.
    */
   windowFrame?: WindowFrame
+  /**
+   * Records what each plan item was drawn as (the box of its vertices, in the house's frame) and the path of every appliance cord, in
+   * `house.internal.ctx.itemBounds` and `.cordPaths`: for tests of the layout (an item standing in a wall, a cord crossing one). Default off.
+   */
+  itemBounds?: boolean
 }
 
 /** Something the player can use, as the house publishes it: where it is, how far it reaches, its prompt and how to use it. */

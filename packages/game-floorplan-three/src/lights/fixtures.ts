@@ -119,8 +119,10 @@ export function installLightsFixtures(K: Kernel, shared: Shared): void {
   }
   function floorLamp(M: Mount, A: FurnitureApi): void { // floor lamp: base, stem and cylindrical shade
     const K = kit2(M, A, M.y || 0), color = colorTemperature(M), id = 'lamp_pe_' + M.seed, h = Math.min(1.6, M.h || 1.5), meta = { id, room: M.room, on: !!M.on, color, lightType: 'floor', hidden: !M.on };
-    K.c('metal', 0, 0, 0, 0.13, 0.025, 0x2a2a2c); K.c('metal', 0, 0.025, 0, 0.011, h - 0.3, 0x2a2a2c); K.c('plain', 0, h - 0.28, 0, 0.17, 0.26, 0xeee6d0);
-    K.part('lamp', 0, h - 0.28, 0, () => K.c('emissive', 0, h - 0.28, 0, 0.173, 0.262, color), meta);
+    // (outside the Visor's scene the shade fits the lamp's footprint: 35 cm across it stood in the wall behind a 30 cm slot)
+    const shade = M.visorScene ? 0.17 : Math.min(0.17, Math.min(M.w || 0.34, M.d || 0.34) / 2 - 0.006);
+    K.c('metal', 0, 0, 0, Math.min(0.13, shade), 0.025, 0x2a2a2c); K.c('metal', 0, 0.025, 0, 0.011, h - 0.3, 0x2a2a2c); K.c('plain', 0, h - 0.28, 0, shade, 0.26, 0xeee6d0);
+    K.part('lamp', 0, h - 0.28, 0, () => K.c('emissive', 0, h - 0.28, 0, shade + 0.003, 0.262, color), meta);
     if (M.on && A.light) A.light(Object.assign({}, M, { lampId: id }), 0, h - 0.15, 0, color, 5, 'floor');
   }
   function sconce(M: Mount, A: FurnitureApi): void { // wall lamp: plate, arm and shade; front = +z

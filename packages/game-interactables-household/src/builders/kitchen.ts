@@ -14,8 +14,8 @@ const CHROME = 0xd2d6da
  * `y` is the counter top the tap stands on.
  */
 function tap(c: Ctx, x: number, y: number, z: number, id: string, partId: string): Vec3 {
-  c.cyl('metal', x, y, z, 0.03, 0.02, STEEL, 'cyl')
-  c.cyl('metal', x, y + 0.02, z, 0.017, 0.2, CHROME, 'cyl')
+  c.cyl('metal', x, y - 0.002, z, 0.03, 0.022, STEEL, 'cyl') // sunk 2 mm, so its foot never lies on a rim or counter face
+  c.cyl('metal', x, y + 0.02, z, 0.017, 0.19, CHROME, 'cyl') // ends inside the head, not on its top
   c.cyl('metal', x, y + 0.2, z, 0.021, 0.02, STEEL, 'cyl')
   c.b('metal', x - 0.015, y + 0.205, z, x + 0.015, y + 0.235, z + 0.015, CHROME)
   c.b('metal', x - 0.014, y + 0.205, z + 0.015, x + 0.014, y + 0.235, z + 0.19, CHROME)
@@ -203,10 +203,12 @@ function counterWithBasin(c: Ctx, o: SinkOptions): void {
   const y0 = o.top - 0.04
   const zf = hd - HANDLE + 0.02
   const col = o.counter
-  c.b('wood', -hw, y0, -hd, o.bx0, o.top, zf, col)
-  c.b('wood', o.bx1, y0, -hd, hw, o.top, zf, col)
-  c.b('wood', o.bx0, y0, -hd, o.bx1, o.top, o.bz0, col)
-  c.b('wood', o.bx0, y0, o.bz1, o.bx1, o.top, zf, col)
+  // the hole is cut to the basin's outer walls (1 cm), so the basin walls' inner faces never lie on the counter's cut faces
+  const g = 0.01
+  c.b('wood', -hw, y0, -hd, o.bx0 - g, o.top, zf, col)
+  c.b('wood', o.bx1 + g, y0, -hd, hw, o.top, zf, col)
+  c.b('wood', o.bx0 - g, y0, -hd, o.bx1 + g, o.top, o.bz0 - g, col)
+  c.b('wood', o.bx0 - g, y0, o.bz1 + g, o.bx1 + g, o.top, zf, col)
   const wall = o.steel ? 0xc4c8cc : 0xf4f6f6
   const floor = o.steel ? 0xaeb2b6 : 0xe6e9ea
   const mat = o.steel ? 'metal' : 'plain'
@@ -226,10 +228,10 @@ function counterWithBasin(c: Ctx, o: SinkOptions): void {
 
 /** Drain pipe from the basin down to a trap and back to the wall. `z` is where the drain leaves the basin. */
 function pipes(c: Ctx, x: number, top: number, z: number): void {
-  const wall = -c.hd + 0.03
+  const wall = -c.hd + 0.002 // into the back panel, past the plinth's back face
   c.cyl('metal', x, 0.2, z, 0.02, top - 0.2 - 0.12, 0xc8ccd0, 'cyl6')
   c.rod('plain', 'x', x + 0.06, 0.2, z, 0.02, 0.14, 0xe8e8e8, 'cyl6')
-  c.cyl('plain', x + 0.13, 0.08, z, 0.02, 0.14, 0xe8e8e8, 'cyl6')
+  c.cyl('plain', x + 0.13, 0.07, z, 0.022, 0.15, 0xe8e8e8, 'cyl6') // trap riser: fatter than the pipes it joins, so their flats never meet
   c.rod('plain', 'z', x + 0.13, 0.09, (z + wall) / 2, 0.02, z - wall, 0xe8e8e8, 'cyl6')
 }
 
@@ -292,7 +294,7 @@ export function utilitySink(c: Ctx): void {
   const wall = 0xcfd1d0
   const bw = c.w - 0.04
   // legs and a frame
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('metal', sx * (hw - 0.04) - 0.02, 0, sz * (hd - 0.04) - 0.02, sx * (hw - 0.04) + 0.02, tubTop - 0.3, sz * (hd - 0.04) + 0.02, 0x6a6e72)
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) c.b('metal', sx * (hw - 0.04) - 0.02, 0, sz * (hd - 0.04) - 0.02, sx * (hw - 0.04) + 0.02, tubTop - 0.32, sz * (hd - 0.04) + 0.02, 0x6a6e72) // legs end inside the frame
   c.b('metal', -hw, tubTop - 0.34, -hd, hw, tubTop - 0.3, hd, 0x6a6e72)
   // deep tub: bottom, four walls, lighter inside
   const x0 = -bw / 2

@@ -31,6 +31,7 @@ import { slotKit } from './slot-kit'
 import { checkLot, defineZone, getZone, listZones, registerPermeableGround } from './zoning'
 import { overlaps, openingZones } from './geometry'
 import { blocksWindow, windowZone } from './queries'
+import { visorLayout } from './layout-mode'
 
 export { version, createFloorplan, defaultFloorplan }
 export type { CreateFloorplanOptions, FloorplanEngine, FloorplanPack }
@@ -86,6 +87,7 @@ export {
   overlaps,
   windowZone,
   openingZones,
+  visorLayout,
 }
 export type * from './types'
 export type { PaletteDraw, PaletteEarly, PaletteStyleDef } from './palette'

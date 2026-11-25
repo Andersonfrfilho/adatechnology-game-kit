@@ -36,6 +36,41 @@ export interface Failures {
   report(): string[]
 }
 
+/** How far in front of its wall a thing stands in the way of a window's curtain or blinds, metres. */
+const BEFORE_WINDOW = 0.3
+
+/** The floor an item's doors or drawers sweep in front of it (`opening` of the catalogue), or null. */
+function sweepOf(m: ResultItem): Rect | null {
+  const depth = (CATALOG[m.type] as { opening?: number } | undefined)?.opening
+  if (!depth || !m.aabb) return null
+  const [u0, v0, u1, v1] = m.aabb
+  const fu = m.frontU ?? 0
+  const fv = m.frontV ?? 1
+  return fv > 0 ? [u0, v1, u1, v1 + depth] : fv < 0 ? [u0, v0 - depth, u1, v0] : fu > 0 ? [u1, v0, u1 + depth, v1] : [u0 - depth, v0, u0, v1]
+}
+
+/** The item was dragged off to a barricade (fortified) from where it stood in `front`: the curtain was skipped for it there. */
+function stoodBefore(m: ResultItem, front: Rect): boolean {
+  const from = (m as { moved?: { from: [number, number] } }).moved?.from
+  if (!from || !m.aabb) return false
+  const half = Math.max(m.aabb[2] - m.aabb[0], m.aabb[3] - m.aabb[1]) / 2
+  return overlap([from[0] - half, from[1] - half, from[0] + half, from[1] + half], front, 0.001)
+}
+
+/**
+ * Something stands against the wall in front of the window and rises past its sill (a wardrobe, a shelf, a lamp on the nightstand), or its door swings
+ * there (a fridge beside it): the window keeps no curtain or blinds, which would hang into it.
+ */
+function standsBeforeWindow(res: Plan, j: Plan['windows'][number]): boolean {
+  const front = openingRect(j as unknown as Opening).map((x, k) => x + (k < 2 ? -BEFORE_WINDOW : BEFORE_WINDOW))
+  const sill = (j as { y0: number }).y0
+  return res.items.some((m) => {
+    if (m.floor !== j.floor || m.flat || !m.aabb || m.category === 'curtain' || m.type === 'blinds' || (m.y || 0) + m.h <= sill) return false
+    const sweep = sweepOf(m)
+    return overlap(m.aabb, front, 0.001) || (!!sweep && overlap(sweep, front, 0.001)) || stoodBefore(m, front)
+  })
+}
+
 export function createFailures(): Failures {
   const map: Record<string, { n: number; ex: string[] }> = {}
   return {
@@ -182,7 +217,14 @@ function checkDecor(tag: string, res: Plan, F: Failures) {
   const lightCategory = (res.config as PlanConfig | undefined)?.power === 'offgrid' ? 'oil_lamp' : 'ceiling_light'
   for (const c of res.rooms) if (!NO_LIGHT_ROOMS.has(c.type) && !res.items.some((m) => m.room === c.id && m.category === lightCategory)) F.add('room without ' + lightCategory, tag + ' ' + c.id)
   for (const m of res.items.filter((m) => m.category === 'curtain')) if (!res.windows.some((j) => j.id === m.window)) F.add('curtain without window', tag + m.id)
-  if (res.style !== 'budget') for (const j of res.windows) if (!res.items.some((m) => m.category === 'curtain' && m.window === j.id) && res.style !== 'commercial') F.add('window without curtain (mid/high)', tag + ' ' + j.id)
+  if (res.style !== 'budget' && res.style !== 'commercial') {
+    for (const j of res.windows) {
+      const covered = res.items.some((m) => (m.category === 'curtain' || m.type === 'blinds') && m.window === j.id)
+      // a boarded-up window (fortified) may have lost what stood before it to a barricade after its curtain was skipped: the boards cover it
+      const boarded = (j as { boards?: boolean }).boards === true
+      if (!covered && !boarded && !standsBeforeWindow(res, j)) F.add('window without curtain or blinds (mid/high)', tag + ' ' + j.id)
+    }
+  }
   for (const m of res.items.filter((m) => m.category === 'ceiling_light')) {
     const ceiling = res.rooms.find((c) => c.id === m.room)!.ceiling
     if (m.y + m.h > ceiling + 1e-6) F.add('light above the ceiling', tag + m.id)
