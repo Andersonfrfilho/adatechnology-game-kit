@@ -16,7 +16,7 @@ export function installFurnitureTypeTable(K: Kernel, _shared: Shared): void {
     mine('sofa_3seat', FURNITURE.sofa); mine('sofa_2seat', FURNITURE.sofa); mine('sofa_xl', FURNITURE.sofa, 'game (sofa)'); mine('armchair', FURNITURE.armchair); mine('armchair_high', FURNITURE.armchair, 'game (armchair)');
     mine('tv_unit', (M, A) => FURNITURE.cabinet(M, A, { doors: 3 })); mine('tv_unit_small', (M, A) => FURNITURE.cabinet(M, A, { doors: 2 })); mine('tv_unit_large', (M, A) => FURNITURE.cabinet(M, A, { doors: 4 }));
     alias('tv', 'flat_tv'); alias('tv_large', 'flat_tv');
-    mine('coffee_table', (M, A) => FURNITURE.table(M, A, { noChairs: true })); mine('coffee_table_round', (M, A) => FURNITURE.table(M, A, { without: true, round: true }));
+    mine('coffee_table', (M, A) => FURNITURE.table(M, A, { noChairs: true })); mine('coffee_table_round', (M, A) => FURNITURE.table(M, A, { noChairs: true, round: true }));
     mine('rug', FURNITURE.rug); mine('rug_small', FURNITURE.rug, 'game (rug)');
     mine('shelf_unit', FURNITURE.shelf); mine('shelf_unit_small', FURNITURE.shelf, 'game (shelf)'); mine('bookcase', FURNITURE.shelf, 'game (shelf)');
     mine('tool_shelf', (M, A) => FURNITURE.shelf(M, A, { iron: true, crates: true })); mine('metal_shelf', (M, A) => FURNITURE.shelf(M, A, { iron: true, crates: true })); mine('laundry_shelf', (M, A) => FURNITURE.shelf(M, A, { crates: true, open: true }));

@@ -26,6 +26,16 @@ export class BoxBatch {
   private readonly positions: number[] = []
   private readonly normals: number[] = []
   private readonly indices: number[] = []
+  /** Where each piece of the house sits in the vertices and indices (`piece`), as the kernel marks its merged meshes: a hit finds the piece by its face. */
+  private readonly ranges: Array<{ id: string; v0: number; v1: number; i0: number; i1: number }> = []
+
+  /** What is added from here on, up to the next call, is the piece `id` (null: no piece). */
+  piece(id: string | null): void {
+    const v = this.positions.length / 3, i = this.indices.length
+    const last = this.ranges[this.ranges.length - 1]
+    if (last && last.v1 < 0) { last.v1 = v; last.i1 = i; if (last.v1 === last.v0) this.ranges.pop() }
+    if (id !== null) this.ranges.push({ id, v0: v, v1: -1, i0: i, i1: -1 })
+  }
 
   get count(): number {
     return this.indices.length / 36
@@ -90,6 +100,7 @@ export class BoxBatch {
   /** The mesh of everything added, or null when nothing was. */
   mesh(THREE: Three, material: THREE_NS.Material, name: string): THREE_NS.Mesh | null {
     if (!this.indices.length) return null
+    this.piece(null)
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(this.positions, 3))
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(this.normals, 3))
@@ -100,6 +111,7 @@ export class BoxBatch {
     mesh.name = name
     mesh.castShadow = true
     mesh.receiveShadow = true
+    if (this.ranges.length) mesh.userData.ranges = this.ranges.map((range) => ({ ...range }))
     return mesh
   }
 }

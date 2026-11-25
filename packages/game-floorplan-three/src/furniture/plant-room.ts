@@ -7,11 +7,14 @@ export const POTTED_PLANT_TYPES: ReadonlySet<string> = new Set(['floor_plant', '
 /** Metres a plant's crown keeps from a wall or a piece of furniture beside it. */
 export const PLANT_CLEAR = 0.04;
 
-/** The least reach (m) from the stem a potted plant needs to be drawn at all: under it there is no room for it and it is left out. */
-export const PLANT_MIN_REACH = 0.14;
+/** The least reach (m) from the stem a potted plant needs to be drawn at all (a small pot's radius, its crown scaled down to it): under it there is no room for it and it is left out. */
+export const PLANT_MIN_REACH = 0.12;
 
 /** How far above its base a plant's crown is looked at against what stands round it (m): its foot stands on the floor's finish, its top under the ceiling. */
 const PLANT_SPAN: readonly [number, number] = [0.03, 2.4];
+
+/** A plant's crown is looked at up to its plan height times this (the species drawn may stand a little taller than the plan's box), never past `PLANT_SPAN`. */
+const PLANT_HEIGHT_MARGIN = 1.5;
 
 export interface FreeReachParams {
   /** The plant's stem, in the house's frame (m). */
@@ -42,9 +45,16 @@ const reachTo = (x: number, z: number, x0: number, z0: number, x1: number, z1: n
  * the nearest of the boxes it keeps out of and of the footprints of the plan's other items that stand within its height.
  */
 export function freeReachOf(p: FreeReachParams): number {
-  const y0 = p.y + PLANT_SPAN[0], y1 = p.y + PLANT_SPAN[1];
+  // (a plant on a coffee table was looked at 2.4 m up, into the slab over the room, and a short one under a window into the blind hung over it: both were left out)
+  const tall = p.self.h != null && p.self.h > 0 ? Math.min(PLANT_SPAN[1], p.self.h * PLANT_HEIGHT_MARGIN) : PLANT_SPAN[1];
+  const y0 = p.y + PLANT_SPAN[0], y1 = p.y + tall;
   let reach = Number.POSITIVE_INFINITY;
-  for (const b of p.boxes) if (b[1] < y1 && b[4] > y0) reach = Math.min(reach, reachTo(p.x, p.z, b[0], b[2], b[3], b[5]));
+  for (const b of p.boxes) {
+    if (b[1] >= y1 || b[4] <= y0) continue;
+    // what hangs over the stem (a ceiling, a shelf above) caps how tall the plant grows, not how far it spreads
+    if (b[1] > p.y && p.x >= b[0] && p.x <= b[3] && p.z >= b[2] && p.z <= b[5]) continue;
+    reach = Math.min(reach, reachTo(p.x, p.z, b[0], b[2], b[3], b[5]));
+  }
   for (const m of p.items) {
     if (m === p.self || m.id === p.self.id || m.floor !== p.self.floor || m.flat || m.category === 'ground_cover' || m.w == null || m.d == null) continue;
     const bottom = p.base + (m.y || 0), top = bottom + (m.h || 0);

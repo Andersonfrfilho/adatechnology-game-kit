@@ -43,7 +43,7 @@ import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS } from './player'
 import type { PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
-import { bodySlotPose, itemPoseOf } from './carry-poses'
+import { bodySlotPose, clampCarriedReach, itemPoseOf } from './carry-poses'
 import { followHeldTarget } from './held-follow'
 import { createHeldHands, holsterEventOf } from './held-hands'
 import { twistTargets } from './twist-hand'
@@ -596,6 +596,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let useFirst = false
   /** What modules ask the walking player to stay out of (`ModuleHost.addBlocker`). */
   const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
+  const moduleBlockers = new Set<(x: number, z: number, radius: number) => boolean>() // the modules' ones (a house's walls): a carried thing stays out of them too
   // the scenery the renderer draws stops the player by what is drawn now (a fallen bookcase is walked onto, not its old footprint); what is
   // too wide for the renderer's boxes (the wall closing the arena) and the tap's post keep their footprint
   const drawnScenery = (i: number): boolean => {
@@ -2988,12 +2989,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     useItemPlayer?.cancel()
     useItemPlayer = null
     afterOpening = null
-    twisting = null
-    twistHand = null
+    twisting = twistHand = null
     heldHands.end()
     entries.release()
-    heldPiece = null
-    heldTilt = 0
+    heldPiece = null; heldTilt = 0
   }
 
   /**
@@ -3235,6 +3234,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     root.quaternion.slerp(targetQ, placed ? 1 : Math.min(1, k * 0.9))
     // the middle of the carried object follows the target; the offset uses the current rotation so it does not orbit
     const off2 = tmpV2.copy(heldLocal).applyQuaternion(root.quaternion)
+    clampCarriedReach({ x: player.position[0], z: player.position[2] }, pos, moduleBlockers, Math.max(0.04, Math.min(heldSize.x, heldSize.z) / 2)) // (it never goes into a wall, nor through one when let go)
     root.position.set(root.position.x + (pos.x - off2.x - root.position.x) * k, root.position.y + (pos.y - off2.y - root.position.y) * k, root.position.z + (pos.z - off2.z - root.position.z) * k)
     if (dt > 0) {
       heldVel[0] = (root.position.x - px) / dt
@@ -4481,8 +4481,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action(type ?? 'module_note', text, { data })
     },
     addBlocker(blocked) {
-      blockers.add(blocked)
-      return () => blockers.delete(blocked)
+      for (const set of [blockers, moduleBlockers]) set.add(blocked)
+      return () => { blockers.delete(blocked); moduleBlockers.delete(blocked) }
     },
     cornerImage(image) {
       cornerImage?.show(image)

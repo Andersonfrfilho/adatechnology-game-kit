@@ -5,6 +5,9 @@ import { isMesh } from '@adatechnology/game-shapes-three';
 import { panelViewOf } from '../destruction/panels.js';
 import { DEFAULT_SEGMENT_LIMITS } from '../utilities/segments.js';
 import { applyConstructionLevel, CONSTRUCTION_LEVEL_MAX } from '../construction-stages/apply-level.js';
+import type { ApplyConstructionLevelOptions } from '../construction-stages/apply-level.js';
+import { partStagesOf, stageLoosePieces } from '../construction-stages/split-pieces.js';
+import type { HouseLoosePiece } from '../adapter-shapes.js';
 import { buildBlueprintStage } from '../construction-stages/blueprint.js';
 import { buildInstallationsStage, buriedSewerOf } from '../construction-stages/installations-stage.js';
 import { openExcavations } from '../construction-stages/excavations.js';
@@ -12,7 +15,10 @@ import { routeConduits, routingPlanOf } from '../construction-stages/installatio
 import type { RoutableElectrical } from '../construction-stages/installation-routes.js';
 import { buildStructuralStageGroups } from '../construction-stages/structural-stages.js';
 import type { EmbeddedRun } from '../construction-stages/structural-stages.js';
-import { bareBoxesOf, buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
+import { ROOF_TIMBER_MATERIAL, bareBoxesOf, buildRoofFramingStage } from '../construction-stages/roof-framing-stage.js';
+
+/** Metres a stretch of the roof's timber reaches for the wall (or the slab) that carries it: up to the ridge over the ceiling slab. */
+const ROOF_TIMBER_REACH = 3;
 import { gutterKeepOut } from '../roof/gutters.js';
 import { createHouseShadowBatches } from '../house/shadow-batches.js';
 import { WALL_BOX, wallBehindOf, wallBoxExtent } from '../utilities/wall-box.js';
@@ -109,7 +115,7 @@ function panelRunOf(P: NonNullable<NonNullable<NonNullable<HouseRecord['utilitie
 }
 
 export function installBuildBuild(K: Kernel, shared: Shared): void {
-  const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, drainPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, createHouseDestruction, newState, enter, tagDamage } = K;
+  const { THREE, cfg, rectsOf, invalidateShadow, colliderChanged, VERSION, CARS, EPS, LIGHTS, MIRRORS, Y0, animateClotheslines, animateDoors, animateInteractive, applyLeaf, applyOutbuildings, applyPart, applyPiece, assembleInteractive, baseboardAndSidewalk, buildStairs, building, carModel, chooseMirror, closeScene, collideAt, createWater, cursor, doorText, doors, electricalStructure, elevator, floorsAndSlabs, gatesInteractive, houseItems, ivAssemble, ivBuild, ivDispose, ivParts, ivPublish, ivUpdate, lightOn, linkDoorLeaves, mailboxInteractive, newInteractiveState, newMirrorState, outbuildings, paths, perimeter, placeSwitches, roofs, roomAt, solar, targetOf, terrain, toggleDoor, toggleLight, walls, waterPipes, drainPipes, windows, props, TYPES, IVK, VEG, vegMaterials, markGroups, assembleStructure, pieceRecord, createHouseDestruction, newState, enter, tagDamage } = K;
   function build(r0: HouseRecord, options?: BuildOptions): House {
         const opts: BuildOptions = options || {};
         const r = withLaidConduits(applyOutbuildings(r0), !!(opts.constructionStages || opts.constructionLevel != null)); // R43: the outbuilding (res.outbuildings) enters the plan the SDK draws as a room, walls, door, windows and items; res.r stays the original plan
@@ -163,6 +169,9 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         house.updateMatrixWorld(true); shared.ctx.unitInverse = house.matrixWorld.clone().invert();
         for (const [k, g] of Object.entries(gs)) { g.name = k; (k === 'floor' || k === 'building' ? root : house).add(g); }
         let currentConstructionLevel = CONSTRUCTION_LEVEL_MAX;
+        // the loose pieces split off the house (the cylinder standing free in its shelter) follow the stage of the parts they came from
+        let partStages: Map<string, string> | null = null, stageOptsNow: ApplyConstructionLevelOptions = {}, piecesStaged = -1;
+        const stageHeld = new Set<HouseLoosePiece>();
         h.groups = gs; h.root = root; h.house = house; h.houseGroup = house;
         shared.ctx.noModel = noModel;
         shared.ctx.lights = LIGHTS.filter(l => l.type !== 'lantern' && l.type !== 'candles' || shared.ctx.night).map((l): LightRequest => ({ ...l })); // real lights requested by the builders (at night)
@@ -237,24 +246,35 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
         const distance = (focus: THREE_NS.Vector3 | { x: number; y: number; z: number }): number => center().distanceTo(focus instanceof THREE.Vector3 ? focus : new THREE.Vector3(focus.x, focus.y, focus.z));
 
         // ---- destruction: tags the loose groups, describes the structure and prepares the world adapter (cfg.destruction) ----
-        markGroups(r, root, parts);
-        const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
+        // the stage groups go up first: the roof's timber is pieces of the house (each stretch of it breaks where the hit lands), and the structure takes them in
         if (cs) {
           const bp = buildBlueprintStage(THREE, K.DOC as Document | null, r, rectsOf);
           // the masonry is laid with the chases of the runs that go up and down inside it
           const stGroups = buildStructuralStageGroups(THREE, r0.structure as Structure | undefined, (r.outbuildings || []) as readonly Outbuilding[], [...embeddedRunsOf(house), ...wallBoxRunsOf(r, shared.ctx.wallBoxShifts)], shared.ctx.blockLaid ?? []);
           const instGroup = buildInstallationsStage(THREE, r, shared.ctx.gutterInfo?.drains ?? [], shared.ctx.paving ?? []);
           // (its rafters clear of the faces of the slabs' edges they pass, finished or bare (the roof goes on before the render), its timbers cut around the water tank standing in the attic and the gutters hung on the eaves)
-          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, [...(shared.ctx.occupied ?? []), ...bareBoxesOf(THREE, [stGroups.frame, stGroups.masonry])], [...atticKeepOut(THREE, house, Object.values(parts)), ...gutterKeepOut(shared.ctx.gutterInfo?.gutters ?? [])]);
+          const roofFraming = buildRoofFramingStage(THREE, shared.ctx.roofRects || [], undefined, [...(shared.ctx.occupied ?? []), ...bareBoxesOf(THREE, [stGroups.frame, stGroups.masonry])], [...atticKeepOut(THREE, house, Object.values(parts)), ...gutterKeepOut(shared.ctx.gutterInfo?.gutters ?? [])], (t) => { pieceRecord(t.id, ROOF_TIMBER_MATERIAL, null, { holdOn: t.kind === 'post' ? 'floor' : 'wall', holdReach: ROOF_TIMBER_REACH, holdJoint: 'nail', mass: t.mass, tags: ['roof_timber', t.kind], ...(t.chain.length ? { chain: t.chain } : {}) }); });
           const yardBoxes = instGroup.userData.yardBoxes as THREE_NS.Group | undefined; // a plan with no drains digs no sewer
           for (const sg of [bp, stGroups.foundation, stGroups.starterBars, stGroups.frame, stGroups.masonry, instGroup, ...(yardBoxes ? [yardBoxes] : []), roofFraming]) {
             gs[sg.name] = sg;
             house.add(sg);
           }
+        }
+        markGroups(r, root, parts);
+        const structure = assembleStructure(r0, root), destruction = createHouseDestruction(root, house, structure, parts, colliders, water); h.destruction = destruction; destruction.breach.setLod(h.lodCurrent);
+        if (cs) {
           currentConstructionLevel = applyConstructionLevel(house, opts.constructionLevel ?? CONSTRUCTION_LEVEL_MAX);
+          partStages = partStagesOf(house);
         }
         // legacy damage: `house.damage(id, point, type, amount)` still subtracts the damageable's hp (the game reads `hp`) and calls cfg.onDamage, and now also
         // becomes a hit in the core when there is a world (cfg.destruction): the piece really breaks, hides its mesh and drops what it carries. Once fractured, hp is zeroed.
+        const stagePieces = (): void => {
+          const R = destruction.renderer;
+          if (!partStages || !R?.pieces) return;
+          const list = R.pieces();
+          piecesStaged = list.length;
+          stageLoosePieces(list, partStages, currentConstructionLevel, stageOptsNow, stageHeld);
+        };
         const strikePiece = (id: string, point: Point | null | undefined, type: string | undefined, amount: number | undefined, d: Damageable | { hpMax: number }, before: number): void => {
           if (!destruction.world) return;
           const pid = id && structure.byId.has(id) ? id : (parts[id] && parts[id].type === 'water_tank' && structure.byId.has('water_tank') ? 'water_tank' : null); if (!pid) return;
@@ -290,7 +310,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
           state: h.state, stats, vegetation: shared.ctx.vegInfo || null, solar: shared.ctx.solarInfo || null, water, electrical: shared.ctx.electricalInfo || null, gutters: shared.ctx.gutterInfo || null,
           // per frame: doors, parts, wind-blown laundry and (with a focus) distance LOD; dt in seconds, time in ms (rAF); focus = {x,y,z} in world coordinates
           update(dt: number, time?: number, focus?: { x: number; y: number; z: number }) {
-            enter(h); animateDoors(dt); animateInteractive(dt); water.step(dt); if (destruction.active || destruction.statistics().falling || destruction.statistics().fragments) destruction.animate(dt); if (h.IV) ivUpdate(h, dt, time, focus); if (time != null) animateClotheslines(time); if (shared.vegMaterials) { shared.vegMaterials.update((time != null ? time : performance.now()) / 1000); shared.vegMaterials.setActors(focus ? [{ x: focus.x, y: focus.y, z: focus.z, radius: 0.9 }] : []); }
+            enter(h); if (partStages && currentConstructionLevel < CONSTRUCTION_LEVEL_MAX && destruction.renderer?.pieces && destruction.renderer.pieces().length !== piecesStaged) stagePieces(); animateDoors(dt); animateInteractive(dt); water.step(dt); if (destruction.active || destruction.statistics().falling || destruction.statistics().fragments) destruction.animate(dt); if (h.IV) ivUpdate(h, dt, time, focus); if (time != null) animateClotheslines(time); if (shared.vegMaterials) { shared.vegMaterials.update((time != null ? time : performance.now()) / 1000); shared.vegMaterials.setActors(focus ? [{ x: focus.x, y: focus.y, z: focus.z, radius: 0.9 }] : []); }
             if (focus && cfg.lod !== false) { const L = Object.assign({ interior: 45, hide: 220 }, cfg.lod), d = distance(focus), at = h.lodCurrent; let n = d > L.hide ? 2 : d > L.interior ? 1 : 0; if (n < at) n = d < (at === 2 ? L.hide : L.interior) * 0.92 ? n : at; applyLod(Math.max(n, h.lodMin)); }
             shadowBatches?.update();
           },
@@ -307,12 +327,16 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
               g.visible = v;
             }
             if (cs && currentConstructionLevel < CONSTRUCTION_LEVEL_MAX) {
-              applyConstructionLevel(house, currentConstructionLevel, { roofLayer: !cut && sel < 0, lotLayer: o.lot !== false });
+              stageOptsNow = { roofLayer: !cut && sel < 0, lotLayer: o.lot !== false };
+              applyConstructionLevel(house, currentConstructionLevel, stageOptsNow);
+              stagePieces();
             }
           },
           setConstructionLevel(level: number, stageOpts?: { waterLayer?: boolean; roofLayer?: boolean; lotLayer?: boolean }) {
             enter(h);
+            stageOptsNow = stageOpts ?? {};
             currentConstructionLevel = applyConstructionLevel(house, level, stageOpts);
+            stagePieces();
             invalidateShadow();
             return currentConstructionLevel;
           },

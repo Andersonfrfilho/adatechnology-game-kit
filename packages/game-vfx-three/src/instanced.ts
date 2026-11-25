@@ -28,10 +28,13 @@ export interface PuffUniforms {
   uTime: { value: number }
 }
 
+/** Subdivisions of a puff's sphere: round enough that its outline never shows facets. */
+const PUFF_DETAIL = 2
+
 export function createPuffLayer(THREE: ThreeLib, pool: OrderedPool<Puff>, uniforms: PuffUniforms): DrawnLayer {
   const capacity = pool.capacity
   const geometry = new THREE.InstancedBufferGeometry()
-  geometry.setAttribute('position', new THREE.IcosahedronGeometry(1, 1).getAttribute('position'))
+  geometry.setAttribute('position', new THREE.IcosahedronGeometry(1, PUFF_DETAIL).getAttribute('position'))
   const a = new Float32Array(capacity * 4)
   const d = new Float32Array(capacity * 4)
   const c = new Float32Array(capacity * 3)
@@ -40,7 +43,7 @@ export function createPuffLayer(THREE: ThreeLib, pool: OrderedPool<Puff>, unifor
   geometry.setAttribute('aD', attributes[1])
   geometry.setAttribute('aC', attributes[2])
   geometry.instanceCount = 0
-  const material = new THREE.ShaderMaterial({ uniforms: uniforms as never, vertexShader: PUFF_VERTEX, fragmentShader: PUFF_FRAGMENT })
+  const material = new THREE.ShaderMaterial({ uniforms: uniforms as never, vertexShader: PUFF_VERTEX, fragmentShader: PUFF_FRAGMENT, transparent: true, depthWrite: false })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.name = 'vfx-puffs'
   mesh.frustumCulled = false

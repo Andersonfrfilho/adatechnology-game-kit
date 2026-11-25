@@ -227,9 +227,19 @@ function counterWithBasin(c: Ctx, o: SinkOptions): void {
 }
 
 /** Drain pipe from the basin down to a trap and back to the wall. `z` is where the drain leaves the basin. */
-function pipes(c: Ctx, x: number, top: number, z: number): void {
+/**
+ * The drain under a basin: the tailpiece down from the drain at the middle of its bottom (`bottom`, the underside of the basin's floor), the trap and the arm back
+ * to the wall. The tailpiece ends under the basin's floor: up to the counter's height it stood 2 to 8 cm out of the bowl behind the drain.
+ */
+/** Depth of the kitchen sink's and the bathroom basin's bowls, metres. */
+const KITCHEN_BASIN_DEPTH = 0.2
+const BATHROOM_BASIN_DEPTH = 0.14
+/** The tailpiece stops this far under the basin's floor, metres (its top never on the floor's underside). */
+const TAILPIECE_GAP = 0.002
+
+function pipes(c: Ctx, x: number, bottom: number, z: number): void {
   const wall = -c.hd + 0.002 // into the back panel, past the plinth's back face
-  c.cyl('metal', x, 0.2, z, 0.02, top - 0.2 - 0.12, 0xc8ccd0, 'cyl6')
+  c.cyl('metal', x, 0.2, z, 0.02, bottom - 0.2 - TAILPIECE_GAP, 0xc8ccd0, 'cyl6')
   c.rod('plain', 'x', x + 0.06, 0.2, z, 0.02, 0.14, 0xe8e8e8, 'cyl6')
   c.cyl('plain', x + 0.13, 0.07, z, 0.022, 0.15, 0xe8e8e8, 'cyl6') // trap riser: fatter than the pipes it joins, so their flats never meet
   c.rod('plain', 'z', x + 0.13, 0.09, (z + wall) / 2, 0.02, z - wall, 0xe8e8e8, 'cyl6')
@@ -250,11 +260,11 @@ export function sinkKitchen(c: Ctx): void {
   const bx1 = -hw * 0.05
   const bz0 = -hd * 0.65
   const bz1 = hd * 0.45
-  counterWithBasin(c, { top, bx0, bx1, bz0, bz1, depth: 0.2, counter: 0x7c7a78, steel: true })
+  counterWithBasin(c, { top, bx0, bx1, bz0, bz1, depth: KITCHEN_BASIN_DEPTH, counter: 0x7c7a78, steel: true })
   // drainboard grooves on the right
   for (let i = 0; i < 7; i++) c.b('metal', bx1 + 0.06, top, bz0 + 0.04 + i * 0.07, hw - 0.06, top + 0.004, bz0 + 0.052 + i * 0.07, 0x9a9ea2)
   tap(c, (bx0 + bx1) / 2, top, -hd + 0.07, 'tap', 'tap_handle')
-  pipes(c, (bx0 + bx1) / 2, top, -hd + 0.17)
+  pipes(c, (bx0 + bx1) / 2, top - KITCHEN_BASIN_DEPTH, (bz0 + bz1) / 2)
   // doors
   const mid = 0.0015
   hingedDoor(c, { id: 'door_1', x0: -hw + 0.003, x1: -mid, y0: 0.103, y1: top - 0.043, zf, t, side: 'left', color: front, inner: lining, handle: 'bar_v', handleLen: 0.22, label: 'prompt.door' })
@@ -277,10 +287,12 @@ export function sinkBathroom(c: Ctx): void {
   const zr = zf - t - 0.003
   const sh = shell(c, { x0: -hw, x1: hw, y0: 0.08, y1: top - 0.04, z0: -hd, z1: zr, color: body, inner: lining, t: 0.016, noTop: true, material: 'plain' })
   c.b('plain', -hw + 0.01, 0, -hd + 0.03, hw - 0.01, 0.08, zr - 0.04, 0x3a3836)
-  counterWithBasin(c, { top, bx0: -hw * 0.6, bx1: hw * 0.6, bz0: -hd * 0.5, bz1: hd * 0.55, depth: 0.14, counter: 0xe9e4da, steel: false })
+  const bz0 = -hd * 0.5
+  const bz1 = hd * 0.55
+  counterWithBasin(c, { top, bx0: -hw * 0.6, bx1: hw * 0.6, bz0, bz1, depth: BATHROOM_BASIN_DEPTH, counter: 0xe9e4da, steel: false })
   c.b('plain', -hw, top, -hd, hw, top + 0.08, -hd + 0.015, 0xe9e4da) // backsplash lip
   tap(c, 0, top, -hd + 0.07, 'tap', 'tap_handle')
-  pipes(c, 0, top, -hd + 0.17)
+  pipes(c, 0, top - BATHROOM_BASIN_DEPTH, (bz0 + bz1) / 2)
   hingedDoor(c, { id: 'door', x0: -hw + 0.003, x1: hw - 0.003, y0: 0.083, y1: top - 0.043, zf, t, side: c.M.hinge ?? 'left', color: body, inner: lining, style: 'flat', handle: 'knob', label: 'prompt.door' })
   c.container({
     id: 'under_sink', access: 'door', from: [sh.ix0, sh.iy0, sh.iz0], to: [sh.ix1, sh.iy1, sh.iz1],

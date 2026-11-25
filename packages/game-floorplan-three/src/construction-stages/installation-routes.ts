@@ -5,6 +5,8 @@
  * rough-in stage (cut into the bare masonry) and, embedded, in the finished house: one network, laid once.
  */
 
+import { PLASTER_PER_FACE } from '@adatechnology/game-floorplan-structure'
+
 /** A point of a run in the house's frame: [x (u), y, z (v)]. */
 export type RoutePoint = readonly [number, number, number]
 export type Route = readonly RoutePoint[]
@@ -49,7 +51,17 @@ export const FEED_Y = -0.6
 export const FEED_EXIT_Y = -0.15
 /** How far the centre of the ground box at the foot of a wall stands off the wall's face, metres. */
 export const FEED_BOX_OFFSET = 0.25
-const BRICK_FACE_INSET = 0.014
+/**
+ * How deep under the wall's finished face the axis of a run cut into the masonry lies, metres: the render over the brick, the run's radius and a clearance, so the
+ * run lies wholly in its chase under the render (at 1.4 cm, half in the render, the pipe's face was 1.5 mm under it and showed through; a sleeve came out of it).
+ */
+export function chaseDepth(diameter = CHASE_DIAMETER): number {
+  return PLASTER_PER_FACE + diameter / 2 + CHASE_CLEAR
+}
+/** The run a chase is cut for when the caller does not say (m): a 25 mm water pipe, the thicker of the runs in a wall. */
+const CHASE_DIAMETER = 0.025
+/** Brick left between a run in its chase and the render, metres (the sleeve over a joint is a little wider than the pipe). */
+const CHASE_CLEAR = 0.006
 /** How far under the top of a slab a run crosses it, metres: through the middle of its thickness. */
 export const SLAB_MIDDLE = 0.065
 /** A ceiling this close to a storey's floor (under it, or a little over it where a plan's storey is lower than the ceiling under it) hangs from that storey's slab, metres. */
@@ -137,7 +149,7 @@ export function wallDrop(plan: RoutingPlan, floor: number, u: number, v: number,
   const inward = (alongU ? (box[1] + box[3]) / 2 : (box[0] + box[2]) / 2) - line
   const side = Math.abs(across) > 1e-3 ? Math.sign(across) : inward >= 0 ? 1 : -1
   const half = (wall.thickness ?? DEFAULT_THICKNESS) / 2
-  const offset = options.surface ? half + (options.diameter ?? 0.02) / 2 : half - BRICK_FACE_INSET
+  const offset = options.surface ? half + (options.diameter ?? 0.02) / 2 : half - chaseDepth(options.diameter)
   const at = line + side * offset
   return { u: alongU ? along : at, v: alongU ? at : along, wall }
 }
