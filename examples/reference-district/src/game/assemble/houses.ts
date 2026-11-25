@@ -127,6 +127,8 @@ export function planLots(site: Site, { underground }: { readonly underground?: (
 }
 
 export type HousesParams = {
+  /** Night lights the houses' rooms, windows and outside lamps (each through its own grid: an outage leaves it dark). Default day. */
+  readonly isNight?: boolean
   readonly THREE: typeof THREE_NS
   readonly world: KitWorld
   readonly scene: THREE_NS.Object3D
@@ -138,7 +140,11 @@ export type HousesParams = {
  * interactables and the vegetation of the kit, standing on its lot facing the street and registered in the world's destruction. The distance level of detail (`planLod`) keeps only the near houses
  * complete: the others lose their interior and, far away, vanish.
  */
-export function createHouses({ THREE, world, scene, lots }: HousesParams): Houses {
+/** Slots of the world's light budget the houses' rooms take at night, and how many of them may light an outside lamp (porch, facade). */
+const NIGHT_ROOM_LIGHTS = 4
+const NIGHT_OUTSIDE_LIGHTS = 2
+
+export function createHouses({ THREE, world, scene, lots, isNight }: HousesParams): Houses {
   const options: HouseRendererOptions = {
     locale: 'pt-BR',
     quality: 'game',
@@ -152,7 +158,7 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
   const unregister = registerHouseQueues(renderer, world.frame.scheduler.budget)
   const removeCovers: Array<() => void> = []
   const list = lots.map(({ lot, plan, size, placement }): PlacedHouse => {
-    const house = renderer.build(plan, { quality: 'game', terrain: false })
+    const house = renderer.build(plan, { quality: 'game', terrain: false, night: isNight === true })
     house.group.rotation.y = placement.ry
     house.group.position.set(placement.x, 0, placement.z)
     house.group.updateMatrixWorld(true)
@@ -168,6 +174,8 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
     ? world.frame.add(() => houseLights.update(houseObjects, world.view.camera.position), { phase: 'present', order: 20, id: 'district.house-lights' })
     : undefined
   let sincePlan = PLAN_EVERY_SECONDS
+  // at night the rooms whose lamps are on (and whose grid is up) light their windows through a few slots of the world's light budget, near the camera
+  const rooms = isNight === true ? renderer.lighting({ scene, n: NIGHT_ROOM_LIGHTS, shadows: 0, external: NIGHT_OUTSIDE_LIGHTS, budget: world.lights }) : undefined
   return {
     list,
     renderer,
@@ -184,11 +192,13 @@ export function createHouses({ THREE, world, scene, lots }: HousesParams): House
         planLod(list.map((placed) => placed.house), focus, HOUSE_DRAW_CALL_BUDGET)
       }
       for (const placed of list) placed.house.update(dt, time)
+      rooms?.update(list.map((placed) => placed.house), { x: focus.x, y: focus.y, z: focus.z })
     },
     dispose() {
       stopHouseLights?.()
       unregister()
       for (const remove of removeCovers) remove()
+      rooms?.dispose()
       for (const placed of list) placed.house.dispose()
       renderer.dispose?.()
     },

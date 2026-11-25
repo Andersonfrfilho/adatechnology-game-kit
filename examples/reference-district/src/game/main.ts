@@ -91,7 +91,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   const sewers = drawDistrictSewers({ THREE, generated: networks, world })
   scene.add(sewers.surface.root, sewers.buried.root)
   await step('houses')
-  const houses = createHouses({ THREE, world, scene, lots })
+  const houses = createHouses({ THREE, world, scene, lots, isNight })
   const props = createProps({ THREE, world, scene, site })
   const missing = createMissingBoxes(THREE, site.missing)
   scene.add(missing.group)
