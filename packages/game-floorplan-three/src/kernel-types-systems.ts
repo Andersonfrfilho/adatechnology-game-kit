@@ -384,7 +384,8 @@ export interface RoomLighting {
 
 /** The masks of the effect lights of a budget (`effectLights`). */
 export interface EffectLighting {
-  update(houses: LitHouse | readonly (LitHouse | null | undefined)[] | null | undefined): void
+  /** `focus` (the camera) orders the houses whose interiors the outdoor lights stay out of, the nearest first. */
+  update(houses: LitHouse | readonly (LitHouse | null | undefined)[] | null | undefined, focus?: { x: number; y: number; z: number }): void
 }
 
 /** The uniforms of the room masks, shared by every lit material. */
@@ -394,6 +395,12 @@ export interface RoomMaskUniforms {
   uRB2: { value: Float32Array }
   uRBY: { value: Float32Array }
   uREx: { value: Float32Array }
+  /** The kind of each slot: 0 a room lamp of `lighting()` (with the fake indirect), 1 an outdoor light (every face outside the interiors and, inside, only the rooms of its boxes), 2 an effect light indoors. */
+  uROut: { value: Float32Array }
+  /** The interiors (room boxes and their y bands) the outdoor lights stay out of, `uRInN` of them. */
+  uRIn: { value: Float32Array }
+  uRInY: { value: Float32Array }
+  uRInN: { value: number }
   uIndK: { value: number }
 }
 

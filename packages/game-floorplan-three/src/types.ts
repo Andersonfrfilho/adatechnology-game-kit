@@ -376,7 +376,8 @@ export interface HouseRenderer {
   lighting(options?: LightingOptions): RoomLighting
   /**
    * Lets the lights of effects (a blast, a fire, a flare) that hold slots of `budget` light the room their point is in, and the rooms either side of an open door or window next to it.
-   * Call `update(houses)` every frame after the budget's `present`. Works without `lighting()`. Off for every house with `effectLightsIndoors: false`.
+   * A light outside every room (a street lamp) lights the outside of the houses and, inside, only the rooms behind an outer window or open outer door that faces it: walls, roofs and closed doors keep it out.
+   * Call `update(houses, camera)` every frame after the budget's `present`. Works without `lighting()` (it gives the house materials the mask). Off for every house with `effectLightsIndoors: false`.
    */
   effectLights?(options?: { budget?: LightBudget; ours?: readonly number[] }): EffectLighting
   setNight(night: boolean): void
