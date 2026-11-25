@@ -40,20 +40,23 @@ const embeddedWorkerSource = (): string | undefined => {
  * The kit's loading card covers the container from the first line until the world is assembled and warmed up, one notch per step (`loading: false` shows none).
  */
 export async function startDistrict(THREE: typeof THREE_NS, options: DistrictOptions): Promise<District> {
-  const text = options.loading === false ? DISTRICT_LOADING_TEXT : (options.loading ?? DISTRICT_LOADING_TEXT)
+  const text = options.loading || DISTRICT_LOADING_TEXT
   const loading = options.loading === false ? undefined : createLoading({ container: options.container, working: text.working })
   const progress = startDistrictProgress(loading, text)
+  let district: District
   try {
-    const district = await assembleDistrict(THREE, options, progress.step)
-    return {
-      ...district,
-      dispose() {
-        district.dispose()
-        loading?.dispose()
-      },
-    }
-  } finally {
-    progress.end()
+    district = await assembleDistrict(THREE, options, progress.step)
+  } catch (error) {
+    progress.fail(error)
+    throw error
+  }
+  progress.end()
+  return {
+    ...district,
+    dispose() {
+      district.dispose()
+      loading?.dispose()
+    },
   }
 }
 

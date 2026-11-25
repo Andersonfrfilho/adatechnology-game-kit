@@ -24,6 +24,16 @@ describe('the loading card of the district', () => {
     loading.dispose()
   })
 
+  it('leaves the card up with the error on it when the assembly fails, so the page is never left black', async () => {
+    const loading = createLoading({ container: {} as HTMLElement, draw: false, working: DISTRICT_LOADING_TEXT.working })
+    const progress = startDistrictProgress(loading, DISTRICT_LOADING_TEXT)
+    await progress.step('world')
+    progress.fail(new Error('no WebGL'))
+    expect(loading.active).toBe(true)
+    expect(loading.state()).toMatchObject({ label: DISTRICT_LOADING_TEXT.title, text: `${DISTRICT_LOADING_TEXT.failed}no WebGL` })
+    loading.dispose()
+  })
+
   it('shows nothing without a sink and still runs the steps', async () => {
     const progress = startDistrictProgress(undefined, DISTRICT_LOADING_TEXT)
     for (const step of DISTRICT_STEPS) await progress.step(step)
