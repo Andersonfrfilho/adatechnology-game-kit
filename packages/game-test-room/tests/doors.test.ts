@@ -209,3 +209,56 @@ describe('opening by hand', () => {
     expect(types(room)).toContain('door_blocked')
   })
 })
+
+/** A blind: a rail with one 6 mm slat that tilts on its long axis (thinner than two skins of the leaf's box). */
+const tilt: AnimationClipSpec = { id: 'open_slat', duration: 1, keys: [{ t: 0, parts: { slat: { rotation: [0, 0, 0] } } }, { t: 1, parts: { slat: { rotation: [-1.4, 0, 0] } } }] }
+const blindSpec: DestructibleSpec = {
+  name: 'blind',
+  parts: [
+    { id: 'rail', material: 'plastic', mass: 1, shape: { kind: 'box', size: [1, 0.06, 0.08] }, position: [0, 2.3, 0] },
+    { id: 'slat', material: 'plastic', mass: 0.1, shape: { kind: 'box', size: [1, 0.006, 0.05] }, position: [0, 2.2, 0] },
+  ],
+  joints: [{ id: 'cord', a: 'rail', b: 'slat', kind: 'hinge' }],
+}
+const blinds: TestableModule<ScenarioContext> = {
+  id: 'blinds',
+  name: 'Blinds',
+  group: 'Blinds',
+  items: () => [
+    {
+      id: 'blind',
+      name: 'Blind',
+      build: (T) => {
+        const three = T as typeof THREE
+        const g = new three.Group()
+        const rail = new three.Mesh(new three.BoxGeometry(1, 0.06, 0.08), new three.MeshStandardMaterial())
+        rail.position.set(0, 2.3, 0)
+        g.add(rail)
+        const slat = new three.Group()
+        slat.name = 'slat'
+        slat.position.set(0, 2.2, 0)
+        slat.add(new three.Mesh(new three.BoxGeometry(1, 0.006, 0.05), new three.MeshStandardMaterial()))
+        g.add(slat)
+        return g
+      },
+      spec: blindSpec,
+      movable: false,
+      animations: [tilt],
+    },
+  ],
+  scenarios: () => [],
+}
+
+describe('a thin leaf', () => {
+  it("a blind's 6 mm slat tilts open: nothing on the line from it to the middle of the world stops it", () => {
+    const { room } = setup()
+    room.loadModule(blinds)
+    // the cabinet of setup stands at z = -4, between the blind and the middle of the world: a leaf box turned inside out swept toward it
+    const blind = room.spawn('blind', [0, 0, -8], 0)
+    room.look([0, 1.7, -6.8], [0, 2.2, -8])
+    room.useLeaf(blind.objectId, 'slat')
+    run(room, 3)
+    expect(room.log.entries({ type: 'door_blocked' })).toEqual([])
+    expect(room.leafOpening(blind.objectId, 'slat')).toBe(1)
+  })
+})

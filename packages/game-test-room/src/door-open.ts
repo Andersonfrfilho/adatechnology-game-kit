@@ -22,6 +22,7 @@ const BODY_HEIGHT = 1.8
 /** The hand at rest in front of the chest, in the eye's space (x right, y up, -z ahead). */
 const HAND_REST: Vec3 = [0.22, -0.42, -0.32]
 const SKIN = 0.01
+const AXES = ['x', 'y', 'z'] as const
 /** How far in from the free edge of a leaf its handle is, metres. */
 const HANDLE_INSET = 0.06
 /** Where the feet stop in front of a handle (a drawer, a leaf with no hinge known) for the hand to hold it with a bent arm, metres on the floor, and how fast the player steps up. */
@@ -157,6 +158,16 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
   const openings = new Map<string, number>()
   const box = new THREE.Box3()
   const before = new THREE.Box3()
+  const inner = new THREE.Box3()
+  /** Pulls each face of `b` in by `SKIN`, never past its middle: a leaf thinner than two skins (a blind's 6 mm slat) keeps its middle plane instead of turning inside out. */
+  const shrink = (b: THREE_NS.Box3): THREE_NS.Box3 => {
+    for (const k of AXES) {
+      const s = Math.min(SKIN, (b.max[k] - b.min[k]) / 2)
+      b.min[k] += s
+      b.max[k] -= s
+    }
+    return b
+  }
   const tmp = new THREE.Vector3()
   const centre = new THREE.Vector3()
   let using: Using | null = null
@@ -350,7 +361,7 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
     options.pose(objectId, leaf.part, leaf.clip, to)
     obj.updateMatrixWorld(true)
     box.setFromObject(obj)
-    box.expandByScalar(-SKIN)
+    shrink(box)
     let by: string | null = null
     // the walls and the furniture of the room that stand on the floor (not the object's own footprint)
     if (Math.max(Math.abs(box.min.x), Math.abs(box.max.x), Math.abs(box.min.z), Math.abs(box.max.z)) > arena.limit) by = 'wall'
@@ -372,7 +383,8 @@ export function createRoomDoors(options: RoomDoorOptions): RoomDoors {
       // the far edge of a turning leaf moves about twice as far as its middle
       if (len > 1e-5) {
         // a leaf clears the floor it stands over (and what it rests on): only what stands up in its way stops it
-        const hit = world.sweepBox({ min: [before.min.x + SKIN, before.min.y + FLOOR_GAP, before.min.z + SKIN], max: [before.max.x - SKIN, before.max.y - SKIN, before.max.z - SKIN] }, dir, len * 2, { ignore: objectId, spacing: 0.12 })
+        shrink(inner.copy(before))
+        const hit = world.sweepBox({ min: [inner.min.x, Math.min(before.min.y + FLOOR_GAP, inner.max.y), inner.min.z], max: [inner.max.x, inner.max.y, inner.max.z] }, dir, len * 2, { ignore: objectId, spacing: 0.12 })
         if (hit && hit.normal[1] < 0.7) by = hit.object
       }
     }
