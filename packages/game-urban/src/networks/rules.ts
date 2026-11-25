@@ -57,6 +57,16 @@ export type NetworkRules = {
     readonly lateralOverGallery: number
     /** Longest sewer main between two manholes. */
     readonly manholeSpacing: number
+    /** A pipe that turns more than this, degrees, or meets two others, is a manhole (a PV). */
+    readonly turnTolerance: number
+    /** A house lateral leaves the street's main at a right angle, within this many degrees. */
+    readonly branchMaxSkew: number
+  }
+  readonly storm: {
+    /** Longest gap between two inlets of a kerb, metres. */
+    readonly inletSpacing: number
+    /** Each corner of a crossing has an inlet within this distance of the crossing's gallery box, metres. */
+    readonly cornerReach: number
   }
   /** Least vertical gap between two pipes that cross, and which one goes above (lower rank above). */
   readonly crossing: { readonly separation: number; readonly rank: Readonly<Record<BuriedEdgeKind, number>> }
@@ -114,7 +124,8 @@ export const DEFAULT_NETWORK_RULES: NetworkRules = {
     storm_gutter: { min: 0 },
     sewer_main: { min: 0.9 },
   },
-  sewer: { maxDepth: 4.5, coverUnderGallery: 1.8, galleryReach: 3, lateralOverGallery: 0.85, manholeSpacing: 80 },
+  sewer: { maxDepth: 4.5, coverUnderGallery: 1.8, galleryReach: 3, lateralOverGallery: 0.85, manholeSpacing: 80, turnTolerance: 5, branchMaxSkew: 5 },
+  storm: { inletSpacing: 60, cornerReach: 15 },
   crossing: { separation: 0.2, rank: { storm_gutter: 0, water_main: 1, water_service: 1, sewer_lateral: 2, storm_lateral: 3, storm_gallery: 3, sewer_main: 4 } },
   connectionTolerance: 0.01,
   layout: DEFAULT_NETWORK_LAYOUT,

@@ -115,3 +115,21 @@ Página da sala `examples/test-room/dist/test-room.html` sha256 `69fe81e810fd…
   até 4 por poste (validador com 4 códigos novos, recorte com 0 violações e 0 avisos); o padrão é poste fino com medidor no pé e eletroduto.
   Postes acrescentados no trecho dos lotes: o vão ali cai para 10 a 22 m. Hashes de dados das redes (`generate.test.ts` do `game-urban` e
   `networks.test.ts` do exemplo) regravados; custo `urban/networks` 9.464 → 12.272 triângulos (aceito por nome). Prints `rede-v2-*`.
+
+## T2.8e — esgoto, drenagem e água na superfície (2026-11-24)
+
+- **Validador** (`validate-surface.ts`, 4 códigos, cada um com caso que reprova em `surface-rules.test.ts`): `pv_missing` (PV onde três coletores se
+  encontram ou dois viram), `inlet_spacing` (> 60 m entre bocas de lobo de um meio-fio), `inlet_at_corner` (esquina de cruzamento sem boca de lobo
+  a ≤ 15 m), `branch_skewed` (ramal predial ou de boca de lobo fora de 90° ± 5° da rua). O recorte e o gerador passam nos quatro sem mudar nó nem aresta.
+- **Peças** (dado em `game-urban/networks`: `surfacePiecesOf`, `pipePiecesOf`, `breachOf`; desenho em `game-urban-three`: `drawNetworkSurface`,
+  `drawBuriedNetworks`): tampa de PV e da caixa da galeria, terminal de limpeza, tampa de registro, grelha da boca de lobo, hidrante, muro de ala,
+  tampa da caixa de inspeção, caixa do hidrômetro e boca do buzinote; canos e poços enterrados nas profundidades das regras.
+- **Camadas** (pedido do dono): o `road` do `game-terrain` (asfalto 5 cm, brita 25 cm, solo 1,5 m) já era a estrutura; a calçada era laje de 12 cm
+  sem camada embaixo, então ganhou o perfil `sidewalk` (concreto 8 cm, brita 22 cm, solo 1,5 m, mesma coluna de 1,8 m). O plano de asfalto que o
+  `game-urban` desenhava a 2 cm tapava a cratera: `streets.road` ganhou `plane: false` e a cena usa só o asfalto do terreno (tracejado sobre ele).
+- **Cratera até os canos**: `world.ground.on('blow')` → `breachOf` → `sever` do cano e `remove` da tampa (ligado em `drawDistrictSewers`).
+  Com 40 MJ na pista (raio 2,3 m, fundo 1,34 m) quebrou ramais de água e de esgoto e arrancou a tampa; o cano aparece na cratera (`esgoto-cratera.png`).
+- **Limites ditos**: o perfil `road` tem 1,8 m, e o coletor de esgoto fica a ≥ 1,8 m de recobrimento: só a cratera no limite da coluna o alcança; a galeria
+  e o ramal de boca de lobo (1,0 a 1,2 m, ou mais fundo onde há elevatória) pedem carga forte. Meio-fio com altura e sarjeta própria são da T3.9.
+- **Dados**: o hash das redes (`generate.test.ts` do `game-urban`, `networks.test.ts` do exemplo) mudou só porque `rules` ganhou `sewer.turnTolerance`,
+  `sewer.branchMaxSkew` e `storm`; nós e arestas iguais. Custo: `urban/network-surface` 2 chamadas, 5.772 triângulos; `urban/network-buried` 3 chamadas, 6.580.

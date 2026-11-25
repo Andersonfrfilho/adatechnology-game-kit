@@ -9,7 +9,7 @@ import { createHouses, planLots } from './assemble/houses'
 import { createDistrictHud } from './assemble/hud'
 import { createPlayerRig } from './assemble/player'
 import { createProps } from './assemble/props'
-import { buildNetworks, drawDistrictNetworks } from './assemble/networks'
+import { buildNetworks, drawDistrictNetworks, drawDistrictSewers } from './assemble/networks'
 import { drawStreets } from './assemble/streets'
 import { createDistrictWeather } from './assemble/weather'
 import { groundLayoutOf, terrainBoundsOf } from './ground'
@@ -86,6 +86,8 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   scene.add(streets.drawn.root)
   const lines = drawDistrictNetworks({ THREE, urban, generated: networks, lights: world.lights, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(lines.drawn.root)
+  const sewers = drawDistrictSewers({ THREE, generated: networks, world })
+  scene.add(sewers.surface.root, sewers.buried.root)
   await step('houses')
   const houses = createHouses({ THREE, world, scene, lots })
   const props = createProps({ THREE, world, scene, site })
@@ -139,6 +141,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
     world,
     site,
     networks: networks.networks,
+    sewers,
     houses,
     horde,
     player,
@@ -155,6 +158,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
       houses.dispose()
       streets.drawn.dispose()
       lines.drawn.dispose()
+      sewers.dispose()
       world.dispose()
     },
   }

@@ -61,6 +61,7 @@ export const referencePlan: CityPlanInput = parsePlan(planJson)
  * A `game-urban` kit that knows the reference plan (`urban.cities.layout(referencePlan.id)`). With `hostLights` (the scene is drawn through the host's LightBudget) every lamp that is on becomes a
  * source, and the budget's fixed slots light only the nearest ones; without it the package's own allowance (the first 16 in draw order) stays the cap.
  */
+/** The roads are the terrain's (`road` layers of `groundLayoutOf`): the kit draws only their dashes, so a crater digs the asphalt and shows what lies under it. */
 export function createReferenceUrban({ hostLights = false }: { readonly hostLights?: boolean } = {}): UrbanKit {
-  return createUrban({ ...(hostLights ? { lights: { budget: Number.POSITIVE_INFINITY } } : {}), packs: { cityPlans: [referencePlan] } })
+  return createUrban({ ...(hostLights ? { lights: { budget: Number.POSITIVE_INFINITY } } : {}), packs: { cityPlans: [referencePlan] }, streets: { road: { plane: false, dash: { y: 0.002 } } } })
 }

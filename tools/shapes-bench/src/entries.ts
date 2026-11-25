@@ -223,6 +223,9 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
     seed: 5,
   })
   entries.push({ id: 'urban/networks', run: () => urbanFlickering.drawNetworks(networkCut.networks, { isNight: true, lamps: { lit: 0.7, flicker: 0.3 }, surfaceAt: networkCut.surfaceAt }) })
+  // the same street's buried networks where they show (covers, grates, hydrants, wing walls, the boxes of each lot) and under the ground (pipes and pits)
+  entries.push({ id: 'urban/network-surface', run: () => urbanFlickering.drawNetworkSurface(networkCut.networks, { surfaceAt: networkCut.surfaceAt }) })
+  entries.push({ id: 'urban/network-buried', run: () => urbanFlickering.drawBuriedNetworks(networkCut.networks, { surfaceAt: networkCut.surfaceAt }) })
 
   // houses: the seven typologies of the Visor (seed 3, full quality), the plan drawn once; the bench is the house renderer
   registerResidential(floorplanEngine)

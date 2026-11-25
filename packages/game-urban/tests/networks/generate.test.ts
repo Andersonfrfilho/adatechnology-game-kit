@@ -11,7 +11,8 @@ const validate = (out: ReturnType<typeof generate>) => validateNetworks(out.netw
 const bytes = (out: ReturnType<typeof generate>): string => createHash('sha256').update(JSON.stringify(out.networks)).digest('hex')
 /** The bytes of the cut's networks with seed 11: a change to the generator that moves anything shows here, and is recorded on purpose. */
 // re-recorded when the rules the output carries gained `layout.poles.minGap` (nodes and edges unchanged)
-const RECORDED = '36e926ebc71b730eb26b14a51f3db6afff15bab1ed81302eacf0320eb6751f6a'
+// re-recorded again when the rules gained `sewer.turnTolerance`, `sewer.branchMaxSkew` and `storm` (nodes and edges unchanged)
+const RECORDED = 'e69d031dd0dde7ff5d71980aadb95bf7109a58494236e957c50c3aea22a9ef63'
 const count = (nodes: readonly NetworkNode[], kind: NetworkNode['kind']): number => nodes.filter((node) => node.kind === kind).length
 
 describe('generateNetworks', () => {

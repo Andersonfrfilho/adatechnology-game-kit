@@ -39,6 +39,13 @@ scene.add(drawn.root)
 // each frame: drawn.animate(t); when the camera moved: drawn.setFocus(x, z)
 ```
 
+
+`drawNetworkSurface(networks, { surfaceAt })` draws what shows of the buried networks (`surfacePiecesOf`): PV and gallery box covers flush with the road
+(2 mm over the frame, 2 mm over the lid), the inlets' grates, cleanout and valve covers, hydrants, the outfalls' wing walls, and at each lot the inspection
+cover, the meter box and the downspout's mouth, in two instanced draw calls. `remove(id)` takes a piece off the ground (a cover thrown by a blast).
+`drawBuriedNetworks(networks, { surfaceAt })` draws the pipes (two instanced halves each, so `sever(id, share)` can break one) and the pits under the covers
+at their depths, in three draw calls: the terrain hides them and a crater deeper than their cover shows them.
+
 - Each `concrete_distribution` pole (or any registry pole with `slots`) stands at its node, turned with its arm toward its lamp: the mast
   instanced per spec, the hardware of `distributionHardwareOf` (crossarm and pin insulators where it carries medium voltage, the low-voltage
   clamp, one telecom clamp per cable, the arm and luminaire, the transformer's bracket and bushings) one instanced mesh of boxes, the

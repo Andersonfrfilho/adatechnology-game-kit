@@ -2,7 +2,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { LIGHT_PRIORITY } from '@adatechnology/game-render-three'
 import type { LightBudget, SourceHandle } from '@adatechnology/game-render-three'
 import type { ItemBox, LightPart, PartStyle, SilhouetteWindow, UrbanPart, UrbanScene } from '@adatechnology/game-urban'
-import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
+import type { SurfacePiecesOptions, UtilityNetworks } from '@adatechnology/game-urban/networks'
 import { shapeGeometries, standOutCoincident } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 
@@ -13,6 +13,10 @@ import type { CanvasFactory } from './text'
 import type { PlacementResolver } from './resolvers'
 import { drawNetworks } from './networks/draw-networks'
 import type { DrawnNetworks, NetworkDrawOptions } from './networks/draw-networks'
+import { drawBuried } from './networks/draw-buried'
+import type { DrawnBuried } from './networks/draw-buried'
+import { drawSurface } from './networks/draw-surface'
+import type { DrawnSurface } from './networks/draw-surface'
 
 type Three = typeof THREE_NS
 type Obj = THREE_NS.Object3D
@@ -453,7 +457,13 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
   const networks = (data: UtilityNetworks, drawOptions: NetworkDrawOptions = {}): DrawnNetworks =>
     drawNetworks(THREE, { networks: data, options: drawOptions, ...(options.lights ? { budget: options.lights } : {}), ...(options.physicalLights ? { physicalLights: true } : {}) })
 
-  return { THREE, draw, drawNetworks: networks }
+  /** Draws what shows of the buried networks (covers, grates, hydrants, wing walls, the boxes of each lot): two draw calls. */
+  const networkSurface = (data: Pick<UtilityNetworks, 'nodes' | 'edges'>, surfaceOptions?: SurfacePiecesOptions): DrawnSurface => drawSurface(THREE, { networks: data, ...(surfaceOptions ? { options: surfaceOptions } : {}) })
+
+  /** Draws the pipes and pits under the street at their depths, for a crater to show: three draw calls. */
+  const buriedNetworks = (data: Pick<UtilityNetworks, 'nodes' | 'edges'>, surfaceOptions?: SurfacePiecesOptions): DrawnBuried => drawBuried(THREE, { networks: data, ...(surfaceOptions ? { options: surfaceOptions } : {}) })
+
+  return { THREE, draw, drawNetworks: networks, drawNetworkSurface: networkSurface, drawBuriedNetworks: buriedNetworks }
 }
 
 export type UrbanThree = ReturnType<typeof createUrbanThree>

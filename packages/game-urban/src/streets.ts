@@ -3,19 +3,21 @@ import type { UrbanBuilder } from './scene'
 /** Look of the road surface and its centre line; the defaults are the Galeria's. */
 export type RoadStyle = {
   color: number
+  /** Lay the asphalt plane (default). Without it only the dashes are drawn and the ground under the road shows: a host whose terrain has a road layer (a blast digs it) leaves the plane out. */
+  plane: boolean
   /** Painted dashes along the centre line. */
   dash: { color: number; every: number; first: number; length: number; width: number; height: number; y: number }
 }
 
 export type WalkStyle = { color: number; height: number; castShadow: boolean }
 
-export const DEFAULT_ROAD_STYLE: RoadStyle = { color: 0x222428, dash: { color: 0x8f7f4f, every: 5, first: 2, length: 1.8, width: 0.16, height: 0.01, y: 0.025 } }
+export const DEFAULT_ROAD_STYLE: RoadStyle = { color: 0x222428, plane: true, dash: { color: 0x8f7f4f, every: 5, first: 2, length: 1.8, width: 0.16, height: 0.01, y: 0.025 } }
 export const DEFAULT_WALK_STYLE: WalkStyle = { color: 0x3a3b3c, height: 0.15, castShadow: false }
 const ROAD_LEVEL = 0.02
 const DEFAULT_GROUND_COLOR = 0x15181a
 const DEFAULT_GROUND_SIZE = 600
 
-export type StreetOptions = { road?: Partial<RoadStyle> & { dash?: Partial<RoadStyle['dash']> }; walk?: Partial<WalkStyle> }
+export type StreetOptions = { road?: Partial<Omit<RoadStyle, 'dash'>> & { dash?: Partial<RoadStyle['dash']> }; walk?: Partial<WalkStyle> }
 
 const roadStyle = (o?: StreetOptions): RoadStyle => ({ ...DEFAULT_ROAD_STYLE, ...o?.road, dash: { ...DEFAULT_ROAD_STYLE.dash, ...o?.road?.dash } })
 const walkStyle = (o?: StreetOptions): WalkStyle => ({ ...DEFAULT_WALK_STYLE, ...o?.walk })
@@ -24,7 +26,7 @@ const walkStyle = (o?: StreetOptions): WalkStyle => ({ ...DEFAULT_WALK_STYLE, ..
 export function drawRoad(b: UrbanBuilder, x: number, z: number, w: number, l: number, along: 'x' | 'z', options?: StreetOptions): void {
   const style = roadStyle(options)
   const alongX = along === 'x'
-  b.plane(x, ROAD_LEVEL, z, alongX ? l : w, alongX ? w : l, style.color)
+  if (style.plane) b.plane(x, ROAD_LEVEL, z, alongX ? l : w, alongX ? w : l, style.color)
   const { dash } = style
   for (let u = -l / 2 + dash.first; u < l / 2; u += dash.every) {
     b.item(alongX ? x + u : x, dash.y, alongX ? z : z + u, alongX ? dash.length : dash.width, dash.height, alongX ? dash.width : dash.length, dash.color)
