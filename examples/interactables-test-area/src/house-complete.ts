@@ -25,6 +25,7 @@ const MAX_BLOWS = 16
 const SHOT_PULLS = 20
 const SHOTS = 3
 const USE_SECONDS = 4
+const USE_TRIES = 2
 
 export interface HouseCompleteOptions {
   readonly locale?: string
@@ -136,7 +137,7 @@ const entriesOf = (room: Room, objectId: string): number => room.log.entries({ o
 const isHurt = (room: Room, objectId: string): boolean => (room.world.state(objectId)?.parts ?? []).some((part) => part.status !== 'intact' || part.hp < part.maxHp || part.holes.length > 0)
 
 function tryUse(trial: Trial, so: SpawnedObject): boolean | null {
-  const { room, step } = trial
+  const { room } = trial
   const leaves = room.leaves(so.objectId)
   if (leaves.length === 0) return null
   // a leaf a blow beside it already tore off is no longer a part of the piece: only one still on it can open
@@ -144,10 +145,17 @@ function tryUse(trial: Trial, so: SpawnedObject): boolean | null {
   const leaf = leaves.find((id) => attached.has(id))
   if (!leaf) return false
   aimAt(trial, so)
-  room.useLeaf(so.objectId, leaf)
-  // the hand first walks to the handle (a peg on a clothesline 2 m up takes longer than a fridge door): wait for the leaf to move, as a player does
-  for (let waited = 0; waited < USE_SECONDS && room.leafOpening(so.objectId, leaf) <= 0.05; waited += 0.2) step(0.2)
+  // a hand that did not get there (something in the way) tries again, as a player does
+  for (let tries = 0; tries < USE_TRIES && room.leafOpening(so.objectId, leaf) <= 0.05; tries++) {
+    room.useLeaf(so.objectId, leaf)
+    waitForLeaf(trial, so, leaf)
+  }
   return room.leafOpening(so.objectId, leaf) > 0.05
+}
+
+/** Waits for a leaf to move: the hand first walks to the handle (a peg on a clothesline 2 m up takes longer than a fridge door). */
+function waitForLeaf({ room, step }: Trial, so: SpawnedObject, leaf: string): void {
+  for (let waited = 0; waited < USE_SECONDS && room.leafOpening(so.objectId, leaf) <= 0.05; waited += 0.2) step(0.2)
 }
 
 function tryPick(trial: Trial, so: SpawnedObject): boolean {
@@ -210,15 +218,20 @@ function attempt<T>(errors: string[], run: () => T, failed: T): T {
 
 type HandTrial = Pick<HouseItemTrial, 'item' | 'looked' | 'used' | 'picked' | 'errors'>
 
-/** What the hands try on a piece, as a player does: look at it, open it, pick it up. */
-export function handTrialOf(trial: Trial, so: SpawnedObject): HandTrial {
-  aimAt(trial, so)
-  trial.step(0.05)
-  const errors: string[] = []
-  const looked = trial.room.inspect()?.objectId === so.objectId
-  const used = attempt<boolean | null>(errors, () => tryUse(trial, so), false)
-  const picked = attempt(errors, () => tryPick(trial, so), false)
-  return { item: so.itemId, looked, used, picked, errors }
+/**
+ * What the hands try on every piece, as a player does, a pass at a time so no trial gets in the way of the next one: look at each piece first, then open each
+ * one, then pick each one up (a piece let go of lies at the feet, in front of the next ones).
+ */
+export function handTrialsOf(trial: Trial, pieces: readonly SpawnedObject[]): HandTrial[] {
+  const errors = pieces.map((): string[] => [])
+  const looked = pieces.map((so) => {
+    aimAt(trial, so)
+    trial.step(0.05)
+    return trial.room.inspect()?.objectId === so.objectId
+  })
+  const used = pieces.map((so, index) => attempt<boolean | null>(errors[index] as string[], () => tryUse(trial, so), false))
+  const picked = pieces.map((so, index) => attempt(errors[index] as string[], () => tryPick(trial, so), false))
+  return pieces.map((so, index) => ({ item: so.itemId, looked: looked[index] === true, used: used[index] ?? null, picked: picked[index] === true, errors: errors[index] ?? [] }))
 }
 
 /** What the weapons try on a piece: a shot, then blows until it breaks. */
@@ -263,7 +276,7 @@ function scenariosOf(locale: Locale, layout: () => HouseCompleteLayout, three: (
         const floor = layout().onFloor
         const pieces = spawned.filter((so) => floor.has(so.itemId) || layout().onWall.has(so.itemId))
         // every piece is handled before any is shot or broken: debris of a neighbour must not stand between the hand and a door
-        const hands = pieces.map((so) => handTrialOf({ room, step, THREE }, so))
+        const hands = handTrialsOf({ room, step, THREE }, pieces)
         const trials = pieces.map((so, index) => {
           const trial = damageTrialOf({ room, step, THREE }, so, hands[index] as HandTrial)
           room.log.add({ channel: 'action', type: HOUSE_COMPLETE_TRIAL_LOG, text: `${trial.item}: ${JSON.stringify(trial)}`, itemId: trial.item, data: { ...trial } })
