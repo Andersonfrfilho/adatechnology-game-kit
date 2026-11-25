@@ -16,6 +16,8 @@ const SHAFT_SEGMENTS = 14
 const BREAK_GAP = 1.2
 /** Metres the shaft's wall goes under the bottom of its pipe (the pit's floor). */
 const FLOOR = 0.1
+/** Metres the lid of a square pit lies under the ground: the terrain covers it, so its top is never in the plane of the asphalt (CLAUDE.md §13). */
+const ROOF_DEPTH = 0.004
 
 export type DrawnBuried = {
   readonly root: THREE_NS.Object3D
@@ -94,8 +96,8 @@ export function drawBuried(THREE: Three, { networks, root, options }: { readonly
     roundMesh.setColorAt(slot, color.set(SHAFT_COLOR[shaft.material]))
   })
   square.forEach(({ piece, shaft }, slot) => {
-    const height = shaft.top - shaft.bottom + FLOOR
-    squareMesh.setMatrixAt(slot, matrix.compose(new THREE.Vector3(piece.at[0], shaft.top - height / 2, piece.at[2]), new THREE.Quaternion().setFromAxisAngle(up, piece.ry), new THREE.Vector3(shaft.width, height, shaft.depth)))
+    const height = shaft.top - ROOF_DEPTH - shaft.bottom + FLOOR
+    squareMesh.setMatrixAt(slot, matrix.compose(new THREE.Vector3(piece.at[0], shaft.top - ROOF_DEPTH - height / 2, piece.at[2]), new THREE.Quaternion().setFromAxisAngle(up, piece.ry), new THREE.Vector3(shaft.width, height, shaft.depth)))
     squareMesh.setColorAt(slot, color.set(SHAFT_COLOR[shaft.material]))
   })
   group.add(pipeMesh, roundMesh, squareMesh)
