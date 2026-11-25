@@ -115,7 +115,8 @@ export function drawBuried(THREE: Three, { networks, root, options }: { readonly
     squareMesh.setColorAt(slot, color.set(SHAFT_COLOR[shaft.material]))
   })
   const byId = new Map(pipes.map((pipe) => [pipe.id, pipe]))
-  group.add(pipeMesh, bankMesh, roundMesh, squareMesh)
+  group.add(pipeMesh, roundMesh, squareMesh)
+  if (bankMesh.count > 0) group.add(bankMesh)
   return {
     root: group,
     pipes,
