@@ -90,10 +90,10 @@ export const DEFAULT_RULES: WeaponRules = {
     // tucking a pistol in the belt and drawing it back is a short motion of one hand
     stowSeconds: 0.45,
   },
-  // as mãos de cada arma e onde ela vai quando as mãos são pedidas (decisão do dono, 2026-11-24): arma longa pede as duas mãos; a de cinto vai no coldre, a longa na bandoleira ou nas costas
+  // as mãos de cada arma e onde ela vai quando as mãos são pedidas (decisão do dono, 2026-11-24): arma longa pede as duas mãos; a de cinto vai no coldre, a longa na bandoleira ou nas costas; o fuzil e a espingarda pendem da bandoleira (dono, 2026-11-25): sem bandoleira vão para as costas (SLOT_FALLBACKS do game-player)
   hands: {
     twoHanded: { categories: ['smg', 'rifle', 'carbine', 'sniper', 'dmr', 'hunting', 'machine_gun', 'launcher', 'shotgun', 'bow', 'crossbow', 'extinguisher'], weapons: ['flamethrower'] },
-    slots: { pistol: 'hip', revolver: 'hip', melee_blade: 'hip', melee_blunt: 'hip', tool: 'hip', throwable: 'hip', heat: 'hip', smg: 'back', rifle: 'back', carbine: 'back', sniper: 'back', dmr: 'back', hunting: 'back', shotgun: 'back', bow: 'back', crossbow: 'back', machine_gun: 'back', launcher: 'back' },
+    slots: { pistol: 'hip', revolver: 'hip', melee_blade: 'hip', melee_blunt: 'hip', tool: 'hip', throwable: 'hip', heat: 'hip', smg: 'sling', rifle: 'sling', carbine: 'sling', sniper: 'sling', dmr: 'sling', hunting: 'sling', shotgun: 'sling', bow: 'back', crossbow: 'back', machine_gun: 'back', launcher: 'back' },
     // the long-handled tools and the long blade hang across the back; a chainsaw has no place on the body
     weaponSlots: { lighter: 'hip', flamethrower: 'back', axe: 'back', sledgehammer: 'back', pickaxe: 'back', shovel: 'back', katana: 'back', chainsaw: null },
     bare: ['kick', 'shove', 'fists'],

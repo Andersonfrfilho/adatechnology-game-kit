@@ -276,7 +276,7 @@ it goes back off when another tool is taken. The laser measures its distance at 
 `rules.hands` says how many hands each weapon takes and where on the body it goes when the hands are wanted for something else: `twoHanded` (by category: the SMGs, rifles, carbines,
 shotguns, launchers, bows, the extinguisher; by id: the flamethrower; or a `two_handed` tag) unless it goes one in each hand (`dualWield`), `slots` by category (`hip`: a holster for the
 handguns, knives, tools and throwables; `back`: a sling for the long guns), `weaponSlots` by id over it, and `bare` (the kick, the shove, the fists: nothing in the hand).
-`weaponHandsOf(arsenal, id)` answers `{ hands: 0 | 1 | 2, slot }`; `planHands` of `@adatechnology/game-player` turns it into what happens to the weapon (decision of the owner, 2026-11-24).
+`weaponHandsOf(arsenal, id)` answers `{ hands: 0 | 1 | 2, slot }`; `planHands` of `@adatechnology/game-player` turns it into what happens to the weapon (decision of the owner, 2026-11-24). Rifles, carbines, SMGs, sniper and hunting rifles and shotguns hang on their own `sling` (owner, 2026-11-25); `createSlingSwing(rules?)` is the pendulum a slung gun swings on, in the body's frame: `step(dt, [right, up, forward] acceleration of the sling point)` answers how far it swings `forward` off the chest (never back into it) and to the `side`, damped (`SLING_SWING_DEFAULTS`). Visual only: it moves nothing of the simulation.
 
 ### A weapon in each hand
 

@@ -16,7 +16,8 @@
 //   ?ui=0               hide the panels
 //   ?combo=1            start with the punch combo on (N toggles it: jab, cross, hook, uppercut)
 //   ?cam=third          start in third person (V toggles 1st/3rd person at any time; the player's body is in the room)
-//   ?bodySlots=hip,back where the body puts a weapon away to free the hands (default hip: a holster, no sling; ?bodySlots= none: the weapon drops)
+//   ?bodySlots=hip,back where the body puts a weapon away to free the hands (default hip and the long gun's own sling, which every list but the empty one
+//                       gets: a rifle hangs on it and H brings it back; back takes the axes and long tools; ?bodySlots= none: the weapon drops)
 //   ?arena=40           half size of the arena in metres (default 14): the houses area needs room for a whole lot
 //   ?bench.<moduleId>=size=2;smoke=0   bench state of that module (the page keeps it up to date as the controls change)
 //   ?table=<group>      lay that catalogue group (its tab name, e.g. Itens, Armas) on the test table (default: the goods, Itens; ?table=0 leaves it empty)

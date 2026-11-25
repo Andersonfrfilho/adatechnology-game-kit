@@ -498,7 +498,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       const worldEffects = createWorldEffects({ arsenal })
       // the weapons put away on the body while the hands do something else (`holster` events), where the host's body keeps them
       const bodySlot = lent.bodySlot?.bind(lent)
-      const holstered = bodySlot ? createHolsteredWeapons({ THREE: lent.THREE as typeof THREE_NS, scene: lent.scene as THREE_NS.Scene, arsenal, ...(options.items ? { items: options.items } : {}), bodySlot }) : null
+      const holstered = bodySlot ? createHolsteredWeapons({ THREE: lent.THREE as typeof THREE_NS, scene: lent.scene as THREE_NS.Scene, arsenal, ...(options.items ? { items: options.items } : {}), bodySlot, holdFrame: () => lent.holdFrame?.('R') ?? null }) : null
       const offEvents = lent.on((event) => {
         worldEffects.handle(event, lent.effects)
         if (event.type === 'holster') {
@@ -513,6 +513,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
           return
         }
         const tool = lent.tool()
+        if (event.type === 'tool') holstered?.inHand(event.weapon)
         created.handle(event, tool)
         if (event.type === 'reload' && event.phase === 'start') {
           const clip = created.clips.find((entry) => entry.name.startsWith('reload'))
@@ -525,9 +526,10 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       })
       const offFrame = lent.onFrame((dt) => {
         created.update(dt)
-        holstered?.update()
+        holstered?.update(dt)
       })
-      const offHands = lent.setHandTargets?.(() => created.handTargets())
+      // a weapon on its way between the hand and the body takes the right hand with it
+      const offHands = lent.setHandTargets?.(() => holstered?.handTargets() ?? created.handTargets())
       const offMuzzle = lent.setMuzzleSource?.((hand) => created.muzzle(hand))
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {

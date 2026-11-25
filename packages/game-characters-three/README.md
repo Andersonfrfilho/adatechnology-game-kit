@@ -62,4 +62,4 @@ the old path made them.
 
 ## Places for a weapon put away
 
-`PlayerAvatar.slot('hip' | 'back')` is a socket on the body where a weapon put away is drawn (`createBodySlots`, `body-slots.ts`): the hip on the weapon side at the belt, the back between the shoulder blades, each read off the body's own surface at rest and `BODY_SLOT_CLEARANCE` (6 mm) off the cloth, in the body's turn (+z its front, -x the weapon side). The test room answers `ModuleHost.bodySlot` from them.
+`PlayerAvatar.slot('hip' | 'back' | 'sling')` is a socket on the body where a weapon put away is drawn (`createBodySlots`, `body-slots.ts`): the hip on the weapon side at the belt, the back between the shoulder blades, the sling point on the front of the chest a little to the weapon side (a rifle hangs from it), each read off the body's own surface at rest and `BODY_SLOT_CLEARANCE` (6 mm) off the cloth, in the body's turn (+z its front, -x the weapon side). The test room answers `ModuleHost.bodySlot` from them.
