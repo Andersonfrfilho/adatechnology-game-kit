@@ -67,6 +67,9 @@ export interface PartAperture {
   bars?: { axis: 0 | 1; spacing: number; width: number }
 }
 
+/** Hands a thing needs to be carried: one leaves the other free, two take both. */
+export type CarryHands = 1 | 2
+
 export interface PartSpec {
   /** Unique inside the object. */
   id: string
@@ -128,6 +131,12 @@ export interface PartSpec {
   }
   /** Fixed to the world (a wall-mounted cabinet, a tree trunk in the ground). Groups that keep an anchored part stay in place. */
   anchored?: boolean
+  /**
+   * The part is taken off its object by hand and carried with this many hands (a book on its shelf: 1). Taking it (`take` of the destruction world)
+   * opens at once the joints that hold it, all of which a hand must be able to undo (`resting`); it then comes off as a piece of its own. One hand
+   * leaves the other free (the player stays armed); two need both. Without it the part is not taken by hand.
+   */
+  hands?: CarryHands
   /** Free tags the host can use (`door`, `wheel`, `screen`, `trunk`, `leaf`...). */
   tags?: string[]
   /**

@@ -38,6 +38,7 @@ export type {
   PartAperture,
   PartShape,
   PartSpec,
+  CarryHands,
   PartBreach,
   PartState,
   PartStatus,
