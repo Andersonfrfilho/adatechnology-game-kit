@@ -70,6 +70,8 @@ import { createHandTake, createTakenInHand, partNameOf } from './hand-take'
 import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
+import { runSteps, runStepsAsync } from './steps'
+import { vehicleLeafKey } from './vehicle-leaf-key'
 import type { ToolMenuGroup } from './tool-menu'
 import type {
   AnimationInfo,
@@ -205,16 +207,6 @@ const dist3 = (a: Vec3, b: Vec3): number => Math.hypot(a[0] - b[0], a[1] - b[1],
  * Create the test room. See `TestRoomOptions`. The room owns a renderer, scene and camera unless you pass them; with your own renderer you call
  * `room.update(dt)` every frame and render yourself.
  */
-/**
- * The sound key of a vehicle's door, hood or trunk lid (`vehicle_door_shut`...): a car leaf has its own sounds, not those of its sheet metal. The part's
- * role tag (`door`, `hood`, `lid`, from game-vehicles) says which; an untagged leaf counts as a door.
- */
-const vehicleLeafKey = (spec: DestructibleSpec, part: string, moment: 'open' | 'shut'): string => {
-  const tags = spec.parts.find((p) => p.id === part)?.tags ?? []
-  const leaf = tags.includes('hood') ? 'hood' : tags.includes('lid') || tags.includes('trunk') ? 'trunk' : 'door'
-  return `vehicle_${leaf}_${moment}`
-}
-
 /** The destruction events that already play the impact of a blow (a mark, a break): a blow without any of them plays its contact sound itself. */
 const MARK_EVENTS: ReadonlySet<string> = new Set(['dent', 'hole', 'crack', 'chip', 'stage', 'fracture'])
 
@@ -3448,8 +3440,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (speed < 3.5) return
       if ((lastImpact.get(piece.objectId) ?? -9) > simTime - 0.25) return
       const dir: Vec3 = [v[0] / speed, v[1] / speed, v[2] / speed]
-      const c = tmpV.copy(new THREE.Vector3(0, 0, 0))
-      void c
       const box = tmpBox.setFromObject(piece.root)
       const centre = box.getCenter(tmpV)
       const size = box.getSize(tmpV2)
@@ -4540,7 +4530,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (probes) kit.warmup.register(probeOf({ id: `scenery:${object.id}`, adapter: { warmUpProbes: () => probes(THREE) } }))
   }
 
-  const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => {
+  // one item's throw-away build and checks per step: `loadModuleAsync` lets the page paint between them (a fleet of vehicles takes seconds)
+  function* loadModuleSteps(mod: TestableModule<ScenarioContext>): Generator<string, ModuleReport> {
     const report: ModuleReport = { module: mod.id, items: [], scenarios: [], ok: true, problems: [] }
     const fail = (problem: string): void => {
       report.ok = false
@@ -4548,6 +4539,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     const added = mod.items(locale)
     for (const ti of added) {
+      yield ti.id
       const item: TestRoomItem = {
         id: ti.id,
         name: ti.name,
@@ -4661,6 +4653,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ui?.refresh()
     return report
   }
+  const loadModule = (mod: TestableModule<ScenarioContext>): ModuleReport => runSteps(loadModuleSteps(mod))
+  const loadModuleAsync = (mod: TestableModule<ScenarioContext>, between: (itemId: string) => Promise<void>): Promise<ModuleReport> => runStepsAsync(loadModuleSteps(mod), between)
 
   const allScenarios = (): TestRoomScenario[] => [...extraScenarios]
   let scenarioRunning = false
@@ -4998,6 +4992,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     graphicsScreen: graphics?.screen ?? null,
     busy: (label, work, busyOptions) => loading.busy(label, work, busyOptions),
     loadModule,
+    loadModuleAsync,
     warmUp: () => {
       audio?.warmUp()
       kit.warmUp()

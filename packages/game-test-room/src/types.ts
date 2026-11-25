@@ -632,6 +632,11 @@ export interface TestRoom {
    */
   loadModule(module: TestableModule<ScenarioContext>): ModuleReport
   /**
+   * `loadModule` a step at a time: awaits `between(itemId)` before each item is built and checked, so a page can show a bar and paint between the items of a heavy module (a
+   * fleet of vehicles). Same report as `loadModule`.
+   */
+  loadModuleAsync(module: TestableModule<ScenarioContext>, between: (itemId: string) => Promise<void>): Promise<ModuleReport>
+  /**
    * Compiles the shader programs that the first hit, decal or effect would otherwise compile in the middle of a frame, then draws a throw-away blast (its particle materials
    * and lights make the materials recompile the first time they appear) and a fire and clears them, so a loading screen can pay those first-frame costs. Nothing of it stays
    * in the world, the log or the sound. Call it once the lights of the scene are set (a module that adds lights changes the programs).
