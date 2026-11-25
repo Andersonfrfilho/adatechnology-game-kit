@@ -1,5 +1,24 @@
 # @adatechnology/game-weapons-three
 
+## 0.24.0
+
+### Minor Changes
+
+- 81e70aa: A weapon put away is drawn on the body: `HostEvent` `holster` and `ModuleHost.bodySlot` (game-contracts), `PlayerAvatar.slot('hip' | 'back')` (game-characters-three), `createHolsteredWeapons`/`holsteredModel` (game-weapons-three: pistol on the hip, long gun across the back); the test room sends the events and lends the slots.
+
+### Patch Changes
+
+- Updated dependencies [9a2dcfb]
+- Updated dependencies [81e70aa]
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-floorplan-three@1.2.0
+  - @adatechnology/game-weapons@0.13.0
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-items-three@0.9.1
+  - @adatechnology/game-audio@0.15.1
+  - @adatechnology/game-render-three@0.4.1
+  - @adatechnology/game-vfx-three@0.10.5
+
 ## 0.23.0
 
 ### Minor Changes

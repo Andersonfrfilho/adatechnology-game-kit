@@ -1,5 +1,19 @@
 # @adatechnology/game-floorplan-three
 
+## 1.2.0
+
+### Minor Changes
+
+- 9a2dcfb: Etapas da construção na ordem de uma obra brasileira: 0 planta, 1 fundação (baldrame impermeabilizado), 2 estrutura, 3 alvenaria, 4 instalações embutidas, 5 madeiramento do telhado (sobre a obra no osso), 6 telhas, calhas e condutores, 7 reboco e acabamento por dentro e por fora, 8 esquadrias, calçada e casa completa. `STAGE_LEVEL` exporta o nível de cada etapa. O madeiramento afasta caibros e ripas das faces da obra no osso (sem faces coincidentes antes do reboco); o reboco do telhado (oitões, beirais, platibandas) entra com o reboco.
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-destruction@0.29.1
+  - @adatechnology/game-floorplan-structure@3.1.1
+  - @adatechnology/game-render-three@0.4.1
+
 ## 1.1.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @adatechnology/game-contracts
 
+## 0.37.0
+
+### Minor Changes
+
+- 81e70aa: A weapon put away is drawn on the body: `HostEvent` `holster` and `ModuleHost.bodySlot` (game-contracts), `PlayerAvatar.slot('hip' | 'back')` (game-characters-three), `createHolsteredWeapons`/`holsteredModel` (game-weapons-three: pistol on the hip, long gun across the back); the test room sends the events and lends the slots.
+
 ## 0.36.0
 
 ### Minor Changes

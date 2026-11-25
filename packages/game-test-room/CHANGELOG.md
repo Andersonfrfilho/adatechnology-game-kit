@@ -1,5 +1,32 @@
 # @adatechnology/game-test-room
 
+## 0.37.0
+
+### Minor Changes
+
+- 81e70aa: Hands and holster (owner's rule, 2026-11-24): `planHands`, `drawBackOf` and `interactionHandsFor` in game-player; `rules.hands` and `weaponHandsOf` in game-weapons; the test room picks a small thing up in the off hand with the weapon still in hand, and a big thing or a push first puts the weapon away in the slot that fits (`bodySlots`, default a hip holster) or drops it to the floor, drawing it back after.
+- 81e70aa: A weapon put away is drawn on the body: `HostEvent` `holster` and `ModuleHost.bodySlot` (game-contracts), `PlayerAvatar.slot('hip' | 'back')` (game-characters-three), `createHolsteredWeapons`/`holsteredModel` (game-weapons-three: pistol on the hip, long gun across the back); the test room sends the events and lends the slots.
+- 81e70aa: A big thing is carried in both hands: in front of the chest with a palm on each of its sides (`bothHandsCarry`), in first and third person; `?bodySlots=hip,back` on the test-room page.
+
+### Patch Changes
+
+- Updated dependencies [81e70aa]
+- Updated dependencies [81e70aa]
+  - @adatechnology/game-player@0.8.0
+  - @adatechnology/game-weapons@0.13.0
+  - @adatechnology/game-contracts@0.37.0
+  - @adatechnology/game-destruction@0.29.1
+  - @adatechnology/game-items@0.2.17
+  - @adatechnology/game-audio@0.15.1
+  - @adatechnology/game-destruction-three@0.26.1
+  - @adatechnology/game-fluids@0.6.6
+  - @adatechnology/game-fluids-three@0.6.1
+  - @adatechnology/game-kit-defaults@0.3.2
+  - @adatechnology/game-render-three@0.4.1
+  - @adatechnology/game-runtime@0.3.1
+  - @adatechnology/game-terrain@0.9.1
+  - @adatechnology/game-terrain-three@0.6.3
+
 ## 0.36.0
 
 ### Minor Changes
