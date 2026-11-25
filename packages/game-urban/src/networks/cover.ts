@@ -30,7 +30,7 @@ export type CoverBody = {
 }
 
 /** Kilograms per cubic metre of each material of a cover (the `game-destruction` table). */
-const DENSITY: Readonly<Record<SurfacePiece['material'], number>> = { cast_iron: 7200, concrete: 2400, plastic: 950 }
+const DENSITY: Readonly<Record<SurfacePiece['material'], number>> = { cast_iron: 7200, concrete: 2400, plastic: 950, steel: 7850 }
 
 export function coverBodyOf(piece: SurfacePiece): CoverBody | undefined {
   if (piece.shaft === undefined || piece.solid) return undefined

@@ -12,6 +12,8 @@ export type DefaultConnectionRules = {
   /** Anchor of the service drop on the meter post over the ground, and of the telecom drop under it. */
   readonly powerHeight: number
   readonly telecomBelowPower: number
+  /** On an underground street: the telecom box beside the meter box along the front, metres. */
+  readonly telecomBesidePower: number
   /** Invert of the inspection box outlet under the ground; a lot set back from its street gets a shallower one, never under the least. */
   readonly sewerDepth: number
   readonly sewerLeastDepth: number
@@ -84,6 +86,28 @@ export type NetworkLayoutRules = {
     readonly hydrantOffset: number
   }
   readonly connection: DefaultConnectionRules
+  /** Underground power: the duct bank under the sidewalk on the water's side, the boxes, the pad-mounted transformers and the light columns across the street. */
+  readonly underground: {
+    /** The bank's centre this far from the kerb into the sidewalk (between the kerb and the water main), and its width. */
+    readonly bankFromKerb: number
+    readonly bankWidth: number
+    /** Height of each layer of ducts in the bank, low voltage on top, telecom, medium voltage at the bottom, `layerGap` of concrete between. */
+    readonly layers: { readonly lv: number; readonly telecom: number; readonly mv: number }
+    readonly layerGap: number
+    /** Outer diameters of a lot's power lateral, its telecom lateral and a light column's cable. */
+    readonly lateralDiameter: number
+    readonly telecomLateralDiameter: number
+    readonly lightCableDiameter: number
+    /** Longest gap between two boxes of the bank. */
+    readonly boxSpacing: number
+    /** Light columns on the far sidewalk, this far from its kerb, about this far apart. */
+    readonly lightFromKerb: number
+    readonly lightSpacing: number
+    /** A light column or a lateral keeps this far along the street from another pipe that crosses the street. */
+    readonly lateralGap: number
+    /** The pad-mounted transformer stands on the bank's sidewalk with its centre this far from the kerb. */
+    readonly padFromKerb: number
+  }
 }
 
 /** The defaults of a Brazilian street: 30 to 40 m spans, MV bare on the crossarm, LV multiplexed, sewer to an interceptor along the river. */
@@ -99,5 +123,19 @@ export const DEFAULT_NETWORK_LAYOUT: NetworkLayoutRules = {
   sewer: { mainDiameter: 0.15, lateralDiameter: 0.1, dropOffset: 1, interceptorOffset: 2 },
   storm: { galleryOffset: 2, galleryDiameter: 0.6, lateralDiameter: 0.4, inletSpacing: 60, inletSetback: 0.3, inletFromCorner: 1, riverLevel: -4 },
   water: { mainDiameter: 0.075, serviceDiameter: 0.02, sidewalkShare: 1 / 3, hydrantOffset: 0.6 },
-  connection: { frontInset: 0.3, sewerInset: 1, meterFromSide: 1, waterFromSide: 1.6, downspoutFromSide: 1, powerHeight: 5.7, telecomBelowPower: 0.6, sewerDepth: 0.6, sewerLeastDepth: 0.3 },
+  connection: { frontInset: 0.3, sewerInset: 1, meterFromSide: 1, waterFromSide: 1.6, downspoutFromSide: 1, powerHeight: 5.7, telecomBelowPower: 0.6, telecomBesidePower: 0.3, sewerDepth: 0.6, sewerLeastDepth: 0.3 },
+  underground: {
+    bankFromKerb: 0.35,
+    bankWidth: 0.26,
+    layers: { lv: 0.15, telecom: 0.1, mv: 0.15 },
+    layerGap: 0.02,
+    lateralDiameter: 0.1,
+    telecomLateralDiameter: 0.05,
+    lightCableDiameter: 0.05,
+    boxSpacing: 40,
+    lightFromKerb: 0.4,
+    lightSpacing: 35,
+    lateralGap: 0.8,
+    padFromKerb: 1.85,
+  },
 }

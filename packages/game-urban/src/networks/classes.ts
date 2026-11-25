@@ -1,6 +1,6 @@
 import type { UtilityNetwork } from '@adatechnology/game-contracts'
 
-import type { AerialEdgeKind, NetworkClass, NetworkEdgeKind, NetworkKind, NetworkNodeKind } from './types'
+import type { AerialEdgeKind, DuctEdgeKind, NetworkClass, NetworkEdgeKind, NetworkKind, NetworkNodeKind } from './types'
 
 /** The network each edge belongs to. A service drop is low voltage: a lot is never linked to the medium voltage. */
 export const EDGE_NETWORK: Readonly<Record<NetworkEdgeKind, NetworkKind>> = {
@@ -17,6 +17,12 @@ export const EDGE_NETWORK: Readonly<Record<NetworkEdgeKind, NetworkKind>> = {
   storm_gutter: 'storm',
   water_main: 'water',
   water_service: 'water',
+  mv_duct: 'power_mv',
+  lv_duct: 'power_lv',
+  service_lateral: 'power_lv',
+  light_cable: 'lighting',
+  telecom_duct: 'telecom',
+  telecom_lateral: 'telecom',
 }
 
 /** The class the rules read each edge by. */
@@ -34,6 +40,12 @@ export const EDGE_CLASS: Readonly<Record<NetworkEdgeKind, NetworkClass>> = {
   storm_gutter: 'storm',
   water_main: 'water',
   water_service: 'water',
+  mv_duct: 'power_mv',
+  lv_duct: 'power_lv',
+  service_lateral: 'service_drop',
+  light_cable: 'street_light',
+  telecom_duct: 'telecom',
+  telecom_lateral: 'telecom',
 }
 
 const AERIAL: ReadonlySet<NetworkEdgeKind> = new Set<AerialEdgeKind>(['mv_span', 'lv_span', 'telecom_span', 'service_drop', 'telecom_drop', 'light_feed'])
@@ -41,6 +53,15 @@ const AERIAL: ReadonlySet<NetworkEdgeKind> = new Set<AerialEdgeKind>(['mv_span',
 export function isAerialEdgeKind(kind: NetworkEdgeKind): kind is AerialEdgeKind {
   return AERIAL.has(kind)
 }
+
+const DUCTS: ReadonlySet<NetworkEdgeKind> = new Set<DuctEdgeKind>(['mv_duct', 'lv_duct', 'telecom_duct', 'service_lateral', 'telecom_lateral', 'light_cable'])
+
+export function isDuctEdgeKind(kind: NetworkEdgeKind): kind is DuctEdgeKind {
+  return DUCTS.has(kind)
+}
+
+/** The ducts that carry power (the rules of separation from water, sewer and drainage hold them; telecom is not power). */
+export const POWER_DUCTS: ReadonlySet<NetworkEdgeKind> = new Set<DuctEdgeKind>(['mv_duct', 'lv_duct', 'service_lateral', 'light_cable'])
 
 /** The network of a street a lot connection links to: `power` takes the low voltage. */
 export const CONNECTION_NETWORK: Readonly<Record<UtilityNetwork, NetworkKind>> = {

@@ -19,6 +19,7 @@ export type NetworkNodeKind =
   | 'treatment'
   | 'pumping_station'
   | 'connection'
+  | 'box'
 
 /** A point of a network, in world metres. */
 export type NetworkNode = {
@@ -36,6 +37,8 @@ export type NetworkNode = {
   readonly lot?: string
   /** A guy wire holds the pole (corner and end of line). */
   readonly guyed?: boolean
+  /** A transformer standing on the sidewalk in its cabinet (pad-mounted, underground power) instead of hanging on a pole. */
+  readonly mount?: 'pad'
 }
 
 export type NetworkEdgeKind =
@@ -52,11 +55,21 @@ export type NetworkEdgeKind =
   | 'storm_gutter'
   | 'water_main'
   | 'water_service'
+  | 'mv_duct'
+  | 'lv_duct'
+  | 'telecom_duct'
+  | 'service_lateral'
+  | 'telecom_lateral'
+  | 'light_cable'
 
 /** An aerial edge: a span between poles or a drop to a lot. */
 export type AerialEdgeKind = 'mv_span' | 'lv_span' | 'telecom_span' | 'service_drop' | 'telecom_drop' | 'light_feed'
-/** A buried edge: a pipe. */
+/** A buried edge: a pipe, or a duct of underground power and telecom. */
 export type BuriedEdgeKind = Exclude<NetworkEdgeKind, AerialEdgeKind>
+/** The ducts of underground power and telecom: the bank under the sidewalk, the laterals to the lots and the cables to the light columns. */
+export type DuctEdgeKind = Extract<NetworkEdgeKind, 'mv_duct' | 'lv_duct' | 'telecom_duct' | 'service_lateral' | 'telecom_lateral' | 'light_cable'>
+/** How a street takes its power: on poles (the default) or under the sidewalk in a duct bank. */
+export type PowerMode = 'overhead' | 'underground'
 
 /**
  * The class a rule reads an edge by: the clearance of a conductor, the slope and cover of a pipe. A service drop has the clearance of the
@@ -84,6 +97,8 @@ export type NetworkEdge = {
   readonly heights?: readonly [number, number]
   /** Buried: the inverts at `from` and `to` when they are not the nodes' own (a lateral entering a main from above). */
   readonly inverts?: readonly [number, number]
+  /** A duct bank: its width across, metres (its height is `diameter`). A round pipe has none. */
+  readonly width?: number
 }
 
 /** The networks of a district, as data. */

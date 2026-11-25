@@ -3,10 +3,21 @@ import type { NetworkGraph } from './graph'
 import type { NetworkEdge, NetworkNode, NetworkSurface, UtilityNetworks } from './types'
 
 /** What shows of the buried networks: each one a piece standing at a node of the ground. */
-export type SurfaceKind = 'manhole_cover' | 'cleanout_cover' | 'inlet_grate' | 'valve_cover' | 'hydrant' | 'wing_wall' | 'inspection_cover' | 'meter_box' | 'downspout_mouth'
+export type SurfaceKind =
+  | 'manhole_cover'
+  | 'cleanout_cover'
+  | 'inlet_grate'
+  | 'valve_cover'
+  | 'hydrant'
+  | 'wing_wall'
+  | 'inspection_cover'
+  | 'meter_box'
+  | 'downspout_mouth'
+  | 'power_box_cover'
+  | 'pad_transformer'
 
 /** Ids of `game-destruction` materials. */
-export type SurfaceMaterial = 'cast_iron' | 'concrete' | 'plastic'
+export type SurfaceMaterial = 'cast_iron' | 'concrete' | 'plastic' | 'steel'
 
 /** The pit under a cover, from the ground down to the pipe's bottom: round (a PV, a valve) or square (an inlet box, an inspection box). */
 export type Shaft = { readonly shape: 'round' | 'square'; readonly width: number; readonly depth: number; readonly top: number; readonly bottom: number; readonly material: SurfaceMaterial }
@@ -54,6 +65,10 @@ function specOf(node: NetworkNode): PieceSpec | undefined {
       return { kind: 'hydrant', shape: 'round', size: [0.2, 0.8, 0.2], material: 'cast_iron', solid: true, shaft: { shape: 'round', width: 0.1, depth: 0.1, material: 'cast_iron' } }
     case 'outfall':
       return { kind: 'wing_wall', shape: 'square', size: [3, 0.8, 1.6], material: 'concrete', solid: true }
+    case 'box':
+      return { kind: 'power_box_cover', shape: 'square', size: [0.5, 0.03, 0.5], material: 'concrete', solid: false, shaft: { shape: 'square', width: 0.5, depth: 0.5, material: 'concrete' } }
+    case 'transformer':
+      return node.mount === 'pad' ? { kind: 'pad_transformer', shape: 'square', size: [1.2, 1.3, 0.8], material: 'steel', solid: true } : undefined
     case 'connection':
       if (network === 'sewer') return { kind: 'inspection_cover', shape: 'square', size: [0.6, 0.03, 0.6], material: 'concrete', solid: false, shaft: { shape: 'square', width: 0.6, depth: 0.6, material: 'concrete' } }
       if (network === 'water') return { kind: 'meter_box', shape: 'square', size: [0.4, 0.3, 0.25], material: 'concrete', solid: true, shaft: { shape: 'round', width: 0.04, depth: 0.04, material: 'plastic' } }
@@ -62,6 +77,9 @@ function specOf(node: NetworkNode): PieceSpec | undefined {
       return undefined
   }
 }
+
+/** The edges that leave a node square to its street: a piece on them turns with its local x along the street. */
+const SQUARE: ReadonlySet<NetworkEdge['kind']> = new Set(['storm_lateral', 'sewer_lateral', 'water_service'])
 
 const unit = (dx: number, dz: number): readonly [number, number] => {
   const length = Math.hypot(dx, dz)
@@ -76,12 +94,12 @@ const planOf = (graph: NetworkGraph, id: string, from: NetworkNode): readonly [n
 /** The way the street runs at a node, from the pipe that leaves it: a lateral or a service leaves square to the street, a gutter or a main runs along it. */
 function alongOf(graph: NetworkGraph, node: NetworkNode): readonly [number, number] {
   const edges: readonly NetworkEdge[] = [...graph.outgoing(node.id), ...graph.incoming(node.id)]
-  const square = edges.find((edge) => edge.kind === 'storm_lateral' || edge.kind === 'sewer_lateral' || edge.kind === 'water_service')
+  const square = edges.find((edge) => SQUARE.has(edge.kind) || (node.mount === 'pad' && edge.kind === 'mv_duct'))
   if (square !== undefined) {
     const [dx, dz] = planOf(graph, square.from === node.id ? square.to : square.from, node)
     return unit(-dz, dx)
   }
-  const along = edges.find((edge) => edge.kind === 'storm_gutter' || edge.kind === 'storm_gallery' || edge.kind === 'sewer_main')
+  const along = edges.find((edge) => edge.kind === 'storm_gutter' || edge.kind === 'storm_gallery' || edge.kind === 'sewer_main' || edge.kind === 'lv_duct' || edge.kind === 'mv_duct')
   if (along === undefined) return [1, 0]
   const [dx, dz] = planOf(graph, along.from === node.id ? along.to : along.from, node)
   return unit(dx, dz)
@@ -112,7 +130,7 @@ export type SurfacePiecesOptions = {
 /**
  * What shows of the buried networks, a piece at each node that has a face on the ground: the PV and gallery box covers, the cleanout and valve
  * covers, the inlets' grates at the kerb, the hydrants, the wing walls at the outfalls, and at each lot the inspection box cover, the meter box
- * and the downspout's mouth. Each carries its pit down to the pipe's bottom.
+ * and the downspout's mouth; on an underground street the lid of every box of the duct bank and the pad-mounted transformers. Each carries its pit down to the pipe's bottom.
  */
 export function surfacePiecesOf(networks: Pick<UtilityNetworks, 'nodes' | 'edges'>, options: SurfacePiecesOptions = {}): SurfacePiece[] {
   const graph = buildNetworkGraph(networks)

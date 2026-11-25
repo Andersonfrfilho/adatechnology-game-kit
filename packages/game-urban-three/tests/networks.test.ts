@@ -173,3 +173,32 @@ describe('drawNetworks: merged meshes, budget and lamps', () => {
     drawn.dispose()
   })
 })
+
+describe('the light columns of an underground street', () => {
+  const generated = generateNetworks({ plan: PLAN, lots: LOTS, seed: 11, power: { districts: { centre: 'underground' } } })
+  const columns = generated.networks.nodes.filter((node) => node.kind === 'pole' && node.carries.length === 1 && node.carries[0] === 'lighting')
+
+  it('stands each column with its arm and lamp and no clamp of a conductor', () => {
+    const frames = poleFramesOf({ networks: generated.networks, index: indexOf(generated.networks), specOf: () => DEFAULT_POLES.find((pole) => pole.id === 'concrete_distribution')!.spec as DistributionSpec })
+    const own = frames.filter((frame) => columns.some((column) => column.id === frame.id))
+    expect(own.length).toBe(columns.length)
+    for (const frame of own) {
+      expect(frame.hardware.boxes.some((box) => box.role === 'lv_clamp' || box.role === 'telecom_clamp' || box.role === 'crossarm')).toBe(false)
+      expect(frame.hardware.lens).toBeDefined()
+    }
+  })
+
+  it('darkens the lamps an outage cuts and lights them again when the power comes back', () => {
+    const budget = createLightBudget(THREE, new THREE.Scene(), { point: 16, spot: 0, pointShadows: 0 })
+    const drawn = createUrbanThree(THREE, { document: fakeDocument, lights: budget }).drawNetworks(generated.networks, { isNight: true })
+    const lenses = drawn.root.getObjectByName('network:lenses') as THREE.InstancedMesh
+    const lit = drawn.lamps.filter((lamp) => lamp.on && columns.some((column) => lamp.pole === column.id)).map((lamp) => lamp.id)
+    expect(lit.length).toBeGreaterThan(0)
+    const before = Array.from(lenses.instanceColor!.array)
+    drawn.setLampsPowered(lit, false)
+    expect(Array.from(lenses.instanceColor!.array)).not.toEqual(before)
+    drawn.setLampsPowered(lit, true)
+    expect(Array.from(lenses.instanceColor!.array)).toEqual(before)
+    drawn.dispose()
+  })
+})

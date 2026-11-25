@@ -20,6 +20,8 @@ export type ValidateNetworksOptions = {
   readonly groundAt?: (x: number, z: number) => number
   /** The lots' fronts on their streets (`GeneratedNetworks.frontages`): with them the drops are held to the street's practice. */
   readonly frontages?: readonly LotFrontage[]
+  /** Whether a point lies on a street whose power runs underground (`GeneratedNetworks.undergroundAt`): no conductor may hang over it. */
+  readonly undergroundAt?: (x: number, z: number) => boolean
 }
 
 export type ValidationContext = {

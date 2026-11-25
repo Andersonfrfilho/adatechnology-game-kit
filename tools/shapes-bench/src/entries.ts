@@ -226,6 +226,16 @@ export function benchEntries(options: EntryOptions = {}): BenchEntry[] {
   // the same street's buried networks where they show (covers, grates, hydrants, wing walls, the boxes of each lot) and under the ground (pipes and pits)
   entries.push({ id: 'urban/network-surface', run: () => urbanFlickering.drawNetworkSurface(networkCut.networks, { surfaceAt: networkCut.surfaceAt }) })
   entries.push({ id: 'urban/network-buried', run: () => urbanFlickering.drawBuriedNetworks(networkCut.networks, { surfaceAt: networkCut.surfaceAt }) })
+  // the same street with its power underground (from the feed at the map's edge): light columns at night, box lids and pad transformers, the duct bank and its laterals
+  const undergroundCut = generateNetworks({
+    plan: { id: 'network_bench_underground', scale: 'town', size: [240, 240], districts: [{ id: 'periphery', kind: 'residential_popular', rect: [-120, -120, 120, 120] }], lines: [{ id: 'main_street', kind: 'street', width: 10, points: [[-118, 0], [110, 0]] }, { id: 'side_street', kind: 'street', width: 10, points: [[60, 0], [60, 110]] }] },
+    lots: [10, 22, 34].flatMap((x) => [{ id: `north_${x}`, rect: [x, -32.5, x + 12, -7.5] as const }, { id: `south_${x}`, rect: [x, 7.5, x + 12, 32.5] as const }]),
+    seed: 5,
+    power: { default: 'underground' },
+  })
+  entries.push({ id: 'urban/networks-underground', run: () => urbanFlickering.drawNetworks(undergroundCut.networks, { isNight: true, lamps: { lit: 0.7, flicker: 0.3 }, surfaceAt: undergroundCut.surfaceAt }) })
+  entries.push({ id: 'urban/network-surface-underground', run: () => urbanFlickering.drawNetworkSurface(undergroundCut.networks, { surfaceAt: undergroundCut.surfaceAt }) })
+  entries.push({ id: 'urban/network-buried-underground', run: () => urbanFlickering.drawBuriedNetworks(undergroundCut.networks, { surfaceAt: undergroundCut.surfaceAt }) })
 
   // houses: the seven typologies of the Visor (seed 3, full quality), the plan drawn once; the bench is the house renderer
   registerResidential(floorplanEngine)

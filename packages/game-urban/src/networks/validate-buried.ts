@@ -1,4 +1,4 @@
-import { isAerialEdgeKind } from './classes'
+import { POWER_DUCTS, isAerialEdgeKind, isDuctEdgeKind } from './classes'
 import { NETWORK_VIOLATION } from './codes'
 import { nearestShare, segmentCrossing } from './geometry'
 import type { PlanPoint } from './geometry'
@@ -8,7 +8,7 @@ import { edgeEnds } from './validate-context'
 import type { ValidationContext } from './validate-context'
 
 /** A pipe with everything the rules read: its ends, the inverts at each end and its diameter. */
-type Pipe = { readonly edge: NetworkEdge; readonly kind: BuriedEdgeKind; readonly from: NetworkNode; readonly to: NetworkNode; readonly inverts: readonly [number, number]; readonly diameter: number }
+export type Pipe = { readonly edge: NetworkEdge; readonly kind: BuriedEdgeKind; readonly from: NetworkNode; readonly to: NetworkNode; readonly inverts: readonly [number, number]; readonly diameter: number }
 
 const SLOPE_TOLERANCE = 1e-3
 
@@ -20,20 +20,21 @@ function groundAt(context: ValidationContext, pipe: Pipe, t: number): number {
   return context.options.groundAt?.(x, z) ?? lerp(pipe.from.at[1], pipe.to.at[1], t)
 }
 
-function pipeOf(context: ValidationContext, edge: NetworkEdge): Pipe | undefined {
+/** The pipe of a buried edge, reporting a missing invert or diameter unless `quiet` (a second pass over the same edges). */
+export function pipeOf(context: ValidationContext, edge: NetworkEdge, { quiet = false }: { readonly quiet?: boolean } = {}): Pipe | undefined {
   if (isAerialEdgeKind(edge.kind)) return undefined
   const ends = edgeEnds(context, edge)
   if (ends === undefined) return undefined
   const inverts = edge.inverts ?? (ends[0].invert !== undefined && ends[1].invert !== undefined ? ([ends[0].invert, ends[1].invert] as const) : undefined)
-  if (inverts === undefined) context.report({ code: NETWORK_VIOLATION.MISSING_INVERT, id: edge.id })
-  if (edge.diameter === undefined) context.report({ code: NETWORK_VIOLATION.MISSING_DIAMETER, id: edge.id })
+  if (inverts === undefined && !quiet) context.report({ code: NETWORK_VIOLATION.MISSING_INVERT, id: edge.id })
+  if (edge.diameter === undefined && !quiet) context.report({ code: NETWORK_VIOLATION.MISSING_DIAMETER, id: edge.id })
   if (inverts === undefined || edge.diameter === undefined) return undefined
   return { edge, kind: edge.kind, from: ends[0], to: ends[1], inverts, diameter: edge.diameter }
 }
 
 /** Gravity pipes fall along the flow by at least the least slope; a declared slope agrees with the inverts. */
 function validateSlope(context: ValidationContext, pipe: Pipe): void {
-  if (pipe.kind === 'water_main' || pipe.kind === 'water_service') return
+  if (pipe.kind === 'water_main' || pipe.kind === 'water_service' || isDuctEdgeKind(pipe.kind)) return
   const length = edgeLength(context.graph, pipe.edge)
   if (length === 0) return
   const slope = (pipe.inverts[0] - pipe.inverts[1]) / length
@@ -83,6 +84,8 @@ function validateCover(context: ValidationContext, pipe: Pipe, pipes: readonly P
   if (isSewer && deepest > context.rules.sewer.maxDepth) context.report({ code: NETWORK_VIOLATION.TOO_DEEP, id: pipe.edge.id, value: deepest, limit: context.rules.sewer.maxDepth })
 }
 
+const SEWERS: ReadonlySet<string> = new Set(['sewer_main', 'sewer_lateral'])
+
 const shareEnds = (a: NetworkEdge, b: NetworkEdge): boolean => a.from === b.from || a.from === b.to || a.to === b.from || a.to === b.to
 
 /** Two pipes that cross in plan keep the least vertical gap, and the one of lower rank (water, then the sewer lateral, then drainage, then the sewer main) goes above. */
@@ -98,7 +101,8 @@ function validateCrossing(context: ValidationContext, a: Pipe, b: Pipe): void {
   const separation = context.rules.crossing.separation
   if (gap < separation) context.report({ code: NETWORK_VIOLATION.CROSSING_TOO_CLOSE, id, value: gap, limit: separation })
   const rank = context.rules.crossing.rank
-  if (rank[upper.kind] > rank[lower.kind]) context.report({ code: NETWORK_VIOLATION.CROSSING_ORDER, id, detail: `${upper.edge.id} above ${lower.edge.id}` })
+  if (POWER_DUCTS.has(lower.kind) && SEWERS.has(upper.kind)) context.report({ code: NETWORK_VIOLATION.POWER_BELOW_SEWER, id, detail: `${lower.edge.id} under ${upper.edge.id}` })
+  else if (rank[upper.kind] > rank[lower.kind]) context.report({ code: NETWORK_VIOLATION.CROSSING_ORDER, id, detail: `${upper.edge.id} above ${lower.edge.id}` })
   const lateral = a.kind === 'sewer_lateral' && b.kind === 'storm_gallery' ? { pipe: a, t: crossing[0], bottom: bottomA } : b.kind === 'sewer_lateral' && a.kind === 'storm_gallery' ? { pipe: b, t: crossing[1], bottom: bottomB } : undefined
   if (lateral === undefined) return
   const depth = groundAt(context, lateral.pipe, lateral.t) - lateral.bottom

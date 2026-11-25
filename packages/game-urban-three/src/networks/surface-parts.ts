@@ -17,6 +17,9 @@ const CONCRETE = 0x9b9a94
 const CONCRETE_LID = 0xa8a7a0
 const VOID = 0x0b0b0c
 const HYDRANT_RED = 0xb02a22
+const CABINET_GREEN = 0x4d6a45
+const CABINET_SEAM = 0x2f3f2b
+const WARNING_YELLOW = 0xd8b21e
 
 /** Flat covers lie at the ground: the frame 2 mm over it, the lid 2 mm over the frame, the ribs another 2 mm and 4 mm (CLAUDE.md §13: nothing in the plane of another). */
 const FRAME_TOP = 0.002
@@ -86,6 +89,35 @@ function mouth(): SurfacePart[] {
   ]
 }
 
+/**
+ * A pad-mounted transformer (transformador em pedestal): the concrete plinth, the steel cabinet on it, the seam between its two doors and the
+ * vents on its sides, the warning plate on its door; each detail stands 2 mm or more out of the face it sits on (CLAUDE.md §13).
+ */
+function padTransformer(piece: SurfacePiece): SurfacePart[] {
+  const [width, height, depth] = piece.size
+  const plinth = 0.15
+  const body = height - plinth
+  const front = depth / 2
+  return [
+    { shape: 'box', centre: [0, plinth / 2 - 0.05, 0], size: [width + 0.1, plinth + 0.1, depth + 0.1], color: CONCRETE },
+    { shape: 'box', centre: [0, plinth + body / 2, 0], size: [width, body, depth], color: CABINET_GREEN },
+    { shape: 'box', centre: [0, plinth + body + 0.02, 0], size: [width + 0.06, 0.04, depth + 0.06], color: CABINET_GREEN },
+    { shape: 'box', centre: [0, plinth + body / 2, front + 0.004], size: [0.012, body - 0.12, 0.008], color: CABINET_SEAM },
+    { shape: 'box', centre: [-width / 4, plinth + body * 0.62, front + 0.004], size: [0.2, 0.14, 0.008], color: WARNING_YELLOW },
+    ...[-1, 1].map((end): SurfacePart => ({ shape: 'box', centre: [end * (width / 2 + 0.004), plinth + body * 0.7, 0], size: [0.008, 0.2, depth * 0.6], color: CABINET_SEAM })),
+  ]
+}
+
+/** The lid of a box of the duct bank: the iron frame, the concrete lid and a lifting bar at each end. */
+function powerBox(piece: SurfacePiece): SurfacePart[] {
+  const [width, , depth] = piece.size
+  return [
+    flat('box', FRAME_TOP, [width + 0.12, depth + 0.12], IRON),
+    flat('box', LID_TOP, [width, depth], CONCRETE_LID),
+    ...[-1, 1].map((end) => rib([0.12, 0.006, 0.025], RIB_TOP, [0, end * (depth / 2 - 0.08)])),
+  ]
+}
+
 /** The solids of a piece, by its kind. */
 export function partsOf(piece: SurfacePiece): SurfacePart[] {
   switch (piece.kind) {
@@ -99,6 +131,10 @@ export function partsOf(piece: SurfacePiece): SurfacePart[] {
       return meterBox(piece)
     case 'downspout_mouth':
       return mouth()
+    case 'pad_transformer':
+      return padTransformer(piece)
+    case 'power_box_cover':
+      return powerBox(piece)
     default:
       return cover(piece)
   }

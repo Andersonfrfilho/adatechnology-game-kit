@@ -39,6 +39,8 @@ export type PoleHardwareOptions = {
   /** Telecom cables fixed on it, `cableGap` apart (the network's `rules.layout.telecom.cableGap`). */
   readonly cables: number
   readonly cableGap: number
+  /** The low voltage clamp: default true. A light column of an underground street carries none (its cable comes up inside it). */
+  readonly lv?: boolean
 }
 
 /** Least free gap between two pieces that touch (CLAUDE.md §13). */
@@ -94,7 +96,7 @@ export function distributionHardwareOf(spec: DistributionSpec, o: PoleHardwareOp
   const mv = mediumVoltage(spec)
   if (o.mv || o.transformer) boxes.push(...mv.boxes)
   const lvAt: PolePoint = [-spec.lowVoltage.out, heights.lv, 0]
-  boxes.push({ role: 'lv_clamp', x: -spec.lowVoltage.out / 2 - spec.mast.radiusTop / 2, y: heights.lv - 0.06, z: 0, width: spec.lowVoltage.out - spec.mast.radiusTop + 0.06, height: 0.12, depth: 0.08, color: spec.lowVoltage.color })
+  if (o.lv !== false) boxes.push({ role: 'lv_clamp', x: -spec.lowVoltage.out / 2 - spec.mast.radiusTop / 2, y: heights.lv - 0.06, z: 0, width: spec.lowVoltage.out - spec.mast.radiusTop + 0.06, height: 0.12, depth: 0.08, color: spec.lowVoltage.color })
   const { telecom } = spec
   const cables = Math.max(o.cables, 0)
   const telecomAt = Array.from({ length: cables }, (_, index): PolePoint => [-telecom.out, heights.telecom - index * o.cableGap, 0])

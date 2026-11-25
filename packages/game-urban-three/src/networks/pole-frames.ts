@@ -102,6 +102,7 @@ export function poleFramesOf({ networks, index, specOf }: { readonly networks: U
         lamp: index.nodes.has(`light:${node.id}`),
         cables: cablesAt(index, node),
         cableGap: networks.rules.layout.telecom.cableGap,
+        lv: node.carries.includes('power_lv'),
       })
       return { id: node.id, specId, spec, x: node.at[0], y: node.at[1], z: node.at[2], ry: Math.atan2(-road[1], road[0]), road, line: [-road[1], road[0]], hardware, guyed: node.guyed === true }
     })

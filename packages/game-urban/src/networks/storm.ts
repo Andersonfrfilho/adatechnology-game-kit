@@ -1,6 +1,6 @@
 import type { UtilityConnection } from '@adatechnology/game-contracts'
 
-import { chainNodes, galleryOffset, pipesOf, reachOf, topOf } from './buried'
+import { chainNodes, galleryOffset, laidOf, pipesOf, reachOf, topOf } from './buried'
 import type { BuriedContext } from './buried'
 import { chainsOf } from './chain'
 import type { ChainStop } from './chain'
@@ -11,10 +11,10 @@ import { piecesOf } from './pole-layout'
 import type { StreetRun } from './runs'
 import type { NetworkEdge, NetworkNode } from './types'
 
-type Inlet = { readonly id: string; readonly key: string; readonly run: StreetRun; readonly curb: 1 | -1; readonly u: number; readonly node: NetworkNode }
+export type Inlet = { readonly id: string; readonly key: string; readonly run: StreetRun; readonly curb: 1 | -1; readonly u: number; readonly node: NetworkNode }
 
 /** Inlets on both kerbs of every stretch: one at each corner (or end) and at most `inletSpacing` apart between. */
-function inletsOf(context: BuriedContext): Inlet[] {
+export function inletsOf(context: BuriedContext): Inlet[] {
   const { storm, coverMargin } = context.rules.layout
   const depth = context.rules.cover.storm_lateral.min + coverMargin + storm.lateralDiameter
   return context.runs.flatMap((run) =>
@@ -37,9 +37,9 @@ function inletsOf(context: BuriedContext): Inlet[] {
 /**
  * The drainage: a gallery beside the axis of every street on the side of the poles, to a headwall on the river bank (else the border), its
  * bottom above the river (a lift where the gallery would reach under it); inlets on both kerbs with a lateral each to the gallery, and every
- * lot's downspout outlet down the gutter to the nearest inlet of its kerb. Returns the edges laid, for the sewer that passes under them.
+ * lot's downspout outlet down the gutter to the nearest inlet of its kerb. Returns the edges laid, for the sewer that passes under them; the galleries pass under `above` (the power ducts).
  */
-export function layStorm({ context, connections }: { readonly context: BuriedContext; readonly connections: readonly UtilityConnection[] }): NetworkEdge[] {
+export function layStorm({ context, connections, above = [] }: { readonly context: BuriedContext; readonly connections: readonly UtilityConnection[]; readonly above?: readonly NetworkEdge[] }): NetworkEdge[] {
   const { rules, sink } = context
   const { storm, slopeMargin, coverMargin } = rules.layout
   const offset = (run: StreetRun): number => galleryOffset({ context, run })
@@ -64,7 +64,8 @@ export function layStorm({ context, connections }: { readonly context: BuriedCon
     return { inlet, joint, end }
   })
   const pipes = pipesOf({ chains, diameter: storm.galleryDiameter, slope: rules.minSlope.storm_gallery + slopeMargin })
-  const { inverts, lifts } = solveDrainInverts({ pipes, top, floor })
+  // the galleries pass under the ducts of underground power that cross them
+  const { inverts, lifts } = solveDrainInverts({ pipes, top, floor, above: laidOf({ edges: above, sink }), separation: rules.crossing.separation + coverMargin })
   for (const node of nodes) {
     const ground = context.groundAt(node.x, node.z)
     const kind = roots.has(node.id) ? ({ kind: 'outfall', spec: 'headwall' } as const) : lifts.has(node.id) ? ({ kind: 'pumping_station', spec: 'storm_lift' } as const) : ({ kind: 'manhole', spec: 'gallery_box' } as const)

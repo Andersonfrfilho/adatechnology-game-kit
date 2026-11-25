@@ -1,5 +1,5 @@
-import { coverOf } from './pipes'
-import type { PipeContent, PipePiece } from './pipes'
+import { coverOf, isFluidContent } from './pipes'
+import type { FluidContent, PipeContent, PipePiece } from './pipes'
 import type { SurfacePiece } from './surface'
 
 export type PipeBreach = {
@@ -9,7 +9,7 @@ export type PipeBreach = {
   /** Where along the pipe (0 at its `from` end) the bowl reaches deepest, and the point of the centre line there. */
   readonly share: number
   readonly at: readonly [number, number, number]
-  /** The bowl got down to the bore's centre line: the pipe is broken. */
+  /** The bowl got down to the bore's centre line: the pipe is broken (a duct's cables are cut). */
   readonly severed: boolean
 }
 
@@ -48,8 +48,8 @@ export type Breach = {
   readonly pipes: readonly PipeBreach[]
   /** The covers, grates and boxes inside the bowl: they are thrown off, and the pit under them lies open. */
   readonly surface: readonly string[]
-  /** What leaks, once, of the pipes severed. */
-  readonly leaks: readonly PipeContent[]
+  /** What leaks, once, of the pipes severed (a duct severed cuts its cables and leaks nothing). */
+  readonly leaks: readonly FluidContent[]
 }
 
 /**
@@ -60,5 +60,5 @@ export type Breach = {
 export function breachOf({ pipes, surface }: { readonly pipes: readonly PipePiece[]; readonly surface: readonly SurfacePiece[] }, crater: Crater): Breach {
   const reached = pipes.flatMap((pipe) => reachOf(pipe, crater) ?? [])
   const covers = surface.filter((piece) => Math.hypot(piece.at[0] - crater.x, piece.at[2] - crater.z) <= crater.radius && bowlDepthAt(crater, Math.hypot(piece.at[0] - crater.x, piece.at[2] - crater.z)) > piece.size[1]).map((piece) => piece.id)
-  return { pipes: reached, surface: covers, leaks: [...new Set(reached.filter((pipe) => pipe.severed).map((pipe) => pipe.content))] }
+  return { pipes: reached, surface: covers, leaks: [...new Set(reached.filter((pipe) => pipe.severed).map((pipe) => pipe.content).filter(isFluidContent))] }
 }

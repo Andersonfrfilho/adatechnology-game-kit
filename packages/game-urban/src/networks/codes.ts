@@ -39,6 +39,10 @@ export const NETWORK_VIOLATION = {
   UNKNOWN_TRANSFORMER: 'unknown_transformer',
   TRANSFORMER_OVERLOADED: 'transformer_overloaded',
   LV_CIRCUIT_TOO_LONG: 'lv_circuit_too_long',
+  PARALLEL_TOO_CLOSE: 'parallel_too_close',
+  POWER_BELOW_SEWER: 'power_below_sewer',
+  BOX_SPACING: 'box_spacing',
+  AERIAL_ON_UNDERGROUND: 'aerial_on_underground',
 } as const
 
 export type NetworkViolationCode = (typeof NETWORK_VIOLATION)[keyof typeof NETWORK_VIOLATION]

@@ -75,7 +75,7 @@ export function edgeLength(graph: NetworkGraph, edge: NetworkEdge): number {
   return Math.hypot(to.at[0] - from.at[0], to.at[2] - from.at[2])
 }
 
-/** The low voltage nodes a transformer feeds, with the length of line (low voltage spans; a service drop adds none) from it to each one. */
+/** The low voltage nodes a transformer feeds, with the length of line (low voltage spans and ducts; a service drop adds none) from it to each one. */
 export function circuitOf(graph: NetworkGraph, transformerId: string): ReadonlyMap<string, number> {
   const distance = new Map<string, number>([[transformerId, 0]])
   const pending = [transformerId]
@@ -84,7 +84,7 @@ export function circuitOf(graph: NetworkGraph, transformerId: string): ReadonlyM
     const base = distance.get(id) ?? 0
     for (const edge of graph.outgoing(id, 'power_lv')) {
       if (distance.has(edge.to)) continue
-      distance.set(edge.to, base + (edge.kind === 'lv_span' ? edgeLength(graph, edge) : 0))
+      distance.set(edge.to, base + (edge.kind === 'lv_span' || edge.kind === 'lv_duct' ? edgeLength(graph, edge) : 0))
       pending.push(edge.to)
     }
   }

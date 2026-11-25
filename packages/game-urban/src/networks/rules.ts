@@ -70,6 +70,8 @@ export type NetworkRules = {
   }
   /** Least vertical gap between two pipes that cross, and which one goes above (lower rank above). */
   readonly crossing: { readonly separation: number; readonly rank: Readonly<Record<BuriedEdgeKind, number>> }
+  /** Underground power (NBR 14039 and NBR 5410, the utilities' duct standards): the clear gap a power duct keeps beside a water, sewer or storm pipe, and the longest duct between two boxes. */
+  readonly underground: { readonly parallel: number; readonly boxSpacing: number }
   /** How far a connection node may sit from the point the lot declared, metres. */
   readonly connectionTolerance: number
   /** What `generateNetworks` lays out: spacing, offsets, sags, diameters (the validator reads none of it). */
@@ -123,10 +125,34 @@ export const DEFAULT_NETWORK_RULES: NetworkRules = {
     // the gutter is an open channel at the kerb (diameter 0): its bottom only has to stay at or under the ground
     storm_gutter: { min: 0 },
     sewer_main: { min: 0.9 },
+    // the duct bank under the sidewalk: low voltage at 0.6 to 1.0 m, telecom under it, medium voltage deepest; the laterals rise to 0.6 m where they reach the lot
+    lv_duct: { min: 0.6, max: 1 },
+    telecom_duct: { min: 0.6, max: 1.3 },
+    mv_duct: { min: 1, max: 1.5 },
+    service_lateral: { min: 0.6, max: 1 },
+    telecom_lateral: { min: 0.5, max: 1.3 },
+    light_cable: { min: 0.6, max: 1 },
   },
   sewer: { maxDepth: 4.5, coverUnderGallery: 1.8, galleryReach: 3, lateralOverGallery: 0.85, manholeSpacing: 80, turnTolerance: 5, branchMaxSkew: 5 },
   storm: { inletSpacing: 60, cornerReach: 15 },
-  crossing: { separation: 0.2, rank: { storm_gutter: 0, water_main: 1, water_service: 1, sewer_lateral: 2, storm_lateral: 3, storm_gallery: 3, sewer_main: 4 } },
+  crossing: { separation: 0.2, rank: {
+      storm_gutter: 0,
+      water_main: 1,
+      water_service: 1,
+      // power and telecom under the water and over every sewer and gallery: power never lies under the sewer
+      lv_duct: 1.5,
+      mv_duct: 1.5,
+      telecom_duct: 1.5,
+      service_lateral: 1.5,
+      telecom_lateral: 1.5,
+      light_cable: 1.5,
+      sewer_lateral: 2,
+      storm_lateral: 3,
+      storm_gallery: 3,
+      sewer_main: 4,
+    },
+  },
+  underground: { parallel: 0.3, boxSpacing: 50 },
   connectionTolerance: 0.01,
   layout: DEFAULT_NETWORK_LAYOUT,
 }

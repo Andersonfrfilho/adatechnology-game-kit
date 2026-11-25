@@ -54,6 +54,8 @@ export type DrawnNetworks = {
   setFocus(x: number, z: number): void
   /** Blinks the failing lamps (lens and light on their flicker group). */
   animate(t: number): void
+  /** Cuts or gives back the power of street lights (`light` node ids, a `NetworkOutage.lights`): a cut lamp's lens goes dark and its light out. */
+  setLampsPowered(ids: readonly string[], on: boolean): void
   dispose(): void
 }
 
@@ -87,17 +89,22 @@ export function drawNetworks(THREE: Three, { networks, options, budget, physical
   lenses.count = pieces.lenses.length
   const matrix = new THREE.Matrix4()
   const color = new THREE.Color()
-  const flickering: Array<{ index: number; lit: number; phase: number }> = []
+  const flickering: Array<{ index: number; lit: number; phase: number; lamp: string }> = []
+  const cut = new Set<string>()
+  const lensSlots = new Map<string, Array<{ readonly slot: number; readonly color: number }>>()
   pieces.lenses.forEach((lens, slot) => {
     const { box } = lens
     lenses.setMatrixAt(slot, matrix.compose(new THREE.Vector3(box.x, box.y, box.z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), box.ry), new THREE.Vector3(box.width, box.height, box.depth)))
     const lamp = byPole.get(lens.pole)
     const spec = frames.get(lens.pole)!.spec
     lenses.setColorAt(slot, color.set(lamp?.on ? spec.lens.lit : spec.lens.unlit))
-    if (lamp?.flicker && lamp.flickerPhase !== undefined) flickering.push({ index: slot, lit: spec.lens.lit, phase: flickerGroupPhase(flickerGroupOf(lamp.flickerPhase)) })
+    if (lamp) lensSlots.set(lamp.id, [...(lensSlots.get(lamp.id) ?? []), { slot, color: lamp.on ? spec.lens.lit : spec.lens.unlit }])
+    if (lamp) lensSlots.set(`${lamp.id}:unlit`, [{ slot, color: spec.lens.unlit }])
+    if (lamp?.flicker && lamp.flickerPhase !== undefined) flickering.push({ index: slot, lit: spec.lens.lit, phase: flickerGroupPhase(flickerGroupOf(lamp.flickerPhase)), lamp: lamp.id })
   })
   const lights: NetworkLight[] = []
   const animators: Array<(t: number) => void> = []
+  const intensities = new Map<string, number>()
   for (const lamp of lamps) {
     const frame = frames.get(lamp.pole)
     if (!lamp.on || !frame || !budget) continue
@@ -108,9 +115,10 @@ export function drawNetworks(THREE: Three, { networks, options, budget, physical
     const intensity = physicalLights ? physicalIntensityOf({ intensity: light.intensity, distance: light.distance, decay: 2, y: light.y }) : light.intensity
     const source = budget.addSource({ owner: 'urban.light', priority: LIGHT_PRIORITY.street, color: light.color, intensity, distance: light.distance, decay: 2, position: [0, 0, 0], follow: bulb })
     lights.push({ bulb, lamp, source })
+    intensities.set(lamp.id, intensity)
     if (lamp.flicker && lamp.flickerPhase !== undefined) {
       const phase = flickerGroupPhase(flickerGroupOf(lamp.flickerPhase))
-      animators.push((t) => source.update({ intensity: intensity * flickerLevel(t, phase) }))
+      animators.push((t) => source.update({ intensity: cut.has(lamp.id) ? 0 : intensity * flickerLevel(t, phase) }))
     }
   }
   root.add(...drawn.meshes, ...wires.near, wires.far, lenses)
@@ -125,8 +133,19 @@ export function drawNetworks(THREE: Three, { networks, options, budget, physical
     animate(t) {
       for (const step of animators) step(t)
       if (flickering.length === 0) return
-      for (const item of flickering) lenses.setColorAt(item.index, color.set(item.lit).multiplyScalar(flickerLevel(t, item.phase)))
+      for (const item of flickering) if (!cut.has(item.lamp)) lenses.setColorAt(item.index, color.set(item.lit).multiplyScalar(flickerLevel(t, item.phase)))
       lenses.instanceColor!.needsUpdate = true
+    },
+    setLampsPowered(ids, on) {
+      for (const id of ids) {
+        if (on) cut.delete(id)
+        else cut.add(id)
+        const slots = on ? lensSlots.get(id) : lensSlots.get(`${id}:unlit`)
+        for (const { slot, color: lens } of slots ?? []) lenses.setColorAt(slot, color.set(lens))
+        const light = lights.find((entry) => entry.lamp.id === id)
+        light?.source.update({ intensity: on ? (intensities.get(id) ?? 0) : 0 })
+      }
+      if (lenses.instanceColor) lenses.instanceColor.needsUpdate = true
     },
     dispose() {
       for (const light of lights) light.source.remove()

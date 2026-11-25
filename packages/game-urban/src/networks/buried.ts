@@ -18,7 +18,12 @@ export type BuriedContext = {
   /** Half the map's width and depth: where a line without a river leaves the map. */
   readonly border: readonly [number, number]
   readonly sink: NetworkSink
+  /** The duct bank of each street whose power runs underground: its offset from the axis and the depth of its bottom under the ground (the laterals of the lots on its side pass under it). */
+  readonly banks?: ReadonlyMap<string, DuctBank>
 }
+
+/** A street's duct bank as the other networks see it: centre offset from the axis (signed as `v`), half its width, its bottom this deep under the ground. */
+export type DuctBank = { readonly v: number; readonly half: number; readonly bottom: number }
 
 export type OnRun = { readonly context: BuriedContext; readonly run: StreetRun }
 
