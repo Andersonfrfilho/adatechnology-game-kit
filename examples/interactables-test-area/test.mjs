@@ -325,7 +325,11 @@ if (PART === 'all' || PART === 'shots') {
 // its name on the floor, and each piece is looked at, opened, picked up, shot and broken. A piece added to the SDK that does not reach the room fails here.
 if (PART === 'all' || PART === 'house') {
   const page = await open('?lang=pt-BR&ui=0&area=house_complete')
-  await page.waitForFunction(() => window.__testRoom.spawned().length > 50, null, { timeout: 600000, polling: 2000 })
+  // the page boots behind the room's loading indicator: it is still up once the modules are in, and goes down only after the area is laid and has come to rest
+  const loading = await page.evaluate(() => window.__testRoom.loading.state() ?? null)
+  await page.waitForFunction(() => window.__furnitureReady === true, null, { timeout: 600000, polling: 1000 })
+  const ready = await page.evaluate(() => ({ active: window.__testRoom.loading.active, spawned: window.__testRoom.spawned().length }))
+  check('house_complete: the loading indicator covers the page until the area is laid and at rest', loading !== null && loading.total === 100 && !ready.active && ready.spawned > 50, { loading, ready })
   const report = await page.evaluate(async () => {
     const room = window.__testRoom
     return room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('house_complete_')))
