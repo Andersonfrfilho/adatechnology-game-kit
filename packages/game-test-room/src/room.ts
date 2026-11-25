@@ -60,7 +60,7 @@ import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
 import { createRoomBag } from './inventory-room'
-import { createHandTake } from './hand-take'
+import { createHandTake, partNameOf } from './hand-take'
 import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -408,7 +408,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.piece = piece
     leaveFootprint(objectId)
     rendererPieces.set(objectId, piece)
-    action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
+    if (!handTake.wasTakenFrom(objectId)) action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
   })
   // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
   kit.destruction.on('brokenChecked', (objectId, released) => {
@@ -505,7 +505,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const e = entries.get(objectId)
     if (e) return e.name
     const s = splitOf.get(objectId)
-    return s ? `${s.name} (${t('piece')})` : objectId
+    return s ? (partNameOf({ world, spec: specs.get(s.so.objectId), objectId, text: S.text }) ?? `${s.name} (${t('piece')})`) : objectId
   }
   const narrator = createNarrator({
     world,
