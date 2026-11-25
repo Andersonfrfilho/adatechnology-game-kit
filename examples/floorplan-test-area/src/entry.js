@@ -17,6 +17,8 @@ import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 import { GOODS_ITEMS } from '@adatechnology/game-items-goods'
 import { createContainedItemModel, itemModels } from '@adatechnology/game-items-three'
 import { createWeaponsTestModule } from '@adatechnology/game-weapons-three/testing'
+import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
+import { createWeatherVisual } from '@adatechnology/game-weather-three/testing'
 import { FLOORPLAN_AREA_ID, createFloorplanTestModule, floorplanAreaParams } from '@adatechnology/game-floorplan-three/testing'
 
 export { FLOORPLAN_AREA_ID, createFloorplanTestModule, createWeaponsTestModule }
@@ -97,6 +99,11 @@ export function loadInto(room, options = {}) {
   // Load the weapons module so 1st-person arms and 3rd-person avatar hold and animate 3D weapons
   if (!room.modules().some((m) => m.id === 'weapons_area')) {
     room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: '../weapon-svg/', flyRocket: false, items: itemModels }))
+  }
+  // the sky: the weather module with only its sky dome (the room has none of its own), at the hour and weather the bench picks
+  if (!room.modules().some((m) => m.id === 'weather')) {
+    const rain = { far_rain: false, near_rain: false, mist: false, lightning: false, headlights: false, haze: false }
+    room.loadModule(createWeatherTestModule({ locale: lang, fog: false, visual: createWeatherVisual({ layers: rain, rig: false }) }))
   }
   // ?effectlights=0: a blast lights no house surface (what the houses did before `effectLightsIndoors`), to compare with the default
   const house = params.get('effectlights') === '0' ? { effectLightsIndoors: false, ...options.house } : options.house
