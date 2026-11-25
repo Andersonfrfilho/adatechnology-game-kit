@@ -87,6 +87,17 @@ export function createModule(options = {}) {
 }
 
 /**
+ * The weather module with the room's film (wet ground) and effects world (near rain, mist, lightning, wind): without them the module only draws the curtain and the sky. The rain layers start off: the bench switches them on.
+ * @param {import('@adatechnology/game-test-room').TestRoom} room
+ * @param {'en' | 'pt-BR'} lang
+ */
+export function loadWeather(room, lang) {
+  if (room.modules().some((m) => m.id === 'weather_area')) return
+  const rain = { far_rain: false, near_rain: false, mist: false, lightning: false, headlights: false, haze: false }
+  room.loadModule(createWeatherTestModule({ locale: lang, fog: false, targets: { film: room.film, vfx: room.vfx }, visual: createWeatherVisual({ vfx: room.vfx, layers: rain, rig: false }) }))
+}
+
+/**
  * Creates the module for the room's locale, with the room's destruction world and renderer (the houses register in them), loads it, opens the houses area and builds the first house.
  * Returns the room's module report with the module itself under `area` (its `houses`, `build()` and `clear()`).
  * @param {import('@adatechnology/game-test-room').TestRoom} room
@@ -100,11 +111,7 @@ export function loadInto(room, options = {}) {
   if (!room.modules().some((m) => m.id === 'weapons_area')) {
     room.loadModule(createWeaponsTestModule({ locale: lang, thumbnailBase: '../weapon-svg/', flyRocket: false, items: itemModels }))
   }
-  // the sky: the weather module with only its sky dome (the room has none of its own), at the hour and weather the bench picks
-  if (!room.modules().some((m) => m.id === 'weather')) {
-    const rain = { far_rain: false, near_rain: false, mist: false, lightning: false, headlights: false, haze: false }
-    room.loadModule(createWeatherTestModule({ locale: lang, fog: false, visual: createWeatherVisual({ layers: rain, rig: false }) }))
-  }
+  loadWeather(room, /** @type {'en' | 'pt-BR'} */ (lang))
   // ?effectlights=0: a blast lights no house surface (what the houses did before `effectLightsIndoors`), to compare with the default
   const house = params.get('effectlights') === '0' ? { effectLightsIndoors: false, ...options.house } : options.house
   // ?template=mansion&seed=4&state=abandoned opens straight on that house

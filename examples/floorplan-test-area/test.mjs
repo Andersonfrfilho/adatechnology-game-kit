@@ -15,6 +15,38 @@ for (const id of ['house_one_pillar', 'house_gas_explodes', 'floorplan_typologie
 if (existsSync(page) && !readFileSync(page, 'utf8').includes('FloorplanArea.loadInto(window.__testRoom)')) throw new Error('dist/sala-casas.html does not boot the area')
 console.log(`ok: ${existsSync(page) ? 'bundle and room page' : 'bundle (no room page: build examples/test-room first)'}`)
 
+// The weather the houses page loads is wired to the room's film and effects world, and runs each frame: a storm wets the film and sets the wind, with no GPU (a fake room, a real three.js scene).
+{
+  const { runInThisContext } = await import('node:vm')
+  const three = createRequire(join(here, '../../packages/game-weather-three/package.json'))('three')
+  runInThisContext(`${text}\n;globalThis.FloorplanArea = FloorplanArea`)
+  const rains = /** @type {number[]} */ ([])
+  const winds = /** @type {unknown[]} */ ([])
+  /** @type {Array<{ id: string; attach: (host: unknown) => unknown }>} */
+  const loaded = []
+  const noop = () => undefined
+  const room = {
+    film: { setWeather: (/** @type {{ rain: number }} */ w) => rains.push(w.rain), wash: noop, setWetness: noop },
+    vfx: { setWind: (/** @type {unknown} */ w) => winds.push(w), workshop: () => ({ emit: noop, count: () => 0 }), wind: () => [0, 0, 0] },
+    modules: () => loaded,
+    loadModule: (/** @type {{ id: string; attach: (host: unknown) => unknown }} */ m) => void loaded.push(m),
+  }
+  const area = /** @type {{ FloorplanArea: { loadWeather: (room: unknown, lang: string) => void } }} */ (/** @type {unknown} */ (globalThis)).FloorplanArea
+  area.loadWeather(room, 'en')
+  if (loaded.length !== 1 || loaded[0]?.id !== 'weather_area') throw new Error('loadWeather did not load the weather_area module')
+  area.loadWeather(room, 'en')
+  if (loaded.length !== 1) throw new Error('loadWeather loaded the weather module twice')
+  /** @type {((dt: number) => void) | undefined} */
+  let frame
+  const weatherModule = /** @type {{ attach: (host: unknown) => unknown; weather: { force: (id: string, seconds: number) => void } }} */ (/** @type {unknown} */ (loaded[0]))
+  weatherModule.attach({ THREE: three, scene: new three.Scene(), camera: new three.PerspectiveCamera(), environment: { set: noop }, onFrame: (/** @type {(dt: number) => void} */ cb) => { frame = cb; return noop }, log: noop })
+  weatherModule.weather.force('storm', 0)
+  for (let i = 0; i < 40; i++) frame?.(0.1)
+  if (!rains.some((r) => r > 0)) throw new Error('the storm never reached the room film: the weather module has no film target')
+  if (winds.length === 0) throw new Error('the storm never reached the room effects world: the weather module has no vfx target')
+  console.log(`ok: the houses page weather reaches the film (${rains.length} updates) and the effects world (${winds.length} updates)`)
+}
+
 // With Playwright (Chromium, software GL) at hand: the room page loads with a wide arena, the contract report is clean, a house stands in the room's destruction world, the walls stop the walk,
 // the door opens with E, the floors go up and down, the level of detail follows the budget, the bench hit brings the wall down, and the six scenarios of the team's house area pass.
 import { createRequire } from 'node:module'
