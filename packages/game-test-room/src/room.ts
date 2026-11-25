@@ -63,7 +63,7 @@ import { resolveStrings } from './locale'
 import { createCornerImage } from './corner-image'
 import { createUi } from './ui'
 import { createRoomBag } from './inventory-room'
-import { createHandTake, partNameOf } from './hand-take'
+import { createHandTake, createTakenInHand, partNameOf } from './hand-take'
 import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
@@ -3120,6 +3120,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
   }
   const handTake = createHandTake(world, (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands))
+  const takeInHand = createTakenInHand({ catalog: catalogMap, spawn: (itemId, position) => spawn(itemId, position), pieceOf: (objectId) => rendererPieces.get(objectId), grab: (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands) })
   const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
   if (bagEnabled) container.appendChild(bag.element)
   const heldHands = createHeldHands({
@@ -3189,7 +3190,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     box.getSize(heldSize)
     piece.root.quaternion.copy(savedQ)
     piece.root.updateMatrixWorld(true)
-    heldHands.begin({ massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] })
+    heldHands.begin(hands ?? { massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] })
     heldYaw = 0
     heldTilt = 0
     heldVel[0] = heldVel[1] = heldVel[2] = 0
@@ -4490,13 +4491,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
     bodySlot: (slot) => (slot === 'hip' || slot === 'back' ? bodySlotPose(avatar?.slot?.(slot)) : null),
-    reachFor(reach) {
-      if (!avatar) {
-        reach.onGrip?.()
-        return
-      }
-      doors.reachFor(reach)
-    },
+    reachFor: (reach) => (avatar ? doors.reachFor(reach) : reach.onGrip?.()),
+    takeInHand: (item) => takeInHand(item),
     setHandTargets(source) {
       handSource = source
       return () => {

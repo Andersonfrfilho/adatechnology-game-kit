@@ -3,7 +3,7 @@ import type { AudioSink } from './audio'
 import type { BlastShoveOptions } from './blast-shove'
 import type { BusySink } from './busy'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
-import type { DestructibleSpec, Vec3 } from './destruction'
+import type { CarryHands, DestructibleSpec, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { EffectSink } from './effects'
@@ -344,6 +344,22 @@ export interface PlayerState {
   readonly cameraMode: string
 }
 
+/** An item a module's object hands over to the player (a pair of jeans taken out of a wardrobe), for `ModuleHost.takeInHand`. */
+export interface HostTakenItem {
+  /** Catalogue id of the item (`ItemDef.id` of the goods catalogue): the host keeps one catalogue entry per id. */
+  readonly itemId: string
+  /** Its name, already translated. */
+  readonly name: string
+  /** Where it was taken from, world space: the host makes it an object there and the hand closes on it. */
+  readonly position: Vec3
+  /** Draws it with the host's `THREE` (origin at the centre of its footprint, on its base), as `TestableItem.build`. */
+  readonly build: (THREE: unknown) => unknown
+  /** What it weighs and measures (as `TestableItem.physical`); without it the host measures the drawing. */
+  readonly physical?: { readonly weightKg: number; readonly size: readonly [number, number, number] }
+  /** Hands it is carried with (the hands and holster rule decides what the weapon does). */
+  readonly hands: CarryHands
+}
+
 /** A leaf a module moves itself, for the host's hand (`ModuleHost.reachFor`). */
 export interface HostReach {
   /** World point of the handle now. */
@@ -500,6 +516,12 @@ export interface ModuleHost {
    * `handle` answers the world point of the handle every frame. A host without a body leaves it out (the module then moves the leaf at once).
    */
   reachFor?(reach: HostReach): void
+  /**
+   * Puts in the player's hand an item a module's object hands over (a pair of jeans taken out of a wardrobe): the host makes it an object of the world at `position` and the hand
+   * closes on it as on anything picked up, with its `hands` (one leaves the weapon in the other hand). Returns whether the hand took it. A host without hands leaves it out (the item
+   * is then only gone from the object).
+   */
+  takeInHand?(item: HostTakenItem): boolean
   /** Asks the tool in hand to do something (see `ToolCommand`). A host without accessories leaves it out. */
   command?(command: ToolCommand): ToolCommandResult
   /**
