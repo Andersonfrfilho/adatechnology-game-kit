@@ -12,8 +12,8 @@ const GAME_ONLY: Record<string, readonly [number, number, number]> = { survivor_
 
 /**
  * Debt: loose groups an item still has when it is added as bound (`makeupSpec`, else `specFromObject3D` of the destructible drawing). Some are really apart (a pair of
- * boots, a handful of nails, planks), the rest are parts drawn a little off the one they are fixed to (no contact, no joint), as the shovel's handle was. Measured
- * 2026-11-17. It only shrinks: give the part its joint (or close the gap) and lower the number; a new item starts at none.
+ * boots, planks), the rest are parts drawn a little off the one they are fixed to (no contact, no joint), as the shovel's handle was. Measured
+ * 2026-11-17 (the nails, a pile in layers lying on each other since 2026-11-25, are one group). It only shrinks: give the part its joint (or close the gap) and lower the number; a new item starts at none.
  */
 const KNOWN_LOOSE: Readonly<Record<string, number>> = {
   'model/wooden_plank': 2,
@@ -22,7 +22,6 @@ const KNOWN_LOOSE: Readonly<Record<string, number>> = {
   'model/camp_stove': 1,
   'model/car_jack': 1,
   'model/scissors': 1,
-  'model/nails': 3,
   'model/combat_boots': 1,
   'model/flip_flops': 1,
   'model/military_radio': 1,

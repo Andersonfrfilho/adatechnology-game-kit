@@ -12,5 +12,8 @@ export const nails: ItemModelBuilder = ({ T, mesh, cyl, G, metal }) => {
     mesh(cyl(0.035, 0.035, 1.1, 6), steel, [direction * 0.06, y, z], [0, 0, R]),
     mesh(new T.ConeGeometry(0.035, 0.16, 6), steel, [-direction * 0.57, y, z], [0, 0, direction * R]),
   ]
-  return G(...nail(-0.2, -0.15, 1), ...nail(-0.2, 0.15, -1), ...nail(0.2, -0.15, -1), ...nail(0.2, 0.15, 1))
+  // the upper pair lies on the lower one, none in the air: its shank on the lower nail's head, its head on the lower shank (head radius 0.1 + shank radius 0.035)
+  const LOW = -0.0675
+  const HIGH = LOW + 0.135
+  return G(...nail(LOW, -0.15, 1), ...nail(LOW, 0.15, -1), ...nail(HIGH, -0.15, -1), ...nail(HIGH, 0.15, 1))
 }
