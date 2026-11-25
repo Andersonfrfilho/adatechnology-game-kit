@@ -2486,13 +2486,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   /**
    * A blow reaches from the body, not from the eye: aimed down, the striker bends (at the hips, or crouches further) to the spot the eye looks at, and the reach is measured
-   * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not.
+   * from the shoulder it brings there. So what lies on the floor in front of the feet is hit where it is aimed, and what is beyond arm and tool length is not. What the eye already has within the tool's reach (a knife 0.2 m from a can on a table) is struck as aimed.
    */
   const bodyReach = (use: Extract<Use, { kind: 'melee' }>): Extract<Use, { kind: 'melee' }> => {
     // an eye placed higher than a standing body's (a scripted view over a tall plant) has no body under it to bend: the blow leaves from the eye
     if (use.direction[1] > MELEE_BODY.downward || use.origin[1] - player.feet > MELEE_BODY.eyeHighest) return use
     const seen = rayWorld(use.origin, use.direction, MELEE_BODY.lookRange)
-    if (!seen) return use
+    if (!seen || seen.distance <= use.reach) return use
     const crouched = player.crouching
     const shoulder = player.feet + (crouched ? MELEE_BODY.shoulderCrouched : MELEE_BODY.shoulderStanding)
     const lowest = player.feet + (crouched ? MELEE_BODY.bentCrouched : MELEE_BODY.bentStanding)
