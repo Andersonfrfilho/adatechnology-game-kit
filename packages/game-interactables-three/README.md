@@ -145,6 +145,10 @@ frame. A host that sets `renderer.info.autoReset = false` and resets it itself i
 `createCord(THREE, points, radius, material)` builds a tube; `catenary(a, b, sag, n)` returns `n` points of a hanging cord whose lowest
 point is `sag` meters below the chord.
 
+`wireMeshes(THREE, spec.wires)` draws the wires an object spec leaves to the host (conduit runs, cables, cords, drops): one tube per wire of two
+points or more, named by its id, in the colour of its kind (`WIRE_COLORS`, the houses' colours), radius `WIRE_RADIUS` when the wire gives none.
+Add them to the object's group; a house folds its wires into its own batches instead.
+
 ## Notes
 
 - `poseOf` converts the pose math of the interactables package (same defaults) to a quaternion, so the rendered part always matches the engine.
