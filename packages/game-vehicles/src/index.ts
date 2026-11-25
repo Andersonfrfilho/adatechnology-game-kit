@@ -56,6 +56,8 @@ export type {
 } from './api'
 export type { StrayLamp } from './stray-lamps'
 export { strayLampsOf } from './stray-lamps'
+export { DOOR_SHELL_DEPTH, DOOR_SHELL_MAX_DEPTH, doorShell, openEdgeCount } from './destructible/door-shell'
+export type { DoorShellParams, DoorShellResult } from './destructible/door-shell'
 export { ARMOUR_LEVELS, armourLevelOf, CRASH_RULES, crashDeltaV, crashVehicle, createCreaseQueue, createVehicleDestructible, buildVehicleItem, buildVehicleModel, JOINT_RULES, cabinEnclosure, cabinBoxOf, swingOf, CABIN_LEAK } from './destructible'
 export type {
   DriveReport,
