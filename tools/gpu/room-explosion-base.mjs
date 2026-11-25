@@ -11,7 +11,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 
 import { assertReportHasHealthyGpu, gpuMismatchReasons } from './gpu-info.mjs'
-import { DEFAULT_EXPLOSIVE } from './room-explosion-frame.mjs'
+import { DEFAULT_EXPLOSIVE, isGatedExplosive } from './room-explosion-frame.mjs'
 
 const keyOf = (/** @type {{ variant: string, throttle: number, kind: string }} */ entry) => `${entry.variant}|${entry.throttle}|${entry.kind}`
 /** The smaller of two readings; a reading that is 0 or missing is not a reading. @param {number} was @param {number} now */
@@ -61,15 +61,16 @@ export const baseSkipReportOf = ({ skipped, pair, notified }) => {
 
 /**
  * The base to save after a night that passed. Without a base, or with one measured in another mode or with another explosive, the night is the base; otherwise nothing rises.
- * A report with an explosive other than c4 is never the base nor merged into it: the base stays as it was (undefined when there was none). The same for a report
+ * A report with an explosive out of `GATED_EXPLOSIVES` is never the base nor merged into it: the base stays as it was (undefined when there was none). The same for a report
  * measured on another GPU or with another driver module than the base's: its numbers are not comparable, so the base stays as it was until it is replaced by hand.
  * @template {BaseReport} TReport
  * @param {BaseReport | undefined} base @param {TReport} report @returns {TReport | undefined}
  */
 export const mergeBase = (base, report) => {
-  if ((report.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return /** @type {TReport | undefined} */ (base)
+  const explosive = report.explosive ?? DEFAULT_EXPLOSIVE
+  if (!isGatedExplosive(explosive)) return /** @type {TReport | undefined} */ (base)
   if (base && skipReasonOf(base, report)) return /** @type {TReport} */ (base)
-  if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== DEFAULT_EXPLOSIVE) return report
+  if (!base || base.budgetMode !== report.budgetMode || (base.explosive ?? DEFAULT_EXPLOSIVE) !== explosive) return report
   // the merged numbers come from several nights and commits, so no single stamp or hash describes them
   const { pageSha256: _lastNightPage, pageBuild: _lastNightBuild, ...reportWithoutPage } = report
   return /** @type {TReport} */ ({
@@ -117,7 +118,7 @@ export const saveBase = (reportFile, baseFile, head) => {
   const base = existsSync(baseFile) ? JSON.parse(readFileSync(baseFile, 'utf8')) : undefined
   const merged = mergeBase(base, report)
   if (merged) writeFileSync(baseFile, JSON.stringify(merged, null, 1))
-  const skipped = base && (report.explosive ?? DEFAULT_EXPLOSIVE) === DEFAULT_EXPLOSIVE ? skipReasonOf(base, report) : undefined
+  const skipped = base && isGatedExplosive(report.explosive ?? DEFAULT_EXPLOSIVE) ? skipReasonOf(base, report) : undefined
   return skipped && base ? { skipped, pair: gpuPairKeyOf(base, report) } : {}
 }
 

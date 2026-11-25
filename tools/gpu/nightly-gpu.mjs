@@ -21,6 +21,9 @@ import { gpuLockIsFree, judgePushes, readProcesses } from './push-guard.mjs'
 import { assertNightlyBuildsItsOwnPage, baseSkipReportOf, trySaveBase } from './room-explosion-base.mjs'
 import { parseSummaryLines } from './suite-runner.mjs'
 
+/** The explosives the daily run times in the room (`room-explosion`): the C4 keeps the report and base names it always had, the others get theirs. */
+const NIGHTLY_EXPLOSIVES = /** @type {const} */ (['c4', 'm67'])
+
 /** @typedef {{ lastPassed?: string, lastRun?: string, lastStatus?: string, baseSkipNotified?: string[] }} NightlyState */
 /** @typedef {{ name: string, ok: boolean, log: string, seconds: number }} StepResult */
 
@@ -151,18 +154,22 @@ async function main() {
     // FRAME_PARTS=1 arms the explosion-frame gate (f0 and the frames after it, in the page's deadline mode) at the cost of a render per frame in the stage pass; a base in another mode is not compared and is rewritten
     // the base keeps the best of the passing nights (room-explosion-base.mjs): copying each night over it let a slow drift pass forever
     // the 5 ms goal is only a warning (main is still over it, so blocking on it failed every night): it blocks on a regression against the last report that passed
-    const explosionOut = join(reportDir, 'room-explosion.json')
-    const explosionBase = join(cacheDir, 'room-explosion-base.json')
-    const explosion = run({ name: 'room-explosion', command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_EXPLOSIVE: 'c4', ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
-    results.push(explosion)
-    if (explosion.ok && existsSync(explosionOut)) {
+    // the C4 against the house (the old reference) and the M67, the case the frame goal of spec 018 is measured on (D3): each with its own report and base, so a
+    // regression of the spread M67 blast fails the night too
+    for (const explosive of NIGHTLY_EXPLOSIVES) {
+      const suffix = explosive === 'c4' ? '' : `-${explosive}`
+      const explosionOut = join(reportDir, `room-explosion${suffix}.json`)
+      const explosionBase = join(cacheDir, `room-explosion-base${suffix}.json`)
+      const explosion = run({ name: `room-explosion${suffix}`, command: 'node', args: ['tools/gpu/perf-gate.mjs', 'room-explosion'], env: { ...quiet, ROOM_EXPLOSION_FRAME_PARTS: '1', ROOM_EXPLOSION_EXPLOSIVE: explosive, ROOM_EXPLOSION_OUT: explosionOut, ...(existsSync(explosionBase) ? { ROOM_EXPLOSION_BASE: explosionBase } : {}) } })
+      results.push(explosion)
+      if (!explosion.ok || !existsSync(explosionOut)) continue
       const saved = trySaveBase(explosionOut, explosionBase, sha)
       if (!saved.ok) {
-        note(`- room-explosion-base: FAILED, the base was not saved: ${saved.reason}`)
-        results.push({ name: 'room-explosion-base', ok: false, log: explosionOut, seconds: 0 })
+        note(`- room-explosion-base${suffix}: FAILED, the base was not saved: ${saved.reason}`)
+        results.push({ name: `room-explosion-base${suffix}`, ok: false, log: explosionOut, seconds: 0 })
       } else if (saved.skipped && saved.pair) {
         // the night itself was valid, so it does not fail; the line is written every night, the notification once per (base GPU/driver, current GPU/driver) pair
-        const said = baseSkipReportOf({ skipped: saved.skipped, pair: saved.pair, notified: state.baseSkipNotified ?? [] })
+        const said = baseSkipReportOf({ skipped: saved.skipped, pair: saved.pair, notified: baseSkipNotified })
         note(said.line)
         if (said.notification) notify(said.notification.title, said.notification.body)
         baseSkipNotified = said.notified

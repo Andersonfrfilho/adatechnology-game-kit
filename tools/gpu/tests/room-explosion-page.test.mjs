@@ -48,7 +48,7 @@ test('pagePairOf: different bytes pass', () => {
 })
 
 test('baseOverwriteError: a non-c4 explosive writing over the base is refused', () => {
-  assert.match(String(baseOverwriteError({ explosive: 'tnt', savedPage: undefined, reportOut: 'base.json', baseFile: './base.json' })), /would overwrite the c4 base/)
+  assert.match(String(baseOverwriteError({ explosive: 'tnt', savedPage: undefined, reportOut: 'base.json', baseFile: './base.json' })), /would overwrite a base/)
 })
 
 test('baseOverwriteError: a saved page writing over the base is refused', () => {
