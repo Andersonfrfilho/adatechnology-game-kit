@@ -24,6 +24,7 @@ const BLOW_ENERGY = 4000
 const MAX_BLOWS = 16
 const SHOT_PULLS = 20
 const SHOTS = 3
+const USE_SECONDS = 4
 
 export interface HouseCompleteOptions {
   readonly locale?: string
@@ -82,21 +83,41 @@ function eyesOf(THREE: Three, so: SpawnedObject): Triple[] {
 const GRID = [0.5, 0.3, 0.7, 0.1, 0.9] as const
 const HEIGHTS = [0.5, 0.95, 0.8, 0.3, 0.1] as const
 
+/** Most points of a piece's parts tried as aim targets. */
+const MAX_PART_TARGETS = 24
+
 /**
- * Where the player's aim lands on the piece: the room's own aim (`inspect`, what the crosshair names) tried from each eye over a grid of its box until it names the
- * piece (a table's middle is the air under its top, a pool's is water). The front eye at the middle of the box when none does.
+ * The middles of what the piece draws, biggest first: every mesh under its root stands for one of its parts (a wire, a leg, a lamp shade), so a thin part is
+ * aimed at where it is, not missed by a grid coarser than it.
+ */
+function partTargetsOf(THREE: Three, so: SpawnedObject): Triple[] {
+  so.root.updateMatrixWorld(true)
+  const found: Array<{ at: Triple; volume: number }> = []
+  so.root.traverse((node) => {
+    if (!(node as ThreeNamespace.Mesh).isMesh) return
+    const box = new THREE.Box3().setFromObject(node)
+    if (box.isEmpty()) return
+    const centre = box.getCenter(new THREE.Vector3())
+    const size = box.getSize(new THREE.Vector3())
+    found.push({ at: [centre.x, centre.y, centre.z], volume: Math.max(size.x, 0.001) * Math.max(size.y, 0.001) * Math.max(size.z, 0.001) })
+  })
+  return found.sort((x, y) => y.volume - x.volume).slice(0, MAX_PART_TARGETS).map((entry) => entry.at)
+}
+
+/**
+ * Where the player's aim lands on the piece: the room's own aim (`inspect`, what the crosshair names) tried from each eye at the middle of each part, then over a
+ * grid of its box (a table's middle is the air under its top, a pool's is water), until it names the piece. The front eye at the middle of the box when none does.
  */
 function sightOf({ room, THREE }: Trial, so: SpawnedObject): { eye: Triple; target: Triple } {
   const box = new THREE.Box3().setFromObject(so.root)
   const z = (box.min.z + box.max.z) / 2
+  const grid = HEIGHTS.flatMap((fy) => GRID.map((fx): Triple => [box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), z]))
+  const targets = [...partTargetsOf(THREE, so), ...grid]
   const eyes = eyesOf(THREE, so)
   for (const eye of eyes) {
-    for (const fy of HEIGHTS) {
-      for (const fx of GRID) {
-        const target: Triple = [box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), z]
-        room.look(eye, target)
-        if (room.inspect()?.objectId === so.objectId) return { eye, target }
-      }
+    for (const target of targets) {
+      room.look(eye, target)
+      if (room.inspect()?.objectId === so.objectId) return { eye, target }
     }
   }
   const centre = box.getCenter(new THREE.Vector3())
@@ -124,7 +145,8 @@ function tryUse(trial: Trial, so: SpawnedObject): boolean | null {
   if (!leaf) return false
   aimAt(trial, so)
   room.useLeaf(so.objectId, leaf)
-  step(0.8)
+  // the hand first walks to the handle (a peg on a clothesline 2 m up takes longer than a fridge door): wait for the leaf to move, as a player does
+  for (let waited = 0; waited < USE_SECONDS && room.leafOpening(so.objectId, leaf) <= 0.05; waited += 0.2) step(0.2)
   return room.leafOpening(so.objectId, leaf) > 0.05
 }
 

@@ -585,6 +585,12 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     }
     for (const p of a.pieces) tagGroup(p.id, p.material, { id: p.id, piece: p.key })
     for (const m of a.movers) tagGroup(/** @type {string} */ (a.partIds.get(m.source.id)), m.material, { id: m.id, piece: m.tag.piece, joint: m.tag.joint })
+    // the wires (a conduit run, the clothesline's cables) are the host's to draw: the kit's tubes, a wire that is a piece of its own tagged as that piece
+    for (const wire of GT.wireMeshes(THREE, spec.wires)) {
+      const piece = a.pieces.find((p) => p.id === wire.name)
+      if (piece) Object.assign(wire.userData, { destructionMaterial: piece.material, destructionPart: piece.id, destructionPiece: piece.key })
+      res.group.add(wire)
+    }
     // household ids can be kebab-case; the groups were named by `finish` with the original id
     res.group.name = type
     res.group.userData.furnitureType = type
