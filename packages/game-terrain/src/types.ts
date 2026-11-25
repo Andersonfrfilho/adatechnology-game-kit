@@ -1,4 +1,4 @@
-import type { GroundLayout, GroundLoss, Hit } from '@adatechnology/game-contracts'
+import type { GroundExcavation, GroundLayout, GroundLoss, Hit } from '@adatechnology/game-contracts'
 
 import type { HeightPatch } from './height-patch'
 
@@ -454,6 +454,11 @@ export interface Terrain {
   raycast(origin: readonly number[], direction: readonly number[], maxDistance: number): { point: [number, number, number]; distance: number; normal: [number, number, number] } | null
   /** A blow at (x, z). `energy` in joules, `direction` where it travels (it throws the pieces back along it). */
   strike(blow: TerrainBlow, spec: TerrainStrike): TerrainBlowResult
+  /**
+   * Opens a pit in the ground as it stands now (a shaft a blast threw its cover off): the same dig as an excavation of the layout, never less deep than the ground already is there, and
+   * no ground loss. The layout is left alone, so the next `reset` closes it with the craters.
+   */
+  open(excavation: GroundExcavation): void
   /** A shovelful at (x, z): takes the earth down through what a shovel digs, stops at what it does not (concrete, rock), heaps it at `dump`. */
   dig(spec: TerrainDig): TerrainDigResult
   /** Earth thrown back from a heap into a hole: fills what was dug first, then heaps. Returns the cubic metres moved. */

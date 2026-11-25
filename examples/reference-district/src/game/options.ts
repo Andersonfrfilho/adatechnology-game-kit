@@ -5,6 +5,7 @@ import type { LampShares } from '@adatechnology/game-urban'
 import type { UtilityNetworks } from '@adatechnology/game-urban/networks'
 import type { ZoneFog } from '@adatechnology/game-weather-three'
 
+import type { DistrictLeaks } from './assemble/leaks'
 import type { DistrictSewers } from './assemble/networks'
 import type { Houses } from './assemble/houses'
 import type { DistrictHud } from './assemble/hud'
@@ -59,6 +60,8 @@ export type District = {
   readonly networks: UtilityNetworks
   /** What shows of the buried networks and the pipes under the street; each blow that digs the ground is answered in `sewers.breaches`. */
   readonly sewers: DistrictSewers
+  /** What the breaks leak, the houses that lose their water and the covers that fly off, with their events (`createDistrictLeaks`). */
+  readonly leaks: DistrictLeaks
   readonly houses: Houses
   readonly horde: Horde
   readonly player: PlayerRig

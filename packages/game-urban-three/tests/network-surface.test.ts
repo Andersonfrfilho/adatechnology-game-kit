@@ -1,4 +1,4 @@
-import { breachOf, generateNetworks, pipePiecesOf, surfacePiecesOf } from '@adatechnology/game-urban/networks'
+import { breachOf, coverBodyOf, generateNetworks, pipePiecesOf, surfacePiecesOf } from '@adatechnology/game-urban/networks'
 import type { CityPlanInput } from '@adatechnology/game-urban'
 import type { NetworkLot } from '@adatechnology/game-urban/networks'
 import * as THREE from 'three'
@@ -64,6 +64,18 @@ describe('the surface of the buried networks, drawn', () => {
     drawn.dispose()
   })
 
+  it('puts a piece taken off back exactly where it was', () => {
+    const drawn = urban.drawNetworkSurface(networks)
+    const meshes = drawn.root.children as THREE.InstancedMesh[]
+    const before = meshes.map((mesh) => Array.from(mesh.instanceMatrix.array))
+    const cover = pieces.find((piece) => piece.kind === 'manhole_cover')!
+    drawn.remove(cover.id)
+    expect(meshes.map((mesh) => Array.from(mesh.instanceMatrix.array))).not.toEqual(before)
+    drawn.restore(cover.id)
+    expect(meshes.map((mesh) => Array.from(mesh.instanceMatrix.array))).toEqual(before)
+    drawn.dispose()
+  })
+
   it('leaves the scene when disposed', () => {
     const parent = new THREE.Group()
     const drawn = urban.drawNetworkSurface(networks)
@@ -116,6 +128,18 @@ describe('the pipes and pits under the street, drawn', () => {
     drawn.dispose()
   })
 
+  it('joins a broken pipe again', () => {
+    const drawn = urban.drawBuriedNetworks(networks)
+    const pipes = drawn.root.children.find((mesh) => mesh.name === 'network:buried:pipes') as THREE.InstancedMesh
+    const before = Array.from(pipes.instanceMatrix.array)
+    const pipe = drawn.pipes.find((entry) => entry.kind === 'water_main')!
+    drawn.sever(pipe.id, 0.5)
+    expect(Array.from(pipes.instanceMatrix.array)).not.toEqual(before)
+    drawn.mend(pipe.id)
+    expect(Array.from(pipes.instanceMatrix.array)).toEqual(before)
+    drawn.dispose()
+  })
+
   it('is what a crater reaches: the pipes breachOf names are the ones drawn', () => {
     const drawn = urban.drawBuriedNetworks(networks)
     const surface = surfacePiecesOf(networks)
@@ -123,5 +147,31 @@ describe('the pipes and pits under the street, drawn', () => {
     expect(result.pipes.length).toBeGreaterThan(0)
     for (const reached of result.pipes) expect(drawn.pipes.some((pipe) => pipe.id === reached.id)).toBe(true)
     drawn.dispose()
+  })
+})
+
+describe('the lid of a thrown cover, drawn', () => {
+  const covers = surfacePiecesOf(networks).filter((piece) => piece.kind === 'manhole_cover' || piece.kind === 'inspection_cover' || piece.kind === 'inlet_grate')
+
+  it('stands where the cast iron plate of the destruction world does: its foot at the origin and its plate as thick as the body says', () => {
+    expect(covers.length).toBeGreaterThan(3)
+    for (const piece of covers) {
+      const lid = urban.drawCoverLid(piece)
+      const box = new THREE.Box3().setFromObject(lid.root)
+      const part = coverBodyOf(piece)!.spec.parts[0]!
+      expect(box.min.y, piece.id).toBeCloseTo(0, 6)
+      const plate = part.shape.kind === 'cylinder' ? part.shape.height : part.shape.kind === 'box' ? part.shape.size[1] : 0
+      expect(box.max.y, piece.id).toBeGreaterThanOrEqual(plate - 1e-9)
+      expect(box.max.y, piece.id).toBeLessThan(plate + 0.02)
+      lid.dispose()
+    }
+  })
+
+  it('leaves the scene when disposed', () => {
+    const parent = new THREE.Group()
+    const lid = urban.drawCoverLid(covers[0]!)
+    parent.add(lid.root)
+    lid.dispose()
+    expect(parent.children.length).toBe(0)
   })
 })
