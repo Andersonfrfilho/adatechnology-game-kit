@@ -52,4 +52,8 @@
 "networks/night_failing":{"hash":"3d987467","objects":11},
 "networks/surface":{"hash":"34c2fe4b","objects":3},
 "networks/buried":{"hash":"a0a8c02b","objects":4},
-"networks/lids":{"hash":"5dab88ac","objects":258}}
+"networks/lids":{"hash":"5dab88ac","objects":258},
+"networks/underground_night":{"hash":"a2c94f8b","objects":5},
+"networks/underground_surface":{"hash":"d3c46208","objects":3},
+"networks/underground_buried":{"hash":"b403e0bf","objects":5},
+"networks/underground_lids":{"hash":"e8cebcb4","objects":81}}
