@@ -57,6 +57,16 @@
       "reason": "a van's roof"
     },
     {
+      "file": "packages/game-vehicles/src/destructible/trunk-bay.ts",
+      "domain": "furniture",
+      "reason": "the carpeted tub of a car's trunk (the luggage space under the lid), not a laundry tub or any furniture"
+    },
+    {
+      "file": "packages/game-vehicles/src/destructible/trunk-bay.ts",
+      "domain": "plants",
+      "reason": "a car's trunk (the luggage space under the lid), not a tree trunk"
+    },
+    {
       "file": "packages/game-vehicles-fleet/src/vehicles/military.ts",
       "domain": "items",
       "reason": "the gun barrel of a military vehicle"
