@@ -1,5 +1,101 @@
 # @adatechnology/game-floorplan-three
 
+## 1.0.0
+
+### Minor Changes
+
+- cd5113c: Os canos de saída da casa (esgoto de vaso, chuveiro, pias, cozinha e área de serviço, e as descidas da calha) viram peças de destruição, e um furo de explosão na parede ou na laje por onde passam os expõe.
+
+  `game-contracts`: `PartSpec.hostedIn` (a peça está embutida, ou presa, em outra), `PartState.exposed` e o evento `reveal`.
+
+  `game-destruction`: uma peça com `hostedIn` que fica inteira dentro da caixa do hospedeiro não toma a onda da explosão nem tem a junta afrouxada pelo choque enquanto o hospedeiro está de pé. Quando um furo do hospedeiro (abertura, tijolos arrancados, ou o hospedeiro perdido) alcança a peça, ela aparece (`reveal`, `exposed`) e a junta com o hospedeiro abre: só o trecho dentro ou cruzando o furo se solta, o resto do traçado fica onde está, e um trecho preso pelos vizinhos fica pendurado no furo.
+
+  `game-floorplan-three`: `utilities/drains.ts` põe cada dreno de aparelho dentro da parede mais próxima, descendo pela laje até o pé da parede do térreo, em trechos cortados por `cutRun`, escondidos enquanto embutidos e presos pelo sólido onde estão. As descidas da calha saem em trechos entre as braçadeiras, presos à parede. A cena do time (`visor*`) não os desenha. O trecho de laje que só tinha a laje inteira como apoio agora se apoia no painel dela (o apoio se perdia quando a laje virava painéis).
+
+- 78ac539: Os fios do poste do lote soltam-se em trechos que não vão com o poste. Antes, cada trecho da fiação pendia do poste por uma junta que sempre une; ao cair, o poste levava os fios que a explosão não tinha soltado e virava um corpo de 1000 kg com 26 caixas e 23 m de largura, e a varredura contínua (CCD) do Jolt custava 60 a 70 ms por passo. Agora o poste leva só o fuste, a travessa e os isoladores (950 kg, 10 caixas) e cada trecho de fio cai como peça sua, com o próprio cobre.
+
+  `game-contracts`, `game-destruction`: `JointSpec.tears` (padrão falso). A parte `a` pende de `b` só enquanto `b` está de pé (em um grupo ancorado); com `b` solto a junta larga, e o fio de um poste que cai desce sozinho. Uma junta que não rasga continua unindo as duas partes em um grupo. Quem se segura em duas pontas, uma delas de pé (o fio do ramal preso à parede da casa), fica pendurado nela.
+
+  `game-destruction-three`: as peças que um `tears` separou (o fio e o poste de que pendia) não se tocam mais: sem isso o poste de 950 kg, ao tombar, batia nos fios de 12 kg que ele acabava de largar e os lançava (C1 de 34 e 105 kg·m, C2 acima do limite em 4 de 10 rodadas). `JointState.tears` (contrato), `PieceSystem.tether`, e o renderizador marca os pares ao soltar os grupos.
+
+  `game-floorplan-structure`: `Support.tears` chega à junta da especificação destrutível.
+
+  `game-floorplan-three`: os trechos da grade e do ramal pendem do poste mais próximo por uma junta que rasga (`tears`); o trecho que fica dentro de laje ou parede, ou ao lado de um, continua preso a ela. Com `segmentLimits.wiring: Infinity` a fiação segue como o time desenhou (uma peça só). Goldens regravados: `destruction/breach`, `destruction/spall`, `destruction/fracture` e o resultado do blast (21 objetos a mais, os trechos).
+
+- f17aebb: Janela e parede na explosão, como no mundo real:
+
+  - O vão da janela fica livre: os tijolos que a parede desenha onde foi cortada param no batente, no peitoril e na verga, e nenhum aparece atrás do vidro.
+  - O vidro de janela é lido como vidro comum de 4 mm (o desenho segue com 12 mm): uma granada na cozinha quebra as vidraças do cômodo e as próximas.
+  - `PlanWindow.frame` e `BuildOptions.windowFrame` (`'wood'`, `'aluminium'`, `'frameless'`): moldura de madeira (lasca), de alumínio (amassa) ou blindex (vidro temperado de 8 mm, sem moldura). O padrão é madeira na casa simples e alumínio nas outras. Na sala: `?windowFrame=`.
+  - O pilar de canto quebra nas duas paredes que se encontram nele, e a quina se desfaz.
+  - As lascas batem na primeira face no caminho (parede, teto, móvel) e caem (`FragmentSystemOptions.sweep`), em vez de atravessar a parede e ficar presas dentro dela à vista.
+
+- 08c5801: Menos chamadas de desenho nos piores quadros da explosão da casa, sem mudar o que aparece na tela.
+
+  - `createStaticBatcher` ganhou `shadowOnly`: as malhas continuam desenhadas sozinhas para a câmera e deixam de projetar sombra enquanto estão no lote; cada lote (só posições, um por lado que o passe de profundidade desenha) entra só no mapa de sombra. Malha com sombra que depende do material (recorte por mapa, planos de corte, deslocamento, material de profundidade próprio) continua projetando a própria. A malha que muda volta a projetar a própria sombra, do formato novo, no quadro em que muda. `maxVertices` divide um grupo grande em lotes menores, para cada um caber num quadro do orçamento.
+  - Casa (`game-floorplan-three`): as peças paradas projetam a sombra de poucos lotes só de sombra (`createHouseShadowBatches`, ligado por padrão em `house.update`; `shadowBatches: false` desliga, e `?shadowBatches=0` na sala compara). Na sala, a sombra da estrutura caiu de 231 para 16 chamadas por quadro. Quando um quarto das peças volta a projetar sozinha (explosão, corte de andar), os lotes são refeitos do que ficou de pé depois de 2 s sem mudança.
+  - Veículo atingido (`game-vehicles-three`): as peças paradas entram em lote logo no golpe, em pedaços de até 16k vértices, e só as que mudam saem; as que saíram voltam a um lote novo, no formato amassado, depois de 1,5 s sem mudança. Antes, o carro esperava 1,5 s desenhando peça por peça (~620 chamadas por quadro, com sombra) e depois juntava tudo de uma vez (16 a 22 ms num quadro). No sedã a 60 quadros por segundo: de 95 quadros acima de 300 chamadas para ~10, nenhuma atualização acima de ~6 ms, e 70 + 37 de sombra no fim (eram 67 + 34).
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- 65b522a: O que é preso no mundo real é preso no mundo da destruição: a casa carrega como um grupo só, e nada cai ou escorrega na carga. Novo tipo de junta `slide` (corrediça de gaveta, 100 de resistência, sai com a mão ou com chave de fenda, 3 s) em `JointKind` e `JOINT_DEFAULTS`; as gavetas dos móveis do `game-interactables-household` passam de `clip` para `slide`. Na casa (`game-floorplan-three`), cada peça declara onde se prende (`holder`, ou `holdOn: 'floor' | 'wall'` com `holdJoint`): muro do lote e poste fincados no chão com a junta que `JOINT_BY_MATERIALS` dá contra concreto (tijolo e concreto: argamassa), soleira assentada no baldrame, portão e porta da caixa de correio na dobradiça do muro ao lado (`slide` no portão de correr), porta do box na parede do banheiro, portas e gavetas dos móveis no piso onde o móvel está (`hinge`/`slide`), eletroduto aparente grampeado na parede, botijão apoiado no piso (`resting`), cano fora da parede preso na laje em que entra; com o poste preso, a fiação pendura nele. Só cai quando essa junta quebra. Limitação conhecida: as portas e gavetas dos móveis da casa ficam presas ao piso sob o móvel (a laje do andar, ou o chão no térreo) até o corpo do móvel virar uma parte do mundo da destruição; hoje elas só caem quando a dobradiça/corrediça quebra ou o piso vai. Peça que diz onde se prende e não acha nada (`holdOn` sem piso, parede ou chão sob ela) vai para `house.structure.unheld`, e o teste de carga exige essa lista vazia em todo o catálogo. Peças interativas abertas são medidas fechadas. O que se finca no chão segura como a base enterrada: `embedmentStrength` (game-destruction) dá a resistência da junta pela base enterrada no solo (`soils.json`, pressão básica × segurança, camada a camada) sobre a base de referência de `EMBEDMENT_DEFAULTS`; `postEmbedment` é a regra do poste (10% da altura + 0,6 m). `Support.strength` (game-floorplan-structure) leva a resistência até a junta. Na casa, o poste declara a base pela regra, o muro do lote o baldrame (`GROUND_BEAM_DEPTH`) ao longo do comprimento, e uma peça desenhada abaixo do terreno conta o que está enterrado; pé no terreno ou abaixo dele (o terreno lido no canto mais baixo da pegada) está ancorado, nunca solto.
+- 334489c: `registerHouseQueues(renderer, budget)`: põe as filas do renderizador de casas (repintura das paredes e corte dos buracos, esta com `mustDrain`) no orçamento de quadro do jogo, na prioridade do contrato. Um jogo não precisa mais escrever `mustDrain` por conta própria.
+
+### Patch Changes
+
+- ea549a5: Os canos escondidos na parede da casa feita por etapas (`constructionStages`, a casa da sala) saem em trechos como os da casa comum, e a soleira da porta de fora deixa de nascer dentro de quem a cerca.
+
+  Canos: o traçado de cada cômodo era uma só peça escondida (uma caixa de 8 m por dentro de paredes e móveis, que o motor empurrava para fora por segundos). Agora a casa por etapas e a comum usam o mesmo `layWallRun`: cortado em cada laje e parede que atravessa e em `segmentLimits.pipe`, um trecho por peça, `hostedIn` a laje ou parede em que está (um furo ali o mostra), preso por ela ou pelo trecho ao lado e ligado ao anterior, os 3 kg do traçado divididos pelo comprimento. `segmentLimits.pipe: Infinity` continua desenhando o traçado inteiro (golden do time). `drawnEnds` passa para `utilities/segments.ts` e é dividido com os drenos.
+
+  Soleira: nascia 4 cm dentro do chão e 1,4 cm dentro dos pilares, das vigas e dos batentes. Agora ocupa só o vão entre os batentes e livre das paredes, pilares e vigas, assenta no chão, com a base à altura da calçada.
+
+- 1fede95: A quina de pilar e parede quebra como obra:
+
+  - `game-destruction`: um membro moldado (peça com `reinforcement`) dentro da caixa de uma parede de unidades (o pilar que fecha a ponta da parede, a verga, a cinta) tira da parede os tijolos daquele lugar, e o tiro, o golpe e o raio que caem ali (também no reboco por cima) vão para o membro.
+  - `game-vfx`: `PIECES_DRAWN_VARIABLE`; com ela os efeitos de rombo e desabamento soltam só a poeira, sem os blocos de enfeite (até 1 m) que jogam numa cena sem pedaços de verdade.
+  - `game-destruction-three`: os efeitos de evento vão com `piecesDrawn` (o renderer já desenha os pedaços); `BindOptions.marksOn` põe as marcas de uma peça sem malha própria nas malhas das peças que a desenham.
+  - `game-floorplan-three`: o pilar sem malha própria leva as marcas nas paredes em que está.
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [f17aebb]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [b37d94f]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [1fede95]
+- Updated dependencies [6473d97]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-destruction@0.29.0
+  - @adatechnology/game-floorplan-structure@3.0.0
+  - @adatechnology/game-floorplan@0.4.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-interactables@0.3.0
+  - @adatechnology/game-floorplan-residential@7.0.0
+  - @adatechnology/game-props3d@0.3.5
+  - @adatechnology/game-shapes-three@0.4.1
+  - @adatechnology/game-floorplan-interactables@2.0.0
+
 ## 0.14.2
 
 ### Patch Changes

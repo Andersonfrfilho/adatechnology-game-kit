@@ -1,5 +1,38 @@
 # @adatechnology/game-crowd-three
 
+## 0.7.0
+
+### Minor Changes
+
+- 631d9d0: Thread de simulação (spec 009, T22): `installSimThread`, `startSimThread` e `runSimInline` no `game-workers`, com memória compartilhada sem espera na página (buffer triplo de retratos e anel de comandos); `SimModule` no `game-contracts`; a horda como módulo (`hordeSimModule`) no `game-crowd`; a bancada da multidão com `hordeThread`. `run` de uma categoria `sim` sem worker roda no quadro principal (a thread de simulação aguarda os jobs).
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [fcf6f83]
+- Updated dependencies [6b82413]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [8ebd34c]
+- Updated dependencies [b37d94f]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-crowd@0.6.0
+  - @adatechnology/game-player@0.7.0
+  - @adatechnology/game-characters-three@0.11.15
+  - @adatechnology/game-audio@0.15.0
+  - @adatechnology/game-characters@0.2.22
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.6.6
 
 ### Patch Changes

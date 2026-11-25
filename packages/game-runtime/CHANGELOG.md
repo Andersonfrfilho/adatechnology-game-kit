@@ -1,5 +1,29 @@
 # @adatechnology/game-runtime
 
+## 0.3.0
+
+### Minor Changes
+
+- 6356f68: `game-runtime`: o orçamento do quadro ganha o modo de prazo, opcional por quadro. Com `targetMs` (opção do agendador ou `budget.targetMs`, mutável) e `FrameRunOptions.frameStartMs` (o `startLoop` passa o horário do `requestAnimationFrame`), as filas recebem o que sobra até o prazo menos a média móvel do render, entre o piso (`minBudgetMs`) e o teto (`budgetMs`), sem dívida. Quadro sem `frameStartMs` (headless, `advance`, testes) segue na cota de antes. `budget.stats()` ganha `mode`, `allowanceMs`, `renderEstimateMs`, `mustDrainSpentMs`, `overMs`, `forcedThisFrame` e `forcedMs`; `QueueStats` ganha `lastSpentMs` e `mustDrain`; `budget.skipRenderSample()` e `budget.recordRender()`. `game-contracts`: `DeferredQueueOptions.mustDrain` (fila que drena inteira fora do prazo).
+- f7de1ec: `scheduler.systemProbe`: gancho opcional de medição, avisado antes e depois de cada sistema de cada fase (`enter(id)`/`leave(id)`); sem sonda não faz nada além de ler uma propriedade por sistema. `SystemProbe` é exportado. Na sala de teste, `frameParts.scheduler` entrega o agendador à ferramenta de medição (`tools/gpu/room-explosion.mjs`).
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+
 ## 0.2.13
 
 ### Patch Changes

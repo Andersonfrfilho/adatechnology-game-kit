@@ -1,5 +1,93 @@
 # @adatechnology/game-destruction
 
+## 0.29.0
+
+### Minor Changes
+
+- cd5113c: Os canos de saída da casa (esgoto de vaso, chuveiro, pias, cozinha e área de serviço, e as descidas da calha) viram peças de destruição, e um furo de explosão na parede ou na laje por onde passam os expõe.
+
+  `game-contracts`: `PartSpec.hostedIn` (a peça está embutida, ou presa, em outra), `PartState.exposed` e o evento `reveal`.
+
+  `game-destruction`: uma peça com `hostedIn` que fica inteira dentro da caixa do hospedeiro não toma a onda da explosão nem tem a junta afrouxada pelo choque enquanto o hospedeiro está de pé. Quando um furo do hospedeiro (abertura, tijolos arrancados, ou o hospedeiro perdido) alcança a peça, ela aparece (`reveal`, `exposed`) e a junta com o hospedeiro abre: só o trecho dentro ou cruzando o furo se solta, o resto do traçado fica onde está, e um trecho preso pelos vizinhos fica pendurado no furo.
+
+  `game-floorplan-three`: `utilities/drains.ts` põe cada dreno de aparelho dentro da parede mais próxima, descendo pela laje até o pé da parede do térreo, em trechos cortados por `cutRun`, escondidos enquanto embutidos e presos pelo sólido onde estão. As descidas da calha saem em trechos entre as braçadeiras, presos à parede. A cena do time (`visor*`) não os desenha. O trecho de laje que só tinha a laje inteira como apoio agora se apoia no painel dela (o apoio se perdia quando a laje virava painéis).
+
+- ff1a27b: `BlastOptions.soilCover` (metros de solo sobre a carga): `world.explode` entrega às estruturas só a parte da energia que o solo deixa sair (`buriedTransmission`, profundidade escalada pela raiz cúbica da carga em TNT, raio e raio letal pela raiz cúbica dessa parte) e o solo segura os fragmentos do invólucro. Sem `soilCover` nada muda (porão, cratera e peças abaixo de y = 0 não são solo). O evento `explode` continua informando a carga inteira.
+- e3a9ee8: A estrutura de um objeto é resolvida uma vez por operação (`hit`, `explode`, `update`), não uma vez por parte perdida ou junta aberta: na explosão de 4 MJ no sobrado, 174 chamadas de `solveStructure` viram 39 (é resolvida de novo só quando algo lê cargas ou tensões no meio da operação). Muda o contrato do `detach`: `groups` são os grupos do objeto depois da operação inteira, e todos os `detach` da operação saem no fim dela, na ordem em que as juntas abriram, depois dos outros eventos (o `collapse` inclusive). `DestructionWorld.structureProbe()` conta as resoluções. `game-destruction-three`: uma fratura solta primeiro os grupos que a operação deixou soltos e só então vê se o que sobrou do objeto perdeu o apoio, então a ordem do `detach` e da `fracture` não muda como as peças se separam. A garantia vale para o mundo do `createDestruction`; os outros `DestructibleImpl` (veículos de `game-vehicles`, personagens de `game-characters`, que manda só a peça que saiu, `[[segmento, ...caídos]]`) continuam emitindo um `detach` por junta com os grupos daquele momento.
+- 78ac539: Os fios do poste do lote soltam-se em trechos que não vão com o poste. Antes, cada trecho da fiação pendia do poste por uma junta que sempre une; ao cair, o poste levava os fios que a explosão não tinha soltado e virava um corpo de 1000 kg com 26 caixas e 23 m de largura, e a varredura contínua (CCD) do Jolt custava 60 a 70 ms por passo. Agora o poste leva só o fuste, a travessa e os isoladores (950 kg, 10 caixas) e cada trecho de fio cai como peça sua, com o próprio cobre.
+
+  `game-contracts`, `game-destruction`: `JointSpec.tears` (padrão falso). A parte `a` pende de `b` só enquanto `b` está de pé (em um grupo ancorado); com `b` solto a junta larga, e o fio de um poste que cai desce sozinho. Uma junta que não rasga continua unindo as duas partes em um grupo. Quem se segura em duas pontas, uma delas de pé (o fio do ramal preso à parede da casa), fica pendurado nela.
+
+  `game-destruction-three`: as peças que um `tears` separou (o fio e o poste de que pendia) não se tocam mais: sem isso o poste de 950 kg, ao tombar, batia nos fios de 12 kg que ele acabava de largar e os lançava (C1 de 34 e 105 kg·m, C2 acima do limite em 4 de 10 rodadas). `JointState.tears` (contrato), `PieceSystem.tether`, e o renderizador marca os pares ao soltar os grupos.
+
+  `game-floorplan-structure`: `Support.tears` chega à junta da especificação destrutível.
+
+  `game-floorplan-three`: os trechos da grade e do ramal pendem do poste mais próximo por uma junta que rasga (`tears`); o trecho que fica dentro de laje ou parede, ou ao lado de um, continua preso a ela. Com `segmentLimits.wiring: Infinity` a fiação segue como o time desenhou (uma peça só). Goldens regravados: `destruction/breach`, `destruction/spall`, `destruction/fracture` e o resultado do blast (21 objetos a mais, os trechos).
+
+- 5e05bb2: Estilhaços do invólucro (`BlastCharge.casing`), mudança de comportamento: muda o dano da M67, da bomba de cano e de todo explosivo de fragmentação, e a sequência sorteada depois do invólucro.
+
+  - O invólucro nunca lança mais raios que `min(maxRays, fragments)`. Cada estilhaço tem direção sorteada por igual na esfera e massa de Mott, de um fluxo semeado pela semente do mundo e pela carga; as massas são normalizadas à massa do invólucro. Um estilhaço que cruza várias esferas de peças conta uma vez.
+  - São alvo as peças dos objetos do mundo (`world.add`) e as peças dos corpos registrados com `world.register` (hoje, os veículos), peça por peça; a peça de um corpo que é caixa é testada pela caixa. Personagens, multidão e animais não são alvo dos estilhaços.
+  - O estilhaço perde energia no ar (`exp(-2 k d)`, `fragmentDrag`) e só voa até cair abaixo de `FRAGMENT_MIN_SPEED`.
+  - Acima do teto: os estilhaços que vão a um corpo registrado e os demais são escolhidos por igual em cada grupo (os demais ficam com pelo menos metade do teto), e cada raio lançado vale por `qualificados / escolhidos` do seu grupo, no máximo `DestructionOptions.fragmentMaxWeight` (padrão 8). Nas peças do mundo o peso vale só nos pontos de vida (até a peça falhar, não além), na energia dos pedaços de uma peça que quebra e no desgaste das juntas; num corpo registrado chega por `Hit.pieces` (novo no contrato: ausente = 1, finito e pelo menos 1, só para dano acumulado de pontos de vida; furo, penetração e marca são de um estilhaço). Por construção, a energia lançada, pesada, nunca passa da energia do invólucro (½·massa·v², os pesos encolhem quando um sorteio pega estilhaços pesados). Acima de `maxRays x fragmentMaxWeight` qualificados num grupo o excesso fica de fora: o grupo entrega `fragmentMaxWeight x escolhidos / qualificados` dos pontos de vida. Com o teto padrão de 256 isso começa em 2048 estilhaços fora de corpos (sem corpo) ou 1024 (com corpos ocupando a metade deles); o maior invólucro dos dados (M67) tem 1000, então não acontece com os explosivos do kit. O que é lançado é determinístico para um estado do mundo e uma carga, mas não é local: acrescentar uma peça em qualquer lugar ao alcance muda quais estilhaços a escolha guarda perto da carga.
+  - `game-vehicles`: o tiro de estilhaço multiplica só os pontos de vida da peça por `Hit.pieces`; furo, penetração, saída e a quebra do vidro (decidida por tiro) continuam de um estilhaço. Personagens, terreno e o resto ignoram o campo.
+  - Contra material marcado com `strength.ndrc` (o concreto), o estilhaço só atravessa se o NDRC modificado também deixar (`concretePerforation`, fator de ponta `BlastCasing.noseFactor`, padrão 0,84). O tijolo continua na regra linear. O tiro de arma não muda.
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- 65b522a: O que é preso no mundo real é preso no mundo da destruição: a casa carrega como um grupo só, e nada cai ou escorrega na carga. Novo tipo de junta `slide` (corrediça de gaveta, 100 de resistência, sai com a mão ou com chave de fenda, 3 s) em `JointKind` e `JOINT_DEFAULTS`; as gavetas dos móveis do `game-interactables-household` passam de `clip` para `slide`. Na casa (`game-floorplan-three`), cada peça declara onde se prende (`holder`, ou `holdOn: 'floor' | 'wall'` com `holdJoint`): muro do lote e poste fincados no chão com a junta que `JOINT_BY_MATERIALS` dá contra concreto (tijolo e concreto: argamassa), soleira assentada no baldrame, portão e porta da caixa de correio na dobradiça do muro ao lado (`slide` no portão de correr), porta do box na parede do banheiro, portas e gavetas dos móveis no piso onde o móvel está (`hinge`/`slide`), eletroduto aparente grampeado na parede, botijão apoiado no piso (`resting`), cano fora da parede preso na laje em que entra; com o poste preso, a fiação pendura nele. Só cai quando essa junta quebra. Limitação conhecida: as portas e gavetas dos móveis da casa ficam presas ao piso sob o móvel (a laje do andar, ou o chão no térreo) até o corpo do móvel virar uma parte do mundo da destruição; hoje elas só caem quando a dobradiça/corrediça quebra ou o piso vai. Peça que diz onde se prende e não acha nada (`holdOn` sem piso, parede ou chão sob ela) vai para `house.structure.unheld`, e o teste de carga exige essa lista vazia em todo o catálogo. Peças interativas abertas são medidas fechadas. O que se finca no chão segura como a base enterrada: `embedmentStrength` (game-destruction) dá a resistência da junta pela base enterrada no solo (`soils.json`, pressão básica × segurança, camada a camada) sobre a base de referência de `EMBEDMENT_DEFAULTS`; `postEmbedment` é a regra do poste (10% da altura + 0,6 m). `Support.strength` (game-floorplan-structure) leva a resistência até a junta. Na casa, o poste declara a base pela regra, o muro do lote o baldrame (`GROUND_BEAM_DEPTH`) ao longo do comprimento, e uma peça desenhada abaixo do terreno conta o que está enterrado; pé no terreno ou abaixo dele (o terreno lido no canto mais baixo da pegada) está ancorado, nunca solto.
+- 1fede95: A quina de pilar e parede quebra como obra:
+
+  - `game-destruction`: um membro moldado (peça com `reinforcement`) dentro da caixa de uma parede de unidades (o pilar que fecha a ponta da parede, a verga, a cinta) tira da parede os tijolos daquele lugar, e o tiro, o golpe e o raio que caem ali (também no reboco por cima) vão para o membro.
+  - `game-vfx`: `PIECES_DRAWN_VARIABLE`; com ela os efeitos de rombo e desabamento soltam só a poeira, sem os blocos de enfeite (até 1 m) que jogam numa cena sem pedaços de verdade.
+  - `game-destruction-three`: os efeitos de evento vão com `piecesDrawn` (o renderer já desenha os pedaços); `BindOptions.marksOn` põe as marcas de uma peça sem malha própria nas malhas das peças que a desenham.
+  - `game-floorplan-three`: o pilar sem malha própria leva as marcas nas paredes em que está.
+
+- 6473d97: Alvenaria que perde o apoio tomba para um lado em volta do pé (os tijolos de cima saem mais rápido), em vez de cair reta e formar uma coluna de tijolos parados. Um pedaço só fica em cima de outro com o centro sobre ele; se o centro passa da borda, ele escorrega e cai. Tijolo inteiro que sai pela junta é desenhado como tijolo, não como entulho. O tiro em concreto, tijolo ou pedra abre uma cratera de material quebrado, de uns cinco calibres, em volta do furo.
+
+### Patch Changes
+
+- b37d94f: Spec 010, fases 1 e 3: passo fixo único e filas no prazo do quadro.
+
+  - `game-physics`: `PhysicsLoop.stepFixed(steps)` roda passos inteiros vindos do agendador (`step(dt)` continua, com o próprio acumulador). **Quebra para quem implementa `PhysicsWorld`:** o membro `readActiveBodies(out)` passa a ser obrigatório (devolve só os corpos acordados).
+  - `game-physics-jolt`: implementa `readActiveBodies`.
+  - `game-render-three`: `createStaticBatchQueue` e a opção `queue` dos lotes estáticos, para o orçamento do quadro drenar a junção dos lotes.
+  - `game-fluids-three`: `FilmManager.deferredQueue()`, a fila do filme de líquido no prazo do quadro; o tempo devido de um grid que sai é esquecido junto com ele.
+  - `game-crowd`: o campo de fluxo passa a andar em células por passo (`cellsPerStep`) por padrão, não pelo relógio; `flow.ms` vale 0. Mesmo resultado em toda máquina.
+  - `game-destruction-three`: `DestructionRenderer` ganha `interpolate`, `present`, `restoreStepPose`, `markMoved` e `deferredQueues` (desenho interpolado entre passos e filas registradas no orçamento); uma peça segurada pelo host (empurrar, carregar) é lida mesmo com o motor a dando como dormindo.
+  - `game-test-room`: opção `frameTargetMs` (prazo do quadro); a pose do passo volta antes da fase `input`, para empurrar e carregar escreverem na pose do passo, não no desenho misturado do quadro anterior.
+  - `game-destruction`: uma operação que lança exceção não passa estrutura e `detach` pela metade para a seguinte.
+
+- c394683: O tiro num veículo não percorre mais a cena inteira para achar a normal da superfície. `DestructionWorld.shoot` agora devolve a normal traçada (`HitResult.normal`, da `surfaceRay` do corpo) e a sala usa essa normal para o empurrão do tiro, em vez de re-raycastar todos os triângulos do corpo — o quadro do tiro na porta de um sedã caía de ~24 ms para ~2 ms.
+
+  A faísca do impacto (`impact_*`) entra no aquecimento da sala, então o primeiro tiro não paga os buffers da faísca em jogo.
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+
 ## 0.28.0
 
 ### Minor Changes

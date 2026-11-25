@@ -1,5 +1,47 @@
 # @adatechnology/game-weapons-three
 
+## 0.23.0
+
+### Minor Changes
+
+- 0b25285: The KA-BAR (uncommon), the katana (rare) and the brass knuckles (rare) are items of the goods catalog and turn up in the house loot: the KA-BAR in dressers, nightstands, the workbench and the tool shelf (drawers and garage), the katana in the wardrobe, the brass knuckles in dressers, nightstands and the wardrobe. Each is the same object as its weapon (`weapon` and `model` of the same id) and `game-weapons-three` draws the weapon with the item model of `game-items-three`, so the model exists once. The pool weight of an entry is small (0.06 uncommon, 0.03 rare, against 2 for a common entry) and only pools of six entries or more carry one, so each turns up in a few containers in a hundred; the reason in `tools/items-catalog/decisions.json` (`housePoolExtras`).
+
+### Patch Changes
+
+- 70c2677: Cápsulas e carregadores jogados pela arma na mão batem nas paredes, tetos e tudo o que a cena desenha, em vez de atravessar o concreto e só parar no chão: cada passo da peça em voo é sondado por `createSurfaceRaycast` (novo, sem o limite de 30 Hz do laser) e ela volta da superfície com a restituição dela. O raio ignora o que a própria arma joga (`userData.fxParticle`).
+- b0ed45a: Cenários de empurrão da M67 e do P13: o mínimo que um corpo na metade de fora do alcance precisa andar cai de 3 cm para 1 cm. Desde que o empurrão passou a ser o impulso refletido de Kinney-Graham sobre a área que o corpo mostra, uma lata cheia a 5 m da M67 sai a ~0,55 m/s e desliza 2 a 3 cm, que é o que a física dá; o cenário reprovava esse movimento real.
+- 6b82413: The body seen from outside closes its fingers around any tool that asks for a hand (`HandTargets.grip`, `gripL`): a knife, a sword held with both hands or a crowbar no longer sit in an open palm (only a firearm closed the fingers before). The second hand of a two-hand handle (the katana) closes as the first one does, and the brass knuckles are gripped with the rings ahead of the palm (`handle` option of the weapon item registry).
+- Updated dependencies [cd5113c]
+- Updated dependencies [ea549a5]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [f17aebb]
+- Updated dependencies [0b25285]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [8ebd34c]
+- Updated dependencies [b37d94f]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [1fede95]
+- Updated dependencies [334489c]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-floorplan-three@1.0.0
+  - @adatechnology/game-items-three@0.9.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-audio@0.15.0
+  - @adatechnology/game-vfx@0.16.0
+  - @adatechnology/game-vfx-three@0.10.4
+  - @adatechnology/game-weapons@0.12.2
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.22.1
 
 ### Patch Changes

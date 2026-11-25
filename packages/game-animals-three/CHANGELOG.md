@@ -1,5 +1,31 @@
 # @adatechnology/game-animals-three
 
+## 0.4.23
+
+### Patch Changes
+
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [8ebd34c]
+- Updated dependencies [b37d94f]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [631d9d0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-audio@0.15.0
+  - @adatechnology/game-props3d@0.3.5
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.4.22
 
 ### Patch Changes

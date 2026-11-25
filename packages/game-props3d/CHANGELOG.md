@@ -1,5 +1,15 @@
 # @adatechnology/game-props3d
 
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies [18bd23f]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [e987bbe]
+  - @adatechnology/game-shapes@0.4.0
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.3.4
 
 ### Patch Changes

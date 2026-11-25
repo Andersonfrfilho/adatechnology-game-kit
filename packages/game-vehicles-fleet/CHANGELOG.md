@@ -1,5 +1,12 @@
 # @adatechnology/game-vehicles-fleet
 
+## 7.0.0
+
+### Patch Changes
+
+- Updated dependencies [df3fbd5]
+  - @adatechnology/game-vehicles-proving@0.2.0
+
 ## 6.0.1
 
 ### Patch Changes

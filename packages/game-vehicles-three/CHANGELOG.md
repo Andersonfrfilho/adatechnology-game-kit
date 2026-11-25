@@ -1,5 +1,65 @@
 # @adatechnology/game-vehicles-three
 
+## 0.9.10
+
+### Patch Changes
+
+- feaa02e: A box collider of a vehicle piece is kept only where `fitOrientedBoxes` (game-shapes) holds the drawing in one box, not only where each box corner has a vertex: a piece made of separate solids (a ladder frame of loose rails, a block with a loose detail) can touch all eight corners and be mostly air, and is now held by its triangles.
+- 727bd90: Tiro no carro sem lag. Depois do #379, o carro atingido que ficava 1,5 s quieto desmanchava todos os lotes para refazer com as peças amassadas: por vários quadros ele desenhava cada peça sozinha (~590 chamadas) e juntava 320 mil vértices de novo, com quadros de até 63 ms. Agora os lotes das peças paradas ficam como estão e só as peças que saíram entram num lote novo, delas. Numa rajada de 30 tiros de AK no sedã visto de longe, a pior atualização do LOD caiu de ~90 ms para 8 a 15 ms, sem o pico de chamadas.
+- 266dc20: `createVehicleLamps.dispose` libera também a cópia do material de uma lâmpada que o tiro apagou (antes o retorno antecipado a deixava na GPU).
+- e9f2812: A área de veículos libera o LOD do veículo que saiu da cena antes de esquecê-lo. Desde a fila única `vehicles.lod-batch` (spec 010), os lotes do LOD ficavam nessa fila e seguravam o veículo inteiro: cada ciclo da sala deixava ~84 MB no heap (`leak.mjs`: explosões, vidro, áreas e tiros vermelhos na rodada diária desde 20/11).
+- 08c5801: Menos chamadas de desenho nos piores quadros da explosão da casa, sem mudar o que aparece na tela.
+
+  - `createStaticBatcher` ganhou `shadowOnly`: as malhas continuam desenhadas sozinhas para a câmera e deixam de projetar sombra enquanto estão no lote; cada lote (só posições, um por lado que o passe de profundidade desenha) entra só no mapa de sombra. Malha com sombra que depende do material (recorte por mapa, planos de corte, deslocamento, material de profundidade próprio) continua projetando a própria. A malha que muda volta a projetar a própria sombra, do formato novo, no quadro em que muda. `maxVertices` divide um grupo grande em lotes menores, para cada um caber num quadro do orçamento.
+  - Casa (`game-floorplan-three`): as peças paradas projetam a sombra de poucos lotes só de sombra (`createHouseShadowBatches`, ligado por padrão em `house.update`; `shadowBatches: false` desliga, e `?shadowBatches=0` na sala compara). Na sala, a sombra da estrutura caiu de 231 para 16 chamadas por quadro. Quando um quarto das peças volta a projetar sozinha (explosão, corte de andar), os lotes são refeitos do que ficou de pé depois de 2 s sem mudança.
+  - Veículo atingido (`game-vehicles-three`): as peças paradas entram em lote logo no golpe, em pedaços de até 16k vértices, e só as que mudam saem; as que saíram voltam a um lote novo, no formato amassado, depois de 1,5 s sem mudança. Antes, o carro esperava 1,5 s desenhando peça por peça (~620 chamadas por quadro, com sombra) e depois juntava tudo de uma vez (16 a 22 ms num quadro). No sedã a 60 quadros por segundo: de 95 quadros acima de 300 chamadas para ~10, nenhuma atualização acima de ~6 ms, e 70 + 37 de sombra no fim (eram 67 + 34).
+
+- c8b5c71: Spec 008 (fases 1–3 até a T3.8): motor físico Jolt Physics como opção do kit, desligado por padrão.
+
+  - Pacotes novos: `game-physics` (contrato do motor, fila de despertar, medidor de custo) e `game-physics-jolt` (adaptador do Jolt). O Jolt é escolhido por `physics`; sem ele, o solver próprio segue como hoje.
+  - Entulho de explosão opcional (`blastDebris`): as peças despertam em lotes, com o mínimo e o máximo ajustados pelo custo medido na máquina.
+  - Colisores fiéis ao desenho:
+    - a caixa só vale quando as faces estão cobertas;
+    - se as faces não estão cobertas, a peça colide pelos triângulos (batentes e molduras não são mais placas maciças).
+  - Portas e janelas sem peças nascendo umas dentro das outras.
+  - Fiação e canos se soltam em trechos (`segmentLimits`), cortados em lajes e paredes.
+  - O chão é montado ao longo do caminho de peças rápidas.
+  - Os estilhaços de granada sorteiam por alvo: um objeto novo na cena não muda mais onde eles caem.
+  - A mão empurra a porta que se afasta, em vez de seguir a folha (spec 004).
+
+- df3fbd5: O banco de provas deixa de ter acumulador próprio (spec 010 T3.8): `ProvingRun.step(dt)` sai; o agendador anda a corrida com `stepFixed(STEPS_PER_TICK)` na fase `fixedSimulate` (e `advance(seconds)` para quem roda sozinho, sobre um agendador do `game-runtime`). O `time_scale` da área vira quantos tiques de passos cada tique roda. Mesma trajetória a 60 Hz.
+- Updated dependencies [812702f]
+- Updated dependencies [cd5113c]
+- Updated dependencies [ff1a27b]
+- Updated dependencies [f1c7229]
+- Updated dependencies [e3a9ee8]
+- Updated dependencies [78ac539]
+- Updated dependencies [5e05bb2]
+- Updated dependencies [18bd23f]
+- Updated dependencies [08c5801]
+- Updated dependencies [6fb91f5]
+- Updated dependencies [c8b5c71]
+- Updated dependencies [8ebd34c]
+- Updated dependencies [b37d94f]
+- Updated dependencies [e987bbe]
+- Updated dependencies [6356f68]
+- Updated dependencies [65b522a]
+- Updated dependencies [df3fbd5]
+- Updated dependencies [631d9d0]
+- Updated dependencies [25a08b0]
+- Updated dependencies [c394683]
+- Updated dependencies [8d26913]
+  - @adatechnology/game-camera@0.3.0
+  - @adatechnology/game-contracts@0.36.0
+  - @adatechnology/game-vehicles@0.6.18
+  - @adatechnology/game-shapes@0.4.0
+  - @adatechnology/game-render-three@0.4.0
+  - @adatechnology/game-audio@0.15.0
+  - @adatechnology/game-vehicles-proving@0.2.0
+  - @adatechnology/game-vehicles-driving@0.2.23
+  - @adatechnology/game-vehicles-fleet@7.0.0
+  - @adatechnology/game-shapes-three@0.4.1
+
 ## 0.9.9
 
 ### Patch Changes
