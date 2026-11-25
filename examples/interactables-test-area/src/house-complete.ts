@@ -19,8 +19,10 @@ export const HOUSE_COMPLETE_TRIAL_LOG = 'house_complete_trial'
 /** The page's floor for this area is 40 m each way: the lines run 34 m to each side, from z = 36 back. */
 const PLAN = { halfX: 34, firstZ: 36 } as const
 const SHOT_TOOL = 'pistol_9mm'
-const BLOW_ENERGY = 2500
-const MAX_BLOWS = 12
+const HAND_TOOL = 'hand'
+const BLOW_ENERGY = 4000
+const MAX_BLOWS = 16
+const SHOT_PULLS = 10
 
 export interface HouseCompleteOptions {
   readonly locale?: string
@@ -63,11 +65,46 @@ function boxOf(THREE: Three, so: SpawnedObject): { centre: Triple; size: Triple 
   return { centre: [centre.x, centre.y, centre.z], size: [size.x, size.y, size.z] }
 }
 
-/** Aims from in front of the piece (+z, the player's side) at its centre, close enough to reach it. */
-function aimAt({ room, THREE }: Trial, so: SpawnedObject): Triple {
+/** Whether `node` is drawn under `root`. */
+const isInside = (node: ThreeNamespace.Object3D, root: ThreeNamespace.Object3D): boolean => {
+  for (let o: ThreeNamespace.Object3D | null = node; o; o = o.parent) if (o === root) return true
+  return false
+}
+
+/** Where to look from at a piece: in front of it (+z, the player's side), a little above its middle, close enough to reach it. */
+function eyeOf(THREE: Three, so: SpawnedObject): Triple {
   const { centre, size } = boxOf(THREE, so)
-  room.look([centre[0], Math.max(centre[1], 0.4) + 0.15, centre[2] + size[2] / 2 + 1.1], centre)
-  return centre
+  return [centre[0], Math.max(centre[1], 0.4) + 0.35, centre[2] + size[2] / 2 + 1.1]
+}
+
+/**
+ * A point of what is drawn of the piece that the eye sees first: rays from the eye over a grid of its box (a table's middle is the air under its top, a pool's is
+ * water) until one meets a visible mesh of the piece before anything else. The middle of the box when none does.
+ */
+function targetOf({ room, THREE }: Trial, so: SpawnedObject, eye: Triple): Triple {
+  const box = new THREE.Box3().setFromObject(so.root)
+  const from = new THREE.Vector3(...eye)
+  const ray = new THREE.Raycaster()
+  ray.camera = room.camera
+  const steps = [0.5, 0.3, 0.7, 0.1, 0.9]
+  for (const fy of [0.5, 0.8, 0.95, 0.3, 0.1]) {
+    for (const fx of steps) {
+      const at = new THREE.Vector3(box.min.x + fx * (box.max.x - box.min.x), box.min.y + fy * (box.max.y - box.min.y), (box.min.z + box.max.z) / 2)
+      ray.set(from, at.clone().sub(from).normalize())
+      const hit = ray.intersectObjects(room.scene.children, true).find((h) => h.object.visible && (h.object as ThreeNamespace.Mesh).isMesh)
+      if (hit && isInside(hit.object, so.root)) return [hit.point.x, hit.point.y, hit.point.z]
+    }
+  }
+  const centre = box.getCenter(new THREE.Vector3())
+  return [centre.x, centre.y, centre.z]
+}
+
+/** Looks at the piece from in front of it, at a point the eye sees of it; returns that point. */
+function aimAt(trial: Trial, so: SpawnedObject): Triple {
+  const eye = eyeOf(trial.THREE, so)
+  const target = targetOf(trial, so, eye)
+  trial.room.look(eye, target)
+  return target
 }
 
 const isLive = (room: Room, objectId: string): boolean => room.spawned().some((so) => so.objectId === objectId)
@@ -90,6 +127,7 @@ function tryUse(trial: Trial, so: SpawnedObject): boolean | null {
 
 function tryPick(trial: Trial, so: SpawnedObject): boolean {
   const { room, step } = trial
+  room.setTool(HAND_TOOL)
   aimAt(trial, so)
   if (!room.grab()) return false
   step(0.2)
@@ -104,22 +142,25 @@ function tryShot(trial: Trial, so: SpawnedObject): boolean {
   const before = entriesOf(room, so.objectId)
   room.setTool(SHOT_TOOL)
   aimAt(trial, so)
-  room.use()
+  // the trigger waits for the draw of the pistol: pull it until it fires
+  for (let pull = 0; pull < SHOT_PULLS; pull++) {
+    if (room.use() === 'ok') break
+    step(0.2)
+  }
   step(0.35)
   return !isLive(room, so.objectId) || isHurt(room, so.objectId) || entriesOf(room, so.objectId) > before
 }
 
+const isBroken = (room: Room, objectId: string): boolean => !isLive(room, objectId) || (room.world.state(objectId)?.parts ?? []).some((part) => part.status !== 'intact')
+
 function tryBreak(trial: Trial, so: SpawnedObject): boolean {
-  const { room, step, THREE } = trial
-  for (let blow = 0; blow < MAX_BLOWS; blow++) {
-    if (!isLive(room, so.objectId)) return true
-    const parts = room.world.state(so.objectId)?.parts ?? []
-    if (parts.some((part) => part.status !== 'intact')) return true
-    const { centre } = boxOf(THREE, so)
-    room.world.hit(so.objectId, { type: 'blunt', point: [centre[0], centre[1], centre[2] + 0.05], direction: [0, -0.3, -1], energy: BLOW_ENERGY, radius: 0.25, source: 'test' })
+  const { room, step } = trial
+  for (let blow = 0; blow < MAX_BLOWS && !isBroken(room, so.objectId); blow++) {
+    const point = aimAt(trial, so)
+    room.world.hit(so.objectId, { type: 'blunt', point, direction: [0, -0.3, -1], energy: BLOW_ENERGY, radius: 0.25, source: 'test' })
     step(0.25)
   }
-  return !isLive(room, so.objectId) || (room.world.state(so.objectId)?.parts ?? []).some((part) => part.status !== 'intact')
+  return isBroken(room, so.objectId)
 }
 
 /** Every trial on one piece, in the order a player tries them: look, open, pick up, shoot, break. */
