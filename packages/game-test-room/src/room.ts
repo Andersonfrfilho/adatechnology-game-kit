@@ -4185,7 +4185,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
    */
   const followPart = (e: Entry, id: string, obj: THREE_NS.Object3D, rest: { p: Vec3; r: Vec3 }): void => {
     const ps = specs.get(e.so.objectId)?.parts.find((p) => p.id === id)
-    if (!ps || !obj.parent) return
+    if (!ps || !obj.parent || !world.part(e.so.objectId, id)) return
     const root = e.so.root
     root.updateMatrixWorld(true)
     fpRoot.copy(root.matrixWorld).invert()
