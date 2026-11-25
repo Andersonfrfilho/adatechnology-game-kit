@@ -51,6 +51,8 @@ const result = await esbuild.build({
   alias: {
     '@adatechnology/game-vegetation-three/testing': join(pkg('game-vegetation-three'), 'dist/testing.js'),
     '@adatechnology/game-urban-three/testing': join(pkg('game-urban-three'), 'dist/testing.js'),
+    // a second entry of the package: the generic alias below would resolve it under dist/index.js
+    '@adatechnology/game-urban/networks': join(pkg('game-urban'), 'dist/networks/index.js'),
     '@adatechnology/game-vehicles-three/testing': join(pkg('game-vehicles-three'), 'dist/testing.js'),
     '@adatechnology/game-vfx-three/testing': join(pkg('game-vfx-three'), 'dist/testing.js'),
     '@adatechnology/game-weather-three/testing': join(pkg('game-weather-three'), 'dist/testing.js'),
