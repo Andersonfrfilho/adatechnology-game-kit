@@ -7,7 +7,7 @@
 //   LEAK_SCENARIOS=a;b                  with LEAK_PHASE, only these scenarios
 //   LEAK_ROUNDS=3                       measured cycles
 //   LEAK_WARMUP=2                       warm-up cycles before the first count
-//   LEAK_SOLVER=jolt                    the room on Jolt (?solver=jolt): also counts the Jolt bodies and the wasm heap in use
+//   LEAK_SOLVER=own                     the room on the old solver (?solver=own); by default it is on Jolt and also counts the Jolt bodies and the wasm heap in use
 // Writes dist/leak.json. Exit code 1 when a budget fails.
 import { createRequire } from 'node:module'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -43,7 +43,7 @@ const PHASES = {
 // What a cycle may leave behind, per measured cycle (above it the room keeps something it removed). Measured after the fixes of 2026-11-02:
 // buffers +0 to +70, textures 0, canvases 0, heap under 0.5 MB.
 const BUDGET = { buffer: 150, vao: 80, texture: 2, framebuffer: 0, program: 2, canvases: 2, listeners: 0, intervals: 0, heapMB: 2 }
-const JOLT = process.env.LEAK_SOLVER === 'jolt'
+const JOLT = process.env.LEAK_SOLVER !== 'own'
 // on Jolt: the bodies the adapter holds, the bodies Jolt itself holds (a body removed from the adapter's map but not from Jolt shows here) and the wasm heap
 // in use (allocated minus free: a shape or a settings object never destroyed). The wasm heap never shrinks, so its size says nothing; what is in use does.
 if (JOLT) Object.assign(BUDGET, { joltBodies: 0, joltSystemBodies: 0, wasmMB: 0.25 })
@@ -138,9 +138,9 @@ for (const [name, phase] of Object.entries(PHASES)) {
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.addInitScript(INSTRUMENT)
-  await page.goto(`${pathToFileURL(dist).href}?table=0&ui=0${JOLT ? '&solver=jolt' : ''}`, { timeout: 180000 })
+  await page.goto(`${pathToFileURL(dist).href}?table=0&ui=0${JOLT ? '' : '&solver=own'}`, { timeout: 180000 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 300000 })
-  if (JOLT && !(await page.evaluate(() => Boolean(window.__joltWorld)))) throw new Error('leak: LEAK_SOLVER=jolt but the page made no Jolt world')
+  if (JOLT && !(await page.evaluate(() => Boolean(window.__joltWorld)))) throw new Error('leak: the page made no Jolt world (LEAK_SOLVER is not own)')
   const cdp = await page.context().newCDPSession(page)
   const cycle = () =>
     page.evaluate(async (p) => {

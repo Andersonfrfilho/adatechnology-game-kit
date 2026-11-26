@@ -9,7 +9,7 @@ import type { PieceSweepHit } from '../src/pieces'
 import { FakeWorld, mat, partState } from './fake-world'
 import { IS_JOLT, physicsOption } from './setup-physics'
 
-// C5 of spec 008: the behaviours of CLAUDE.md §12 named in spec.md 6.1, one test each, on whichever solver the run is (own by default, Jolt with PIECE_SOLVER=jolt)
+// C5 of spec 008: the behaviours of CLAUDE.md §12 named in spec.md 6.1, one test each, on whichever solver the run is (Jolt by default, the old solver with PIECE_SOLVER=own)
 
 const STEP = 1 / 60
 

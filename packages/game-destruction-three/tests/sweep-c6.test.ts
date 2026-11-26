@@ -9,7 +9,7 @@ import type { BowlResult } from './bowl-energy'
 import { stack } from './stack-energy'
 
 // C6, the robustness sweep: off in the default `test`; `node tests/sweep-c6.mjs` runs it over 8 processes and prints the table (SWEEP_FROM / SWEEP_COUNT cut the seeds)
-const RUNS = process.env.SWEEP === '1' && process.env.PIECE_SOLVER === 'jolt'
+const RUNS = process.env.SWEEP === '1' && process.env.PIECE_SOLVER !== 'own'
 const FROM = Number(process.env.SWEEP_FROM ?? 1)
 const SEEDS = Array.from({ length: Number(process.env.SWEEP_COUNT ?? 64) }, (_, i) => i + FROM)
 const STEPS = [1 / 30, 0.05, 1 / 60, 1 / 144]

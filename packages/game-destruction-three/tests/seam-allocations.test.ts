@@ -61,7 +61,7 @@ const debris = (): { update: () => void; kick: () => void } => {
 const SEAM_BYTES_PER_UPDATE = 400_000
 const UPDATES = 120
 
-describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('what the seam makes per update', () => {
+describe.skipIf(process.env.PIECE_SOLVER === 'own')('what the seam makes per update', () => {
   it(`200 pieces, 40 awake: under ${SEAM_BYTES_PER_UPDATE / 1000} kB per update in the seam's files, garbage included`, { timeout: 120000 }, async () => {
     const scene = debris()
     for (let i = 0; i < 180; i++) scene.update()
