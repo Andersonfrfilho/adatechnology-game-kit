@@ -1,5 +1,23 @@
 # @adatechnology/game-vehicles-three
 
+## 0.10.0
+
+### Minor Changes
+
+- b3670e1: A chuva não passa por nada que tenha teto. Além das casas, agora alimentam o `RainCover` do host: os carros, ônibus e caminhões (`createVehicleRainCover` em `game-vehicles`, a cabine do `cabinEnclosure` mais o teto e as janelas que sobraram; caçamba aberta, moto, barco, avião, helicóptero e trator ficam descobertos; teto arrancado, para-brisa quebrado ou furo de 30 cm ou mais deixam a chuva entrar; o carro em movimento só gira o retângulo e a versão só sobe a cada 1 m ou 5 graus, `createVehicleRainCovers` em `game-vehicles-three` liga isso ao host), os prédios, torres de vigia, contêineres e barracas do `game-urban` (`builder.covers`, fora de `scene()`, então nada do que é desenhado muda; a área de teste e o distrito de referência alimentam o host) e, nas casas, a edícula, a sauna, a casinha de cachorro e o banheiro externo do lote (`createItemRainCover`). O `game-contracts` ganha `createFootprintRainCover` (retângulos girados que se movem) e `createFixedFootprintRainCover` (retângulos fixos respondidos por uma grade). Copas de árvore não seguram a chuva.
+
+### Patch Changes
+
+- Updated dependencies [b3670e1]
+  - @adatechnology/game-contracts@0.40.0
+  - @adatechnology/game-vehicles@0.7.0
+  - @adatechnology/game-audio@0.15.4
+  - @adatechnology/game-render-three@0.4.4
+  - @adatechnology/game-shapes@0.4.4
+  - @adatechnology/game-vehicles-driving@0.2.27
+  - @adatechnology/game-vehicles-fleet@8.0.0
+  - @adatechnology/game-vehicles-proving@0.2.4
+
 ## 0.9.13
 
 ### Patch Changes

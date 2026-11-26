@@ -1,5 +1,13 @@
 # @adatechnology/weapon-thumbnails-tool
 
+## 0.0.53
+
+### Patch Changes
+
+- @adatechnology/game-items-three@0.10.3
+- @adatechnology/game-weapons@0.13.3
+- @adatechnology/game-weapons-three@0.24.4
+
 ## 0.0.52
 
 ### Patch Changes
