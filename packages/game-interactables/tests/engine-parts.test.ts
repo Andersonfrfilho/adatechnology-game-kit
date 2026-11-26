@@ -45,7 +45,7 @@ const scene = async (options: EnginePartOptions = {}) => {
     partPhysics.dispose()
     physics.dispose()
   }
-  return { physics, partPhysics, w, run, events, poseOf, leaf, dispose }
+  return { physics, partPhysics, loop, w, run, events, poseOf, leaf, dispose }
 }
 
 describe('doors and drawers on the engine joints (spec 008 T4.4)', () => {
@@ -277,6 +277,28 @@ describe('what is left in the engine when the parts go (spec 008 review, §8)', 
     w.remove('c')
     w.remove('k')
     expect(physics.bodyCount).toBe(floorBodies)
+    dispose()
+  })
+})
+
+describe('a break the loop reports for one frame only (spec 008 review)', () => {
+  it('a door whose joint breaks is found broken when the world updates every fourth step of the loop', { timeout: 60000 }, async () => {
+    const { physics, loop, w, events, leaf, dispose } = await scene({ breakImpulse: () => 5 })
+    w.add('c', cabinet, { x: 0, y: 0, z: 0, ry: 0 })
+    const step = KIT_WORLD.fixedStep ?? 1 / 120
+    const slow = (frames: number): void => {
+      for (let i = 0; i < frames; i++) {
+        for (let k = 0; k < 4; k++) loop.stepFixed(1)
+        w.update(4 * step)
+      }
+    }
+    slow(10)
+    physics.addImpulse(leaf('c', 'door'), [0, 0, 300], [0.4, 0.9, 0.3])
+    slow(30)
+    expect(events.filter((e) => e.type === 'broke' && e.part === 'door')).toHaveLength(1)
+    const frozen = w.partT('c', 'door')
+    slow(30)
+    expect(w.partT('c', 'door')).toBe(frozen)
     dispose()
   })
 })

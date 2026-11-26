@@ -672,6 +672,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     removeJoint(this, id)
   }
 
+  jointExists(id: JointId): boolean {
+    return this.joints.has(id)
+  }
+
   jointAngles(id: JointId): { swing: number; twist: number; hinge: number } {
     return jointAngles(this, id)
   }

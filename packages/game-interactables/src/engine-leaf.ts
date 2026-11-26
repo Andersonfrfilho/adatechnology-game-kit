@@ -115,7 +115,7 @@ export function createLeafDriver(spec: LeafDriverSpec): EnginePartDriver {
     },
     update() {
       if (broken) return
-      if (world.brokenJoints.includes(joint)) {
+      if (!world.jointExists(joint)) {
         broken = true
         settled = true
         return

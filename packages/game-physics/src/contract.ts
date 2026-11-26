@@ -358,6 +358,8 @@ export interface PhysicsWorld {
   removeJoint(id: JointId): void
   /** Angles of a joint now (radians), for checking limits: `hinge` for hinge, fixed and ragdoll hinge joints; `swing` and `twist` for swing-twist; 0 for the rest. */
   jointAngles(id: JointId): { swing: number; twist: number; hinge: number }
+  /** Whether the joint is still in the world: false once it broke (for good, unlike `brokenJoints`, which holds a frame) or was removed. */
+  jointExists(id: JointId): boolean
   /** Joints whose `breakImpulse` was passed in the last step: removed by the adapter, reported once. */
   readonly brokenJoints: readonly JointId[]
   /** Its bodies (in part order) and its joints (one per part but the root, in part order), for reading poses and `jointAngles`. */
