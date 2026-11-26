@@ -129,6 +129,37 @@ describe('T7.1: the crowd as kinematic capsules in the engine', () => {
     world.dispose()
   })
 
+  it('a leaf torn off its hinge is kept by the door bodies: the door shut again drops it before hanging a new one, and dispose takes it out of the world', async () => {
+    const grid = createNavGrid({ size: 64 })
+    const doors = createDoors(grid, { random: createRng(3) })
+    doors.add(0, 0, 'x', 1.2)
+    const world = (await createJoltEngine()).createWorld(KIT_WORLD)
+    const loop = createPhysicsLoop(world)
+    const bodiesBefore = world.bodyCount
+    const doorBodies = createDoorBodies(loop, doors)
+    const hung = world.bodyCount
+    expect(hung).toBe(bodiesBefore + 2)
+    for (let cycle = 0; cycle < 5; cycle++) {
+      world.addImpulse(doorBodies.leafOf(0)!, [0, 0, 5000])
+      for (let step = 0; step < 10 && !doors.list[0]!.broken; step++) loop.stepFixed(1)
+      expect(doors.list[0]!.broken).toBe(true)
+      expect(doorBodies.leafOf(0)).toBeUndefined()
+      // the frame is gone and the torn leaf is left: one body, not two
+      expect(world.bodyCount).toBe(bodiesBefore + 1)
+      // repaired and shut again
+      doors.list[0]!.broken = false
+      doors.list[0]!.open = false
+      loop.stepFixed(1)
+      expect(doorBodies.leafOf(0)).toBeDefined()
+      expect(world.bodyCount).toBe(hung)
+    }
+    world.addImpulse(doorBodies.leafOf(0)!, [0, 0, 5000])
+    for (let step = 0; step < 10 && !doors.list[0]!.broken; step++) loop.stepFixed(1)
+    doorBodies.dispose()
+    expect(world.bodyCount).toBe(bodiesBefore)
+    world.dispose()
+  })
+
   it('the state-hash of the crowd is the same with its agents in the engine as without it: nothing the engine does writes back into the store', { timeout: 120000 }, async () => {
     const run = async (withBodies: boolean): Promise<string> => {
       const grid = createNavGrid({ size: 128 })

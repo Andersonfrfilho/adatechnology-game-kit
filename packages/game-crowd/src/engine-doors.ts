@@ -30,6 +30,7 @@ type Hung = { readonly door: number; readonly frame: BodyId; readonly leaf: Body
  * A closed door as a leaf on a hinge that gives way: a dynamic box on the `prop` layer on a frame post, the hinge limited to a hair of play and with a `breakImpulse`.
  * The agents (kinematic capsules) press on it; when the hinge breaks the door is `broken` for the crowd (`doors.hit` with all its hit points: the grid opens, the events fire).
  * A door that opens or breaks by another cause (`doors.set`, the pressure of the field) loses its leaf at the next frame, and one shut again or added gets a leaf.
+ * A leaf torn off by a hinge that broke stays in the world as a prop until that door hangs a new leaf, or until `dispose`.
  */
 export const createDoorBodies = (loop: PhysicsLoop, doors: Doors, options: DoorBodiesOptions = {}): DoorBodies => {
   const world = loop.world
@@ -38,10 +39,20 @@ export const createDoorBodies = (loop: PhysicsLoop, doors: Doors, options: DoorB
   const height = options.height ?? DOOR_DEFAULTS.height
   const hung = new Map<number, Hung>()
   const doorOfHinge = new Map<JointId, number>()
+  // the leaf a door tore off its hinge stays in the world as a prop, kept here so the next leaf of that door (shut again) and `dispose` can take it out
+  const tornLeaves = new Map<number, BodyId>()
+
+  const removeTornLeaf = (index: number): void => {
+    const leaf = tornLeaves.get(index)
+    if (leaf === undefined) return
+    tornLeaves.delete(index)
+    if (world.has(leaf)) world.removeBody(leaf)
+  }
 
   const hang = (index: number): void => {
     const door = doors.list[index]
     if (!door || door.open || door.broken || hung.has(index)) return
+    removeTornLeaf(index)
     const alongX = door.axis === 'x'
     const half = door.width / 2
     const hingeAt: [number, number, number] = alongX ? [door.x - half, height / 2, door.z] : [door.x, height / 2, door.z - half]
@@ -80,6 +91,8 @@ export const createDoorBodies = (loop: PhysicsLoop, doors: Doors, options: DoorB
       const entry = index === undefined ? undefined : hung.get(index)
       if (!entry) continue
       drop(entry, true)
+      removeTornLeaf(entry.door)
+      tornLeaves.set(entry.door, entry.leaf)
       doors.hit(entry.door, doors.list[entry.door]!.hp)
     }
     sync()
@@ -101,6 +114,7 @@ export const createDoorBodies = (loop: PhysicsLoop, doors: Doors, options: DoorB
     dispose: () => {
       removePhase()
       for (const entry of [...hung.values()]) drop(entry, false)
+      for (const index of [...tornLeaves.keys()]) removeTornLeaf(index)
     },
   }
 }
