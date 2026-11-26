@@ -35,3 +35,10 @@ cena.add(carro.group); carro.damageables                  // [{ material, zone, 
 - O modo leve deixa de fora os interiores, o motor e as peças com menos de 3 cm; a placa mantém a textura.
 - Peer `three >=0.160.0`: testado em r160 (desde o T9g).
 - Sem `Math.random`: a cor vem da semente.
+
+## Peças e dano no motor (`createCrashParts`, spec 008 T6.9)
+- `createCrashParts({ THREE, world, vehicle, frame, colliders, mass, onPartLost? })`: `shape()` é o composto mutável dos cascos (filho com o `tag` = id da peça), `bind(chassis)` põe massa, inércia e centro de massa do kit e liga `watchContacts`, `step()` a cada passo, `dispose()` remove os corpos das peças.
+- A peça solta vira corpo com os próprios cascos, massa de `PartDef.mass`, inércia da caixa e a velocidade do ponto do chassi; o chassi perde a massa (chassi + peças = massa do kit). Nada é lançado, nada nasce dentro de nada (§12).
+- Dano de nível 2: a linha de contato mais forte de cada `tag` vira `crashVehicle`. Parado (< 0,05 m/s por 30 passos), os cascos amassados são refeitos; casco que toca algo só anda para dentro e, para fora, 2 mm (`holdWithin`).
+- Cascos: `createHullPlanCache` (cache por modelo; carro amassado sai dele) e o worker `vehicles.hull-plan`; K1 a K7 nos 69 modelos em `vehicle-hulls.test.ts`.
+- Medição em AMD (pior quadro e p99 do `hulls()` no passo fixo) fica na T8.6; o interior é da spec 009.

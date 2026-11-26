@@ -37,3 +37,7 @@ const { state, events } = driver.step({ throttle: 1, brake: 0, steer: 0.5, handb
 - O motorista só emite eventos: dano, sangue, som e câmera são do anfitrião.
 - Sem `Math.random`.
 - A semissimulação não tem código do time: os números do documento da Frota são os testes; o passo interno é de 1/240 s.
+
+## Atropelar (spec 008, T6.26) e o carro no motor (T6.2)
+- `createRunOver`: fase `actors`, carro acima de 1 m/s, agentes da camada `agent` debaixo da caixa; `push` (< 3 m/s), `knock` (até 8, `crowd.knockDown`) ou `kill` (`crowd.kill`, o cadáver nasce com a velocidade comum). Choque inelástico; o agente é golpeado uma vez enquanto fica debaixo do carro. Casa o `Crowd` por tipo (`RunOverCrowd`).
+- `vehicleDescFromSemi(spec, { chassis })` e `createPhysicsInputMapper()`: a ficha da semi-simulação vira o veículo do motor (carro criado já andando).

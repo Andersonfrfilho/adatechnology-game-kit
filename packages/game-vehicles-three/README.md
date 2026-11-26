@@ -35,3 +35,13 @@ The bench sets the quality (full or light mode), the paint by seed and palette, 
 ## Rain under the roof
 
 `createVehicleRainCovers()` keeps the host's rain (`ModuleHost.rainCover`) told what each vehicle in the scene roofs over: `track(id, destructible, frame)`, then `sync(host.rainCover, dt)` every frame and `clear()` when the module leaves (the vehicles test area does it). The cover comes from `createVehicleRainCover` of `game-vehicles`: the cabin box and roof of a car, the body of a bus or truck; an open pickup bed, bikes, boats, planes, helicopters and the tractor roof nothing. A torn-off roof, a broken windshield or pane and a through-hole of 30 cm or more are openings; a moving car only turns its rectangle (the damage state is read every 0.4 s) and the version the far curtain caches grows every metre or so.
+
+## Crash parts on the physics engine (`createCrashParts`, spec 008 T6.9)
+
+`createCrashParts({ THREE, world, vehicle, frame, colliders, mass, onPartLost? })` builds a mutable compound of the car's hulls (`colliders.hulls()`, each child tagged with the id of its part) and keeps it in step with the drawing. `shape()` gives the chassis shape; `bind(chassis)` sets the kit's mass, inertia and centre of mass and listens to the contacts; call `step()` after every physics step.
+
+- A part that comes off (`vehicle.disassemble`, or a blow) leaves the compound and becomes a body with its own hulls, mass (`PartDef.mass`), box inertia and the velocity of its point on the chassis; the chassis gives up that mass (`massOf(chassis) + parts = the kit's mass`). Nothing is flung (`flying` stays empty), and the part is not born inside anything (pushed out of fixed geometry, at most 3 times).
+- Level-2 damage: each step the strongest contact row of every hull tag becomes a `crashVehicle` (point, direction, approach speed, both masses, width of the part's box, `source` = part id).
+- At rest (chassis under 0.05 m/s for 30 steps) the hulls of what was dented are made again and the changed ones go to the engine with `setChildShape`. A hull that touches something may only move inward, and outward by 2 mm at most (`holdWithin`), until the contact ends.
+- `stats()` reports `released`, `pushedOut`, `settles`, `remade`, `held`, `unplaced`, `blows`, `events`, `hitParts` and `children`; `dispose()` removes every part body. Wheels and lamps without a hull use the drawn box; the interior is spec 009.
+- The hull cache by model (`createHullPlanCache`) and the worker kind `vehicles.hull-plan` are described above; a dented car leaves the cache.

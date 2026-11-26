@@ -82,6 +82,11 @@
       "reason": "P13_WALL is the steel wall thickness of the gas cylinder, not a wall"
     },
     {
+      "file": "packages/game-vehicles-proving/src/physics-run.ts",
+      "domain": "vehicles",
+      "reason": "the box that is the test car's chassis in the Jolt world (a collision shape of the proving runner, nothing is drawn)"
+    },
+    {
       "file": "packages/game-weather-three/src/headlights.ts",
       "domain": "vehicles",
       "reason": "the beam cone of the headlights (light, not a car)"

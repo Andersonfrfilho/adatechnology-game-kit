@@ -11,3 +11,7 @@ A `ProvingRun` owns no accumulator. The physics step is `fixedStep` (default 1/1
 - **`time_scale`** (the proving area's control, 1 to 20) is not a clock: it is the number of ticks' worth of steps run in each tick (`stepFixed(STEPS_PER_TICK * timeScale)`), a fast-forward of the test alone. The scheduler's `timeScale` stays the room's slow motion, and the scheduler's cap of ticks per frame would cut a 20x run, so the fast-forward cannot live there.
 
 Trajectories at 60 Hz are the same as with the old private accumulator (test `the scheduler tick and the old private accumulator...`).
+
+## The proving ground on the physics engine (spec 008 T6.2b)
+
+`startPhysicsRun` and `runTestOnPhysics` run the same procedures on the Jolt vehicle (`vehicleDescFromSemi`), model by model, against the same bands as the semi-simulation. State of the fleet on Jolt (T6.2d, open): 17 land models are outside the bands (acceleration of five cars and SUVs, heavy and military models too fast, the bicycle, the tank's turn, the tractor and four motorcycles braking on a wet track); the reasons and the owner's decisions are in `specs/008-motor-fisico-jolt/evidence.md`.

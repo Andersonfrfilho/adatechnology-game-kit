@@ -293,3 +293,7 @@ scene.add(c.root)
 ## Light mode and damageable parts
 
 `createVehicleKit({ lod })` takes the settings of the light mode (`defaultLodSettings`: every number can be overridden). `kit.build(key, state, zones, { lod: true })` builds the same vehicle with fewer triangles (rounded boxes with one ring, coarser lofts, grilles and generators, interiors tagged `userData.skipLite`) and puts the switch back; with it off nothing changes. `kit.damageables(c, matrix?)` lists the metal, glass, rubber and fuel parts of a built vehicle as `Box3` boxes (`kit.damageableKinds` maps zone types to parts and can be extended).
+
+## Parts as bodies (`setPartSink`, spec 008 T6.9)
+
+`destructible.setPartSink(sink | null)` hands a part that comes off (`detach`) to the host instead of throwing it as a `fling`: with a sink, the part's holder (the meshes) leaves `c.flying` and the sink gets the part, the holder, the velocity and the spin the `fling` would have had (`PartSink`). Without a sink nothing changes. `@adatechnology/game-vehicles-three` (`createCrashParts`) is the sink that turns each part into a physics body. The `fling` of explosions does not go through the sink.

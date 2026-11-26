@@ -205,7 +205,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `crash-parts.test.ts` · `sonnet`.
 - ✅ **T6.12 Aceitação da frota** (`CLAUDE.md` §7) com motor e cascos: tiro acerta o desenhado, marca vai com a peça; goldens da geometria intacta iguais (feito em 2026-11-26, `evidence.md` `## T6.12`; 1 478 testes, nenhum golden mudou).
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-fleet test` · `sonnet`.
-- **T6.16 README, skills** (`kit-veiculos`), `docs/veiculos-verificacao.md` e `docs/veiculos-pecas-por-categoria.md`.
+- ✅ **T6.16 README, skills** (`kit-veiculos`), `docs/veiculos-verificacao.md` e `docs/veiculos-pecas-por-categoria.md` (feito em 2026-11-26, `evidence.md` `## T6.16`; `kit-audit --check` sai 0, com uma entrada nova na allowlist do rodador do Jolt).
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
 - ✅ **T6.19 Atualizar o §6 da `arquitetura.md`:** carro estacionado dinâmico (D3), sem par `vehicle`–`agent`, camada de corpo morto (`corpse`, da Fase 5), camada do testador das rodas.
   Mecânica? sim · Aceite por comando? sim: `grep` das camadas novas na `arquitetura.md` · `haiku`.

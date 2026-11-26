@@ -4686,3 +4686,9 @@ A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a 
 **Verificado.** `node --check` dos dois arquivos; o pacote da página é gerado pelo esbuild (3,16 MB). **Não rodei o navegador** (regra do dono, §9): a sonda nunca executou. A mesma sequência (criar, bater, soltar, remover) é a do teste de heap em ciclo da T6.9 (`crash-parts.test.ts`, 0 bytes de resíduo).
 
 **Pendência.** O comando para o dono rodar fica na T8.5: `cd examples/test-room && node build.mjs && LEAK_PHASE=vehicle node leak.mjs`. A T6.25 tem o aceite "à mão": ✅ só depois dessa corrida; a task ficou **sem ✅**.
+
+## T6.16 — README, skills e docs dos veículos (2026-11-26) — ✅
+
+**O que entrou.** READMEs de `game-vehicles` (`setPartSink`), `game-vehicles-three` (`createCrashParts`), `game-vehicles-driving` (`createRunOver`, `vehicleDescFromSemi`), `game-vehicles-proving` (rodador no Jolt e o estado da T6.2d), `game-vehicles-fleet` (eixos, aceleração com fonte, aceitação), `game-physics-jolt` e `game-crowd` (`knockDown`); as cinco referências de `.claude/skills/kit-veiculos/references/`; `docs/veiculos-verificacao.md` e `docs/veiculos-pecas-por-categoria.md`.
+**Achado e corrigido.** `kit-audit --check` já saía 1 antes das docs: `game-vehicles-proving/src/physics-run.ts:75` (a caixa do chassi do carro de teste no mundo Jolt, T6.2b) caía em "FORA do SDK dono". Entrou em `tools/kit-audit/allowlist.json` com o motivo (colisão do rodador, nada é desenhado).
+**Gate.** `node tools/kit-audit/audit.mjs --check`: saída 0 (0 novos fora do SDK dono, 9 pendentes conhecidos, 20 permitidos).

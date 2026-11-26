@@ -85,3 +85,7 @@ step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-mu
 Adaptador de `@adatechnology/game-physics` sobre o Jolt Physics (`jolt-physics` 1.1.1, build `wasm-compat`, single-thread). É o único
 pacote que depende do `jolt-physics`. Todo objeto do Jolt criado pelo pacote é destruído por ele; `world.dispose()` libera o que sobrar.
 A licença MIT do Jolt está no `LICENSE`, na seção "Third-party".
+
+## Vehicles and loose parts (spec 008, phase 6)
+
+The adapter shares the compound of a car between cars (a copy on the first damage), gives children a handle (`setChildShape`, also after `setMassProperties` moved the centre of mass: the compound is found inside the offset wrapper), and offers `watchContacts`, `vehicleWheels`, `rebuildVehicle`, `applyBuoyancy` and the `motorcycle` and `tracked` controllers. A car made, crashed, stripped of parts and removed hands the wasm heap back but for 8 bytes for each `SetShape` of the centre of mass (`tests/heap.test.ts`, `crash-parts.test.ts`).
