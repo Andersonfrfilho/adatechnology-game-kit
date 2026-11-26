@@ -1,4 +1,4 @@
-import { FALL_CAUSE, STATE } from '../types'
+import { BALANCE, FALL_CAUSE, STATE } from '../types'
 import type { CrowdType } from '../types'
 import { createBalance } from './balance'
 import type { Balance } from './balance'
@@ -217,7 +217,7 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     beginStep,
     endStep,
     knockDown: (i, vx, vz) => {
-      if (store.hp[i]! <= 0) return
+      if (i < 0 || i >= store.n || store.hp[i]! <= 0) return
       if (!balance) {
         store.state[i] = STATE.STUNNED
         store.stateTimer[i] = KNOCK_STUN_SECONDS
@@ -225,6 +225,7 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
         store.vz[i] = vz
         return
       }
+      if (store.balance[i] !== BALANCE.STANDING && store.balance[i] !== BALANCE.STAGGERING) return
       store.pushX[i]! += vx
       store.pushZ[i]! += vz
       balance.requestFall(i, FALL_CAUSE.SHOVE, Math.hypot(vx, vz) / options.balance!.shoveFall)
