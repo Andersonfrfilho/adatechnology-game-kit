@@ -90,6 +90,8 @@ export class EngineStatics {
   readonly ownerOf = new Map<BodyId, string>()
   /** The part of the object each held body draws (the key without its mesh number): what a blow on the body hits. */
   readonly partOf = new Map<BodyId, string>()
+  /** Changes whenever an answer of `covers` may have (an object came, went, or was fitted again). */
+  coverageRevision = 0
 
   constructor(
     private readonly world: SeamWorld,
@@ -114,6 +116,7 @@ export class EngineStatics {
       if (now.has(id)) continue
       for (const h of f.held.values()) this.release(h, f.settled)
       this.bodies.delete(id)
+      this.coverageRevision++
     }
     const budget = { triangles: TRIANGLES_PER_UPDATE }
     for (const [id, solids] of now) {
@@ -122,6 +125,7 @@ export class EngineStatics {
       const fixed = f ?? { objectId: id, solids, held: new Map<string, Held>(), waiting: 0, settled: false }
       this.bodies.set(id, fixed)
       fixed.solids = solids
+      this.coverageRevision++
       this.fit(fixed, budget)
     }
   }
@@ -129,6 +133,7 @@ export class EngineStatics {
   clear(): void {
     for (const f of this.bodies.values()) for (const h of f.held.values()) this.drop(h.id)
     this.bodies.clear()
+    this.coverageRevision++
     this.changed.clear()
   }
 

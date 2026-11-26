@@ -17,12 +17,14 @@ export const createEngineRayBroadPhase = (world: SeamWorld, statics: EngineStati
   const hits: RayHit[] = []
   const inside: BodyId[] = []
   const met = new Set<string>()
+  const metList: string[] = []
   const from: Vec3 = [0, 0, 0]
   const toward: Vec3 = [0, 0, 0]
   return {
     begin(origin, direction, maxDistance) {
       if (!(maxDistance <= LONGEST_RAY)) return false
       met.clear()
+      metList.length = 0
       from[0] = origin[0]
       from[1] = origin[1]
       from[2] = origin[2]
@@ -32,15 +34,26 @@ export const createEngineRayBroadPhase = (world: SeamWorld, statics: EngineStati
       const count = world.sphereCastAll(from, toward, maxDistance, RAY_MARGIN, hits, FIXED_ONLY)
       for (let i = 0; i < count; i++) {
         const owner = statics.ownerOf.get(hits[i]!.body)
-        if (owner !== undefined) met.add(owner)
+        if (owner !== undefined && !met.has(owner)) {
+          met.add(owner)
+          metList.push(owner)
+        }
       }
       const around = world.overlapSphere(from, RAY_MARGIN, inside, FIXED_ONLY)
       for (let i = 0; i < around; i++) {
         const owner = statics.ownerOf.get(inside[i]!)
-        if (owner !== undefined) met.add(owner)
+        if (owner !== undefined && !met.has(owner)) {
+          met.add(owner)
+          metList.push(owner)
+        }
       }
       return true
     },
     mayMeet: (objectId) => !statics.covers(objectId) || met.has(objectId),
+    candidates: {
+      met: () => metList,
+      covers: (objectId) => statics.covers(objectId),
+      revision: () => statics.coverageRevision,
+    },
   }
 }

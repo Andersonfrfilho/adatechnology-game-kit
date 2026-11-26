@@ -674,6 +674,23 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let time = 0
   let counter = 0
   const objects = new Map<string, ObjRT>()
+  // the place each object holds in `objects`' iteration order (a key set again keeps its place), for a ray that visits only some of them in that same order
+  const slots = new Map<string, number>()
+  let slotCounter = 0
+  let objectsRevision = 0
+  const putObject = (id: string, object: ObjRT): void => {
+    if (!objects.has(id)) {
+      slots.set(id, ++slotCounter)
+      objectsRevision++
+    }
+    objects.set(id, object)
+  }
+  const dropObject = (id: string): void => {
+    if (objects.delete(id)) {
+      slots.delete(id)
+      objectsRevision++
+    }
+  }
   // copy-on-write: `on`/`off` swap the array, so an `emit` walks the list it found even if a listener subscribes or leaves meanwhile
   const listeners = new Map<string, readonly ((e: DestructionEvent) => void)[]>()
   let cur: DestructionEvent[] = []
@@ -2802,21 +2819,55 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     if (o.soil?.sets.size) restCarry.soilSets = Object.fromEntries(o.soil.sets)
     const rest = build(sub(inOld), o.id, o.soil ? o.base.pos : pos, o.soil ? o.base.rot : rot, restCarry)
     dirtyHosted.delete(o)
-    objects.set(o.id, rest)
-    for (const [nid, object] of fresh) objects.set(nid, object)
+    putObject(o.id, rest)
+    for (const [nid, object] of fresh) putObject(nid, object)
     return fresh.map(([nid]) => nid)
   }
 
   let rayBroad: RayBroadPhase | null = null
+  // the objects the engine does not hold every part of, in `objects`' order: rebuilt only when the engine's answer or the set of objects changed
+  let uncovered: ObjRT[] = []
+  let uncoveredFor: { hook: RayBroadPhase | null; coverage: number; objects: number } = { hook: null, coverage: -1, objects: -1 }
+  const metObjects: ObjRT[] = []
+  const rayObjects: ObjRT[] = []
+
+  /** The objects a ray may meet, in the order `objects` holds them, so a tie goes to the same object as the scan of all of them; null when the scan of all is the cheaper way. */
+  const candidatesOf = (hook: RayBroadPhase): ObjRT[] | null => {
+    const asked = hook.candidates
+    if (!asked) return null
+    const coverage = asked.revision()
+    if (uncoveredFor.hook !== hook || uncoveredFor.coverage !== coverage || uncoveredFor.objects !== objectsRevision) {
+      uncovered = []
+      for (const o of objects.values()) if (!asked.covers(o.id)) uncovered.push(o)
+      uncoveredFor = { hook, coverage, objects: objectsRevision }
+    }
+    if (uncovered.length * 2 > objects.size) return null
+    metObjects.length = 0
+    for (const id of asked.met()) {
+      const o = objects.get(id)
+      if (o && asked.covers(id)) metObjects.push(o)
+    }
+    metObjects.sort((a, b) => slots.get(a.id)! - slots.get(b.id)!)
+    rayObjects.length = 0
+    let m = 0
+    let u = 0
+    while (m < metObjects.length || u < uncovered.length) {
+      const takeMet = u >= uncovered.length || (m < metObjects.length && slots.get(metObjects[m]!.id)! < slots.get(uncovered[u]!.id)!)
+      rayObjects.push(takeMet ? metObjects[m++]! : uncovered[u++]!)
+    }
+    return rayObjects
+  }
 
   const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
     // the sweep's scope is its own broad phase; the engine's answers for every other ray
-    const outside = rayBroad && !scope && rayBroad.begin(origin, d, maxDist) ? rayBroad : null
+    const asked = rayBroad && !scope && rayBroad.begin(origin, d, maxDist) ? rayBroad : null
+    const candidates = asked ? candidatesOf(asked) : null
+    const outside = candidates ? null : asked
     const minRadius = skip.minObjectRadius ?? 0
     let best: (RayHit & { pathLen: number }) | null = null
     const counts = sweepCounts
-    for (const o of scope ? scope.objects : objects.values()) {
+    for (const o of scope ? scope.objects : (candidates ?? objects.values())) {
       if (counts) counts.objectVisits++
       if ((skip.skipLoose && o.loose) || o.br < minRadius) continue
       if (outside && !outside.mayMeet(o.id)) continue
@@ -6150,7 +6201,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       finishExplosions()
       const id = opts.id ?? nextId()
       if (taken(id)) throw new Error(`object "${id}" already exists`)
-      objects.set(id, build(resolveSpec(spec), id, opts.position ?? [0, 0, 0], opts.rotation ?? [0, 0, 0, 1]))
+      putObject(id, build(resolveSpec(spec), id, opts.position ?? [0, 0, 0], opts.rotation ?? [0, 0, 0, 1]))
       return id
     },
     register(impl, opts: AddOptions = {}) {
@@ -6185,7 +6236,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       impls.get(id)?.impl.dispose?.()
       const existing = objects.get(id)
       if (existing) dirtyHosted.delete(existing)
-      objects.delete(id)
+      dropObject(id)
       impls.delete(id)
     },
     has: (id) => taken(id),
@@ -6561,7 +6612,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }
       const o = getObj(id)
       dirtyHosted.delete(o)
-      objects.set(id, build(o.spec, id, o.base.pos, o.base.rot))
+      putObject(id, build(o.spec, id, o.base.pos, o.base.rot))
     },
     on(type: DestructionEventType | '*', fn) {
       const known = listeners.get(type) ?? []
@@ -6592,7 +6643,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       finishExplosions()
       const existing = objects.get(id)
       if (existing) dirtyHosted.delete(existing)
-      objects.set(id, buildFromEntry(entry, id))
+      putObject(id, buildFromEntry(entry, id))
     },
     load(snap) {
       // the whole world is replaced: what an open blast would still do belongs to the world that goes
@@ -6600,10 +6651,12 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       if (snap.version !== 1) throw new Error(`unsupported snapshot version ${String(snap.version)}`)
       dirtyHosted.clear()
       objects.clear()
+      slots.clear()
+      objectsRevision++
       time = snap.time
       rng.set(snap.rng)
       counter = snap.counter ?? 0
-      for (const e of snap.objects) objects.set(e.id, buildFromEntry(e, e.id))
+      for (const e of snap.objects) putObject(e.id, buildFromEntry(e, e.id))
       for (const e of snap.impls ?? []) {
         const im = impls.get(e.id)
         if (!im) continue
