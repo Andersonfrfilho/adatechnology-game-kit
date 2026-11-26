@@ -27,8 +27,8 @@ export interface BodyLodOptions {
   readonly pileHeight?: number
   /**
    * Most chains (R1) a pile keeps: the ones nearest the points of interest (the lowest id among equals); the rest of the pile's bodies are capsules (R2), changed in the
-   * step they are seen in. Default `Infinity`: off. Measured on a pile of 100 in the `KIT_WORLD` (`evidence.md` T5.4, "Fechamento"): no number from 0 to 30 puts the pile to sleep in 10 s
-   * on every seed and inside the C7 of a pile, so none is the default.
+   * step they are seen in. Default `Infinity`: off. Measured on a pile of 100 in the `KIT_WORLD` (`evidence.md` T5.4, "Nascer como cápsula"): no number from 10 to 40, with or without the birth as a capsule, puts the pile to sleep in 14 s
+   * on all 13 seeds, so none is the default.
    */
   readonly pileChainsMax?: number
   /** Most ragdolls (R0) at once. Default 1 (measured, T5.1: the most that keeps 20 dead bodies inside the C7 at 120 Hz). */

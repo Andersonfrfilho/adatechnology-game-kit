@@ -1,6 +1,6 @@
 import type { BodyDesc, BodyId, Layer, Quat, RagdollDesc, ShapeDesc, Vec3 } from './contract'
 import { KIT_RAGDOLL_SOLVER } from './contract'
-import { capsuleOfTorso, chainOfCapsule, chainOfPoses, multiplyQuat, placeRagdoll, torsoOfCapsule } from './corpse-pose'
+import { capsuleOfTorso, chainOfCapsule, chainOfPoses, multiplyQuat, placeRagdoll, standingTorso, torsoOfCapsule } from './corpse-pose'
 import type { Rigid } from './corpse-pose'
 import { LOD_UNITS } from './engine-corpses-types'
 import type { CorpseContext, CorpseRecord } from './engine-corpses-types'
@@ -100,8 +100,8 @@ const isFree = (ctx: CorpseContext, pieces: readonly Piece[], lift: number, igno
   pieces.every((piece) => ctx.world.overlapShape(shrunk(piece.shape, REST_MARGIN), [piece.position[0], piece.position[1] + lift, piece.position[2]], piece.rotation, FOUND, { layers: STANDS_ON, ignore }) === 0)
 
 /** The least lift, a few millimetres at a time and up to 5 cm, that clears everything but the corpse's own bodies; null when 5 cm is not enough. */
-const liftToClear = (ctx: CorpseContext, pieces: readonly Piece[], own: readonly BodyId[]): number | null => {
-  for (let lift = 0; lift <= LIFT_MAX + 1e-9; lift += LIFT_STEP) if (isFree(ctx, pieces, lift, own)) return lift
+const liftToClear = (ctx: CorpseContext, pieces: readonly Piece[], own: readonly BodyId[], max = LIFT_MAX, step = LIFT_STEP): number | null => {
+  for (let lift = 0; lift <= max + 1e-9; lift += step) if (isFree(ctx, pieces, lift, own)) return lift
   return null
 }
 
@@ -216,8 +216,22 @@ const removeOrKeep = (ctx: CorpseContext, record: CorpseRecord, from: BodyRung, 
   removeRungBodies(ctx, record)
 }
 
-/** A death: the ragdoll (R0) or chain (R1) of the kit made standing where the body stood, falling, with the speed it had. */
-export const bornAt = (ctx: CorpseContext, record: CorpseRecord, rung: 'r0' | 'r1', frame: Rigid, velocity: Vec3): void => {
+/** How far (m) a death into a full pile is raised to clear the bodies there, in steps: it falls onto the pile from there. */
+const BIRTH_LIFT_MAX = 3
+const BIRTH_LIFT_STEP = 0.05
+
+/** A death: the ragdoll (R0), chain (R1) or, in a pile that is full, capsule (R2) of the kit made standing where the body stood, falling, with the speed it had. */
+export const bornAt = (ctx: CorpseContext, record: CorpseRecord, rung: 'r0' | 'r1' | 'r2', frame: Rigid, velocity: Vec3): void => {
+  if (rung === 'r2') {
+    const capsule = capsuleOfTorso(record.kit, standingTorso(record.kit, frame))
+    const pieces = [{ shape: record.kit.capsule.shape, position: capsule.position, rotation: capsule.rotation }]
+    const lift = liftToClear(ctx, pieces, [], BIRTH_LIFT_MAX, BIRTH_LIFT_STEP) ?? BIRTH_LIFT_MAX
+    const at: Rigid = { position: [capsule.position[0], capsule.position[1] + lift, capsule.position[2]], rotation: capsule.rotation }
+    const body = ctx.world.createBody(capsuleDesc(record, at, false))
+    remember(ctx, record, [body])
+    carry(ctx, [body], [[velocity, NO_SPIN]])
+    return
+  }
   const placed = placeRagdoll(rung === 'r0' ? record.kit.ragdoll : record.kit.chain, frame)
   const built = ctx.world.createRagdoll(engineRagdoll(placed, rung, false))
   record.ragdoll = built.id

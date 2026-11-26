@@ -2,8 +2,8 @@ import { createBodyLod, farthestSleeping } from './body-lod'
 import type { BodyRung } from './body-lod'
 import type { BodyId, Quat, SeamWorld, Vec3 } from './contract'
 import { yawQuat } from './corpse-pose'
-import type { Rigid } from './corpse-pose'
-import { distanceTo, enforceIslands, enforceQuotas, evaluateCorpses, rankPiles } from './engine-corpses-eval'
+import type { CorpseBodyKit, Rigid } from './corpse-pose'
+import { bornInFullPile, distanceTo, enforceIslands, enforceQuotas, evaluateCorpses, rankPiles } from './engine-corpses-eval'
 import { freezeCorpses, releaseResting } from './engine-corpses-pile'
 import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf } from './engine-corpses-swap'
 import type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, CorpseContext, CorpseRecord } from './engine-corpses-types'
@@ -113,7 +113,8 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
   }
   const stop = loop ? loop.add({ beforeStep: (h) => step(h) }, 'actors') : () => undefined
 
-  const bornRung = (distance: number): 'r0' | 'r1' => {
+  const bornRung = (distance: number, kit: CorpseBodyKit, frame: Rigid): 'r0' | 'r1' | 'r2' => {
+    if (bornInFullPile(ctx, kit, frame, options.moundAt)) return 'r2'
     if (distance > lod.numbers.ragdollDistance) return 'r1'
     let ragdolls = 0
     for (const record of ctx.records.values()) if (record.rung === 'r0') ragdolls++
@@ -128,7 +129,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     if (ctx.records.has(params.id)) throw new Error(`game-physics: corpse ${params.id} is already in the world`)
     const frame: Rigid = { position: params.position, rotation: yawQuat(params.yaw) }
     const distance = distanceTo(interest(), params.position[0], params.position[2])
-    const rung = bornRung(distance)
+    const rung = bornRung(distance, params.kit, frame)
     const record: CorpseRecord = {
       id: params.id, kit: params.kit, rung, ragdoll: 0, bodies: [], pile: 0, pileRank: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: false, stale: true,
       touching: [], born: ctx.born++, originX: params.position[0], originZ: params.position[2], lastLookedAt: ctx.tick, distance,

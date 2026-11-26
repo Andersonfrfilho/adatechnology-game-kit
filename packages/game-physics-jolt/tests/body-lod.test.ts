@@ -38,13 +38,18 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
   })
 
 
-  it('`pileChainsMax`: a pile of 40 against a wall keeps only its nearest chains, the rest are capsules, and the pile still comes to rest', { timeout: 120000 }, async () => {
+  it('`pileChainsMax`: a pile of 40 against a wall keeps only its nearest chains, the bodies that fall on a full pile are born capsules, and the pile still comes to rest', { timeout: 120000 }, async () => {
     const scene = await sceneOf({ lod: { pileChainsMax: 5 } }, true)
     const ids = Array.from({ length: 40 }, (_, i) => i + 1)
-    for (const id of ids) scene.corpses.add({ id, kit, position: heapAt(id - 1), yaw: id * 0.7 })
+    const born = ids.map((id) => {
+      const rung = scene.corpses.add({ id, kit, position: heapAt(id - 1), yaw: id * 0.7 })
+      frame(scene.loop)
+      return rung
+    })
     seconds(scene.loop, 4)
     const counts = scene.corpses.counts()
-    report('lod-pile-chains-max', { counts })
+    report('lod-pile-chains-max', { counts, bornCapsules: born.filter((rung) => rung === 'r2').length })
+    expect(born.filter((rung) => rung === 'r2').length).toBeGreaterThan(0)
     expect(counts.r2 + counts.r2f).toBeGreaterThan(counts.r1)
     expect(counts.rigidBodies).toBeLessThan(ids.length * 3)
     seconds(scene.loop, 12)

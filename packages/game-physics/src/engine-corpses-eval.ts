@@ -1,10 +1,11 @@
 import { farthestSleeping, rungBelow } from './body-lod'
 import type { BodyLodDecision, BodyLodInput, BodyRung } from './body-lod'
-import type { Vec3 } from './contract'
+import type { BodyId, Vec3 } from './contract'
 import { freezeCorpses } from './engine-corpses-pile'
 import { anchorBody, readTouching, rigidBodies, switchRung, switchUnits } from './engine-corpses-swap'
 import type { CorpseContext, CorpseRecord, SettledCorpse } from './engine-corpses-types'
-import { rotateVector } from './corpse-pose'
+import { capsuleOfTorso, rotateVector, standingTorso } from './corpse-pose'
+import type { CorpseBodyKit, Rigid } from './corpse-pose'
 
 /** How far (m) above another body's centre a body is to count as resting on it. */
 const ABOVE = 0.1
@@ -53,6 +54,37 @@ export const rankPiles = (ctx: CorpseContext, moundAt: ((x: number, z: number) =
       record.pileRank = rank
     })
   }
+}
+
+/** How far (m) beyond a standing body's own capsule a death looks for the corpses it falls on. */
+const BIRTH_REACH = 0.25
+/** How far (m) around a death the chains of its pile are counted: bodies that have just fallen have no contact lists yet to join them into an island. */
+const PILE_REACH = 4
+const FOUND: BodyId[] = []
+
+/**
+ * Whether a death at `frame` falls on a pile that already keeps `pileChainsMax` chains: the same pile test as the policy (it reaches `pileContacts` dead bodies, or one of them
+ * on a mound higher than `pileHeight`), and the R1 within `PILE_REACH` of it are already that many. Such a body is born a capsule, without passing through R1.
+ */
+export const bornInFullPile = (ctx: CorpseContext, kit: CorpseBodyKit, frame: Rigid, moundAt: ((x: number, z: number) => number) | undefined): boolean => {
+  const { pileChainsMax, pileContacts, pileHeight } = ctx.lod.numbers
+  if (pileChainsMax === Infinity) return false
+  const capsule = capsuleOfTorso(kit, standingTorso(kit, frame))
+  const shape = kit.capsule.shape
+  const probe = shape.kind === 'capsule' ? { ...shape, radius: shape.radius + BIRTH_REACH } : shape
+  ctx.world.overlapShape(probe, capsule.position, capsule.rotation, FOUND, { layers: ['corpse'] })
+  const owners = new Set<number>()
+  for (const body of FOUND) {
+    const owner = ctx.ownerOf.get(body)
+    if (owner !== undefined) owners.add(owner)
+  }
+  const onMound = (moundAt?.(frame.position[0], frame.position[2]) ?? 0) > pileHeight
+  if (owners.size === 0 || (owners.size < pileContacts && !onMound)) return false
+  let chains = 0
+  for (const record of ctx.records.values()) {
+    if (record.rung === 'r1' && Math.hypot((record.torso[0] as number) - frame.position[0], (record.torso[2] as number) - frame.position[2]) <= PILE_REACH) chains++
+  }
+  return chains >= pileChainsMax
 }
 
 interface Pending {
