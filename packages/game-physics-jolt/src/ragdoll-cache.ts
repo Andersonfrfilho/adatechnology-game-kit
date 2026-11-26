@@ -4,7 +4,7 @@ import type { ShapeDesc } from '@adatechnology/game-physics'
 
 import type { JoltWorldHost } from './world-host'
 
-/** The most shapes held for ragdoll parts: a kit's bodies come in a few sizes, a caller with a new size every time must not fill the heap. */
+/** The most shapes (and skeletons) held for ragdolls: a kit's bodies come in a few sizes, a caller with a new size every time must not fill the heap; the least recently used goes. */
 const RAGDOLL_SHAPES_MAX = 64
 
 /** What a ragdoll's shared pieces are held in: the shapes by their exact dimensions and the skeletons by their parent list; both let go of at `dispose`. */
@@ -35,11 +35,17 @@ export const ragdollShape = (w: JoltWorldHost, desc: ShapeDesc): JoltNS.Shape =>
   if (key === null) return w.makeShape(desc)
   const held = w.ragdollCache.shapes.get(key)
   if (held) {
+    w.ragdollCache.shapes.delete(key)
+    w.ragdollCache.shapes.set(key, held)
     held.AddRef()
     return held
   }
+  if (w.ragdollCache.shapes.size >= RAGDOLL_SHAPES_MAX) {
+    const [oldest, shape] = w.ragdollCache.shapes.entries().next().value as [string, JoltNS.Shape]
+    shape.Release()
+    w.ragdollCache.shapes.delete(oldest)
+  }
   const made = w.makeShape(desc)
-  if (w.ragdollCache.shapes.size >= RAGDOLL_SHAPES_MAX) return made
   w.ragdollCache.shapes.set(key, made)
   made.AddRef()
   return made
@@ -49,7 +55,16 @@ export const ragdollShape = (w: JoltWorldHost, desc: ShapeDesc): JoltNS.Shape =>
 export const ragdollSkeleton = (w: JoltWorldHost, parents: readonly number[]): JoltNS.Skeleton => {
   const key = parents.join(',')
   const held = w.ragdollCache.skeletons.get(key)
-  if (held) return held.skeleton
+  if (held) {
+    w.ragdollCache.skeletons.delete(key)
+    w.ragdollCache.skeletons.set(key, held)
+    return held.skeleton
+  }
+  if (w.ragdollCache.skeletons.size >= RAGDOLL_SHAPES_MAX) {
+    const [oldest, { holder: oldHolder }] = w.ragdollCache.skeletons.entries().next().value as [string, { holder: JoltNS.RagdollSettings }]
+    w.J.destroy(oldHolder)
+    w.ragdollCache.skeletons.delete(oldest)
+  }
   const J = w.J
   const skeleton = new J.Skeleton()
   parents.forEach((parent, i) => {
@@ -57,7 +72,6 @@ export const ragdollSkeleton = (w: JoltWorldHost, parents: readonly number[]): J
     skeleton.AddJoint(name, parent)
     J.destroy(name)
   })
-  if (w.ragdollCache.skeletons.size >= RAGDOLL_SHAPES_MAX) return skeleton
   // a settings object that does nothing but hold the cache's reference: a ragdoll's settings let go of theirs when it is removed, and the last one would free the skeleton
   const holder = new J.RagdollSettings()
   holder.mSkeleton = skeleton
