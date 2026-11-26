@@ -1,5 +1,12 @@
 # @adatechnology/game-runtime
 
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies [d7fa717]
+  - @adatechnology/game-contracts@0.41.0
+
 ## 0.3.4
 
 ### Patch Changes

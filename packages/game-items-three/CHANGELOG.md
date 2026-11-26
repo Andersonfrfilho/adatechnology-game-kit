@@ -1,5 +1,17 @@
 # @adatechnology/game-items-three
 
+## 0.10.5
+
+### Patch Changes
+
+- Updated dependencies [d7fa717]
+- Updated dependencies [9f0a371]
+  - @adatechnology/game-contracts@0.41.0
+  - @adatechnology/game-floorplan-three@4.1.0
+  - @adatechnology/game-fluids@0.6.10
+  - @adatechnology/game-interactables@0.6.1
+  - @adatechnology/game-items@0.2.23
+
 ## 0.10.4
 
 ### Patch Changes

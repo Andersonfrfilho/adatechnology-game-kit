@@ -1,5 +1,19 @@
 # @adatechnology/game-destruction-three
 
+## 0.26.6
+
+### Patch Changes
+
+- 9f0a371: Nada fica no ar sobre uma cratera (CLAUDE.md §12). `wakeRegion` acorda também a peça cuja raiz está fora do disco (a peça cortada de um objeto inteiro, a calçada da casa, tem a raiz na origem do objeto) quando ela está no disco e o chão sob parte da sua pegada desceu mais de 5 cm; a que o disco só toca segue dormindo. `BuildOptions.groundSurfaces: false` (novo): quando o terreno do host desenha o lote (`groundLayoutOfPlans`: zonas, coberturas de chão e caminhos), a casa não desenha mais as próprias placas planas por cima dele — elas não podiam ser cavadas e ficavam como um tampo sobre a cratera. A área de casas da sala liga a opção.
+- Updated dependencies [d7fa717]
+  - @adatechnology/game-terrain@0.9.5
+  - @adatechnology/game-destruction@0.29.5
+  - @adatechnology/game-contracts@0.41.0
+  - @adatechnology/game-audio@0.15.5
+  - @adatechnology/game-render-three@0.4.5
+  - @adatechnology/game-shapes@0.4.5
+  - @adatechnology/game-vfx-three@0.10.9
+
 ## 0.26.5
 
 ### Patch Changes

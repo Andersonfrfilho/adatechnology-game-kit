@@ -1,5 +1,19 @@
 # @adatechnology/game-urban
 
+## 0.7.0
+
+### Minor Changes
+
+- d7fa717: A cratera de uma carga no chão usa a energia real da carga. Os `specificEnergy` do solo são de joules reais (1 kg de TNT = 4,184 MJ; a granada de 800 kJ, a carga de contato de 4,2 MJ), mas o mundo de destruição entregava ao terreno o `energy` da escala de dano do arsenal (0,24 kg = 200 kJ): toda cratera saía com 1/5 da energia. `applyHit` explosivo agora lê `hit.tnt` vezes `TNT_JOULES` (exportado de `game-contracts`) quando o golpe traz `hasCharge` (novo em `Hit`: o mundo de destruição o marca quando a explosão recebeu `charge.tnt`, como a sala faz com toda carga do arsenal); sem carga dita, segue o `energy`. O PG-7V (0,45 kg) passa de 0,19 m para 0,39 m de fundo no solo do quintal.
+
+  Os canos enterrados da casa (esgoto da NBR 8160 e águas pluviais da NBR 10844) quebram com cratera como a rede da rua: `createHouseBuriedPipes` (`game-floorplan-three`) lê o estágio de instalações e pergunta a `breachOf` de `game-urban`; o cano que a bacia alcança aparece no buraco, o que ela corta até a linha de centro quebra (vão) e vaza (`leakOfPipe`, novo em `game-urban`). `ModuleHost` ganha `onCrater` e `addTap` (`HostTap`), que a sala implementa com o terreno e o `game-fluids`; a área de casas liga os dois.
+
+### Patch Changes
+
+- Updated dependencies [d7fa717]
+  - @adatechnology/game-contracts@0.41.0
+  - @adatechnology/game-floorplan@0.5.4
+
 ## 0.6.0
 
 ### Minor Changes
