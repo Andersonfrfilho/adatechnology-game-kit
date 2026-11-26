@@ -1444,6 +1444,9 @@ importers:
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:^
         version: link:../game-vehicles-fleet
+      '@adatechnology/game-vehicles-three':
+        specifier: workspace:^
+        version: link:../game-vehicles-three
       '@adatechnology/game-vfx':
         specifier: workspace:^
         version: link:../game-vfx
