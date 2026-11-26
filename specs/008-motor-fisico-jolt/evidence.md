@@ -4595,3 +4595,43 @@ A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a 
 **Caso 5 (cena de referência), `single`, 4 rodadas, carga 5 a 9:** mediana 0,44–0,50, p99 4,9–5,3, maior quadro 11,8–13,6 ms; na comparação das builds (segunda execução do processo) o `multithread` ficou em mediana 0,38–0,43 e p99 3,4–4,4 contra 0,42–0,50 e 4,2–4,9 do `single`.
 
 **Gates:** `game-physics-jolt` `pnpm test` 40 arquivos, 180 testes verdes (2 pulados); `test:cost` de `cascade-tail` (sozinho, carga 3,0 a 3,2) 2 de 2 testes verdes, nas duas builds; typecheck e eslint do pacote limpos; `pnpm build` do repositório verde e a página da sala recompilada com a nova escolha. O `test:cost` do pacote inteiro em paralelo com as outras sessões segue com as falhas de tempo de sempre (19 com carga 4 a 8; `blast-query`, `body-lod`, `queries`, `ragdoll`...), nenhuma em arquivo que esta task toque além do `cascade-tail`.
+
+## T6.26 — Atropelar pedestres e zumbis (2026-11-26, worktree `spec-008-atropelar`, ramo `spec/008-atropelar`) — **✅**
+
+**O que já existia:** o par `vehicle`–`agent` já estava fora de `LAYER_PAIRS` (`game-physics/src/contract.ts`; a Fase 6 o tirou e o comentário diz que atropelar é consulta do host); `RunOverRules`/`runOver()` (`arcade.ts`, `run-over.ts`: empurrar abaixo de 3 m/s, derrubar até 8, matar acima); `createAgentBodies` (cápsulas cinemáticas da Fase 7, camada `agent`, `user = índice`); no `Crowd`: `damage`, `kill` e `asPlayerCrowd().stun` (a derrubada do `arcade`); `createCorpseBodies().add({ velocity })` (R0 se a cota deixa, senão R1) e `relocateCorpse`.
+
+**O que mudou:** só `game-vehicles-driving` ganhou código (`src/physics-run-over.ts`, `createRunOver`); o resto é teste e uma dependência de teste.
+- Na fase `actors`, por carro acima de 1 m/s: `overlapShape` da caixa do carro (mais a margem e o deslocamento do passo) contra a camada `agent`. Cada agente achado, do maior índice para o menor (a morte move o último agente para o lugar do morto), é um golpe.
+- Velocidade de aproximação = velocidade do carro menos a do agente ao longo do movimento; `runOver()` classifica com as `RunOverRules`. Choque perfeitamente inelástico: o carro perde `m/(M+m)` da aproximação, o corpo sai com a velocidade comum, o impulso `−μ·v` vai ao carro por `addImpulse` no ponto do agente (à altura do centro do carro). Energia reportada: `½·μ·v²`, `μ` a massa reduzida.
+- `push`: o agente é movido 1 m/s para o lado e o carro é preso por `holdDrag` (a cada passo, enquanto empurra). `knock`: dano `(μ/70)·v²·knockDamage` pelo `crowd.damage` (o do `arcade` para um corpo de 70 kg, crescendo com a energia); se não morre, `stun` com a velocidade comum. `kill`: `crowd.kill`. Quem morre é dito ao ouvinte do `ledger` por `runOver.dyingVelocity` (o `bodies.add` do host passa `velocity`).
+- O mesmo agente é golpeado uma vez enquanto fica debaixo do carro (empurrão é exceção). `Crowd` e `RunOverCrowd` se casam por tipo estrutural: `game-vehicles-driving` não importa `game-crowd`. Pedestre e zumbi são o mesmo agente do `Crowd` com outra altura, constituição e tipo (pedestre: faixas de `AGE_PRESETS` de `game-characters-people`; zumbi: `undeadCrowdPack`); o kit do cadáver sai de `corpseBodyKit` com as medidas de cada um.
+- `game-crowd` ganhou `game-vehicles-driving` e `game-characters-people` como `devDependencies` (só os testes novos; `pnpm-lock.yaml` acompanha). Nenhum ciclo: o driving não depende do crowd.
+
+**Números (Jolt, `KIT_WORLD`, carro de 1 300 kg sem atrito):**
+| Cena | Resultado |
+|---|---|
+| carro a 30 km/h, zumbi adulto parado (126 kg) | `kill`; cadáver nasce R0; carro perde 8,8% da velocidade; quantidade de movimento conservada dentro de 5% |
+| zumbi adulto a 15 km/h | `knock`, vivo, `STUNNED`, sem cadáver |
+| zumbi adulto a 25 km/h | `knock` com dano maior que a vida: morre, cadáver R0 |
+| criança (≈ 40 kg) a 20 km/h | `knock`, viva (massa menor, menos energia) |
+| adulto pedestre a 30 km/h | `kill` |
+| carro a 5 km/h | só `push` (10 passos de aperto em 4 s), ninguém ferido nem derrubado, carro mais lento |
+| carro a 40 km/h, 20 agentes | atravessa todos (agente nunca é parede): 20 de 20 contados (cadáveres + vivos), 7 mortos, o resto derrubado; carro passa de z = 20 |
+| carro de verdade (semi-simulação) a 30 km/h, 3 cápsulas | 3 golpes (`kill` 8,31 m/s, `knock` 7,17 e 6,67), carro passa de z = 14; velocidade logo após o 1.º golpe 7,82 m/s, dentro de 5% da esperada |
+
+**Determinismo:** dois carros (36 e 28 km/h) e dez zumbis, 5 s, duas execuções: `hashCrowdState` `ecd31840` nas duas, registro de cadáveres e `rungHash` (4033033353) iguais, velocidades finais dos carros iguais (4,754265308 e 3,930306673 m/s), 10 golpes. O aceite da T7.1 (`corpse-physics-hash.test.ts`: hash igual quando nada empurra) segue verde.
+
+**Heap em ciclo:** o mundo recebe 6 ciclos de carro + agentes + cadáveres + `RunOver`, tudo desfeito no fim de cada um; depois de 3 de aquecimento, a contagem de corpos é igual e a memória em uso varia no máximo 24 bytes em 3 ciclos (a variação é da contabilidade do alocador, mede 8 a 24; o limite do teste é 256 bytes, um ragdoll vazado são quilobytes).
+
+**Testes:** `game-vehicles-driving/tests/physics-run-over.test.ts` (5, mundo e crowd de mentira: conservação, energia, empurrão, golpe único, ordem de índices), `game-crowd/tests/physics/run-over.test.ts` (9, `Crowd` real e Jolt), `game-physics-jolt/tests/vehicle.test.ts` (carro real, caso `T6.26`).
+
+**Gates:** `game-vehicles-driving` 9 arquivos, 102 testes; `game-crowd` 27 arquivos, 159; `game-crowd-three` 9 arquivos, 48; `game-physics` 4 arquivos, 32; `game-physics-jolt` 43 arquivos (1 pulado), 232 testes; typecheck dos cinco e eslint dos tocados limpos. Nenhum golden mudou. Sem GPU nem navegador.
+
+**Fora desta task (decisão registrada):** a derrubada é a do `arcade` (`STUNNED` com a velocidade do carro), não o `BALANCE.FALLEN` do equilíbrio: o `Crowd` só expõe essa queda pela explosão (`blast`), que é de área e atingiria vizinhos. Se o dono quiser a queda com levantar-se, o caminho é um `Crowd.knockDown(i, velocity)` público que chama `balance.shove`.
+
+**O que o dono deve ver na sala (§5), sem eu ter aberto o navegador:**
+1. Carro a 5 km/h contra um grupo: os corpos são empurrados para o lado, o carro desacelera um pouco, ninguém cai nem morre.
+2. A 15 km/h: o zumbi cai (atordoado) e o carro perde cerca de 9% da velocidade; criança e adulto reagem diferente na mesma velocidade.
+3. A 30 km/h ou mais: o corpo é lançado com a velocidade do carro (R0 enquanto a cota de ragdoll deixa, depois R1) e cai atrás dele; nenhum agente para o carro como parede.
+4. Dez agentes em fila: o carro os atravessa perdendo velocidade a cada golpe, e os cadáveres formam monte atrás.
+5. Conferir que o cadáver lançado não atravessa o chão nem prende o carro (camada `corpse` encontra `vehicle`).

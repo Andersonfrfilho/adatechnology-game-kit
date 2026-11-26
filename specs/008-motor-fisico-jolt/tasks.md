@@ -215,7 +215,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `heap.test.ts`, `cascade.test.ts` · `sonnet`.
 - **T6.25 Sonda da sala do veículo no `leak.mjs`** (§8).
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.
-- **T6.26 Atropelar pedestres e zumbis** (7.8).
+- ✅ **T6.26 Atropelar pedestres e zumbis** (7.8; feito em 2026-11-26, `evidence.md` `## T6.26`; `createRunOver` em `game-vehicles-driving`, provado com o `Crowd` real em `game-crowd` e com um carro do Jolt em `vehicle.test.ts`).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
 
 > Vai para a spec 009 (E3–E5: reticulado `game-deform`, propriedades mecânicas, gerador e classes de viga, skinning, acoplamento contato → reticulado → cascos, vagas, salvar, interior e fogo, calibração, linha composta do C7, ocupantes ragdoll, reboque/ônibus, barco, voo, z-fighting nas batidas, aceitação com reticulado): lista na seção 21.2 de `design/veiculos.md`. A spec 009 ainda não foi criada.
