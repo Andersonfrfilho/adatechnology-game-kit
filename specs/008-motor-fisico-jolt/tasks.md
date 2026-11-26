@@ -135,7 +135,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? não (sondas à mão) · `sonnet`.
 - **T3.9 Goldens dos destroços** (`plan.md` D4), num commit só, por último, comparados com o `origin/main` atual.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-floorplan-three test` · `haiku`.
-- **T3.10 Ligar o Jolt como padrão** dos destroços (a chave `own` continua). Aceite: C1–C6, C8 verdes.
+- ✅ **T3.10 Ligar o Jolt como padrão** dos destroços (a chave `own` continua). Aceite: C1–C6, C8 verdes. **2026-11-26:** sala e testes abrem com Jolt (`own` é a exceção até a T8.1), 3 goldens de `destruction` regravados por decisão do dono (`evidence.md` rodadas 1–6); limite do motor: restituição do cilindro e = 0,46 (não 0,6).
   Mecânica? sim · Aceite por comando? sim: testes de `d3`, `dest`, `game-floorplan-three` · `sonnet`.
 
 ## Fase 4 — Props

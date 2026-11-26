@@ -3551,3 +3551,21 @@ Goldens (não regravados), `destruction`: Jolt `breach` `e5885aa5`/832, `spall` 
 **Não resolvido:** a queixa do dono na sala ("partes de madeira sobem e ficam sambando depois de tiro") **não foi reproduzida por esta cena**. Precisa de um caso real (qual peça, qual tiro) ou da sala com a sonda. Quem lê `root.position.y` de peça para medir altura repete o erro: ler o centro (`localToWorld(localCenter)`).
 
 Gates (rodada 5): `game-physics-jolt` 114 passam, 2 pulados; `game-destruction-three` Jolt 853 / `own` 740, 0 falhas; `game-floorplan-three` Jolt 1621 passam e **3 falhas (os 3 goldens, não regravados)**, `own` 1619 passam, 0 falhas; `eslint` e `tsc` do teste novo sem erro (nenhum código do kit tocado).
+
+### T3.10, rodada 6 (2026-11-26): goldens de `destruction` regravados por decisão do dono
+
+Branch rebaseada sobre a `origin/main` (sem commits novos), `dist` refeitos. Decisão do dono (2026-11-26): regravar os 3 goldens de `destruction`; o diagnóstico das rodadas 4 e 5 (física legítima do motor novo: a laje segura as peças, o vidro tem a espessura real) fica como a causa.
+
+Regravados com `UPDATE_EXACT=1` em `tests/exact-golden.test.ts`. O diff do `tests/fixtures/exact-floorplan.json` tem **só 3 linhas**:
+
+| Golden | Antes | Depois |
+|---|---|---|
+| `destruction/breach` | `4a2638b7`, 842 objetos | `e5885aa5`, 832 |
+| `destruction/spall` | `e112e96c`, 851 | `26c3349`, 824 |
+| `destruction/fracture` | `66c76666`, 935 | `fb65e788`, 908 |
+
+Os 41 goldens das casas seguem iguais.
+
+**Limites do motor (registrados, não corrigidos):**
+- **Restituição do cilindro:** no Jolt o cilindro (a lata) perde restituição, e = 0,46 onde o material pede 0,6 (esfera e caixa dão 0,6 exato; com e = 1, caixa 1,00 e cilindro 0,89). Causa dentro do Jolt (contato de superfície curva); o teste `rolling` lata contra lata exige o valor medido (0,7292 / 0,2708 da velocidade). O `own` mantém 0,6.
+- **Ponto para o dono ver na sala:** a janela e o batente pousam cerca de 34 cm acima de onde pousavam no `own`; não identifiquei no que o vidro pousa.
