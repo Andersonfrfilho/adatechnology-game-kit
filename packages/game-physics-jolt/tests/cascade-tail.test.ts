@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { KIT_WORLD, PhysicsCostMeter, WakeQueue, chooseForPhysics, physicsPieceCount } from '@adatechnology/game-physics'
 import type { BodyDesc, Vec3, WorldDesc } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
-import type { JoltEngineOptions, JoltWorld } from '../src/index'
+import type { JoltBuild, JoltWorld } from '../src/index'
 import { expectCostAtMost, ground, report, stats } from './scenes'
 
 interface Tail {
@@ -15,8 +15,16 @@ interface Tail {
   readonly steps: number[]
 }
 
-/** `JOLT_BUILD=multithread` runs the same scene on the multithreaded build with no job threads (SIMD; needs `SharedArrayBuffer`), the one the desktop app uses: same physics, see evidence.md T7.4. */
-const engineOptions = (): JoltEngineOptions => (process.env.JOLT_BUILD === 'multithread' ? { build: 'multithread' } : {})
+/**
+ * The two builds the kit runs: `multithread` (SIMD, 0 job threads; the desktop app and the isolated room, needs `SharedArrayBuffer`) and `single` (a page without isolation).
+ * The physics is the same (hash of case 5, `cascade.test.ts`); the step is not. `JOLT_BUILD=single|multithread` runs only that one. Limits in ms (spec.md 6.2, evidence.md T7.4):
+ * `multithread` carries the C7 limits; `single` carries the band measured on 2026-11-26 (Intel Core Ultra 9 275HX, Node, load 4 to 5: median 0.587 to 0.954, p99 3.54 to 5.60, wake 6.1 to 9.6) because it has no SIMD.
+ */
+const LIMITS: Record<JoltBuild, { readonly median: number; readonly p99: number; readonly wake: number }> = {
+  multithread: { median: 0.6, p99: 4.0, wake: 10 },
+  single: { median: 1.0, p99: 6.0, wake: 10 },
+}
+const BUILDS: readonly JoltBuild[] = process.env.JOLT_BUILD === 'single' || process.env.JOLT_BUILD === 'multithread' ? [process.env.JOLT_BUILD] : ['multithread', 'single']
 
 /** The world the bench runs in: the kit's (120 Hz, 20 passes, contact listener); `B6_LEGACY=1` brings back the gate 0 one (60 Hz, Jolt's 10 passes, no `KIT_WORLD`) for comparison. */
 const worldDesc = (): WorldDesc => (process.env.B6_LEGACY === '1' ? { fixedStep: 1 / 60, maxBodies: 8192 } : KIT_WORLD)
@@ -31,8 +39,8 @@ const PLAYER: Vec3 = [-6, 1, 6]
 
 type Wake = 'burst' | 'budget' | 'queue'
 
-const tail = async (wake: Wake): Promise<Tail> => {
-  const engine = await createJoltEngine(engineOptions())
+const tail = async (wake: Wake, build: JoltBuild): Promise<Tail> => {
+  const engine = await createJoltEngine({ build })
   const world = engine.createWorld(worldDesc()) as JoltWorld
   ground(world, 100)
   const descs: BodyDesc[] = []
@@ -93,19 +101,33 @@ const WARM_RUNS = 3
 /** `burst`: before D4; `budget`: the piece count only (an ablation); `queue`: the production recipe. */
 const MODE: Wake = process.env.B6_WAKE === 'burst' || process.env.B6_WAKE === 'budget' ? process.env.B6_WAKE : 'queue'
 
-describe('case 5b: cascade tail (gate 0 B6), cold and warm', () => {
-  // this file runs in a process of its own (vitest's forks pool), so the first scene is the first contact the wasm and the adapter's code have
+describe.each(BUILDS)('case 5b: cascade tail (gate 0 B6), cold and warm, %s build', (build) => {
+  // this file runs in a process of its own (vitest's forks pool), so the first scene of a build is the first contact its wasm and the adapter's code have
   it('500 bodies woken by one blast: the first run in the process (cold), then the same scene after a warm-up (warm)', { timeout: 300000 }, async () => {
-    const cold = await tail(MODE)
-    report('cascade-tail', { phase: 'cold', wake: MODE, wokeInOneFrame: cold.woke, firstFrameMs: ms(cold.firstFrameMs), first1s: stats(cold.steps.slice(0, 60)), all3s: stats(cold.steps) })
-    for (let i = 0; i < WARM_UP; i++) await tail(MODE)
+    const limits = LIMITS[build]
+    const cold = await tail(MODE, build)
+    report('cascade-tail', { build, phase: 'cold', wake: MODE, wokeInOneFrame: cold.woke, firstFrameMs: ms(cold.firstFrameMs), first1s: stats(cold.steps.slice(0, 60)), all3s: stats(cold.steps) })
+    for (let i = 0; i < WARM_UP; i++) await tail(MODE, build)
+    const medians: number[] = []
+    const p99s: number[] = []
     for (let i = 0; i < WARM_RUNS; i++) {
-      const warm = await tail(MODE)
-      report('cascade-tail', { phase: 'warm', run: i + 1, wake: MODE, wokeInOneFrame: warm.woke, firstFrameMs: ms(warm.firstFrameMs), first1s: stats(warm.steps.slice(0, 60)), all3s: stats(warm.steps), head: warm.steps.slice(0, 12).map(ms), over5ms: over(warm.steps, 5), over6ms: over(warm.steps, 6) })
-      // condition 10: the frame the island wakes in costs at most 10 ms, the production recipe (`queue`) warm; the median and the p99 of the 3 s (0.6 / 4.0 ms, spec.md 6.2) are in the report, not here: see evidence.md T7.4
-      if (MODE === 'queue') expectCostAtMost(warm.firstFrameMs, 10)
+      const warm = await tail(MODE, build)
+      const all3s = stats(warm.steps)
+      report('cascade-tail', { build, phase: 'warm', run: i + 1, wake: MODE, wokeInOneFrame: warm.woke, firstFrameMs: ms(warm.firstFrameMs), first1s: stats(warm.steps.slice(0, 60)), all3s, head: warm.steps.slice(0, 12).map(ms), over5ms: over(warm.steps, 5), over6ms: over(warm.steps, 6) })
+      // condition 10 and the C7 line of the 5b (spec.md 6.2): the wake frame, the median and the p99 of the 3 s, the production recipe (`queue`) warm, each build against its own limits
+      if (MODE === 'queue') {
+        expectCostAtMost(warm.firstFrameMs, limits.wake)
+        medians.push(all3s.median)
+        p99s.push(all3s.p99)
+      }
       if (MODE === 'burst') expect(warm.woke).toBe(500)
       if (MODE !== 'burst') expect(warm.bodies).toBe(250)
+    }
+    // the middle of the warm runs: one run that another process disturbed does not decide the line
+    const middle = (xs: number[]): number => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)] ?? 0
+    if (MODE === 'queue') {
+      expectCostAtMost(middle(medians), limits.median)
+      expectCostAtMost(middle(p99s), limits.p99)
     }
   })
 })

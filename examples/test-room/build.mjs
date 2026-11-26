@@ -97,13 +97,15 @@ const joltBoot = (
       contents: `import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import { MAX_WORKER_THREADS, createJoltEngine } from '@adatechnology/game-physics-jolt'
 // ?joltThreads=auto: the machine's threads but the page's own, at most the build's pthread pool (MAX_WORKER_THREADS)
-// ?joltBuild=multithread (needs a cross-origin isolated page: the 4280 with --isolate, or the desktop app), ?joltThreads=N|auto job threads besides the main one,
+// the build is chosen at load: multithread (SIMD, 0 job threads; same physics, same hash) on a cross-origin isolated page (the 4280 with --isolate, or the desktop app), single elsewhere.
+// ?joltBuild=single|multithread forces one, ?joltThreads=N|auto job threads besides the main one,
 // ?joltContacts=off the kit's JS contact listener off (only to measure: Jolt calls it from the job threads, where it does not exist). Anything that cannot run here
 // falls back to the single-threaded build, said in the console and in window.__joltInfo
 const threadingOf = (q) => {
   const raw = q.get('joltThreads')
   const workerThreads = raw === 'auto' ? Math.min(MAX_WORKER_THREADS, Math.max(0, (navigator.hardwareConcurrency || 1) - 1)) : Number(raw ?? 0)
-  const build = q.get('joltBuild') === 'multithread' || workerThreads > 0 ? 'multithread' : 'single'
+  const asked = q.get('joltBuild')
+  const build = asked === 'multithread' || workerThreads > 0 || (asked !== 'single' && self.crossOriginIsolated === true) ? 'multithread' : 'single'
   return { build, workerThreads, contactCallbacks: q.get('joltContacts') === 'off' ? 'none' : 'js', moduleUrl: new URL('jolt-physics.multithread.wasm-compat.js', location.href).href }
 }
 window.__joltBoot = () => /[?&]solver=own(&|$)/.test(location.search) ? Promise.resolve() : (() => {

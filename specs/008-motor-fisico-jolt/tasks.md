@@ -206,7 +206,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction test` e `... game-physics-jolt exec vitest run tests/queries.test.ts` · `sonnet`.
 - ✅ **T7.3 Blast e fragmentos** (2026-11-26, `evidence.md` `## T7.3`): ~300 raios de fragmento + sobreposição + linha de visada; sensores de fumaça (entra/sai). Aceite: um blast ≤ 1 ms.
   Mecânica? não · Aceite por comando? sim: testes de `game-weapons`, `game-vfx`, `jolt` · `sonnet`.
-- **T7.4 Reação em cadeia** (2026-11-26, **sem ✅**: o golpe do motor virou `hitPart` blunt e o heap é estável, mas a mediana (0,61 a 0,73 contra 0,6) e o p99 (3,7 a 4,3 contra 4,0) do caso 5b não fecham e o caso 5 em rajada passa de 10 ms; `evidence.md` `## T7.4`, decisão do dono): eventos de contato com impulso viram `hit` do `game-destruction` sem alocação por quadro; despertar em massa
+- ✅ **T7.4 Reação em cadeia** (2026-11-26, fechada pela decisão do dono: o 5b vale na build SIMD com os limites do §6.2 e a build `single` tem linha própria; o caso 5 é cena de referência sem limite; `evidence.md` `## T7.4`): eventos de contato com impulso viram `hit` do `game-destruction` sem alocação por quadro; despertar em massa
   dentro da condição 10. Aceite: caso 5 e 5b dentro do orçamento; heap de JS estável.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/cascade.test.ts` · `sonnet`.
 

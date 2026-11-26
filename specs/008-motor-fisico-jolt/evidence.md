@@ -4043,7 +4043,7 @@ Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 4 a 5, sob `perf-measure.
 
 **Gates:** `game-physics-jolt test`: 40 arquivos, 177 testes verdes (1 arquivo e 2 testes pulados, como antes); `game-vfx test` 437 e `game-weapons test` 596 verdes; typecheck do `game-physics` e eslint dos arquivos novos limpos.
 
-## T7.4 — reação em cadeia (2026-11-26) — **parcial, sem ✅: a mediana e o p99 do caso 5b e o quadro de despertar do caso 5 não fecham; números abaixo, decisão do dono**
+## T7.4 — reação em cadeia (2026-11-26) — **fechada em 2026-11-26 pela decisão do dono (build SIMD onde dá, C7 por build; seção "Fechamento" no fim)**
 
 Máquina: Intel Core Ultra 9 275HX, Node, Linux; três rodadas sob `perf-measure.lock`, carga 1,8 a 2,5 (outras sessões na máquina).
 
@@ -4113,3 +4113,29 @@ Caso 5 (`wasm-compat-multithread` / `wasm-multithread`, hash igual): p99 depois 
 **Veredicto:** nenhuma otimização do adaptador foi commitada (todas ≤ 3 %, dentro do ruído); `single` fica como está. Os quatro: 5b mediana e p99 passam na build SIMD com carga 7 (0,62 e 2,8 contra 0,6 e 4,0: a mediana na beira, a medir quieta), o caso 5 (p99 e maior quadro) não. **T7.4 segue sem ✅.** Decisão do dono: (a) mundo padrão do app e da sala isolada passa a `multithread` com 0 threads (já é o do desktop) e o 5b/caso 5 passam a ser cobrados nela; (b) manter `single` como a cobrada e subir os limites para a faixa medida; (c) as duas coisas, com o caso 5 como rajada fora do orçamento. Reproduzir: `JOLT_BUILD=multithread pnpm --filter @adatechnology/game-physics-jolt test:cost -- tests/cascade-tail.test.ts`.
 
 **Gates:** `game-physics-jolt test` 40 arquivos, 178 testes verdes; typecheck e eslint limpos; `test:cost` do pacote inteiro com carga 5,6 a 6,3: 17 falhas de tempo em `blast-query`, `body-lod`, `queries`, `ragdoll` e `cascade-tail` (quadro de despertar a frio 18,8 ms), nenhuma em arquivo que este commit toca além da variável de ambiente do `cascade-tail`; `game-physics` e `game-destruction-three` não foram tocados.
+
+### Fechamento (2026-11-26, decisão do dono, worktree `spec-008-t74`) — **✅**
+
+**Decisão:** (1) o app de desktop e a sala isolada (`pnpm serve:room --isolate`) carregam a build `multithread` do Jolt (SIMD, 0 threads de job); a página sem isolamento segue na `single`; (2) o C7 do caso 5b vale por build; (3) o caso 5 (318 corpos acordando de uma vez, sem fila) é cena de referência sem limite, porque a produção sempre desperta em fila.
+
+**Carregamento:** o desktop já pedia `joltBuild=multithread` (`apps/desktop/src/areas.ts`, `DEFAULT_LAUNCH`), sem mudança. A sala só usava a `multithread` com `?joltBuild=multithread`: agora `examples/test-room/build.mjs` (`threadingOf`) escolhe em tempo de carga, `multithread` quando `self.crossOriginIsolated === true` e `single` caso contrário; `?joltBuild=single|multithread` força uma. A falha de carga (módulo ausente, sem memória compartilhada) já caía na `single` com `console.warn` e `__joltInfo.fallback`, sem erro. Os testes de `apps/desktop` e `tools/serve-room` não mudaram (não foram tocados).
+
+**Prova de hash igual:** `cascade.test.ts` ganhou "the single and the multithreaded (SIMD, 0 job threads) builds run the cascade to the same hash": roda o caso 5 nas duas builds e exige o mesmo hash. Resultado nas 4 rodadas: `single` = `multithread` = **`645d812254fd0a98`** (o mesmo hash do teste de determinismo e da evidência anterior).
+
+**Cobrança:** `cascade-tail.test.ts` roda o 5b nas duas builds (`describe.each`; `JOLT_BUILD=single|multithread` restringe a uma). Na faixa de custo: quadro de despertar ≤ 10 ms por execução; mediana e p99 dos 3 s pela mediana das 3 execuções aquecidas (uma execução que outro processo perturbou não decide a linha). Limites: SIMD 0,6 / 4,0 ms; `single` 1,0 / 6,0 ms (a faixa medida, 2026-11-26). O caso 5 só registra (`report`), sem `expect` de tempo.
+
+**Medidas do 5b (receita de produção, `KIT_WORLD`, aquecido, sob `perf-measure.lock`, cascade-tail rodando sozinho):**
+
+| Rodada | Carga (1 min) | SIMD mediana / p99 / despertar (ms) | `single` mediana / p99 / despertar (ms) |
+|---|---|---|---|
+| A (3 execuções por build) | 3,0 a 3,2 | 0,483–0,507 / 2,28–2,36 / 3,7–5,8 | 0,604–0,684 / 3,57–3,63 / 6,0–6,3 |
+| B (3 execuções) | 3,2 | idem, 0,487–0,507 / 2,29–2,35 / 3,7–4,1 | 0,604–0,618 / 3,57–3,63 / 6,1–6,3 |
+| C (3 execuções) | 3,2 | 0,487–0,499 / 2,29–2,30 / 3,7–3,9 | 0,614–0,618 / 3,57–3,62 / 6,1–6,3 |
+| 5 rodadas de varredura | 4,0 a 4,9 | 0,484–0,661 / 2,26–3,38 / 3,7–6,1 (3 de 15 execuções acima de 0,6, todas junto de perturbação: o `single` foi a 0,954 / 5,40 / 9,6 na mesma janela) | 0,587–0,954 / 3,54–5,40 / 6,1–9,6 |
+| 4 rodadas com a carga em 5,1 a 5,6 (outras sessões) | 5,1 a 5,6 | 0,49–0,80 / 2,27–4,43 / 3,7–6,3 | 0,60–0,79 / 3,58–5,60 / 6,1–8,6 |
+
+A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a C, a máquina mais quieta que consegui). **Com a carga baixa a mediana SIMD do 5b é 0,49 ms (limite 0,6): o limite não foi tocado.** Com a carga em 5 ou mais, a mediana SIMD passa de 0,6 (0,61–0,80) junto da `single`: é a máquina dividida, não a build; a linha é medida na faixa quieta. Dois arquivos de teste rodando juntos (`cascade-tail` + `cascade`) também a levaram a 0,67–0,69: rodar cada suíte de custo sozinha.
+
+**Caso 5 (cena de referência), `single`, 4 rodadas, carga 5 a 9:** mediana 0,44–0,50, p99 4,9–5,3, maior quadro 11,8–13,6 ms; na comparação das builds (segunda execução do processo) o `multithread` ficou em mediana 0,38–0,43 e p99 3,4–4,4 contra 0,42–0,50 e 4,2–4,9 do `single`.
+
+**Gates:** `game-physics-jolt` `pnpm test` 40 arquivos, 180 testes verdes (2 pulados); `test:cost` de `cascade-tail` (sozinho, carga 3,0 a 3,2) 2 de 2 testes verdes, nas duas builds; typecheck e eslint do pacote limpos; `pnpm build` do repositório verde e a página da sala recompilada com a nova escolha. O `test:cost` do pacote inteiro em paralelo com as outras sessões segue com as falhas de tempo de sempre (19 com carga 4 a 8; `blast-query`, `body-lod`, `queries`, `ragdoll`...), nenhuma em arquivo que esta task toque além do `cascade-tail`.
