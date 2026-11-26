@@ -2,6 +2,7 @@ import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type * as THREE_NS from 'three'
 import type { AnimationEventSpec } from '@adatechnology/game-contracts'
 import { muzzleSmokeOf } from '@adatechnology/game-weapons'
+import { casingCollider } from '../engine-loose'
 import { buildCasing, buildRound } from '../models/cartridge'
 import { FLASH_BY_CASE } from './effects'
 import type { MuzzleTrack } from './effects'
@@ -32,7 +33,7 @@ export function createClipEventHandler(world: FxWorld, session: Session): (event
     casing.group.position.copy(positionOf(mark))
     casing.group.rotation.set(0, random() * 0.6 - 0.3, tilt)
     if (session.cartridge.caseType) casing.group.userData['caseType'] = session.cartridge.caseType
-    particles.spawn(casing.group, velocity, { kind: 'casing', life: 25, radius: casing.radius, bounce: 0.35, spin, onRest: restFlat, ownsGeometry: true })
+    particles.spawn(casing.group, velocity, { kind: 'casing', life: 25, radius: casing.radius, bounce: 0.35, spin, onRest: restFlat, ownsGeometry: true, collider: casingCollider(casing.radius, casing.length) })
   }
 
   const ejectFromPort = (down: boolean): void => {

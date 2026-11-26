@@ -146,7 +146,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-player test` e `... game-physics-jolt test` · `sonnet`.
 - ✅ **T4.2 Segurar, soltar, arremessar** (dinâmico ↔ cinemático). Aceite: teste de pegar e arremessar sem atravessar parede.
   Mecânica? não · Aceite por comando? sim · `sonnet`.
-- **T4.3 B2 em produção:** granada como desenhada (corpo, espoleta, alavanca) com C_rr 0,015 e cápsulas com rolamento. Aceite: granada em
+- ✅ **T4.3 B2 em produção:** granada como desenhada (corpo, espoleta, alavanca) com C_rr 0,015 e cápsulas com rolamento. Aceite: granada em
   repouso ≤ 5 s e ≤ 8 m; ≥ 95% de 200 cápsulas dormindo a 5 s; nenhuma abaixo do chão.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/extras.test.ts` e testes de `game-weapons-three` · `sonnet`.
 - **T4.4 Juntas dos interativos:** porta (dobradiça com limite), gaveta (deslizante), cortina e cabo; porta que quebra por impulso.

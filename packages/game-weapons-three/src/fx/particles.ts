@@ -1,4 +1,7 @@
 import type * as THREE_NS from 'three'
+import type { SeamWorld } from '@adatechnology/game-physics'
+import { dropLoose, spawnLoose, syncLoose } from '../engine-loose'
+import type { LooseBody, LooseCollider } from '../engine-loose'
 import { PARTICLE_USERDATA_KEY } from '../laser-raycast'
 import type { SurfaceProbe } from '../laser-raycast'
 
@@ -30,6 +33,8 @@ export interface ParticleOptions {
   ownsGeometry?: boolean
   /** Called once when the particle leaves for good (life over, floor, too many): where an object that came from a pool gives its geometry and material back. */
   onRemove?: () => void
+  /** With a physics world: the engine moves this piece (rolling, sleep, the walls and floor of its world) instead of the gallery's own bounce; the object's pose and `onBounce` come from it. */
+  collider?: LooseCollider
 }
 
 interface Particle extends Required<Pick<ParticleOptions, 'life' | 'gravity' | 'bounce' | 'drag' | 'radius' | 'grow' | 'kind'>> {
@@ -44,6 +49,7 @@ interface Particle extends Required<Pick<ParticleOptions, 'life' | 'gravity' | '
   ownsGeometry: boolean
   onRemove: ParticleOptions['onRemove']
   bounces: number
+  body: LooseBody | undefined
 }
 
 const MAX_PARTICLES = 900
@@ -77,7 +83,7 @@ const disposeOwned = (object: THREE_NS.Object3D): void => {
 }
 
 /** `limit`: the most bodies the host allows at once (its one budget); without it the own cap of 900 stands (no host lends one yet, so no warning). */
-export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number, limit?: () => number | undefined, surface?: SurfaceProbe): Particles {
+export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt: (x: number, z: number) => number, limit?: () => number | undefined, surface?: SurfaceProbe, physics?: SeamWorld): Particles {
   const from = new THREE.Vector3()
   const step = new THREE.Vector3()
   let list: Particle[] = []
@@ -87,6 +93,7 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
     })
     particle.object.removeFromParent()
     if (particle.ownsGeometry) disposeOwned(particle.object)
+    if (particle.body && physics) dropLoose(physics, particle.body)
     particle.onRemove?.()
     if (particle.fadeFrom !== undefined) ((particle.object as THREE_NS.Mesh).material as THREE_NS.Material).dispose()
     list = list.filter((other) => other !== particle)
@@ -138,6 +145,7 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
         ownsGeometry: options.ownsGeometry ?? false,
         onRemove: options.onRemove,
         bounces: 0,
+        body: options.collider && physics ? spawnLoose(physics, options.collider, { position: object.position, rotation: object.quaternion, velocity, spin: options.spin ?? new THREE.Vector3() }) : undefined,
       })
       const hostLimit = limit?.()
       const oldest = list[0]
@@ -154,6 +162,13 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
         const { object } = particle
         if (particle.fadeFrom !== undefined) ((object as THREE_NS.Mesh).material as THREE_NS.Material).opacity = Math.max(0, particle.fadeFrom * (1 - particle.age / particle.life))
         if (particle.resting) continue
+        if (particle.body && physics) {
+          const reading = syncLoose(physics, particle.body, object)
+          if (reading.bounceSpeed !== undefined && particle.bounces < 4) api.onBounce?.(particle.kind, { object, speed: reading.bounceSpeed, bounce: particle.bounces })
+          if (reading.bounceSpeed !== undefined) particle.bounces++
+          if (reading.asleep) particle.resting = true
+          continue
+        }
         particle.velocity.y -= particle.gravity * dt
         if (particle.drag) particle.velocity.multiplyScalar(Math.max(0, 1 - particle.drag * dt))
         const probed = surface !== undefined && SOLID_KINDS.has(particle.kind) && probes < MAX_PROBES_PER_FRAME && particle.velocity.lengthSq() > PROBE_MIN_SPEED * PROBE_MIN_SPEED

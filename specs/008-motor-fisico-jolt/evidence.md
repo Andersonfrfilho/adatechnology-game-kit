@@ -3259,3 +3259,28 @@ Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm 
 **Gates**: `game-physics` 22 testes; `game-physics-jolt` 108 passam, 2 pulados (27 arquivos, 1 pulado); `game-player` 115; `tsc --noEmit` dos três e de `game-destruction-three` limpos; `eslint src tests` dos três limpo; `kit-audit --check` 0 novos.
 
 **Limites:** `engine-pieces.ts` (peça na mão do jogo) ainda usa `setMotion` + `moveKinematic` sem a varredura: ligar `grabBody` lá muda o que a mão faz com a peça no jogo inteiro e fica como passo próprio (o dono decide; não é parte da T4.2, cujo aceite é o teste de pegar e arremessar sem atravessar parede). O soltar liga `continuous` e não o desliga depois (custa só enquanto a peça anda rápido).
+
+## T4.3 — B2 em produção: granada como desenhada e cápsulas com rolamento (2026-11-26)
+
+2026-11-26, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz, 32 iterações de velocidade), chão igual ao da produção (`engine-pieces.ts` GROUND: atrito 0,7/0,6, restituição 0, C_rr 0,015).
+
+**O que já existia e foi reaproveitado:** `Rolling` e `BodyDesc.rolling` do contrato (T3.5), o `rolling` do adaptador, o desenho da M67 (`models/explosives.ts`, agora com as medidas em `M67_PARTS`, lidas pelo desenho e pelo colisor), o `projectileModel` (modelo centrado na caixa), o `buildCasing` (cilindro ao longo de x) e o `createParticles` (por onde todas as cápsulas dos modelos da galeria passam). A demonstração (b) do `extras.test.ts` (gate 0, 1/60, chão padrão) fica como está e passa.
+
+**O que mudou:** `game-weapons-three/src/engine-loose.ts` (costura: `explosiveCollider`, `casingCollider`, `spawnLoose`, `syncLoose`, `dropLoose`); `createParticles(..., physics?)` e `ParticleOptions.collider`: com mundo, a cápsula é corpo do motor (pose, repouso e `onBounce` vêm dele); sem mundo, o salto próprio de antes (os 58 arquivos de teste do pacote seguem verdes). Opção `physics` em `createWeaponFx` e no viewmodel. Dependência nova: `game-physics` (tipos) e devDependency `game-physics-jolt`. Não mexi em `box-fx` (arquétipos genéricos) nem na sala de teste.
+
+**O que a medição mostrou (margem fina, confirmada):** o arremesso do gate 0 (11 m/s, subindo 4, de 1,5 m) com `KIT_WORLD` e chão de produção, só com C_rr 0,015, repousa a **5,51 s** (reprova o limite de 5 s); em 18 arremessos variados (10/11/12 m/s, subida 3/4/5, giro 0/6) a mediana é 5,30 s e **11 de 18 passam de 5 s** (amortecimento 0,05, o das peças do kit: 12 de 18). O resultado de cada arremesso é caótico (a mesma cena dá de 2,7 a 5,9 s conforme a origem do corpo, o passo e o chão), então um arremesso só não prova nada. **Decisão:** a granada ganha `rolling.damping = 1` (campo que já existe no contrato; a espoleta e a alavanca saem do corpo, ela não é bola lisa), no mesmo patamar de superfícies moles do `friction.ts`. Varredura de amortecimento (18 arremessos, chão de produção): 0 → 11 acima de 5 s; 0,05 → 12; 0,3 → 4; 1 → **0** (máximo 4,83 s); 2 → 0 (máximo 4,44 s). O C_rr segue 0,015 como o aceite pede; **o 1 é escolha minha para fechar a margem, não vem do aceite — o dono pode trocar** (`GRENADE_ROLLING_DAMPING`).
+
+| Medida (`tests/engine-loose.test.ts`, 8 testes) | Resultado | Limite |
+|---|---|---|
+| granada no chão aberto (cena do gate) | repouso 4,08 s; 5,12 m do pouso (16,66 m do arremesso) | ≤ 5 s e ≤ 8 m do pouso |
+| granada contra a parede a 8 m (cena do gate) | repouso 2,23 s; 7,88 m do arremesso | ≤ 5 s e ≤ 8 m |
+| varredura de 18 arremessos | repouso 2,88 a **4,83 s**; no máximo 6,16 m do pouso | todos ≤ 5 s, ≤ 8 m |
+| 200 cápsulas de 9 mm (uma por 2 passos, `KIT_WORLD`) | **200/200** dormindo 5 s depois da última; **0** abaixo do chão | ≥ 95% e 0 |
+| cápsula pelo `createParticles` com mundo (chão que quica 0,6) | quica (`onBounce`), repousa a < 2 cm do chão, parada no fim; sai do mundo com a partícula | — |
+| colisor igual ao desenho | esfera no mesmo lugar do modelo centrado; base do colisor = base do modelo (6 casas) | — |
+
+**Margens:** granada 4,83 s de 5 (0,17 s) no pior da varredura; contra a parede 7,88 m de 8 (0,12 m). Medir de novo em toda fase que mexa em rolamento ou sono (spec §risco).
+
+**Gates:** `game-weapons-three` 58 arquivos, 2084 testes passam (as dependências `game-items-three`, `game-test-room` e outras foram buildadas antes: faltava o `dist` no worktree); `extras.test.ts` 4 passam; `tsc --noEmit` do pacote limpo; `eslint` (raiz) em `src` e no teste novo limpo; `kit-audit --check` 0 novos.
+
+**Limites (não escondidos):** (1) a sala de teste (`game-test-room`) ainda lança a granada com a balística própria: a costura existe e está exportada, mas ligar o arremesso da sala a ela muda o jogo inteiro e não era da task (aceite: os testes pedidos). (2) Cápsulas dos arquétipos genéricos (`box-fx`) e carregadores continuam no salto próprio. (3) Com mundo, o chão é o do mundo do host: `groundAt` não é consultado para a cápsula.

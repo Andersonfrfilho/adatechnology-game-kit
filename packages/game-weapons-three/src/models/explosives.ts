@@ -8,11 +8,19 @@ type ExplosiveBuilder = (kit: ModelKit, group: THREE_NS.Group) => void
 
 // Port of the gallery's `buildExp` (Galeria 3D do Arsenal, explosivos): same measures in metres, same parts, same order; each stands on its base, y up.
 // The `handle` mark is where the hand closes: the middle of the body.
+/** The M67 as drawn, in metres (the body is the sphere at the origin, the rest relative to its centre): the one place the drawing and the collider of `engine-loose.ts` read. */
+export const M67_PARTS = {
+  bodyRadius: 0.032,
+  fuze: { radius: 0.011, height: 0.022, y: 0.04 },
+  spoon: { size: [0.012, 0.07, 0.006], x: 0.016, y: 0.018, tilt: 0.2 },
+} as const
+
 const grenade: ExplosiveBuilder = (kit, group) => {
   const { M, sphere, cylinderY, box, torus, THREE } = kit
-  sphere(group, 0.032, M.olive, 0, 0.032, 0, 1)
-  cylinderY(group, 0.011, 0.022, M.metal, 0, 0.072, 0)
-  box(group, 0.012, 0.07, 0.006, M.metal, 0.016, 0.05, 0, 0.2)
+  const { bodyRadius, fuze, spoon } = M67_PARTS
+  sphere(group, bodyRadius, M.olive, 0, bodyRadius, 0, 1)
+  cylinderY(group, fuze.radius, fuze.height, M.metal, 0, bodyRadius + fuze.y, 0)
+  box(group, ...spoon.size, M.metal, spoon.x, bodyRadius + spoon.y, 0, spoon.tilt)
   torus(group, new THREE.TorusGeometry(0.0085, 0.0016, 6, 12), M.steel, -0.012, 0.082, 0)
   kit.mark(group, 0, 0.032, 0).name = 'handle'
 }

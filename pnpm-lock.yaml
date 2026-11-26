@@ -2278,6 +2278,9 @@ importers:
       '@adatechnology/game-items-three':
         specifier: workspace:^
         version: link:../game-items-three
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
@@ -2297,6 +2300,9 @@ importers:
       '@adatechnology/game-characters-three':
         specifier: workspace:^
         version: link:../game-characters-three
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
