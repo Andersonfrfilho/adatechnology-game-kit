@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { bothHandsCarry, offHandCarryPose } from '../src/carry-poses'
+import { bothHandsCarry, clampCarriedReach, offHandCarryPose } from '../src/carry-poses'
 
 const SHOULDERS = { R: [-0.2, 1.4, 0], L: [0.2, 1.4, 0] } as const
 
@@ -34,5 +34,20 @@ describe('the hands on a thing carried', () => {
     expect(pose.position[1]).toBeCloseTo(1.0)
     expect(pose.position[2]).toBeLessThan(-0.2)
     expect(backOf(pose.quaternion)[0]).toBeCloseTo(-1)
+  })
+})
+
+describe('clampCarriedReach', () => {
+  const wall = (x: number, _z: number, radius: number): boolean => x + radius > 0.8 && x - radius < 0.9
+  it('stops a carried thing at the near face of a wall thinner than the reach, never past it', () => {
+    const to = { x: 1.6, z: 0 }
+    expect(clampCarriedReach({ x: 0, z: 0 }, to, [wall], 0.2)).toBe(true)
+    expect(to.x).toBeLessThanOrEqual(0.6 + 1e-9)
+    expect(to.x).toBeGreaterThan(0.5)
+  })
+  it('leaves it where the hand takes it when nothing is in the way', () => {
+    const to = { x: 0.5, z: 0.3 }
+    expect(clampCarriedReach({ x: 0, z: 0 }, to, [wall], 0.2)).toBe(false)
+    expect(to).toEqual({ x: 0.5, z: 0.3 })
   })
 })

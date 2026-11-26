@@ -305,6 +305,26 @@ describe('blockers', () => {
   })
 })
 
+describe('a carried thing and the walls of a module', () => {
+  it('stays on the player\'s side of a module\'s wall as the player walks up to it, and lands there when let go', () => {
+    const room = makeRoom()
+    room.loadModule(benchModule((host) => { host.addBlocker?.((x, z, radius) => x + radius > 0.8 && x - radius < 1.2 && z > -2 && z < 6) }))
+    room.look([-0.6, 1.6, 4], [-0.6, 0.1, 3.3])
+    const { objectId } = room.spawn('wooden_crate', [-0.6, 0, 3.3], 0)
+    expect(room.grab()).toBe(true)
+    // facing the wall, close to it: the hands reach past its face, the crate does not
+    room.look([0.55, 1.6, 4], [3, 1.4, 4])
+    for (let i = 0; i < 60; i++) room.update(1 / 60)
+    const held = room.spawned().find((o) => o.objectId === objectId)!.root as THREE.Object3D
+    const box = new THREE.Box3().setFromObject(held)
+    expect(box.max.x).toBeLessThan(0.81)
+    expect(room.grab()).toBe(true)
+    for (let i = 0; i < 90; i++) room.update(1 / 60)
+    expect(new THREE.Box3().setFromObject(held).max.x).toBeLessThan(0.81)
+    room.dispose()
+  })
+})
+
 describe('scenery objects of a module', () => {
   it('a module puts a catalogue item in the world: it stays through clears and hard resets, takes hits and goes when removed', async () => {
     const room = makeRoom()

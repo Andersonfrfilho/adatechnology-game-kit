@@ -73,6 +73,14 @@ export interface HouseDestructionRenderer {
   release?(objectId: string): string[]
   /** What split from the object leaves the world with its effects; the object stays bound (a reset). */
   releasePieces?(objectId: string): string[]
+  /** The loose pieces it draws now: what split off the objects (a cylinder standing free of the house is one from the first frame). */
+  pieces?(): readonly HouseLoosePiece[]
+}
+
+/** A loose piece of the destruction renderer as the house stages it: its drawing and whether it is held out of the simulation. */
+export interface HouseLoosePiece {
+  readonly root: THREE_NS.Object3D
+  held: boolean
 }
 
 /** The species pack the game hands the house's vegetation (`game-vegetation-species`): a plant spec by species id. */

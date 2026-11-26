@@ -6,6 +6,10 @@ import type { ObjectSpec, Transform, Vec3, WorldEvent } from '@adatechnology/gam
 import type { PlanEntry, SourcePlan, WaterNetwork } from '@adatechnology/game-floorplan-interactables';
 import type { InteractablesContentsView } from '../adapter-shapes.js';
 import type { Eye, HouseInstance, HouseInteractives, Hex, InteractablesRefs, InteractablesState, InteractiveState, Kernel, KernelInteractablesBridge, KitEntry, KitInteractionTarget, KitRoomState, KitSeat, KitTarget, KitTargetOptions, MaterialTable, Shared } from '../kernel-types.js';
+import { FLOOR_OVER_GROUND } from '../house/floors.js';
+
+/** Radius of an appliance's cord (m). */
+const CORD_RADIUS = 0.006;
 
 /** What the lamp plan reads of a furniture item. */
 type HouseItemLike = { id: string; type: string; room?: string | null };
@@ -106,9 +110,11 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     const spec = ik.A.household.build(type, loc, mesh.api);
     const out = mesh.finish(spec);
     for (const l of out.lights) l.removeFromParent(); // the house decides the real lights (per-room lighting)
-    const group = ivGroup(ent), g0 = cursor.group, stage0 = cursor.stage, root = new THREE.Group(); root.name = 'iv:' + ent.id;
-    // the panel, meter and entrance come with the rough-in; the plates of switches and sockets close their boxes once the walls are rendered and painted
-    const isInst = type === 'electrical_panel' || type === 'power_meter' || type === 'service_entrance' || type === 'gas_bottle';
+    // a cylinder in its outdoor shelter is the house's, as its shelter and its copper line are (place-items): the lot layer, off in the room, never hides it
+    const group = type === 'gas_bottle' && (item as { shelter?: unknown }).shelter && !shared.ctx.visorScene ? 'f0' : ivGroup(ent), g0 = cursor.group, stage0 = cursor.stage, root = new THREE.Group(); root.name = 'iv:' + ent.id;
+    // the panel, meter and entrance come with the rough-in; the plates of switches and sockets close their boxes once the walls are rendered and painted; the gas
+    // cylinder is delivered full when the house is lived in (its shelter and its copper line are the rough-in's), with the furniture
+    const isInst = type === 'electrical_panel' || type === 'power_meter' || type === 'service_entrance';
     const isPlate = type === 'wall_switch' || type === 'wall_socket';
     const ivStage = shared.ctx.constructionStages ? (isInst ? 'installations' : isPlate ? 'finishes' : 'furniture') : undefined;
     if (ivStage) root.userData.constructionStage = ivStage;
@@ -138,6 +144,8 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
     if (root.children.length) IV.roots.push(E);
     return spec;
   }
+  /** How far over a storey's base its finished floor lies (m): the staged ground floor's finish is laid over the slab, as the furniture stands on it (place-items). */
+  const floorFinishOf = (floor: number): number => shared.ctx.constructionStages && !shared.ctx.visorScene && floor === 0 ? FLOOR_OVER_GROUND : 0;
   // outlet cords to the appliances, wires and fixed conduits: thin tubes in the 'plain' accumulator
   function ivCords(IV: InteractablesState): void {
     const ik = IV.k, w = IV.world, wl = (o: { transform: Transform }, p: Vec3): Vec3 => ik.GI.localToWorld(o.transform, p), g0 = cursor.group;
@@ -154,11 +162,13 @@ export function installInteractablesBridge(K: Kernel, shared: Shared): void {
           if (!so || !sk) continue; // (a device plugged into no socket has no cord: its stub lay loose on the floor)
           const sp = wl(so, sk.pos), dir = [Math.sin(so.transform.ry), Math.cos(so.transform.ry)] as const, last = pts[pts.length - 1] as Vec3;
           if (last[1] < 0.3 + E.pos[1]) {
-            const foot: Vec3 = [sp[0] + dir[0] * 0.035, E.pos[1] + 0.012, sp[2] + dir[1] * 0.035];
-            pts.push([last[0] + (foot[0] - last[0]) * 0.4, E.pos[1] + 0.012, last[2] + (foot[2] - last[2]) * 0.4], [last[0] + (foot[0] - last[0]) * 0.75, E.pos[1] + 0.012, last[2] + (foot[2] - last[2]) * 0.75], foot, [foot[0], Math.max(E.pos[1] + 0.1, sp[1] - 0.04), foot[2]], [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012]);
+            // the cord lies on the floor's finish (laid 1.2 cm over the slab on a staged ground floor), never in it: there it sank out of sight between the appliance and the wall
+            const lie = E.pos[1] + floorFinishOf(E.floor) + CORD_RADIUS + 0.001;
+            const foot: Vec3 = [sp[0] + dir[0] * 0.035, lie, sp[2] + dir[1] * 0.035];
+            pts.push([last[0] + (foot[0] - last[0]) * 0.4, lie, last[2] + (foot[2] - last[2]) * 0.4], [last[0] + (foot[0] - last[0]) * 0.75, lie, last[2] + (foot[2] - last[2]) * 0.75], foot, [foot[0], Math.max(E.pos[1] + 0.1, sp[1] - 0.04), foot[2]], [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012]);
           } else { const hang = ik.gfx.catenary(last, [sp[0] + dir[0] * 0.012, sp[1] - 0.01, sp[2] + dir[1] * 0.012], 0.1, 8); hang.shift(); for (const p of hang) pts.push(p); }
           shared.ctx.cordPaths?.push({ object: E.id, device: d.id, points: pts.map((p) => [p[0], p[1], p[2]] as const) });
-          tube(pts, 0.006, IV_WIRE.cord as Hex, 0, 0, 0, 0);
+          tube(pts, CORD_RADIUS, IV_WIRE.cord as Hex, 0, 0, 0, 0);
         }
       }
     } finally { cursor.group = g0; }

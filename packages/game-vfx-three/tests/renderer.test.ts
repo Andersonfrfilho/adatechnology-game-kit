@@ -14,12 +14,14 @@ function setup(extra: Parameters<typeof createVfx>[0] = {}) {
 }
 
 describe('shaders', () => {
-  it('keep the Lab code and use the r160 colour-space chunk', () => {
+  it('keep the Lab heat ramp, draw soft smoke and use the r160 colour-space chunk', () => {
     for (const source of [PUFF_FRAGMENT, SPARK_FRAGMENT, GLOW_FRAGMENT]) {
       expect(source).toContain('#include <colorspace_fragment>')
       expect(source).not.toContain('encodings_fragment')
     }
-    expect(PUFF_FRAGMENT).toContain('float band=lam>.55?1.:lam>.15?.68:.42;')
+    // smoke is soft and seen through: the sphere's normal (no flat facets from dFdx/dFdy), an alpha that thins at the edge and with age
+    expect(PUFF_FRAGMENT).not.toContain('dFdx')
+    expect(PUFF_FRAGMENT).toContain('gl_FragColor=vec4(col,alpha);')
     expect(PUFF_FRAGMENT).toContain('vec3 c0=L(vec3(.36,.07,.03))')
     expect(PUFF_VERTEX).toContain('p*=0.78+0.5*n;')
   })

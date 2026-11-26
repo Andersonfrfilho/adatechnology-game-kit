@@ -130,7 +130,7 @@ export interface ApplyConstructionLevelOptions {
  */
 export const STAGE_LEVEL = { foundation: 1, frame: 2, masonry: 3, installations: 4, roofFraming: 5, roof: 6, finishes: 7, openings: 8, last: 8 } as const
 
-function stageVisible(stage: string, level: number, opts: ApplyConstructionLevelOptions): boolean {
+export function stageVisible(stage: string, level: number, opts: ApplyConstructionLevelOptions): boolean {
   switch (stage) {
     case 'installations':
       return level >= STAGE_LEVEL.installations
@@ -140,6 +140,9 @@ function stageVisible(stage: string, level: number, opts: ApplyConstructionLevel
       return level >= STAGE_LEVEL.openings
     case 'roof':
       return level >= STAGE_LEVEL.roof && opts.roofLayer !== false
+    // the timber of the roof (its stage group is shown by name, `groupVisible`): a stretch of it broken off the frame keeps the frame's stage
+    case 'roofFraming':
+      return level >= STAGE_LEVEL.roofFraming && opts.roofLayer !== false
     case 'furniture':
       return level >= STAGE_LEVEL.last
     // the protective sidewalk round the house: the last of the work outside

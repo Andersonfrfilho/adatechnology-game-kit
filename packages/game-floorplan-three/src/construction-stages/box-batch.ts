@@ -26,6 +26,16 @@ export class BoxBatch {
   private readonly positions: number[] = []
   private readonly normals: number[] = []
   private readonly indices: number[] = []
+  /** Where each piece of the house sits in the vertices and indices (`piece`), as the kernel marks its merged meshes: a hit finds the piece by its face. */
+  private readonly ranges: Array<{ id: string; v0: number; v1: number; i0: number; i1: number }> = []
+
+  /** What is added from here on, up to the next call, is the piece `id` (null: no piece). */
+  piece(id: string | null): void {
+    const v = this.positions.length / 3, i = this.indices.length
+    const last = this.ranges[this.ranges.length - 1]
+    if (last && last.v1 < 0) { last.v1 = v; last.i1 = i; if (last.v1 === last.v0) this.ranges.pop() }
+    if (id !== null) this.ranges.push({ id, v0: v, v1: -1, i0: i, i1: -1 })
+  }
 
   get count(): number {
     return this.indices.length / 36
@@ -48,12 +58,14 @@ export class BoxBatch {
 
   /**
    * A six-faced solid from its eight corners: four at the start (in turn around the section) and the same four at the end, for a timber laid on a slope. Each
-   * face is wound to look out of the solid.
+   * face is wound to look out of the solid. `open`: the start or end face is left out (a stretch of a timber cut into pieces, against the next one).
    */
-  addHexahedron(corners: readonly (readonly [number, number, number])[]): void {
+  addHexahedron(corners: readonly (readonly [number, number, number])[], open: { readonly start?: boolean; readonly end?: boolean } = {}): void {
     if (corners.length !== 8) return
     const centre = [0, 1, 2].map((k) => corners.reduce((sum, c) => sum + c[k]!, 0) / 8)
     for (const quad of HEXAHEDRON_FACES) {
+      // (an end laid against the next stretch of the same timber is not laid: the two faces would lie on one plane, inside the timber)
+      if ((open.start && quad === HEXAHEDRON_FACES[0]) || (open.end && quad === HEXAHEDRON_FACES[1])) continue
       const a = corners[quad[0]]!, b = corners[quad[1]]!, c = corners[quad[2]]!, d = corners[quad[3]]!
       const e1 = [b[0]! - a[0]!, b[1]! - a[1]!, b[2]! - a[2]!], e2 = [d[0]! - a[0]!, d[1]! - a[1]!, d[2]! - a[2]!]
       let n = [e1[1]! * e2[2]! - e1[2]! * e2[1]!, e1[2]! * e2[0]! - e1[0]! * e2[2]!, e1[0]! * e2[1]! - e1[1]! * e2[0]!]
@@ -90,6 +102,7 @@ export class BoxBatch {
   /** The mesh of everything added, or null when nothing was. */
   mesh(THREE: Three, material: THREE_NS.Material, name: string): THREE_NS.Mesh | null {
     if (!this.indices.length) return null
+    this.piece(null)
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(this.positions, 3))
     geometry.setAttribute('normal', new THREE.Float32BufferAttribute(this.normals, 3))
@@ -100,6 +113,7 @@ export class BoxBatch {
     mesh.name = name
     mesh.castShadow = true
     mesh.receiveShadow = true
+    if (this.ranges.length) mesh.userData.ranges = this.ranges.map((range) => ({ ...range }))
     return mesh
   }
 }

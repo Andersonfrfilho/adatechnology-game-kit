@@ -12,6 +12,10 @@ import type { Span, Vec3 } from './segments.js';
 const PIPE_WALL_FILL = 0.3;
 /** What the team gave the hidden pipe of one run (kg); the run's spans share it by length. */
 const WALL_PIPE_MASS = 3;
+/** How far off the wall (m) the feed under a sink goes up to the tap: under the back of the basin, behind its bowl. */
+const UNDER_SINK_RISER_OFF_WALL = 0.08;
+/** How far over the run off the wall (m) the valve under a sink stands. */
+const UNDER_SINK_VALVE_RISE = 0.1;
 export const pipeMass = (diameter: number, length: number): number => DENSITY.plastic! * Math.PI * (diameter / 2) ** 2 * length * PIPE_WALL_FILL;
 
 export function installUtilitiesWater(K: Kernel, shared: Shared): void {
@@ -126,7 +130,9 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
     }
   }
   function underSink(tr: NonNullable<NonNullable<HouseRecord['utilities']>['plumbing']>['visibleRuns'][number]): void {
-    const H = (shared.ctx.r as HouseRecord).utilities?.plumbing, nA = shared.ctx.r.floors.length, pt = H && H.points.find(p => p.id === tr.to), pts = tr.points.map((p) => [p[0], p[2], p[1]]), d = tr.diameter || 0.025;
+    const H = (shared.ctx.r as HouseRecord).utilities?.plumbing, nA = shared.ctx.r.floors.length, pt = H && H.points.find(p => p.id === tr.to), d = tr.diameter || 0.025;
+    // the feed comes off the wall and goes up to the tap's tail under the back of the basin, never up the middle of it (its end and valve stood in the bowl, over the drain)
+    const pts = riserUnderBack(tr.points.map((p) => [p[0]!, p[2]!, p[1]!]));
     // the feed under a sink goes in with the sink it serves (louças e metais): never standing alone where the sink will be
     const stage = cursor.stage; if (shared.ctx.constructionStages) cursor.stage = 'furniture';
     cursor.group = pt && pt.floor >= 0 ? 'f' + Math.min(pt.floor, nA - 1) : 'lot'; cursor.pc = pieceRecord('pipe:' + tr.id, 'plastic', null, { tags: ['pipe'] });
@@ -134,6 +140,19 @@ export function installUtilitiesWater(K: Kernel, shared: Shared): void {
     for (const p of pts) { cylBase('metal', p[0], p[1] - d * 0.9, p[2], d * 0.75, d * 1.8, 0xc8c8c4); }
     cursor.pc = null;
     cursor.stage = stage;
+  }
+  /**
+   * The plan's run under a sink, [wall, centre low, centre high] as [x, y, z]: its riser moved from the centre of the sink back to `UNDER_SINK_RISER_OFF_WALL` off the wall, on
+   * the line from the wall to the centre, and ending `UNDER_SINK_VALVE_RISE` over the run, at its valve under the bowl.
+   */
+  function riserUnderBack(pts: number[][]): number[][] {
+    if (pts.length < 3 || shared.ctx.visorScene) return pts;
+    const wall = pts[0]!, mid = pts[1]!, dx = mid[0]! - wall[0]!, dz = mid[2]! - wall[2]!, L = Math.hypot(dx, dz);
+    if (L <= UNDER_SINK_RISER_OFF_WALL) return pts;
+    const x = wall[0]! + dx / L * UNDER_SINK_RISER_OFF_WALL, z = wall[2]! + dz / L * UNDER_SINK_RISER_OFF_WALL;
+    // its valve (the angle valve the hose to the tap comes off) stands a hand over the run, low under the bowl: up at the tap's height it stood in a deep basin
+    const top = mid[1]! + UNDER_SINK_VALVE_RISE;
+    return [wall, ...pts.slice(1).map((p) => [x, Math.min(p[1]!, top), z])];
   }
   const defined: KernelUtilitiesWater = { createWater, PIPE_COLOR, pipe, _v3, waterPipes };
   Object.assign(K, defined);
