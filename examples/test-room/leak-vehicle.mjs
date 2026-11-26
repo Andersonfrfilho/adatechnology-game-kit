@@ -49,7 +49,7 @@ window.__vehicleLeakCycle = () => {
   // what the crash did not shake off is unbolted, so the cycle always ends with a car that lost parts
   for (const joint of vehicle.model.joints) {
     const tool = joint.tools[0]
-    if (tool) vehicle.disassemble(joint.id, tool, joint.seconds)
+    if (tool) vehicle.disassemble?.(joint.id, tool, joint.seconds)
   }
   for (let i = 0; i < 60; i++) {
     world.step(STEP)
