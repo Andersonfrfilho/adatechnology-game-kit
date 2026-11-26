@@ -20,6 +20,7 @@ import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
 import { HINGE_RELEASE } from './internal'
 import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
+import { mergeFlushBoxes } from './merge-flush-boxes'
 
 export type { StaticSolid } from './engine-statics'
 
@@ -666,7 +667,7 @@ export class EnginePieces {
       return { kind: 'compound', children: [{ shape: { kind: 'cylinder', halfHeight: b.halfExtents[round.axis], radius: round.radius }, position: [0, 0, 0], rotation }] }
     }
     if (b.partBoxes && b.partBoxes.length > 0) {
-      return { kind: 'compound', children: b.partBoxes.map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
+      return { kind: 'compound', children: mergeFlushBoxes(b.partBoxes).map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
     }
     return { kind: 'box', half: b.halfExtents }
   }
