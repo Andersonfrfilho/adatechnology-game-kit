@@ -3488,3 +3488,41 @@ O que a investigação fechou:
 | `eslint` nos arquivos tocados | 0 erros (avisos de `max-lines` que já existiam em `pieces.ts` e `renderer.ts`) | – |
 
 Falhas fechadas desde a rodada 2: `topple-energy` (segue verde com restituição nas caixas), `rolling` (guarda-roupa e lata contra lata), `engine-ground-ahead`, `separate-pair`, `bookcase-topple`, `furniture-laid-still`, `fragment-rest`. Abertos: `asleep-on-steep-top` (celular) e os três goldens, que mudam por decisão (a física é outra; o dono decide regravar). O `floorplan-three` no Jolt foi rodado inteiro antes do último commit (que só mexe no caminho `own`); depois dele rodaram o `exact-golden` e o `bookcase-topple`.
+
+### T3.10, rodada 4 (2026-11-26): o celular e os goldens de `destruction`
+
+Branch rebaseada sobre a `origin/main` (a4ab2f28e, com o #518); `dist` refeitos.
+
+**1. `asleep-on-steep-top` (celular): causa e correção.**
+- `mEnhancedInternalEdgeRemoval` **existe** no binding (`jolt-physics` 1.1.1: `BodyCreationSettings.mEnhancedInternalEdgeRemoval`, `Body.SetEnhancedInternalEdgeRemoval`). Foi ligada de duas formas pelo adaptador (`BodyDesc.smoothEdges`, ligada só nos compostos e depois em **todos** os corpos de peça): o celular ficou em **0,737 m nas duas**, igual ao vermelho. A opção do Jolt remove a aresta interna de malha de triângulos e de composto de triângulos; entre caixas de um composto ela não age. Por isso **não ficou no código** (revertida).
+- Correção: `shapeOf` (`engine-pieces.ts`) passa as caixas por `mergeFlushBoxes` (`merge-flush-boxes.ts`): caixas sem folga e com o mesmo tamanho e lugar nos outros dois eixos, mesma rotação, viram uma caixa só. As 6 tábuas do tampo viram 1. Só o caminho do motor; `own` não muda (`shapeOf` não é dele).
+- Teste: `asleep-on-steep-top` (o do celular, sem afrouxar) vermelho (0,737 m, limite 0,1) → verde (4/4); `merge-flush-boxes.test.ts` novo (6 tábuas → 1 caixa; folga, espessura diferente ou rotação mantêm separadas).
+- Efeito nos outros: `furniture-laid-still`, `bookcase-*`, `settle-every-material`, `pieces-*` verdes (suíte inteira abaixo). Custo: a fusão é O(n²) nas caixas de um composto, só ao (re)montar a forma; sem custo por passo, e o composto fica com menos filhos (o Jolt testa menos formas por contato).
+
+**2. Goldens de `destruction` no Jolt** (não regravados; o dono decide). Rodados nos dois solvers, mesma cena (`sobrado:3`, semente 5, 1 s), lista de objetos da cena comparada (tipo, nome, material, tamanho, posição), mais os eventos do mundo (`world.on('*')`) e a trilha de cada peça (`renderer.pieces()`, a cada 0,05 s). Os 41 goldens das casas seguem iguais.
+
+Todos os objetos que mudam são **fragmentos de detrito** (`fragment`, e as `fragment-instances` que os desenham); as peças (`obj_*`), as paredes e o resto da cena são os mesmos. Contagens por material (`own` → Jolt):
+
+| Golden | Objetos | Fragmentos por material | Eventos do mundo | Causa |
+|---|---|---|---|---|
+| `breach` | 842 → 832 (−10) | vidro 11 → 20 (+9); reboco 24 → 13 (−11); tijolo 77 → 71 (−6); madeira 1 → 0 (−1); instâncias −1 | 36 → 38 | (a) o vidro da janela (`window:w0_0`, peça `obj_4`) cai em 0,35 s no Jolt e em 0,55 s no `own`, e estilhaça em **20** cacos contra 11; (b) o orçamento de 160 fragmentos vivos (`maxFragments`) faz os cacos pequenos mais velhos (reboco e tijolo) sumirem para dar lugar aos 9 a mais: o Jolt termina com exatamente 160; (c) o batente da janela cai e lasca no `own` (1 caco de madeira), no Jolt não |
+| `spall` | 851 → 824 (−27) | MDF 19 → 0 (−19); madeira 5 → 0 (−5); tijolo +4; instâncias −7 (MDF 5, madeira 2) | 104 → 84 | as peças soltas do andar de cima (porta do guarda-roupa, 2 gavetas das mesinhas, batente e porta `d1_5`) **caem 2,8 m e batem a −7,4 m/s no `own`** (cinco `fall`: lascas de MDF e madeira, vinte eventos a mais); no Jolt elas **ficam sobre a laje** e não há `fall` |
+| `fracture` | 935 → 908 (−27) | MDF 9 → 4 (−5); madeira 10 → 1 (−9); vidro 15 → 20 (+5); instâncias −7 | 460 → 443 | as duas: as mesmas peças de MDF e madeira (guarda-roupa, gaveta, batente) não caem no Jolt (`chip`/`crack`/`damage` de `ix:door:…wardrobe`, `ix:drawer:…nightstand_left`, `jamb:d1_5` somem), e o vidro da janela estilhaça em 20 (o `own`: 15) |
+
+Por que o Jolt segura as peças do andar de cima: a laje `slab_1_p0` fica `damaged` (2 trincas, 0 furos, 86 785 de 87 752 de vida) **nos dois solvers**, isto é, intacta como superfície. No `own` as nove peças caem em queda livre desde o primeiro quadro (`vy` −0,49 m/s em 0,05 s, sem apoio) por 2,8 m; no Jolt elas estão sobre os sólidos fixos da casa (`onGround`, `y` ≈ 0 a 0,1 m). O `own` só conhece o chão plano (`groundAt` = 0 aqui) e a varredura contra as partes do mundo, e passa as peças pela laje; o Jolt tem a laje como corpo fixo. Leitura: **o Jolt é o que está certo** nesse ponto (inferência de medida: não conferi o `own` linha a linha).
+
+Por que o vidro estilhaça em 20 no Jolt: a chapa fina agora tem a espessura desenhada (item 5 da rodada 3: meia espessura 0,006 contra 0,02 do `own`, que inflava), e cai e bate em outro lugar: o vidro e o batente descem juntos e pousam a ~0,34 m acima de onde o `own` os pousa. **Não identifiquei no que o vidro pousa** (a peça sob ele não é um sólido fixo que eu tenha listado): é o ponto que eu pediria ao dono para ver na sala.
+
+**Veredito por golden:** `breach`, `spall` e `fracture` mudam por **física legítima do motor novo** (peças apoiadas na laje em vez de atravessá-la, chapa de vidro com a espessura real), sem objeto que deveria existir e sumiu por defeito; as contagens (−10, −27, −27) vêm só de fragmentos de detrito, e o orçamento de 160 distribui o que sobra. **Dois pontos que eu não chamaria de resolvidos e que não mudam a contagem:**
+- as **gavetas** (`obj_6` a `obj_9`, MDF, 6 kg) **sobem** a 6,2–6,4 m no Jolt (e 2,4–2,6 m no `own`: aparece nos dois solvers, só maior no Jolt) por empurrões de posição, não por velocidade (a velocidade lida fica em 0,05–0,9 m/s enquanto `y` sobe 0,4 a 1,5 m por quadro). É defeito, de causa não achada (o `fellThrough` e o `liftFor` não explicam sozinhos: pede sonda);
+- o pouso do vidro (acima).
+
+**Gates (rodada 4):**
+| Gate | Jolt (padrão) | `PIECE_SOLVER=own` |
+|---|---|---|
+| `game-physics-jolt test` | 114 passam, 2 pulados | – |
+| `game-destruction test` | 699/699 | – |
+| `game-destruction-three test` | 853 passam, 0 falham, 89 pulados | 740 passam, 0 falham, 197 pulados |
+| `game-floorplan-three test` | **3 falhas** (os 3 goldens, não regravados: `breach` 832, `spall` 824, `fracture` 908 objetos) / 1618 passam | 1616 passam, 0 falham, 5 pulados |
+| `tsc --noEmit` | sem erro nos arquivos tocados (os erros que o `tsc` lista são de `game-interactables`/`game-items-three`, sem `.d.ts` no `dist` desta máquina) | – |
+| `eslint` | 0 erros (aviso de `max-lines` que já existia em `engine-pieces.ts`) | – |
