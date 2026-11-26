@@ -191,6 +191,21 @@ describe('C9: every Jolt object the adapter makes is destroyed (heap in cycles)'
     world.dispose()
   })
 
+  it('collision group create and release, with bodies in it, and the index is reused', async () => {
+    const { world } = await made()
+    let firstId = -1
+    expectFlat('group', world, () => {
+      const group = world.createGroup(3, [[0, 1], [1, 2]])
+      if (firstId < 0) firstId = group
+      expect(group).toBe(firstId)
+      const bodies = [0, 1, 2].map((sub) => world.createBody({ shape: { kind: 'box', half: [0.1, 0.1, 0.1] }, motion: 'dynamic', mass: 1, position: [10 + sub, 3, 0], group: { id: group, sub }, user: 6 }))
+      world.step(1 / 30)
+      for (const body of bodies) world.removeBody(body)
+      world.releaseGroup(group)
+    })
+    world.dispose()
+  })
+
   it('sensor create and remove', async () => {
     const { world } = await made()
     expectFlat('sensor', world, () => {

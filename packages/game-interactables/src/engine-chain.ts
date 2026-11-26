@@ -26,6 +26,8 @@ export interface Chain {
   readonly joints: readonly JointId[]
   /** Half the length of each link, for reading its ends. */
   readonly halfLengths: readonly number[]
+  /** The collision group the links share (released with the chain). */
+  readonly group: number
 }
 
 const UP: Vec3 = [0, 1, 0]
@@ -98,7 +100,14 @@ export function buildChain(world: SeamWorld, spec: ChainSpec): Chain {
     world.ignorePair(spec.endBody, bodies[count - 1] as BodyId, true)
     joints.push(world.createJoint(swingTwist(spec, bodies[count - 1] as BodyId, spec.endBody, last, [direction[0] / size, direction[1] / size, direction[2] / size])))
   }
-  return { bodies, joints, halfLengths: lengths.map((each) => each / 2) }
+  return { bodies, joints, halfLengths: lengths.map((each) => each / 2), group }
+}
+
+/** Takes a chain out of the world: its joints, its links, then the group the links shared. */
+export function disposeChain(world: SeamWorld, chain: Chain): void {
+  for (const joint of chain.joints) world.removeJoint(joint)
+  for (const body of chain.bodies) world.removeBody(body)
+  world.releaseGroup(chain.group)
 }
 
 const swingTwist = (spec: ChainSpec, a: BodyId, b: BodyId, point: Vec3, direction: Vec3) => ({

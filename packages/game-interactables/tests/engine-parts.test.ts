@@ -222,3 +222,23 @@ describe('what the world does each frame with everything asleep (spec 008 review
     dispose()
   })
 })
+
+describe('what mounting and unmounting curtains leaves in the engine (spec 008 review, §8)', () => {
+  it('a curtain made and removed over and over hands the heap and the bodies back', { timeout: 60000 }, async () => {
+    const { physics, w, run, dispose } = await scene()
+    const floorBodies = physics.bodyCount
+    const cycle = (): void => {
+      w.add('k', curtain, { x: 0, y: 0, z: 0, ry: 0 })
+      run(0.1)
+      w.remove('k')
+    }
+    cycle()
+    expect(physics.bodyCount).toBe(floorBodies)
+    const warm = physics.memoryInUse()
+    for (let i = 0; i < 10; i++) {
+      cycle()
+      expect(physics.memoryInUse()).toBe(warm)
+    }
+    dispose()
+  })
+})

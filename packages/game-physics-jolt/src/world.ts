@@ -34,7 +34,7 @@ import { Contacts } from './contact-rows'
 import { makeListener } from './contacts'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 import { roll, touch, updateFriction } from './friction'
-import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
+import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, releaseGroup, removeJoint, removeRagdoll } from './joints'
 import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { HullSet } from './hull-cache'
 import { makeCentredShape, makeShape } from './shapes'
@@ -67,7 +67,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly characters = new Map<number, JoltCharacter>()
   nextCharacter = 1
   nextRagdoll = 1
-  readonly groups: JoltNS.GroupFilterTable[] = []
+  readonly groups: Array<JoltNS.GroupFilterTable | undefined> = []
+  readonly freeGroups: number[] = []
   nextJoint = 1
   nextVehicle = 1
   readonly fixedStep: number
@@ -651,6 +652,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return createGroup(this, subCount, disabledPairs)
   }
 
+  releaseGroup(id: number): void {
+    releaseGroup(this, id)
+  }
+
   createJoint(desc: JointDesc): JointId {
     return createJoint(this, desc)
   }
@@ -800,7 +805,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
-    for (const g of this.groups) g.Release()
+    for (const g of this.groups) g?.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
     if (this.among.filter) {
       J.destroy(this.among.filter)

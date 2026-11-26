@@ -365,6 +365,8 @@ export interface PhysicsWorld {
   removeRagdoll(id: RagdollId): void
   /** Disable contact between sub-ids of a group. Returns the group id. */
   createGroup(subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number
+  /** Lets go of a group made by `createGroup` once none of its bodies is left (remove them first): the id may come back from the next `createGroup`. */
+  releaseGroup(id: number): void
   createVehicle(desc: VehicleDesc): VehicleId
   driveVehicle(id: VehicleId, input: VehicleInput): void
   vehicleBody(id: VehicleId): BodyId

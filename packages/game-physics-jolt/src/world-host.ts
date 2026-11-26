@@ -23,7 +23,9 @@ export interface JoltWorldHost {
   readonly characters: Map<number, JoltCharacter>
   nextCharacter: number
   nextRagdoll: number
-  readonly groups: JoltNS.GroupFilterTable[]
+  readonly groups: Array<JoltNS.GroupFilterTable | undefined>
+  /** Indices of `groups` that were released: the next `createGroup` takes one. */
+  readonly freeGroups: number[]
   nextJoint: number
   nextVehicle: number
   readonly fixedStep: number

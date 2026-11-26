@@ -1,6 +1,6 @@
 import type { BodyId, SeamWorld } from '@adatechnology/game-physics'
 
-import { buildChain, chainEnd } from './engine-chain'
+import { buildChain, chainEnd, disposeChain } from './engine-chain'
 import type { Chain } from './engine-chain'
 import { localToWorld, rotY } from './math'
 import type { SoftDriver } from './part-physics'
@@ -92,10 +92,7 @@ export function attachStrips(world: SeamWorld, soft: SoftSpec, transform: Transf
       }
     },
     dispose() {
-      for (const chain of chains) {
-        for (const joint of chain.joints) world.removeJoint(joint)
-        for (const body of chain.bodies) world.removeBody(body)
-      }
+      for (const chain of chains) disposeChain(world, chain)
       world.removeBody(rail)
     },
   }
