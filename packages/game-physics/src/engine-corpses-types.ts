@@ -70,6 +70,8 @@ export interface CorpseRecord {
   asleepSeconds: number
   sinceChangeSeconds: number
   woken: boolean
+  /** Its place among the bodies of its pile by distance (`BodyLodInput.pileRank`), set every `evaluateEvery` steps. */
+  pileRank: number
   /** Asleep when last looked at. */
   asleep: boolean
   /** `touching` is of bodies that are gone (the rung changed): the next look reads it again. */

@@ -57,6 +57,20 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
     scene.world.dispose()
   })
 
+  it('`pileChainsMax`: a pile of 40 against a wall keeps only its nearest chains, the rest are capsules, and the pile still comes to rest', { timeout: 120000 }, async () => {
+    const scene = await sceneOf({ lod: { pileChainsMax: 5 } }, true)
+    const ids = Array.from({ length: 40 }, (_, i) => i + 1)
+    for (const id of ids) scene.corpses.add({ id, kit, position: heapAt(id - 1), yaw: id * 0.7 })
+    seconds(scene.loop, 4)
+    const counts = scene.corpses.counts()
+    report('lod-pile-chains-max', { counts })
+    expect(counts.r2 + counts.r2f).toBeGreaterThan(counts.r1)
+    expect(counts.rigidBodies).toBeLessThan(ids.length * 3)
+    seconds(scene.loop, 12)
+    expect(allAsleep(scene, ids)).toBe(true)
+    scene.world.dispose()
+  })
+
   it('2. 20 dead bodies in the KIT_WORLD with the production quota (1 ragdoll, the rest chains): median and p99 inside the C7', { timeout: 120000 }, async () => {
     const scene = await sceneOf()
     for (let id = 1; id <= 20; id++) scene.corpses.add({ id, kit, position: [(id % 5) * 0.9, 0.5 + Math.floor(id / 5) * 0.6, (id % 3) * 0.4], yaw: id })

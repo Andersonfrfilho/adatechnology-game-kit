@@ -25,6 +25,12 @@ export interface BodyLodOptions {
   readonly pileContacts?: number
   /** Height (m) of the mound under a corpse that makes it part of a pile. Default 0.5 (twice a body's thickness). */
   readonly pileHeight?: number
+  /**
+   * Most chains (R1) a pile keeps: the ones nearest the points of interest (the lowest id among equals); the rest of the pile's bodies are capsules (R2), changed in the
+   * step they are seen in. Default `Infinity`: off. Measured on a pile of 100 in the `KIT_WORLD` (`evidence.md` T5.4, "Fechamento"): no number from 0 to 30 puts the pile to sleep in 10 s
+   * on every seed and inside the C7 of a pile, so none is the default.
+   */
+  readonly pileChainsMax?: number
   /** Most ragdolls (R0) at once. Default 1 (measured, T5.1: the most that keeps 20 dead bodies inside the C7 at 120 Hz). */
   readonly ragdollsMax?: number
   /** Most rigid bodies (R0 + R1 + R2) at once. Default 900. */
@@ -45,6 +51,7 @@ export const DEFAULT_BODY_LOD: BodyLodNumbers = {
   dwellSeconds: 1,
   pileContacts: 2,
   pileHeight: 0.5,
+  pileChainsMax: Infinity,
   ragdollsMax: 1,
   dynamicBodiesMax: 900,
   islandBodiesMax: 300,
@@ -65,6 +72,8 @@ export interface BodyLodInput {
   readonly moundHeight: number
   /** Something touches it from above. */
   readonly hasBodyAbove: boolean
+  /** Its place among the bodies of its pile, nearest the points of interest first (0 for the nearest; 0 too when it is in no pile). */
+  readonly pileRank: number
   /** Something woke it since it went down a rung (a blow, a body that fell on it). */
   readonly woken: boolean
 }
@@ -90,6 +99,7 @@ export const createBodyLod = (options: BodyLodOptions = {}): BodyLod => {
   const inPile = (input: BodyLodInput): boolean => input.touchingCorpses >= numbers.pileContacts || input.moundHeight > numbers.pileHeight
   const settled = (input: BodyLodInput): boolean => input.asleepSeconds >= numbers.sleepSeconds
   const dwelt = (input: BodyLodInput): boolean => input.sinceChangeSeconds >= numbers.dwellSeconds
+  const beyondPileChains = (input: BodyLodInput): boolean => inPile(input) && input.pileRank >= numbers.pileChainsMax
 
   const decide = (input: BodyLodInput, out: BodyLodDecision): BodyLodDecision => {
     out.to = input.rung
@@ -103,12 +113,17 @@ export const createBodyLod = (options: BodyLodOptions = {}): BodyLod => {
         } else if (input.distance > numbers.ragdollDistance && dwelt(input)) out.to = 'r1'
         break
       case 'r1':
-        // the base of a pile that sleeps under another body is frozen into the pile's compound; the rest goes by distance
+        // the base of a pile that sleeps under another body is frozen into the pile's compound; a pile keeps only its nearest chains; the rest goes by distance
         if (inPile(input) && input.hasBodyAbove && settled(input)) out.to = 'r2f'
+        else if (beyondPileChains(input)) {
+          out.to = 'r2'
+          out.forced = true
+        }
         else if (input.distance > numbers.chainDistance && settled(input) && dwelt(input)) out.to = 'r2'
         break
       case 'r2':
-        if (input.distance < numbers.chainReturnDistance && input.woken && dwelt(input)) out.to = 'r1'
+        if (inPile(input) && input.hasBodyAbove && settled(input)) out.to = 'r2f'
+        else if (input.distance < numbers.chainReturnDistance && input.woken && dwelt(input) && !beyondPileChains(input)) out.to = 'r1'
         else if (input.distance > numbers.unloadDistance && settled(input) && dwelt(input)) out.to = 'r3'
         break
       case 'r3':

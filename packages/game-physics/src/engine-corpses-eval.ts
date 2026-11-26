@@ -34,6 +34,27 @@ const hasBodyAbove = (ctx: CorpseContext, record: CorpseRecord): boolean => {
   return false
 }
 
+const inPileNow = (ctx: CorpseContext, record: CorpseRecord, moundAt: ((x: number, z: number) => number) | undefined): boolean =>
+  countCorpses(ctx, record) >= ctx.lod.numbers.pileContacts || (moundAt?.(record.torso[0] as number, record.torso[2] as number) ?? 0) > ctx.lod.numbers.pileHeight
+
+/** Each pile's bodies in order of distance (the lowest id among equals): `pileRank`, which the policy reads to keep only the nearest chains. Seen every `evaluateEvery` steps. */
+export const rankPiles = (ctx: CorpseContext, moundAt: ((x: number, z: number) => number) | undefined): void => {
+  if (ctx.lod.numbers.pileChainsMax === Infinity) return
+  let any = false
+  for (const record of ctx.records.values()) {
+    record.pileRank = 0
+    if (record.bodies.length > 0 && record.rung !== 'r0' && inPileNow(ctx, record, moundAt)) any = true
+  }
+  if (!any) return
+  for (const island of islands(ctx)) {
+    const members = island.filter((record) => record.rung !== 'r0' && inPileNow(ctx, record, moundAt))
+    members.sort((a, b) => a.distance - b.distance || a.id - b.id)
+    members.forEach((record, rank) => {
+      record.pileRank = rank
+    })
+  }
+}
+
 interface Pending {
   readonly record: CorpseRecord
   readonly to: BodyRung
@@ -51,6 +72,7 @@ const inputOf = (ctx: CorpseContext, record: CorpseRecord, moundAt: ((x: number,
   into.touchingCorpses = countCorpses(ctx, record)
   into.moundHeight = moundAt?.(record.torso[0] as number, record.torso[2] as number) ?? 0
   into.hasBodyAbove = hasBodyAbove(ctx, record)
+  into.pileRank = record.pileRank
   into.woken = record.woken
   return into
 }
@@ -107,7 +129,7 @@ const due = (ctx: CorpseContext, record: CorpseRecord, every: number): boolean =
 
 /** One fixed step of the policy: each corpse that is due is looked at and asked; the changes then run, the forced ones first, the rest as the frame's units allow. */
 export const evaluateCorpses = (ctx: CorpseContext, options: EvaluateOptions): void => {
-  const input = { rung: 'r1', distance: 0, asleepSeconds: 0, sinceChangeSeconds: 0, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, woken: false } as Mutable<BodyLodInput>
+  const input = { rung: 'r1', distance: 0, asleepSeconds: 0, sinceChangeSeconds: 0, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, pileRank: 0, woken: false } as Mutable<BodyLodInput>
   const decision: BodyLodDecision = { to: 'r1', forced: false }
   const pending: Pending[] = []
   const freezing: CorpseRecord[] = []

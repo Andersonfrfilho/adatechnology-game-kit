@@ -4,7 +4,7 @@ import { createBodyLod, DEFAULT_BODY_LOD, farthestSleeping, newBodyLodDecision, 
 import type { BodyLodInput } from '../src/index'
 
 const input = (change: Partial<BodyLodInput>): BodyLodInput => ({
-  rung: 'r1', distance: 5, asleepSeconds: 0, sinceChangeSeconds: 10, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, woken: false, ...change,
+  rung: 'r1', distance: 5, asleepSeconds: 0, sinceChangeSeconds: 10, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, pileRank: 0, woken: false, ...change,
 })
 
 describe('the body LOD policy', () => {
@@ -24,6 +24,26 @@ describe('the body LOD policy', () => {
     expect(decide({ rung: 'r0', touchingCorpses: 2, sinceChangeSeconds: 0 })).toEqual({ to: 'r1', forced: true })
     expect(decide({ rung: 'r0', moundHeight: 0.6, sinceChangeSeconds: 0 })).toEqual({ to: 'r1', forced: true })
     expect(decide({ rung: 'r0', touchingCorpses: 1, moundHeight: 0.5 })).toEqual({ to: 'r0', forced: false })
+  })
+
+  it('a pile keeps only its `pileChainsMax` nearest chains: the rest are capsules, changed at once, and a woken capsule does not come back while beyond them', () => {
+    const limited = createBodyLod({ pileChainsMax: 10 })
+    const run = (change: Partial<BodyLodInput>) => {
+      const out = newBodyLodDecision()
+      limited.decide(input(change), out)
+      return { to: out.to, forced: out.forced }
+    }
+    expect(run({ rung: 'r1', touchingCorpses: 2, pileRank: 9 })).toEqual({ to: 'r1', forced: false })
+    expect(run({ rung: 'r1', touchingCorpses: 2, pileRank: 10 })).toEqual({ to: 'r2', forced: true })
+    expect(run({ rung: 'r1', touchingCorpses: 1, pileRank: 50 })).toEqual({ to: 'r1', forced: false })
+    expect(run({ rung: 'r2', touchingCorpses: 2, pileRank: 10, distance: 5, woken: true })).toEqual({ to: 'r2', forced: false })
+    expect(run({ rung: 'r2', touchingCorpses: 2, pileRank: 9, distance: 5, woken: true })).toEqual({ to: 'r1', forced: false })
+    expect(decide({ rung: 'r1', touchingCorpses: 2, pileRank: 1000 })).toEqual({ to: 'r1', forced: false })
+  })
+
+  it('a capsule that sleeps 2 s under another body in a pile freezes, as a chain does', () => {
+    expect(decide({ rung: 'r2', touchingCorpses: 2, hasBodyAbove: true, asleepSeconds: 2 })).toEqual({ to: 'r2f', forced: false })
+    expect(decide({ rung: 'r2', touchingCorpses: 2, hasBodyAbove: true, asleepSeconds: 1 })).toEqual({ to: 'r2', forced: false })
   })
 
   it('a ragdoll past 18 m becomes a chain, not forced, and never goes back up by distance', () => {

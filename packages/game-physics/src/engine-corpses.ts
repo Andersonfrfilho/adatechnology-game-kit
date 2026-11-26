@@ -3,7 +3,7 @@ import type { BodyRung } from './body-lod'
 import type { BodyId, Quat, SeamWorld, Vec3 } from './contract'
 import { yawQuat } from './corpse-pose'
 import type { Rigid } from './corpse-pose'
-import { distanceTo, enforceIslands, enforceQuotas, evaluateCorpses } from './engine-corpses-eval'
+import { distanceTo, enforceIslands, enforceQuotas, evaluateCorpses, rankPiles } from './engine-corpses-eval'
 import { freezeCorpses, releaseResting } from './engine-corpses-pile'
 import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf } from './engine-corpses-swap'
 import type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, CorpseContext, CorpseRecord } from './engine-corpses-types'
@@ -41,6 +41,7 @@ export interface CorpseBodiesState {
     readonly ragdoll: number
     readonly bodies: readonly number[]
     readonly pile: number
+    readonly pileRank: number
     readonly torso: readonly number[]
     readonly asleepSeconds: number
     readonly sinceChangeSeconds: number
@@ -105,6 +106,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
 
   const step = (h: number): void => {
     ctx.tick++
+    if (ctx.tick % every === 0) rankPiles(ctx, options.moundAt)
     evaluateCorpses(ctx, { h, interest: interest(), every, moundAt: options.moundAt, onSettled: options.onSettled, settleDistance: options.settleDistance ?? DEFAULT_SETTLE_DISTANCE })
     enforceQuotas(ctx)
     if (ctx.tick % ISLAND_EVERY === 0) enforceIslands(ctx)
@@ -128,7 +130,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     const distance = distanceTo(interest(), params.position[0], params.position[2])
     const rung = bornRung(distance)
     const record: CorpseRecord = {
-      id: params.id, kit: params.kit, rung, ragdoll: 0, bodies: [], pile: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: false, stale: true,
+      id: params.id, kit: params.kit, rung, ragdoll: 0, bodies: [], pile: 0, pileRank: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: false, stale: true,
       touching: [], born: ctx.born++, originX: params.position[0], originZ: params.position[2], lastLookedAt: ctx.tick, distance,
     }
     storeTorso(record, standingTorso(params.kit, frame))
@@ -141,7 +143,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
   const addLying = (params: AddLyingCorpseParams): BodyRung => {
     if (ctx.records.has(params.id)) throw new Error(`game-physics: corpse ${params.id} is already in the world`)
     const record: CorpseRecord = {
-      id: params.id, kit: params.kit, rung: 'r3', ragdoll: 0, bodies: [], pile: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: true, stale: true,
+      id: params.id, kit: params.kit, rung: 'r3', ragdoll: 0, bodies: [], pile: 0, pileRank: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: true, stale: true,
       touching: [], born: ctx.born++, originX: params.torso.position[0], originZ: params.torso.position[2], lastLookedAt: ctx.tick, distance: 0,
     }
     storeTorso(record, params.torso)
@@ -183,7 +185,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     born: ctx.born,
     nextPile: ctx.nextPile,
     records: [...ctx.records.values()].map((record) => ({
-      id: record.id, rung: record.rung, ragdoll: record.ragdoll, bodies: [...record.bodies], pile: record.pile, torso: [...record.torso], asleepSeconds: record.asleepSeconds,
+      id: record.id, rung: record.rung, ragdoll: record.ragdoll, bodies: [...record.bodies], pile: record.pile, pileRank: record.pileRank, torso: [...record.torso], asleepSeconds: record.asleepSeconds,
       sinceChangeSeconds: record.sinceChangeSeconds, woken: record.woken, asleep: record.asleep, stale: record.stale, touching: [...record.touching], born: record.born, originX: record.originX, originZ: record.originZ, lastLookedAt: record.lastLookedAt, distance: record.distance,
     })),
     piles: [...ctx.piles.values()].map((pile) => ({ id: pile.id, body: pile.body, members: [...pile.members] })),
@@ -202,7 +204,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     ctx.nextPile = state.nextPile
     for (const saved of state.records) {
       const record: CorpseRecord = {
-        id: saved.id, kit: kits.get(saved.id) as CorpseRecord['kit'], rung: saved.rung, ragdoll: saved.ragdoll as CorpseRecord['ragdoll'], bodies: saved.bodies as BodyId[], pile: saved.pile,
+        id: saved.id, kit: kits.get(saved.id) as CorpseRecord['kit'], rung: saved.rung, ragdoll: saved.ragdoll as CorpseRecord['ragdoll'], bodies: saved.bodies as BodyId[], pile: saved.pile, pileRank: saved.pileRank,
         torso: Float64Array.from(saved.torso), asleepSeconds: saved.asleepSeconds, sinceChangeSeconds: saved.sinceChangeSeconds, woken: saved.woken, asleep: saved.asleep, stale: saved.stale,
         touching: saved.touching as BodyId[], born: saved.born, originX: saved.originX, originZ: saved.originZ, lastLookedAt: saved.lastLookedAt, distance: saved.distance,
       }
