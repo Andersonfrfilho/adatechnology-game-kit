@@ -11,6 +11,25 @@ export interface SemiWheel {
   handbrake?: boolean
 }
 
+/** A cyclist in place of the engine: sustained power at the cadence it is held, and the bicycle's gears (wheel turns per crank turn, lowest first). */
+export interface SemiPedal {
+  readonly watts: number
+  readonly cadenceRpm: number
+  readonly gears: readonly number[]
+}
+
+/**
+ * The two tracks of a tracked vehicle (x ahead of the centre of mass): the distance between their centre lines, the rearmost and the foremost road wheel, how many there are per side
+ * and their radius. `wheels` of the spec stays the four-wheel stand-in the semi-simulation drives; the physics engine builds the road wheels from this.
+ */
+export interface SemiTracks {
+  readonly gauge: number
+  readonly rearX: number
+  readonly frontX: number
+  readonly roadWheels: number
+  readonly roadRadius: number
+}
+
 export interface SemiSimSpec {
   /** Kilograms. */
   mass: number
@@ -52,6 +71,10 @@ export interface SemiSimSpec {
     corneringStiffness: number
   }
   tank: { capacity: number } & Partial<import('./fuel').FuelModel>
+  /** A bicycle: the cyclist is the engine (the physics engine's vehicle takes the pedal; `engine` stays for the semi-simulation). */
+  pedal?: SemiPedal
+  /** A tracked vehicle: the physics engine builds a tracked controller instead of a wheeled one. */
+  tracks?: SemiTracks
 }
 
 /** What is wrong with the vehicle, each from 0 (gone) to 1 (new). The host fills it from `kit.zoneOverall` or from a destructible. */

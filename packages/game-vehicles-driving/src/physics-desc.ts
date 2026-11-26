@@ -1,7 +1,7 @@
-import type { BodyDesc, Curve, VehicleDesc, WheelDesc } from '@adatechnology/game-physics'
+import type { BodyDesc, Curve, TrackDesc, VehicleDesc, WheelDesc } from '@adatechnology/game-physics'
 
 import { FLAT_BELOW, RIM_FRICTION, RIM_RADIUS_SHARE, torqueAt } from './semi/driver'
-import type { SemiSimSpec, SemiWheel, VehicleCondition } from './semi/types'
+import type { SemiPedal, SemiSimSpec, SemiTracks, SemiWheel, VehicleCondition } from './semi/types'
 
 const GRAVITY = 9.81
 /** Where the torque curve still gives its torque before the redline cuts it (rpm under the redline). */
@@ -17,6 +17,8 @@ const MAX_SAG = 0.5
 const LEAN_SPRING_PER_INERTIA = 400
 const LEAN_DAMPING_PER_INERTIA = 40
 const LEAN_LIMIT = 0.7
+/** A track's lateral grip: with the tyre's own (about 0.9) the engine cannot swing a 40 t tracked vehicle round on the spot (it did not turn at all); at 0.6 and under it pivots (measured, specs/008 evidence T6.2c). */
+const TRACK_LATERAL_FRICTION = 0.5
 const WHEEL_WIDTH = 0.2
 const CLUTCH_STRENGTH = 10
 const CLUTCH_SLIP = 0.03
@@ -43,12 +45,8 @@ const SUSPENSION_FLOOR = 0.5
 const CAR_TRANSMISSION = { switchTime: 0.1, clutchReleaseTime: 0.1, switchLatency: 0.1 } as const
 const MOTORCYCLE_TRANSMISSION = { switchTime: 0.05, clutchReleaseTime: 0.07, switchLatency: 0.05 } as const
 
-/** A cyclist as the engine: sustained power at the cadence it is held, and the bicycle's gears (wheel turns per crank turn, lowest first). */
-export interface PedalOptions {
-  readonly watts: number
-  readonly cadenceRpm: number
-  readonly gears: readonly number[]
-}
+/** A cyclist as the engine (the spec's own `pedal` when the options do not give one). */
+export type PedalOptions = SemiPedal
 
 export interface VehicleFromSemiOptions {
   /** The body: shape, pose, user, velocity, layer. Its origin is the centre of mass (`centreAtOrigin` is set); mass and inertia come from the spec. */
@@ -58,7 +56,7 @@ export interface VehicleFromSemiOptions {
   readonly wheelWidth?: number
   /** Rotational inertia of each wheel with its tyre, kg m^2: by default 0.0008 per kg of the vehicle (a bicycle: 0.1). */
   readonly wheelInertia?: number
-  /** A bicycle's engine in place of `spec.engine`. */
+  /** A bicycle's engine in place of `spec.engine` (`spec.pedal` when omitted). */
   readonly pedal?: PedalOptions
 }
 
@@ -152,7 +150,7 @@ const inertiaOf = (spec: SemiSimSpec): readonly [number, number, number] => {
 }
 
 const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<VehicleDesc, 'maxTorque' | 'engineDamping' | 'engineInertia' | 'minRpm' | 'maxRpm' | 'gears' | 'reverseGears' | 'differentialRatio' | 'torqueCurve' | 'transmission'> => {
-  const { pedal } = options
+  const pedal = options.pedal ?? spec.pedal
   if (pedal) {
     const crankSpeed = (pedal.cadenceRpm * 2 * Math.PI) / 60
     return {
@@ -166,7 +164,7 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
       reverseGears: [],
       differentialRatio: 1,
       torqueCurve: [[0, 1], [0.67, 1], [1, 0]],
-      transmission: { shiftUpRpm: pedal.cadenceRpm * 1.1, shiftDownRpm: pedal.cadenceRpm * 0.6, clutchStrength: clutchFor(pedal.watts / crankSpeed, pedal.cadenceRpm * 1.5) },
+      transmission: { shiftUpRpm: pedal.cadenceRpm * 0.95, shiftDownRpm: pedal.cadenceRpm * 0.5, clutchStrength: clutchFor(pedal.watts / crankSpeed, pedal.cadenceRpm * 1.5) },
     }
   }
   const health = clamp(options.condition?.engine ?? 1, 0, 1)
@@ -189,6 +187,17 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
   }
 }
 
+/** The road wheels of a tracked vehicle, left track (the +x side of the chassis) first, as the wheels of a spec; each track is `TrackDesc` over its own wheels, driven at the rear. */
+const trackedOf = (spec: SemiSimSpec, tracks: SemiTracks): { readonly spec: SemiSimSpec; readonly tracks: NonNullable<VehicleDesc['tracks']> } => {
+  const count = Math.max(2, tracks.roadWheels)
+  const alongX = (index: number): number => tracks.rearX + ((tracks.frontX - tracks.rearX) * index) / (count - 1)
+  // the spec's z is to the right: the left track is the negative z
+  const wheels: SemiWheel[] = [-1, 1].flatMap((side) => Array.from({ length: count }, (_, index) => ({ x: alongX(index), z: (side * tracks.gauge) / 2 })))
+  const friction = spec.tyre.friction
+  const side = (first: number): TrackDesc => ({ wheels: Array.from({ length: count }, (_, index) => first + index), drivenWheel: first, longitudinalFriction: friction, lateralFriction: TRACK_LATERAL_FRICTION, maxBrakeTorque: (spec.brakeForce * spec.wheelRadius) / 2 })
+  return { spec: { ...spec, wheels }, tracks: [side(0), side(count)] }
+}
+
 /**
  * The semi-simulation's vehicle as a physics-engine vehicle (design 7.1): the wheels where the spec has them (x to the left, z ahead, from the centre of mass),
  * the suspension as a frequency and a damping ratio from the spring and the corner's mass, the engine and gearbox, the tyres as the two grip curves, the brake
@@ -196,14 +205,17 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
  * friction, and the air drag and the rolling resistance are `resistanceImpulse`.
  */
 export const vehicleDescFromSemi = (spec: SemiSimSpec, options: VehicleFromSemiOptions): VehicleDesc => {
-  const context = wheelContext(spec, options)
+  const tracked = spec.tracks ? trackedOf(spec, spec.tracks) : undefined
+  const body = tracked ? tracked.spec : spec
+  const context = wheelContext(body, options)
   const inertia = inertiaOf(spec)
-  const bike = spec.wheels.length === 2
+  const bike = body.wheels.length === 2
   return {
     // no damping of the body's own: it would be a drag of 0.05 m/s per m/s (1.8 kN at 28 m/s on a 1.3 t car) the spec never asked for; `resistanceImpulse` is the drag
     chassis: { linearDamping: 0, angularDamping: 0, ...options.chassis, motion: 'dynamic', mass: spec.mass, inertia, centreAtOrigin: true, allowSleep: true },
-    wheels: spec.wheels.map((wheel, index) => wheelOf(wheel, index, context)),
+    wheels: body.wheels.map((wheel, index) => wheelOf(wheel, index, context)),
     ...drivetrainOf(spec, options),
+    ...(tracked ? { controller: 'tracked' as const, tracks: tracked.tracks } : {}),
     ...(bike
       ? { controller: 'motorcycle' as const, motorcycle: { maxLeanAngle: LEAN_LIMIT, leanSpring: LEAN_SPRING_PER_INERTIA * inertia[2], leanDamping: LEAN_DAMPING_PER_INERTIA * inertia[2] } }
       : {}),
