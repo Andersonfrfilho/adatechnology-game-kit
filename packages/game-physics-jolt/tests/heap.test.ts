@@ -284,3 +284,109 @@ describe('C9: every Jolt object the adapter makes is destroyed (heap in cycles)'
     holder.dispose()
   })
 })
+
+/**
+ * The cycles of a body whose shape or mass is changed again and again: the allocator's overhead moves by a block header (8 to 16 bytes) with the order things were freed
+ * in, up and down, so a sample may sit that far from the first. A leak only goes up: every sample stays within 32 bytes of the first, after three warm-up passes.
+ */
+const expectNoGrowth = (name: string, world: JoltWorld, cycle: (i: number) => void): void => {
+  for (let i = 0; i < 3; i++) cycle(i)
+  const used = bytesPerCycle(world, cycle)
+  report(`heap-cycles-${name}`, { cycles: CYCLES, startBytes: used[0], endBytes: used[used.length - 1], lowest: Math.min(...used), highest: Math.max(...used) })
+  for (const bytes of used) expect(Math.abs(bytes - used[0]!)).toBeLessThanOrEqual(32)
+}
+
+const parkedHulls: ShapeDesc = {
+  kind: 'compound',
+  children: Array.from({ length: 12 }, (_, i) => ({ shape: { kind: 'box', half: [0.2, 0.2, 0.4] } as ShapeDesc, position: [(i % 3) * 0.5 - 0.5, 0.2, Math.floor(i / 3) * 0.9 - 1.3] as Vec3, tag: i })),
+}
+
+describe('T6.1b: what a car needs of the contract leaves the heap as it found it (heap in cycles)', () => {
+  const made = async (): Promise<JoltWorld> => {
+    const world = (await createJoltEngine()).createWorld() as JoltWorld
+    ground(world, 50)
+    return world
+  }
+
+  it('a shared shape, many bodies from it, taken away (released while bodies still use it)', async () => {
+    const world = await made()
+    expectFlat('shared-shape', world, () => {
+      const shared = world.createSharedShape(parkedHulls)
+      const cars = Array.from({ length: 20 }, (_, i) => world.createBody({ shape: { kind: 'shared', id: shared }, motion: 'dynamic', mass: 800, position: [(i % 5) * 4, 1, Math.floor(i / 5) * 6], sleeping: true, user: i }))
+      world.step(1 / 30)
+      world.releaseSharedShape(shared)
+      for (const car of cars) world.removeBody(car)
+    })
+    world.dispose()
+  })
+
+  it('children of a damaged car taken out, replaced and moved again and again', async () => {
+    const world = await made()
+    const shared = world.createSharedShape(parkedHulls)
+    // the first damage (the copy of the shared shape) is the warm-up pass; a body that had its shape changed and then goes leaves 8 bytes in the wasm heap (`setShape` does the
+    // same, jolt-physics 1.1.1), so the car stays: what a cycle must not do is grow
+    const car = world.createBody({ shape: { kind: 'shared', id: shared }, motion: 'dynamic', mass: 800, position: [0, 1, 0], sleeping: true, user: 1 })
+    expectNoGrowth('child-shape', world, (i) => {
+      world.setChildShape(car, 3 + (i % 2), { kind: 'box', half: [0.2, 0.1 + 0.01 * (i % 2), 0.4] }, { position: [0, 0.2, 0] })
+      world.setChildShape(car, 7, { kind: 'box', half: [0.2, 0.2, 0.4] })
+      // two steps: the broadphase frees what the changes left behind on the next one
+      world.step(1 / 30)
+      world.step(1 / 30)
+    })
+    world.dispose()
+  })
+
+  it('200 parked cars from one shared shape, and the same 200 each with a shape of its own, then all gone', async () => {
+    const world = await made()
+    const used = (): number => world.memoryInUse()
+    const base = used()
+    const shared = world.createSharedShape(parkedHulls)
+    const afterShape = used()
+    const cars = Array.from({ length: 200 }, (_, i) => world.createBody({ shape: { kind: 'shared', id: shared }, motion: 'dynamic', mass: 800, position: [(i % 20) * 4, 1, Math.floor(i / 20) * 6], sleeping: true, user: i }))
+    const sharedBytes = used() - afterShape
+    for (const car of cars) world.removeBody(car)
+    world.releaseSharedShape(shared)
+    const own = Array.from({ length: 200 }, (_, i) => world.createBody({ shape: parkedHulls, motion: 'dynamic', mass: 800, position: [(i % 20) * 4, 1, Math.floor(i / 20) * 6], sleeping: true, user: i }))
+    const ownBytes = used() - base
+    for (const car of own) world.removeBody(car)
+    report('heap-parked-cars', { carsSharing: 200, bytesPerCarSharing: Math.round(sharedBytes / 200), bytesPerCarOwnShape: Math.round(ownBytes / 200) })
+    // sharing the shape, a car costs its body: the 12 hulls are not made again
+    expect(sharedBytes / 200).toBeLessThan(ownBytes / 200 / 2)
+    expect(used()).toBe(base)
+    world.dispose()
+  })
+
+  it('mass properties with a moved centre of mass, set again and again', async () => {
+    const world = await made()
+    const car = world.createBody({ shape: { ...parkedHulls, mutable: true } as ShapeDesc, motion: 'dynamic', mass: 800, inertia: [200, 300, 250], position: [0, 2, 0], user: 1 })
+    expectNoGrowth('mass-properties', world, () => {
+      world.setMassProperties(car, { mass: 700, inertia: [200, 300, 250], centreOfMass: [0.05, 0.2, 0] })
+      world.step(1 / 30)
+      world.setMassProperties(car, { mass: 800, inertia: [200, 300, 250], centreOfMass: [0, 0.25, 0] })
+      world.step(1 / 30)
+      world.step(1 / 30)
+    })
+    world.dispose()
+  })
+
+  it('watching contacts, reading them and not watching, and a vehicle made again, its wheels read', async () => {
+    const world = await made()
+    const box = world.createBody({ shape: { kind: 'box', half: [0.4, 0.4, 0.4] }, motion: 'dynamic', mass: 10, position: [8, 0.5, 0], user: 4 })
+    const out = new Float32Array(7 * 16)
+    const wheels = new Float64Array(11 * 4)
+    expectFlat('watch-and-rebuild', world, () => {
+      world.watchContacts(box, true)
+      world.step(1 / 30)
+      world.readContacts(box, out)
+      world.watchContacts(box, false)
+      const car = world.createVehicle(vehicleDesc)
+      world.step(1 / 30)
+      world.vehicleWheels(car, wheels)
+      world.rebuildVehicle(car, { ...vehicleDesc, wheels: vehicleDesc.wheels.slice(0, 3) })
+      world.step(1 / 30)
+      world.vehicleWheels(car, wheels)
+      world.removeVehicle(car)
+    })
+    world.dispose()
+  })
+})

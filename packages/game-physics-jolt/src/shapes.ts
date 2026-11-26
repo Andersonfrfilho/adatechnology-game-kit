@@ -33,8 +33,10 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, h
       return trimeshSettings(J, shape)
     case 'heightfield':
       return heightFieldSettings(J, shape)
+    case 'shared':
+      throw new Error('game-physics-jolt: a shared shape is taken from the world, never made from settings')
     case 'compound': {
-      const s = new J.StaticCompoundShapeSettings()
+      const s = shape.mutable ? new J.MutableCompoundShapeSettings() : new J.StaticCompoundShapeSettings()
       for (const child of shape.children) {
         if (shape.reuseHulls && hulls && child.shape.kind === 'convex' && child.tag === undefined) {
           addReusedHull(J, scratch, s, child, hulls)
@@ -56,7 +58,7 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, h
 }
 
 /** An untagged convex child as the hull the cache holds for its points (made the first time): the compound keeps its own reference to it. */
-const addReusedHull = (J: Jolt, scratch: JoltNS.Vec3, compound: JoltNS.StaticCompoundShapeSettings, child: Extract<ShapeDesc, { kind: 'compound' }>['children'][number], hulls: HullSet): void => {
+const addReusedHull = (J: Jolt, scratch: JoltNS.Vec3, compound: JoltNS.CompoundShapeSettings, child: Extract<ShapeDesc, { kind: 'compound' }>['children'][number], hulls: HullSet): void => {
   const convex = child.shape as Extract<ShapeDesc, { kind: 'convex' }>
   const hull = hulls.shapeOf(convex.points, () => makeShape(J, scratch, convex))
   const r = child.rotation ?? [0, 0, 0, 1]

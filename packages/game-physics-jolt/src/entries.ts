@@ -21,6 +21,18 @@ export interface BodyEntry {
   sliding: boolean
   /** The coefficient Jolt holds for it now (`updateFriction`, `SetFriction`). */
   friction: number
+  /** Its compound once `setChildShape` made it one whose children change, and the handle of each child by current index (handles do not move when another child goes). */
+  mutable?: JoltNS.MutableCompoundShape
+  handles?: number[]
+}
+
+/** The contact points of a body asked for with `watchContacts`: x y z, normal, depth, as many as `POINTS_PER_BODY`, of the step in `step`. */
+export interface WatchedContacts {
+  readonly data: Float32Array
+  n: number
+  step: number
+  /** Its `points` entry was made by watching, so it goes when the watch does. */
+  readonly ownsPoints: boolean
 }
 
 export interface JointEntry {

@@ -6,6 +6,7 @@ import { POINTS_PER_BODY } from './constants'
 import type { Jolt } from './constants'
 import type { BodyEntry } from './entries'
 import { vec3At } from './vec3'
+import { recordWatched } from './watched-contacts'
 import type { JoltWorldHost } from './world-host'
 
 /** Scratch for one contact's first point and normal: reused, so a contact makes no garbage. */
@@ -86,6 +87,8 @@ const recordPoints = (w: JoltWorldHost, key: number, m: JoltNS.ContactManifold, 
     p.xyz[p.n * 3 + 2] = at.GetZ()
     p.n++
   }
+  const watched = w.watched.get(key)
+  if (watched) recordWatched(w, watched, m, onFirst)
 }
 
 const recordPair = (w: JoltWorldHost, k1: number, k2: number, m: JoltNS.ContactManifold): void => {

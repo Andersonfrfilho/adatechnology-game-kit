@@ -1,6 +1,8 @@
+import { WHEEL_READ, WHEEL_READ_STRIDE } from '@adatechnology/game-physics'
 import type { BodyId, VehicleDesc, VehicleId, VehicleInput } from '@adatechnology/game-physics'
 
-import { layerOf } from './constants'
+import { WHEEL_PROBE_LAYER } from './constants'
+import type { VehicleEntry } from './entries'
 import type { JoltWorldHost } from './world-host'
 
 /**
@@ -23,10 +25,9 @@ const axlesOf = (desc: VehicleDesc): Array<[number, number]> => {
   return out
 }
 
-/** A wheeled vehicle: its chassis a body of the world, Jolt's vehicle constraint and controller, stepped by its own step listener. */
-export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId => {
+/** The vehicle constraint over `body` and the step listener that runs it: what a vehicle is besides its chassis, made again by `rebuildVehicle`. */
+const attach = (w: JoltWorldHost, body: BodyId, desc: VehicleDesc): VehicleEntry => {
   const J = w.J
-  const body = w.createBody({ ...desc.chassis, layer: 'vehicle', allowSleep: true })
   const vs = new J.VehicleConstraintSettings()
   vs.mUp.Set(0, 1, 0)
   vs.mForward.Set(0, 0, 1)
@@ -84,30 +85,96 @@ export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId =>
       J.destroy(bar)
     }
   }
-  const e = w.entry(body)
-  const constraint = new J.VehicleConstraint(e.body, vs)
-  const tester = new J.VehicleCollisionTesterCastCylinder(layerOf('vehicle'), 0.05)
+  const constraint = new J.VehicleConstraint(w.entry(body).body, vs)
+  // the wheels' probes meet what a wheel can stand on, never a person or a dead body (the layer of the adapter's own, `WHEEL_PROBE_LAYER`)
+  const tester = new J.VehicleCollisionTesterCastCylinder(WHEEL_PROBE_LAYER, 0.05)
   constraint.SetVehicleCollisionTester(tester)
   const wheeled = J.castObject(constraint.GetController(), J.WheeledVehicleController)
-  // a car made already moving rolls: its wheels turn with it, or they skid it to a stop
-  const v = desc.chassis.linearVelocity
-  if (v) {
-    desc.wheels.forEach((wheel, i) => constraint.GetWheel(i).SetAngularVelocity(v[2] / wheel.radius))
-    // and in the gear that speed asks for (the highest one that keeps the engine above its minimum)
-    const wheelRpm = (Math.abs(v[2]) / (desc.wheels[0]?.radius ?? 0.3)) * (60 / (2 * Math.PI)) * desc.differentialRatio
-    let gear = 1
-    desc.gears.forEach((ratio, i) => {
-      if (wheelRpm * ratio >= desc.minRpm * 1.5) gear = i + 1
-    })
-    wheeled.GetTransmission().Set(gear, 1)
-  }
   w.system.AddConstraint(constraint)
   const listener = new J.VehicleConstraintStepListener(constraint)
   w.system.AddStepListener(listener)
   J.destroy(vs)
+  return { body, constraint, controller: wheeled, listener, tester, wheelCount: desc.wheels.length }
+}
+
+/** A car made already moving rolls: its wheels turn with it, or they skid it to a stop, in the gear that speed asks for (the highest one that keeps the engine above its minimum). */
+const rollWith = (entry: VehicleEntry, desc: VehicleDesc, forwardSpeed: number): void => {
+  desc.wheels.forEach((wheel, i) => entry.constraint.GetWheel(i).SetAngularVelocity(forwardSpeed / wheel.radius))
+  const wheelRpm = (Math.abs(forwardSpeed) / (desc.wheels[0]?.radius ?? 0.3)) * (60 / (2 * Math.PI)) * desc.differentialRatio
+  let gear = 1
+  desc.gears.forEach((ratio, i) => {
+    if (wheelRpm * ratio >= desc.minRpm * 1.5) gear = i + 1
+  })
+  entry.controller.GetTransmission().Set(gear, 1)
+}
+
+/** A wheeled vehicle: its chassis a body of the world, Jolt's vehicle constraint and controller, stepped by its own step listener. */
+export const createVehicle = (w: JoltWorldHost, desc: VehicleDesc): VehicleId => {
+  const body = w.createBody({ ...desc.chassis, layer: 'vehicle', allowSleep: true })
+  const entry = attach(w, body, desc)
+  const v = desc.chassis.linearVelocity
+  if (v) rollWith(entry, desc, v[2])
   const id = w.nextVehicle++ as VehicleId
-  w.vehicles.set(id, { body, constraint, controller: wheeled, listener, tester, wheelCount: desc.wheels.length })
+  w.vehicles.set(id, entry)
   return id
+}
+
+/** The constraint made again over the same chassis: a wheel of the old one that is still listed keeps its spin, a new one starts at the speed the chassis rolls at. */
+export const rebuildVehicle = (w: JoltWorldHost, id: VehicleId, desc: VehicleDesc): void => {
+  const old = w.vehicles.get(id)
+  if (!old) throw new Error(`game-physics-jolt: no vehicle ${id}`)
+  const spins = Array.from({ length: old.wheelCount }, (_, i) => old.constraint.GetWheel(i).GetAngularVelocity())
+  w.system.RemoveStepListener(old.listener)
+  w.system.RemoveConstraint(old.constraint)
+  w.J.destroy(old.listener)
+  const entry = attach(w, old.body, desc)
+  const rolling = forwardSpeedOf(w, old.body)
+  desc.wheels.forEach((wheel, i) => entry.constraint.GetWheel(i).SetAngularVelocity(spins[i] ?? rolling / wheel.radius))
+  w.vehicles.set(id, entry)
+}
+
+const forwardSpeedOf = (w: JoltWorldHost, body: BodyId): number => {
+  const e = w.entry(body)
+  const v = e.body.GetLinearVelocity()
+  const q = e.body.GetRotation()
+  // the chassis's forward is its local z
+  const fx = 2 * (q.GetX() * q.GetZ() + q.GetW() * q.GetY())
+  const fy = 2 * (q.GetY() * q.GetZ() - q.GetW() * q.GetX())
+  const fz = 1 - 2 * (q.GetX() * q.GetX() + q.GetY() * q.GetY())
+  return v.GetX() * fx + v.GetY() * fy + v.GetZ() * fz
+}
+
+/** What each wheel is doing now (`WHEEL_READ`), `WHEEL_READ_STRIDE` numbers a wheel into `out`; returns the wheel count. */
+export const vehicleWheels = (w: JoltWorldHost, id: VehicleId, out: Float64Array): number => {
+  const v = w.vehicles.get(id)
+  if (!v) return 0
+  const count = Math.min(v.wheelCount, Math.floor(out.length / WHEEL_READ_STRIDE))
+  for (let i = 0; i < count; i++) {
+    const wheel = v.constraint.GetWheel(i)
+    const base = i * WHEEL_READ_STRIDE
+    const touching = wheel.HasContact()
+    out[base + WHEEL_READ.CONTACT] = touching ? 1 : 0
+    out[base + WHEEL_READ.BODY] = touching ? wheel.GetContactBodyID().GetIndexAndSequenceNumber() : -1
+    out[base + WHEEL_READ.ANGLE] = wheel.GetRotationAngle()
+    out[base + WHEEL_READ.STEER] = wheel.GetSteerAngle()
+    out[base + WHEEL_READ.SPIN] = wheel.GetAngularVelocity()
+    out[base + WHEEL_READ.COMPRESSION] = wheel.GetSuspensionLength()
+    out[base + WHEEL_READ.SUSPENSION_IMPULSE] = wheel.GetSuspensionLambda()
+    out[base + WHEEL_READ.LONGITUDINAL_IMPULSE] = wheel.GetLongitudinalLambda()
+    out[base + WHEEL_READ.LATERAL_IMPULSE] = wheel.GetLateralLambda()
+    let longitudinal = 0
+    let lateral = 0
+    if (touching) {
+      const ground = wheel.GetContactPointVelocity()
+      const along = wheel.GetContactLongitudinal()
+      const across = wheel.GetContactLateral()
+      longitudinal = wheel.GetAngularVelocity() * wheel.GetSettings().mRadius - (ground.GetX() * along.GetX() + ground.GetY() * along.GetY() + ground.GetZ() * along.GetZ())
+      lateral = ground.GetX() * across.GetX() + ground.GetY() * across.GetY() + ground.GetZ() * across.GetZ()
+    }
+    out[base + WHEEL_READ.SLIP_LONGITUDINAL] = longitudinal
+    out[base + WHEEL_READ.SLIP_LATERAL] = lateral
+  }
+  return count
 }
 
 export const driveVehicle = (w: JoltWorldHost, id: VehicleId, input: VehicleInput): void => {
