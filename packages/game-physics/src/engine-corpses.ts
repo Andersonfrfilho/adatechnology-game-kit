@@ -98,6 +98,7 @@ export interface CorpseBodies {
   saveState(): CorpseBodiesState
   /** Puts a `saveState` back; the world must hold the same bodies (it was restored from its own save first). False when a body is missing. */
   restoreState(state: CorpseBodiesState): boolean
+  /** Takes every body the corpses hold (the rungs' and the piles' compounds) out of the world and stops following the loop; the world stays. */
   dispose(): void
 }
 
@@ -284,10 +285,16 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     restoreState,
     dispose() {
       stop()
+      for (const record of ctx.records.values()) if (record.rung !== 'r2f' && record.rung !== 'r3') removeRungBodies(ctx, record)
+      for (const pile of ctx.piles.values()) world.removeBody(pile.body)
       ctx.records.clear()
       ctx.ownerOf.clear()
       ctx.piles.clear()
       ctx.pileOf.clear()
+      ctx.live.clear()
+      ctx.dormant.clear()
+      ctx.rigidCount = 0
+      for (const key of Object.keys(ctx.rungCounts)) ctx.rungCounts[key as BodyRung] = 0
     },
   }
 }
