@@ -36,6 +36,9 @@ export interface JoltWorldHost {
   readonly fixedStep: number
   accumulator: number
   readonly slipSpeed: number
+  /** The world's sleep speed (m/s) and sleep time (s): what `settleVehicles` holds a vehicle to. */
+  readonly sleepSpeed: number
+  readonly sleepAfter: number
   readonly reportSpeed: number
   readonly maxContacts: number
   readonly listener: JoltNS.ContactListenerJS | null

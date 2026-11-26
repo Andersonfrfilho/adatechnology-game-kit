@@ -2,6 +2,7 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
+import { KIT_WORLD, WHEEL_READ, WHEEL_READ_STRIDE } from '@adatechnology/game-physics'
 import type { PhysicsWorld, VehicleDesc, VehicleId, WheelDesc } from '@adatechnology/game-physics'
 import { createPhysicsInputMapper, createSemiSimDriver, defaultSemiSpec, resistanceImpulse, vehicleDescFromSemi } from '@adatechnology/game-vehicles-driving'
 import type { DriveStatus, PedalOptions, SemiInput, SemiSimSpec, VehicleCondition } from '@adatechnology/game-vehicles-driving'
@@ -372,3 +373,119 @@ describe('T6.2: the semi-simulation car on the engine (vehicleDescFromSemi, crea
     r.world.dispose()
   })
 })
+
+describe('T6.3: the car sleeps when it is at rest and stays awake while a wheel turns (design 7.7)', () => {
+  const STEP = KIT_WORLD.fixedStep ?? 1 / 120
+  const none = { forward: 0, right: 0, brake: 0, handBrake: 0 }
+  const car = (world: PhysicsWorld, position: [number, number, number], speed = 0): VehicleId =>
+    world.createVehicle({
+      chassis: { shape: { kind: 'box', half: [0.8, 0.3, 2] }, motion: 'dynamic', position, mass: 1200, user: 2, allowSleep: true, ...(speed ? { linearVelocity: [0, 0, speed] as const } : {}) },
+      wheels: [[0.7, 1.4], [-0.7, 1.4], [0.7, -1.4], [-0.7, -1.4]].map(([x, z], i) => ({
+        position: [x!, -0.3, z!] as [number, number, number], radius: 0.3, width: 0.2, suspensionMin: 0.05, suspensionMax: 0.25, frequency: 1.5, damping: 0.5,
+        maxSteer: i < 2 ? 0.6 : 0, driven: i < 2, maxBrakeTorque: 1500, maxHandBrakeTorque: i < 2 ? 0 : 4000,
+      })),
+      maxTorque: 160, minRpm: 1000, maxRpm: 6000, gears: [3.5, 2.0, 1.4], reverseGears: [-3.3], differentialRatio: 4.2, antiRoll: 1000,
+    })
+  const spins = (world: PhysicsWorld, id: VehicleId): number => {
+    const out = new Float64Array(WHEEL_READ_STRIDE * 4)
+    world.vehicleWheels(id, out)
+    return Math.max(...[0, 1, 2, 3].map((i) => Math.abs(out[i * WHEEL_READ_STRIDE + WHEEL_READ.SPIN]!)))
+  }
+
+  it('a car brought to a stop with no input is asleep within 3 s of being still (chassis under 0.08 m/s)', async () => {
+    const world = (await createJoltEngine()).createWorld(KIT_WORLD)
+    ground(world, 400)
+    const id = car(world, [0, 0.6, 0], 8)
+    const body = world.vehicleBody(id)
+    const vel = new Float64Array(6)
+    for (let i = 0; i < 120 * 12; i++) {
+      world.driveVehicle(id, { ...none, brake: speedOfBody(world, body, vel) > 0.1 ? 1 : 0 })
+      world.step(STEP)
+      if (speedOfBody(world, body, vel) < 0.08) break
+    }
+    let still = 0
+    while (!world.isSleeping(body) && still < 120 * 10) {
+      world.driveVehicle(id, none)
+      world.step(STEP)
+      still++
+
+    }
+    report('t6.3-park', { asleepAfterS: still * STEP, wheelSpin: spins(world, id) })
+    expect(still * STEP).toBeLessThanOrEqual(3)
+    world.dispose()
+  })
+
+  it('the compact hatch of the curb scene (60 km/h into 30 cm) is asleep within 7 s of the hit, throttle let go', async () => {
+    const world = (await createJoltEngine()).createWorld(KIT_WORLD)
+    ground(world, 200)
+    world.createBody({ shape: { kind: 'box', half: [4, 0.15, 0.15] }, motion: 'static', position: [0, 0.15, 25], user: -1 })
+    const id = hatch(world, 0, 0, KMH60, 1)
+    const body = world.vehicleBody(id)
+    const vel = new Float64Array(6)
+    const pose = new Float64Array(7)
+    let hit = -1
+    let asleep = -1
+    for (let i = 0; i < 120 * 20 && asleep < 0; i++) {
+      world.readPose(body, pose, 0)
+      // the throttle holds the speed for the first 1.2 s, as in the curb scene above
+      world.driveVehicle(id, { ...none, forward: i < 120 * 1.2 && speedOfBody(world, body, vel) < KMH60 ? 1 : 0 })
+      world.step(STEP)
+      if (hit < 0 && pose[2]! > 22.5) hit = i
+      if (hit >= 0 && world.isSleeping(body)) asleep = i
+    }
+    report('t6.3-curb', { hitAtS: hit * STEP, asleepAfterHitS: (asleep - hit) * STEP, wheelsOnGround: world.wheelContacts(id) })
+    expect(hit).toBeGreaterThan(0)
+    expect(asleep).toBeGreaterThan(0)
+    expect((asleep - hit) * STEP).toBeLessThanOrEqual(7)
+    world.dispose()
+  })
+
+  it('a wheel in the air still turning keeps the car awake; with the wheels stopped it goes to sleep', async () => {
+    const world = (await createJoltEngine()).createWorld(KIT_WORLD)
+    // the chassis rests on two beams under its belly and the wheels hang over a pit: nothing under them
+    world.createBody({ shape: { kind: 'box', half: [3, 0.1, 3] }, motion: 'static', position: [0, -3, 0], user: -1 })
+    for (const z of [-1, 1]) world.createBody({ shape: { kind: 'box', half: [1.2, 0.2, 0.15] }, motion: 'static', position: [0, 0.4, z], user: -1 })
+    const id = car(world, [0, 0.9, 0])
+    const body = world.vehicleBody(id)
+    for (let i = 0; i < 120 * 2; i++) {
+      world.driveVehicle(id, { ...none, forward: 1 })
+      world.step(STEP)
+    }
+    const spinning = spins(world, id)
+    // the throttle off: the engine no longer pushes; the wheels coast down by their own damping and the brakes are not touched
+    let awakeWhileSpinning = true
+    let steps = 0
+    for (; steps < 120 * 3; steps++) {
+      world.driveVehicle(id, none)
+      world.step(STEP)
+      if (spins(world, id) >= 0.5 && world.isSleeping(body)) awakeWhileSpinning = false
+    }
+    const spinAfter = spins(world, id)
+    report('t6.3-air', { spinning, spinAfter, awakeWhileSpinning, asleep: world.isSleeping(body) })
+    expect(spinning).toBeGreaterThan(5)
+    expect(spinAfter).toBeGreaterThanOrEqual(0.5)
+    expect(awakeWhileSpinning).toBe(true)
+    expect(world.isSleeping(body)).toBe(false)
+    // the handbrake and the brakes stop them, and then it sleeps
+    let stopped = 0
+    while (spins(world, id) >= 0.5 && stopped < 120 * 20) {
+      world.driveVehicle(id, { ...none, brake: 1, handBrake: 1 })
+      world.step(STEP)
+      stopped++
+    }
+    let toSleep = 0
+    while (!world.isSleeping(body) && toSleep < 120 * 5) {
+      world.driveVehicle(id, none)
+      world.step(STEP)
+      toSleep++
+    }
+    report('t6.3-air-stopped', { stoppedAfterS: stopped * STEP, asleepAfterS: toSleep * STEP })
+    expect(world.isSleeping(body)).toBe(true)
+    world.dispose()
+  })
+})
+
+const speedOfBody = (world: PhysicsWorld, body: ReturnType<PhysicsWorld['vehicleBody']>, vel: Float64Array): number => {
+  world.readVelocity(body, vel, 0)
+  return Math.hypot(vel[0]!, vel[1]!, vel[2]!)
+}

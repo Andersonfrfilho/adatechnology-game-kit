@@ -194,7 +194,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
 - **T6.2b Rodador do banco de provas no Jolt:** frota terrestre inteira dentro das faixas.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-proving test` · `sonnet`.
-- **T6.3 Regra de sono do carro** (7.7; roda no ar girando mantém o carro acordado). Aceite: carro parado dorme em ≤ 3 s; batida a 60 km/h no meio-fio de 30 cm dorme em ≤ 7 s.
+- ✅ **T6.3 Regra de sono do carro** (feito em 2026-11-26, `evidence.md` `## T6.3`; 7.7; roda no ar girando mantém o carro acordado). Aceite: carro parado dorme em ≤ 3 s; batida a 60 km/h no meio-fio de 30 cm dorme em ≤ 7 s.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/vehicle.test.ts` · `sonnet`.
 - **T6.4 Cascos convexos** (10.1, 10.3, 10.5): concavidade, extrusão para dentro, teto por classe medido e escrito aqui, H1–H6 nos 69 modelos; estacionado dinâmico com as guardas da 10.4.
   Mecânica? não · Aceite por comando? sim: `vehicle-hulls.test.ts` · `sonnet`.

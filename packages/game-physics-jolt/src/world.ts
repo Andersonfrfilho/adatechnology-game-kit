@@ -31,7 +31,7 @@ import type {
 
 import { createCharacter } from './character'
 import { updateHeights } from './heights'
-import { BP_AGENT, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
+import { BP_AGENT, DEFAULT_SLEEP_AFTER, DEFAULT_SLEEP_SPEED, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
 import type { Jolt } from './constants'
 import { Contacts } from './contact-rows'
 import { makeListener } from './contacts'
@@ -49,7 +49,7 @@ import type { JoltThreading } from './threading'
 import type { JoltWorldHost } from './world-host'
 import { moveCentreOfMass, createSharedShape, releaseSharedShape, setChildShape } from './shared-shapes'
 import { applyBuoyancy } from './buoyancy'
-import { createVehicle, driveVehicle, rebuildVehicle, removeVehicle, vehicleBody, vehicleWheels, wheelContacts } from './vehicles'
+import { createVehicle, driveVehicle, rebuildVehicle, removeVehicle, settleVehicles, vehicleBody, vehicleWheels, wheelContacts } from './vehicles'
 import { readContacts, watchContacts } from './watched-contacts'
 
 /**
@@ -85,6 +85,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   /** Time `step` has not run yet (less than one fixed step): saved with the state. */
   accumulator = 0
   readonly slipSpeed: number
+  readonly sleepSpeed: number
+  readonly sleepAfter: number
   readonly reportSpeed: number
   readonly maxContacts: number
   /** The kit's contact listener; null when the world runs with `contactCallbacks: 'none'` (Jolt's job threads cannot call JS). */
@@ -146,6 +148,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.threading = threading
     this.fixedStep = desc.fixedStep ?? 1 / 60
     this.slipSpeed = desc.slipSpeed ?? 0.02
+    this.sleepSpeed = desc.sleepSpeed ?? DEFAULT_SLEEP_SPEED
+    this.sleepAfter = desc.sleepAfter ?? DEFAULT_SLEEP_AFTER
     this.reportSpeed = desc.contactReportSpeed ?? 0.5
     this.maxContacts = Math.min(ROW_CAPACITY, desc.maxContacts ?? ROW_CAPACITY)
     checkVec3Layout(J)
@@ -851,6 +855,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     updateFriction(this)
     if (this.rollers.size > 0) roll(this, h)
     breakJoints(this, h)
+    if (this.vehicles.size > 0) settleVehicles(this, h)
   }
 
   clearEvents(): void {

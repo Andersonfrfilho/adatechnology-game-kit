@@ -30,3 +30,7 @@ export const POINTS_PER_BODY = 16
 export const NO_TAG = 0xffffffff
 
 export const layerOf = (layer: Layer): number => LAYER_INDEX.get(layer) ?? 0
+
+/** Jolt's own sleep speed (m/s) and sleep time (s), for a world that does not say. */
+export const DEFAULT_SLEEP_SPEED = 0.03
+export const DEFAULT_SLEEP_AFTER = 0.5

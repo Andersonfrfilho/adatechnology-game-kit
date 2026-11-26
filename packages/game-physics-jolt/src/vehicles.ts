@@ -42,7 +42,7 @@ const attach = (w: JoltWorldHost, body: BodyId, desc: VehicleDesc): VehicleEntry
   const listener = new J.VehicleConstraintStepListener(constraint)
   w.system.AddStepListener(listener)
   J.destroy(vs)
-  return { body, constraint, controller: driven, tracked, listener, tester, wheelCount: desc.wheels.length }
+  return { body, constraint, controller: driven, tracked, listener, tester, wheelCount: desc.wheels.length, quietFor: 0, driven: false }
 }
 
 /** The radius the engine turns: the driven wheels' mean (a tracked vehicle's driven wheel of each track), the first wheel's when none is listed driven. */
@@ -152,7 +152,8 @@ export const driveVehicle = (w: JoltWorldHost, id: VehicleId, input: VehicleInpu
   if (!v) return
   if (v.tracked) driveTracks(v.controller as JoltNS.TrackedVehicleController, input)
   else (v.controller as JoltNS.WheeledVehicleController).SetDriverInput(input.forward, input.right, input.brake, input.handBrake)
-  if (input.forward !== 0 || input.right !== 0) w.bi.ActivateBody(w.entry(v.body).id)
+  v.driven = input.forward !== 0 || input.right !== 0
+  if (v.driven) w.bi.ActivateBody(w.entry(v.body).id)
 }
 
 export const vehicleBody = (w: JoltWorldHost, id: VehicleId): BodyId => {
@@ -177,4 +178,36 @@ export const wheelContacts = (w: JoltWorldHost, id: VehicleId): number => {
   let n = 0
   for (let i = 0; i < v.wheelCount; i++) if (v.constraint.GetWheel(i).HasContact()) n++
   return n
+}
+
+/** A wheel turning faster than this (rad/s) keeps the vehicle awake; every wheel under it is at rest. */
+const WHEEL_REST_SPIN = 0.5
+
+const fastestWheel = (v: VehicleEntry): number => {
+  let fastest = 0
+  for (let i = 0; i < v.wheelCount; i++) fastest = Math.max(fastest, Math.abs(v.constraint.GetWheel(i).GetAngularVelocity()))
+  return fastest
+}
+
+/**
+ * The sleep rule of a vehicle (design 7.7), once per fixed step: it sleeps when it has been still (under the world's sleep speed) with every wheel at rest and
+ * no throttle or steering for the world's sleep time, and a vehicle asleep with a wheel still turning is woken. A car rolling on free wheels would otherwise take
+ * minutes to cross the sleep speed, and one with a wheel spinning in the air would freeze it mid-turn.
+ */
+export const settleVehicles = (w: JoltWorldHost, dt: number): void => {
+  for (const v of w.vehicles.values()) {
+    const e = w.entry(v.body)
+    if (!e.body.IsActive()) {
+      if (fastestWheel(v) >= WHEEL_REST_SPIN) w.bi.ActivateBody(e.id)
+      continue
+    }
+    const linear = e.body.GetLinearVelocity()
+    const speed = Math.hypot(linear.GetX(), linear.GetY(), linear.GetZ())
+    if (v.driven || speed >= w.sleepSpeed || fastestWheel(v) >= WHEEL_REST_SPIN) {
+      v.quietFor = 0
+      continue
+    }
+    v.quietFor += dt
+    if (v.quietFor >= w.sleepAfter) w.bi.DeactivateBody(e.id)
+  }
 }

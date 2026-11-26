@@ -4140,3 +4140,20 @@ Aceite: `grep -c 'corpse\|testador das rodas\|estacionado' specs/008-motor-fisic
 **Aberto, não resolvido (vai para a T6.2b):** a arrancada do Jolt é 1,6× a da semi-simulação: com 1 300 kg e tração traseira o motor passa o que o pneu segura (grip de pico ≈ 7 kN) e as rodas patinam; o Jolt também não troca de marcha para cima com roda patinando, então a 1ª vai até o corte. A semi-simulação não tem esse limite de tração (ela dá 4,4 m/s² médios a 1,3 t). O teste `launch` registra o tempo e confere só que é maior que o da semi e menor que 9 s; **não é um critério de equivalência**. A direção reduzida com a velocidade e a puxada (`pullShare`) também esperam medida. Um pneu furado não tem a resistência de rolamento do `FLAT_ROLLING` da semi-simulação (puxa só pela `steerPull` do `status()`, que o mapeador aplica).
 
 **Gates:** `pnpm --filter @adatechnology/game-vehicles-driving test` 7 arquivos, **92 testes passam**; `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado), **158 passam, 3 puladas** (`vehicle.test.ts` inclui as duas cenas antigas, meio-fio e rampa, **sem mudança de valor**: nenhum teste de andar ou bater precisou ser recalibrado); `tsc --noEmit` dos dois e de `game-physics` limpos; eslint dos três sem avisos.
+
+## T6.3 — Regra de sono do carro (2026-11-26)
+
+**Entrou** (`game-physics-jolt/src/vehicles.ts`, `settleVehicles`, chamada uma vez por passo fixo em `stepFixed` só quando há veículo; `world-host.ts` e `world.ts` guardam `sleepSpeed` e `sleepAfter` do mundo, com os padrões do Jolt 0,03 m/s e 0,5 s quando o mundo não diz): o veículo dorme quando ficou **parado** (abaixo do sono do mundo) com **toda roda abaixo de 0,5 rad/s**, **sem acelerador nem direção** (`driveVehicle` com `forward` e `right` zero), pelo tempo de sono do mundo; e um veículo dormindo com roda girando a 0,5 rad/s ou mais é acordado. Sem a regra, um carro que rola em roda livre leva minutos para cruzar a velocidade de sono: o Jolt sozinho deixou o carro parado, sem entrada, **dormir só aos 8,2 s** (mundo do kit: sono a 0,08 m/s, 0,5 s); a roda no ar girando **já** mantinha o carro acordado pelo Jolt, e a regra agora o garante.
+
+**Testes** (`tests/vehicle.test.ts`, descrição `T6.3`, mundo do kit `KIT_WORLD`, 120 Hz):
+
+| Cenário | Medido | Critério |
+|---|---|---|
+| carro freado até parar (chassi < 0,08 m/s), entrada zero | dorme **0,49 s** depois (antes da regra: 8,2 s) | ≤ 3 s |
+| hatch da cena do meio-fio, 60 km/h contra 30 cm, acelerador solto | dorme **3,25 s** depois da batida, 4 rodas no chão | ≤ 7 s |
+| carro sobre vigas com as rodas sobre um poço, 2 s de acelerador cheio e solto | rodas a 35 rad/s caem para 19 rad/s em 3 s (amortecimento da roda do Jolt) e o corpo **fica acordado** durante todo o tempo em que alguma roda passa de 0,5 rad/s | acordado |
+| a mesma cena com freio e freio de mão | rodas param em 0,18 s e o carro dorme **0,49 s** depois | dorme |
+
+Um carro que cai de barriga depois de pular o meio-fio (o carro do T6.2, mais leve de frente) fica acordado enquanto as rodas no ar giram: 57 rad/s a 6 rad/s em 11 s com o amortecimento padrão da roda; é o que a regra diz.
+
+**Gates:** `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado), **161 passam, 3 puladas**; `tsc --noEmit` e eslint de `game-physics-jolt` limpos.

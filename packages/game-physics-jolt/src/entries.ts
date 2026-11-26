@@ -64,6 +64,10 @@ export interface VehicleEntry {
   readonly tester: JoltNS.VehicleCollisionTester
   /** How many wheels it was made with: a motorbike has 2, and Jolt must not be asked for a third. */
   readonly wheelCount: number
+  /** Seconds the vehicle has been still with no throttle and no steering (`settleVehicles`). */
+  quietFor: number
+  /** The last `driveVehicle` asked for a throttle or a steer. */
+  driven: boolean
 }
 
 export interface JoltCharacter {
