@@ -46,6 +46,7 @@ export const SUITES = [
  */
 export const BASE_PACKAGES = [
   '@adatechnology/game-contracts',
+  '@adatechnology/game-physics',
   '@adatechnology/game-shapes',
   '@adatechnology/game-shapes-three',
   '@adatechnology/game-render-three',
