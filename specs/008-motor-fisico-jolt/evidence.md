@@ -3285,6 +3285,34 @@ Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm 
 
 **Limites (não escondidos):** (1) a sala de teste (`game-test-room`) ainda lança a granada com a balística própria: a costura existe e está exportada, mas ligar o arremesso da sala a ela muda o jogo inteiro e não era da task (aceite: os testes pedidos). (2) Cápsulas dos arquétipos genéricos (`box-fx`) e carregadores continuam no salto próprio. (3) Com mundo, o chão é o do mundo do host: `groundAt` não é consultado para a cápsula.
 
+### Sem amortecimento, decisão do dono (2026-11-26)
+
+O dono tirou `GRENADE_ROLLING_DAMPING = 1` (20 vezes o das outras peças, e mascarava o C_rr 0,015). Medido de novo, mesma máquina, `KIT_WORLD`, chão de produção, granada só com C_rr 0,015, arremessos de 11 m/s subindo 4 m/s de 1,5 m, e a varredura de 10-12 m/s: o teste da própria T4.3 reprova (open floor 5,51 s; varredura até 5,74 s).
+
+**Sono do Jolt ou parar de andar?** Rodei cada arremesso duas vezes, com a mesma semente: uma com `sleepAfter` 0,5 s (o do kit) e outra sem nunca dormir, lendo velocidade linear e angular do corpo a cada passo (12 sementes: 101 a 112, arremessos novos, quaternião inicial por semente).
+
+| Semente | toca o chão | dorme (kit) | para de verdade (v < 2 cm/s e ω < 0,5 rad/s), sem dormir |
+|---|---|---|---|
+| 101 | 1,28 s | 5,13 s | 12,71 s |
+| 105 | 0,89 s | 3,92 s | 13,68 s |
+| 108 | 1,07 s | 6,17 s | 13,64 s |
+| 111 | 1,26 s | 6,22 s | 12,71 s |
+| 12 sementes | 0,88 a 1,28 s | 3,92 a 6,22 s | 12,48 a 13,99 s |
+
+O corpo **não** "parou e o Jolt demorou": ele se mexe de verdade (rolamento e balanço sobre a espoleta, v 0,09 e ω 3 rad/s aos 5 s) por 12 a 14 s; o Jolt o põe para dormir antes, quando os pontos de teste de sono andam menos que o limite numa janela de 0,5 s (`sleepSpeed` 0,08). O tempo de repouso é, então, o tempo de **perder o giro residual**, e o giro é o da alavanca e da espoleta: com 24 arremessos por variante (sementes 200 a 223, `restAt`):
+
+| Colisor | mediana | mín | máx | acima de 5 s |
+|---|---|---|---|---|
+| completo (corpo, espoleta, alavanca), como desenhado | 5,42 s | 4,81 | 6,30 | 22 de 24 |
+| corpo e espoleta | 6,83 s | 6,04 | 7,91 | 24 de 24 |
+| só a esfera | 12,84 s | 11,60 | 13,52 | 24 de 24 |
+| completo, restituição 0,1 | 5,41 s | 3,05 | 6,23 | 21 de 24 |
+| completo, atrito 0,9/0,8 | 5,22 s | 3,52 | 5,94 | 17 de 24 |
+
+Leitura: a esfera lisa com C_rr 0,015 leva 12,8 s (Coulomb: 0,015 g = 0,15 m/s² de freio); a espoleta e a alavanca já **ajudam** (cortam para 5,4 s) ao travar o rolamento. Não achei defeito no colisor (a esfera está onde o modelo desenha), no material nem no sono: o tempo vem do próprio C_rr 0,015 contra uma granada que chega ao chão girando. Tentativas: (1) variantes de colisor e de material acima; (2) separar sono de parada física. Nenhuma fecha 5 s sem amortecimento artificial, sem afrouxar o limite ou sem mudar o `sleepSpeed` do mundo (que é de todo o kit).
+
+**Reaberta.** A T4.3 volta a 🔄 no `tasks.md`. **Saiu do PR #518:** `explosiveCollider` (colisor da granada), o amortecimento, o teste de aceite da granada (cena aberta, varredura de 18, parede) e os testes do colisor; os textos de README e skills foram ajustados. **Ficou:** `casingCollider`, `spawnLoose`/`syncLoose`/`dropLoose`, `createParticles` com mundo, 200/200 cápsulas dormindo e `M67_PARTS` (o desenho segue lendo as medidas). A decisão que falta ao dono: aceitar que a granada só com C_rr 0,015 repousa em torno de 5,4 s (e mudar o limite), ou outro C_rr/colisor para a granada, ou o `sleepSpeed` do kit.
+
 ## T4.4 — Juntas dos interativos (2026-11-26)
 
 2026-11-26, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz), o `update` do mundo a 60 Hz.
