@@ -4024,3 +4024,36 @@ Script descartável (`lattice-bench.mjs`, na pasta de rascunho da sessão; **nã
 3. **Deriva do referencial flutuante:** momento linear sem deriva; momento angular 0,005% a 0,11% de variação em 0,3 s (sobe com a frequência baixa e com os nós), sem importância para o aceite de 4.2.
 
 **Conclusão para o desenho:** 480 Hz com uma iteração (D5) é barato e **não** foi demonstrado exato contra a referência deste script; a decisão da 009 deve tratar o ganho de precisão (iterações, passo menor ou vigas menos rígidas) e a razão 300:1 como risco aberto, medido com um lote de referência melhor.
+
+## T6.0b — Espião descartável: um carro, uma parede, cinco componentes (2026-11-26)
+
+`packages/game-physics-jolt/tests/crash-spy.test.ts` (Jolt cru, um arquivo; **descartável**: sai quando a 009 decidir). Carro de 1 500 kg a 15 m/s (54 km/h) contra uma parede, **sem gravidade e sem rodas** (o impulso de contato é `m·Δv`: os termos de chão e roda do 4.2 item 1 não são medidos aqui); corpo rígido num composto **mutável** de 96 ou 192 cascos convexos de 12 pontos; reticulado de 300 nós e 1 973 vigas (4,4 m × 1,8 m × 1,2 m; 4 nós de motor 300:1), XPBD a 480 Hz (4 subpassos por passo de 1/120), plano da parede lido do `ContactManifold`, referencial flutuante (cada nó recebe `−Δv −Δω×r` do que o Jolt aplicou), plasticidade a força fixa (8 kN), densificação em 30%. Cinco componentes lidos: para-choque dianteiro, capô, farol esquerdo, roda dianteira esquerda e suspensão dianteira esquerda (conjuntos de nós). Etapas medidas por passo: `Step` do Jolt, leitura e `Δv`, reticulado, refazer cascos (`ModifyShape` + `SetPositionAndRotation`; no máximo 12 por passo), skinning na CPU de 20 000 vértices (4 nós cada). Sob `perf-measure.lock`, carga 3,3 a 3,6 (abaixo de 4), 9 rodadas de 1 s depois de uma de aquecimento.
+
+### Critérios de seguir ou parar a E3 (4.2 e 15.1), na cena de 96 cascos
+
+| Critério | Medido | Passa? |
+|---|---|---|
+| nenhum nó passa da parede mais de 3 cm | 1e-14 m | sim |
+| nó mais rápido em relação ao corpo ≤ 1,5× a aproximação | 1,07× (16,1 m/s para 15 m/s) | sim |
+| energia do reticulado (cinética + elástica) ≤ a que entrou (1% de folga) | 0% acima (entrada 169,1 kJ; o carro tinha 169,1 kJ) | sim |
+| **frente presa à parede (folga ≤ 3 cm)** enquanto o contato dura | **0,21 m** | **NÃO** |
+| carro (reticulado + cascos) ≤ 1,2 ms em quadro de 60 Hz a 480 Hz | p90 0,77 ms (96 cascos) a 0,83 ms (192), p99 1,0 a 1,3 ms | sim no p90 (o teste confere); o p99 passa de 1,2 ms em 96 cascos |
+
+O critério da folga **falha**. Varri 17 variações (força de escoamento de 4, 8, 16 e 40 kN; densificação em 30% e 50%; amortecimento de 20 a 400 /s; 1, 2 e 4 iterações): a melhor deu 0,21 m e a maioria passou de 2 m (a frente rebate da parede, ou o motor atravessa o painel porque o reticulado não tem autocontato). Mais iterações **pioraram** o resultado (0,21 → 1,9 a 2,6 m), o mesmo sintoma da T6.0: sem reticulado mais fino ou autocontato, o ajuste é caótico. O teste de CI confere os três que passam e **imprime** o veredito da folga (`crash-spy.verdict`).
+
+**Achado de acoplamento (alimenta a 009-f):** com os cascos refeitos a partir do deslocamento dos nós (`feedHulls`), o esmagamento do reticulado sobe de 0,40 m para **1,23 m** (96 cascos) e **1,37 m** (192): o carro entra 15 cm (96) e 7 cm (192) na parede e a velocidade relativa dos nós chega a 1,17× a aproximação. O motivo é o laço: o casco que avança muda o contato do Jolt, que muda o plano, que muda o reticulado. A leitura de `Δv` deixa de contar o que o refazer dos cascos mexeu no corpo (a linha de base é lida depois da troca), e mesmo assim não fecha: o acoplamento precisa do desenho da 009-f (plano fixo no mundo durante o esmagamento, cascos que seguem o reticulado menos a deriva média).
+
+### Custo por etapa (ms, mediana / p90 / p99; 1 008 passos com reticulado ativo por configuração)
+
+| Cascos | CCD | `Step` em todos os passos | `Step` em contato | Reticulado (1/120 s) | Refazer cascos | Skinning 20 mil vértices | Reticulado + cascos por passo |
+|---|---|---|---|---|---|---|---|
+| 96 | discreto | 0,005 / 0,024 / 0,060 | 0,022 / 0,038 / 0,093 | 0,174 / 0,196 / 0,340 | 0,019 / 0,263 / 0,342 | 0,212 / 0,426 / 0,491 | 0,199 / 0,450 / 0,619 |
+| 96 | `LinearCast` | 0,005 / 0,020 / 0,043 | 0,018 / 0,028 / 0,054 | 0,165 / 0,199 / 0,400 | 0,010 / 0,234 / 0,273 | 0,199 / 0,235 / 0,438 | 0,190 / 0,419 / 0,634 |
+| 192 | discreto | 0,004 / 0,014 / 0,034 | 0,012 / 0,017 / 0,045 | 0,147 / 0,177 / 0,322 | 0,008 / 0,217 / 0,265 | 0,176 / 0,260 / 0,287 | 0,170 / 0,384 / 0,501 |
+| 192 | `LinearCast` | 0,004 / 0,015 / 0,050 | 0,013 / 0,017 / 0,048 | 0,163 / 0,184 / 0,240 | 0,009 / 0,236 / 0,270 | 0,199 / 0,274 / 0,321 | 0,182 / 0,414 / 0,482 |
+
+Leituras: (1) **o composto mutável de 96 a 192 filhos não pesa**: o `Step` do Jolt fica em 0,005 ms (0,02 em contato), sem diferença entre 96 e 192 nem entre discreto e `LinearCast` (a cena é um carro só; o custo sob muitos carros é o da T6.21). (2) Refazer um casco convexo de 12 pontos e trocar com `ModifyShape` custa **0,017 a 0,022 ms**; com 12 por passo (cadência), 0,22 a 0,26 ms no p90, a estimativa de 0,64 ms sustentados (10.2) fica folgada. (3) O skinning de 20 000 vértices na CPU custa 0,18 a 0,21 ms por passo: D15 (GPU) não se justifica por custo neste tamanho. (4) O reticulado a 480 Hz custa 0,15 a 0,17 ms por passo de 1/120 s (0,3 ms por quadro de 60 Hz), de acordo com a T6.0.
+
+**Achado do Jolt (1.1.1):** `BodyInterface::NotifyShapeChanged` deixa 8 bytes no heap do wasm a cada chamada (crescimento linear medido em 600 chamadas: 4 104 bytes); `SetShape` com outra forma num corpo que depois sai faz o mesmo. O adaptador (T6.1b) usa `SetPositionAndRotation` no lugar do primeiro (plano) e documenta o segundo.
+
+**Limites:** reticulado, acoplamento e parâmetros são do próprio espião (primeira passada, não calibrada); os cascos só se movem (não se deformam); o carro não tem rodas nem gravidade. O veredito de seguir ou parar a E3 é do dono: com a folga reprovada, o acoplamento instável e a T6.0 sem convergência clara, **recomendo não começar a 009 sem um desenho novo do reticulado (autocontato ou grade mais fina) e do acoplamento (009-f) antes**.
