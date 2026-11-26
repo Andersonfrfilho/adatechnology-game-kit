@@ -3284,3 +3284,32 @@ Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm 
 **Gates:** `game-weapons-three` 58 arquivos, 2084 testes passam (as dependências `game-items-three`, `game-test-room` e outras foram buildadas antes: faltava o `dist` no worktree); `extras.test.ts` 4 passam; `tsc --noEmit` do pacote limpo; `eslint` (raiz) em `src` e no teste novo limpo; `kit-audit --check` 0 novos.
 
 **Limites (não escondidos):** (1) a sala de teste (`game-test-room`) ainda lança a granada com a balística própria: a costura existe e está exportada, mas ligar o arremesso da sala a ela muda o jogo inteiro e não era da task (aceite: os testes pedidos). (2) Cápsulas dos arquétipos genéricos (`box-fx`) e carregadores continuam no salto próprio. (3) Com mundo, o chão é o do mundo do host: `groundAt` não é consultado para a cápsula.
+
+## T4.4 — Juntas dos interativos (2026-11-26)
+
+2026-11-26, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz), o `update` do mundo a 60 Hz.
+
+**O que já existia e foi reaproveitado:** o que os interativos já fazem (`game-interactables`: `PartSpec` com `motion` `hinge`/`slide`, `bounds`, `pivot`, `ry`, `speed`; `setPart`, `partT`, `act`, `load`, `SoftSpec` e `push`; `game-interactables-three` só desenha o `t` e o `sway` que o mundo reporta) e, no contrato, a junta `hinge` com limite e atrito, a `slider` (T2.2), a `swingTwist`, `breakImpulse` com `brokenJoints`, `jointAngles`, `createGroup`, `ignorePair`, `setPose`/`setVelocity`/`wake`. Nenhuma junta nova no contrato e nada do Jolt fora de `game-physics-jolt`.
+
+**O que mudou (`game-interactables`)**
+- Porta de entrada: `WorldOptions.partPhysics` (`PartPhysics`, `PartDriver`, `SoftDriver` em `part-physics.ts`, duck-typed: o pacote não ganha dependência de motor em tempo de execução, só os tipos de `game-physics`). Em `world.ts`: a parte com `driver` recebe `aim` quando o alvo muda, `t` é lido do driver a cada `update`, ao chegar o alvo vira o `t` (empurrão deixa a porta onde parou e o próximo `act` alterna dali), `setPart(..., instant)` e `load` dão `snap`, o evento novo `broke` sai uma vez, `remove` descarta os drivers; no volume mole o `sway` vem do driver e `push` vira impulso nas correntes. **Sem o `partPhysics`, ou com `attach` devolvendo `undefined` (parte sem `bounds`), o caminho é o de antes, linha a linha.**
+- Implementação sobre o contrato: `engine-parts.ts` (`createEnginePartPhysics`, `leafOf`), `engine-leaf.ts` (folha dinâmica na `hinge` limitada a `[min(0, ângulo), max(0, ângulo)]` ou na `slider` limitada a `[min(0, distância), max(0, distância)]`, movida por velocidade proporcional ao erro até `Motion.speed`, livre depois de chegar, com atrito que a segura), `engine-chain.ts` (`buildChain`: correntes de caixas por juntas swing-twist, `chainPoints` para desenhar o cabo) e `engine-soft.ts` (cortina: uma corrente por 12 cm de largura pendurada num trilho). Porta que quebra: `EnginePartOptions.breakImpulse`; a folha vira corpo solto do motor (`leafOf` devolve o corpo para o host desenhar).
+
+**Testes novos** (`tests/engine-parts.test.ts`, 8, todos verdes)
+
+| Caso | Resultado |
+|---|---|
+| porta em dobradiça, objeto girado 0,5 rad | `t` 0,562 / 0,938 / 0,995 / 0,996 a 0,25 / 0,5 / 1 / 2 s; volta a < 0,03 em 2 s; evento `part` na chegada |
+| gaveta em corrediça, objeto girado 90° | avança 0,38 a 0,42 m no eixo do mundo, sem desvio lateral (< 1 cm); `t` > 0,97; volta |
+| empurrão numa porta deixada em paz (impulso 6 e depois 400 N s na borda) | abre (`t` > 0,05), o limite segura (`t` < 1,06 mesmo com 400 N s); `act` fecha dali |
+| porta que quebra (`breakImpulse` 5, impulso 300) | 1 evento `broke`; a folha vai a > 0,5 m; `t` fica congelado |
+| parte sem `bounds` / mundo sem motor | `t` anda a 2,5/s como antes (0,5 em 0,2 s) |
+| `setPart(..., instant)` | porta em 0,6 de `t`, parada (0,55 a 0,65 depois de 1 s) |
+| cortina empurrada a 1,5 m/s | pico 0,171 rad (em 0,52 s), 0,04 rad depois de 12 s (o teste exige < pico/3 em 8 s) |
+| cabo de 12 elos, 3 m, preso nas duas pontas | cede > 10 cm, as pontas ficam a < 5 cm das âncoras, nada abaixo do chão |
+
+**Custo:** um quadro de 60 Hz com uma porta e uma cortina (8 correntes de 8 elos) — dois passos fixos mais o `update` — **0,034 ms**.
+
+**Gates:** `game-interactables` 10 arquivos, 162 testes passam (os 154 de antes sem mudança); `game-interactables-three` 15 arquivos, 541 passam; `tsc --noEmit` de `game-interactables`, `-three` e `game-floorplan-three` limpo; `eslint` (raiz) sem erro (o aviso de `max-lines` de `world.ts`, 1811 linhas, já existia: eram 1749); `kit-audit --check` 0 novos.
+
+**Limites (não escondidos):** (1) a ligação do motor no jogo/sala (criar o `createEnginePartPhysics` com o mundo do host e passar a `createWorld`, e desenhar a folha solta depois de quebrar) é do host; `game-floorplan-three` e a sala não passam `partPhysics` ainda, então nada muda no jogo até alguém ligar. (2) A cortina não desliza pelo trilho: o `part` da cortina continua `t` do mundo, as correntes ficam penduradas no trilho fixo. (3) Cabo: `buildChain`/`chainPoints` estão exportados e testados, mas o `wires` do `ObjectSpec` (desenho estático) não é ligado ao motor. (4) A folha não vê o corpo do móvel se o host não passar `frameOf`: a folha do móvel fechado só não briga com o resto se o host cuidar da sobreposição (o teste usa folhas que não se tocam). (5) Folha adormecida não acorda por `addImpulse`: o jogo acorda por contato; o teste chama `wake` antes do impulso.

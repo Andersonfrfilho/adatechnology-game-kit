@@ -149,7 +149,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - ✅ **T4.3 B2 em produção:** granada como desenhada (corpo, espoleta, alavanca) com C_rr 0,015 e cápsulas com rolamento. Aceite: granada em
   repouso ≤ 5 s e ≤ 8 m; ≥ 95% de 200 cápsulas dormindo a 5 s; nenhuma abaixo do chão.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/extras.test.ts` e testes de `game-weapons-three` · `sonnet`.
-- **T4.4 Juntas dos interativos:** porta (dobradiça com limite), gaveta (deslizante), cortina e cabo; porta que quebra por impulso.
+- ✅ **T4.4 Juntas dos interativos:** porta (dobradiça com limite), gaveta (deslizante), cortina e cabo; porta que quebra por impulso.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-interactables test` · `sonnet`.
 - **T4.5 README e skills** dos pacotes tocados.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
