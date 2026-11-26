@@ -1,6 +1,7 @@
 import { mergeColliders } from './colliders'
 import { fitsSlot, generateLoot } from './loot'
 import { format, resolveStrings } from './locale'
+import type { PartDriver, SoftDriver } from './part-physics'
 import { clamp, dist3, localToWorld, rotateAxis, rotY, worldToLocal } from './math'
 import type {
   ActiveEmitter,
@@ -57,6 +58,13 @@ interface PartState {
   t: number
   target: number
   maxT: number
+  /** With `WorldOptions.partPhysics`: the engine moves the part, and `t` is read from it. */
+  driver?: PartDriver
+  /** The target the driver was last told (`aim`). */
+  commanded?: number
+  /** The driver is going to a target: arriving reports the part event. */
+  moving?: boolean
+  broken?: boolean
 }
 
 interface DeviceState {
@@ -100,6 +108,8 @@ interface SoftState {
   vax: number
   vaz: number
   phase: number
+  /** With `WorldOptions.partPhysics`: the engine swings the volume (the spring is not used). */
+  driver?: SoftDriver
 }
 
 interface DamageState {
@@ -224,7 +234,11 @@ export function createWorld(options: WorldOptions = {}): World {
     const next = clamp(target, 0, p.maxT)
     const changed = next !== p.target
     p.target = next
-    if (instant) writeT(o, p, next)
+    if (instant) {
+      p.driver?.snap(next)
+      p.commanded = next
+      writeT(o, p, next)
+    }
     if (changed || instant) emit({ type: 'part', object: o.id, part: p.spec.id, t: p.t, target: p.target })
   }
 
@@ -861,6 +875,11 @@ export function createWorld(options: WorldOptions = {}): World {
         if (Math.hypot(dx, dz) > radius) continue
         const top = tr.y + s.spec.anchor[1]
         if (pos[1] + ACTOR_HEIGHT < top - h || pos[1] > top) continue
+        if (s.driver) {
+          s.driver.push(lv)
+          if (s.spec.kind === 'panel' && s.spec.part && lv[2] < -0.05 && lp[2] > s.spec.anchor[2]) setPartTarget(o, s.spec.part, 1)
+          continue
+        }
         const cap = 8
         s.vax = clamp(s.vax - lv[2] * PUSH_GAIN, -cap, cap)
         s.vaz = clamp(s.vaz + lv[0] * PUSH_GAIN, -cap, cap)
@@ -869,6 +888,7 @@ export function createWorld(options: WorldOptions = {}): World {
     }
   }
 
+  const swingOut: [number, number] = [0, 0]
   function stepSoft(dt: number): void {
     const sub = Math.max(1, Math.ceil(dt / (1 / 120)))
     const h = dt / sub
@@ -879,6 +899,12 @@ export function createWorld(options: WorldOptions = {}): World {
         const k = s.spec.stiffness ?? 30
         const c = s.spec.damping ?? 4
         const max = s.spec.maxAngle ?? 0.7
+        if (s.driver) {
+          s.driver.swing(swingOut)
+          s.ax = swingOut[0]
+          s.az = swingOut[1]
+          continue
+        }
         const gain = s.spec.wind ?? (s.spec.kind === 'panel' ? 0 : 1)
         const gust = gain * (0.6 + 0.4 * Math.sin(time * 1.7 + s.phase)) * 0.1
         const fx = -wl[2] * gust
@@ -1422,11 +1448,40 @@ export function createWorld(options: WorldOptions = {}): World {
   }
 
   // ------------------------------------------------------------------ update
+  /** A part the engine moves: it aims at the target when that changed, then `t` is what the joint says; a broken one stays where it broke. */
+  function updateDriven(o: ObjState, p: PartState, dt: number): void {
+    const driver = p.driver as PartDriver
+    if (p.broken) return
+    if (p.commanded !== p.target && !(gated(o, p) && p.target > p.t)) {
+      driver.aim(p.target)
+      p.commanded = p.target
+      p.moving = true
+    }
+    driver.update(dt)
+    if (driver.broken) {
+      p.broken = true
+      emit({ type: 'broke', object: o.id, part: p.spec.id })
+      return
+    }
+    const next = clamp(driver.read(), 0, p.maxT)
+    if (next !== p.t) writeT(o, p, next)
+    if (!driver.settled) return
+    // let go (or pushed by hand): what the joint holds is the target, so the next interaction toggles from there
+    p.target = next
+    p.commanded = next
+    if (p.moving) emit({ type: 'part', object: o.id, part: p.spec.id, t: next, target: next })
+    p.moving = false
+  }
+
   function update(dt: number): void {
     if (!(dt > 0)) return
     time += dt
     for (const o of objs.values()) {
       for (const p of o.parts.values()) {
+        if (p.driver) {
+          updateDriven(o, p, dt)
+          continue
+        }
         if (p.t === p.target) continue
         if (gated(o, p) && p.target > p.t) continue // a gated part may still close
         const step = (p.spec.motion.speed ?? 2.5) * dt
@@ -1506,7 +1561,9 @@ export function createWorld(options: WorldOptions = {}): World {
     }
     for (const p of spec.parts ?? []) {
       const t0 = clamp(p.t0 ?? 0, 0, 1)
-      o.parts.set(p.id, { spec: p, t: t0, target: t0, maxT: 1 })
+      const driver = options.partPhysics?.attachPart(id, p, pub.transform)
+      o.parts.set(p.id, { spec: p, t: t0, target: t0, maxT: 1, ...(driver ? { driver, commanded: t0 } : {}) })
+      driver?.snap(t0)
       pub.parts[p.id] = t0
     }
     for (const c of spec.containers ?? []) {
@@ -1532,7 +1589,8 @@ export function createWorld(options: WorldOptions = {}): World {
     for (const f of spec.fixtures ?? []) o.fixtures.set(f.id, { spec: f, on: false, flowing: false, frac: 0, timer: 0 })
     let n = 0
     for (const s of spec.soft ?? []) {
-      o.soft.set(s.id, { spec: s, ax: 0, az: 0, vax: 0, vaz: 0, phase: (n++ * 2.399963) % (Math.PI * 2) })
+      const driver = options.partPhysics?.attachSoft?.(id, s, pub.transform)
+      o.soft.set(s.id, { spec: s, ax: 0, az: 0, vax: 0, vaz: 0, phase: (n++ * 2.399963) % (Math.PI * 2), ...(driver ? { driver } : {}) })
     }
     for (const d of spec.damage ?? []) o.hp.set(d.target, { max: d.hp, hp: d.hp })
     objs.set(id, o)
@@ -1545,6 +1603,8 @@ export function createWorld(options: WorldOptions = {}): World {
     const o = objs.get(id)
     if (!o) return
     for (const [actor, s] of [...seats]) if (s.object === id) seats.delete(actor)
+    for (const p of o.parts.values()) p.driver?.dispose()
+    for (const s of o.soft.values()) s.driver?.dispose()
     objs.delete(id)
     if (defaultTank && defaultTank.startsWith(id + ':')) defaultTank = null
     rebuildPlugs()
@@ -1584,6 +1644,8 @@ export function createWorld(options: WorldOptions = {}): World {
         if (p) {
           // keep the limit found by fitSweep: a loaded save must not let a door open through a wall again
           p.target = clamp(v, 0, p.maxT)
+          p.driver?.snap(p.target)
+          p.commanded = p.target
           writeT(o, p, p.target)
         }
       }

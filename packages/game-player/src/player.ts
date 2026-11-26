@@ -188,6 +188,8 @@ export function createPlayer(options: PlayerOptions = {}): Player {
   const fist = options.fist ?? PLAYER_DEFAULTS.fist
   const listeners = new Map<PlayerEventName, Set<(event: never) => void>>()
   let P = freshState(derived, options.position)
+  // the controller's feet, read every step it walks: a vault lifts the body over them
+  const feet = new Float64Array(3)
   let defaultWorld: PlayerWorld = options.world ?? {}
   let world: PlayerWorld = defaultWorld
 
@@ -435,9 +437,10 @@ export function createPlayer(options: PlayerOptions = {}): Player {
       const k = 1 - P.vaultTimer / numbers.vaultSeconds
       P.x = lerp(P.vault[0], P.vault[2], k)
       P.z = lerp(P.vault[1], P.vault[3], k)
-      P.y = Math.sin(k * Math.PI) * numbers.vaultHeight
+      P.y = feet[1] + Math.sin(k * Math.PI) * numbers.vaultHeight
       if (P.vaultTimer <= 0) {
-        P.y = 0
+        P.y = feet[1]
+        world.controller?.teleport(P.x, P.y, P.z)
         noise(P.x, P.z, numbers.vaultNoise)
         const surface = surfaceHere()
         sound('step', numbers.vaultLandVolume, [landSoundId(surface, 0)], surface)
@@ -490,11 +493,20 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     const tvz = want ? (mz / ml) * sp : 0
     P.vx = lerp(P.vx, tvx, Math.min(1, dt * numbers.acceleration))
     P.vz = lerp(P.vz, tvz, Math.min(1, dt * numbers.acceleration))
-    const r = numbers.radius * heightScale
-    const nx = P.x + P.vx * dt
-    const nz = P.z + P.vz * dt
-    if (!blocked(nx + Math.sign(P.vx) * r, P.z)) P.x = nx
-    if (!blocked(P.x, nz + Math.sign(P.vz) * r)) P.z = nz
+    const controller = world.controller
+    if (controller) {
+      controller.move(P.vx, P.vz, dt)
+      controller.read(feet)
+      P.x = feet[0] ?? P.x
+      P.y = feet[1] ?? P.y
+      P.z = feet[2] ?? P.z
+    } else {
+      const r = numbers.radius * heightScale
+      const nx = P.x + P.vx * dt
+      const nz = P.z + P.vz * dt
+      if (!blocked(nx + Math.sign(P.vx) * r, P.z)) P.x = nx
+      if (!blocked(P.x, nz + Math.sign(P.vz) * r)) P.z = nz
+    }
     world.afterMove?.(P)
     // the player does not walk through the crowd: agents pressed against the body push it out
     if (crowd) {
@@ -611,6 +623,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     save: () => ({ state: structuredClone(P), attributes }),
     load(save) {
       P = structuredClone(save.state)
+      world.controller?.teleport(P.x, P.y, P.z)
     },
     setWorld(next) {
       defaultWorld = next

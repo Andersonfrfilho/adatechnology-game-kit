@@ -3,10 +3,10 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
-import type { BodyDesc, BodyId, Vec3 } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, CharacterId, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
-import { eulerXYZ, ground, report, stairs, stats } from './scenes'
+import { WALKER, eulerXYZ, ground, report, stairs, stats } from './scenes'
 
 describe('case 7: small demos', () => {
   it('(a) character controller: stairs, a 30 degree ramp, pushing a crate; 1 and 50 controllers', { timeout: 120000 }, async () => {
@@ -16,48 +16,49 @@ describe('case 7: small demos', () => {
     stairs(world, [0, 0, 0])
     world.createBody({ shape: { kind: 'box', half: [1, 0.05, 3] }, motion: 'static', position: [4, 1.5 * Math.sin(Math.PI / 6), -1.3], rotation: eulerXYZ(Math.PI / 6, 0, 0), user: -1 })
     const crate = world.createBody({ shape: { kind: 'box', half: [0.3, 0.3, 0.3] }, motion: 'dynamic', mass: 30, position: [-4, 0.3, -2], layer: 'prop', user: 5 })
-    const me = world.createCharacter([0, 0, 1], 0.3, 0.6, 75, 400)
     const p = new Float64Array(3)
+    const walk = (id: CharacterId, vx: number, vz: number): void => world.moveCharacter(id, vx, vz, 1 / 60)
+    const me = world.createCharacter({ ...WALKER, position: [0, 0, 1] })
     let top = 0
     for (let i = 0; i < 180; i++) {
-      me.update(1 / 60, 0, -1.5)
+      walk(me, 0, -1.5)
       world.step(1 / 60)
-      me.position(p)
+      world.readCharacter(me, p, 0)
       top = Math.max(top, p[1])
     }
-    const ramp = world.createCharacter([4, 0, 2], 0.3, 0.6, 75, 400)
+    const ramp = world.createCharacter({ ...WALKER, position: [4, 0, 2] })
     let rampTop = 0
     for (let i = 0; i < 240; i++) {
-      ramp.update(1 / 60, 0, -1.5)
+      walk(ramp, 0, -1.5)
       world.step(1 / 60)
-      ramp.position(p)
+      world.readCharacter(ramp, p, 0)
       rampTop = Math.max(rampTop, p[1])
     }
-    const pusher = world.createCharacter([-4, 0, 0], 0.3, 0.6, 75, 400)
+    const pusher = world.createCharacter({ ...WALKER, position: [-4, 0, 0] })
     const c = new Float64Array(7)
     for (let i = 0; i < 180; i++) {
-      pusher.update(1 / 60, 0, -1.2)
+      walk(pusher, 0, -1.2)
       world.step(1 / 60)
     }
     world.readPose(crate, c, 0)
-    const crowd = Array.from({ length: 50 }, (_, i) => world.createCharacter([(i % 10) - 5, 0, 6 + Math.floor(i / 10)], 0.3, 0.6, 75, 400))
+    const crowd = Array.from({ length: 50 }, (_, i) => world.createCharacter({ ...WALKER, position: [(i % 10) - 5, 0, 6 + Math.floor(i / 10)] }))
     const t50: number[] = []
     for (let i = 0; i < 120; i++) {
       const t0 = performance.now()
-      for (const [k, ch] of crowd.entries()) ch.update(1 / 60, Math.sin(i / 30 + k), Math.cos(i / 30 + k))
+      for (const [k, ch] of crowd.entries()) walk(ch, Math.sin(i / 30 + k), Math.cos(i / 30 + k))
       t50.push(performance.now() - t0)
       world.step(1 / 60)
     }
     const t1: number[] = []
     for (let i = 0; i < 120; i++) {
       const t0 = performance.now()
-      me.update(1 / 60, 1, 0)
+      walk(me, 1, 0)
       t1.push(performance.now() - t0)
       world.step(1 / 60)
     }
     report('character', { stairsTopReached: top, stairsTop: 0.9, rampTopReached: rampTop, crateMovedZ: c[2] + 2, update1: stats(t1), update50: stats(t50) })
     expect(top).toBeGreaterThan(0.85)
-    for (const ch of [me, ramp, pusher, ...crowd]) ch.dispose()
+    for (const ch of [me, ramp, pusher, ...crowd]) world.removeCharacter(ch)
     world.dispose()
   })
 

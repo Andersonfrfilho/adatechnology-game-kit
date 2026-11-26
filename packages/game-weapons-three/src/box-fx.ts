@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import type { GunshotSpace } from './audio/gunshot'
 import { FIRST_PERSON_LAYER } from '@adatechnology/game-contracts'
 import type { EffectSink, HandPose, HandTargets, HostEvent, HostTool, MuzzlePose, ToolHand } from '@adatechnology/game-contracts'
+import type { SeamWorld } from '@adatechnology/game-physics'
 import type { LightBudget, RenderPools } from '@adatechnology/game-render-three'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
@@ -54,6 +55,8 @@ export interface WeaponFxOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes from a point along a direction (metres), or null when it hits nothing: the dot lands where it ends. */
   raycast?: LaserRaycast
+  /** The host's physics world (`@adatechnology/game-physics`): the casings ejected by the models the gallery drew are bodies of it, rolling and sleeping as the engine decides (the host's loop steps it); the generic archetypes of this file and a host without it keep the gallery's own bounce. */
+  physics?: SeamWorld
   /** Where the world is (distance from a point along a direction to the first surface, or null): the weapon in the hands comes back from a wall it would go through. */
   contact?: LaserRaycast
   /** Where the body holds the tool (`ModuleHost.holdFrame`): third person draws it there at its real size. */

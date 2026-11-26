@@ -3206,3 +3206,160 @@ Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm 
   - Sala (cratera do C4): 3 dos 4 ladrilhos da cratera ficam a 5 cm (o quarto, o de 5,0 mm, a 2,5 cm). `Step` do f1 aquecido, mediana de 5 (carga 6): **2,38 ms** (2,20–2,72), antes 3,48, com todo ladrilho a 5 cm 1,76 (carga 4–5).
   - Bacia com Jolt: `fellThrough` 0, `deepest` −0,0392, C1 −0,0177, C2 0, C3 0,0332 (limite 0,035), C4 0,50. `engine-ground-inplace.test.ts` ganhou uma terceira cratera pequena e afiada para o ladrilho ficar sempre a 2,5 cm (o que se escreve no lugar é o mesmo campo).
 - **Baixos da revisão aprovada do #351**: `collisionFieldOf` (era `collisionStep`) não aloca por canto (as duas diagonais num `Float64Array` do módulo) e devolve o campo que montou para `shapeGround` (antes montado duas vezes). Histerese: um ladrilho na grade lida só passa ao campo de 5 cm abaixo de 4,5 mm (`COLLISION_ENTER`); um que já está nele só volta acima de 5 mm (o limite do dono, rígido); 4 mm derrubava o ladrilho da cratera da sala em que a peça repousa (4,47 mm) e o ganho junto. Testes: um ladrilho liso que fica nos 5 cm é escrito no lugar (o mesmo corpo, `updateHeights`, os mesmos raios de um ladrilho novo a menos de 2 mm); encostas de 0,65 e 0,68 (4,71 e 4,93 mm) ficam no campo que tinham. Sala: os mesmos 3 de 4 ladrilhos da cratera a 5 cm; `Step` do f1 mediana de 5 **2,43 ms** (2,17–2,50, carga 4–6).
+
+## T4.1 — Controlador de personagem atrás do contrato (2026-11-25)
+
+2026-11-25, Intel Core Ultra 9 275HX (24 threads), Linux, Node, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz).
+
+**O que já existia e foi reaproveitado:** o `CharacterVirtual` do spike (`game-physics-jolt/src/character.ts`: `ExtendedUpdate`, degrau de 0,4 m, colar no chão, `mMaxStrength`), a limpeza em `world.dispose()` (T2.5) e a demonstração (a) do `extras.test.ts` (degraus, rampa, caixa, 50 controladores). O spike só existia no adaptador (`JoltCharacter`, `createCharacter(at, r, h, m, f)`), fora do contrato.
+
+**O que mudou**
+- Contrato (`game-physics/src/contract.ts`, sem citar o motor): `CharacterId`, `CharacterDesc` (`position`, `radius`, `halfHeight`, `mass`, `strength`, `stepHeight` 0,4 m, `maxSlopeDegrees` 45) e em `PhysicsWorld`: `createCharacter`, `moveCharacter(id, vx, vz, dt)`, `pushCharacter(id, impulso)`, `readCharacter`, `teleportCharacter`, `characterSupported`, `removeCharacter`.
+- Adaptador: `createCharacter` devolve `CharacterId`; o mundo guarda `Map<id, JoltCharacter>` (`world.characters`); `dispose` do mundo descarta o que sobrou (heap plana, `heap.test.ts` verde). Empurrão recebido: `pushCharacter` soma `impulso / massa` à velocidade pedida e some com `exp(-4 t)` (constante de 0,25 s); passa pelo mesmo varrimento, então parede segura.
+- `game-player`: porta `PlayerController` em `PlayerWorld.controller` (`move`, `read`, `teleport`) e `createPhysicsController(world, { position, collider })` sobre o contrato (`src/physics-controller.ts`; cápsula com a altura e o raio do `player.collider()`, 75 kg, 400 N). Com controlador, `x`, `y`, `z` do jogador são os pés dele e `blocked` não é consultado. Sem controlador o caminho de grade é o mesmo de antes (os 115 testes do pacote, incluindo o golden da equipe, continuam verdes sem mudança). Pulo de muro e `load` teleportam o controlador. Dependência nova: `@adatechnology/game-physics` (tipos); devDependency `@adatechnology/game-physics-jolt` (teste de integração).
+- Migrados para o contrato, sem afrouxar nada: `extras.test.ts` (a) e `heap.test.ts` (character).
+
+**Testes novos** (`game-physics-jolt/tests/character.test.ts`, 8; `game-player/tests/physics-controller.test.ts`, 7)
+
+| Caso | Resultado |
+|---|---|
+| degrau de 18 cm | pés a y = 0,18 (±0,005) depois de subir; parede de 50 cm detém (y < 0,05, z > -1,6) |
+| rampa de 30° | sobe e acompanha a rampa (|y - (-z tan 30°)| < 0,15; y > 1,0); rampa de 60° não sobe (y < 0,6) |
+| empurrar caixa de 30 kg | caixa passa de z -3,2 em 3 s a 1,2 m/s e o personagem vai atrás (z < -2,6); caixa de 500 kg (400 N não move) fica a menos de 10 cm |
+| ser empurrado | impulso 225 N s em 75 kg: 0,6 a 0,9 m (esperado 3 m/s x 0,25 s = 0,75 m), sem desvio lateral; 2250 N s contra parede a 0,3 m: para a menos de 0,35 m; parado sem comando não anda |
+| teleporte | pés exatamente no ponto e sem velocidade carregada |
+| `game-player` + Jolt + `PhysicsLoop` | sobe degrau de 18 cm (y 0,18), parede do mundo físico segura sem `blocked`, empurra caixa de 30 kg, é empurrado, `load` leva o controlador ao ponto salvo |
+
+**50 controladores** (`moveCharacter` dos 50, só o controlador, sem o `stepFixed`; 300 amostras depois de 60 de aquecimento; 50 pessoas andando em círculos, mundo `KIT_WORLD`): mediana **0,107 / 0,106 / 0,109 ms** (3 levas), p90 0,138–0,164, **p99 0,27–0,30**, máximo 0,31–0,39. Meta ≤ 0,5 ms: **cumprida na mediana e no p99**. A medição da demonstração (a) do `extras.test.ts` (mesmo mundo com degraus, rampa, caixa e outros 3 controladores) deu mediana 0,133, p90 0,166, **p99 0,547, máximo 0,729**: ali o p99 passa de 0,5 ms (picos isolados; o teste novo trava na mediana). Um controlador: 0,003 ms.
+
+**Decisão de §11 da arquitetura (corpo do personagem):** o `CharacterVirtual` continua sem corpo interno (`mInnerBodyShape`): destroço o atravessa e não gera linha de contato; quem pretende ferir o jogador usa `hurt`/`pushCharacter` do próprio sistema. Um corpo interno cobraria um corpo cinemático por jogador na camada `character` e não faria o personagem ser empurrado (ele empurraria o destroço de volta). Fica para quando o dano por contato for decidido.
+
+**Limites conhecidos (não escondidos)**
+- A cápsula tem a altura de pé: agachar não a encolhe (precisa de `setShape` de personagem no contrato; não pedido na T4.1).
+- Com o jogador derrubado, agarrado, em salto de muro ou `busy`, o `update` do jogador sai antes do movimento e o controlador não anda (nem cai) nesse passo.
+- O host chama `player.update(h, input)` no passo fixo (`beforeStep` da fase `actors`), não com o `dt` do quadro.
+
+**Gates**: `game-physics` 22 testes; `game-physics-jolt` 100 passam, 2 pulados, 26 arquivos (1 pulado); `game-player` 115 (13 arquivos); `tsc --noEmit` dos três limpo; `eslint src tests` dos três limpo; `kit-audit --check` 0 novos. `pnpm typecheck` da raiz para em `apps/desktop` (falta o `@adatechnology/serve-room-tool` buildado; não é desta mudança).
+
+## T4.2 — Segurar, soltar, arremessar: dinâmico ↔ cinemático (2026-11-25)
+
+2026-11-25, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz).
+
+**O que já existia e foi reaproveitado:** `setMotion` (dinâmico ↔ cinemático, devolve a massa do kit ao soltar), `moveKinematic`, `setVelocity`, `sphereCastAll` com filtro de camada, `continuous` na criação do corpo, e o uso que `game-destruction-three/src/engine-pieces.ts` já faz (peça `held` vira cinemática). A demonstração (b) do `extras.test.ts` já pegava, carregava e arremessava uma lata, mas no campo aberto.
+
+**O buraco que a T4.2 fecha:** um corpo cinemático movido pela mão **atravessa parede fixa** (cinemático não colide com estático). Teste de controle: caixa cinemática levada a x = 4 por uma parede de 10 cm em x = 3 acaba depois da parede (`hold.test.ts`, "without the sweep ... goes through the wall"). E uma peça pequena arremessada rápido passa por parede fina se for discreta: caixa de 6 cm a 25 m/s (21 cm por passo, parede de 10 cm) sem varredura termina depois da parede (teste de controle verde, o que prova que o teste pega).
+
+**O que mudou**
+- `game-physics/src/hold.ts`: `grabBody(world, id, { radius, skin? })` devolve `Hold` (`moveTo(posição, rotação, h)`, `release(linear, angular?)`, `held`). Pegar zera a velocidade e põe cinemático; `moveTo` varre uma esfera (a menor meia-medida do corpo menos a folga) do ponto atual até a pose da mão contra a camada `static` e para `skin` (1 cm) antes do primeiro corpo fixo, devolvendo `false` quando algo fixo estava no caminho; soltar põe dinâmico (com a massa do kit), liga a varredura (`setContinuous`) e dá a velocidade (zero = largar). Soltar de novo não faz nada. Só usa o contrato (`SeamWorld`); nada do Jolt.
+- Contrato: `setContinuous(id, boolean)`; adaptador: `SetMotionQuality` (`LinearCast` / `Discrete`).
+- O raio da varredura é a menor meia-medida, não a esfera que envolve o corpo: uma caixa deitada no chão tem o centro mais baixo que o raio que a envolve e contaria como presa no chão (teste "a hand sliding along the floor").
+
+**Testes** (`game-physics-jolt/tests/hold.test.ts`, 8, todos verdes): pegar do chão e segurar na mão por 1 s sem cair (pose final 0,5 / 1,2 / 0 a 1 cm, `moveTo` devolve `true`); levada a uma parede por uma mão que está dentro dela, para a menos de 5 cm antes da face com folga (nunca além de x = 2,851) e `moveTo` devolve `false`; controle sem varredura atravessa; arremesso de uma caixa de 20 cm a 15 m/s contra parede de 10 cm a 1,5 m fica deste lado (x < 2,95 e > 2,65); peça de 6 cm a 25 m/s não faz túnel; controle da mesma peça com chamadas cruas faz túnel; largar cai com a massa dela, assenta (y = 0,1) e dorme; a mão deslizando rente ao chão não é parada pelo chão.
+
+**Gates**: `game-physics` 22 testes; `game-physics-jolt` 108 passam, 2 pulados (27 arquivos, 1 pulado); `game-player` 115; `tsc --noEmit` dos três e de `game-destruction-three` limpos; `eslint src tests` dos três limpo; `kit-audit --check` 0 novos.
+
+**Limites:** `engine-pieces.ts` (peça na mão do jogo) ainda usa `setMotion` + `moveKinematic` sem a varredura: ligar `grabBody` lá muda o que a mão faz com a peça no jogo inteiro e fica como passo próprio (o dono decide; não é parte da T4.2, cujo aceite é o teste de pegar e arremessar sem atravessar parede). O soltar liga `continuous` e não o desliga depois (custa só enquanto a peça anda rápido).
+
+## T4.3 — B2 em produção: granada como desenhada e cápsulas com rolamento (2026-11-26)
+
+2026-11-26, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz, 32 iterações de velocidade), chão igual ao da produção (`engine-pieces.ts` GROUND: atrito 0,7/0,6, restituição 0, C_rr 0,015).
+
+**O que já existia e foi reaproveitado:** `Rolling` e `BodyDesc.rolling` do contrato (T3.5), o `rolling` do adaptador, o desenho da M67 (`models/explosives.ts`, agora com as medidas em `M67_PARTS`, lidas pelo desenho e pelo colisor), o `projectileModel` (modelo centrado na caixa), o `buildCasing` (cilindro ao longo de x) e o `createParticles` (por onde todas as cápsulas dos modelos da galeria passam). A demonstração (b) do `extras.test.ts` (gate 0, 1/60, chão padrão) fica como está e passa.
+
+**O que mudou:** `game-weapons-three/src/engine-loose.ts` (costura: `explosiveCollider`, `casingCollider`, `spawnLoose`, `syncLoose`, `dropLoose`); `createParticles(..., physics?)` e `ParticleOptions.collider`: com mundo, a cápsula é corpo do motor (pose, repouso e `onBounce` vêm dele); sem mundo, o salto próprio de antes (os 58 arquivos de teste do pacote seguem verdes). Opção `physics` em `createWeaponFx` e no viewmodel. Dependência nova: `game-physics` (tipos) e devDependency `game-physics-jolt`. Não mexi em `box-fx` (arquétipos genéricos) nem na sala de teste.
+
+**O que a medição mostrou (margem fina, confirmada):** o arremesso do gate 0 (11 m/s, subindo 4, de 1,5 m) com `KIT_WORLD` e chão de produção, só com C_rr 0,015, repousa a **5,51 s** (reprova o limite de 5 s); em 18 arremessos variados (10/11/12 m/s, subida 3/4/5, giro 0/6) a mediana é 5,30 s e **11 de 18 passam de 5 s** (amortecimento 0,05, o das peças do kit: 12 de 18). O resultado de cada arremesso é caótico (a mesma cena dá de 2,7 a 5,9 s conforme a origem do corpo, o passo e o chão), então um arremesso só não prova nada. **Decisão:** a granada ganha `rolling.damping = 1` (campo que já existe no contrato; a espoleta e a alavanca saem do corpo, ela não é bola lisa), no mesmo patamar de superfícies moles do `friction.ts`. Varredura de amortecimento (18 arremessos, chão de produção): 0 → 11 acima de 5 s; 0,05 → 12; 0,3 → 4; 1 → **0** (máximo 4,83 s); 2 → 0 (máximo 4,44 s). O C_rr segue 0,015 como o aceite pede; **o 1 é escolha minha para fechar a margem, não vem do aceite — o dono pode trocar** (`GRENADE_ROLLING_DAMPING`).
+
+| Medida (`tests/engine-loose.test.ts`, 8 testes) | Resultado | Limite |
+|---|---|---|
+| granada no chão aberto (cena do gate) | repouso 4,08 s; 5,12 m do pouso (16,66 m do arremesso) | ≤ 5 s e ≤ 8 m do pouso |
+| granada contra a parede a 8 m (cena do gate) | repouso 2,23 s; 7,88 m do arremesso | ≤ 5 s e ≤ 8 m |
+| varredura de 18 arremessos | repouso 2,88 a **4,83 s**; no máximo 6,16 m do pouso | todos ≤ 5 s, ≤ 8 m |
+| 200 cápsulas de 9 mm (uma por 2 passos, `KIT_WORLD`) | **200/200** dormindo 5 s depois da última; **0** abaixo do chão | ≥ 95% e 0 |
+| cápsula pelo `createParticles` com mundo (chão que quica 0,6) | quica (`onBounce`), repousa a < 2 cm do chão, parada no fim; sai do mundo com a partícula | — |
+| colisor igual ao desenho | esfera no mesmo lugar do modelo centrado; base do colisor = base do modelo (6 casas) | — |
+
+**Margens:** granada 4,83 s de 5 (0,17 s) no pior da varredura; contra a parede 7,88 m de 8 (0,12 m). Medir de novo em toda fase que mexa em rolamento ou sono (spec §risco).
+
+**Gates:** `game-weapons-three` 58 arquivos, 2084 testes passam (as dependências `game-items-three`, `game-test-room` e outras foram buildadas antes: faltava o `dist` no worktree); `extras.test.ts` 4 passam; `tsc --noEmit` do pacote limpo; `eslint` (raiz) em `src` e no teste novo limpo; `kit-audit --check` 0 novos.
+
+**Limites (não escondidos):** (1) a sala de teste (`game-test-room`) ainda lança a granada com a balística própria: a costura existe e está exportada, mas ligar o arremesso da sala a ela muda o jogo inteiro e não era da task (aceite: os testes pedidos). (2) Cápsulas dos arquétipos genéricos (`box-fx`) e carregadores continuam no salto próprio. (3) Com mundo, o chão é o do mundo do host: `groundAt` não é consultado para a cápsula.
+
+### Sem amortecimento, decisão do dono (2026-11-26)
+
+O dono tirou `GRENADE_ROLLING_DAMPING = 1` (20 vezes o das outras peças, e mascarava o C_rr 0,015). Medido de novo, mesma máquina, `KIT_WORLD`, chão de produção, granada só com C_rr 0,015, arremessos de 11 m/s subindo 4 m/s de 1,5 m, e a varredura de 10-12 m/s: o teste da própria T4.3 reprova (open floor 5,51 s; varredura até 5,74 s).
+
+**Sono do Jolt ou parar de andar?** Rodei cada arremesso duas vezes, com a mesma semente: uma com `sleepAfter` 0,5 s (o do kit) e outra sem nunca dormir, lendo velocidade linear e angular do corpo a cada passo (12 sementes: 101 a 112, arremessos novos, quaternião inicial por semente).
+
+| Semente | toca o chão | dorme (kit) | para de verdade (v < 2 cm/s e ω < 0,5 rad/s), sem dormir |
+|---|---|---|---|
+| 101 | 1,28 s | 5,13 s | 12,71 s |
+| 105 | 0,89 s | 3,92 s | 13,68 s |
+| 108 | 1,07 s | 6,17 s | 13,64 s |
+| 111 | 1,26 s | 6,22 s | 12,71 s |
+| 12 sementes | 0,88 a 1,28 s | 3,92 a 6,22 s | 12,48 a 13,99 s |
+
+O corpo **não** "parou e o Jolt demorou": ele se mexe de verdade (rolamento e balanço sobre a espoleta, v 0,09 e ω 3 rad/s aos 5 s) por 12 a 14 s; o Jolt o põe para dormir antes, quando os pontos de teste de sono andam menos que o limite numa janela de 0,5 s (`sleepSpeed` 0,08). O tempo de repouso é, então, o tempo de **perder o giro residual**, e o giro é o da alavanca e da espoleta: com 24 arremessos por variante (sementes 200 a 223, `restAt`):
+
+| Colisor | mediana | mín | máx | acima de 5 s |
+|---|---|---|---|---|
+| completo (corpo, espoleta, alavanca), como desenhado | 5,42 s | 4,81 | 6,30 | 22 de 24 |
+| corpo e espoleta | 6,83 s | 6,04 | 7,91 | 24 de 24 |
+| só a esfera | 12,84 s | 11,60 | 13,52 | 24 de 24 |
+| completo, restituição 0,1 | 5,41 s | 3,05 | 6,23 | 21 de 24 |
+| completo, atrito 0,9/0,8 | 5,22 s | 3,52 | 5,94 | 17 de 24 |
+
+Leitura: a esfera lisa com C_rr 0,015 leva 12,8 s (Coulomb: 0,015 g = 0,15 m/s² de freio); a espoleta e a alavanca já **ajudam** (cortam para 5,4 s) ao travar o rolamento. Não achei defeito no colisor (a esfera está onde o modelo desenha), no material nem no sono: o tempo vem do próprio C_rr 0,015 contra uma granada que chega ao chão girando. Tentativas: (1) variantes de colisor e de material acima; (2) separar sono de parada física. Nenhuma fecha 5 s sem amortecimento artificial, sem afrouxar o limite ou sem mudar o `sleepSpeed` do mundo (que é de todo o kit).
+
+**Reaberta.** A T4.3 volta a 🔄 no `tasks.md`. **Saiu do PR #518:** `explosiveCollider` (colisor da granada), o amortecimento, o teste de aceite da granada (cena aberta, varredura de 18, parede) e os testes do colisor; os textos de README e skills foram ajustados. **Ficou:** `casingCollider`, `spawnLoose`/`syncLoose`/`dropLoose`, `createParticles` com mundo, 200/200 cápsulas dormindo e `M67_PARTS` (o desenho segue lendo as medidas). A decisão que falta ao dono: aceitar que a granada só com C_rr 0,015 repousa em torno de 5,4 s (e mudar o limite), ou outro C_rr/colisor para a granada, ou o `sleepSpeed` do kit.
+
+## T4.4 — Juntas dos interativos (2026-11-26)
+
+2026-11-26, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz), o `update` do mundo a 60 Hz.
+
+**O que já existia e foi reaproveitado:** o que os interativos já fazem (`game-interactables`: `PartSpec` com `motion` `hinge`/`slide`, `bounds`, `pivot`, `ry`, `speed`; `setPart`, `partT`, `act`, `load`, `SoftSpec` e `push`; `game-interactables-three` só desenha o `t` e o `sway` que o mundo reporta) e, no contrato, a junta `hinge` com limite e atrito, a `slider` (T2.2), a `swingTwist`, `breakImpulse` com `brokenJoints`, `jointAngles`, `createGroup`, `ignorePair`, `setPose`/`setVelocity`/`wake`. Nenhuma junta nova no contrato e nada do Jolt fora de `game-physics-jolt`.
+
+**O que mudou (`game-interactables`)**
+- Porta de entrada: `WorldOptions.partPhysics` (`PartPhysics`, `PartDriver`, `SoftDriver` em `part-physics.ts`, duck-typed: o pacote não ganha dependência de motor em tempo de execução, só os tipos de `game-physics`). Em `world.ts`: a parte com `driver` recebe `aim` quando o alvo muda, `t` é lido do driver a cada `update`, ao chegar o alvo vira o `t` (empurrão deixa a porta onde parou e o próximo `act` alterna dali), `setPart(..., instant)` e `load` dão `snap`, o evento novo `broke` sai uma vez, `remove` descarta os drivers; no volume mole o `sway` vem do driver e `push` vira impulso nas correntes. **Sem o `partPhysics`, ou com `attach` devolvendo `undefined` (parte sem `bounds`), o caminho é o de antes, linha a linha.**
+- Implementação sobre o contrato: `engine-parts.ts` (`createEnginePartPhysics`, `leafOf`), `engine-leaf.ts` (folha dinâmica na `hinge` limitada a `[min(0, ângulo), max(0, ângulo)]` ou na `slider` limitada a `[min(0, distância), max(0, distância)]`, movida por velocidade proporcional ao erro até `Motion.speed`, livre depois de chegar, com atrito que a segura), `engine-chain.ts` (`buildChain`: correntes de caixas por juntas swing-twist, `chainPoints` para desenhar o cabo) e `engine-soft.ts` (cortina: uma corrente por 12 cm de largura pendurada num trilho). Porta que quebra: `EnginePartOptions.breakImpulse`; a folha vira corpo solto do motor (`leafOf` devolve o corpo para o host desenhar).
+
+**Testes novos** (`tests/engine-parts.test.ts`, 8, todos verdes)
+
+| Caso | Resultado |
+|---|---|
+| porta em dobradiça, objeto girado 0,5 rad | `t` 0,562 / 0,938 / 0,995 / 0,996 a 0,25 / 0,5 / 1 / 2 s; volta a < 0,03 em 2 s; evento `part` na chegada |
+| gaveta em corrediça, objeto girado 90° | avança 0,38 a 0,42 m no eixo do mundo, sem desvio lateral (< 1 cm); `t` > 0,97; volta |
+| empurrão numa porta deixada em paz (impulso 6 e depois 400 N s na borda) | abre (`t` > 0,05), o limite segura (`t` < 1,06 mesmo com 400 N s); `act` fecha dali |
+| porta que quebra (`breakImpulse` 5, impulso 300) | 1 evento `broke`; a folha vai a > 0,5 m; `t` fica congelado |
+| parte sem `bounds` / mundo sem motor | `t` anda a 2,5/s como antes (0,5 em 0,2 s) |
+| `setPart(..., instant)` | porta em 0,6 de `t`, parada (0,55 a 0,65 depois de 1 s) |
+| cortina empurrada a 1,5 m/s | pico 0,171 rad (em 0,52 s), 0,04 rad depois de 12 s (o teste exige < pico/3 em 8 s) |
+| cabo de 12 elos, 3 m, preso nas duas pontas | cede > 10 cm, as pontas ficam a < 5 cm das âncoras, nada abaixo do chão |
+
+**Custo:** um quadro de 60 Hz com uma porta e uma cortina (8 correntes de 8 elos) — dois passos fixos mais o `update` — **0,034 ms**.
+
+**Gates:** `game-interactables` 10 arquivos, 162 testes passam (os 154 de antes sem mudança); `game-interactables-three` 15 arquivos, 541 passam; `tsc --noEmit` de `game-interactables`, `-three` e `game-floorplan-three` limpo; `eslint` (raiz) sem erro (o aviso de `max-lines` de `world.ts`, 1811 linhas, já existia: eram 1749); `kit-audit --check` 0 novos.
+
+**Limites (não escondidos):** (1) a ligação do motor no jogo/sala (criar o `createEnginePartPhysics` com o mundo do host e passar a `createWorld`, e desenhar a folha solta depois de quebrar) é do host; `game-floorplan-three` e a sala não passam `partPhysics` ainda, então nada muda no jogo até alguém ligar. (2) A cortina não desliza pelo trilho: o `part` da cortina continua `t` do mundo, as correntes ficam penduradas no trilho fixo. (3) Cabo: `buildChain`/`chainPoints` estão exportados e testados, mas o `wires` do `ObjectSpec` (desenho estático) não é ligado ao motor. (4) A folha não vê o corpo do móvel se o host não passar `frameOf`: a folha do móvel fechado só não briga com o resto se o host cuidar da sobreposição (o teste usa folhas que não se tocam). (5) Folha adormecida não acorda por `addImpulse`: o jogo acorda por contato; o teste chama `wake` antes do impulso.
+
+## T4.5 — README e skills dos pacotes da fase 4 (2026-11-26)
+
+**Pacotes tocados nas T4.1–T4.4 e o que ganhou texto:** `game-physics` (README + `kit-base/references/game-physics.md`: personagem, `grabBody`, junta `slider`), `game-physics-jolt` (README + `kit-base/references/game-physics-jolt.md`: `CharacterVirtual`, `setContinuous`, B2 com os números), `game-player` (README + `kit-pessoas-bichos/references/game-player.md`: `createPhysicsController`), `game-weapons-three` (README + `kit-armas/references/game-weapons-three.md`: `physics`, `explosiveCollider`, `casingCollider`, limites) e `game-interactables` (README + `kit-objetos-itens/references/game-interactables.md`: `partPhysics`, `createEnginePartPhysics`, `broke`, limites). `game-interactables-three` não mudou.
+
+**Gates:** `node tools/kit-audit/audit.mjs --check` sai 0 (0 novos fora do SDK dono, 9 pendentes conhecidos, 19 permitidos; relógio próprio 0 novos; `mustDrain` 0 novas); `tests/docs.test.ts` de `game-weapons-three` 2 passam; `game-player` 115 passam. Mudança só de texto (nenhum código).
+
+## Revisão do PR #518 (2026-11-26)
+
+Cinco achados da revisão, um commit por item, cada um com teste que falhava antes (vermelho visto) e passa depois.
+
+| # | Causa | Correção | Teste novo |
+|---|---|---|---|
+| 1 (§15) | `updateDriven` lia junta/pose de toda parte todo quadro, parada ou não; `swing` lia todos os elos de toda fita com `forEach`, spread e `Float64Array` por chamada | `engine-leaf.ts`: com o driver assentado e o corpo dormindo, `read` devolve o `t` guardado (`restedT`, invalidado por `aim`/`snap` ou ao acordar); scratch fixo no módulo, sem vetores em `move`/`read`. `engine-soft.ts` `swing`: devolve o balanço anterior quando o último elo de toda fita dorme, senão lê só o último elo (`chainEnd`); `engine-chain.ts` `chainPoints` sem `forEach` nem alocação | `engine-parts.test.ts` "does not read a joint or a pose..." (espia `jointAngles` e `readPose` do mundo: 0 chamadas com tudo dormindo; acordada por empurrão, volta a ler) |
+| 2 (§8) | `buildChain` criava um grupo por corrente e o adaptador o guardava com `AddRef` até o `dispose` do mundo; o contrato não tinha como soltar | Contrato `releaseGroup(id)` (`game-physics/src/contract.ts`); adaptador libera a tabela e reaproveita o índice (`joints.ts`, `world.ts`, `world-host.ts`); `disposeChain` (`engine-chain.ts`) remove juntas, elos e solta o grupo, usado por `attachStrips.dispose` | `game-physics-jolt/tests/heap.test.ts` (ciclo C9 de grupo com corpos, índice reaproveitado, `memoryInUse` igual em 20 ciclos); `engine-parts.test.ts` cortina montada e desmontada 10 vezes devolve `memoryInUse` (era +464 B por ciclo) e `bodyCount` |
+| 3 | `memoryInUse() <= before` com o corpo ainda vivo não media nada | `engine-loose.test.ts`: `bodyCount` igual ao do chão depois de `particles.dispose()`, e também depois de vida esgotada e de limite do host (os três testes reprovam se `dropLoose` for esvaziado); `engine-parts.test.ts`: corpos e juntas (`JoltWorld.joints.size`) a zero depois de `remove` e de `partPhysics.dispose()`. **Nenhum vazamento real apareceu** | idem |
+| 4 | `brokenJoints.includes` lê um evento limpo a cada `run` do laço: com `World.update` a 30 Hz e o laço a 60 a quebra passava batida e a porta ficava desenhada fechada | Contrato `jointExists(id)` (falso para sempre depois de quebrar ou remover); o driver da folha trata junta ausente como quebrada (`engine-leaf.ts`) | `engine-parts.test.ts` "found broken when the world updates every fourth step" (sem o evento de `broke`: 0 de 1 antes); `game-physics-jolt/tests/joint-exists.test.ts` |
+| 5 | O fechamento do driver removido por `remove()` ficava em `disposers`, e `partPhysics.dispose()` o desmontava de novo (soltando um grupo que já podia ser de outra cadeia); `syncLoose` devolvia um objeto por partícula por quadro | `engine-parts.ts`: o driver se retira de `disposers` ao desmontar; `dispose` do driver da folha e da fita idempotente; `engine-loose.ts`: leitura única reaproveitada | `engine-parts.test.ts` ("not kept": 0 chamadas de `releaseGroup`/`removeBody`/`removeJoint` no segundo desmonte; antes 8); `engine-loose.test.ts` (uma só leitura em 1440 chamadas, bounce e sono ainda por quadro) |
+
+**Não mexido:** `GRENADE_ROLLING_DAMPING` (decisão do dono). **Limite:** `jointAngles` ainda devolve um objeto por chamada (contrato do adaptador); com a parte dormindo ele não é chamado, e só a parte em movimento paga.
+
+**Gates (pacotes tocados, uma suíte por vez):** `game-physics` 22 testes, `game-physics-jolt` 110 (2 puladas, 1 arquivo pulado como antes), `game-interactables` 169, `game-interactables-three` 541, `game-weapons-three` 2087, `game-player` 115, todos passam; `tsc --noEmit` e `eslint` limpos nos seis (só o aviso `max-lines` de `world.ts`, que já existia). Dependências de `dist` refeitas (`game-physics`, `game-physics-jolt`, `game-interactables`) antes.

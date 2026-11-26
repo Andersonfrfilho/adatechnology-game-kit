@@ -20,9 +20,12 @@ export interface JoltWorldHost {
   readonly joints: Map<number, JointEntry>
   readonly vehicles: Map<number, VehicleEntry>
   readonly ragdolls: Map<number, RagdollEntry>
-  readonly characters: Set<JoltCharacter>
+  readonly characters: Map<number, JoltCharacter>
+  nextCharacter: number
   nextRagdoll: number
-  readonly groups: JoltNS.GroupFilterTable[]
+  readonly groups: Array<JoltNS.GroupFilterTable | undefined>
+  /** Indices of `groups` that were released: the next `createGroup` takes one. */
+  readonly freeGroups: number[]
   nextJoint: number
   nextVehicle: number
   readonly fixedStep: number

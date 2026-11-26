@@ -4,7 +4,7 @@ import type { BodyDesc, BodyId, JointDesc, RagdollDesc, ShapeDesc, VehicleDesc, 
 import { createPhysicsLoop } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
-import { ground, report } from './scenes'
+import { WALKER, ground, report } from './scenes'
 
 /**
  * Gate 0 B4: the worst scene in one world, made as the room makes its world (1/120 s, 20 passes, 8192 bodies): a city block of 2000 fixed colliders, the
@@ -191,6 +191,21 @@ describe('C9: every Jolt object the adapter makes is destroyed (heap in cycles)'
     world.dispose()
   })
 
+  it('collision group create and release, with bodies in it, and the index is reused', async () => {
+    const { world } = await made()
+    let firstId = -1
+    expectFlat('group', world, () => {
+      const group = world.createGroup(3, [[0, 1], [1, 2]])
+      if (firstId < 0) firstId = group
+      expect(group).toBe(firstId)
+      const bodies = [0, 1, 2].map((sub) => world.createBody({ shape: { kind: 'box', half: [0.1, 0.1, 0.1] }, motion: 'dynamic', mass: 1, position: [10 + sub, 3, 0], group: { id: group, sub }, user: 6 }))
+      world.step(1 / 30)
+      for (const body of bodies) world.removeBody(body)
+      world.releaseGroup(group)
+    })
+    world.dispose()
+  })
+
   it('sensor create and remove', async () => {
     const { world } = await made()
     expectFlat('sensor', world, () => {
@@ -221,11 +236,11 @@ describe('C9: every Jolt object the adapter makes is destroyed (heap in cycles)'
   it('character create and dispose', async () => {
     const { world } = await made()
     expectFlat('character', world, () => {
-      const character = world.createCharacter([0, 0, 0], 0.3, 0.6, 75, 400)
-      character.update(1 / 60, 1, 0)
+      const character = world.createCharacter(WALKER)
+      world.moveCharacter(character, 1, 0, 1 / 60)
       world.step(1 / 60)
-      character.dispose()
-      character.dispose()
+      world.removeCharacter(character)
+      world.removeCharacter(character)
     })
     world.dispose()
   })
@@ -262,7 +277,7 @@ describe('C9: every Jolt object the adapter makes is destroyed (heap in cycles)'
       ground(world, 10)
       world.createRagdoll(ragdollDesc([0, 0, 0]))
       world.createVehicle(vehicleDesc)
-      world.createCharacter([4, 0, 0], 0.3, 0.6, 75, 400)
+      world.createCharacter({ ...WALKER, position: [4, 0, 0] })
       world.step(1 / 30)
       world.dispose()
     })

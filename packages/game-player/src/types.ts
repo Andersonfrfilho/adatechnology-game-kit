@@ -101,6 +101,19 @@ export interface PlayerCrowd {
   damage(i: number, hit: { region: number; amount: number; distance: number; cut: number }): void
 }
 
+/**
+ * A body in a physics world that walks the player (the engine's character controller, `physics-controller.ts`): steps up, climbs slopes, pushes props and
+ * falls on its own. When the world has one, the player's x, y and z are the controller's feet and `blocked` is not asked.
+ */
+export interface PlayerController {
+  /** Walks one step `dt` at the wanted velocity (m/s, world x and z). The host calls `player.update` with the loop's fixed step. */
+  move(velocityX: number, velocityZ: number, dt: number): void
+  /** The feet (x, y, z) into `out`. */
+  read(out: Float64Array): void
+  /** The feet are here now (a vault ends, a game loads, a respawn). */
+  teleport(x: number, y: number, z: number): void
+}
+
 /** What the player asks of the world. Everything is optional: the default is an open, dry field. */
 export interface PlayerWorld {
   /** Occupancy code of the cell at (x, z): -1 outside, 0 free, 1 solid, 2 low wall that can be vaulted, 3 open door, others solid. */
@@ -117,6 +130,8 @@ export interface PlayerWorld {
   canVault?(): boolean
   /** After the move (stairs change the floor and the height). */
   afterMove?(player: PlayerState): void
+  /** A character controller of the host's physics world: it walks the player in place of `blocked`. Absent: the player walks the grid as always. */
+  controller?: PlayerController
   crowd?: PlayerCrowd
 }
 

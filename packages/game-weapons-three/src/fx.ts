@@ -68,6 +68,7 @@ const createHandFx = (options: WeaponFxOptions, layers: FxLayers, hand: ToolHand
     ...(options.condition ? { condition: options.condition } : {}),
     ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
     ...(options.raycast ? { raycast: options.raycast } : {}),
+    ...(options.physics ? { physics: options.physics } : {}),
     ...(options.contact ? { contact: options.contact } : {}),
     ...(options.bodyHold ? { bodyHold: options.bodyHold } : {}),
     ...(options.firstPerson ? { firstPerson: options.firstPerson } : {}),

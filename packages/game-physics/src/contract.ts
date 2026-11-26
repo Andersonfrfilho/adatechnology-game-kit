@@ -123,6 +123,7 @@ export interface Rolling {
 export type BodyId = number & { readonly __body: unique symbol }
 export type JointId = number & { readonly __joint: unique symbol }
 export type VehicleId = number & { readonly __vehicle: unique symbol }
+export type CharacterId = number & { readonly __character: unique symbol }
 
 export type JointDesc =
   | { readonly kind: 'fixed'; readonly a: BodyId; readonly b: BodyId; readonly point: Vec3; readonly breakImpulse?: number }
@@ -205,6 +206,26 @@ export interface VehicleInput {
   readonly right: number
   readonly brake: number
   readonly handBrake: number
+}
+
+/**
+ * A walking capsule: not a body. It moves by sweeps against the world, steps up what is `stepHeight` or lower, climbs slopes up to `maxSlopeDegrees`, sticks
+ * to the floor going down, falls under gravity and pushes dynamic bodies with at most `strength` N. Moved by `moveCharacter` once per fixed step, in the loop's `actors` phase.
+ */
+export interface CharacterDesc {
+  /** Where the feet are. */
+  readonly position: Vec3
+  readonly radius: number
+  /** Half the straight part of the capsule (its height is `2 * (halfHeight + radius)`). */
+  readonly halfHeight: number
+  /** What it weighs (kg): what a body that pushes back feels. */
+  readonly mass: number
+  /** Most force (N) it pushes a dynamic body with: 400 N moves a 30 kg crate over wood, not a wardrobe. */
+  readonly strength: number
+  /** Default 0.4 m. */
+  readonly stepHeight?: number
+  /** Default 45 degrees: steeper ground it slides down. */
+  readonly maxSlopeDegrees?: number
 }
 
 export interface RayHit {
@@ -325,6 +346,8 @@ export interface PhysicsWorld {
   setRolling(id: BodyId, rolling: Rolling | undefined): void
   /** Dynamic <-> kinematic (a piece picked up and put down). */
   setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void
+  /** Swept collision from now on (`BodyDesc.continuous`) or discrete again: a thrown piece is fast and small. */
+  setContinuous(id: BodyId, continuous: boolean): void
   /** The points (world, x y z each) where the body touched anything in the last step, into `out`; returns how many points (at most `out.length / 3`). */
   contactPoints(id: BodyId, out: Float32Array): number
   /** Whether the body touched anything in the last step. */
@@ -335,6 +358,8 @@ export interface PhysicsWorld {
   removeJoint(id: JointId): void
   /** Angles of a joint now (radians), for checking limits: `hinge` for hinge, fixed and ragdoll hinge joints; `swing` and `twist` for swing-twist; 0 for the rest. */
   jointAngles(id: JointId): { swing: number; twist: number; hinge: number }
+  /** Whether the joint is still in the world: false once it broke (for good, unlike `brokenJoints`, which holds a frame) or was removed. */
+  jointExists(id: JointId): boolean
   /** Joints whose `breakImpulse` was passed in the last step: removed by the adapter, reported once. */
   readonly brokenJoints: readonly JointId[]
   /** Its bodies (in part order) and its joints (one per part but the root, in part order), for reading poses and `jointAngles`. */
@@ -342,10 +367,27 @@ export interface PhysicsWorld {
   removeRagdoll(id: RagdollId): void
   /** Disable contact between sub-ids of a group. Returns the group id. */
   createGroup(subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number
+  /** Lets go of a group made by `createGroup` once none of its bodies is left (remove them first): the id may come back from the next `createGroup`. */
+  releaseGroup(id: number): void
   createVehicle(desc: VehicleDesc): VehicleId
   driveVehicle(id: VehicleId, input: VehicleInput): void
   vehicleBody(id: VehicleId): BodyId
   removeVehicle(id: VehicleId): void
+  createCharacter(desc: CharacterDesc): CharacterId
+  /**
+   * Walks it for one fixed step `dt` at the wanted horizontal velocity (m/s, world x and z; 0 stands still) plus what `pushCharacter` gave it. The caller
+   * calls it before `stepFixed` (a `beforeStep` of the loop), never with the frame's `dt`.
+   */
+  moveCharacter(id: CharacterId, velocityX: number, velocityZ: number, dt: number): void
+  /** Shoves it: `impulse` (N s, horizontal part) is a change of velocity of impulse / mass that fades in about a quarter of a second and cannot go through a wall. */
+  pushCharacter(id: CharacterId, impulse: Vec3): void
+  /** Feet position into `out` at `offset` (x, y, z). */
+  readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void
+  /** Puts the feet here at once (a respawn, a loaded game, the end of a vault), with no sweep and no speed carried over. */
+  teleportCharacter(id: CharacterId, position: Vec3): void
+  /** Whether the feet stand on something. */
+  characterSupported(id: CharacterId): boolean
+  removeCharacter(id: CharacterId): void
   /** How many of the vehicle's wheels touch the ground now (a car with none is airborne: its sleep rule reads this). */
   wheelContacts(id: VehicleId): number
   /** Every hit along the ray, nearest first, into `out` (cleared); returns the count. */

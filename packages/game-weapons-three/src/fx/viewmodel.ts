@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import { createToolClipPlayer, FIRST_PERSON_LAYER, toolAnimationStep, warnOnce } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { AnimationPose, EffectPose, EffectSink, HandTargets, HostEvent, HostTool, HostToolAttachment, MuzzlePose, ToolAnimationStep, ToolClipPlayer, ToolHand, HandPose } from '@adatechnology/game-contracts'
+import type { SeamWorld } from '@adatechnology/game-physics'
 import { createRng, muzzleEnergy } from '@adatechnology/game-weapons'
 import type { Arsenal, CaliberDef, FittedAttachment, MountKind, WeaponDef } from '@adatechnology/game-weapons'
 import { ease } from '../animation/clip-builder'
@@ -91,6 +92,8 @@ export interface ViewmodelOptions {
   attachmentModels?: AttachmentModelRegistry
   /** How far a laser beam goes (metres) from a point along a direction, or null when it hits nothing. */
   raycast?: LaserRaycast
+  /** The host's physics world: the ejected casings are bodies of it (see `WeaponFxOptions.physics`). */
+  physics?: SeamWorld
   /** The most casings and magazines alive at once, read at each spawn (the host's one budget); without it the viewmodel keeps a cap of its own. */
   particleLimit?: () => number | undefined
   /** The host's effects (`host.effects`): the muzzle flash, the smoke, the backblast and the flame jet are recipes it plays. Without it the viewmodel makes a world of its own for them. */
@@ -177,7 +180,7 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
   const random = createRng(options.seed ?? 1)
   const layers = options.layers ?? createLayers()
   const distance = (): number => options.soundDistance?.() ?? 0
-  const particles = createParticles(THREE, scene, groundAt, options.particleLimit, createSurfaceRaycast(THREE, scene))
+  const particles = createParticles(THREE, scene, groundAt, options.particleLimit, createSurfaceRaycast(THREE, scene), options.physics)
   // the casings and the magazines leave the gun as drawn through its lens, into the world
   const spawnParticle = particles.spawn.bind(particles)
   particles.spawn = (object, velocity, particleOptions) => {

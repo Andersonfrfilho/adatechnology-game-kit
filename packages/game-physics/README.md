@@ -66,6 +66,13 @@ Phase orders: `crowd` and `actors` run before each fixed step; `contacts` and `r
 
 The types are the whole contract; read `src/index.ts` for each field's meaning and units.
 
+## Character controller, hold and throw (spec 008, phase 4)
+
+- `createCharacter(desc)`, `moveCharacter(id, vx, vz, dt)`, `pushCharacter`, `readCharacter`, `teleportCharacter`, `removeCharacter` are on `PhysicsWorld`: a capsule that
+  steps up (`CharacterDesc.stepHeight`, 0.4 m), climbs a slope up to `maxSlopeDegrees`, pushes what it can (`strength`) and is pushed. Call `moveCharacter` in a `beforeStep` with the fixed `h`.
+- `grabBody(world, id, { radius, skin? })` returns a `Hold`: `moveTo(position, rotation, h)` carries a body (kinematic) swept against the fixed bodies so a hand never takes it
+  through a wall; `release(linear, angular?)` hands it back to the engine, swept (`setContinuous`), so a fast small throw does not tunnel. Uses `SeamWorld` only.
+- `JointDesc` has the `slider` (a drawer, a rail) next to `fixed`, `hinge` and `swingTwist`; `breakImpulse` breaks any of them and `brokenJoints` reports it once.
 ## Português
 
 Contrato de corpos rígidos do kit: formas, juntas, ragdolls, veículos, materiais, contatos, sono, raycast e o laço de passo fixo.

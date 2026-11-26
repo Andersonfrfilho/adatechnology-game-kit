@@ -4,6 +4,8 @@ import { DEFAULT_MATERIAL, LAYERS, LAYER_PAIRS } from '@adatechnology/game-physi
 import type {
   BodyDesc,
   BodyId,
+  CharacterDesc,
+  CharacterId,
   HeightRegion,
   JointDesc,
   JointId,
@@ -32,7 +34,7 @@ import { Contacts } from './contact-rows'
 import { makeListener } from './contacts'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 import { roll, touch, updateFriction } from './friction'
-import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, removeJoint, removeRagdoll } from './joints'
+import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, releaseGroup, removeJoint, removeRagdoll } from './joints'
 import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { HullSet } from './hull-cache'
 import { makeCentredShape, makeShape } from './shapes'
@@ -62,9 +64,11 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly joints = new Map<number, JointEntry>()
   readonly vehicles = new Map<number, VehicleEntry>()
   readonly ragdolls = new Map<number, RagdollEntry>()
-  readonly characters = new Set<JoltCharacter>()
+  readonly characters = new Map<number, JoltCharacter>()
+  nextCharacter = 1
   nextRagdoll = 1
-  readonly groups: JoltNS.GroupFilterTable[] = []
+  readonly groups: Array<JoltNS.GroupFilterTable | undefined> = []
+  readonly freeGroups: number[] = []
   nextJoint = 1
   nextVehicle = 1
   readonly fixedStep: number
@@ -565,6 +569,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     if (motion === 'dynamic' && e.kitMass) this.putMass(e, e.body.GetShape(), e.kitMass)
   }
 
+  setContinuous(id: BodyId, continuous: boolean): void {
+    this.bi.SetMotionQuality(this.entry(id).id, continuous ? this.J.EMotionQuality_LinearCast : this.J.EMotionQuality_Discrete)
+  }
+
   contactPoints(id: BodyId, out: Float32Array): number {
     let p = this.points.get(id)
     if (!p) {
@@ -644,6 +652,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return createGroup(this, subCount, disabledPairs)
   }
 
+  releaseGroup(id: number): void {
+    releaseGroup(this, id)
+  }
+
   createJoint(desc: JointDesc): JointId {
     return createJoint(this, desc)
   }
@@ -658,6 +670,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
 
   removeJoint(id: JointId): void {
     removeJoint(this, id)
+  }
+
+  jointExists(id: JointId): boolean {
+    return this.joints.has(id)
   }
 
   jointAngles(id: JointId): { swing: number; twist: number; hinge: number } {
@@ -684,8 +700,32 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return wheelContacts(this, id)
   }
 
-  createCharacter(at: Vec3, radius: number, halfHeight: number, mass: number, strength: number): JoltCharacter {
-    return createCharacter(this, at, { radius, halfHeight, mass, strength })
+  createCharacter(desc: CharacterDesc): CharacterId {
+    return createCharacter(this, desc)
+  }
+
+  moveCharacter(id: CharacterId, velocityX: number, velocityZ: number, dt: number): void {
+    this.characters.get(id)?.move(velocityX, velocityZ, dt)
+  }
+
+  pushCharacter(id: CharacterId, impulse: Vec3): void {
+    this.characters.get(id)?.push(impulse[0], impulse[2])
+  }
+
+  readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void {
+    this.characters.get(id)?.read(out, offset)
+  }
+
+  teleportCharacter(id: CharacterId, position: Vec3): void {
+    this.characters.get(id)?.teleport(position[0], position[1], position[2])
+  }
+
+  characterSupported(id: CharacterId): boolean {
+    return this.characters.get(id)?.supported() ?? false
+  }
+
+  removeCharacter(id: CharacterId): void {
+    this.characters.get(id)?.dispose()
   }
 
   // Queries (`queries.ts`) ----------------------------------------------------------------------------------------------------------------
@@ -764,12 +804,12 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.disposed = true
     const J = this.J
     for (const id of [...this.vehicles.keys()]) this.removeVehicle(id as VehicleId)
-    for (const character of [...this.characters]) character.dispose()
+    for (const character of [...this.characters.values()]) character.dispose()
     for (const id of [...this.ragdolls.keys()]) this.removeRagdoll(id as RagdollId)
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
-    for (const g of this.groups) g.Release()
+    for (const g of this.groups) g?.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
     if (this.among.filter) {
       J.destroy(this.among.filter)

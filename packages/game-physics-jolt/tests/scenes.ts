@@ -1,7 +1,10 @@
 import { appendFileSync } from 'node:fs'
 
 import { createRig, describeBody, GUIDE, SEGMENT_TREE } from '@adatechnology/game-characters'
-import type { BodyDesc, BodyId, JointDesc, JointId, PhysicsWorld, Quat, RagdollJoint, RagdollPart, Vec3 } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, CharacterDesc, JointDesc, JointId, PhysicsWorld, Quat, RagdollJoint, RagdollPart, Vec3 } from '@adatechnology/game-physics'
+
+/** A person: 0.3 m radius, 1.8 m tall, 75 kg, pushes with 400 N. */
+export const WALKER: CharacterDesc = { position: [0, 0, 0], radius: 0.3, halfHeight: 0.6, mass: 75, strength: 400 }
 
 /** Measurements go to the file in SPIKE_OUT (one JSON line each), and to the console. */
 export const report = (name: string, value: Record<string, unknown>): void => {

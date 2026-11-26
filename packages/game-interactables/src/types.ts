@@ -12,6 +12,7 @@
  */
 
 import type { CarryHands, Thumbnail } from '@adatechnology/game-contracts'
+import type { PartPhysics } from './part-physics'
 
 export type Vec3 = [number, number, number]
 
@@ -482,6 +483,11 @@ export interface WorldOptions {
    * `blunt` otherwise. Without it the deprecated behaviour is unchanged.
    */
   destruction?: DestructionDelegate
+  /**
+   * A physics engine for the movable parts and soft volumes (`createEnginePartPhysics`): the parts it takes move by joints (limits, friction, a push moves them, an impact
+   * can break them) and `t` is read back from them. Without it, or for a part it declines, `t` steps at `Motion.speed` as before.
+   */
+  partPhysics?: PartPhysics
   /** Called for every event. */
   onEvent?: (event: WorldEvent) => void
   /** Return false to cancel an interaction (locked, needs a tool, tutorial...). */
@@ -492,6 +498,8 @@ export interface WorldOptions {
 
 export type WorldEvent =
   | { type: 'part'; object: string; part: string; t: number; target: number }
+  /** The joint of a part broke (an impact over its limit, with a physics engine): it is a loose body of the engine now, and `t` stays where it was. */
+  | { type: 'broke'; object: string; part: string }
   | { type: 'pickup'; object: string; container: string; slot: number; stack: ItemStack; actor: string }
   | { type: 'device'; object: string; device: string; on: boolean; powered: boolean; channel?: number }
   | { type: 'switch'; object: string; switch: string; on: boolean }

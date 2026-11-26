@@ -12,8 +12,19 @@ export const createGroup = (w: JoltWorldHost, subCount: number, disabledPairs: R
   for (const [a, b] of disabledPairs) table.DisableCollision(a, b)
   // the bodies hold references to the filter; the world keeps one for itself
   table.AddRef()
-  w.groups.push(table)
-  return w.groups.length - 1
+  const free = w.freeGroups.pop()
+  if (free === undefined) return w.groups.push(table) - 1
+  w.groups[free] = table
+  return free
+}
+
+/** The world lets go of the table; it is destroyed once the last body that holds it is gone, and its index is the next one given out. */
+export const releaseGroup = (w: JoltWorldHost, id: number): void => {
+  const table = w.groups[id]
+  if (!table) return
+  table.Release()
+  w.groups[id] = undefined
+  w.freeGroups.push(id)
 }
 
 /** Any unit vector perpendicular to `axis`: the slider's normal axis, which only has to be off the slide. */

@@ -1,5 +1,7 @@
 export { PLAYER_DEFAULTS, createPlayer, deriveVitals, drawWound } from './player'
 export type { Player, PlayerCollider, PlayerOptions } from './player'
+export { PLAYER_MASS_KG, PLAYER_PUSH_STRENGTH_NEWTONS, createPhysicsController } from './physics-controller'
+export type { PhysicsControllerOptions, PhysicsPlayerController, PlayerPhysicsWorld } from './physics-controller'
 export { createRng } from './rng'
 export { FURNITURE_PUSH_DEFAULTS, canPush, createFurniturePush, dragMarkFor, frictionFor, gripSecondsFor, pushAccelerationFor, pushSpeedFor, slipsOnTop } from './furniture-push'
 export type { DragMark, FurniturePush, FurniturePushBlock, FurniturePushLoad, FurniturePushInput, FurniturePushPhase, FurniturePushRules, FurniturePushStep, FurniturePushTarget } from './furniture-push'
