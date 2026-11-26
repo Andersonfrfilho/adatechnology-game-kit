@@ -3,7 +3,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import { AwakeList } from './awake-list'
 import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
-import { squareBoxOf } from './internal'
+import { HINGE_RELEASE, HINGE_SECONDS, squareBoxOf } from './internal'
 import { GROUND_ROLLING_DAMPING, PIECE_ROLLING_DAMPING } from './friction'
 import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
@@ -200,12 +200,6 @@ const MAX_COLLISION_STEPS = 8
 const MIN_ROUND_RADIUS = 0.005
 /** Two pieces closing slower than this (m/s) only stop against each other; faster, they bounce by their restitution. */
 const BOUNCE_MIN_SPEED = 0.1
-/**
- * A piece hung on a hinge (`hinge`: a shelf that lost the side at one end swings on the screw at the other) lets go once it has turned this far (rad) or after
- * `HINGE_SECONDS`: the screw tears out of the board.
- */
-const HINGE_RELEASE = (40 * Math.PI) / 180
-const HINGE_SECONDS = 1.5
 /** Two boxes closing faster than this (m/s) hit each other (`boxImpact`): a fall of 11 cm. Slower, they only rest on or lean against each other. */
 const BOX_IMPACT_SPEED = 1.5
 /** A contact normal at least this level (its share along the ground) puts two pieces apart along the ground only. */
@@ -611,10 +605,9 @@ export class PieceSystem {
 
   /**
    * Hangs a piece on a hinge at `point` (world): that point of it stays where it is while the rest swings down about it, as a shelf that lost the side at one end swings on
-   * the screw at the other and pours what lay on it off its free end. It lets go past `HINGE_RELEASE` or `HINGE_SECONDS`. The kit's own solver only (`physics` swings nothing).
+   * the screw at the other and pours what lay on it off its free end. It lets go past `HINGE_RELEASE` or `HINGE_SECONDS`. On the engine it is a hinge joint to a fixed anchor (`EnginePieces.hang`).
    */
   hinge(body: PieceBody, point: Vec3): void {
-    if (this.engine) return
     const c = this.centerOf(body, this.p)
     const q = body.root.quaternion
     const local = this.ax.set(point[0] - c.x, point[1] - c.y, point[2] - c.z).applyQuaternion(this.dq.copy(q).invert())

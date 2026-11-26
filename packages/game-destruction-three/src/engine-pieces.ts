@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, HeightRegion, JointId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 import { samePatch } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
 
@@ -18,6 +18,7 @@ import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameNumbers, sameSolid } from
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
+import { HINGE_RELEASE } from './internal'
 import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
 
 export type { StaticSolid } from './engine-statics'
@@ -281,6 +282,8 @@ export class EnginePieces {
   private readonly pose = new Float64Array(7)
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
+  /** The pieces hung on a hinge: the fixed anchor at the screw and the joint that holds them to it. */
+  private readonly hung = new Map<PieceBody, { readonly anchor: BodyId; readonly joint: JointId }>()
   private readonly outAxis = new Float64Array(3)
   private readonly wayAxis = new Float64Array(3)
   /** The centre `readBack` reads into (the sweep may move it). */
@@ -328,6 +331,8 @@ export class EnginePieces {
   remove(b: PieceBody, wakeNeighbours = true): void {
     const link = this.links.get(b)
     if (!link) return
+    const held = this.hung.get(b)
+    if (held) this.letGo(b, held)
     this.world.removeBody(link.id)
     // an awake piece shares its island with what rests on it, so only a sleeping one leaves sleepers behind: asleep for the kit now, or asleep when the engine last
     // stepped and woken (a blow, its support looked at again) in this same frame, before the engine could wake what lay on it (CLAUDE.md §12)
@@ -491,6 +496,7 @@ export class EnginePieces {
     this.applyDueGround()
     this.layBlastGround()
     this.makeBodies(each)
+    each((b) => this.hang(b))
     each((b) => this.sync(b, dt, h))
     if (this.schedule) this.layGroundLater(each, dt)
     else this.layGround(each, dt)
@@ -526,7 +532,46 @@ export class EnginePieces {
       this.readActive(awake)
       awake.walk((b) => this.readBack(b, dt, time, this.active))
     } else for (const b of list) this.readBack(b, dt, time, null)
+    this.wearHinges(dt)
     this.knock(time)
+  }
+
+  /** A piece with a hinge asked for (`PieceSystem.hinge`) gets a fixed anchor at the screw and a hinge joint to it, once its body exists. It swings in the vertical plane through the screw and its centre. */
+  private hang(b: PieceBody): void {
+    const hinge = b.hinge
+    const link = this.links.get(b)
+    if (!hinge || !link || this.hung.has(b)) return
+    const c = this.centre(b)
+    const dx = c.x - hinge.point[0]
+    const dz = c.z - hinge.point[2]
+    const along = Math.hypot(dx, dz)
+    const axis: Vec3 = along < 1e-3 ? [0, 0, 1] : [dz / along, 0, -dx / along]
+    const anchor = this.world.createBody({ shape: { kind: 'box', half: [0.005, 0.005, 0.005] }, motion: 'static', position: hinge.point, user: 0 })
+    this.world.ignorePair(anchor, link.id, true)
+    const joint = this.world.createJoint({ kind: 'hinge', a: anchor, b: link.id, point: hinge.point, axis, normal: [0, 1, 0], min: -Math.PI / 2, max: Math.PI / 2 })
+    this.hung.set(b, { anchor, joint })
+  }
+
+  /** The screw tears out: past `HINGE_RELEASE` of turn, or after `HINGE_SECONDS`, the piece falls free. */
+  private wearHinges(dt: number): void {
+    for (const [b, held] of this.hung) {
+      const hinge = b.hinge
+      if (hinge) {
+        hinge.seconds -= dt
+        const [x, y, z, w] = hinge.from
+        const q = b.root.quaternion
+        const turned = 2 * Math.acos(Math.min(1, Math.abs(q.x * x + q.y * y + q.z * z + q.w * w)))
+        if (turned < HINGE_RELEASE && hinge.seconds > 0) continue
+      }
+      this.letGo(b, held)
+    }
+  }
+
+  private letGo(b: PieceBody, held: { readonly anchor: BodyId; readonly joint: JointId }): void {
+    this.world.removeJoint(held.joint)
+    this.world.removeBody(held.anchor)
+    this.hung.delete(b)
+    b.hinge = undefined
   }
 
   /** The engine's awake bodies in one crossing: a sleeping piece one of them wakes (a blow) is among the awake pieces from now on, and read back in this same step. */

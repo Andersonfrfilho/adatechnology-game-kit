@@ -15,6 +15,13 @@ const rows = (r: readonly [number, number, number, number]): number[] => {
 }
 
 /** Whether a part box is turned askew in its piece's frame: a quarter or half turn leaves it square, only its sizes swapped. */
+/**
+ * A piece hung on a hinge (`PieceSystem.hinge`: a shelf that lost the side at one end swings on the screw at the other) lets go once it has turned this far (rad) or after
+ * `HINGE_SECONDS`: the screw tears out of the board.
+ */
+export const HINGE_RELEASE = (40 * Math.PI) / 180
+export const HINGE_SECONDS = 1.5
+
 export const isTurned = (box: PartBox): boolean => box.rotation !== undefined && rows(box.rotation).some((v) => Math.abs(v) > 1e-6 && Math.abs(Math.abs(v) - 1) > 1e-6)
 
 /**
