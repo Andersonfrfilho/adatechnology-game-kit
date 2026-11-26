@@ -517,6 +517,9 @@ importers:
       '@adatechnology/game-animals-species':
         specifier: workspace:^
         version: link:../game-animals-species
+      '@adatechnology/game-characters-people':
+        specifier: workspace:^
+        version: link:../game-characters-people
       '@adatechnology/game-characters-undead':
         specifier: workspace:^
         version: link:../game-characters-undead
@@ -526,6 +529,9 @@ importers:
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt
+      '@adatechnology/game-vehicles-driving':
+        specifier: workspace:^
+        version: link:../game-vehicles-driving
       '@adatechnology/game-workers':
         specifier: workspace:^
         version: link:../game-workers

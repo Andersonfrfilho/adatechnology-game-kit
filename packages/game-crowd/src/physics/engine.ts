@@ -1,3 +1,4 @@
+import { FALL_CAUSE, STATE } from '../types'
 import type { CrowdType } from '../types'
 import { createBalance } from './balance'
 import type { Balance } from './balance'
@@ -29,6 +30,8 @@ export const DEFAULT_DRIVE_FORCE = 250
 const GRAVITY_FORCE = 9.8
 const EXTRA_BODIES = 500
 const PAIRS_PER_AGENT = 12
+/** How long the knock-down of a crowd without balance stuns (s). */
+const KNOCK_STUN_SECONDS = 1
 
 /** What the crowd hands over: the shared state and the verbs only it can do. */
 export type PhysicsBase = Omit<PhysicsContext, 'options' | 'stats' | 'step' | 'h' | 'centre' | 'lastBlastStep' | 'moundAt' | 'weightOn'> & {
@@ -51,6 +54,8 @@ export type PhysicsEngine = {
   beginStep(h: number, centre: { readonly x: number; readonly z: number }): void
   /** Contact, pressure, balance, mound and thrown bodies, in the order of the design (§3, items 5 to 10). */
   endStep(): void
+  /** Pushes agent `i` alone at `(vx, vz)` m/s and asks for its fall; without balance it is stunned with that velocity instead. */
+  knockDown(i: number, vx: number, vz: number): void
   /** The store removed agent `removed` and moved agent `moved` into its place. */
   remap(removed: number, moved: number): void
   /** Stops the worker, if there is one. */
@@ -211,6 +216,19 @@ export function createPhysics(base: PhysicsBase, options: ResolvedPhysics, stats
     balance,
     beginStep,
     endStep,
+    knockDown: (i, vx, vz) => {
+      if (store.hp[i]! <= 0) return
+      if (!balance) {
+        store.state[i] = STATE.STUNNED
+        store.stateTimer[i] = KNOCK_STUN_SECONDS
+        store.vx[i] = vx
+        store.vz[i] = vz
+        return
+      }
+      store.pushX[i]! += vx
+      store.pushZ[i]! += vz
+      balance.requestFall(i, FALL_CAUSE.SHOVE, Math.hypot(vx, vz) / options.balance!.shoveFall)
+    },
     remap: (removed, moved) => {
       thrown?.remap(removed, moved)
       offload?.remap(removed, moved)

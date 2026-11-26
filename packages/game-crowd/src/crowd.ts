@@ -78,6 +78,8 @@ export type Crowd = {
   readonly thrown: ThrownPool
   /** A blast: queued, and resolved at the start of the next step in one pass over the agents. Without `physics` it only hurts, kills and stuns. */
   blast(blast: CrowdBlast): void
+  /** Knocks agent `i` alone down at `velocity` m/s (no area): `BALANCE.FALLEN`, slides on the push, gets up; stunned without balance. */
+  knockDown(i: number, velocity: { readonly x: number; readonly z: number }): void
   /** How many agents are steps of a pile now. */
   pileCount(): number
   readonly trail: { x: number; z: number; t: number }[]
@@ -122,13 +124,11 @@ export type Crowd = {
   on<K extends CrowdEventName>(event: K, listener: (event: CrowdEventMap[K]) => void): () => void
 }
 
-
 const clamp = (v: number, a: number, b: number): number => (v < a ? a : v > b ? b : v)
 // one shared empty set: the update loop reads the traits of every agent every frame
 const NO_TRAITS: CrowdTraits = {}
 const TAU_APPROX = 6.2832
 const TURN = 6.28
-
 /**
  * The crowd: a literal port of the team game's horde (`jogo.js` G 66714-67430). One struct of arrays, relevance bands R0-R3 with hysteresis, perception
  * by sight, hearing and smell, the sliced flow field, the spatial hash, separation, six attack slots, chain alerts, doors, piles against walls, the
@@ -1426,6 +1426,7 @@ export function createCrowd(options: CrowdOptions): Crowd {
     mound: moundHeight,
     thrown: engine.thrown,
     blast: (blast) => engine.blasts.enqueue(blast),
+    knockDown: (i, velocity) => engine.knockDown(i, velocity.x, velocity.z),
     pileCount: () => pileN,
     trail,
     variantsOf,
