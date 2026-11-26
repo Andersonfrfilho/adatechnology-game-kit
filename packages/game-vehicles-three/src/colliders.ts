@@ -3,11 +3,15 @@ import type { DrawnCollider } from '@adatechnology/game-contracts'
 import type { PartDef, VehicleDestructible } from '@adatechnology/game-vehicles'
 
 import { addTriangle, colliderOf, soupOf } from './collider-fit'
+import type { Soup } from './collider-fit'
+import { HULL_CELL, hullsOf } from './vehicle-hulls'
 
 /** The parts of the body shell: what is drawn by the vehicle's merged meshes (skin, glass, pillars, a shut door) belongs to the smallest of these whose box holds it. */
 const SHELL_ROLES: ReadonlySet<string> = new Set(['panel', 'fender', 'roof', 'frame', 'glass', 'pillar', 'door', 'lid', 'hood', 'bumper'])
 /** Statuses of a part that is not on the vehicle any more. */
 const GONE: ReadonlySet<string> = new Set(['broken', 'melted', 'ashes'])
+/** Parts that are a solid block, not a thin shell: one hull each, whole (H5). */
+const SOLID_ROLES: ReadonlySet<string> = new Set(['rim', 'tyre', 'light', 'mirror', 'engine', 'radiator', 'fuel_tank', 'oil_pan', 'battery', 'alternator', 'gearbox', 'brakes', 'steering', 'shocks', 'hitch'])
 /** A part's triangles are held in pieces by the cell (m) of the vehicle their centre is in: a dent in one panel makes again the pieces it touched, not the whole panel. */
 /** The cross product (twice the area, m2) a triangle needs to be drawn at all. */
 const MIN_AREA = 1e-9
@@ -23,6 +27,15 @@ type Three = typeof THREE_NS
 export interface VehicleCollidersOptions {
   /** Triangles of work per `pieces()` call: a vehicle that spawns fills in over several calls. Default all at once. */
   readonly budget?: number
+  /** Keeps what `hulls()` needs (the triangles of each piece); off by default, the pieces alone need none of it. */
+  readonly hulls?: boolean
+}
+
+/** A convex hull of drawn vertices (at most 64), in the frame `pieces()` answers in: `id` is the part it belongs to, `key` names it across calls. */
+export interface VehicleHull {
+  readonly id: string
+  readonly key: string
+  readonly points: Float32Array
 }
 
 export interface VehicleColliders {
@@ -30,6 +43,8 @@ export interface VehicleColliders {
   pieces(): DrawnCollider[]
   /** Pieces are still to be made (the budget ran out): call `pieces()` again. */
   isPending(): boolean
+  /** The convex hulls of what is drawn (design 10.1): each part's pieces gathered in cells of `HULL_CELL`, cut where the hull leaves the drawn shell; only the cells a dent touched are made again. Needs `options.hulls`. */
+  hulls(): VehicleHull[]
 }
 
 /** One drawn mesh as the cache knows it: where each of its triangles went, and what it looked like when it was last read. */
@@ -56,6 +71,9 @@ interface Piece {
   readonly entries: Set<MeshEntry>
   dirty: boolean
   collider: DrawnCollider | null
+  /** The triangles the collider was made from, kept when hulls are wanted; `version` counts how many times they were made. */
+  soup: Soup | null
+  version: number
 }
 
 /**
@@ -113,6 +131,7 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
   const pieces = new Map<number, Piece>()
   const partIndex = new Map(vehicle.model.parts.map((part, index) => [part.id, index]))
   const isShown = new Map(vehicle.model.parts.map((part) => [part.id, part.visual]))
+  const isSolid = new Map(vehicle.model.parts.map((part) => [part.id, SOLID_ROLES.has(part.role)]))
   const shell = vehicle.model.parts.filter((part) => SHELL_ROLES.has(part.role))
   const toFrame = new THREE.Matrix4()
   const toVehicle = new THREE.Matrix4()
@@ -120,6 +139,8 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
   const placed = new THREE.Vector3()
   const matrix = new THREE.Matrix4()
   let pending = false
+  let shown: Piece[] = []
+  const hullGroups = new Map<string, { readonly signature: string; readonly hulls: VehicleHull[] }>()
 
   const release = (entry: MeshEntry): void => {
     for (const key of entry.chunks.keys()) {
@@ -170,7 +191,7 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
       let piece = pieces.get(key)
       if (!piece) {
         const part = vehicle.model.parts[Math.floor(key / PART_SPAN)]!.id
-        pieces.set(key, (piece = { key, part, entries: new Set(), dirty: true, collider: null }))
+        pieces.set(key, (piece = { key, part, entries: new Set(), dirty: true, collider: null, soup: null, version: 0 }))
       }
       piece.entries.add(entry)
       piece.dirty = true
@@ -237,6 +258,8 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
       }
     }
     piece.collider = colliderOf(piece.part, `${piece.part}#${piece.key % PART_SPAN}`, soup)
+    piece.soup = options.hulls ? soup : null
+    piece.version++
     piece.dirty = false
   }
 
@@ -277,6 +300,7 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
     }
     for (const [mesh, owner] of live) read(mesh, owner, budget)
     const out: DrawnCollider[] = []
+    shown = []
     for (const [key, piece] of pieces) {
       if (piece.entries.size === 0) {
         pieces.delete(key)
@@ -286,13 +310,69 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
         if (budget.left <= 0) pending = true
         else rebuild(piece, budget)
       }
-      if (piece.collider && !(isGone(piece.part) && isShown.get(piece.part))) out.push(piece.collider)
+      if (piece.collider && !(isGone(piece.part) && isShown.get(piece.part))) {
+        out.push(piece.collider)
+        shown.push(piece)
+      }
     }
     return out
   }
 
-  return { pieces: make, isPending: () => pending }
+  /** The cell of `HULL_CELL` a piece is in, from its key (the cell number is the low part of it). */
+  const hullCellOf = (piece: Piece): string => {
+    const cell = piece.key % PART_SPAN
+    const cz = cell % CELL_SPAN
+    const rest = Math.floor(cell / CELL_SPAN)
+    const cy = rest % CELL_SPAN
+    const cx = Math.floor(rest / CELL_SPAN)
+    if (isSolid.get(piece.part)) return piece.part
+    const side = Math.round(HULL_CELL / CHUNK)
+    return `${piece.part}:${Math.floor(cx / side)}:${Math.floor(cy / side)}:${Math.floor(cz / side)}`
+  }
+
+  const hulls = (): VehicleHull[] => {
+    if (!options.hulls) throw new Error('createVehicleColliders: hulls() needs options.hulls')
+    const boxes = make()
+    const low = [Infinity, Infinity, Infinity]
+    const high = [-Infinity, -Infinity, -Infinity]
+    for (const box of boxes) for (let k = 0; k < 3; k++) [low[k], high[k]] = [Math.min(low[k]!, box.center[k]! - box.half[k]!), Math.max(high[k]!, box.center[k]! + box.half[k]!)]
+    const centre: [number, number, number] = [(low[0]! + high[0]!) / 2, (low[1]! + high[1]!) / 2, (low[2]! + high[2]!) / 2]
+    const groups = new Map<string, Piece[]>()
+    for (const piece of shown) {
+      if (!piece.soup) continue
+      const id = hullCellOf(piece)
+      const list = groups.get(id)
+      if (list) list.push(piece)
+      else groups.set(id, [piece])
+    }
+    for (const id of hullGroups.keys()) if (!groups.has(id)) hullGroups.delete(id)
+    const out: VehicleHull[] = []
+    for (const [id, members] of groups) {
+      const signature = members.map((piece) => `${piece.key}.${piece.version}`).join(',')
+      let made = hullGroups.get(id)
+      if (!made || made.signature !== signature) {
+        const vertices: number[] = []
+        const indices: number[] = []
+        for (const piece of members) {
+          const offset = vertices.length / 3
+          for (const v of piece.soup!.vertices) vertices.push(v)
+          for (const i of piece.soup!.indices) indices.push(i + offset)
+        }
+        const part = members[0]!.part
+        const triangles = Array.from({ length: indices.length / 3 }, (_, t) => t)
+        made = { signature, hulls: hullsOf({ vertices, indices }, triangles, centre, isSolid.get(part)).map((points, n) => ({ id: part, key: `${id}.${n}`, points: new Float32Array(points) })) }
+        hullGroups.set(id, made)
+      }
+      out.push(...made.hulls)
+    }
+    return out
+  }
+
+  return { pieces: make, isPending: () => pending, hulls }
 }
 
 /** The pieces of a vehicle once, all at once (`createVehicleColliders` keeps them between calls). */
 export const vehicleColliders = (THREE: Three, vehicle: VehicleDestructible, frame: THREE_NS.Object3D): DrawnCollider[] => createVehicleColliders(THREE, vehicle, frame).pieces()
+
+/** The convex hulls of a vehicle once, all at once (`createVehicleColliders` with `hulls` keeps them between calls). */
+export const vehicleHulls = (THREE: Three, vehicle: VehicleDestructible, frame: THREE_NS.Object3D): VehicleHull[] => createVehicleColliders(THREE, vehicle, frame, { hulls: true }).hulls()

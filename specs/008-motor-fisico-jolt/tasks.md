@@ -192,11 +192,11 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` e `heap.test.ts` · `sonnet`.
 - ✅ **T6.2 Mapa da condução** (seção 7; feito em 2026-11-26, `evidence.md` `## T6.2`; a arrancada do Jolt é 1,6× a da semi-simulação, registrada e entregue à T6.2b), inclusive a bicicleta a pedal: `vehicleDescFromSemi`, controles → entrada, carro criado andando, arrasto, `status()`; os testes de andar e bater recalibrados com motivo (nenhum precisou).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
-- **T6.2b Rodador do banco de provas no Jolt:** frota terrestre inteira dentro das faixas. **Rodador feito em 2026-11-26 (`evidence.md` `## T6.2b`); a frota NÃO está inteira dentro das faixas: 258 de 288 corridas passam, 21 dos 48 modelos terrestres têm algo fora (os 21 falham na arrancada, 17 só nela); sem ✅ até o dono decidir como a arrancada limitada pela tração entra (ficha ou assistência), e a faixa não foi tocada.**
+- **T6.2b Rodador do banco de provas no Jolt:** frota terrestre inteira dentro das faixas. **Rodador feito em 2026-11-26 (`evidence.md` `## T6.2b`); a frota NÃO está inteira dentro das faixas: 258 de 288 corridas passam, 21 dos 48 modelos terrestres têm algo fora (os 21 falham na arrancada, 17 só nela); sem ✅ até o dono decidir como a arrancada limitada pela tração entra (ficha ou assistência), e a faixa não foi tocada. Diagnóstico de 2026-11-26 (`evidence.md` `## T6.2b — Diagnóstico da arrancada`): não é tração nem defeito do pneu; a tabela da faixa é por nota, sem fonte, e a semi não tem inércia, troca nem rigidez de pneu; decisão do dono.**
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-proving test` · `sonnet`.
 - ✅ **T6.3 Regra de sono do carro** (feito em 2026-11-26, `evidence.md` `## T6.3`; 7.7; roda no ar girando mantém o carro acordado). Aceite: carro parado dorme em ≤ 3 s; batida a 60 km/h no meio-fio de 30 cm dorme em ≤ 7 s.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/vehicle.test.ts` · `sonnet`.
-- **T6.4 Cascos convexos** (10.1, 10.3, 10.5): concavidade, extrusão para dentro, teto por classe medido e escrito aqui, H1–H6 nos 69 modelos; estacionado dinâmico com as guardas da 10.4.
+- **T6.4 Cascos convexos** (10.1, 10.3, 10.5): concavidade, extrusão para dentro, teto por classe medido e escrito aqui, H1–H6 nos 69 modelos; estacionado dinâmico com as guardas da 10.4. **Maquinário feito em 2026-11-26 (`evidence.md` `## T6.4`): casco convexo incremental, corte por concavidade e por vão, extrusão para dentro, peça sólida inteira, cache por célula, teto por classe medido (moto 200, carro 1 450, caminhão e ônibus 2 000…, escrito no desenho 10.3); sem ✅: H2 e H3 reprovam (`family_hatch` 66% de cobertura, 33% dos raios com casco à frente do desenhado), a contagem é 12× a estimativa (~1 270 cascos por carro) e a guarda de memória da 10.4 não fecha com ela (83 MB contra 64 MB). Decisão do dono pendente.**
   Mecânica? não · Aceite por comando? sim: `vehicle-hulls.test.ts` · `sonnet`.
 - **T6.9 Peças soltam como corpos** (11, sem o interior), contabilidade de massa, no lugar do `fling` no modo Jolt; nível 2 de dano alimentado pelas linhas de contato do Jolt (`crashVehicle` pelo `tag`) e cascos refeitos ao assentar.
   Mecânica? não · Aceite por comando? sim: `crash-parts.test.ts` · `sonnet`.
@@ -208,7 +208,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `grep` das camadas novas na `arquitetura.md` · `haiku`.
 - **T6.20 Emenda do C8 no `spec.md`** (D2) com o texto aprovado pelo dono.
   Mecânica? sim · Aceite por comando? sim: `grep` da emenda · `haiku`.
-- **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4).
+- ✅ **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4; feito em 2026-11-26, `evidence.md` `## T6.21`; passa com o teto de 96 cascos do desenho, e **não** com os ~1 270 que a T6.4 mediu: ver lá).
   Mecânica? sim · Aceite por comando? sim: `heap.test.ts`, `cascade.test.ts` · `sonnet`.
 - **T6.25 Sonda da sala do veículo no `leak.mjs`** (§8).
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.

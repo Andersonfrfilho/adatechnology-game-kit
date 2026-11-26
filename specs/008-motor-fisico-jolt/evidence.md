@@ -4180,3 +4180,78 @@ Um carro que cai de barriga depois de pular o meio-fio (o carro do T6.2, mais le
 **Não mexi na faixa nem na ficha.** O que sobra se divide em dois: a **arrancada** (21 das 30 corridas, nos 21 modelos) é a diferença de modelo entre um pneu com limite de tração e a semi-simulação sem ele, e a correção é decisão do dono (aliviar o torque da ficha por massa em `semiSpecFromStats`, que mexe também no semi, ou uma assistência de tração no mapa; um controle de tração por patinagem **piorou** a arrancada dos carros de 12,7 s para 16 s com o limiar que tentei e foi retirado); e os **veículos fora do desenho de quatro rodas** (bicicleta, tractor, `step_through_scooter`), que a ficha trata como carro.
 
 **Gates:** `pnpm --filter @adatechnology/game-vehicles-proving test` 2 arquivos, 6 testes novos; `pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/proving-physics.test.ts` 50 testes; `game-vehicles-driving test` 92; `game-physics-jolt test` conferido em seguida; `tsc --noEmit` e eslint dos pacotes tocados.
+
+## T6.2b — Diagnóstico da arrancada (2026-11-26; nenhum código de condução mudou)
+
+**De onde vêm as faixas.** `game-vehicles-proving/src/ranges.ts`: `accelerationSeconds` é uma tabela **única, escrita à mão, por nota de aceleração da ficha (0–10)**, igual para toda classe: 1 → 34 s, 3 → 21, 5 → 14, 7 → 10, 9 → 6, 10 → 4,2, com ±35%. O comentário diz "bandas do mundo real" e **não cita fonte**; veio inteira no commit `046a1915e` (fase 1 do banco de provas) e **não foi calibrada sobre a semi-simulação**. A ficha (`semiSpecFromStats`) dá o torque de pico por massa pela nota: `0,06 + 0,015 × nota` N m/kg, também igual para toda classe. Efeito: a semi-simulação dá **8,4 a 8,7 s para qualquer carro, caminhão ou moto de nota 7** (ela não tem inércia de motor e de roda, nem tempo de troca, nem rigidez de pneu), e isso cai dentro de 6,5–13,5 por coincidência da tabela, não por desenho.
+
+**Tabela real × semi × Jolt** (0–100 km/h; `accel_0_100`, mesma ficha, banco de provas dos dois rodadores; o modelo do jogo é a "inspiração" da ficha do próprio repositório, `cards.pt-BR.json`):
+
+| Modelo (inspiração) | Massa / tração | Semi | Jolt | Faixa | Real (fonte) |
+|---|---|---|---|---|---|
+| `entry_hatch` (Renault Kwid 1.0) | 895 kg, traseira | 8,7 s | **14,1 s** | 6,5–13,5 | 14,9 s (Quatro Rodas, via [car.blog.br](https://www.car.blog.br/2017/10/renault-kwid-pontos-negativos-positivos.html), segunda mão); 15,5 s (dado Renault, via [iCarros](https://www.icarros.com.br/noticias/testes-e-comparativos/como-anda-o-renault-kwid-intense,-de-r$-39.990-/23022.html)) |
+| `midsize_sedan` (Toyota Corolla 2.0) | 1 169 kg, traseira | 8,4 s | **12,2 s** | 6,5–13,5 | 9,9 s (medição [Motor Show](https://motorshow.com.br/blog-sobre-rodas-avaliacao-toyota-corolla-gli-e-o-melhor-carro-que-voce-pode-comprar-hoje-com-r-110-mil), GLi); ~9 s ([Autoo](https://www.autoo.com.br/teste-toyota-corolla-xei-2020/), XEi) |
+| `midsize_pickup` (Toyota Hilux 2.8) | 2 081 kg, 4x4 | 8,5 s | **7,9 s** | 6,5–13,5 | 10,0 s (dado Toyota Europa, [carmag.co.za](https://www.carmag.co.za/news/refreshed-150-kw-toyota-hiluxs-claimed-0-100-kmh-time-revealed/)); 10,1–10,7 s ([auto-data.net](https://www.auto-data.net/en/toyota-hilux-double-cab-viii-facelift-2024-2.8d-204hp-4x4-53909)) |
+| `sport_bike` (Kawasaki Ninja 400) | 146 kg, **quatro rodas** na ficha | 7,1 s | **10,6 s** | 3,9–8,1 | 4,35 s a 5,4 s ([MotoStatz](https://motostatz.com/?p=369), [Zigwheels](https://www.zigwheels.com/reviews-advice/reviews/kawasaki-ninja-400-road-test-review/32146/{{url}})) |
+| `box_truck` (VW Delivery 11.180) | 9 363 kg, traseira | 8,6 s | **16,2 s** | 6,9–14,3 | **sem fonte verificada** para o 11.180 (só "cerca de 20 s" do Delivery Express, outro modelo, sem método: [encontracarros](https://www.encontracarros.com.br/vw-delivery-2026/amp/)) |
+| `city_bus` | 15 179 kg, traseira | 6,7 s | **14,1 s** | 6,6–13,6 | sem fonte |
+
+Todos os modelos de nota 7 e carga leve ficam na semi em 8,4–8,7 s; no Jolt: `family_hatch` 13,6, `v8_coupe` (nota 9) 10,2, `commuter_motorcycle` 16,8, `cargo_van`, `school_bus` e demais entre 14 e 16 s.
+
+**O que o Jolt faz com o `entry_hatch` (895 kg, traseira; o mesmo vale para os outros, medido por telemetria das rodas):** a carga no eixo motriz é 4,4 kN parado e 5,1 kN acelerando (centro de massa no meio do entre-eixos, mapa certo); o pneu tem pico de μ = 1,01 e o pico de tração é 5,2 kN. Em 1ª marcha o empuxo pedido (4,3–5,0 kN até 50 km/h) é **da ordem** do que o pneu segura, mas **o que limita não é o atrito**: com o chão em μ 3 e a curva longitudinal do pneu com pico 5, o tempo não muda (chão em μ 3: 14,22 s contra 14,15 s; curva com pico 5 e troca de 0,05 s: 11,85 s contra 11,21 s). Os fatores que a medida acha, cada um com o seu efeito no `entry_hatch` (14,15 s de base):
+
+| Item | Valor medido | Efeito |
+|---|---|---|
+| tempo de troca de marcha: o mapa **não** passa `switchTime`, `clutchReleaseTime` e `switchLatency`, então valem os padrões do Jolt (0,5 + 0,3 + 0,5 s) e a semi troca em 0 s | 3 trocas até 100 km/h; com 0,05 s cada: **11,2 s (−2,9 s)** | maior |
+| patinagem da roda de tração em 1ª e 2ª: 1,7 a 3,4 m/s acima do chão (patinagem de 25–50%), a rotação do motor sobe a 6 500 e **o Jolt não troca para cima com roda patinando**: a 1ª vai de 0 a 55 km/h (a semi troca a 85% da rotação máxima, em 50 km/h) | força média nas rodas 2,8–3,7 kN em 1ª (ideal 4,3–5,0) e 1,9–2,4 kN de 5 a 12 s (ideal 2,2–3,4) | médio |
+| joelho da curva longitudinal (6% de patinagem para atingir o pico): joelho em 0,1% | 12,07 → 10,68 s (−1,4 s), a patinagem cai de 2,2 para 0,6–1,7 m/s | médio |
+| inércia do motor (`0,001 × torque` = 0,148 kg m², reflete 29% da massa em 1ª) | 0,02 kg m²: −0,5 s | pequeno |
+| μ do chão ou pico do pneu | sem efeito (ver acima) | nenhum |
+
+**Conclusão: (b) e (c), não (a).** (1) **O Jolt não está com defeito de pneu nem de centro de massa**: μ e distribuição de peso estão certos, e mexer no atrito não muda a arrancada. A diferença para a semi-simulação é que a semi é um modelo **sem** inércia de motor/roda, sem tempo de troca e sem rigidez de pneu, e o Jolt tem os três; o que nele é ajustável (tempo de troca, joelho do pneu) são **parâmetros de modelo, não consertos**. (2) **A faixa não foi calibrada na semi**: é uma tabela por nota, igual para toda classe, sem fonte. Contra os reais acima, ela **não distingue** um Kwid de 15 s (nota 7 → 10 s) de um Corolla de 10 s (nota 7 também); o Jolt acerta o Kwid (14,1 contra 14,9–15,5) e erra o Corolla (12,2 contra ~10); a semi erra o Kwid por 6 s e chega perto do Corolla (8,4 contra ~10). (3) **A ficha é a mesma por classe** (0,06 + 0,015 × nota N m/kg): ônibus e moto saem como carro, e a moto vem com quatro rodas (`subjectSpec`), o que invalida a comparação das motos nos dois rodadores. Quem decide o que fazer é o dono: trocar a tabela da faixa por faixa de classe com fonte, ou a nota de aceleração dos 21 modelos, ou o tempo de troca e o pneu do mapa (cada um desloca a arrancada de 1 a 3 s, mas ajustado para entrar na faixa, e não para o real, e o Kwid real já está dentro do que o Jolt dá hoje). **Faixa e ficha intactas; nenhum arquivo de condução alterado.** Os números da tabela vieram de `scratchpad` (o diagnóstico foi um teste temporário sobre `vehicleDescFromSemi`, `WHEEL_READ` e o `GetCurrentGear` do controlador, descartado).
+
+## T6.4 — Cascos convexos: maquinário e medida (2026-11-26) — **sem ✅: H2, H3 e H4 reprovam; a contagem de cascos é 12× a estimativa do desenho**
+
+**Entrou** (`game-vehicles-three`): `src/hull-geometry.ts` (casco convexo incremental, volume, redução de pontos: o extremo de cada uma das 26 direções mais os mais distantes, sempre vértices desenhados); `src/vehicle-hulls.ts` (`hullsOf`: célula de partida de 1,6 m por peça; a célula é cortada ao meio quando uma face do casco fica a mais de 3 cm do desenhado para dentro ou a mais de 1 cm para fora, no maior vão entre os centros dos triângulos de qualquer eixo (≥ 3 cm: separa as duas chapas de uma porta) ou, sem vão, no meio do lado mais longo; peça fina (< 3 cm) é extrudada para dentro, para o meio do veículo, até 3 cm, nunca para fora; peça sólida (motor, bateria, tanque, roda, aro, pneu, farol, retrovisor…) é um casco só, inteiro; ≤ 64 pontos); `createVehicleColliders({ hulls: true }).hulls()` e `vehicleHulls`: cada peça nas suas células de 1,6 m, só a célula que a batida tocou é refeita (as outras voltam o mesmo objeto). Os testes de `vehicle-hulls.test.ts` (geometria, redução, extrusão, corte, peça sólida, cache incremental) e `vehicle-hulls-fleet.test.ts` (os 69 modelos: ≤ 64 pontos, volume, teto da classe) **passam**; `tests/vehicle-hulls-support.ts` e `vehicle-hulls-check.ts` são o rodador de raios (26 direções, grade de 5 cm; profundidades medidas em 1 cm, que dão a folga de 1 cm de H2 e H4) e de volume de H5.
+
+**Medido, frota inteira (69 modelos, `vehicleHulls` de cada, 126 s no total; a classe de cada modelo é o `fleetGroupOf`):**
+
+| Classe | Modelos | Cascos: mín. / média / máx. | Estimativa do desenho (10.3) | Teto medido (arredondado a 50) |
+|---|---|---|---|---|
+| moto e bicicleta | 12 | 72 / 119 / 166 | 32 | **200** |
+| carro | 15 | 1 172 / 1 269 / 1 401 | 96 | **1 450** |
+| SUV | 4 | 1 345 / 1 373 / 1 448 | 96 | **1 450** |
+| picape | 4 | 1 223 / 1 346 / 1 466 | 96 | **1 500** |
+| van | 2 | 1 141 / 1 161 / 1 182 | 96 | **1 200** |
+| caminhão, ônibus (`heavy`) | 5 | 1 315 / 1 629 / 1 948 | 160 / 192 | **2 000** |
+| trator | 1 | 818 | 96 | **850** |
+| militar | 8 | 1 132 / 1 774 / 3 050 | 96 | **3 100** |
+| aéreo | 11 | 696 / 1 602 / 2 960 | 96–192 | **3 000** |
+| barco | 7 | 572 / 1 027 / 1 784 | 64–192 | **1 800** |
+
+Nenhum casco passa de 64 pontos. A contagem é dominada pela regra de 3 cm: com a tolerância para fora de 1, 2 e 3 cm o `family_hatch` dá 1 588, 1 614 (2) e 1 403 (3) antes do corte pelo vão; com o corte pelo vão (final) 1 172. Quase todos os cascos são folhas de 10 a 20 cm: porta, para-brisa, para-choque e subchassi têm 20 a 80 cascos **cada**, porque o desenho tem vincos e chanfros de 1 a 3 cm por todo lado.
+
+**H2 a H5 (rodador de raios e de volume), `family_hatch` e `naked_bike`:**
+
+| Modelo | Cascos | Raios que acertam o desenhado | H3: cobertos (≥ 95%) | H2: casco mais de 1 cm à frente do desenhado | pior | H4: casco sem desenho (folga de 1 cm) | H5 (volume, peças sólidas fechadas) |
+|---|---|---|---|---|---|---|---|
+| `family_hatch` | 1 172 | 54 074 | **66,3%** | **17 921 raios (33%)** | 2,17 m | **168** | 1 peça medida, passa |
+| `naked_bike` | 108 | 9 574 | **41,6%** | **5 375 raios (56%)** | 0,88 m | **896** | falha: roda dianteira 0,0226 m³ contra 0,0138 m³ desenhado; pneus sem casco próprio (o desenho entrega o pneu à roda) |
+
+O sanity do rodador (o desenhado contra o próprio desenhado) dá 12 259 de 12 259, 0 à frente, 0 fantasma. Os cascos que mais passam do desenhado no `family_hatch` são `roof`, `hood`, `underbody` e `windshield` (por raio na direção −y: o teto tem cascos de 18 cm de espessura com 25 cm de excesso sobre a descida do vidro traseiro). A causa provável, **não resolvida**: o corte parte de triângulos grandes (um painel é poucos triângulos de 1 m, cujo centro cai numa célula e os vértices em outra), e o corte pelo meio/vão não separa a concavidade; o limite de 6 cortes (célula de 2,5 cm de lado nominal) termina antes de a regra fechar.
+
+**Decisão que cabe ao dono:** H2 (≤ 1 cm para fora) e H3 (≥ 95% de cobertura), da forma como o desenho os escreveu, **não saem com o algoritmo da 10.1 a um custo de ~100 cascos por carro**: o que se mede é ~1 200 a 1 400 cascos por carro e as regras ainda reprovam. Memória (T6.21): um casco de 64 pontos custa **5,46 KB** no heap do wasm (o pior caso: todos os pontos no casco); um modelo de 96 cascos 0,5 MB, de 1 200 cascos 6,24 MB, de 1 800 cascos 9,37 MB, de um heap fixo de 128 MB: **12 modelos de 1 270 cascos pesam 83 MB, acima dos 64 MB da guarda da 10.4**, e a guarda só aguenta 9 modelos distintos na frota medida. Saídas a decidir: (i) afrouxar o 3 cm e o 1 cm (o corte para de ser uma regra de 1–3 cm); (ii) casco só das peças de casca que a batida alcança (carroceria baixa), o resto na caixa do `describe()`; (iii) mais profundidade e corte por triângulo (não por centro); (iv) reduzir o detalhe do desenho (vincos < 3 cm) que a frota tem. Os tetos medidos acima já estão em `vehicle-hulls-fleet.test.ts`.
+
+## T6.21 — Heap dos 200 estacionados e B6 com 20 carros (2026-11-26)
+
+`game-physics-jolt/tests/heap.test.ts` (descrição `T6.21`) e `cascade.test.ts` (teste `T6.21`); medidos neste computador, com carga de outras sessões.
+
+| Cena | Medido | Aceite |
+|---|---|---|
+| 200 carros de 12 modelos de **96 cascos** (o teto do desenho; cada casco de 64 pontos no pior caso), compostos compartilhados, 20 deles danificados (`setChildShape` copia o composto) | formas compartilhadas 5,99 MB (5 457 B por casco), 200 corpos 0,06 MB, 20 cópias do dano **0,11 MB** (o Jolt copia a lista dos filhos, não os cascos), **pico 6,17 MB** | ≤ 64 MB ✓ |
+| tudo removido e as formas soltas, sem carros danificados | **mesmo byte** do início | ✓ |
+| tudo removido, com os 20 danificados | dentro de 8 bytes por carro danificado (o `setChildShape` deixa 8 bytes ao remover o corpo, como o `setShape`, jolt-physics 1.1.1) | ✓ |
+| um modelo por número de cascos | 96: 0,50 MB; 500: 2,60; 1 200: 6,24; 1 800: 9,37 | só relato |
+| B6 com 20 carros de 24 cascos na ilha do sopro (cascata de 500) | acordam 323 corpos num quadro (318 sem os carros); mediana do passo depois do sopro **2,50 ms** (0,41 sem os carros), p99 6,01 ms (3,84), máx. 7,96 ms; o hash é o mesmo duas vezes | determinismo ✓; o aceite de tempo do B6 (mediana ≤ 4 ms e nenhuma rodada acima de 5 ms) é medido em AMD, fora do CI: este p99 passa de 5 ms numa máquina com carga |
+
+O aceite escrito passa, mas com o teto de **96 cascos** do desenho; com os 1 270 que a T6.4 mediu, o primeiro quadro desta tabela vira 83 MB (acima da guarda), ver T6.4.

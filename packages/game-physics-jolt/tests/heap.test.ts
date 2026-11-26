@@ -445,3 +445,91 @@ describe('T6.1b part 2: controllers, curves and buoyancy leave the heap as they 
     world.dispose()
   })
 })
+
+/** A car's hulls as the engine holds them: `count` convex children of 64 drawn points each (every point on the hull: the worst a hull costs), tagged by part, laid over a 4 x 1.5 m footprint. */
+const carOfHulls = (count: number, model: number): ShapeDesc => ({
+  kind: 'compound',
+  children: Array.from({ length: count }, (_, i) => {
+    const centre: Vec3 = [((i * 7 + model) % 11) * 0.14 - 0.7, 0.2 + (i % 5) * 0.2, ((i * 13 + model) % 23) * 0.18 - 2]
+    const points: number[] = []
+    for (let k = 0; k < 64; k++) {
+      const u = 1 - (2 * (k + 0.5)) / 64, r = Math.sqrt(1 - u * u), a = k * 2.399963 + i
+      points.push(centre[0] + 0.07 * r * Math.cos(a), centre[1] + 0.07 * u, centre[2] + 0.07 * r * Math.sin(a))
+    }
+    return { shape: { kind: 'convex', points } as ShapeDesc, position: [0, 0, 0] as Vec3, tag: i }
+  }),
+})
+
+/** The class ceiling of a car (design 10.3): the number the 64 MB guard of 10.4 was sized with. */
+const CAR_HULLS = 96
+const MODELS = 12
+const PARKED = 200
+const DAMAGED = 20
+const MB = 1048576
+
+describe('T6.21: 200 parked cars from shared compounds of hulls, 20 of them damaged (design 10.4)', () => {
+  it(`${PARKED} cars of ${MODELS} models with ${CAR_HULLS} hulls each: the peak stays under 64 MB, the damaged ones take a copy of their own, and everything gone gives the heap back`, { timeout: 300000 }, async () => {
+    const world = (await createJoltEngine()).createWorld({ maxBodies: 1024 }) as JoltWorld
+    ground(world, 400)
+    // the warm-up: Jolt grows its arrays and caches once
+    const warm = world.createSharedShape(carOfHulls(4, 0))
+    world.removeBody(world.createBody({ shape: { kind: 'shared', id: warm }, motion: 'dynamic', mass: 800, position: [0, 1, 0], sleeping: true, user: 0 }))
+    world.releaseSharedShape(warm)
+    world.step(1 / 30)
+    const base = world.memoryInUse()
+    const shapes = Array.from({ length: MODELS }, (_, model) => world.createSharedShape(carOfHulls(CAR_HULLS, model)))
+    const afterShapes = world.memoryInUse()
+    const cars = Array.from({ length: PARKED }, (_, i) => world.createBody({ shape: { kind: 'shared', id: shapes[i % MODELS]! }, motion: 'dynamic', mass: 1200, position: [(i % 20) * 6, 0.7, Math.floor(i / 20) * 8], sleeping: true, layer: 'vehicle', user: i }))
+    world.step(1 / 30)
+    const afterCars = world.memoryInUse()
+    for (let i = 0; i < DAMAGED; i++) world.setChildShape(cars[i]!, 3, { kind: 'box', half: [0.2, 0.1, 0.4] }, { position: [0, 0.2, 0] })
+    world.step(1 / 30)
+    world.step(1 / 30)
+    const peak = world.memoryInUse() - base
+    report('heap-parked-cars-hulls', {
+      cars: PARKED, models: MODELS, hullsPerCar: CAR_HULLS, bytesPerHull: Math.round((afterShapes - base) / (MODELS * CAR_HULLS)), sharedShapesMB: Math.round(((afterShapes - base) / MB) * 100) / 100,
+      bodiesMB: Math.round(((afterCars - afterShapes) / MB) * 100) / 100, damagedCopiesMB: Math.round(((peak - (afterCars - base)) / MB) * 100) / 100, peakMB: Math.round((peak / MB) * 100) / 100,
+    })
+    expect(peak).toBeLessThanOrEqual(64 * MB)
+    for (let i = DAMAGED; i < PARKED; i++) world.removeBody(cars[i]!)
+    // a body that had its shape changed leaves 8 bytes behind when it goes (`setShape` does the same, jolt-physics 1.1.1): the undamaged ones leave nothing
+    for (let i = 0; i < DAMAGED; i++) world.removeBody(cars[i]!)
+    for (const shape of shapes) world.releaseSharedShape(shape)
+    world.step(1 / 30)
+    world.step(1 / 30)
+    expect(world.memoryInUse() - base).toBeLessThanOrEqual(8 * DAMAGED)
+    world.dispose()
+  })
+
+  it('the same cars without the damaged ones give the heap back to the byte', { timeout: 300000 }, async () => {
+    const world = (await createJoltEngine()).createWorld({ maxBodies: 1024 }) as JoltWorld
+    ground(world, 400)
+    const warm = world.createSharedShape(carOfHulls(4, 0))
+    world.removeBody(world.createBody({ shape: { kind: 'shared', id: warm }, motion: 'dynamic', mass: 800, position: [0, 1, 0], sleeping: true, user: 0 }))
+    world.releaseSharedShape(warm)
+    world.step(1 / 30)
+    const base = world.memoryInUse()
+    const shapes = Array.from({ length: MODELS }, (_, model) => world.createSharedShape(carOfHulls(CAR_HULLS, model)))
+    const cars = Array.from({ length: PARKED }, (_, i) => world.createBody({ shape: { kind: 'shared', id: shapes[i % MODELS]! }, motion: 'dynamic', mass: 1200, position: [(i % 20) * 6, 0.7, Math.floor(i / 20) * 8], sleeping: true, layer: 'vehicle', user: i }))
+    world.step(1 / 30)
+    for (const car of cars) world.removeBody(car)
+    for (const shape of shapes) world.releaseSharedShape(shape)
+    world.step(1 / 30)
+    world.step(1 / 30)
+    expect(world.memoryInUse()).toBe(base)
+    world.dispose()
+  })
+
+  it('what one model of the measured hull counts takes of the heap (reported, not a limit)', { timeout: 300000 }, async () => {
+    const world = (await createJoltEngine()).createWorld({ maxBodies: 64 }) as JoltWorld
+    const rows: Record<string, number> = {}
+    for (const count of [96, 500, 1200, 1800]) {
+      const base = world.memoryInUse()
+      const shape = world.createSharedShape(carOfHulls(count, 1))
+      rows[String(count)] = Math.round(((world.memoryInUse() - base) / MB) * 100) / 100
+      world.releaseSharedShape(shape)
+    }
+    report('heap-one-model-by-hull-count', { totalHeapMB: Math.round(world.memoryTotal() / MB), megabytesByHulls: rows })
+    world.dispose()
+  })
+})

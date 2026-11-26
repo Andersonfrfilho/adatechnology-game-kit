@@ -469,6 +469,8 @@ leve 192 · helicóptero 96 · barco pequeno 64 · barco grande 192. A T6.0b med
 `MutableCompoundShape` com 96 e 192 filhos (a forma mutável **não tem árvore**: o teste de contato é linear nos filhos); se pesar, o composto
 volta a ser `StaticCompoundShape` (com árvore) assim que o carro assenta, e o mutável só existe durante a batida.
 
+**Medido na T6.4 (2026-11-26, `evidence.md` `## T6.4`), 69 modelos intactos, o número medido substitui a estimativa acima:** moto e bicicleta 200 (medido 72–166) · carro 1 450 (1 172–1 401) · SUV 1 450 · picape 1 500 · van 1 200 · caminhão e ônibus 2 000 · trator 850 · militar 3 100 · avião 3 000 · barco 1 800. Ficou **12× a estimativa**, e H2 e H3 ainda reprovam nos dois modelos medidos (`family_hatch` 66% de cobertura e 33% dos raios com casco à frente do desenhado; `naked_bike` 42% e 56%); a memória da guarda da 10.4 (5,46 KB por casco de 64 pontos) não fecha com esses números (12 modelos de 1 270 cascos = 83 MB contra 64 MB). Decisão do dono pendente (opções em `evidence.md`).
+
 Medido na frota inteira (69 modelos), intactos e depois de três batidas de referência (seção 18). O colisor de triângulos da T3.0b sai do
 caminho da física de veículos; a montagem incremental dela fica (é a entrada dos cascos).
 
@@ -476,7 +478,7 @@ caminho da física de veículos; a montagem incremental dela fica (é a entrada 
 
 - **Cópia na escrita**: todos os carros intactos do mesmo modelo e estado dividem **o mesmo** composto imutável (forma do Jolt com contagem de
   referência; uma por modelo). Um carro ganha o seu `MutableCompoundShape` só no **primeiro dano**.
-- **Memória**: estimativa de ~250 KB por carro com cascos próprios; 200 carros sem compartilhar = ~50 MB, 39% do heap fixo de 128 MB (o C9 limita
+- **Memória** (medido na T6.21: 5,46 KB por casco de 64 pontos no pior caso; a cópia do dano de 20 carros custou 0,11 MB, o Jolt copia a lista de filhos e não os cascos): estimativa de ~250 KB por carro com cascos próprios; 200 carros sem compartilhar = ~50 MB, 39% do heap fixo de 128 MB (o C9 limita
   o pico a 50%). Teste de heap com **200 carros estacionados** (compartilhados, mais 20 danificados) exige pico ≤ 64 MB e volta ao mesmo byte.
 - **Sem `VehicleConstraint` estacionado**: entra preguiçosa por `rebuildVehicle` quando alguém dirige ou o trânsito ativa o carro.
 - **Nenhum agente encontra carro** (7.8): o par `vehicle`–`agent` sai; o carro é obstáculo de navegação do `game-crowd`.
