@@ -3998,3 +3998,15 @@ Cada R0 de quadrúpede custa o mesmo que um de pessoa ou menos (0,5 a 0,8 ms con
 
 **Para o dono ver na sala (§5, sem GPU aqui)**: um cão e uma vaca mortos em 1ª e 3ª pessoa caindo na escada; o desenho do cadáver de bicho ainda é a pose fixa (o R0/R1 de bicho com esqueleto desenhado é a T5.4a, que serve a pessoa e o bicho). Não escolhi limites de cauda e orelhas: ficam fora do R0.
 
+
+## T7.1 — multidão no motor (2026-11-26) — ✅
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; outras sessões usando a máquina (carga 7 a 22 durante as medições).
+
+**O que já existia (não recriado):** `createCorpseBodies` e `relocateCorpse` (Fase 5), o teste `corpse-physics-hash.test.ts` (hash e registro de cadáveres iguais sem empurrão) e `relocate.test.ts` (caso empurrado), a camada `corpse` e a tabela `LAYER_PAIRS` (`agent` sem par com `agent` nem `static`), `moveKinematic`, junta de dobradiça com `breakImpulse` e `brokenJoints` no contrato. O spike de `game-physics-jolt/tests/crowd.test.ts` media 1 000 agentes a 0,29 ms só no passo do mundo.
+
+**O que mudou:** `packages/game-crowd/src/engine-agents.ts` (`createAgentBodies`: uma cápsula cinemática por agente da loja, fase `crowd` do laço, `moveKinematic` com o passo do laço; a cápsula `i` segue o agente `i`, também depois de um `remove`), `engine-doors.ts` (`createDoorBodies`: folha dinâmica de 40 kg na camada `prop` numa dobradiça com `breakImpulse` 40; ao romper, `doors.hit` com a vida toda da porta; porta aberta ou quebrada por outra causa perde a folha, porta fechada de novo ganha uma), `tests/physics/engine-agents.test.ts` (3 testes), script `test:cost` do `game-crowd`, `@adatechnology/game-physics` de `devDependencies` para `dependencies` (os tipos aparecem no `.d.ts`), README e skill.
+
+**Números** (`pnpm --filter @adatechnology/game-crowd test:cost`, sob `perf-measure.lock`; 1 000 agentes e uma porta, `KIT_WORLD` 120 Hz, mediana e p99 de um passo com a fase `crowd` e o passo do mundo): carga 22 → 0,474 / 0,727 ms; carga 7 (três rodadas) → 0,340 / 0,537, 0,336 / 0,560, 0,336 / 0,495 ms. Limite do `spec.md` §6.2: 0,5 / 1,0 ms. A porta cede em 2,275 s. O limite em ms só é cobrado com `PHYSICS_COST=1`.
+
+**Gates:** `pnpm --filter @adatechnology/game-crowd test` 26 arquivos, 147 testes verdes (inclui `team-golden` e `state-hash`, sem golden alterado); `pnpm --filter @adatechnology/game-crowd-three test` 9 arquivos, 48 testes verdes; typecheck e eslint dos arquivos novos limpos; `kit-audit --check` sem novos.
