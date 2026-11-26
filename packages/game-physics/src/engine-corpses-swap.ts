@@ -72,7 +72,17 @@ interface Piece {
 const REST_MARGIN = 0.005
 
 /** A shape smaller by `margin`, to ask what is in the way without counting a body that merely rests where it was (it sinks by the slop). */
+const shrunkShapes = new WeakMap<ShapeDesc, ShapeDesc>()
+
 const shrunk = (shape: ShapeDesc, margin: number): ShapeDesc => {
+  const made = shrunkShapes.get(shape)
+  if (made) return made
+  const smaller = shrinkBy(shape, margin)
+  shrunkShapes.set(shape, smaller)
+  return smaller
+}
+
+const shrinkBy = (shape: ShapeDesc, margin: number): ShapeDesc => {
   switch (shape.kind) {
     case 'sphere':
       return { ...shape, radius: Math.max(shape.radius - margin, 0.001) }

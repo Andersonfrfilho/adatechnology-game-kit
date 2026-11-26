@@ -352,4 +352,44 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
     expect(scene.world.bodyCount).toBeLessThanOrEqual(2)
     scene.world.dispose()
   })
+
+  it('the rigid body quota: past `dynamicBodiesMax` the farthest sleepers go down a rung until it fits', { timeout: 120000 }, async () => {
+    const scene = await sceneOf({ lod: { ragdollsMax: 0, dynamicBodiesMax: 150 }, interest: () => [[0, 0, 0]] })
+    scatter(scene, 60)
+    // all of them fall at first and none sleeps: the quota takes only sleepers
+    expect(scene.corpses.counts().rigidBodies).toBe(180)
+    seconds(scene.loop, 10)
+    const counts = scene.corpses.counts()
+    report('lod-quota-bodies', { ...counts })
+    expect(counts.rigidBodies).toBeLessThanOrEqual(150)
+    expect(counts.r2 + counts.r3).toBeGreaterThan(0)
+    scene.world.dispose()
+  })
+
+  it('the island quota: a heap past `islandBodiesMax` has its oldest sleepers frozen into the pile', { timeout: 120000 }, async () => {
+    const scene = await sceneOf({ lod: { ragdollsMax: 0, islandBodiesMax: 60 } }, true)
+    for (let id = 1; id <= 40; id++) scene.corpses.add({ id, kit, position: heapAt(id - 1), yaw: id * 0.7 })
+    seconds(scene.loop, 20)
+    const counts = scene.corpses.counts()
+    report('lod-quota-island', { ...counts })
+    expect(counts.r2f).toBeGreaterThan(0)
+    expect(counts.rigidBodies).toBeLessThan(120)
+    scene.world.dispose()
+  })
+
+  it('the default quota of 900 rigid bodies: 300 chains asleep cost the policy next to nothing, and the quota holds', { timeout: 180000 }, async () => {
+    const scene = await sceneOf({ lod: { ragdollsMax: 0 } })
+    const ids = Array.from({ length: 300 }, (_, i) => i + 1)
+    for (const id of ids) scene.corpses.add({ id, kit, position: [((id - 1) % 20) * 3 - 30, 0.05, Math.floor((id - 1) / 20) * 3 - 22], yaw: id })
+    const falling: number[] = []
+    for (let f = 0; f < 60 * 3; f++) falling.push(frame(scene.loop))
+    seconds(scene.loop, 8)
+    expect(allAsleep(scene, ids)).toBe(true)
+    const asleep: number[] = []
+    for (let f = 0; f < 60 * 3; f++) asleep.push(frame(scene.loop))
+    report('lod-bodies-300', { rigid: scene.corpses.counts().rigidBodies, falling3s: stats(falling), asleep3s: stats(asleep) })
+    expect(scene.corpses.counts().rigidBodies).toBeLessThanOrEqual(900)
+    expect(stats(asleep).median).toBeLessThanOrEqual(0.5)
+    scene.world.dispose()
+  })
 })

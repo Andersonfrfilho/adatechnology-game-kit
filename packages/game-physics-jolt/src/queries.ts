@@ -103,10 +103,26 @@ export const overlapSphere = (w: JoltWorldHost, at: { readonly center: Vec3; rea
   return out.length
 }
 
+/** The most shapes held for `overlapShape`: a kit asks with a handful, a caller with a new description every time must not fill the heap. */
+const QUERY_SHAPES_MAX = 32
+
+const queryShape = (w: JoltWorldHost, desc: ShapeDesc): JoltNS.Shape => {
+  const held = w.queryShapes.get(desc)
+  if (held) return held
+  if (w.queryShapes.size >= QUERY_SHAPES_MAX) {
+    const [oldest, shape] = w.queryShapes.entries().next().value as [ShapeDesc, JoltNS.Shape]
+    shape.Release()
+    w.queryShapes.delete(oldest)
+  }
+  const made = w.makeShape(desc)
+  w.queryShapes.set(desc, made)
+  return made
+}
+
 /** The bodies a shape overlaps when put at `at` (`PhysicsWorld.overlapShape`): the shape is made for the query and let go of after it. */
 export const overlapShape = (w: JoltWorldHost, at: { readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation: Quat }, out: BodyId[], filter?: QueryFilter): number => {
   const J = w.J
-  const shape = w.makeShape(at.shape)
+  const shape = queryShape(w, at.shape)
   w.r1.Set(at.position[0], at.position[1], at.position[2])
   w.q1.Set(at.rotation[0], at.rotation[1], at.rotation[2], at.rotation[3])
   const m = J.RMat44.prototype.sRotationTranslation(w.q1, w.r1)
@@ -116,7 +132,6 @@ export const overlapShape = (w: JoltWorldHost, at: { readonly shape: ShapeDesc; 
   w.r1.Set(0, 0, 0)
   w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   J.destroy(m)
-  shape.Release()
   out.length = 0
   const hits = c.mHits
   for (let i = 0; i < hits.size(); i++) {

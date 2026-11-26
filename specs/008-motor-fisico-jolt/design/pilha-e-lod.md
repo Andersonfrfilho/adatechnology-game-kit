@@ -162,3 +162,12 @@ nos mesmos 18 m da troca de degrau.
 
 - Corpo que queima, derrete ou desmembra: T5.2 (`setShape`). A política só vê corpo e degrau.
 - Arrastar corpo: Fase 4 usa o corpo no degrau em que está; segurar sobe a R0 (§2.2).
+
+## 10. O que a T5.4 mudou no desenho (2026-11-26)
+
+- `contactBodies` de corpo que **dorme** consulta a forma alargada em 1 cm: o Jolt solta os contatos de quem adormece, então a tabela de parceiros some com o sono (§5.1).
+- R2f vale para qualquer corpo da pilha que dorme ≥ 2 s com corpo por cima, não só para a base; quem repousa em corpo que sai (comido, expirado, despejado, dinâmico ou congelado) volta a R1 por cascata (§2.1.4).
+- A troca encolhe a forma 5 mm antes do `overlapShape` (o repouso afunda 2 mm; sem a folga todo corpo em repouso subia 5 mm a cada troca) e usa `QueryFilter.ignore` para não encontrar as próprias partes.
+- Permanência de 1 s por degrau (`dwellSeconds`) além da histerese de distância.
+- `onSettled` só avisa a partir de 2 m: o tombo do próprio corpo move o tronco até ~1,3 m; é o que mantém o `state-hash` do `game-crowd` igual quando nada empurra.
+- Medido no `KIT_WORLD` (`evidence.md` `## T5.4`): corpo R1 acordado custa ~0,055 ms; o C7 de 100 correntes (2,5 ms) foi do passo de 60 Hz com iterações padrão e não vale no `KIT_WORLD`.

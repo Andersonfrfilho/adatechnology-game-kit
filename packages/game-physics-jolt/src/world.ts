@@ -102,6 +102,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly castSettings: JoltNS.ShapeCastSettings
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
+  readonly queryShapes = new Map<ShapeDesc, JoltNS.Shape>()
   /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
   readonly hulls = new Map<number, HullSet>()
   private readonly objectFilter: JoltNS.ObjectLayerPairFilterTable
@@ -823,6 +824,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
+    for (const s of this.queryShapes.values()) s.Release()
     for (const g of this.groups) g?.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
     if (this.among.filter) {

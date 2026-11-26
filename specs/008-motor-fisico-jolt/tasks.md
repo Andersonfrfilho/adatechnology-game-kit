@@ -165,8 +165,14 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - ✅ **T5.3 🧠 Regra da pilha** (feito em 2026-11-26: `design/pilha-e-lod.md` v2, reprovada a v1 pelo `architect` com 12 mudanças, todas aplicadas; D-T5.3a decidida pelo dono, opção A): pilhas são correntes ou cápsulas, nunca ragdolls inteiros (1 700 corpos não dormem em nenhum motor); LOD
   ragdoll → cápsula pela distância. Decisão em `design/pilha-e-lod.md`, revisada por `architect`.
   Mecânica? não · Aceite por comando? não · `opus`.
-- **T5.4 Implementar a regra da pilha.** Aceite: 100 corpos empilhados dormem em ≤ 10 s a ≤ 4 ms; troca de LOD de 100 corpos ≤ 5 ms.
-  Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/crowd.test.ts` · `sonnet`.
+- **T5.4 Implementar a regra da pilha** (2026-11-26, **sem ✅**: 11 dos 13 testes do §7 passam; o T1 — 100 corpos a 5,9 ms e dormindo a ~12 s no `KIT_WORLD` contra 2,5 ms e 10 s — falha e o T5 fica no limite, R2 → R1 em 4,8–5,5 ms contra 5; `evidence.md` `## T5.4`, decisão do dono pedida no fim dela). Aceite: 100 corpos empilhados dormem em ≤ 10 s a ≤ 4 ms; troca de LOD de 100 corpos ≤ 5 ms.
+  Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/body-lod.test.ts` · `sonnet`.
+  Pendências nomeadas desta task (nada disso está feito):
+  - **T5.4a** desenho de R0/R1 perto por esqueleto (`game-characters-three`, §5.3 do desenho): o `game-crowd-three` segue desenhando cadáver como instância de pose fixa e `y: 0` (`instances.ts`); troca nos mesmos 18 m. Exige §5 do CLAUDE.md (1ª e 3ª pessoa, print por câmera).
+  - **T5.4b** canal novo de instância (y + quaternion) em `game-crowd-three` para R2, R2f e R3.
+  - **T5.4c** ligar `createCorpseBodies` ao jogo/sala: `interest` do jogador, `follower` no registro de cadáveres, `onSettled` → `relocateCorpse`, `budget` do host (`beginFrame`); hoje só os testes usam.
+  - **T5.4d** restaurar num mundo novo depois de trocas (C8): as chaves dos corpos levam o número de sequência, então `restoreState` só vale no mesmo mundo; recriar na ordem de criação exige o número de sequência no estado salvo.
+  - **T5.4e** o orçamento somado do §2.3 (20 R0 + pilha + 1 000 agentes + destroços) na sala de teste.
 - **T5.5 Ragdoll de quadrúpede** (`game-animals-three`). Aceite: mesmo critério de T5.1.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-animals-three test` · `sonnet`.
 
