@@ -4304,6 +4304,66 @@ O sanity do rodador (o desenhado contra o próprio desenhado) dá 12 259 de 12 2
 
 **Gates** (um pacote por vez): `game-vehicles-three` 719 passam, 5 falham (os 4 K7 acima e o K4 do `v8_coupe`); `game-vehicles-fleet` 1 416 de 1 416; `game-physics-jolt` 225 passam, 3 puladas; typecheck e eslint de `game-vehicles-three` e `game-physics-jolt`: limpos.
 
+### Fechamento (decisões do dono de 2026-11-26): tetos 300 e 550, cache por modelo e plano no worker; **sem ✅: K4 do `v8_coupe` (+3) e do `city_bus` (+1)**
+
+**Passo 0 (juntar).** `spec/008-fase6-ficha` (T6.2c, `05c725f8e`) entrou por `git merge --no-ff` (`a30ce62d6`), sem conflito. A `origin/main` (16 commits novos) entrou por merge (`21f424670`): conflito em `evidence.md` (os dois lados só acrescentaram: mantidos) e em `game-physics-jolt/tests/cascade.test.ts` (a main passou `run` a receber a build `single`/`multithread`, esta branch a receber os carros estacionados: `run(build = 'single', parked = 0)`). Depois do merge `pnpm install --frozen-lockfile` e **`pnpm build` do repositório inteiro verde**; sem refazer o build, `proving-physics.test.ts` do `game-vehicles-fleet` reprovou 20 modelos (dist velho de `game-vehicles-driving`), e depois do build passou inteiro.
+
+**1. Tetos do K7**: van **300** (era 256; os dois modelos: 273 e 280) e `heavy` **550** (era 384; 302 a 520), o medido arredondado, escrito em `design/veiculos.md` 10.3 (K7) com a data; os outros tetos ficam. Com o teto sobrando a divisão passa a trabalhar nesses sete modelos (todos chegam no teto: van 300/300, `heavy` 550 ×5) e a K3 e a K4 deles **caem** (a catraca foi baixada: `UPDATE_HULL_EXCESS=1`, só `ambulance`, `armored_truck`, `box_truck`, `cargo_van`, `city_bus`, `school_bus`, `tanker_truck` mudaram, nenhum valor subiu). K3 do pior modelo (cima/baixo/lateral): van 6,3/7,8/3,0% -> **5,3/6,9/2,4%**; `heavy` 11,5/15,0/7,0% -> **8,8/11,0/5,6%** (10.3.1 refeito).
+
+**2. Tempo de nascer: cache por modelo e plano no worker** (`design/veiculos.md` 10.4b).
+- `hull-plan-cache.ts`: `createHullPlanCache()` guarda por modelo o plano, os cascos de cada pedaço (os mesmos objetos para todo carro), os cascos das peças sólidas e a divisão em voo (dois carros que nascem juntos mandam um plano só). Chave: chave do veículo, `seedKey` (`spec.seedKey || key`, de que o `game-vehicles` tira `strHash(seedKey + estado)`) e estado de construção, mais o teto; a assinatura (nomes e vértices de cada pedaço) confere antes de reaproveitar. Só carro intacto dá e recebe (vértice mexido ou peça que saiu tira o carro do cache). `dispose()` solta tudo e depois dele nada entra.
+- `hull-plan-kind.ts` (+ `worker-kinds.ts`, export `@adatechnology/game-vehicles-three/worker-kinds`, três-livre): categoria **`vehicles.hull-plan`** (`WORKER_KIND_ID.VEHICLE_HULL_PLAN` em `game-contracts`), faixa **`build`**, prioridade **120**, atraso **`keep-waiting`** (sem prazo em quadros). Não é `sim`: a faixa `sim` roda o kernel no quadro principal quando o worker atrasa (plano de centenas de ms) e o primeiro carro voltaria a bloquear o quadro. **Kernel puro** `planHulls(job)`: lê só os pedaços finos e os das peças sólidas do carro intacto (vértices em `Float64Array`, cantos em `Uint32Array`, buffers entregues ao worker, não copiados) e o teto; devolve dados simples (cortes, saliências, cascos com pontos `Float32Array` e vértices desenhados, o casco de cada peça sólida; buffers transferidos de volta). Sem worker, ou com o worker em falha, o mesmo `planHulls` roda no quadro principal.
+- **A entrada do worker é montada aos poucos**: converter `number[]` em bytes custa uns 5 ns por número (6 ms num `taxi`, 17 ms num `battle_tank`); `hulls()` faz até 200 000 números por chamada (cerca de 1 ms) e a primeira que fecha a entrada a manda.
+- **Enquanto o plano não chega**: `hulls()` devolve vazio, `isHullPending()` é verdadeiro e o carro usa o colisor da T3.0b (`pieces()`, caixas por pedaço). A troca é a chamada seguinte de `hulls()` depois da resposta, que o adaptador faz no passo fixo; a regra de contato da 10.5 vale para a troca (os cascos entram como cascos refeitos).
+- **Equivalência** (`tests/vehicle-hulls-cache.test.ts`): `checkTaskKind` (quadro principal, worker na mesma thread e `worker_threads` de verdade, byte a byte) sobre uma amostra pequena e o trabalho real de uma `naked_bike`; o carro inteiro: o plano feito por um worker de verdade dá os cascos que a thread principal faz, byte a byte, e `stats()` mostra 1 enviado, 0 em fallback, 0 falhas; plano pendente (`hulls()` vazio, `pieces()` com as caixas, instala na chamada seguinte); dois carros juntos mandam um plano; o segundo carro recebe os mesmos objetos (identidade), sem divisão (`stats()`: 1 planejado, 1 reaproveitado), o dano num carro refaz só o pedaço tocado e não mexe no outro, `dispose()` zera, carro amassado antes não dá, e a mesma chave com outro desenho faz o seu.
+
+**K7 de tempo (faixa de custo, `pnpm test:cost`, sob `perf-measure.lock`, carga 0,86 no começo e 2,3 no fim, os 69 modelos, worker `worker_threads` de verdade já aquecido):**
+
+| Medida (ms) | mín. | mediana | p90 | máx. | Aceite |
+|---|---|---|---|---|---|
+| **Segundo carro do modelo** (`hulls()` com o cache) | 0,10 | 0,50 | 0,82 | **1,23** (`apc_6x6`) | ≤ 2 ✓ nos 69 |
+| Primeiro carro: a chamada mais longa de `hulls()` enquanto a entrada é montada e mandada | 0,28 | 0,95 | 2,20 | **3,89** (`midsize_sedan`) | ≤ 5 ✓ nos 69 |
+| Primeiro carro: a chamada que instala o plano | 0,11 | 0,47 | 0,74 | **1,87** (`apc_6x6`) | ≤ 5 ✓ nos 69 |
+| Primeiro carro: do pedido até instalado (a divisão está no worker; com 1 ms de espera entre as chamadas) | 87 | 365 | 679 | 1 260 (`battle_tank`) | só relato |
+
+Antes disso, a divisão rodava dentro da chamada: 140 a 1 000 ms por modelo (média por classe de 267 ms a 1 276 ms, tabela "Saliências e divisão"). O limite de 5 ms do primeiro carro é novo (o dono pediu "não bloqueia o quadro", sem número): é o que a medida deixa com folga, 1,3× o pior caso; a espera de 1 ms entre as chamadas é o que um quadro faz.
+
+**3. K4 do `v8_coupe`: a recusa foi implementada, medida, e não entra; K4 fica 67 de 69.** `v8_coupe` "de cima" 4 534 contra 4 531 (+3) e, **novo com o teto do `heavy`**, `city_bus` "de cima" 9 540 contra 9 539 (+1; com o teto de 384 o ônibus de 520 cascos não dividia, com 550 divide e uma esfera passa). A catraca **não subiu**; os dois testes do K4 reprovam e o resto (K1, K2, K3, K5, K6, ≤ 64 pontos, K7) passa nos 69.
+
+Como se chegou lá (`planDivision`, recusar o corte cujas duas metades têm mais área do casco à frente do desenhado, a menos de 3 cm de qualquer triângulo, que o casco cortado; a face onde as duas metades se encostam não conta: está dentro do casco do vizinho):
+| Variante | Resultado |
+|---|---|
+| Recusa na hora do corte, K4 local do pedaço, qualquer aumento | `v8_coupe` 4 274 "de cima" mas 11 226 "de baixo" (catraca 10 547), e **77 testes de catraca reprovam** (39 de K3 e 38 de K4) nos 69 modelos |
+| Idem, com 1% de ruído (a amostra é de dez pontos por face) | `v8_coupe` passa inteiro (4 531, 10 426, 3 256), mas **71 reprovam** (K3 36, K4 35: barcos e aviões sobem 1 500 a 2 800 esferas, carros 8 a 850) |
+| Recusa contra o desenhado do carro inteiro (não só do pedaço) | 10 modelos medidos: mistura de -500 e +2 900 esferas por modelo |
+| Desfazer o corte depois do plano (sem devolver o teto, só um corte e o que está acima dele) | só mexe nos cortes recusados, mas **`v8_coupe` continua em +3** "de cima" (-112 "de baixo") e o `family_hatch` sobe 1/9/4 |
+| Recusa na hora, reservando o teto do corte recusado | `v8_coupe` +3, `entry_hatch` +211 |
+
+**Por que não fecha:** a catraca é uma contagem exata de esferas por modelo e por lado. Recusar um corte devolve o teto de cascos a outros cortes e muda a ordem do resto do plano (a divisão é gulosa e todo carro termina no teto), e qualquer mudança do plano move a K3 e a K4 de todo modelo, para cima e para baixo, em dezenas a milhares de esferas. O K4 local de 3 cm também não enxerga o que o K4 mede: nos pares do `v8_coupe` todo corte do capô melhora a área à frente (queda de 18% a 100% conforme o alcance) e os do assoalho caem de 6% a 100% (um deles 0%), e mesmo assim, com a divisão só nessa família e o resto do carro sem dividir, o capô soma 28 esferas "de cima" a mais que o método B (4 559 contra 4 531) e o assoalho 3 (4 534). Por família, cada uma sozinha, "de cima": capô 4 559, para-choque dianteiro 4 509, para-choque traseiro 4 464, para-lamas 4 386, portas 4 122, laterais 4 492, assoalho 4 534, teto 4 451, vidros 2 185, o resto 4 536, contra 4 531 do método B (os números não se somam: os cascos de uma família escondem os da outra). **Fica para o dono**: subir 3 esferas no `v8_coupe` e 1 no `city_bus`, ou aceitar uma recusa que reembase as catracas (K3 e K4 de todos os modelos, para baixo onde melhorou e para cima onde piorou: o que a regra de "só diminuir" proíbe).
+
+**Tabela K1 a K7, 69 modelos (parte das esferas que tocam o desenhado, em todas as direções, soma da classe; `HULLS_REPORT`):**
+
+| Classe | Modelos | Cascos (mín / média / máx) | Teto | K3 cima / baixo / lateral | K4 cima / baixo / lateral | K5 máx. | K1, K2, K6, ≤ 64 pontos | K7 teto | K7 tempo (2.º carro / 1.º) |
+|---|---|---|---|---|---|---|---|---|---|
+| moto e bicicleta | 12 | 64 / 64 / 64 | 64 | 5,8 / 5,8 / 4,4% | 8,6 / 9,1 / 6,5% | 0,19% | passam | ✓ | ✓ / ✓ |
+| carro | 15 | 256 / 256 / 256 | 256 | 3,7 / 6,7 / 2,3% | 5,7 / 9,8 / 3,4% | 0,32% | passam | ✓ | ✓ / ✓ |
+| SUV | 4 | 256 / 256 / 256 | 256 | 4,7 / 7,5 / 2,5% | 7,6 / 10,6 / 3,7% | 0,27% | passam | ✓ | ✓ / ✓ |
+| picape | 4 | 256 / 256 / 256 | 256 | 7,2 / 12,3 / 5,0% | 8,9 / 14,7 / 5,6% | 0,27% | passam | ✓ | ✓ / ✓ |
+| van | 2 | 300 / 300 / 300 | **300** | 3,8 / 6,6 / 2,3% | 5,0 / 8,0 / 3,0% | 0,10% | passam | ✓ | ✓ / ✓ |
+| caminhão, ônibus (`heavy`) | 5 | 550 / 550 / 550 | **550** | 4,4 / 8,1 / 3,3% | 6,2 / 10,0 / 4,2% | 0,04% | passam | ✓ | ✓ / ✓ |
+| trator | 1 | 150 | 150 | 7,0 / 14,6 / 9,8% | 7,7 / 16,1 / 8,7% | 0,30% | passam | ✓ | ✓ / ✓ |
+| militar | 8 | 500 / 500 / 500 | 500 | 5,8 / 7,4 / 4,6% | 7,1 / 8,5 / 5,1% | 0,14% | passam | ✓ | ✓ / ✓ |
+| aéreo | 11 | 500 / 500 / 500 | 500 | 5,1 / 5,5 / 3,3% | 5,5 / 5,9 / 3,5% | 0,08% | passam | ✓ | ✓ / ✓ |
+| barco | 7 | 369 / 435 / 450 | 450 | 10,0 / 6,4 / 7,9% | 11,2 / 8,0 / 8,0% | 0,05% | passam | ✓ | ✓ / ✓ |
+
+K1 (tiro e vértices, `family_hatch`, `naked_bike`, `city_bus`), K2 (0 falhas de encosto), K5 (≤ 0,32% por classe, o pior modelo da moto 0,19%), K6 (0 falhas) e ≤ 64 pontos passam nos 69. **K3 passa nos 69** (catraca por modelo e por lado, só baixou). **K4: 67 de 69** (acima). **K7: teto ✓ nos 69; tempo ✓ nos 69.** Por isso a T6.4 segue **sem ✅**.
+
+**T6.21 com os cascos novos** (`car-hulls.json.gz` regerado por `HULLS_FIXTURE=… vitest run tests/vehicle-hulls-fixture.test.ts`: as duas vans agora têm 300 cascos e as peças sólidas vêm depois das finas; não é golden): 12 modelos, **3 160 cascos**, 2 301 bytes por casco, formas compartilhadas 6,93 MB, 200 corpos 0,06 MB, cópias dos 20 danificados 0,30 MB, **pico 7,3 MB (≤ 64 MB)**; tudo solto devolve o heap. A T6.21 já estava ✅ (aceite do heap com os cascos reais) e segue passando; o ✅ pedido para a T6.21 junto da T6.4 vale quando o K4 fechar.
+
+**Gates** (uma suíte por vez; a máquina esteve com carga 5 a 16 de outras sessões nos gates): `game-vehicles-three` 730 passam, 2 falham (os dois K4 acima), 70 puladas (69 da faixa de custo, 1 do fixture); `game-vehicles-fleet` 42 arquivos, 1 478 testes; `game-vehicles-driving` 97; `game-vehicles-proving` 20; `game-workers` 23; `game-physics-jolt` 231 passam, 3 puladas; `game-contracts` 129; `game-kit-defaults` 68; `tsc --noEmit` dos sete pacotes limpo; eslint de `game-vehicles-three`, `workers.ts` e `cascade.test.ts` sem erros. **Nenhum golden mudou** (`team-golden`, `exact-vehicles-three.json`); mudaram `hull-excess-ledger.json` e `hull-floating-ledger.json` (só para baixo, 7 modelos) e `car-hulls.json.gz`.
+
+**Não feito:** `hullPlanKind` **não** está em `KIT_WORKER_KINDS` de `game-kit-defaults`: o pacote `game-vehicles-three` já depende dele por `devDependencies` (ciclo). O jogo lista `hullPlanKind` no `installWorkerHost` do próprio arquivo de worker e chama `warm([hullPlanKind])` na carga. A medição na sala (§14: pior quadro e p99 com 0 workers e com o automático, em AMD) fica para quando o adaptador do Jolt usar `hulls()` (T6.9).
+
 ## T6.21 — Heap dos 200 estacionados e B6 com 20 carros (2026-11-26)
 
 `game-physics-jolt/tests/heap.test.ts` (descrição `T6.21`) e `cascade.test.ts` (teste `T6.21`); medidos neste computador, com carga de outras sessões.

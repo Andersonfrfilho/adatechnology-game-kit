@@ -450,6 +450,12 @@ com no máximo 64 pontos por `reducePoints` (que sempre inclui o extremo de cada
   triângulos), até nenhum passar, nenhum poder ser cortado (< 5 cm) ou o modelo chegar ao teto da classe do K7 (`maxHulls`; as peças
   sólidas contam). **O carro intacto congela o plano** (os cortes e as saliências tiradas, por pedaço); no dano, o pedaço refaz os mesmos
   cortes sobre os vértices novos e as alças (chaves) ficam as mesmas.
+- **Corte que piora o K4: tentado, não entra** (decisão do coordenador em 2026-11-26 depois do `v8_coupe`, +3 esferas do K4; medidas em `evidence.md`
+  `## T6.4`, "Fechamento"). A regra feita foi a pedida: o K4 local de um casco é a área das suas faces sem triângulo desenhado a menos de 3 cm, sem
+  contar a que cai dentro do casco do vizinho do corte; o corte cuja soma nas duas metades passa a do casco cortado é recusado. **A catraca do K4 e a
+  do K3 não fecham com ela**: recusar um corte devolve o teto de cascos a outros cortes e muda a ordem do resto do plano, e as catracas são contagens
+  exatas por modelo e por lado, que sobem e descem em dezenas a milhares de esferas com qualquer mudança do plano (a versão que recusa na hora reprova 71
+  testes de catraca dos 69 modelos). Desfazer o corte depois do plano (sem devolver o teto) não mexe nos outros modelos, mas também não tira as 3 esferas do `v8_coupe`.
 
 Casco é a peça **fina** (painel, assoalho, teto, vidro), nunca o volume da cabine: o interior fica oco e um banco solto cai sobre o assoalho
 e sai pela porta que não está mais lá (seção 11).
@@ -482,7 +488,7 @@ de 1 cm; a "esfera" é o primeiro toque de uma bola de r = 10 cm sobre esse mapa
 | K4 | Excesso para fora: esferas com o casco mais de 3 cm à frente do desenhado, relatadas por grupo (de baixo, de cima, lateral) | ≤ o medido na frota no merge, e só pode diminuir (catraca gravada, como a do §13) |
 | K5 | Não afunda: esferas com o casco mais de 5 cm atrás do desenhado, ou sem casco | ≤ 1% por modelo |
 | K6 | Peça sólida: um casco, só de vértices desenhados; rodas fora do chassi | teste |
-| K7 | Teto: ≤ 64 pontos por casco; moto 64, carro/SUV/picape/van 256, `heavy` 384, as demais classes medidas; construção do modelo ≤ 100 ms em Node (faixa de custo); 12 modelos distintos ≤ 64 MB | teste |
+| K7 | Teto: ≤ 64 pontos por casco; moto 64, carro/SUV/picape 256, **van 300** (era 256) e **`heavy` 550** (era 384): decisão do dono em 2026-11-26, o medido arredondado; as demais classes medidas. **Tempo de nascer** (decisão do dono em 2026-11-26, no lugar de "construção do modelo ≤ 100 ms"): o segundo carro do mesmo modelo recebe os cascos em **≤ 2 ms** (cache por modelo, 10.4b) e o primeiro não bloqueia o quadro (o plano roda no worker, `vehicles.hull-plan`); medido na faixa de custo, sob a trava, com carga < 4. 12 modelos distintos ≤ 64 MB | teste |
 
 **H1–H6 ficam substituídos** (histórico, não apagado): H1 virou K1; H2 (≤ 1 cm para fora) e H3 (≥ 95% de cobertura entre 3 cm antes e 1 cm
 depois) viraram K3, K4 e K5 por esfera, porque o raio de 5 cm do desenho media saliência fina e não o que um objeto do tamanho de um punho
@@ -499,15 +505,15 @@ O §12 do kit ("nada colide sem desenho") pede 0. Para veículo, **dentro dos te
 encostar em esferas que não tocam o desenhado, **por grupo de direção** (de baixo, de cima, lateral) e **só diminuindo**: a catraca é
 `tests/fixtures/hull-floating-ledger.json` (esferas por modelo e por grupo, o mesmo formato da do K4, baixada com `UPDATE_HULL_EXCESS=1`,
 nunca subida). Medido na T6.4 depois das saliências e da divisão (parte das esferas que tocam o desenhado, em todas as direções; o
-pior modelo de cada classe; `evidence.md` `## T6.4`, "Saliências e divisão"):
+pior modelo de cada classe; `evidence.md` `## T6.4`, "Saliências e divisão"; as linhas da van e do `heavy` foram refeitas em 2026-11-26 com os tetos 300 e 550, "Fechamento"):
 
 | Classe | de cima | de baixo | lateral |
 |---|---|---|---|
 | carro | até 6,7% | até 9,4% | até 3,3% |
 | SUV | 8,2% | 10,4% | 3,4% |
 | picape | 10,4% | 21,0% | 9,5% |
-| van | 6,3% | 7,8% | 3,0% |
-| `heavy` | 11,5% | 15,0% | 7,0% |
+| van | 5,3% | 6,9% | 2,4% |
+| `heavy` | 8,8% | 11,0% | 5,6% |
 | moto e bicicleta | 9,0% | 8,6% | 6,0% |
 | trator | 7,0% | 14,6% | 9,8% |
 | militar | 8,4% | 12,7% | 6,4% |
@@ -531,6 +537,32 @@ mutável só existe durante a batida.
 - **Nenhum agente encontra carro** (7.8): o par `vehicle`–`agent` sai; o carro é obstáculo de navegação do `game-crowd`.
 - **Variante do B6**: cascata de 500 com 20 carros estacionados dentro da ilha do blast; mesmo aceite do B6.
 - **Filhos por alça**: `tag` ou alça estável; `RemoveShape` desloca os índices seguintes (`types.d.ts:1147`).
+
+### 10.4b Cache por modelo e plano no worker (decisão do dono em 2026-11-26)
+
+O plano de cascos do carro **intacto** é o mesmo para todo carro do mesmo modelo: o que custa (a divisão adaptativa, `planDivision`: 140 a 1 000
+ms por modelo) se faz **uma vez por modelo**.
+
+- **Chave do modelo**: a identidade do modelo e da semente que o `game-vehicles-fleet` usa para desenhar: a chave do veículo, a `seedKey`
+  (`spec.seedKey || key`, de que sai `strHash(seedKey + estado)`) e o estado de construção; mais o teto de cascos. Vem do `VehicleContext`
+  (`options.planKey` sobrescreve). Antes de reaproveitar, confere a assinatura: nomes e número de vértices de cada pedaço; se não bate o carro faz o seu.
+- **O que se guarda** (`HullPlanCache`, `hull-plan-cache.ts`): o plano (cortes e saliências tiradas), os cascos de cada pedaço (os mesmos objetos
+  para todo carro: o adaptador do Jolt compartilha a forma por identidade dos pontos, 10.4) e os cascos das peças sólidas. **Só carro intacto dá
+  e recebe**: vértice amassado ou peça que saiu tira o carro do cache; o dano refaz só o pedaço tocado, com os cortes do plano, e **nunca
+  mexe no que os outros carros têm**. O cache solta tudo no `dispose` (§8) e depois dele nada entra.
+- **Primeiro plano no coordenador** (CLAUDE.md §14, `specs/regras/14-workers.md`): categoria `vehicles.hull-plan` (`hull-plan-kind.ts`, entrada
+  `@adatechnology/game-vehicles-three/worker-kinds`, três-livre), faixa `build`, prioridade 120, regra de atraso `keep-waiting`, sem prazo em quadros.
+  Não é `sim`: a faixa `sim` roda o kernel no quadro principal quando o worker atrasa, e o plano pesa centenas de ms. **Kernel puro**: `planHulls(job)`
+  lê só os pedaços do carro intacto (vértices e índices) e o teto, e devolve dados simples (cortes, saliências, cascos com os pontos em `Float32Array`
+  e os vértices desenhados em `Float64Array`, os `ArrayBuffer` transferidos de volta). Sem worker, ou com o worker em falha, `planHulls` roda no
+  quadro principal com o mesmo código e dá os **mesmos bytes** (teste de equivalência: `checkTaskKind` no quadro principal, no worker na mesma
+  thread e em `worker_threads`, e o carro inteiro). Dois carros do mesmo modelo que nascem juntos mandam um plano só.
+- **Enquanto o plano não chega**, `hulls()` devolve vazio, `isHullPending()` é verdadeiro e o carro usa o colisor da T3.0b (`pieces()`: caixas por
+  pedaço). **A troca é num passo fixo**: o plano que voltou só entra na chamada seguinte de `hulls()`, que o adaptador faz dentro do passo fixo; com a
+  regra de contato da 10.5 a troca não faz salto (os cascos novos entram como cascos refeitos: para dentro livre, para fora até o *slop*).
+- **K7 de tempo**: o segundo carro do modelo ≤ 2 ms (só `make()` e achar o plano no cache); o primeiro não bloqueia o quadro porque a divisão está
+  no worker, e o que fica no quadro (montar a entrada e mandá-la) é medido e registrado em `evidence.md` `## T6.4`.
+- **Aquecer** (CLAUDE.md §14): o jogo chama `warm([hullPlanKind])` antes do primeiro carro; sem isso o primeiro plano espera o worker subir.
 
 ### 10.5 Cascos contra contatos que estão acontecendo
 
