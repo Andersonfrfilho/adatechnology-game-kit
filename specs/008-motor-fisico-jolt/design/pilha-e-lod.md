@@ -176,3 +176,5 @@ Limite em milissegundos reprova por carga da máquina; por isso (regra §9, `CON
 - Permanência de 1 s por degrau (`dwellSeconds`) além da histerese de distância.
 - `onSettled` só avisa a partir de 2 m: o tombo do próprio corpo move o tronco até ~1,3 m; é o que mantém o `state-hash` do `game-crowd` igual quando nada empurra.
 - Medido no `KIT_WORLD` (`evidence.md` `## T5.4`): corpo R1 acordado custa ~0,055 ms; o C7 de 100 correntes (2,5 ms) foi do passo de 60 Hz com iterações padrão e não vale no `KIT_WORLD`.
+- **Limites do T1 no `KIT_WORLD` (decisão do dono, 2026-11-26):** a pilha de 100 dorme em ≤ 14 s, com mediana ≤ 6 ms e p99 ≤ 10 ms por quadro (`C7_PILE_KIT_WORLD`). O T5.4 segue sem ✅ (T5.4 fecha com a medição na faixa de custo, não com este texto).
+- **Aceite da T7.1 coberto por teste (2026-11-26, revisão do PR 521):** `game-crowd/tests/physics/corpse-physics-hash.test.ts` roda a mesma multidão com cadáveres, com a física ligada e sem ela, e exige `hashCrowdState` e o registro de cadáveres iguais, e nenhum `onSettled`, quando nada empurra os corpos.
