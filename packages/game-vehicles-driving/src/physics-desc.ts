@@ -11,6 +11,8 @@ const FRONT_BRAKE_SHARE = 0.6
 const HANDBRAKE_SHARE = 0.5
 /** Suspension travel left when fully compressed, as a share of the free length. */
 const SUSPENSION_MIN_SHARE = 0.4
+/** The most of the free length the static sag may take. */
+const MAX_SAG = 0.5
 /** A motorcycle's lean spring and damper per kg m^2 of roll inertia (measured: the engine's own values are for a real bike's inertia), and its lean limit. */
 const LEAN_SPRING_PER_INERTIA = 400
 const LEAN_DAMPING_PER_INERTIA = 40
@@ -19,10 +21,16 @@ const WHEEL_WIDTH = 0.2
 const CLUTCH_STRENGTH = 10
 const CLUTCH_SLIP = 0.03
 const BICYCLE_WHEEL_INERTIA = 0.1
+/** A wheel with its tyre and brake weighs about 1.5% of the vehicle: its inertia `1/2 m r^2` is this per kg of the vehicle at a 0.32 m radius (0.83 kg m^2 on a 1 t car; the engine's own 0.9 is a car's, and four of them on a 150 kg bike weigh as much as the bike). */
+const WHEEL_INERTIA_PER_MASS = 0.0008
+const REFERENCE_RADIUS = 0.32
+const MIN_WHEEL_INERTIA = 0.02
 /** The wheels' spin damping: the engine's own (0.2) is a drag of 7.8 N per m/s on a car's four wheels (0.4 kN at 50 m/s) the spec's rolling resistance already covers. */
 const WHEEL_DAMPING = 0.02
 /** The engine's friction: the semi-simulation has none beyond its efficiency (the engine's own, 0.2, would take 85 N m of a 187 N m engine at 4 000 rpm). */
 const ENGINE_DAMPING = 0.005
+/** The engine's rotating mass per N m of peak torque (kg m^2): 0.19 for a 190 N m car engine; the engine's own 0.5 is a third of a ton of inertia in first gear on a car and a ton on a bike. */
+const ENGINE_INERTIA_PER_TORQUE = 0.001
 /** What a worn engine and a worn suspension keep of their torque and of their spring and damper (the semi-simulation's own floors). */
 const ENGINE_FLOOR = 0.55
 const SUSPENSION_FLOOR = 0.5
@@ -40,7 +48,7 @@ export interface VehicleFromSemiOptions {
   /** What is wrong with it now: a flat tyre or a bare rim rides on the rim's radius with its grip, a worn engine gives less, worn brakes brake less. */
   readonly condition?: VehicleCondition
   readonly wheelWidth?: number
-  /** Rotational inertia of each wheel with its tyre, kg m^2: the engine's own is a car's (0.9), a bicycle's wheel is about a ninth of it (the default with `pedal`). */
+  /** Rotational inertia of each wheel with its tyre, kg m^2: by default 0.0008 per kg of the vehicle (a bicycle: 0.1). */
   readonly wheelInertia?: number
   /** A bicycle's engine in place of `spec.engine`. */
   readonly pedal?: PedalOptions
@@ -79,9 +87,12 @@ interface WheelContext {
 const wheelOf = (wheel: SemiWheel, index: number, context: WheelContext): WheelDesc => {
   const { spec, condition, options } = context
   const cornerMass = spec.mass / spec.wheels.length
-  const spring = spec.suspension.spring * (SUSPENSION_FLOOR + (1 - SUSPENSION_FLOOR) * clamp(condition.suspension ?? 1, 0, 1))
-  const damper = spec.suspension.damper * (SUSPENSION_FLOOR + (1 - SUSPENSION_FLOOR) * clamp(condition.suspension ?? 1, 0, 1))
+  const wear = SUSPENSION_FLOOR + (1 - SUSPENSION_FLOOR) * clamp(condition.suspension ?? 1, 0, 1)
   const free = spec.suspension.restLength
+  // the spec's spring is a car's: a heavy vehicle that kept it would sag past its own travel and sit on its belly, so the spring stiffens (the damper with it) until the sag is the share MAX_SAG of the travel
+  const stiffening = Math.max(1, (cornerMass * GRAVITY) / (MAX_SAG * free * spec.suspension.spring * wear))
+  const spring = spec.suspension.spring * wear * stiffening
+  const damper = spec.suspension.damper * wear * stiffening
   const sag = (cornerMass * GRAVITY) / spring
   const flat = isFlat(condition, index)
   const rimRadius = spec.rimRadius ?? RIM_RADIUS_SHARE * spec.wheelRadius
@@ -102,7 +113,7 @@ const wheelOf = (wheel: SemiWheel, index: number, context: WheelContext): WheelD
     driven: spec.fourWheelDrive || wheel.drive === true,
     maxBrakeTorque: brakeTorque,
     maxHandBrakeTorque: wheel.handbrake ? (spec.brakeForce * spec.wheelRadius * HANDBRAKE_SHARE) / context.handbrakeCount : 0,
-    ...((options.wheelInertia ?? (options.pedal ? BICYCLE_WHEEL_INERTIA : undefined)) !== undefined ? { inertia: options.wheelInertia ?? BICYCLE_WHEEL_INERTIA } : {}),
+    inertia: options.wheelInertia ?? (options.pedal ? BICYCLE_WHEEL_INERTIA : Math.max(MIN_WHEEL_INERTIA, WHEEL_INERTIA_PER_MASS * spec.mass * (spec.wheelRadius / REFERENCE_RADIUS) ** 2)),
     angularDamping: WHEEL_DAMPING,
     longitudinalFriction: longitudinalCurve(friction),
     lateralFriction: lateralCurve(friction, spec.tyre.corneringStiffness),
@@ -132,12 +143,13 @@ const inertiaOf = (spec: SemiSimSpec): readonly [number, number, number] => {
   return [(spec.mass * (wheelbase * wheelbase + 1)) / 12, spec.yawInertia ?? (spec.mass * (wheelbase * wheelbase + track * track)) / 12, (spec.mass * (track * track + 1)) / 12]
 }
 
-const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<VehicleDesc, 'maxTorque' | 'engineDamping' | 'minRpm' | 'maxRpm' | 'gears' | 'reverseGears' | 'differentialRatio' | 'torqueCurve' | 'transmission'> => {
+const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<VehicleDesc, 'maxTorque' | 'engineDamping' | 'engineInertia' | 'minRpm' | 'maxRpm' | 'gears' | 'reverseGears' | 'differentialRatio' | 'torqueCurve' | 'transmission'> => {
   const { pedal } = options
   if (pedal) {
     const crankSpeed = (pedal.cadenceRpm * 2 * Math.PI) / 60
     return {
       engineDamping: ENGINE_DAMPING,
+      engineInertia: ENGINE_INERTIA_PER_TORQUE * (pedal.watts / crankSpeed),
       maxTorque: (pedal.watts / crankSpeed) * spec.efficiency,
       minRpm: 0,
       maxRpm: pedal.cadenceRpm * 1.5,
@@ -152,6 +164,7 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
   const health = clamp(options.condition?.engine ?? 1, 0, 1)
   return {
     engineDamping: ENGINE_DAMPING,
+    engineInertia: ENGINE_INERTIA_PER_TORQUE * spec.engine.peakTorque,
     maxTorque: spec.engine.peakTorque * spec.efficiency * (ENGINE_FLOOR + (1 - ENGINE_FLOOR) * health),
     minRpm: spec.engine.idleRpm,
     maxRpm: spec.engine.redlineRpm,

@@ -2107,6 +2107,12 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -2143,6 +2149,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-runtime':
         specifier: workspace:^
         version: link:../game-runtime
@@ -2150,6 +2159,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vehicles-driving
     devDependencies:
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5

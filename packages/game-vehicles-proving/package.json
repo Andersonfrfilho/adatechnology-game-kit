@@ -41,6 +41,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@types/node": "^22.10.7",
     "tsup": "^8.5.1",
     "typescript": "^5.7.3",
@@ -48,6 +49,7 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
     "@adatechnology/game-runtime": "workspace:^",
     "@adatechnology/game-vehicles-driving": "workspace:^"
   }

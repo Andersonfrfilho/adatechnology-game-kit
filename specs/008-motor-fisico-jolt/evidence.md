@@ -4127,17 +4127,17 @@ Aceite: `grep -c 'corpse\|testador das rodas\|estacionado' specs/008-motor-fisic
 
 | Item | Jolt | Semi-simulação |
 |---|---|---|
-| altura parado | 0,458 m | 0,500 m (mola do Jolt usa a massa efetiva na roda, não 1/4 do carro; critério: ±6 cm) |
-| velocidade máxima, tempo suficiente | 55,2 m/s | 56,7 m/s (2,6%; critério 5%) |
-| frenagem 100 km/h → 0 | 41,5 m | 36,4 m (+14%; critério 0,9–1,3×) |
-| curva à esquerda a 15 m/s, 2 s | 1,358 rad (direita: −1,356) | 1,321 rad (critério 10%) |
+| altura parado | 0,457 m | 0,500 m (mola do Jolt usa a massa efetiva na roda, não 1/4 do carro; critério: ±6 cm) |
+| velocidade máxima, tempo suficiente | 55,3 m/s | 56,7 m/s (2,5%; critério 5%) |
+| frenagem 100 km/h → 0 | 41,9 m | 36,4 m (+15%; critério 0,9–1,3×) |
+| curva à esquerda a 15 m/s, 2 s | 1,3205 rad (direita: −1,3208) | 1,3209 rad (critério 10%) |
 | `canDrive` falso, acelerador cheio, 4 s | 0,001 m/s | |
 | pneu dianteiro esquerdo furado | assenta inclinado: arfagem 0,019 rad e rolagem 0,009 contra 0,000 do carro inteiro | |
-| criado a 60 km/h girado 37°, 2 s com 0,4 de acelerador | perde 2,1 km/h; lateral 0,010 m/s; deriva 0,0004 rad | (os 7 km/h do freio de motor a 0 vêm do Jolt, girado ou não) |
+| criado a 60 km/h girado 37°, 2 s com 0,4 de acelerador | perde 0,79 km/h (critério da §7.3: < 1); lateral 0,009 m/s; deriva 0,00003 rad | (os 7 km/h do freio de motor a 0 vêm do Jolt, girado ou não) |
 | bicicleta, 250 W, 40 s | 8,0 m/s, rolagem máxima 0,022 rad | |
-| **arrancada 0–60 km/h** | **6,1 s** | **3,8 s** |
+| **arrancada 0–60 km/h** | **5,9 s** | **3,8 s** |
 
-**Aberto, não resolvido (vai para a T6.2b):** a arrancada do Jolt é 1,6× a da semi-simulação: com 1 300 kg e tração traseira o motor passa o que o pneu segura (grip de pico ≈ 7 kN) e as rodas patinam; o Jolt também não troca de marcha para cima com roda patinando, então a 1ª vai até o corte. A semi-simulação não tem esse limite de tração (ela dá 4,4 m/s² médios a 1,3 t). O teste `launch` registra o tempo e confere só que é maior que o da semi e menor que 9 s; **não é um critério de equivalência**. A direção reduzida com a velocidade e a puxada (`pullShare`) também esperam medida. Um pneu furado não tem a resistência de rolamento do `FLAT_ROLLING` da semi-simulação (puxa só pela `steerPull` do `status()`, que o mapeador aplica).
+**Aberto (a T6.2b mediu a frota inteira com o mesmo mapa; ver lá):** a arrancada do Jolt é 1,6× a da semi-simulação: com 1 300 kg e tração traseira o motor passa o que o pneu segura (grip de pico ≈ 7 kN) e as rodas patinam; o Jolt também não troca de marcha para cima com roda patinando, então a 1ª vai até o corte. A semi-simulação não tem esse limite de tração (ela dá 4,4 m/s² médios a 1,3 t). O teste `launch` registra o tempo e confere só que é maior que o da semi e menor que 9 s (valor medido depois dos acertos da T6.2b: 5,9 s); **não é um critério de equivalência**. A direção reduzida com a velocidade e a puxada (`pullShare`) também esperam medida. Um pneu furado não tem a resistência de rolamento do `FLAT_ROLLING` da semi-simulação (puxa só pela `steerPull` do `status()`, que o mapeador aplica).
 
 **Gates:** `pnpm --filter @adatechnology/game-vehicles-driving test` 7 arquivos, **92 testes passam**; `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado), **158 passam, 3 puladas** (`vehicle.test.ts` inclui as duas cenas antigas, meio-fio e rampa, **sem mudança de valor**: nenhum teste de andar ou bater precisou ser recalibrado); `tsc --noEmit` dos dois e de `game-physics` limpos; eslint dos três sem avisos.
 
@@ -4157,3 +4157,26 @@ Aceite: `grep -c 'corpse\|testador das rodas\|estacionado' specs/008-motor-fisic
 Um carro que cai de barriga depois de pular o meio-fio (o carro do T6.2, mais leve de frente) fica acordado enquanto as rodas no ar giram: 57 rad/s a 6 rad/s em 11 s com o amortecimento padrão da roda; é o que a regra diz.
 
 **Gates:** `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado), **161 passam, 3 puladas**; `tsc --noEmit` e eslint de `game-physics-jolt` limpos.
+
+
+## T6.2b — Rodador do banco de provas no Jolt (2026-11-26)
+
+**Entrou:** `game-vehicles-proving`: `startPhysicsRun` e `runTestOnPhysics` (`src/physics-run.ts`): os **mesmos procedimentos e faixas** do rodador da semi-simulação (`tests.ts` e `ranges.ts` não mudaram), dirigindo o veículo do motor. O chão é uma laje com o atrito da superfície (`surfaceGrip`, inclusive o aquaplanagem, por `setMaterial`), o veículo vem de `vehicleDescFromSemi` da ficha (`subjectSpec`), a entrada passa pelo `createPhysicsInputMapper`, o arrasto e o rolamento pelo `resistanceImpulse`, e o atoleiro de uma superfície `bogs` (2WD acelerando) troca o rolamento pelo `bogResistance` da ficha. O estado que os procedimentos leem (`SemiState`) vem do corpo: `u` pela frente do chassi, `yawRate` positivo à esquerda, `x`/`z` a distância percorrida; `rpm` e `gear` ficam 0 (o contrato não os lê). O motor entra por `createWorld` (injeção: o pacote só depende do contrato de `game-physics`; o Jolt é `devDependency` dos testes). `resultOf` saiu de `startRun` para os dois rodadores partilharem o veredito. Teste da frota inteira em `game-vehicles-fleet/tests/proving-physics.test.ts` (a frota é o conteúdo daquele pacote; pô-la em `game-vehicles-proving` criaria um ciclo de dependência entre os dois).
+
+**Acertos do mapa que a frota pediu** (cada um mediu efeito grande; todos em `vehicleDescFromSemi`): (1) a inércia do motor do Jolt (0,5 kg m²) vale um terço de tonelada em primeira marcha num carro e uma tonelada numa moto: `engineInertia` = 0,001 × torque de pico; (2) a inércia das quatro rodas padrão (0,9 cada) pesa o mesmo que uma moto de 150 kg: `inertia` da roda = 0,0008 × massa × (raio / 0,32)²; (3) a mola da ficha é de um carro de 1,3 t: um caminhão de 12 t afundaria além do curso e andaria de barriga, então a mola (e o amortecedor, na mesma proporção) enrijece até o afundamento estático ser metade do curso. Efeito na frota (67 corridas fora da faixa → 30): antes do ajuste 28 modelos de 48 fora, depois 21.
+
+**Resultado, frota terrestre (48 modelos; os três aeronaves do grupo `military` ficam fora porque `fleetProvingSubject` toma o domínio do grupo e os devolve como terrestres; a semi-simulação os reprova também), seis testes cada = 288 corridas:** **258 dentro da faixa, 30 fora, em 21 modelos; 27 modelos passam nos seis.** Por teste: `accel_0_100` 21, `top_speed` 3, `brake_100_0` 3, `wet_brake_80_0` 2, `turn_circle` 1; `mud_traction` 0. O teste da frota grava, por modelo, o que está fora, e falha se esse conjunto mudar (para os dois lados). A faixa não foi tocada.
+
+| Modelo | Teste | Medido | Faixa | Semi-simulação | Causa provável |
+|---|---|---|---|---|---|
+| entry_hatch, electric_hatch, beetle, family_hatch, v8_coupe | `accel_0_100` | 14,1 / 14,5 / 16,3 / 13,6 / 10,2 s | 6,5–13,5 / 6,5–13,5 / 5–10,4 / 6,5–13,5 / 3,9–8,1 | 8,7 / 8,9 / 8,4 / 8,6 / 7,1 | arrancada limitada pela tração: o motor passa o que o pneu segura, a roda patina e o Jolt não troca de marcha para cima com roda patinando; a semi-simulação não tem esse limite (1,6× a 1,8×) |
+| scooter, commuter_motorcycle, trail_bike, naked_bike, sport_bike, cruiser, delivery_bike | `accel_0_100` | 15,6 / 16,8 / 14,8 / 14,1 / 10,6 / 12,3 / 15,7 s | 3,6–7,5 … 3,9–8,1 | 7,0 … 7,9 | o mesmo (a ficha dá quatro rodas a uma moto, com o mesmo torque por kg) |
+| cargo_van, box_truck, tanker_truck, school_bus, city_bus, armored_truck | `accel_0_100` | 14,2 / 16,2 / 15,9 / 15,1 / 14,1 / 15,9 s | 6,5–13,5 … 7,3–15,1 | 8,8 / 8,6 / 7,9 / 6,5 / 6,7 / 7,9 | o mesmo, mais pesado: a ficha dá ao ônibus 0,135 N m de torque por kg, mais do que o pneu segura em primeira |
+| city_bus | `turn_circle` | 27,2 m | 10–26 | 25,8 m | giro = 2 × entre-eixos / sen(esterço): 4% acima do teto, a semi-simulação ficou 0,8% abaixo dele |
+| tractor | `top_speed`, `accel_0_100`, `brake_100_0` | 21,8 km/h; não chega ao alvo de 22 km/h (80% dos 28 da ficha) em 90 s; sem valor | 25,2–30,8; 1,7–3,6; 2,5–5,3 | 26,3; 0,9 (falha); 1,6 (falha) | máxima de 28 km/h num carro de quatro rodas com a escala de carro: no limite o Jolt perde 17% da máxima; a semi-simulação já erra as faixas de 0–alvo e de frenagem |
+| bicycle | quatro | 12,8 km/h de máxima; o resto sem valor | 22,5–27,5 … | 23 (e falha em `brake`/`wet_brake`) | a ficha trata a bicicleta como carro de quatro rodas; a pedal (`pedal`) é o caminho certo e não entra pelo `subjectSpec` |
+| step_through_scooter | `top_speed`, `accel_0_100`, `brake_100_0`, `wet_brake_80_0` | 75,2 km/h; sem valor nos outros | 85,5–104,5 … | 90,9 (falha em `brake`) | máxima de 95 km/h, alvo de 100 que cai a 76 km/h (80%): o carro de quatro rodas da ficha não chega ao alvo no Jolt (75,2 de máxima); o mesmo tipo da moto |
+
+**Não mexi na faixa nem na ficha.** O que sobra se divide em dois: a **arrancada** (21 das 30 corridas, nos 21 modelos) é a diferença de modelo entre um pneu com limite de tração e a semi-simulação sem ele, e a correção é decisão do dono (aliviar o torque da ficha por massa em `semiSpecFromStats`, que mexe também no semi, ou uma assistência de tração no mapa; um controle de tração por patinagem **piorou** a arrancada dos carros de 12,7 s para 16 s com o limiar que tentei e foi retirado); e os **veículos fora do desenho de quatro rodas** (bicicleta, tractor, `step_through_scooter`), que a ficha trata como carro.
+
+**Gates:** `pnpm --filter @adatechnology/game-vehicles-proving test` 2 arquivos, 6 testes novos; `pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/proving-physics.test.ts` 50 testes; `game-vehicles-driving test` 92; `game-physics-jolt test` conferido em seguida; `tsc --noEmit` e eslint dos pacotes tocados.

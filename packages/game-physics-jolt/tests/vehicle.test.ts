@@ -237,7 +237,7 @@ describe('T6.2: the semi-simulation car on the engine (vehicleDescFromSemi, crea
     r.world.dispose()
   })
 
-  it('launch: 0 to 60 km/h on dry asphalt takes 6.1 s against the semi-simulation\'s 3.8 s: the engine spins the rear wheels (recorded, not an equivalence)', async () => {
+  it('launch: 0 to 60 km/h on dry asphalt takes 5.9 s against the semi-simulation\'s 3.8 s: the engine spins the rear wheels (recorded, not an equivalence)', async () => {
     const semi = createSemiSimDriver()
     let semiTime = -1
     for (let i = 0; i < 120 * 20 && semiTime < 0; i++) {
@@ -332,7 +332,7 @@ describe('T6.2: the semi-simulation car on the engine (vehicleDescFromSemi, crea
     expect(Math.abs(flat.roll - whole.roll)).toBeGreaterThan(0.005)
   })
 
-  it('made at 60 km/h turned 37 degrees it keeps its heading and its speed for 2 s (the engine\'s own braking, drag and rolling resistance: a few km/h)', async () => {
+  it('made at 60 km/h turned 37 degrees it keeps its heading and its speed for 2 s (under 1 km/h with the throttle that holds the speed)', async () => {
     const heading = 37 * (Math.PI / 180)
     const r = await rig(defaultSemiSpec, { speed: 60 / 3.6, heading })
     for (let i = 0; i < 30; i++) r.step({ ...idle, throttle: 0.4 })
@@ -349,7 +349,7 @@ describe('T6.2: the semi-simulation car on the engine (vehicleDescFromSemi, crea
     report('t6.2-created-moving', { lostKmh: (v0 - speedOf(r)) * 3.6, sidewaysMs: sideways, drift })
     expect(Math.abs(drift)).toBeLessThan(0.05)
     expect(sideways).toBeLessThan(0.5)
-    expect((v0 - speedOf(r)) * 3.6).toBeLessThan(3)
+    expect((v0 - speedOf(r)) * 3.6).toBeLessThan(1)
     r.world.dispose()
   })
 

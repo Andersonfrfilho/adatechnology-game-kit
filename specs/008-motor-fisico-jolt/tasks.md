@@ -192,7 +192,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` e `heap.test.ts` · `sonnet`.
 - ✅ **T6.2 Mapa da condução** (seção 7; feito em 2026-11-26, `evidence.md` `## T6.2`; a arrancada do Jolt é 1,6× a da semi-simulação, registrada e entregue à T6.2b), inclusive a bicicleta a pedal: `vehicleDescFromSemi`, controles → entrada, carro criado andando, arrasto, `status()`; os testes de andar e bater recalibrados com motivo (nenhum precisou).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
-- **T6.2b Rodador do banco de provas no Jolt:** frota terrestre inteira dentro das faixas.
+- **T6.2b Rodador do banco de provas no Jolt:** frota terrestre inteira dentro das faixas. **Rodador feito em 2026-11-26 (`evidence.md` `## T6.2b`); a frota NÃO está inteira dentro das faixas: 258 de 288 corridas passam, 21 dos 48 modelos terrestres têm algo fora (os 21 falham na arrancada, 17 só nela); sem ✅ até o dono decidir como a arrancada limitada pela tração entra (ficha ou assistência), e a faixa não foi tocada.**
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-proving test` · `sonnet`.
 - ✅ **T6.3 Regra de sono do carro** (feito em 2026-11-26, `evidence.md` `## T6.3`; 7.7; roda no ar girando mantém o carro acordado). Aceite: carro parado dorme em ≤ 3 s; batida a 60 km/h no meio-fio de 30 cm dorme em ≤ 7 s.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/vehicle.test.ts` · `sonnet`.
