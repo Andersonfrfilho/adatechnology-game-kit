@@ -13,6 +13,7 @@ import type { GaitId, SurfaceId } from './foley'
 import type { ContainerSpec } from './fluids'
 import type { DeferredQueue, DeferredQueueOptions, FramePhase } from './frame'
 import type { SealSpec } from './seal'
+import type { WorkerCoordinator } from './workers'
 
 /** An item that holds a liquid (a cup, a bottle, a fuel tank). `part` is the destruction part that is the container; a hole in it makes it leak. */
 export interface ModuleItemFluid {
@@ -565,6 +566,10 @@ export interface ModuleHost {
   lights?: unknown
   /** The host's pools of geometries and materials (`RenderPools` of `@adatechnology/game-render-three`; `unknown` here because the contracts do not depend on three.js): what an effect asks for instead of making its own, so its shader programs stay linked. Read it with `isRenderPools`. Absent when the host has none. */
   pools?: unknown
+  /** The host's physics services (`PhysicsServices` of `@adatechnology/game-physics`; `unknown` here because the contracts do not depend on it): the loop and world a module makes its bodies in. Read it with `isPhysicsServices`. Absent when the host steps its pieces with its own solver. */
+  physics?: unknown
+  /** The host's worker coordinator, for a module that hands heavy work to workers (CLAUDE.md §14). Absent when the host has none. */
+  workers?: WorkerCoordinator
   /**
    * The numbers of the shove a blast gives to a body. A module that moves bodies of its own (people, vehicles) answers the `explosion` host event with `blastShove(event, body, host.blastShove)`
    * so that it throws things the way the host throws its loose items. Absent when the host keeps the defaults.
