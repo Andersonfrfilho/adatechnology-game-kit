@@ -143,15 +143,17 @@ como o spike: sincroniza, passo, lê de volta, regras). Uma costura que recebeu 
 
 | Camada | Quem | Encontra |
 |---|---|---|
-| `static` | casa, lote, rua, móveis fixos e alvos (malhas desenhadas), chão (height field + volume sólido), carro estacionado como corpo fixo | tudo menos `static`, `agent`, `sensor` |
+| `static` | casa, lote, rua, móveis fixos e alvos (malhas desenhadas), chão (height field + volume sólido); **o carro estacionado não é mais `static`** (ver `vehicle`) | tudo menos `static`, `agent`, `sensor` |
 | `debris` | peças soltas dos destroços, cápsulas, lascas | tudo, inclusive `agent` |
-| `prop` | móveis empurrados, itens, granada, ragdolls e corpos-corrente | tudo |
+| `prop` | móveis empurrados, itens, granada | tudo |
+| `corpse` | corpo morto de qualquer degrau do LOD de corpo (ragdoll, corrente, cápsula; Fase 5, PR #521). É a camada `ragdoll` que o desenho de veículos (`veiculos.md` 6.4) pedia: **uma só camada**, a `corpse` | o mundo fixo, `debris`, `prop`, `character`, `vehicle`, outros `corpse` e `sensor`; **não** `agent` (uma horda subindo na pilha não a empurra) |
 | `character` | jogador e controladores | tudo menos `sensor` como corpo (sensor só reporta) |
-| `agent` | cápsulas cinemáticas da multidão | `debris`, `prop`, `character`, `vehicle`, `sensor`; **não** entre si (o `game-crowd` separa) nem com `static` |
-| `vehicle` | chassi de carro andando | tudo menos `sensor` como corpo |
+| `agent` | cápsulas cinemáticas da multidão | `debris`, `prop`, `character`, `sensor`; **não** entre si (o `game-crowd` separa), **nem com `static`, `vehicle` e `corpse`**: o carro não encontra agente (atropelar é a consulta de 7.8 do `veiculos.md`, que acerta o agente por fora do motor) |
+| `vehicle` | chassi do carro **andando e estacionado**: o estacionado é corpo dinâmico dormindo (D3, `veiculos.md` 5 e 10.4), empurrável, e não `static` (um corpo estático com malha não se move); intacto, divide o composto imutável do modelo; sem `VehicleConstraint` enquanto dorme | tudo menos `agent` e `sensor` como corpo |
+| testador das rodas (camada interna do adaptador, fora de `Layer`) | o raio/cilindro das rodas do `VehicleConstraint` | o mundo fixo, `debris`, `prop`, `character`, `vehicle`; **nem `agent`, `corpse` nem `sensor`**: a roda não pisa em pessoa nem em corpo morto (o contato com o carro seria uma suspensão contra gente) |
 | `sensor` | fumaça, gatilhos | só reporta entrada e saída; nunca é parceiro de atrito nem `touching` (`atrito-por-corpo.md` §5) |
 
-A tabela é `LAYER_PAIRS`, sem mudança. Consultas rodam numa camada própria do adaptador que encontra tudo menos sensores.
+A tabela é `LAYER_PAIRS`, com três mudanças da Fase 6: sai o par `vehicle`–`agent`; `corpse` (Fase 5) entra com os pares da linha acima; o testador das rodas é uma camada interna do adaptador, na mesma situação da camada das consultas. Consultas rodam numa camada própria do adaptador que encontra tudo menos sensores.
 
 ## 7. `user` e `tag`
 

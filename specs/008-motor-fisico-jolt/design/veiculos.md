@@ -294,7 +294,7 @@ interface VehicleLattice {                      // game-vehicles: o reticulado e
 | `setMassProperties(id, { mass, inertia, centreOfMass })` | peça que solta tira a sua massa, inércia e centro de massa do chassi (11); o reticulado assentado move o centro de massa (4.2, item 5) |
 | `setMotionQuality(id, 'discrete' \| 'linearCast')` | CCD do carro rápido, da peça solta rápida e do avião |
 | `watchContacts(id, on)` | liga os pontos de contato mantidos (com normal e penetração) só para o veículo que bate (custo só enquanto observado) |
-| camadas: tirar o par `vehicle`–`agent` de `LAYER_PAIRS`; camada `ragdoll` separada de `prop`; testador das rodas numa camada que não encontra `agent` nem `ragdoll` | atropelar (7.8) e carro estacionado (10.4); muda o §6 da `arquitetura.md` |
+| camadas: tirar o par `vehicle`–`agent` de `LAYER_PAIRS`; camada `corpse` separada de `prop` (a mesma que a Fase 5 criou; este desenho a chamava `ragdoll`); testador das rodas numa camada que não encontra `agent` nem `ragdoll` | atropelar (7.8) e carro estacionado (10.4); muda o §6 da `arquitetura.md` |
 | `vehicleWheels(id, out)` | por roda: contato, corpo e `tag` do chão, ângulo, giro, compressão, deslizamento e os três *lambdas* (impulso das rodas, 4.2; sono, 7.7; som e marcas de pneu) |
 | `rebuildVehicle(id, desc)` | recria a constraint sobre o **mesmo** corpo (roda perdida, alinhamento torto); `removeVehicle` continua tirando tudo |
 | `applyBuoyancy(id, surface, normal, buoyancy, linearDrag, angularDrag, flow)` | barco e anfíbio (`ApplyBuoyancyImpulse`, 3.1) |
