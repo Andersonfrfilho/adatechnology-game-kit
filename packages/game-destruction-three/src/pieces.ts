@@ -1870,7 +1870,10 @@ export class PieceSystem {
 
   /** Sleeps sooner than it would by itself, so it answers to every point it lies on (`restPoints`). */
   private sleepByBudget(b: PieceBody): void {
+    // the tilt it kept goes with it: the engine wakes a sleeper that touches an awake body, and one that has to keep its tilt anew each time never sleeps with the row it leans on
+    const steady = b.steady
     this.sleep(b)
+    b.steady = steady
     b.restPoints = this.restPointsOf(b)
   }
 
