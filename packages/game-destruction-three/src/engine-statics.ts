@@ -67,8 +67,9 @@ const NONE: ReadonlySet<string> = new Set()
 
 /** `top:0` is mesh 0 of the part `top`. */
 const partOfKey = (key: string): string => {
-  const colon = key.indexOf(':')
-  return colon < 0 ? key : key.slice(0, colon)
+  const colon = key.lastIndexOf(':')
+  // a key from a module of its own is the part id as it is: only a number after the last colon is a mesh number
+  return colon < 0 || !/^\d+$/.test(key.slice(colon + 1)) ? key : key.slice(0, colon)
 }
 
 const hasSize = (s: StaticSolid): boolean => s.half[0] > 0 && s.half[1] > 0 && s.half[2] > 0

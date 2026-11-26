@@ -109,4 +109,20 @@ describe("a fixed object's boxes changing in the engine", () => {
     expect(broad.revision()).not.toBe(revision)
     world.dispose()
   })
+  it('the part a body draws is the key without its mesh number, also for a part whose id has a colon', async () => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120 })
+    const system = new PieceSystem(THREE, {
+      groundAt: () => 0,
+      gravity: 9.81,
+      onHardLanding: () => undefined,
+      scene: new THREE.Scene(),
+      physics: world,
+      staticSolids: () => new Map([['house', [{ ...solid([0, 0.25, 0], [2, 0.25, 2]), key: 'wall:north:0' }, { ...solid([5, 0.25, 0], [1, 0.25, 1]), key: 'door:1' }, { ...solid([8, 0.25, 0], [1, 0.25, 1]), key: 'hosted:left' }]]]),
+    })
+    system.update(0.05)
+    const { statics } = (system as unknown as { engine: { statics: { partOf: ReadonlyMap<number, string> } } }).engine
+    expect([...statics.partOf.values()].sort()).toEqual(['door', 'hosted:left', 'wall:north'])
+    world.dispose()
+  })
 })
