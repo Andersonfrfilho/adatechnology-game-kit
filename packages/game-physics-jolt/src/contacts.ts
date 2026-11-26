@@ -130,11 +130,13 @@ export const makeListener = (w: JoltWorldHost): JoltNS.ContactListenerJS => {
     if (!sensor && w.points.size > 0) recordPair(w, e1.key, e2.key, m)
     added(w, pair, m, cs)
   }
-  listener.OnContactPersisted = (body1: number, body2: number, manifold: number) => {
-    if (w.points.size === 0) return
+  listener.OnContactPersisted = (body1: number, body2: number, manifold: number, settings: number) => {
     const e1 = w.byPointer.get(body1)
     const e2 = w.byPointer.get(body2)
-    if (!e1 || !e2 || (!w.points.has(e1.key) && !w.points.has(e2.key))) return
+    if (!e1 || !e2) return
+    // a contact seen before the bodies met (speculative) closes in a later step with Jolt's default again (the larger of the two): mixed as the kit mixes it
+    if (e1.material.restitution !== e2.material.restitution) J.wrapPointer(settings, J.ContactSettings).mCombinedRestitution = Math.sqrt(e1.material.restitution * e2.material.restitution)
+    if (w.points.size === 0 || (!w.points.has(e1.key) && !w.points.has(e2.key))) return
     recordPair(w, e1.key, e2.key, J.wrapPointer(manifold, J.ContactManifold))
   }
   listener.OnContactRemoved = (subPair: number) => {
