@@ -1,7 +1,7 @@
 {
   "compact_hatch": {
     "speed": 8,
-    "acceleration": 7,
+    "acceleration": 3,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -11,7 +11,7 @@
   },
   "taxi": {
     "speed": 8,
-    "acceleration": 7,
+    "acceleration": 3,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -21,7 +21,7 @@
   },
   "entry_hatch": {
     "speed": 7,
-    "acceleration": 7,
+    "acceleration": 1,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -31,7 +31,7 @@
   },
   "electric_hatch": {
     "speed": 7,
-    "acceleration": 7,
+    "acceleration": 4,
     "handling": 6,
     "toughness": 6,
     "load": 4,
@@ -41,7 +41,7 @@
   },
   "midsize_sedan": {
     "speed": 9,
-    "acceleration": 7,
+    "acceleration": 6,
     "handling": 6,
     "toughness": 6,
     "load": 4,
@@ -51,7 +51,7 @@
   },
   "police_sedan": {
     "speed": 9,
-    "acceleration": 7,
+    "acceleration": 6,
     "handling": 6,
     "toughness": 6,
     "load": 4,
@@ -61,7 +61,7 @@
   },
   "highway_police_sedan": {
     "speed": 9,
-    "acceleration": 7,
+    "acceleration": 6,
     "handling": 6,
     "toughness": 6,
     "load": 4,
@@ -141,7 +141,7 @@
   },
   "beetle": {
     "speed": 5,
-    "acceleration": 8,
+    "acceleration": 1,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -151,7 +151,7 @@
   },
   "compact_suv": {
     "speed": 8,
-    "acceleration": 7,
+    "acceleration": 5,
     "handling": 6,
     "toughness": 6,
     "load": 4,
@@ -161,7 +161,7 @@
   },
   "hybrid_suv": {
     "speed": 8,
-    "acceleration": 7,
+    "acceleration": 2,
     "handling": 6,
     "toughness": 6,
     "load": 4,
@@ -491,7 +491,7 @@
   },
   "boxy_hatch": {
     "speed": 6,
-    "acceleration": 6,
+    "acceleration": 2,
     "handling": 7,
     "toughness": 4,
     "load": 3,
@@ -501,7 +501,7 @@
   },
   "family_hatch": {
     "speed": 7,
-    "acceleration": 7,
+    "acceleration": 4,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -511,7 +511,7 @@
   },
   "rideshare_hatch": {
     "speed": 7,
-    "acceleration": 7,
+    "acceleration": 2,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -521,7 +521,7 @@
   },
   "turbo_hatch": {
     "speed": 8,
-    "acceleration": 7,
+    "acceleration": 6,
     "handling": 7,
     "toughness": 5,
     "load": 4,
@@ -541,7 +541,7 @@
   },
   "classic_six_sedan": {
     "speed": 7,
-    "acceleration": 7,
+    "acceleration": 4,
     "handling": 5,
     "toughness": 6,
     "load": 5,
@@ -551,7 +551,7 @@
   },
   "v8_coupe": {
     "speed": 10,
-    "acceleration": 9,
+    "acceleration": 10,
     "handling": 5,
     "toughness": 6,
     "load": 3,

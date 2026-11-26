@@ -34,6 +34,14 @@ const ENGINE_INERTIA_PER_TORQUE = 0.001
 /** What a worn engine and a worn suspension keep of their torque and of their spring and damper (the semi-simulation's own floors). */
 const ENGINE_FLOOR = 0.55
 const SUSPENSION_FLOOR = 0.5
+/**
+ * Gearbox timing, seconds (the engine's own 0.5 + 0.3 + 0.5 is a slow truck's box and a quarter of a 0-100 km/h of a hatch): the shift itself, the clutch closing after it, and the wait before the next shift.
+ * The card has no gearbox type (the semi-simulation shifts automatically and instantly), so a car gets the middle of the real range: a modern automatic or dual-clutch shifts in 0.1-0.3 s and a manual
+ * in 0.3-0.6 s of a practised hand, 0.2 s of torque interruption plus 0.1 s of hold-off in all. A motorcycle's box (dog rings, no torque converter, a short clutch) shifts in about 0.1-0.2 s.
+ * An estimate from those ranges (manufacturer shift-time figures, e.g. ZF 8HP ~0.2 s, dual-clutch < 0.1 s); the measurement that tied these to real 0-100 km/h times is in specs/008 evidence T6.2b.
+ */
+const CAR_TRANSMISSION = { switchTime: 0.1, clutchReleaseTime: 0.1, switchLatency: 0.1 } as const
+const MOTORCYCLE_TRANSMISSION = { switchTime: 0.05, clutchReleaseTime: 0.07, switchLatency: 0.05 } as const
 
 /** A cyclist as the engine: sustained power at the cadence it is held, and the bicycle's gears (wheel turns per crank turn, lowest first). */
 export interface PedalOptions {
@@ -172,7 +180,12 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
     reverseGears: [-spec.reverseRatio],
     differentialRatio: spec.finalDrive,
     torqueCurve: torqueCurve(spec),
-    transmission: { shiftUpRpm: spec.engine.redlineRpm * spec.upshiftFraction, shiftDownRpm: spec.engine.redlineRpm * spec.downshiftFraction, clutchStrength: clutchFor(spec.engine.peakTorque, spec.engine.redlineRpm) },
+    transmission: {
+      shiftUpRpm: spec.engine.redlineRpm * spec.upshiftFraction,
+      shiftDownRpm: spec.engine.redlineRpm * spec.downshiftFraction,
+      clutchStrength: clutchFor(spec.engine.peakTorque, spec.engine.redlineRpm),
+      ...(spec.wheels.length === 2 ? MOTORCYCLE_TRANSMISSION : CAR_TRANSMISSION),
+    },
   }
 }
 

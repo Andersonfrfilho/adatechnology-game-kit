@@ -4255,3 +4255,43 @@ O sanity do rodador (o desenhado contra o próprio desenhado) dá 12 259 de 12 2
 | B6 com 20 carros de 24 cascos na ilha do sopro (cascata de 500) | acordam 323 corpos num quadro (318 sem os carros); mediana do passo depois do sopro **2,50 ms** (0,41 sem os carros), p99 6,01 ms (3,84), máx. 7,96 ms; o hash é o mesmo duas vezes | determinismo ✓; o aceite de tempo do B6 (mediana ≤ 4 ms e nenhuma rodada acima de 5 ms) é medido em AMD, fora do CI: este p99 passa de 5 ms numa máquina com carga |
 
 O aceite escrito passa, mas com o teto de **96 cascos** do desenho; com os 1 270 que a T6.4 mediu, o primeiro quadro desta tabela vira 83 MB (acima da guarda), ver T6.4.
+
+## T6.2b — Notas de aceleração pelos dados reais (2026-11-26)
+
+**Decisão do dono (2026-11-26):** cada modelo inspirado num veículo real recebe a nota de aceleração que o 0-100 real dele dá na faixa da classe (`accelerationByClass` em `game-vehicles-proving/src/ranges.ts`: carros 15,5 s na nota 1 a 4,8 s na 10; SUVs 12,7 s a 6,7 s), arredondada à nota mais próxima. A fonte de cada modelo está em `game-vehicles-fleet/src/acceleration-sources.ts` (e o teste `proving-physics.test.ts` confere que a nota de cada um é a mais próxima do tempo citado). Modelo sem fonte verificada mantém a nota e leva a marca "sem fonte". Motos, pesados, militares, bicicleta, trator e `step_through_scooter` não entram (T6.2c no `tasks.md`).
+
+| Modelo (inspiração) | 0-100 real (fonte) | Nota antes -> depois |
+|---|---|---|
+| `compact_hatch` (Onix 1.0) | 13,3 s (GM; Webmotors, Fichacompleta) | 7 -> 3 |
+| `taxi` (Onix Plus 1.0) | 13,3 s (Garagem360) | 7 -> 3 |
+| `entry_hatch` (Kwid) | 15,5 s (Renault; 14,9 s Quatro Rodas) | 7 -> 1 |
+| `electric_hatch` (Dolphin 95 cv) | 12,3 s (fichas; teste colombiano 10,9 s) | 7 -> 4 |
+| `midsize_sedan` (Corolla 2.0) | 9,9 s (Motor Show) | 7 -> 6 |
+| `police_sedan`, `highway_police_sedan` (Cruze 1.4 T) | 9,0 s (Motor Show; 8,8 s Autopapo) | 7 -> 6 |
+| `beetle` (Fusca 1300) | 30,9 s (base de fichas; fontes de 24 a 45 s) | 8 -> 1 (abaixo da banda) |
+| `boxy_hatch` (Uno Mille Fire) | 14,7 s | 6 -> 2 |
+| `family_hatch` (Gol G5 1.0) | 12,3 s (Webmotors) | 7 -> 4 |
+| `rideshare_hatch` (HB20 1.0) | 14,5 s etanol (catálogo Hyundai) | 7 -> 2 |
+| `turbo_hatch` (Polo 200 TSI) | 9,9 s (Autoentusiastas; Motor Show 10,1/9,6) | 7 -> 6 |
+| `fastback_sedan` (Civic 1.5 T) | 8,2 s (ficha; 8,43 s medido) | 7 (igual) |
+| `classic_six_sedan` (Opala Comodoro 4.1) | 12,2 s (base de fichas) | 7 -> 4 |
+| `v8_coupe` (Mustang GT) | 4,8 s (Ford) | 9 -> 10 |
+| `compact_suv` (T-Cross 200 TSI) | 10,0 s (ficha VW) | 7 -> 5 |
+| `hybrid_suv` (Corolla Cross Hybrid) | 11,8 s (Motor Show) | 7 -> 2 |
+| `midsize_suv` (Compass), `large_suv` (SW4) | **sem fonte** (só motores e mercados diferentes; o SW4 atual não tem 0-100 publicado) | 7 (mantida) |
+
+Pickups, vans e o resto não têm banda por classe (um só ponto de fonte no caso da Hilux) e ficam como estavam.
+
+**Frota nos dois motores, 48 modelos terrestres x 6 testes = 288 corridas (mesmas faixas, mesmo código; só as notas mudaram):**
+
+| Motor | Antes (faixas por classe, notas antigas) | Depois (notas pelos dados reais) |
+|---|---|---|
+| Jolt | 24 modelos fora, 33 corridas | **21 modelos fora, 30 corridas** |
+| Semi-simulação | 12 modelos fora, 22 corridas | **15 modelos fora, 25 corridas** |
+
+- Jolt, saíram da lista: `compact_hatch`, `taxi`, `electric_hatch`, `family_hatch`, `classic_six_sedan`; entraram: `hybrid_suv`, `boxy_hatch`. Seguem fora na arrancada: `entry_hatch` (23,3 s contra 15,5 ± 35%), `beetle`, `rideshare_hatch`, `v8_coupe`, `boxy_hatch`, `hybrid_suv`.
+- Semi-simulação, entraram: `beetle` (21,0 s contra banda máxima de 20,9), `hybrid_suv` (16,3 s contra 16,2) e `v8_coupe` (6,7 s contra 6,5); a semi tem torque por kg da nota (0,06 + 0,015 x nota) e não acompanha os extremos reais da banda (nota 1 e 10): o Jolt dá 1,4x a 1,8x o tempo da semi. A correção é da ficha por tipo e do modelo da semi (T6.2c), não das notas.
+- Tempos medidos antes -> depois (semi / Jolt, s): `compact_hatch` 8,6 -> 13,8 / 11,7 -> 16,7; `entry_hatch` 8,7 -> 20,2 / 12,3 -> 23,3; `midsize_sedan` 8,4 -> 9,3 / 11,1 -> 11,9 (real 9,9); `v8_coupe` 7,1 -> 6,7 / 9,1 -> 8,7; `hybrid_suv` 8,6 -> 16,3 / 10,9 -> 19,1.
+- Os tempos que a banda espera (nota 1 a 10) agora são os reais; o que a semi e o Jolt medem fica 30 a 50% acima nos carros lentos (Kwid 20,2 s na semi contra 15,5 real).
+
+**Gates (uma suíte por vez):** `game-vehicles-fleet` `tsc --noEmit`, `eslint`, `tests/proving-physics.test.ts` + `tests/data.test.ts` 71 testes; `game-vehicles-proving test` 20 testes.

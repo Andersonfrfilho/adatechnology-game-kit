@@ -15,8 +15,10 @@ const lerpTable = (table: ReadonlyArray<readonly [number, number]>, x: number): 
  * be replaced per class through `createProvingTests({ ranges })`.
  */
 export interface RangeTable {
-  /** 0-100 km/h seconds by the card's acceleration rating (0-10). */
+  /** 0-100 km/h seconds by the card's acceleration rating (0-10), for a class that has no sourced table in `accelerationByClass` (no source for these numbers). */
   accelerationSeconds: ReadonlyArray<readonly [number, number]>
+  /** 0-100 km/h seconds by the card's acceleration rating, per class (`cars`, `suvs`, `motorcycles`): the rating places the model between the class's slowest and fastest real figure. */
+  accelerationByClass: Readonly<Record<string, ReadonlyArray<readonly [number, number]>>>
   /** Accepted spread around the expected 0-100 time (0.35 = ±35 %). */
   accelerationSpread: number
   /** Accepted spread around the card's top speed. */
@@ -31,7 +33,21 @@ export interface RangeTable {
   mudFourWheelDrive: number
 }
 
+/**
+ * Real 0-100 km/h times that anchor each class: rating 1 at the slowest, rating 10 at the fastest, in between linearly.
+ * cars: slowest 15.5 s, Renault Kwid 1.0 (Renault's figure, https://www.icarros.com.br/noticias/testes-e-comparativos/como-anda-o-renault-kwid-intense,-de-r$-39.990-/23022.html; 14.9 s measured by Quatro Rodas);
+ *   fastest 4.8 s, Ford Mustang GT 5.0 V8 (Ford's figure, https://media.ford.com/content/fordmedia/feu/en/news/2015/04/27/all-new-mustang-sprints-0-100-km-h-in-under-5-seconds--2-200-ord.html). A Corolla 2.0 is 9.9 s (Motor Show measurement).
+ * suvs: slowest 12.7 s, Toyota Land Cruiser Prado 2.8 D-4D 177 hp automatic (https://www.auto-data.net/en/toyota-land-cruiser-prado-j150-facelift-2017-5-door-2.8-d-4d-177hp-4wd-automatic-32878, a database, not the maker);
+ *   fastest 6.7 s, Toyota Land Cruiser 300 (Toyota's figure, via https://www.motor1.com/news/515260/2022-toyota-land-cruiser-acceleration-test/).
+ * motorcycles: slowest 19.5 s, Honda PCX 160 (measured, https://www.autofun.co.id/berita-motor/mana-paling-gesit-akselerasinya-honda-pcx-160-2022-atau-yamaha-nmax-155-2022-48474); fastest 4.35 s, Kawasaki Ninja 400 (https://motostatz.com/?p=369).
+ * pickups, vans, heavy, agricultural, military: no verified pair of figures (a Hilux 2.8 is 10.0 s, Toyota Europe, one point only), so they keep `accelerationSeconds`.
+ */
 export const defaultRangeTable: RangeTable = {
+  accelerationByClass: {
+    cars: [[1, 15.5], [10, 4.8]],
+    suvs: [[1, 12.7], [10, 6.7]],
+    motorcycles: [[1, 19.5], [10, 4.35]],
+  },
   accelerationSeconds: [
     [1, 34],
     [3, 21],
@@ -52,7 +68,7 @@ const byClass = <T>(table: Readonly<Record<string, T>>, category: string): T => 
 
 /** Expected 0-100 (or 0-`target`) seconds for a subject. Below 100 km/h the time scales linearly with the target speed. */
 export const expectedAcceleration = (table: RangeTable, subject: ProvingSubject, target: number): number => {
-  const base = lerpTable(table.accelerationSeconds, subject.stats.acceleration)
+  const base = lerpTable(table.accelerationByClass[subject.category] ?? table.accelerationSeconds, subject.stats.acceleration)
   return base * (target / 100)
 }
 

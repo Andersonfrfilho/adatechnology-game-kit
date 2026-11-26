@@ -2,13 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { KIT_WORLD } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
-import { createProvingTests, runTestOnPhysics } from '@adatechnology/game-vehicles-proving'
+import { createProvingTests, defaultRangeTable, expectedAcceleration, runTestOnPhysics } from '@adatechnology/game-vehicles-proving'
 
-import { fleetProvingSubject, fleetVehicleIds } from '../src'
+import { FLEET_ACCELERATION_SOURCES, fleetProvingSubject, fleetVehicleIds } from '../src'
 
 /**
  * The land fleet on the physics engine (T6.2b): each model, mapped from its card by `vehicleDescFromSemi` and run through the six measured tests of the proving ground on
- * the engine's vehicle, against the same ranges the semi-simulation is held to. The ranges are not touched here; what is out of them is written below, with the
+ * the engine's vehicle, against the same ranges the semi-simulation is held to. The ranges are the sourced class bands of `ranges.ts` (cars, suvs, motorcycles) and the table by rating for the rest; what is out of them is written below, with the
  * measured numbers in `specs/008-motor-fisico-jolt/evidence.md` (`## T6.2b`). The test fails when a model's out-of-range set CHANGES, in either direction: a fix has to
  * shrink this table, a regression cannot hide in it.
  *
@@ -19,25 +19,25 @@ const AIRCRAFT = ['transport_helicopter', 'light_attack_turboprop', 'attack_heli
 
 const OUT_OF_RANGE: Readonly<Record<string, readonly string[]>> = {
   entry_hatch: ['accel_0_100'],
-  electric_hatch: ['accel_0_100'],
-  bicycle: ['accel_0_100', 'top_speed', 'brake_100_0', 'wet_brake_80_0'],
+  bicycle: ['accel_0_100', 'top_speed', 'brake_100_0', 'turn_circle', 'wet_brake_80_0'],
   scooter: ['accel_0_100'],
   commuter_motorcycle: ['accel_0_100'],
   trail_bike: ['accel_0_100'],
   beetle: ['accel_0_100'],
-  cargo_van: ['accel_0_100'],
-  box_truck: ['accel_0_100'],
-  tanker_truck: ['accel_0_100'],
-  school_bus: ['accel_0_100'],
-  city_bus: ['accel_0_100', 'turn_circle'],
-  armored_truck: ['accel_0_100'],
+  hybrid_suv: ['accel_0_100'],
+  monster_truck: ['accel_0_100'],
+  city_bus: ['turn_circle'],
   tractor: ['accel_0_100', 'top_speed', 'brake_100_0'],
+  troop_truck: ['accel_0_100'],
+  apc_6x6: ['accel_0_100'],
+  armored_car_6x6: ['accel_0_100'],
+  battle_tank: ['accel_0_100'],
   step_through_scooter: ['accel_0_100', 'top_speed', 'brake_100_0', 'wet_brake_80_0'],
   naked_bike: ['accel_0_100'],
   sport_bike: ['accel_0_100'],
-  cruiser: ['accel_0_100'],
   delivery_bike: ['accel_0_100'],
-  family_hatch: ['accel_0_100'],
+  boxy_hatch: ['accel_0_100'],
+  rideshare_hatch: ['accel_0_100'],
   v8_coupe: ['accel_0_100'],
 }
 
@@ -66,5 +66,14 @@ describe('the land fleet on the physics engine (spec 008, T6.2b)', () => {
   it('the table lists only models of the land fleet, and 21 of 48 have something out of range', () => {
     for (const id of Object.keys(OUT_OF_RANGE)) expect(landFleet).toContain(id)
     expect(Object.keys(OUT_OF_RANGE)).toHaveLength(21)
+  })
+})
+
+describe('the acceleration ratings of cars and suvs come from the real 0-100 km/h', () => {
+  it.each(Object.entries(FLEET_ACCELERATION_SOURCES).filter(([, entry]) => entry.seconds !== null))('%s: its rating is the nearest one to the sourced time on the class band', (id, entry) => {
+    const subject = fleetProvingSubject(id)!
+    const distanceAt = (rating: number): number => Math.abs(expectedAcceleration(defaultRangeTable, { ...subject, stats: { ...subject.stats, acceleration: rating } }, 100) - entry.seconds!)
+    const rating = subject.stats.acceleration
+    expect(distanceAt(rating)).toBeLessThanOrEqual(Math.min(distanceAt(Math.max(1, rating - 1)), distanceAt(Math.min(10, rating + 1))))
   })
 })
