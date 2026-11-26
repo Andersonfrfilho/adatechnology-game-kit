@@ -34,7 +34,7 @@ import { displacedVolume } from './displaced-volume'
 import { createExplosives } from './explosives'
 import { createBlastSettings } from './blast-settings'
 import { createTestTable } from './test-table'
-import { toHostEvent } from './host-events'
+import { groundHostOf, toHostEvent } from './host-events'
 import { createDualReload } from './dual-reload'
 import { createLog } from './log'
 import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
@@ -4389,7 +4389,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
-    setGround: (layout) => terrain.setLayout(layout),
+    setGround: (layout) => terrain.setLayout(layout), ...groundHostOf(kit.ground, fluids),
     effects: vfx,
     particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,

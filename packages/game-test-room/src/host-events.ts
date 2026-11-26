@@ -1,4 +1,6 @@
-import type { HostEvent } from '@adatechnology/game-contracts'
+import type { GroundLoss, HostEvent, ModuleHost } from '@adatechnology/game-contracts'
+import type { FluidWorld } from '@adatechnology/game-fluids'
+import type { KitWorldGround } from '@adatechnology/game-kit-defaults/world'
 import type { WeaponEvent, WeaponPhase } from '@adatechnology/game-weapons'
 
 const NO_RECOIL: [number, number] = [0, 0]
@@ -54,3 +56,17 @@ export const toHostEvent = (weapon: string, event: WeaponEvent, options: HostEve
       return null
   }
 }
+
+/** What the host lends a module of its ground and liquids: each bowl a blow digs (`onCrater`, its floor as deep as the column is now) and a tap it opens (`addTap`). */
+export const groundHostOf = (ground: KitWorldGround, fluids: FluidWorld): Required<Pick<ModuleHost, 'onCrater' | 'addTap'>> => ({
+  onCrater: (listener) =>
+    ground.on('blow', (result) => {
+      if (result.radius <= 0) return
+      const crater: GroundLoss = { x: result.point[0], z: result.point[2], radius: result.radius, depth: result.totalDepth, source: 'crater' }
+      listener(crater)
+    }),
+  addTap: (tap) => {
+    const id = fluids.addTap({ id: tap.id, position: [...tap.position], ...(tap.direction ? { direction: [...tap.direction] } : {}), liquid: tap.liquid, rate: tap.rate })
+    return () => fluids.removeTap(id)
+  },
+})

@@ -4790,6 +4790,8 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
 
   /** Kilograms of TNT per joule of the blast being resolved: the charge's own, or the arsenal's scale. */
   let blastTntPerJoule = TNT_PER_JOULE
+  /** The blast running now was told its charge: its impl hits say so (`Hit.hasCharge`). */
+  let blastHasCharge = false
   /** The fireball of the blast being resolved: the charge's, or the fuel's when the blast burns one. */
   let blastFireball: Fireball = chargeFireball(0)
 
@@ -4927,7 +4929,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     }
     for (const im of [...impls.values()]) {
       if (!implInRange(im, point, radius)) continue
-      out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
+      out.push(implHit(im, { type: 'explosive', point, energy, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule, ...(blastHasCharge ? { hasCharge: true as const } : {}), ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(src !== undefined ? { source: src } : {}) }))
       yield 'part'
     }
     return out
@@ -5068,7 +5070,7 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
           den += f
         }
         const k = den > 0 ? num / den : 1
-        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule * k, ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
+        const res = implHit(im, { type: 'explosive', point, energy: E * k, radius, fireball: blastFireball, tnt: energy * blastTntPerJoule * k, ...(blastHasCharge ? { hasCharge: true as const } : {}), ...(lethal !== undefined ? { lethalRadius: lethal } : {}), ...(shelter ? { shelter: k } : {}), ...(src !== undefined ? { source: src } : {}) })
         results.set(im, res)
         report(im).shelter = k
       }
@@ -5511,13 +5513,16 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     const fireball = charge?.fuel ? fuelFireball(charge.fuel) : chargeFireball(energy * tntPerJoule)
     const inBlast = <T>(fn: () => T): T => {
       const outer = blastTntPerJoule
+      const outerHasCharge = blastHasCharge
       const outerFireball = blastFireball
       blastTntPerJoule = tntPerJoule
+      blastHasCharge = charge?.tnt !== undefined
       blastFireball = fireball
       try {
         return fn()
       } finally {
         blastTntPerJoule = outer
+        blastHasCharge = outerHasCharge
         blastFireball = outerFireball
       }
     }

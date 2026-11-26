@@ -107,6 +107,12 @@ With `destruction` (a world of `game-destruction`) and `destructionRenderer` (`g
 - **Spall decal and rebar cage** come from the destruction renderer (decals on hits, instanced bars when the concrete is exposed).
 - `house.damage(id, point, type, amount)` keeps the legacy behaviour (hp of the part, `onDamage`) and becomes a hit in the world.
 
+## Buried pipes and craters
+
+`createHouseBuriedPipes(THREE, house.group)` reads the sewer (NBR 8160: branches at 0.25 m, the collector falling 1 % to the inspection box at the front of the lot) and the rain pipes (NBR 10844: 0.3 m at the sand box, falling to the kerb)
+of a house built with its construction stages, as `PipePiece`s of `game-urban`. `crater({ x, z, radius, depth }, { isRaining })` asks the street's rule (`breachOf`): a pipe whose top the bowl reaches is drawn in the hole, one it gets down to the centre line of
+breaks there (a gap) and leaks (`leakOfPipe`: sewage runs, the rain pipe only in the rain). Nothing is drawn until a bowl reaches a pipe. The houses area wires it to the host's `onCrater` and `addTap`.
+
 ## Floor navigator
 
 `createFloorNavigator()` is the team's AndaresSDK: a 10 cm grid per floor, stairs with banisters and U-turns, path fields, occlusion of the floors above.

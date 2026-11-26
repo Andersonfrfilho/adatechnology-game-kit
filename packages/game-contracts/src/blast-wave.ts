@@ -13,7 +13,7 @@ const NEAREST_SCALED = 0.2
 /** m: a charge's near field and the size of a charge add this much to the standoff when the area the wave loads evenly is taken. */
 const LOADED_MARGIN = 0.15
 /** J/kg: the TNT equivalent's definition. */
-const TNT_JOULES = 4.184e6
+export const TNT_JOULES = 4.184e6
 /**
  * Share of the charge energy that a target crushes and spalls when the charge is in contact with it, at the scaled distance 0 (an engineering estimate of the cratering efficiency of
  * contact charges in concrete and masonry: a few percent of the energy goes into breaking the material, the rest into air and ground shock).

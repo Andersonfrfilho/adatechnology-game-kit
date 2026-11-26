@@ -148,6 +148,11 @@ export interface BuildOptions {
   serviceFrom?: readonly [number, number, number]
   /** `true`: no lot wall, fence or gates (the game has its own). */
   noPerimeter?: boolean
+  /**
+   * `false`: the host's terrain lays the lot's ground (`groundLayoutOfPlans`: its zones, ground covers and paths), so the house draws no flat surface of its own over
+   * that ground. A drawn pad cannot be dug: it lay over a crater as a plate.
+   */
+  groundSurfaces?: false
   /** `'meshes'`: one mesh per structural piece instead of one per group and material. */
   pieces?: 'meshes'
   /**

@@ -3,7 +3,7 @@ import type { AudioSink } from './audio'
 import type { BlastShoveOptions } from './blast-shove'
 import type { BusySink } from './busy'
 import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './bench'
-import type { CarryHands, DestructibleSpec, Vec3 } from './destruction'
+import type { CarryHands, DestructibleSpec, GroundLoss, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
 import type { RainCover } from './rain-cover'
@@ -441,6 +441,13 @@ export interface ModuleHost {
   surfaceAt?(x: number, z: number): string | undefined
   /** Replaces the floor layout of the host's terrain (zones of grass, road, paving, water...) when a module changes its lot or area. */
   setGround?(layout: GroundLayout): void
+  /**
+   * Follow the bowls the ground takes (a blast, a round): where, how wide and, as `depth`, how far under the untouched surface its floor is now. What lies buried under it (a house's
+   * pipes) reads what the bowl reached. Returns the unsubscribe function. A host without a terrain leaves it out.
+   */
+  onCrater?(listener: (crater: GroundLoss) => void): () => void
+  /** Runs a liquid out of a point of the world (a broken pipe) until the returned function is called. A host without liquids leaves it out. */
+  addTap?(tap: HostTap): () => void
   tool(): HostTool
   /** The player now: where, which way, crouching, how fast and how the camera follows. A `player` event tells when crouching or the camera mode changes. */
   player(): PlayerState
@@ -581,6 +588,16 @@ export interface ModuleHost {
   shove?(objectId: string, push: HostShove): number
   /** The host's loading indicator: a module with a slow job of its own (building a house, laying a district) shows it through this instead of freezing the page. Absent when the host has none. */
   loading?: BusySink
+}
+
+/** A liquid running out of a fixed point (`ModuleHost.addTap`): the host's liquids (`game-fluids` ids: `water`, `sewage`...) at `rate` litres per second. */
+export interface HostTap {
+  readonly id: string
+  readonly position: Vec3
+  /** Where it leaves, normalised (default straight down). */
+  readonly direction?: Vec3
+  readonly liquid: string
+  readonly rate: number
 }
 
 /** What a module hands the test room: its items and, optionally, scenarios that exercise them, its area and its own presentation. */

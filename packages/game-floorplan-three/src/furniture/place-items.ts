@@ -32,7 +32,10 @@ export function installFurniturePlaceItems(K: Kernel, shared: Shared): void {
     const covers: Rect[] = [];
     for (const m of ordered) {
       if (m.type === 'stairs') continue;
-      const exterior = m.outdoor || m.floor < 0, f = exterior ? -1 : Math.min(m.floor, R.floors.length - 1);
+      const exterior = m.outdoor || m.floor < 0;
+      // the host's terrain lays the lot's covers as zones of its own ground (`groundLayoutOfPlans`): a pad drawn over it would lie flat over a crater
+      if (exterior && m.category === 'ground_cover' && shared.ctx.noGroundSurfaces) continue;
+      const f = exterior ? -1 : Math.min(m.floor, R.floors.length - 1);
       // a gas shelter is the house's (backed on its wall, drawn with its installations): the lot layer, off by default in the room, never hides it
       cursor.group = exterior && !(m.type === 'cooking_gas_cylinder' && m.shelter && !shared.ctx.visorScene) ? 'lot' : 'f' + Math.max(f, 0);
       const com = m.room != null ? shared.ctx.roomById[m.room] : undefined, lift = !exterior && f === 0 && shared.ctx.constructionStages && !shared.ctx.visorScene && !com?.outbuilding ? FLOOR_OVER_GROUND : 0, base = exterior ? 0 : Y0(f) + lift; // (on the ground floor's finish, never 1.2 cm into it)

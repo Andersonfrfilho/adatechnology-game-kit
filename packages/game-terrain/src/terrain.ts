@@ -1,3 +1,4 @@
+import { TNT_JOULES } from '@adatechnology/game-contracts'
 import type { Hit } from '@adatechnology/game-contracts'
 import { DEFAULT_BAR_DIAMETER, DEFAULT_BAR_YIELD_JOULES, DEFAULT_BAR_YIELD_PA, DEFAULT_PROFILE, TERRAIN_MATERIALS, TERRAIN_PROFILES } from './catalog'
 import { createCrackStore, CRACK_REFERENCE_JOULES } from './cracks'
@@ -1236,8 +1237,9 @@ export function createTerrain(options: TerrainOptions): Terrain {
         const reach = (hit.radius ?? 1) * BLAST_HEIGHT_REACH
         if (above >= reach) return null
         const share = (1 - above / reach) ** 2
+        // the ground's specific energies are of real joules (a kilogram of TNT is 4.184 MJ): a charge the blast was told says them; its `energy` is the arsenal's damage scale
         soot(x, z, BLAST_SOOT_REACH * Math.cbrt((hit.energy * share) / 1e6))
-        return strike('explosive', { x, z, energy: hit.energy * share })
+        return strike('explosive', { x, z, energy: (hit.hasCharge && hit.tnt !== undefined && hit.tnt > 0 ? hit.tnt * TNT_JOULES : hit.energy) * share })
       }
       case 'fire':
       case 'heat':

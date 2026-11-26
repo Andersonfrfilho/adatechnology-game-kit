@@ -545,6 +545,8 @@ export interface Hit {
   lethalRadius?: number
   /** `explosive` only: kilograms of TNT equivalent of the charge, for the blast wave on the parts (`waveWork`); without it `energy` stands for it at the arsenal's scale. */
   tnt?: number
+  /** `explosive` only: `tnt` is the charge the blast was told (`BlastOptions.charge`), not the stand-in of its `energy` at the arsenal's scale. */
+  hasCharge?: true
   /** `explosive` only: the fireball of the blast (`chargeFireball`, `fuelFireball`), whose heat is what the blast lights; without it, the fireball of the charge `energy` stands for. */
   fireball?: { readonly radius: number; readonly seconds: number; readonly flux: number }
   /** Source temperature for `fire` and `heat`. */
