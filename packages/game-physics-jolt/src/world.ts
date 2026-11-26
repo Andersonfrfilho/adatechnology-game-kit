@@ -103,7 +103,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly castSettings: JoltNS.ShapeCastSettings
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
-  readonly queryShapes = new Map<ShapeDesc, JoltNS.Shape>()
+  readonly queryShapes = new Map<string, JoltNS.Shape>()
   readonly ragdollCache = createRagdollCache()
   /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
   readonly hulls = new Map<number, HullSet>()

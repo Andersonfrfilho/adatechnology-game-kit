@@ -58,7 +58,7 @@ export interface JoltWorldHost {
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes: Map<number, JoltNS.Shape>
   /** The shapes `overlapShape` asked about, by the description's identity (a kit asks with the same few again and again): held up to a few, let go of at `dispose`. */
-  readonly queryShapes: Map<ShapeDesc, JoltNS.Shape>
+  readonly queryShapes: Map<string, JoltNS.Shape>
   /** The shapes and skeletons the ragdolls made by `createRagdoll` share. */
   readonly ragdollCache: RagdollCache
   readonly partners: Map<number, Map<number, number>>

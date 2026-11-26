@@ -15,7 +15,7 @@ export interface RagdollCache {
 
 export const createRagdollCache = (): RagdollCache => ({ shapes: new Map(), skeletons: new Map() })
 
-const shapeKey = (shape: ShapeDesc): string | null => {
+export const shapeKey = (shape: ShapeDesc): string | null => {
   switch (shape.kind) {
     case 'capsule':
     case 'cylinder':

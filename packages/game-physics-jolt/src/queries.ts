@@ -4,6 +4,7 @@ import { LAYER_PAIRS, LAYERS } from '@adatechnology/game-physics'
 import type { BodyId, Layer, QueryFilter, Quat, RayHit, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 
 import { layerOf } from './constants'
+import { shapeKey } from './ragdoll-cache'
 import type { JoltWorldHost } from './world-host'
 
 /** A ray or a sphere swept: where from, which way (unit), how far. */
@@ -103,23 +104,44 @@ export const overlapSphere = (w: JoltWorldHost, at: { readonly center: Vec3; rea
   return out.length
 }
 
-/** The most shapes held for `overlapShape`: a kit asks with a handful, a caller with a new description every time must not fill the heap. */
+/** The most shapes held for `overlapShape`: a kit asks with a handful, a caller with new dimensions every time must not fill the heap. */
 const QUERY_SHAPES_MAX = 32
 
+/** A shape with no value key (a compound, a hull, a mesh) is held by the description's identity. */
+const identityKeys = new WeakMap<ShapeDesc, string>()
+let identityCount = 0
+
+const queryKey = (desc: ShapeDesc): string => {
+  const byValue = shapeKey(desc)
+  if (byValue !== null) return byValue
+  let key = identityKeys.get(desc)
+  if (key === undefined) {
+    key = `object:${++identityCount}`
+    identityKeys.set(desc, key)
+  }
+  return key
+}
+
+/** The shape for the description, made once per type and dimensions (the least recently asked for is let go of when 32 are held). */
 const queryShape = (w: JoltWorldHost, desc: ShapeDesc): JoltNS.Shape => {
-  const held = w.queryShapes.get(desc)
-  if (held) return held
+  const key = queryKey(desc)
+  const held = w.queryShapes.get(key)
+  if (held) {
+    w.queryShapes.delete(key)
+    w.queryShapes.set(key, held)
+    return held
+  }
   if (w.queryShapes.size >= QUERY_SHAPES_MAX) {
-    const [oldest, shape] = w.queryShapes.entries().next().value as [ShapeDesc, JoltNS.Shape]
+    const [oldest, shape] = w.queryShapes.entries().next().value as [string, JoltNS.Shape]
     shape.Release()
     w.queryShapes.delete(oldest)
   }
   const made = w.makeShape(desc)
-  w.queryShapes.set(desc, made)
+  w.queryShapes.set(key, made)
   return made
 }
 
-/** The bodies a shape overlaps when put at `at` (`PhysicsWorld.overlapShape`): the shape is made for the query and let go of after it. */
+/** The bodies a shape overlaps when put at `at` (`PhysicsWorld.overlapShape`): the shape is kept for the next ask of the same dimensions. */
 export const overlapShape = (w: JoltWorldHost, at: { readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation: Quat }, out: BodyId[], filter?: QueryFilter): number => {
   const J = w.J
   const shape = queryShape(w, at.shape)
