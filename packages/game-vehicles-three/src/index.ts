@@ -1,6 +1,8 @@
 export { createVehiclesThree } from './build'
 export { createCabinSmoke } from './cabin-smoke'
 export type { CabinSmoke } from './cabin-smoke'
+export { createVehicleRainCovers, RAIN_SHELL_INTERVAL } from './rain-cover'
+export type { VehicleRainCovers } from './rain-cover'
 export * from './audio'
 export type { BuildVehicleOptions, BuiltVehicle, FleetDims, VehicleFleetContent, VehicleQuality, VehiclesThree, VehiclesThreeOptions } from './build'
 export { LITE_CLASSES, PRUNE_BELOW, classColor, classify, fuse, liteMaterials, liteMeshes } from './lite'

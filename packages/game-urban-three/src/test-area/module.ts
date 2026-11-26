@@ -1,4 +1,5 @@
 import type * as THREE_NS from 'three'
+import { createFixedFootprintRainCover } from '@adatechnology/game-contracts'
 import { isLightBudget } from '@adatechnology/game-render-three'
 import type { LightBudget } from '@adatechnology/game-render-three'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
@@ -146,7 +147,10 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
   })
 
   // ---- the bench ----------------------------------------------------------------------------------------------------------------------------
+  let removeBenchCover: (() => void) | null = null
   const clearBench = (): void => {
+    removeBenchCover?.()
+    removeBenchCover = null
     if (!bench) return
     bench.drawn.dispose()
     bench = null
@@ -168,6 +172,8 @@ export function createUrbanTestModule(options: UrbanTestOptions = {}): TestableM
     drawn.root.position.set(benchOrigin[0], FLOOR_Y, benchOrigin[1])
     ;(host.scene as THREE_NS.Object3D).add(drawn.root) // the host's three.js scene
     bench = { root: drawn.root, drawn, plan: made }
+    // the roofs of the bench (buildings, tents, containers, towers) keep the rain off what they cover
+    if (host.rainCover) removeBenchCover = host.rainCover.add(createFixedFootprintRainCover(b.covers.map((roof) => ({ ...roof, x: roof.x + benchOrigin[0], z: roof.z + benchOrigin[1], top: roof.top + FLOOR_Y }))))
     lightsLeft = b.lights.left
     host.log(fill(text.log.composed, settings.pattern, settings.seed, countObjects(drawn.root), drawn.lights.length), { pattern: settings.pattern, seed: settings.seed })
     helpersShown = ''

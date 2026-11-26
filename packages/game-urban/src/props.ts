@@ -39,6 +39,7 @@ export function drawFence(b: UrbanBuilder, x0: number, z0: number, x1: number, z
 /** Tent: a triangular prism `w` wide, 0.7 w high and `d` long, turned by `ry`. */
 export function drawTent(b: UrbanBuilder, x: number, z: number, ry: number, w: number, d: number, color?: number, c?: Partial<PropColors>): void {
   b.prism(x, 0, z, w, w * 0.7, d, color ?? colors(c).tent, -1, ry)
+  b.cover({ x, z, halfX: w / 2, halfZ: d / 2, yaw: -ry, top: w * 0.7 })
 }
 
 /** Pine: a trunk and two cones of one of the greens (one draw from the random). */
@@ -62,6 +63,7 @@ export function drawContainer(b: UrbanBuilder, x: number, y: number, z: number, 
   const group = b.group(x, y, z, ry)
   b.box(0, 0, 0, 2.44, 2.6, 6.06, color, { parent: group, style: { roughness: 0.7, metalness: 0.3 } })
   for (let k = -2; k <= 2; k++) b.box(k * 0.5, 0, 3.04, 0.06, 2.6, 0.04, 0x1a1a1a, { parent: group })
+  b.cover({ x, z, halfX: 1.22, halfZ: 3.03, yaw: -ry, top: y + 2.6 })
 }
 
 /** Watch tower: four legs, a cabin, a roof deck and two posts; with a searchlight whose beam circles the ground. */
@@ -70,6 +72,7 @@ export function drawWatchtower(b: UrbanBuilder, x: number, z: number, searchligh
   for (const a of [-1, 1]) for (const d of [-1, 1]) b.box(x + a * 1.2, 0, z + d * 1.2, 0.25, 7, 0.25, palette.leg)
   b.box(x, 7, z, 3.2, 1.2, 3.2, palette.cabin)
   b.box(x, 8.2, z, 3.6, 0.15, 3.6, palette.deck)
+  b.cover({ x, z, halfX: 1.8, halfZ: 1.8, yaw: 0, top: 8.35 })
   for (const side of [-1.5, 1.5]) b.box(x + side, 8.2, z, 0.15, 1.6, 0.15, palette.deck)
   if (searchlight) b.spot({ x, y: 9, z, color: 0xe6eeff, intensity: 2.4, distance: 70, decay: 1.2, angle: 0.35, penumbra: 0.5, target: { x: x + 20, y: 0, z: z + 20 }, sweep: { speed: 0.5, radius: 25 } })
 }

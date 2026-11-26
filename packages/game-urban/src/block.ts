@@ -61,6 +61,7 @@ export const DEFAULT_STOREY_PRESETS: Readonly<Record<string, string>> = { commer
 /** One city building: block, roof slab, maybe a vent on the roof, maybe a shop front on both long faces, windows on the four faces. Draws from the builder's random. */
 export function drawBuilding(b: UrbanBuilder, x: number, z: number, width: number, depth: number, height: number, color: number, options: BuildingOptions = {}): BlockBuilding {
   b.add(createCityBuilding({ x, z, width, depth, height, color, random: b.random, shopChance: options.shop, litChance: options.lit }))
+  b.cover({ x, z, halfX: width / 2, halfZ: depth / 2, yaw: 0, top: height })
   return { x, z, width, depth, height, color }
 }
 

@@ -1,5 +1,5 @@
-import { createGridRainCover, rainCoverTopOf } from '@adatechnology/game-contracts'
-import type { RainCover, RainCoverBounds, RainCoverHole, RainCoverRect, RainCoverSource } from '@adatechnology/game-contracts'
+import { createFootprintRainCover, createGridRainCover, rainCoverTopOf } from '@adatechnology/game-contracts'
+import type { RainCover, RainCoverBounds, RainCoverFootprint, RainCoverHole, RainCoverRect, RainCoverSource } from '@adatechnology/game-contracts'
 
 import type { House } from './types.js'
 
@@ -8,6 +8,10 @@ export const RAIN_OPENING_DIAMETER = 0.3
 const GONE = new Set(['broken', 'collapsed', 'melted', 'ashes'])
 const COVER_ROLES = new Set(['slab', 'roof'])
 const BOUNDS_MARGIN = 0.5
+/** The slab over an outbuilding's ceiling, metres (`outbuildingSlabEdge`). */
+const OUTBUILDING_SLAB = 0.2
+/** Plan item types whose model is a solid roof over what is under it (the sauna cabin, the doghouse, the outhouse): the box of the item roofs its footprint at its height. A pergola's slats are not one. */
+export const ROOFED_ITEM_TYPES: ReadonlySet<string> = new Set(['sauna', 'doghouse', 'outhouse'])
 
 type Cover = { readonly id: string; readonly x: number; readonly y: number; readonly z: number; readonly halfX: number; readonly halfY: number; readonly halfZ: number }
 
@@ -89,12 +93,36 @@ export function createHouseRainCover(house: House): RainCoverSource & { dispose(
   }
 }
 
+/** The roofed items of the plan (see {@link ROOFED_ITEM_TYPES}) and the slab roof of each outbuilding (the edicula: its walls and slab are drawn, no part of the structure) where the house stands now. */
+export function createItemRainCover(house: House): RainCoverSource {
+  house.group.updateWorldMatrix(true, false)
+  const e = house.group.matrixWorld.elements
+  const houseYaw = Math.atan2(e[2]!, e[0]!)
+  const roofs: RainCoverFootprint[] = []
+  for (const item of house.r.items) {
+    if (!ROOFED_ITEM_TYPES.has(item.type)) continue
+    const [x, z] = [item.x, item.z]
+    roofs.push({ x: e[0]! * x + e[8]! * z + e[12]!, z: e[2]! * x + e[10]! * z + e[14]!, halfX: item.w / 2, halfZ: item.d / 2, yaw: houseYaw - item.ry, top: e[1]! * x + e[5]! * (item.y + item.h) + e[9]! * z + e[13]! })
+  }
+  for (const building of house.r.outbuildings ?? []) {
+    const half = (building.thickness ?? 0.15) / 2
+    const [u0, v0, u1, v1] = building.aabb
+    const [cu, cv] = [(u0 + u1) / 2, (v0 + v1) / 2]
+    roofs.push({ x: e[0]! * cu + e[8]! * cv + e[12]!, z: e[2]! * cu + e[10]! * cv + e[14]!, halfX: (u1 - u0) / 2 + half, halfZ: (v1 - v0) / 2 + half, yaw: houseYaw, top: e[1]! * cu + e[5]! * (building.ceiling + OUTBUILDING_SLAB) + e[9]! * cv + e[13]! })
+  }
+  const source = createFootprintRainCover()
+  source.set(roofs, [], true)
+  return source
+}
+
 /** Adds the covers of `house` to `cover` (`ModuleHost.rainCover`, `KitWorld.rainCover`); returns the function that takes them away. Call once the house stands where it will. */
 export function addHouseRainCover(cover: RainCover, house: House): () => void {
   const source = createHouseRainCover(house)
   const remove = cover.add(source)
+  const removeItems = cover.add(createItemRainCover(house))
   return () => {
     remove()
+    removeItems()
     source.dispose()
   }
 }

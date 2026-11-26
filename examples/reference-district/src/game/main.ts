@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 
+import { createFixedFootprintRainCover } from '@adatechnology/game-contracts'
 import { createKitWorkers } from '@adatechnology/game-kit-defaults'
 import { createKitWorld, createLoading } from '@adatechnology/game-kit-defaults/world'
 import { sourceSpawn } from '@adatechnology/game-workers'
@@ -85,6 +86,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
   const urban = createReferenceUrban({ hostLights: true })
   const streets = drawStreets({ THREE, urban, plan, site, lights: world.lights, seed: site.seed })
   scene.add(streets.drawn.root)
+  const removeStreetCovers = world.rainCover.add(createFixedFootprintRainCover(streets.covers))
   const lines = drawDistrictNetworks({ THREE, urban, generated: networks, lights: world.lights, isNight, ...(options.lights === undefined ? {} : { lamps: options.lights }) })
   scene.add(lines.drawn.root)
   const sewers = drawDistrictSewers({ THREE, generated: networks, world })
@@ -161,6 +163,7 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
       missing.dispose()
       props.dispose()
       houses.dispose()
+      removeStreetCovers()
       streets.drawn.dispose()
       lines.drawn.dispose()
       leaks.dispose()

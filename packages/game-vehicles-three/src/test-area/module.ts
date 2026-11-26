@@ -14,6 +14,7 @@ import { createVehicleColliders } from '../colliders'
 import { createVehicleLod, createVehicleLodQueue } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
 import { createCabinSmoke } from '../cabin-smoke'
+import { createVehicleRainCovers } from '../rain-cover'
 import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
 import type { LaneDamage } from './lane-damage'
 import { createScenarios } from './scenarios'
@@ -93,6 +94,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const placed = new Map<string, Placed>()
   // the cabins hold the room's smoke out: through a shut car it does not pass, it gets in only by an open door, a broken window or a bullet hole
   const cabins = createCabinSmoke()
+  // and the rain keeps off what the cabins roof over: a broken roof or windshield lets it in
+  const rainCovers = createVehicleRainCovers()
   let host: ModuleHost | null = null
   let three: Three | null = null
   let counter = 0
@@ -204,6 +207,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         return hitBody(h)
       }
       cabins.track(id, d, root as { parent: unknown | null })
+      rainCovers.track(id, d, root as { parent: unknown | null })
       r.userData.destructible = d
       return d
     },
@@ -527,6 +531,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
     if (host?.bench && boxKey() !== helpersShown && (host.bench.layer('damageables') || host.bench.layer('zones') || helpersShown !== '')) refreshLayers()
     lane?.step(dt)
     cabins.sync(effects())
+    rainCovers.sync(host?.rainCover, dt)
   }
 
   const count = (): { drawCalls: number; triangles: number } => {
@@ -642,6 +647,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         stopCrease?.()
         stopLodBatch?.()
         cabins.clear(effects())
+        rainCovers.clear()
         clearHelpers()
         clearLane()
         host = null

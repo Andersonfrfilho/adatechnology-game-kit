@@ -141,6 +141,8 @@ limited and panned the same way. `ModuleHost.environment?` is an `EnvironmentBus
 `nightFactor`, `temperatureC`, `wetness`): the weather module writes it, the others read it. Both are optional, additive and generic; `createEnvironmentBus(initial?)` is a plain
 store that implements the bus, and `DEFAULT_ENVIRONMENT` is the calm dry day.
 
+`ModuleHost.rainCover?` is a `RainCover` (`coverTopAt(x, z)`, `version()`, `add(source)`): whatever has a roof over it registers a `RainCoverSource` and the rain (near, splashes, rings, the far curtain) stops under it. `createFootprintRainCover` is a source of turned rectangles that move (a car: `set(roofs, openings, bumpVersion)`), `createFixedFootprintRainCover` one of rectangles that stay (the roofs of a district), `createGridRainCover` the grid of a house. Feeders: houses (`addHouseRainCover`), vehicles (`createVehicleRainCovers`), urban pieces (`builder.covers`).
+
 ## API
 
 Everything is exported from the package root; see `src/*.ts` for the doc comments. Units: metres, seconds, joules, millimetres (calibre), degrees Celsius.
