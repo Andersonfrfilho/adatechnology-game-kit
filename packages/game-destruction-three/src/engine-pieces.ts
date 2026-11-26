@@ -1416,7 +1416,7 @@ export class EnginePieces {
   private replaceGround(tile: Tile | undefined, made: GroundTile, ix: number, iz: number, material: Material): BodyId {
     if (tile) this.world.removeBody(tile.ground)
     if (made.level === null) return this.world.createBody({ shape: this.heightField(made, ix, iz), motion: 'static', position: [0, 0, 0], material, user: 0 })
-    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
+    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2], convexRadius: 0 }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
   }
 
   /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Boxes only: a box costs nothing to make, a hull did (T3.8ag). */
@@ -1444,7 +1444,7 @@ export class EnginePieces {
 
   private stepBoxes(boxes: ArrayLike<number>): ShapeDesc {
     const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
-    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]] }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
+    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]], convexRadius: 0 }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
     return { kind: 'compound', children }
   }
 
