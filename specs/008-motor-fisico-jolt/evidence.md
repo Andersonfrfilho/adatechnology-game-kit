@@ -4668,3 +4668,13 @@ A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a 
 3. A 30 km/h ou mais: o corpo é lançado com a velocidade do carro (R0 enquanto a cota de ragdoll deixa, depois R1) e cai atrás dele; nenhum agente para o carro como parede.
 4. Dez agentes em fila: o carro os atravessa perdendo velocidade a cada golpe, e os cadáveres formam monte atrás.
 5. Conferir que o cadáver lançado não atravessa o chão nem prende o carro (camada `corpse` encontra `vehicle`).
+
+## T6.12 — Aceitação da frota com motor e cascos (2026-11-26) — ✅
+
+**O que entrou.** Nenhum código: a aceitação do `CLAUDE.md` §7 já está nos testes do `game-vehicles-fleet` e passou sem mudança depois da T6.4 (cascos), da T6.9 (peças soltas) e da T6.26.
+- Tiro acerta o desenhado: `surface-ray-exact.test.ts` (o raio responde como o three.js, intacto, danificado, posado e movido) e `vehicle-acceptance.test.ts` (por modelo, o tiro cai na peça desenhada; todo vidro desenhado é peça de vidro e nada fica na frente dele).
+- Marca vai com a peça: `vehicle-acceptance.test.ts` (a marca fica na peça quando a porta gira; a porta leva pele, vidro e borracha), `fragments-on-the-car.test.ts`, `destructible.test.ts`.
+- Cascos K1 a K7 nos 69 modelos: `game-vehicles-three/tests/vehicle-hulls.test.ts` (T6.4, ✅).
+- Goldens da geometria intacta (`golden-*.test.ts`, `exact-golden.test.ts`, `digest.test.ts`) e z-fighting: iguais.
+
+**Gate.** `pnpm --filter @adatechnology/game-vehicles-fleet test` (depois de `pnpm build` limpo): 42 arquivos, **1 478 testes passam**, 0 falham, 0 pulados. `git status` limpo depois da suíte: nenhum golden nem ledger mudou.
