@@ -3526,3 +3526,28 @@ Por que o vidro estilhaça em 20 no Jolt: a chapa fina agora tem a espessura des
 | `game-floorplan-three test` | **3 falhas** (os 3 goldens, não regravados: `breach` 832, `spall` 824, `fracture` 908 objetos) / 1618 passam | 1616 passam, 0 falham, 5 pulados |
 | `tsc --noEmit` | sem erro nos arquivos tocados (os erros que o `tsc` lista são de `game-interactables`/`game-items-three`, sem `.d.ts` no `dist` desta máquina) | – |
 | `eslint` | 0 erros (aviso de `max-lines` que já existia em `engine-pieces.ts`) | – |
+
+### T3.10, rodada 5 (2026-11-26): Gavetas que sobem
+
+**Resultado: a gaveta não sobe. O "subir a 6,2–6,4 m" da rodada 4 é artefato de medição; não há correção de posição para consertar.** Nenhum código do kit mudou.
+
+Sonda (cena `sobrado:3`, semente 5, 1 s, `spall`; `[DEBUG-7c1a]` em `moveBy`, `underGround`, `reshape`, o `setPose` do `sync`, `fellThrough` e a leitura do motor a cada quadro; removida) e leitura da altura pelo **centro da peça no mundo** (`root.localToWorld(localCenter)`), nos dois solvers:
+
+| O que | Jolt | `own` |
+|---|---|---|
+| Altura real das gavetas `obj_6`–`obj_9`: início → máximo → fim | 2,97/3,21 → 2,97/3,21 → **2,815** (descem 0,16 a 0,4 m e param na laje) | 2,97/3,21 → 2,97/3,21 → 0,11–0,17 (caem 2,8 m: o `own` atravessa a laje, rodada 4) |
+| Subida máxima do centro de qualquer peça (`breach`/`spall`/`fracture`) | 0,000 / 0,002 / 0,066 m | 0,022 / 0,000 / 0,002 m |
+| Subida máxima da base da caixa (Box3 do desenho) | 0,000 / 0,000 / 0,022 m | 0,028 / 0,000 / 0,001 m |
+| Salto de posição acima do que a velocidade explica, por quadro | ≤ 0,024 m | ≤ 0,056 m |
+| Peças que passam de 0,5 m acima de onde estavam | **0** | **0** |
+| Correções de posição aplicadas nas 3 cenas | 3 × `moveBy` de 6–8 mm (de lado, saída de dentro de fixo); 0 `underGround`, 0 `fellThrough`, 0 `reshape` de gaveta | – |
+
+Causa do número da rodada 4 (`engine-pieces.ts:1598`, `b.root.position.set(pos - R·centerV)`): a raiz da peça é a origem da casa e o centro da gaveta fica a `localCenter` = (3,49; 2,99–3,22; 1,44) dela. Quando a gaveta gira 90° em torno de z (cai de lado sobre a laje: `ang` 72° em 0,35 s, 159° em 0,5 s, 90° no fim), `root.position.y` varre esse braço de ~3,5 m: 6,15–6,42 no Jolt, 2,44–2,57 no `own` (gira 69° no fim), exatamente os valores da rodada 4. A velocidade lida é a do centro de massa e estava certa (0,05–0,9 m/s); o que "subia 0,4 a 1,5 m por quadro" era a origem da raiz, que não é onde a peça está nem onde o desenho aparece (o desenho é raiz + R·localCenter = o centro). Por isso `fellThrough` e `liftFor` "não explicavam": não havia subida a explicar.
+
+Teste: `packages/game-floorplan-three/tests/destruction-pieces-never-rise.test.ts` (3 cenas, nenhuma peça sobe 0,5 m ou mais acima da altura inicial do centro). **Não ficou vermelho antes**, porque não há defeito nesta cena: entra como guarda, verde nos dois solvers. Não escrevi cena pequena de gaveta saindo de mesinha porque ela também passaria (inventar o vermelho seria afrouxar o critério ao contrário).
+
+Goldens (não regravados), `destruction`: Jolt `breach` `e5885aa5`/832, `spall` `26c3349`/824, `fracture` `fb65e788`/908 (esperados `4a2638b7`/842, `e112e96c`/851, `66c76666`/935); `own` 44/44 passam. Os 41 das casas seguem iguais nos dois.
+
+**Não resolvido:** a queixa do dono na sala ("partes de madeira sobem e ficam sambando depois de tiro") **não foi reproduzida por esta cena**. Precisa de um caso real (qual peça, qual tiro) ou da sala com a sonda. Quem lê `root.position.y` de peça para medir altura repete o erro: ler o centro (`localToWorld(localCenter)`).
+
+Gates (rodada 5): `game-physics-jolt` 114 passam, 2 pulados; `game-destruction-three` Jolt 853 / `own` 740, 0 falhas; `game-floorplan-three` Jolt 1621 passam e **3 falhas (os 3 goldens, não regravados)**, `own` 1619 passam, 0 falhas; `eslint` e `tsc` do teste novo sem erro (nenhum código do kit tocado).
