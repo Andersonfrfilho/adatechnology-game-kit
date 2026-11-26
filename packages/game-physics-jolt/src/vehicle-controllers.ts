@@ -40,6 +40,7 @@ const configureDrivetrain = (controller: JoltNS.WheeledVehicleControllerSettings
   engine.mMinRPM = desc.minRpm
   engine.mMaxRPM = desc.maxRpm
   if (desc.engineInertia !== undefined) engine.mInertia = desc.engineInertia
+  if (desc.engineDamping !== undefined) engine.mAngularDamping = desc.engineDamping
   if (desc.torqueCurve) fillCurve(engine.mNormalizedTorque, desc.torqueCurve)
   const gearbox = controller.mTransmission
   gearbox.mGearRatios.clear()

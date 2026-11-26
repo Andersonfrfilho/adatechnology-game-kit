@@ -264,6 +264,8 @@ export interface VehicleDesc {
   /** Engine torque by rpm / `maxRpm`, as a fraction of `maxTorque`: (x, y) pairs. The engine's own when omitted. */
   readonly torqueCurve?: Curve
   readonly engineInertia?: number
+  /** The engine's own friction (N m s/rad: torque lost per rad/s of its speed); the engine's own value is large (0.2: 85 N m at 4 000 rpm) and takes half the torque of a small engine. */
+  readonly engineDamping?: number
   readonly transmission?: TransmissionDesc
   /** One per driven axle, derived from the wheels when omitted. */
   readonly differentials?: readonly DifferentialDesc[]

@@ -123,11 +123,16 @@ export const vehicleWheels = (w: JoltWorldHost, id: VehicleId, out: Float64Array
     let longitudinal = 0
     let lateral = 0
     if (touching) {
+      // the tyre's slip is against the ground *under* it, as the chassis moves over it: the chassis' velocity at the contact point minus the ground's
+      const rolling = w.bi.GetPointVelocity(w.entry(v.body).id, wheel.GetContactPosition())
+      const [rx, ry, rz] = [rolling.GetX(), rolling.GetY(), rolling.GetZ()]
+      // each vector is read into numbers before the next getter: they share one temporary
       const ground = wheel.GetContactPointVelocity()
+      const [dx, dy, dz] = [rx - ground.GetX(), ry - ground.GetY(), rz - ground.GetZ()]
       const along = wheel.GetContactLongitudinal()
+      longitudinal = wheel.GetAngularVelocity() * wheel.GetSettings().mRadius - (dx * along.GetX() + dy * along.GetY() + dz * along.GetZ())
       const across = wheel.GetContactLateral()
-      longitudinal = wheel.GetAngularVelocity() * wheel.GetSettings().mRadius - (ground.GetX() * along.GetX() + ground.GetY() * along.GetY() + ground.GetZ() * along.GetZ())
-      lateral = ground.GetX() * across.GetX() + ground.GetY() * across.GetY() + ground.GetZ() * across.GetZ()
+      lateral = dx * across.GetX() + dy * across.GetY() + dz * across.GetZ()
     }
     out[base + WHEEL_READ.SLIP_LONGITUDINAL] = longitudinal
     out[base + WHEEL_READ.SLIP_LATERAL] = lateral

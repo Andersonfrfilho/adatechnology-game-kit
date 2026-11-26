@@ -50,6 +50,7 @@
     "@adatechnology/golden-tool": "workspace:^"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:^"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^"
   }
 }

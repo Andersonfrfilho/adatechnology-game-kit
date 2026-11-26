@@ -3,6 +3,8 @@ import { performance } from 'node:perf_hooks'
 import { describe, expect, it } from 'vitest'
 
 import type { PhysicsWorld, VehicleDesc, VehicleId, WheelDesc } from '@adatechnology/game-physics'
+import { createPhysicsInputMapper, createSemiSimDriver, defaultSemiSpec, resistanceImpulse, vehicleDescFromSemi } from '@adatechnology/game-vehicles-driving'
+import type { DriveStatus, PedalOptions, SemiInput, SemiSimSpec, VehicleCondition } from '@adatechnology/game-vehicles-driving'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { eulerXYZ, ground, HATCH, report, stats } from './scenes'
@@ -148,5 +150,225 @@ describe('case 3: vehicle', () => {
     }
     report('vehicle-x10', { step: stats(steps) })
     world.dispose()
+  })
+})
+
+describe('T6.2: the semi-simulation car on the engine (vehicleDescFromSemi, createPhysicsInputMapper, resistanceImpulse)', () => {
+  const STEP = 1 / 120
+  const idle: SemiInput = { throttle: 0, brake: 0, steer: 0, handbrake: false }
+  const yawOf = (q: readonly number[]): number => Math.atan2(2 * (q[3]! * q[1]! + q[0]! * q[2]!), 1 - 2 * (q[1]! * q[1]! + q[0]! * q[0]!))
+
+  interface Rig {
+    readonly world: PhysicsWorld
+    readonly id: VehicleId
+    readonly body: ReturnType<PhysicsWorld['vehicleBody']>
+    readonly pose: Float64Array
+    readonly vel: Float64Array
+    step(input: SemiInput, status?: Partial<DriveStatus>): void
+    /** The yaw turned since the last call, unwrapped. */
+    turned(): number
+  }
+
+  /** The spec's car on dry asphalt (the ground body's friction is the surface's grip, 1). */
+  const rig = async (spec: SemiSimSpec, options: { speed?: number; heading?: number; condition?: VehicleCondition; pedal?: PedalOptions } = {}): Promise<Rig> => {
+    const world = (await createJoltEngine()).createWorld({ fixedStep: STEP })
+    world.createBody({ shape: { kind: 'box', half: [20000, 0.5, 20000] }, motion: 'static', position: [0, -0.5, 0], user: -1, material: { frictionStatic: 1, frictionDynamic: 1, restitution: 0 } })
+    const heading = options.heading ?? 0
+    const desc = vehicleDescFromSemi(spec, {
+      chassis: {
+        shape: { kind: 'box', half: [0.9, 0.35, 2.2] },
+        position: [0, spec.centreHeight + 0.05, 0],
+        user: 1,
+        ...(options.speed ? { linearVelocity: [Math.sin(heading) * options.speed, 0, Math.cos(heading) * options.speed] as const } : {}),
+        ...(heading ? { rotation: eulerXYZ(0, heading, 0) } : {}),
+      },
+      ...(options.condition ? { condition: options.condition } : {}),
+      ...(options.pedal ? { pedal: options.pedal } : {}),
+    })
+    const id = world.createVehicle(desc)
+    const body = world.vehicleBody(id)
+    const mapper = createPhysicsInputMapper()
+    const pose = new Float64Array(7)
+    const vel = new Float64Array(6)
+    let previous = heading
+    return {
+      world, id, body, pose, vel,
+      step(input, status) {
+        world.readVelocity(body, vel, 0)
+        const forward = Math.sin(heading) * vel[0]! + Math.cos(heading) * vel[2]!
+        world.driveVehicle(id, mapper.map({ input, speed: forward, dt: STEP, ...(status ? { status } : {}) }))
+        world.addImpulse(body, resistanceImpulse(spec, [vel[0]!, vel[1]!, vel[2]!], STEP))
+        world.step(STEP)
+      },
+      turned() {
+        world.readPose(body, pose, 0)
+        let delta = yawOf([pose[3]!, pose[4]!, pose[5]!, pose[6]!]) - previous
+        if (delta > Math.PI) delta -= 2 * Math.PI
+        if (delta < -Math.PI) delta += 2 * Math.PI
+        previous += delta
+        return delta
+      },
+    }
+  }
+  const speedOf = (r: Rig): number => {
+    r.world.readVelocity(r.body, r.vel, 0)
+    return Math.hypot(r.vel[0]!, r.vel[2]!)
+  }
+
+  it('stands on its wheels at the height the spec says it does (within 6 cm: the engine\'s spring uses the effective mass at the wheel, not a quarter of the car)', async () => {
+    const r = await rig(defaultSemiSpec)
+    for (let i = 0; i < 240; i++) r.step(idle)
+    r.world.readPose(r.body, r.pose, 0)
+    report('t6.2-stance', { y: r.pose[1], spec: defaultSemiSpec.centreHeight, contacts: r.world.wheelContacts(r.id) })
+    expect(r.world.wheelContacts(r.id)).toBe(4)
+    expect(Math.abs(r.pose[1]! - defaultSemiSpec.centreHeight)).toBeLessThan(0.06)
+    r.world.dispose()
+  })
+
+  it('after 150 s of full throttle (its top speed) it has the speed the semi-simulation has (within 5%: the drag, the rolling resistance, the gears and the engine agree)', async () => {
+    const semi = createSemiSimDriver()
+    for (let i = 0; i < 120 * 150; i++) semi.step({ ...idle, throttle: 1 }, STEP)
+    const r = await rig(defaultSemiSpec)
+    for (let i = 0; i < 120 * 150; i++) r.step({ ...idle, throttle: 1 })
+    const top = speedOf(r)
+    report('t6.2-top-speed', { jolt: top, semi: semi.state.u })
+    expect(Math.abs(top - semi.state.u) / semi.state.u).toBeLessThan(0.05)
+    r.world.dispose()
+  })
+
+  it('launch: 0 to 60 km/h on dry asphalt takes 6.1 s against the semi-simulation\'s 3.8 s: the engine spins the rear wheels (recorded, not an equivalence)', async () => {
+    const semi = createSemiSimDriver()
+    let semiTime = -1
+    for (let i = 0; i < 120 * 20 && semiTime < 0; i++) {
+      semi.step({ ...idle, throttle: 1 }, STEP)
+      if (semi.state.u > 60 / 3.6) semiTime = i * STEP
+    }
+    const r = await rig(defaultSemiSpec)
+    for (let i = 0; i < 120; i++) r.step(idle)
+    let time = -1
+    for (let i = 0; i < 120 * 20 && time < 0; i++) {
+      r.step({ ...idle, throttle: 1 })
+      if (speedOf(r) > 60 / 3.6) time = i * STEP
+    }
+    report('t6.2-launch', { jolt: time, semi: semiTime })
+    expect(time).toBeGreaterThan(semiTime)
+    expect(time).toBeLessThan(9)
+    r.world.dispose()
+  })
+
+  it('brakes from 100 km/h in a distance within 30% of the semi-simulation\'s', async () => {
+    const semi = createSemiSimDriver()
+    semi.state.u = 100 / 3.6
+    let semiDistance = 0
+    for (let i = 0; i < 120 * 15 && semi.state.u > 0.3; i++) {
+      semi.step({ ...idle, brake: 1 }, STEP)
+      semiDistance += semi.state.u * STEP
+    }
+    const r = await rig(defaultSemiSpec, { speed: 100 / 3.6 })
+    for (let i = 0; i < 60; i++) r.step({ ...idle, throttle: 0.4 })
+    r.world.readPose(r.body, r.pose, 0)
+    const start = r.pose[2]!
+    for (let i = 0; i < 120 * 15 && speedOf(r) > 0.3; i++) r.step({ ...idle, brake: 1 })
+    r.world.readPose(r.body, r.pose, 0)
+    const distance = r.pose[2]! - start
+    report('t6.2-braking', { jolt: distance, semi: semiDistance })
+    expect(distance / semiDistance).toBeGreaterThan(0.9)
+    expect(distance / semiDistance).toBeLessThan(1.3)
+    r.world.dispose()
+  })
+
+  it('steering left at 15 m/s turns by what the semi-simulation turns in 2 s (within 10%), and a steer to the right turns the other way', async () => {
+    const semi = createSemiSimDriver()
+    semi.state.u = 15
+    for (let i = 0; i < 60; i++) semi.step({ ...idle, throttle: 0.3 }, STEP)
+    const from = semi.state.yaw
+    for (let i = 0; i < 240; i++) semi.step({ ...idle, throttle: 0.3, steer: 0.4 }, STEP)
+    const semiTurn = semi.state.yaw - from
+    const turnFor = async (steer: number): Promise<number> => {
+      const r = await rig(defaultSemiSpec, { speed: 15 })
+      for (let i = 0; i < 60; i++) r.step({ ...idle, throttle: 0.3 })
+      r.turned()
+      let total = 0
+      for (let i = 0; i < 240; i++) {
+        r.step({ ...idle, throttle: 0.3, steer })
+        total += r.turned()
+      }
+      r.world.dispose()
+      return total
+    }
+    const left = await turnFor(0.4)
+    const right = await turnFor(-0.4)
+    report('t6.2-steering', { jolt: left, semi: semiTurn, right })
+    expect(Math.abs(left - semiTurn) / semiTurn).toBeLessThan(0.1)
+    expect(right).toBeLessThan(0)
+    expect(Math.abs(right + left)).toBeLessThan(0.1)
+  })
+
+  it('a vehicle that cannot drive (status canDrive false) does not move under full throttle', async () => {
+    const r = await rig(defaultSemiSpec)
+    for (let i = 0; i < 120 * 4; i++) r.step({ ...idle, throttle: 1 }, { canDrive: false })
+    report('t6.2-cannot-drive', { speed: speedOf(r) })
+    expect(speedOf(r)).toBeLessThan(0.5)
+    r.world.dispose()
+  })
+
+  it('a flat front-left tyre sinks that corner onto its rim: the car stands tilted toward it, the other corners as before', async () => {
+    const settle = async (condition: VehicleCondition): Promise<{ pitch: number; roll: number }> => {
+      const r = await rig(defaultSemiSpec, { condition })
+      for (let i = 0; i < 360; i++) r.step(idle)
+      r.world.readPose(r.body, r.pose, 0)
+      const q = [r.pose[3]!, r.pose[4]!, r.pose[5]!, r.pose[6]!]
+      r.world.dispose()
+      // pitch about x (nose down is positive), roll about z (left side down is positive)
+      return { pitch: Math.asin(2 * (q[3]! * q[0]! - q[1]! * q[2]!)), roll: -Math.asin(2 * (q[3]! * q[2]! + q[0]! * q[1]!)) }
+    }
+    const whole = await settle({})
+    const flat = await settle({ tyres: [0.1, 1, 1, 1] })
+    report('t6.2-flat-tyre', { whole, flat })
+    expect(Math.abs(whole.pitch)).toBeLessThan(0.01)
+    expect(Math.abs(whole.roll)).toBeLessThan(0.01)
+    expect(Math.abs(flat.pitch - whole.pitch)).toBeGreaterThan(0.01)
+    expect(Math.abs(flat.roll - whole.roll)).toBeGreaterThan(0.005)
+  })
+
+  it('made at 60 km/h turned 37 degrees it keeps its heading and its speed for 2 s (the engine\'s own braking, drag and rolling resistance: a few km/h)', async () => {
+    const heading = 37 * (Math.PI / 180)
+    const r = await rig(defaultSemiSpec, { speed: 60 / 3.6, heading })
+    for (let i = 0; i < 30; i++) r.step({ ...idle, throttle: 0.4 })
+    r.turned()
+    const v0 = speedOf(r)
+    let sideways = 0
+    let drift = 0
+    for (let i = 0; i < 240; i++) {
+      r.step({ ...idle, throttle: 0.4 })
+      drift += r.turned()
+      r.world.readVelocity(r.body, r.vel, 0)
+      sideways = Math.max(sideways, Math.abs(r.vel[0]! * Math.cos(heading) - r.vel[2]! * Math.sin(heading)))
+    }
+    report('t6.2-created-moving', { lostKmh: (v0 - speedOf(r)) * 3.6, sidewaysMs: sideways, drift })
+    expect(Math.abs(drift)).toBeLessThan(0.05)
+    expect(sideways).toBeLessThan(0.5)
+    expect((v0 - speedOf(r)) * 3.6).toBeLessThan(3)
+    r.world.dispose()
+  })
+
+  it('a bicycle: the cyclist is the engine; it rides at 7 m/s and more with 250 W and stays upright for 40 s', async () => {
+    const bicycle: SemiSimSpec = {
+      ...defaultSemiSpec, mass: 90, centreHeight: 0.9, wheelRadius: 0.34, fourWheelDrive: false, efficiency: 0.95,
+      wheels: [{ x: 0.55, z: 0, steer: true }, { x: -0.55, z: 0, drive: true }],
+      suspension: { restLength: 0.1, spring: 20000, damper: 1500 }, drag: 0.25, rolling: 0.005, brakeForce: 900, maxSteer: 0.4,
+    }
+    const r = await rig(bicycle, { pedal: { watts: 250, cadenceRpm: 80, gears: [1.5, 2.5, 3.5] } })
+    let maxRoll = 0
+    for (let i = 0; i < 120 * 40; i++) {
+      r.step({ ...idle, throttle: 1 })
+      r.world.readPose(r.body, r.pose, 0)
+      const q = [r.pose[3]!, r.pose[4]!, r.pose[5]!, r.pose[6]!]
+      maxRoll = Math.max(maxRoll, Math.abs(Math.atan2(2 * (q[3]! * q[2]! + q[0]! * q[1]!), 1 - 2 * (q[2]! * q[2]! + q[0]! * q[0]!))))
+    }
+    report('t6.2-bicycle', { speed: speedOf(r), maxRoll })
+    expect(speedOf(r)).toBeGreaterThan(7)
+    expect(maxRoll).toBeLessThan(0.1)
+    r.world.dispose()
   })
 })
