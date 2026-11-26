@@ -74,7 +74,7 @@ describe('a part that came off with a sink on the vehicle', () => {
     })
     let released = 0
     for (const geometry of geometries) geometry.addEventListener('dispose', () => released++)
-    d.dispose()
+    d.dispose?.()
     kit.dispose(item.vehicle)
     expect(released).toBe(geometries.length)
   })
