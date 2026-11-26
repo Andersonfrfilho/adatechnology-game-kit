@@ -703,6 +703,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.characters.get(id)?.read(out, offset)
   }
 
+  teleportCharacter(id: CharacterId, position: Vec3): void {
+    this.characters.get(id)?.teleport(position[0], position[1], position[2])
+  }
+
   characterSupported(id: CharacterId): boolean {
     return this.characters.get(id)?.supported() ?? false
   }

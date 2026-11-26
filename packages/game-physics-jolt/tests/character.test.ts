@@ -102,6 +102,19 @@ describe('character controller behind the contract (spec 008 T4.1)', () => {
     world.dispose()
   })
 
+  it('teleports: the feet are there at once, and the speed it had is gone', async () => {
+    const world = await makeWorld()
+    const walker = spawn(world, [0, 0, 0])
+    walk(world, walker, { x: 0, z: -2 }, 1)
+    world.teleportCharacter(walker, [5, 0, 5])
+    const feet = new Float64Array(3)
+    world.readCharacter(walker, feet, 0)
+    expect([feet[0], feet[1], feet[2]]).toEqual([5, 0, 5])
+    const after = walk(world, walker, { x: 0, z: 0 }, 1)
+    expect(Math.hypot(after[0] - 5, after[2] - 5)).toBeLessThan(0.01)
+    world.dispose()
+  })
+
   it('falls off a ledge and lands, and a removed controller no longer answers', async () => {
     const world = await makeWorld()
     const walker = spawn(world, [0, 2, 0])

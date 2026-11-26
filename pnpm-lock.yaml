@@ -1508,7 +1508,13 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
     devDependencies:
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden

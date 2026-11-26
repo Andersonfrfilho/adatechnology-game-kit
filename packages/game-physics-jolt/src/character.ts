@@ -34,6 +34,7 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
   update.mStickToFloorStepDown.Set(0, -STICK_TO_FLOOR_DISTANCE, 0)
   const velocity = new J.Vec3(0, 0, 0)
   const gravity = new J.Vec3(0, -GRAVITY, 0)
+  const zero = new J.Vec3(0, 0, 0)
   let fall = 0
   let pushX = 0
   let pushZ = 0
@@ -58,12 +59,21 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
       out[offset + 1] = p.GetY()
       out[offset + 2] = p.GetZ()
     },
+    teleport: (x: number, y: number, z: number) => {
+      w.r1.Set(x, y, z)
+      character.SetPosition(w.r1)
+      character.SetLinearVelocity(zero)
+      fall = 0
+      pushX = 0
+      pushZ = 0
+    },
     supported: () => character.IsSupported(),
     dispose: () => {
       if (!w.characters.delete(id)) return
       J.destroy(update)
       J.destroy(velocity)
       J.destroy(gravity)
+      J.destroy(zero)
       J.destroy(character)
     },
   }

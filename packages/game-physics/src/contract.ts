@@ -377,6 +377,8 @@ export interface PhysicsWorld {
   pushCharacter(id: CharacterId, impulse: Vec3): void
   /** Feet position into `out` at `offset` (x, y, z). */
   readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void
+  /** Puts the feet here at once (a respawn, a loaded game, the end of a vault), with no sweep and no speed carried over. */
+  teleportCharacter(id: CharacterId, position: Vec3): void
   /** Whether the feet stand on something. */
   characterSupported(id: CharacterId): boolean
   removeCharacter(id: CharacterId): void

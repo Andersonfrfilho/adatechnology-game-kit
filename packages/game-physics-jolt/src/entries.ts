@@ -52,6 +52,7 @@ export interface JoltCharacter {
   move(vx: number, vz: number, dt: number): void
   push(impulseX: number, impulseZ: number): void
   read(out: Float32Array | Float64Array, offset: number): void
+  teleport(x: number, y: number, z: number): void
   supported(): boolean
   dispose(): void
 }

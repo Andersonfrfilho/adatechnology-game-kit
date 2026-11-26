@@ -51,9 +51,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@adatechnology/game-contracts": "workspace:^"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^"
   },
   "devDependencies": {
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "happy-dom": "^17.4.4",
