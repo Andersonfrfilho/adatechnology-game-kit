@@ -4,6 +4,8 @@ import type { PartDef, VehicleDestructible } from '@adatechnology/game-vehicles'
 
 import { addTriangle, colliderOf, soupOf } from './collider-fit'
 import type { Soup } from './collider-fit'
+import { newHullPlan, planDivision } from './hull-plan'
+import { leavesOf, unitsOf } from './hull-split'
 import { hullOf } from './vehicle-hulls'
 
 /** The parts of the body shell: what is drawn by the vehicle's merged meshes (skin, glass, pillars, a shut door) belongs to the smallest of these whose box holds it. */
@@ -31,6 +33,8 @@ export interface VehicleCollidersOptions {
   readonly budget?: number
   /** Keeps what `hulls()` needs (the triangles of each piece); off by default, the pieces alone need none of it. */
   readonly hulls?: boolean
+  /** Hulls the model may have at most: the adaptive division (design 10.3) stops there. Default no limit. */
+  readonly maxHulls?: number
 }
 
 /** A convex hull of drawn vertices (at most 64), in the frame `pieces()` answers in: `id` is the part it belongs to, `key` names it across calls. */
@@ -78,8 +82,8 @@ interface Piece {
   /** The triangles the collider was made from, kept when hulls are wanted; `version` counts how many times they were made. */
   soup: Soup | null
   version: number
-  /** The hull of `soup` as of `version`, so a call that finds nothing changed hands back the same object. */
-  hull: VehicleHull | null
+  /** The hulls of `soup` as of `version` (and the drawn vertices of each), so a call that finds nothing changed hands back the same objects. */
+  hulls: Array<{ readonly hull: VehicleHull; readonly drawn: readonly number[] }>
   hullVersion: number
 }
 
@@ -148,7 +152,9 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
   const matrix = new THREE.Matrix4()
   let pending = false
   let shown: Piece[] = []
-  let hullSources = new Map<VehicleHull, readonly Piece[]>()
+  let hullSources = new Map<VehicleHull, ReadonlyArray<readonly number[]>>()
+  const plan = newHullPlan()
+  let isDivided = false
   const hullGroups = new Map<string, { readonly signature: string; readonly hulls: VehicleHull[] }>()
 
   const release = (entry: MeshEntry): void => {
@@ -200,7 +206,7 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
       let piece = pieces.get(key)
       if (!piece) {
         const part = vehicle.model.parts[Math.floor(key / PART_SPAN)]!.id
-        pieces.set(key, (piece = { key, part, entries: new Set(), dirty: true, collider: null, soup: null, version: 0, hull: null, hullVersion: -1 }))
+        pieces.set(key, (piece = { key, part, entries: new Set(), dirty: true, collider: null, soup: null, version: 0, hulls: [], hullVersion: -1 }))
       }
       piece.entries.add(entry)
       piece.dirty = true
@@ -327,14 +333,39 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
     return out
   }
 
-  /** The hull of one piece, made again only when the piece was. */
-  const hullOfPiece = (piece: Piece): VehicleHull | null => {
-    if (piece.hullVersion !== piece.version) {
-      const points = hullOf(piece.soup!)
-      piece.hull = points ? { id: piece.part, key: `${piece.part}#${piece.key % PART_SPAN}`, points: new Float32Array(points) } : null
+  const nameOf = (piece: Piece): string => `${piece.part}#${piece.key % PART_SPAN}`
+
+  /** The hulls of one piece: its body and its thin protrusions (hull-split.ts), each cut as the plan cut it; made again only when the piece was. */
+  const hullsOfPiece = (piece: Piece): Piece['hulls'] => {
+    if (piece.hullVersion === piece.version) return piece.hulls
+    piece.hulls = []
+    for (const unit of unitsOf(nameOf(piece), piece.soup!, plan.taken.get(nameOf(piece)))) {
+      for (const leaf of leavesOf(unit.key, unit.soup, plan.cuts.get(unit.key) ?? null)) {
+        const points = hullOf(leaf.soup)
+        if (points) piece.hulls.push({ hull: { id: piece.part, key: leaf.key, points: new Float32Array(points) }, drawn: leaf.soup.vertices })
+      }
+    }
+    piece.hullVersion = piece.version
+    return piece.hulls
+  }
+
+  /** The division is planned once, on the car as it is the first time all its pieces are there, and kept: later calls cut the same way. The solid parts (one hull each) count against `maxHulls`. */
+  const divide = (thin: readonly Piece[], solidHulls: number): void => {
+    const owners = new Map(thin.map((piece) => [nameOf(piece), piece]))
+    const made = new Map<Piece, Piece['hulls']>()
+    const leaves = planDivision(thin.map((piece) => ({ key: nameOf(piece), soup: piece.soup! })), plan, (options.maxHulls ?? Infinity) - solidHulls)
+    for (const leaf of leaves) {
+      if (!leaf.points) continue
+      const piece = owners.get(leaf.unit.split('~')[0]!)!
+      const list = made.get(piece) ?? []
+      list.push({ hull: { id: piece.part, key: leaf.path ? `${leaf.unit}:${leaf.path}` : leaf.unit, points: new Float32Array(leaf.points) }, drawn: leaf.soup.vertices })
+      made.set(piece, list)
+    }
+    for (const piece of thin) {
+      piece.hulls = made.get(piece) ?? []
       piece.hullVersion = piece.version
     }
-    return piece.hull
+    isDivided = true
   }
 
   /** The one hull of a solid part: its pieces' triangles together. */
@@ -362,13 +393,15 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
     hullSources = new Map()
     const out: VehicleHull[] = []
     const solids = new Map<string, Piece[]>()
+    const thin = shown.filter((piece) => piece.soup && !isWheel.get(piece.part) && !isSolid.get(piece.part))
+    if (!isDivided && !pending) divide(thin, new Set(shown.filter((piece) => piece.soup && isSolid.get(piece.part) && !isWheel.get(piece.part)).map((piece) => piece.part)).size)
     for (const piece of shown) {
       if (!piece.soup || isWheel.get(piece.part)) continue
       if (!isSolid.get(piece.part)) {
-        const hull = hullOfPiece(piece)
-        if (!hull) continue
-        out.push(hull)
-        hullSources.set(hull, [piece])
+        for (const { hull, drawn } of hullsOfPiece(piece)) {
+          out.push(hull)
+          hullSources.set(hull, [drawn])
+        }
         continue
       }
       const list = solids.get(piece.part)
@@ -379,13 +412,13 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
     for (const [part, members] of solids) {
       for (const hull of hullOfSolid(part, members)) {
         out.push(hull)
-        hullSources.set(hull, members)
+        hullSources.set(hull, members.map((piece) => piece.soup!.vertices))
       }
     }
     return out
   }
 
-  const drawnPointsOf = (hull: VehicleHull): number[] => (hullSources.get(hull) ?? []).flatMap((piece) => piece.soup?.vertices ?? [])
+  const drawnPointsOf = (hull: VehicleHull): number[] => (hullSources.get(hull) ?? []).flatMap((vertices) => vertices)
 
   return { pieces: make, isPending: () => pending, hulls, drawnPointsOf }
 }

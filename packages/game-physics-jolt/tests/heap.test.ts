@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
+
 import { describe, expect, it } from 'vitest'
 
 import type { BodyDesc, BodyId, JointDesc, RagdollDesc, ShapeDesc, VehicleDesc, Vec3 } from '@adatechnology/game-physics'
@@ -460,15 +463,21 @@ const carOfHulls = (count: number, model: number): ShapeDesc => ({
   }),
 })
 
-/** The class ceiling of a car (design 10.3): the number the 64 MB guard of 10.4 was sized with. */
-const CAR_HULLS = 96
-const MODELS = 12
+/** The real hulls of 12 models (6 cars, 2 SUVs, 2 pickups, 2 vans) as `game-vehicles-three` makes them at the ceiling of their class (design 10.3): `HULLS_FIXTURE=<this file> vitest run tests/vehicle-hulls-fixture.test.ts` there writes it again. */
+const REAL_CARS = JSON.parse(gunzipSync(readFileSync(new URL('./fixtures/car-hulls.json.gz', import.meta.url))).toString()) as Record<string, number[][]>
+const REAL_IDS = Object.keys(REAL_CARS)
+const realCar = (model: number): ShapeDesc => ({
+  kind: 'compound',
+  children: REAL_CARS[REAL_IDS[model]!]!.map((points, i) => ({ shape: { kind: 'convex', points } as ShapeDesc, position: [0, 0, 0] as Vec3, tag: i })),
+})
+const MODELS = REAL_IDS.length
+const TOTAL_HULLS = REAL_IDS.reduce((sum, id) => sum + REAL_CARS[id]!.length, 0)
 const PARKED = 200
 const DAMAGED = 20
 const MB = 1048576
 
 describe('T6.21: 200 parked cars from shared compounds of hulls, 20 of them damaged (design 10.4)', () => {
-  it(`${PARKED} cars of ${MODELS} models with ${CAR_HULLS} hulls each: the peak stays under 64 MB, the damaged ones take a copy of their own, and everything gone gives the heap back`, { timeout: 300000 }, async () => {
+  it(`${PARKED} cars of ${MODELS} real models (${TOTAL_HULLS} hulls): the peak stays under 64 MB, the damaged ones take a copy of their own, and everything gone gives the heap back`, { timeout: 300000 }, async () => {
     const world = (await createJoltEngine()).createWorld({ maxBodies: 1024 }) as JoltWorld
     ground(world, 400)
     // the warm-up: Jolt grows its arrays and caches once
@@ -477,7 +486,7 @@ describe('T6.21: 200 parked cars from shared compounds of hulls, 20 of them dama
     world.releaseSharedShape(warm)
     world.step(1 / 30)
     const base = world.memoryInUse()
-    const shapes = Array.from({ length: MODELS }, (_, model) => world.createSharedShape(carOfHulls(CAR_HULLS, model)))
+    const shapes = Array.from({ length: MODELS }, (_, model) => world.createSharedShape(realCar(model)))
     const afterShapes = world.memoryInUse()
     const cars = Array.from({ length: PARKED }, (_, i) => world.createBody({ shape: { kind: 'shared', id: shapes[i % MODELS]! }, motion: 'dynamic', mass: 1200, position: [(i % 20) * 6, 0.7, Math.floor(i / 20) * 8], sleeping: true, layer: 'vehicle', user: i }))
     world.step(1 / 30)
@@ -487,7 +496,7 @@ describe('T6.21: 200 parked cars from shared compounds of hulls, 20 of them dama
     world.step(1 / 30)
     const peak = world.memoryInUse() - base
     report('heap-parked-cars-hulls', {
-      cars: PARKED, models: MODELS, hullsPerCar: CAR_HULLS, bytesPerHull: Math.round((afterShapes - base) / (MODELS * CAR_HULLS)), sharedShapesMB: Math.round(((afterShapes - base) / MB) * 100) / 100,
+      cars: PARKED, models: MODELS, totalHulls: TOTAL_HULLS, bytesPerHull: Math.round((afterShapes - base) / TOTAL_HULLS), sharedShapesMB: Math.round(((afterShapes - base) / MB) * 100) / 100,
       bodiesMB: Math.round(((afterCars - afterShapes) / MB) * 100) / 100, damagedCopiesMB: Math.round(((peak - (afterCars - base)) / MB) * 100) / 100, peakMB: Math.round((peak / MB) * 100) / 100,
     })
     expect(peak).toBeLessThanOrEqual(64 * MB)
@@ -509,7 +518,7 @@ describe('T6.21: 200 parked cars from shared compounds of hulls, 20 of them dama
     world.releaseSharedShape(warm)
     world.step(1 / 30)
     const base = world.memoryInUse()
-    const shapes = Array.from({ length: MODELS }, (_, model) => world.createSharedShape(carOfHulls(CAR_HULLS, model)))
+    const shapes = Array.from({ length: MODELS }, (_, model) => world.createSharedShape(realCar(model)))
     const cars = Array.from({ length: PARKED }, (_, i) => world.createBody({ shape: { kind: 'shared', id: shapes[i % MODELS]! }, motion: 'dynamic', mass: 1200, position: [(i % 20) * 6, 0.7, Math.floor(i / 20) * 8], sleeping: true, layer: 'vehicle', user: i }))
     world.step(1 / 30)
     for (const car of cars) world.removeBody(car)

@@ -31,30 +31,45 @@ const MAX_HULL_MS = 100
 const IS_COST_LANE = process.env.HULLS_COST === '1'
 /** K4: the balls that meet a hull more than 3 cm before the drawn shell, per model and side, as measured when the method went in; it only goes down (`UPDATE_HULL_EXCESS=1` writes what a run measured when it is lower, and adds a new model). */
 const LEDGER = join(process.cwd(), 'tests/fixtures/hull-excess-ledger.json')
+/** K3: the same for the balls that meet a hull with no drawn surface near (the exception to §12, design 10.3). */
+const FLOATING_LEDGER = join(process.cwd(), 'tests/fixtures/hull-floating-ledger.json')
 const SIDES: readonly Side[] = ['above', 'below', 'side']
 type Ledger = Record<string, Record<Side, number>>
-const ledger: Ledger = existsSync(LEDGER) ? (JSON.parse(readFileSync(LEDGER, 'utf8')) as Ledger) : {}
+const readLedger = (file: string): Ledger => (existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Ledger) : {})
+const ledger = readLedger(LEDGER)
+const floatingLedger = readLedger(FLOATING_LEDGER)
 
 const reports = new Map<string, HullReport>()
 const reportOf = (id: string): HullReport => {
   let report = reports.get(id)
-  if (!report) reports.set(id, (report = checkHulls(id, FLAT_PAD * Math.SQRT2)))
+  if (!report) reports.set(id, (report = checkHulls(id, FLAT_PAD * Math.SQRT2, CEILING[fleetGroupOf(id) ?? ''])))
   return report
 }
 
-afterAll(() => {
-  if (process.env.UPDATE_HULL_EXCESS !== '1') return
+/** The ledger as it is with what this run measured when that is lower, and any model that was not in it. */
+const lowered = (file: string, kept: Ledger, measuredOf: (report: HullReport) => Record<Side, number>): void => {
   const next: Ledger = {}
   for (const id of [...fleetVehicleIds].sort()) {
-    const measured = reports.get(id)?.ahead
-    const kept = ledger[id]
-    if (!measured) {
-      if (kept) next[id] = kept
+    const report = reports.get(id)
+    const before = kept[id]
+    if (!report) {
+      if (before) next[id] = before
       continue
     }
-    next[id] = Object.fromEntries(SIDES.map((side) => [side, Math.min(measured[side], kept?.[side] ?? measured[side])])) as Record<Side, number>
+    const measured = measuredOf(report)
+    next[id] = Object.fromEntries(SIDES.map((side) => [side, Math.min(measured[side], before?.[side] ?? measured[side])])) as Record<Side, number>
   }
-  writeFileSync(LEDGER, `${JSON.stringify(next, null, 2)}\n`)
+  writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`)
+}
+
+afterAll(() => {
+  if (process.env.HULLS_REPORT) {
+    const rows = [...reports.values()].map((report) => ({ ...report, group: fleetGroupOf(report.id) }))
+    writeFileSync(process.env.HULLS_REPORT, `${JSON.stringify(rows)}\n`)
+  }
+  if (process.env.UPDATE_HULL_EXCESS !== '1') return
+  lowered(LEDGER, ledger, (report) => report.ahead)
+  lowered(FLOATING_LEDGER, floatingLedger, (report) => report.floatingBySide)
 })
 
 describe('the hulls of the whole fleet (design 10.3, K1 to K7)', () => {
@@ -79,8 +94,12 @@ describe('the hulls of the whole fleet (design 10.3, K1 to K7)', () => {
     for (const side of SIDES) expect(report.ahead[side], `${id} ${side}: ${JSON.stringify(report.aheadByPart)}`).toBeLessThanOrEqual(allowed![side])
   }, 240000)
 
-  it.each(fleetVehicleIds)('%s: K3 no ball touches a hull without touching the drawn shell with a radius 3 cm bigger', (id) => {
-    expect(reportOf(id).floating).toBe(0)
+  it.each(fleetVehicleIds)('%s: K3 the balls that touch a hull with no drawn shell near are not above the ledger, by side (exception to the rule of zero, design 10.3)', (id) => {
+    const report = reportOf(id)
+    if (process.env.UPDATE_HULL_EXCESS === '1') return
+    const allowed = floatingLedger[id]
+    expect(allowed, `${id} is not in the floating ledger: UPDATE_HULL_EXCESS=1 writes it`).toBeDefined()
+    for (const side of SIDES) expect(report.floatingBySide[side], `${id} ${side}`).toBeLessThanOrEqual(allowed![side])
   }, 240000)
 
   it.each(fleetVehicleIds)('%s: K7 no more hulls than its class', (id) => {

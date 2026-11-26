@@ -20,9 +20,12 @@ export interface HullReport {
   readonly maxPoints: number
   /** K3 */
   readonly floating: number
+  /** K3, by where the ball comes from. */
+  readonly floatingBySide: Readonly<Record<Side, number>>
   /** K4, by where the ball comes from. */
   readonly ahead: Readonly<Record<Side, number>>
   readonly aheadByPart: Readonly<Record<string, number>>
+  readonly floatingByPart: Readonly<Record<string, number>>
   readonly drawnBalls: number
   /** K5 */
   readonly behind: number
@@ -59,10 +62,10 @@ export const isOnlyDrawn = (hull: VehicleHull, drawn: ArrayLike<number>): boolea
 }
 
 /** The hulls of the model made whole and measured against what is drawn: K2 to K6 of the design (10.3). */
-export const checkHulls = (id: string, padding: number): HullReport => {
+export const checkHulls = (id: string, padding: number, maxHulls = Infinity): HullReport => {
   const { vehicle, frame, dispose } = build(id)
   try {
-    const colliders = createVehicleColliders(THREE, vehicle, frame, { hulls: true })
+    const colliders = createVehicleColliders(THREE, vehicle, frame, { hulls: true, maxHulls })
     colliders.pieces()
     const started = performance.now()
     const hulls: VehicleHull[] = colliders.hulls()
@@ -74,7 +77,9 @@ export const checkHulls = (id: string, padding: number): HullReport => {
     const drawn = drawnTriangles(root, frame, wheels)
     const solid = hullTriangles(hulls, partNumbers)
     const ahead: Record<Side, number> = { above: 0, below: 0, side: 0 }
+    const floatingBySide: Record<Side, number> = { above: 0, below: 0, side: 0 }
     const aheadByPart: Record<string, number> = {}
+    const floatingByPart: Record<string, number> = {}
     const partNames = vehicle.model.parts.map((part) => part.id)
     let floating = 0, behind = 0, drawnBalls = 0
     for (const direction of RAY_DIRECTIONS) {
@@ -82,8 +87,10 @@ export const checkHulls = (id: string, padding: number): HullReport => {
       const counts = compareBalls(depthMap(drawn, rayFrame), depthMap(solid.triangles, rayFrame, solid.owners))
       drawnBalls += counts.drawn
       floating += counts.floating
+      floatingBySide[sideOf(direction)] += counts.floating
       behind += counts.behind
       ahead[sideOf(direction)] += counts.ahead
+      for (const [owner, n] of counts.floatingByOwner) floatingByPart[partNames[owner] ?? '?'] = (floatingByPart[partNames[owner] ?? '?'] ?? 0) + n
       for (const [owner, n] of counts.aheadByOwner) aheadByPart[partNames[owner] ?? '?'] = (aheadByPart[partNames[owner] ?? '?'] ?? 0) + n
     }
     const extremeFailures: string[] = []
@@ -104,7 +111,7 @@ export const checkHulls = (id: string, padding: number): HullReport => {
       if (SOLID_ONE.has(role) && list.length === 1 && !isOnlyDrawn(list[0]!, colliders.drawnPointsOf(list[0]!))) solidFailures.push(`${part} (${role}): the hull has a point that is not a drawn vertex`)
     }
     return {
-      id, hulls: hulls.length, maxPoints: Math.max(0, ...hulls.map((hull) => hull.points.length / 3)), floating, ahead, aheadByPart, drawnBalls, behind, extremeFailures, solidFailures, hullMs,
+      id, hulls: hulls.length, maxPoints: Math.max(0, ...hulls.map((hull) => hull.points.length / 3)), floating, floatingBySide, ahead, aheadByPart, floatingByPart, drawnBalls, behind, extremeFailures, solidFailures, hullMs,
     }
   } finally {
     dispose()
