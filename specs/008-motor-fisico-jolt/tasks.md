@@ -174,7 +174,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - **T5.4c** ligar `createCorpseBodies` ao jogo/sala: `interest` do jogador, `follower` no registro de cadáveres, `onSettled` → `relocateCorpse`, `budget` do host (`beginFrame`); hoje só os testes usam.
   - **T5.4d** restaurar num mundo novo depois de trocas (C8): as chaves dos corpos levam o número de sequência, então `restoreState` só vale no mesmo mundo; recriar na ordem de criação exige o número de sequência no estado salvo.
   - **T5.4e** o orçamento somado do §2.3 (20 R0 + pilha + 1 000 agentes + destroços) na sala de teste.
-- **T5.5 Ragdoll de quadrúpede** (`game-animals-three`). Aceite: mesmo critério de T5.1.
+- ✅ **T5.5 Ragdoll de quadrúpede** (2026-11-26: `ragdollOfAnimal`/`chainOfAnimal`/`corpseBodyKitOfAnimal` puros em `game-animals`; B3 em cão, gato, vaca e cavalo, dorme em 2,1 a 2,7 s e excesso máximo 0,024 rad; R0 de 0,5 a 0,8 ms; `evidence.md` `## T5.5`). Aceite: mesmo critério de T5.1.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-animals-three test` · `sonnet`.
 
 ## Fase 6 — Veículos

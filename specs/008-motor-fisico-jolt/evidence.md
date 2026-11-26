@@ -3957,3 +3957,44 @@ Sono: 13 de 13 passam. Custo: mediana passa em 6 de 13 e p99 em 3 de 13 nas 9 se
 **3. `ragdollsMax` = 1, decisão do dono (2026-11-26).** Registrado em `design/pilha-e-lod.md` §2.3 e em `spec.md` §6.2. Nova task `T5.6 Otimizar o custo do R0` em `tasks.md` (depois da Fase 8, `sonnet`): R0 a 60 Hz em vez de 120 e sem os passes 20/8; aceite: 3 a 4 R0 dentro do C7 sem perder o B3.
 
 **Gates** (`game-physics-jolt` `pnpm test`: **143 passam, 2 ignorados, 0 vermelhos**; `test:cost` (carga de 4 a 17): 136 passam, 12 vermelhos, 11 do T1 por mediana ou p99 (tabela) e `ragdoll.test.ts` caso 2, 20 mortos, p99 4,8 contra 4,0 com a carga alta; o T5 passou nessa rodada (numa rodada anterior, com carga de 25, deu 9,7 ms: sem valor); `game-physics` 32; `game-characters` 397; `game-crowd` 142, `state-hash` e `team-golden` iguais, nenhum arquivo de `game-crowd` tocado). `tsc --noEmit` e `eslint` limpos nos pacotes tocados. **✅ da T5.4 não dado:** o T1 segue vermelho na faixa de custo (mediana e p99) e o limite não foi mexido.
+
+## T5.5 — ragdoll de quadrúpede (2026-11-26) — ✅
+
+**O que já existia** (§1): `game-animals` tem a espécie como dado (`QuadrupedSpec`: corpo, pernas com ângulos de repouso, pescoço, cabeça) e `quadrupedLayout` (altura dos quadris e do corpo); o esqueleto do bicho é three.js (`game-animals-three/src/quadruped.ts`), então o R0 sai da pose de repouso pura (`design/pilha-e-lod.md` v2 §5.2). Mesmo desenho do T5.1/T5.2 (`ragdollOfRig`, `chainOfRig`, `corpseBodyKit` em `game-characters`).
+
+**O que mudou** (`game-animals`, puro: só tipos de `game-physics`, sem three nem Jolt; dependência nova `@adatechnology/game-physics`):
+- `anatomy.ts` `anatomyOf(spec)`: tronco, pescoço, cabeça e osso de cima e de baixo de cada perna, em metros, de pé, virado para +z, com os mesmos números do desenhista (ângulos `fa1/fa2/ha1/ha2`, `neck.ang`, `head.down`, `quadrupedLayout`); o osso de baixo vai até o chão (inclui o casco/pé).
+- `ragdoll.ts` `ragdollOfAnimal({ body, at?, user? })` (R0, `RagdollDesc`): 11 partes (tronco, pescoço, cabeça, 4 x cima + baixo), pais primeiro; massa = 900 kg/m³ x volume da cápsula do osso (vaca ~ 600 kg, cão ~ 15 kg). `ANIMAL_RAGDOLL_LIMITS`: pescoço 0,6/0,5/0,3 e cabeça 0,6/0,5/0,4 (sagital/lateral/torção, rad), ombro 0,9/0,45/0,25, quadril 0,9/0,4/0,25, carpo (dobradiça) -0,1 a 2,0 e jarrete -0,6 a 1,8, com o pé indo para trás (+), como as pernas da página.
+- `chain.ts` `chainOfAnimal` (R1): tronco, pescoço+cabeça num osso, as 4 pernas numa caixa sob o tronco (as mesmas 3 partes da corrente da pessoa: tronco, cabeça, pernas), 2 juntas, mesma massa total do R0.
+- `corpse-kit.ts` `corpseBodyKitOfAnimal` (`CorpseBodyKit`: R0, R1, cápsula R2 ao longo do tronco, âncoras torso 0, cabeça 2, pernas 3 e 9): o quadrúpede entra em `createCorpseBodies`/`createBodyLod` **sem uma linha de bicho no aplicador**.
+- Testes: `game-animals/tests/ragdoll.test.ts` (6 + 1), `game-animals-three/tests/ragdoll-rig.test.ts` (as 9 espécies de quatro patas: todo corpo cai dentro da caixa do bicho desenhado e os pés ficam no chão), `game-physics-jolt/tests/ragdoll-animal.test.ts` (B3, custo, pilha).
+
+**B3 por espécie** (R0 de produção no `KIT_WORLD`: 120 Hz, 32/2, `stabilize`, 20/8; cai de 2 m na escada e numa caixa, tiro de 9 mm no tronco em 1,5 s; `expect` no teste):
+
+| Espécie | Maior excesso de junta | Passos seguidos > 0,1 rad | Dorme em | Limite |
+|---|---|---|---|---|
+| cão | 0,013 rad | 0 | 2,70 s | ≤ 3 / ≤ 4 s |
+| gato | 0,024 | 0 | 2,50 s | idem |
+| vaca | 0,024 | 0 | 2,13 s | idem |
+| cavalo | 0,016 | 0 | 2,72 s | idem |
+| R1 cão | 0,002 | 0 | 2,63 s | idem |
+| R1 cavalo | 0,020 | 0 | 2,32 s | idem |
+
+Passou de primeira, sem ajustar limite nenhum (a pessoa chegou a 0,106 rad num quadro).
+
+**Pilha** (`ragdoll-animal.test.ts`): 4 cães e 1 cavalo mortos no `KIT_WORLD` pela política do motor: `counts` r0 1, r1 4, dormem em 14 s; um cão morto longe do jogador nasce cápsula e dorme.
+
+**Custo de 1 R0** (`pnpm --filter @adatechnology/game-physics-jolt test:cost`, sob `perf-measure.lock`; quadro de 1/60 s = 2 passos, primeiros 3 s caindo e empilhando; limites C7 3,0 mediana e 4,0 p99). **Carga da máquina 10 a 14 (acima de 4: outras sessões), número a repetir com a máquina livre**:
+
+| Espécie | Mediana (ms) | p99 (ms) | 2ª rodada: mediana / p99 |
+|---|---|---|---|
+| cão | 0,11 | 0,67 | 0,12 / 1,79 (pico de carga) |
+| vaca | 0,51 | 0,70 | 0,48 / 0,65 |
+| cavalo | 0,62 | 0,83 | 0,54 / 0,68 |
+
+Cada R0 de quadrúpede custa o mesmo que um de pessoa ou menos (0,5 a 0,8 ms contra 0,65 a 0,9); com 11 partes e 11 juntas. A cota `ragdollsMax` = 1 não muda.
+
+**Gates**: `game-animals` 15 testes, `game-animals-three` 72, `game-physics-jolt` 154 (2 pulados de antes); typecheck e eslint dos três limpos. Nenhum golden mudou.
+
+**Para o dono ver na sala (§5, sem GPU aqui)**: um cão e uma vaca mortos em 1ª e 3ª pessoa caindo na escada; o desenho do cadáver de bicho ainda é a pose fixa (o R0/R1 de bicho com esqueleto desenhado é a T5.4a, que serve a pessoa e o bicho). Não escolhi limites de cauda e orelhas: ficam fora do R0.
+
