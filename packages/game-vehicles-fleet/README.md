@@ -126,3 +126,7 @@ veja "Left for the game adapter". A tabela completa de nomes antigos e novos est
 ## Measurements, paint and design cards
 
 `fleetDims(id)` (length, width, height in metres as the team measured them), `paintPalettes` and `paletteOf(group)` (13 civil colours and 5 military), `colorFromSeed(seed, palette)` (the same seed gives the same colour; number or text), `fleetStats(id)` (six 0-10 ratings, noise radius, top speed) and `fleetCard(id)` (the design card texts, Brazilian Portuguese). The data are JSON files in `src/data/` written by `tools/vehicles-catalog` from the team's Frota Leve and Frota pages.
+
+## Wheel layouts and sourced acceleration (spec 008)
+
+`fleetWheelLayout(id)` gives the axles and the tracks of a model (`src/data/wheel-layouts.json`), which the proving runner reads to build a two-wheeler, a 6x6 or a tracked vehicle on the engine. `FLEET_ACCELERATION_SOURCES` lists the real 0-100 km/h figure and its source for each car and SUV whose acceleration grade was set from data. The vehicle acceptance (CLAUDE.md section 7: a shot lands on the drawn part, the mark follows its part, every pane of glass is a glass part, the goldens of the intact geometry) passes with the engine's hulls: 1 478 tests, no golden changed (T6.12).

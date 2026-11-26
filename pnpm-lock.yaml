@@ -517,6 +517,9 @@ importers:
       '@adatechnology/game-animals-species':
         specifier: workspace:^
         version: link:../game-animals-species
+      '@adatechnology/game-characters-people':
+        specifier: workspace:^
+        version: link:../game-characters-people
       '@adatechnology/game-characters-undead':
         specifier: workspace:^
         version: link:../game-characters-undead
@@ -526,6 +529,9 @@ importers:
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt
+      '@adatechnology/game-vehicles-driving':
+        specifier: workspace:^
+        version: link:../game-vehicles-driving
       '@adatechnology/game-workers':
         specifier: workspace:^
         version: link:../game-workers
@@ -1524,6 +1530,9 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-vehicles-driving':
+        specifier: workspace:^
+        version: link:../game-vehicles-driving
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -2076,6 +2085,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
     devDependencies:
       '@adatechnology/golden-tool':
         specifier: workspace:^
@@ -2101,6 +2113,12 @@ importers:
       '@adatechnology/game-destruction':
         specifier: workspace:^
         version: link:../game-destruction
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-shapes-three':
         specifier: workspace:^
         version: link:../game-shapes-three
@@ -2137,6 +2155,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-runtime':
         specifier: workspace:^
         version: link:../game-runtime
@@ -2144,6 +2165,9 @@ importers:
         specifier: workspace:^
         version: link:../game-vehicles-driving
     devDependencies:
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@types/node':
         specifier: ^22.10.7
         version: 22.20.5
@@ -2168,6 +2192,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
@@ -2193,9 +2220,15 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
+      '@adatechnology/game-workers':
+        specifier: workspace:^
+        version: link:../game-workers
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden

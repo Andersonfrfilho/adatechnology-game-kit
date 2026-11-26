@@ -5,7 +5,7 @@ import type { BodyDesc, BodyId, JointId, Rolling, SensorEvent, ShapeDesc } from 
 import type { Contacts } from './contact-rows'
 import type { Jolt } from './constants'
 import type { RagdollCache } from './ragdoll-cache'
-import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
+import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry, WatchedContacts } from './entries'
 
 /** What the files beside `world.ts` need of the world: `JoltWorld` satisfies it, and they import this, so none of them imports `world.ts` back. */
 export interface JoltWorldHost {
@@ -29,9 +29,16 @@ export interface JoltWorldHost {
   readonly freeGroups: number[]
   nextJoint: number
   nextVehicle: number
+  /** Shapes held by `createSharedShape`, by id: a body made from one takes its own reference. */
+  readonly sharedShapes: Map<number, JoltNS.Shape>
+  nextShared: number
+  readonly watched: Map<number, WatchedContacts>
   readonly fixedStep: number
   accumulator: number
   readonly slipSpeed: number
+  /** The world's sleep speed (m/s) and sleep time (s): what `settleVehicles` holds a vehicle to. */
+  readonly sleepSpeed: number
+  readonly sleepAfter: number
   readonly reportSpeed: number
   readonly maxContacts: number
   readonly listener: JoltNS.ContactListenerJS | null

@@ -79,6 +79,7 @@ export type {
   PartRole,
   VehicleDestructible,
   VehicleDestructibleOptions,
+  PartSink,
   VehicleItem,
   VehicleItemOptions,
   VehicleModel,

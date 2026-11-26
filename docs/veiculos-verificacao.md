@@ -60,3 +60,7 @@ Só o `midsize_sedan` foi visto no jogo real até agora (sala de testes, `?scene
 | 7 | Usar (abrir porta) | Testado no jogo: porta com borda, soleira, vidro, borracha e espelho; a base preta do espelho ainda fica no corpo |
 | 18 | Desgaste visual | Furo fica e acompanha a porta |
 | 3, 4, 6, 8 a 17, 19 a 21 | Demais critérios | Não verificados nesta rodada |
+
+## Aceitação com o motor e os cascos (spec 008, T6.12, 2026-11-26)
+
+A mesma aceitação da frota roda com o motor físico e os cascos convexos no lugar: `pnpm --filter @adatechnology/game-vehicles-fleet test` passa inteira (42 arquivos, 1 478 testes) e nenhum golden da geometria intacta mudou. O que cada parte cobre: tiro no desenhado (`surface-ray-exact`, `vehicle-acceptance`); marca na peça e junto dela quando a porta gira (`vehicle-acceptance`, `fragments-on-the-car`); todo vidro é peça de vidro (`vehicle-acceptance`); cascos K1 a K7 nos 69 modelos (`game-vehicles-three/tests/vehicle-hulls.test.ts`); peças que soltam como corpos e memória em ciclo (`crash-parts.test.ts`). A sonda de memória do carro que bate (`LEAK_PHASE=vehicle node examples/test-room/leak.mjs`) está escrita e **não foi rodada**: fica para a T8.5.

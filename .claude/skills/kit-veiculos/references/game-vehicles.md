@@ -86,3 +86,6 @@ em `example/dist/vehicles-example.html` (`?lang=pt-BR` troca o idioma). Ainda n�
 - V4: condução como dois modos do SDK, arcade primeiro, depois semi-simulação.
 - V5: módulos de teste (8 itens, 11 cenários) viram `examples/vehicles-test-area`.
 - S1: motor e rotor sonoros ficam no `game-vehicles-three`, sobre `game-audio`.
+
+## Peças que soltam como corpos (spec 008, T6.9)
+`destructible.setPartSink(sink | null)` entrega ao hospedeiro a peça que sai (`PartSink`: peça, holder, velocidade e giro do `fling`) em vez de lançá-la. Sem sink nada muda; o `fling` das explosões não passa por ele. O sink que vira corpo de física é `createCrashParts` (`game-vehicles-three`).

@@ -3998,6 +3998,466 @@ Cada R0 de quadrúpede custa o mesmo que um de pessoa ou menos (0,5 a 0,8 ms con
 
 **Para o dono ver na sala (§5, sem GPU aqui)**: um cão e uma vaca mortos em 1ª e 3ª pessoa caindo na escada; o desenho do cadáver de bicho ainda é a pose fixa (o R0/R1 de bicho com esqueleto desenhado é a T5.4a, que serve a pessoa e o bicho). Não escolhi limites de cauda e orelhas: ficam fora do R0.
 
+## T6.0 — Micro-benchmark do reticulado XPBD (2026-11-26)
+
+Script descartável (`lattice-bench.mjs`, na pasta de rascunho da sessão; **não entra em commit**, como a T6.0 pede). XPBD de passos pequenos em Node, `Float64Array`, uma passada de vigas por iteração, plasticidade (escoamento a força fixa de 8 kN, vigas densificam em 30% do comprimento), 9 rodadas depois de uma de aquecimento, mediana. Máquina: carga 3,36 no início (abaixo de 4), sob `perf-measure.lock`. Grades de 60, 150, 300 e 400 nós (329, 957, 1 973 e 2 658 vigas); massa realista (4 nós de 300 partes para 1 de painel, 1 500 kg no total); entrada: todos os nós a 15 m/s contra um plano, 0,3 s. Referência de erro: 1 920 Hz com 4 iterações (a mais convergida que o script roda).
+
+| Nós | Hz | Iterações | ms por quadro de 60 Hz | Erro RMS dos nós (m) | Erro da frente esmagada (m) | Erro do impulso do plano | Deriva do momento angular |
+|---|---|---|---|---|---|---|---|
+| 300 | 1 920 | 1 | 0,799 | 0,886 | 0,630 | 5,2% | 0,010% |
+| 300 | 1 920 | 2 | 1,613 | 0,495 | 0,309 | 3,4% | 0,010% |
+| 300 | 960 | 1 | 0,410 | 1,227 | 0,752 | 7,7% | 0,022% |
+| 300 | 960 | 2 | 0,873 | 0,937 | 0,595 | 6,1% | 0,022% |
+| 300 | **480** | **1** | **0,240** | 1,485 | 0,860 | 8,8% | 0,045% |
+| 300 | 480 | 2 | 0,443 | 1,278 | 0,679 | 3,8% | 0,044% |
+| 300 | 240 | 1 | 0,118 | 1,604 | 0,892 | 9,1% | 0,086% |
+| 300 | 240 | 2 | 0,235 | 1,481 | 0,790 | 6,0% | 0,087% |
+| 400 | 480 | 1 | 0,318 | 1,185 | 0,633 | 8,2% | 0,055% |
+| 400 | 1 920 | 2 | 2,549 | 0,447 | 0,365 | 4,6% | 0,013% |
+
+(60 e 150 nós: 480 Hz com uma iteração custa 0,044 e 0,123 ms; as outras 22 linhas da grade (4 tamanhos × 4 frequências × 1 e 2 iterações) seguem a mesma forma e saíram só na sessão. Deriva do momento linear: 0 em todas.)
+
+**O que os números dizem (registrado, a decisão da 009 não é tomada aqui):**
+
+1. **Custo:** 300 nós a 480 Hz com uma iteração custa **0,24 ms por quadro de 60 Hz**, ou 0,03 ms por subpasso: abaixo da estimativa B do desenho (≈0,05 ms por subpasso, 15.1) e bem abaixo da A (0,1 ms). O custo é linear nas vigas, nos subpassos e nas iterações.
+2. **Erro:** o erro RMS dos nós contra a referência fica entre 0,4 e 2,1 m em **todas** as configurações e **não** cai de forma regular com a frequência: com 300:1 de razão de massas e vigas perfeitamente plásticas, uma iteração por subpasso não segura a rigidez, e a resposta (a frente esmagada, 0,3 a 1,1 m de diferença) depende do passo. Só 1 920 Hz com 2 iterações chega perto da referência (RMS 0,5 m) e custa 1,6 ms por quadro para 300 nós, acima do 1,2 ms do §15.1. A referência de 4 iterações também não é uma solução exata; um resultado limpo exigiria uma referência independente (por exemplo, um passo de 7 680 Hz com 8 iterações), que este script não roda.
+3. **Deriva do referencial flutuante:** momento linear sem deriva; momento angular 0,005% a 0,11% de variação em 0,3 s (sobe com a frequência baixa e com os nós), sem importância para o aceite de 4.2.
+
+**Conclusão para o desenho:** 480 Hz com uma iteração (D5) é barato e **não** foi demonstrado exato contra a referência deste script; a decisão da 009 deve tratar o ganho de precisão (iterações, passo menor ou vigas menos rígidas) e a razão 300:1 como risco aberto, medido com um lote de referência melhor.
+
+## T6.0b — Espião descartável: um carro, uma parede, cinco componentes (2026-11-26)
+
+`packages/game-physics-jolt/tests/crash-spy.test.ts` (Jolt cru, um arquivo; **descartável**: sai quando a 009 decidir). Carro de 1 500 kg a 15 m/s (54 km/h) contra uma parede, **sem gravidade e sem rodas** (o impulso de contato é `m·Δv`: os termos de chão e roda do 4.2 item 1 não são medidos aqui); corpo rígido num composto **mutável** de 96 ou 192 cascos convexos de 12 pontos; reticulado de 300 nós e 1 973 vigas (4,4 m × 1,8 m × 1,2 m; 4 nós de motor 300:1), XPBD a 480 Hz (4 subpassos por passo de 1/120), plano da parede lido do `ContactManifold`, referencial flutuante (cada nó recebe `−Δv −Δω×r` do que o Jolt aplicou), plasticidade a força fixa (8 kN), densificação em 30%. Cinco componentes lidos: para-choque dianteiro, capô, farol esquerdo, roda dianteira esquerda e suspensão dianteira esquerda (conjuntos de nós). Etapas medidas por passo: `Step` do Jolt, leitura e `Δv`, reticulado, refazer cascos (`ModifyShape` + `SetPositionAndRotation`; no máximo 12 por passo), skinning na CPU de 20 000 vértices (4 nós cada). Sob `perf-measure.lock`, carga 3,3 a 3,6 (abaixo de 4), 9 rodadas de 1 s depois de uma de aquecimento.
+
+### Critérios de seguir ou parar a E3 (4.2 e 15.1), na cena de 96 cascos
+
+| Critério | Medido | Passa? |
+|---|---|---|
+| nenhum nó passa da parede mais de 3 cm | 1e-14 m | sim |
+| nó mais rápido em relação ao corpo ≤ 1,5× a aproximação | 1,07× (16,1 m/s para 15 m/s) | sim |
+| energia do reticulado (cinética + elástica) ≤ a que entrou (1% de folga) | 0% acima (entrada 169,1 kJ; o carro tinha 169,1 kJ) | sim |
+| **frente presa à parede (folga ≤ 3 cm)** enquanto o contato dura | **0,21 m** | **NÃO** |
+| carro (reticulado + cascos) ≤ 1,2 ms em quadro de 60 Hz a 480 Hz | p90 0,77 ms (96 cascos) a 0,83 ms (192), p99 1,0 a 1,3 ms | sim no p90 (o teste confere); o p99 passa de 1,2 ms em 96 cascos |
+
+O critério da folga **falha**. Varri 17 variações (força de escoamento de 4, 8, 16 e 40 kN; densificação em 30% e 50%; amortecimento de 20 a 400 /s; 1, 2 e 4 iterações): a melhor deu 0,21 m e a maioria passou de 2 m (a frente rebate da parede, ou o motor atravessa o painel porque o reticulado não tem autocontato). Mais iterações **pioraram** o resultado (0,21 → 1,9 a 2,6 m), o mesmo sintoma da T6.0: sem reticulado mais fino ou autocontato, o ajuste é caótico. O teste de CI confere os três que passam e **imprime** o veredito da folga (`crash-spy.verdict`).
+
+**Achado de acoplamento (alimenta a 009-f):** com os cascos refeitos a partir do deslocamento dos nós (`feedHulls`), o esmagamento do reticulado sobe de 0,40 m para **1,23 m** (96 cascos) e **1,37 m** (192): o carro entra 15 cm (96) e 7 cm (192) na parede e a velocidade relativa dos nós chega a 1,17× a aproximação. O motivo é o laço: o casco que avança muda o contato do Jolt, que muda o plano, que muda o reticulado. A leitura de `Δv` deixa de contar o que o refazer dos cascos mexeu no corpo (a linha de base é lida depois da troca), e mesmo assim não fecha: o acoplamento precisa do desenho da 009-f (plano fixo no mundo durante o esmagamento, cascos que seguem o reticulado menos a deriva média).
+
+### Custo por etapa (ms, mediana / p90 / p99; 1 008 passos com reticulado ativo por configuração)
+
+| Cascos | CCD | `Step` em todos os passos | `Step` em contato | Reticulado (1/120 s) | Refazer cascos | Skinning 20 mil vértices | Reticulado + cascos por passo |
+|---|---|---|---|---|---|---|---|
+| 96 | discreto | 0,005 / 0,024 / 0,060 | 0,022 / 0,038 / 0,093 | 0,174 / 0,196 / 0,340 | 0,019 / 0,263 / 0,342 | 0,212 / 0,426 / 0,491 | 0,199 / 0,450 / 0,619 |
+| 96 | `LinearCast` | 0,005 / 0,020 / 0,043 | 0,018 / 0,028 / 0,054 | 0,165 / 0,199 / 0,400 | 0,010 / 0,234 / 0,273 | 0,199 / 0,235 / 0,438 | 0,190 / 0,419 / 0,634 |
+| 192 | discreto | 0,004 / 0,014 / 0,034 | 0,012 / 0,017 / 0,045 | 0,147 / 0,177 / 0,322 | 0,008 / 0,217 / 0,265 | 0,176 / 0,260 / 0,287 | 0,170 / 0,384 / 0,501 |
+| 192 | `LinearCast` | 0,004 / 0,015 / 0,050 | 0,013 / 0,017 / 0,048 | 0,163 / 0,184 / 0,240 | 0,009 / 0,236 / 0,270 | 0,199 / 0,274 / 0,321 | 0,182 / 0,414 / 0,482 |
+
+Leituras: (1) **o composto mutável de 96 a 192 filhos não pesa**: o `Step` do Jolt fica em 0,005 ms (0,02 em contato), sem diferença entre 96 e 192 nem entre discreto e `LinearCast` (a cena é um carro só; o custo sob muitos carros é o da T6.21). (2) Refazer um casco convexo de 12 pontos e trocar com `ModifyShape` custa **0,017 a 0,022 ms**; com 12 por passo (cadência), 0,22 a 0,26 ms no p90, a estimativa de 0,64 ms sustentados (10.2) fica folgada. (3) O skinning de 20 000 vértices na CPU custa 0,18 a 0,21 ms por passo: D15 (GPU) não se justifica por custo neste tamanho. (4) O reticulado a 480 Hz custa 0,15 a 0,17 ms por passo de 1/120 s (0,3 ms por quadro de 60 Hz), de acordo com a T6.0.
+
+**Achado do Jolt (1.1.1):** `BodyInterface::NotifyShapeChanged` deixa 8 bytes no heap do wasm a cada chamada (crescimento linear medido em 600 chamadas: 4 104 bytes); `SetShape` com outra forma num corpo que depois sai faz o mesmo. O adaptador (T6.1b) usa `SetPositionAndRotation` no lugar do primeiro (plano) e documenta o segundo.
+
+**Limites:** reticulado, acoplamento e parâmetros são do próprio espião (primeira passada, não calibrada); os cascos só se movem (não se deformam); o carro não tem rodas nem gravidade. O veredito de seguir ou parar a E3 é do dono: com a folga reprovada, o acoplamento instável e a T6.0 sem convergência clara, **recomendo não começar a 009 sem um desenho novo do reticulado (autocontato ou grade mais fina) e do acoplamento (009-f) antes**.
+
+## T6.19 — §6 da `arquitetura.md` (2026-11-26)
+
+`design/arquitetura.md` §6 agora diz: o carro estacionado é `vehicle` dinâmico dormindo (D3), não `static`; o par `vehicle`–`agent` sai (o agente também deixa de encontrar `vehicle`, e atropelar é a consulta de 7.8 do `veiculos.md`); a camada de corpo morto é a **`corpse`** da Fase 5 (PR #521: `Layer`, `LAYER_PAIRS`, `corpse` encontra o mundo fixo, `debris`, `prop`, `character`, `vehicle`, outros `corpse` e `sensor`, nunca `agent`); o testador das rodas é uma camada interna do adaptador (como a das consultas), que não encontra `agent`, `corpse` nem `sensor`. **Alinhamento com o #521** (`git diff origin/main...origin/spec/008-fase5 -- packages/game-physics/src/contract.ts`): a `ragdoll` que o `veiculos.md` 6.4 pedia é a mesma coisa que a `corpse`; **não se criou uma segunda camada**, e o 6.4 do desenho diz isso. O #521 não toca `arquitetura.md`, então a edição não conflita.
+
+Aceite: `grep -c 'corpse\|testador das rodas\|estacionado' specs/008-motor-fisico-jolt/design/arquitetura.md` dá 6 (as quatro linhas da tabela e o parágrafo seguinte).
+
+## T6.1b — Contrato e adaptador, primeira parte (2026-11-26)
+
+**Entrou** (`game-physics/src/contract.ts`, só acréscimos e a remoção do par; `game-physics-jolt`): `ShapeDesc` composto com `mutable: true` e a forma `shared`; `createSharedShape` / `releaseSharedShape`; `setChildShape(id, filho, forma | null, pose?)` com **alça = índice do filho no `children` com que o corpo nasceu** (não se mexe quando outro sai; o adaptador guarda alça → índice atual) e **cópia mutável no primeiro dano** (os filhos da cópia dividem os cascos com a forma compartilhada; os outros corpos seguem inteiros); `setMassProperties(id, { mass, inertia, centreOfMass? })`; `setMotionQuality`; `watchContacts` + `readContacts` (ponto, normal para dentro do corpo, profundidade; `CONTACT_READ_STRIDE` = 7); `vehicleWheels` (`WHEEL_READ`, 11 números por roda: contato, corpo do chão, ângulo, esterço, giro, compressão, deslizamento longitudinal e lateral, os três impulsos); `rebuildVehicle` (mesma `BodyId`, pose e velocidade; a roda que continua na lista mantém o giro); camadas: sai `vehicle`–`agent` de `LAYER_PAIRS`, e as rodas passam a testar numa camada interna do adaptador (`WHEEL_PROBE_LAYER`) que não encontra `agent`, `corpse` nem `sensor`. O contrato não cita Jolt. Arquivos novos: `shared-shapes.ts`, `watched-contacts.ts`; `vehicles.ts` ganhou `attach` (constraint + listener) para `createVehicle` e `rebuildVehicle` partilharem.
+
+**Alinhamento com o #521 (Fase 5):** a camada de corpo morto é a **`corpse`**, que a Fase 5 acrescenta ao `Layer`; **esta branch não a cria** (o #521 ainda não está na main) e o testador das rodas cega a `corpse` por nome (`WHEEL_BLIND_LAYERS`), de modo que a regra passa a valer sozinha quando o #521 entrar. Conflitos esperados no merge, conferidos contra `git diff origin/main...origin/spec/008-fase5`: nenhum em `constants.ts`, `contacts.ts`, `vehicles.ts`, `shapes.ts`; em `contract.ts` o #521 mexe nas linhas de `Layer`/`LAYERS`/`LAYER_PAIRS` (a minha remoção de `['vehicle', 'agent']` fica numa linha separada por uma linha intacta da dele); em `world.ts`, `world-host.ts` e `entries.ts` as edições do #521 ficam a mais de 10 linhas das minhas.
+
+**Testes** (`tests/vehicle-shapes.test.ts`, 10; `tests/heap.test.ts`, 5 novos; fora da faixa de custo: nenhum limite em ms):
+
+| Item | Teste |
+|---|---|
+| forma compartilhada | dois corpos da mesma forma; o dano de um (filho 0 sai) não muda o outro; `releaseSharedShape` com corpos vivos não derruba os corpos |
+| alça | tirar os filhos 0 e 1: o filho 5 continua o filho 5 (a tag volta no raio); troca de forma no lugar e em outra pose; erros claros (`no child`, `no compound`) |
+| massa | massa e inércia do kit se mantêm quando o filho muda; `setMassProperties` com centro de massa novo: o centro fica onde o kit disse e **a forma não se mexe no mundo** (o raio acerta a mesma altura); de novo e sem centro |
+| qualidade de movimento | esfera de 5 cm a 300 m/s atravessa uma parede de 2 cm discreta e para com `linearCast` |
+| `watchContacts` | caixa no chão: normal (0,1,0), profundidade ≥ 0; só o corpo observado; some depois de desligar |
+| rodas | quatro rodas com contato, compressão entre o mínimo e o máximo, impulso da suspensão > 0; giro e deslizamento finitos ao acelerar |
+| `rebuildVehicle` | de 4 para 3 rodas; mesma `BodyId`, mesma pose; segue andando; erro para id inexistente |
+| camadas | carro sobre uma laje de `agent` atravessa para o chão (sobre `prop` fica em cima); carro a 15 m/s contra `agent` passa, contra `prop` para |
+| heap em ciclo (§8) | forma compartilhada + 20 corpos (a mesma contagem de bytes, 20 ciclos); 200 carros estacionados: **337 bytes por carro dividindo a forma contra 2 142 com forma própria** (6,4×) e o heap volta ao byte; troca de filhos e `setMassProperties` repetidos: sem crescimento (±32 bytes de fragmentação do alocador, três passes de aquecimento); `watchContacts`, `vehicleWheels` e `rebuildVehicle`: planos ao byte |
+
+**Achados do Jolt 1.1.1 (wasm):** (1) `NotifyShapeChanged` deixa 8 bytes por chamada (linear: 4 104 bytes em 600): o adaptador usa `SetPositionAndRotation` com a pose atual, que atualiza limites e broadphase sem o vazamento; (2) `SetShape` com uma forma **diferente** deixa 8 bytes por corpo que depois sai (acontece com o `setShape` já existente; um corpo que muda de forma e fica não vaza): a cópia no primeiro dano usa `SetShape`, então **um carro danificado e removido custa 8 bytes**, a 200 danos 1,6 KB, registrado e não resolvido; (3) os getters que devolvem vetor (`GetCenterOfMass`, `GetPositionCOM`) usam o mesmo temporário: ler cada um para números antes da próxima chamada; (4) `SetShape` já move a posição do corpo (que é o centro de massa) pelo que o centro de massa andou, então o corpo não precisa de segundo deslocamento.
+
+**Gates (uma suíte por vez, carga 3,1):** `pnpm --filter @adatechnology/game-physics-jolt test` 30 arquivos passam (1 pulado como antes), **126 testes passam, 3 puladas**; `game-physics test` 22 passam; `tsc --noEmit` de `game-physics` e `game-physics-jolt` limpos; `eslint packages/game-physics packages/game-physics-jolt` sem avisos. **A faixa de custo** (`pnpm --filter @adatechnology/game-physics-jolt test:cost`) **não existe na main**: vem com o #521 (ele mexe no `package.json` do adaptador); nenhum teste desta tarefa tem limite em ms.
+
+**Fica para a segunda parte da T6.1b (não feito):** controladores `motorcycle` e `tracked` e as curvas de pneu, motor e transmissão em `VehicleDesc` (6.4, últimas duas linhas), `applyBuoyancy` e as correções de 3.4. Por isso a T6.1b **não** ganha ✅.
+
+## T6.1b — Segunda parte (2026-11-26)
+
+**Entrou** (`game-physics/src/contract.ts`, só acréscimos; `game-physics-jolt`): `VehicleDesc.controller` (`wheeled` | `motorcycle` | `tracked`), `tracks` (duas esteiras: rodas e roda motriz, atrito e freio), `motorcycle` (`maxLeanAngle`, `leanSpring`, `leanDamping`), `torqueCurve` (x = rpm / `maxRpm`), `engineInertia`, `transmission` (troca para cima e para baixo, tempo de troca, embreagem, latência), `differentials` (`left`, `right`, `ratio`, `limitedSlip`, `torqueShare`; derivados dos eixos motrizes quando omitidos) e, em `WheelDesc`, `longitudinalFriction` e `lateralFriction` (curvas), `inertia`, `angularDamping`; `applyBuoyancy(id, FluidDesc)` (superfície, normal, empuxo, dois arrastos, corrente). Tipos `Curve`, `TrackDesc`, `DifferentialDesc`, `TransmissionDesc`, `MotorcycleDesc`, `FluidDesc`; o contrato não cita Jolt. Arquivos novos: `vehicle-controllers.ts` (monta os controladores e as rodas), `buoyancy.ts`. Entrada da esteira: `right` ≠ 0 freia o lado de dentro até zero e depois o inverte (1 = giro sobre o lugar); sem `forward`, a direção sozinha dirige. **Correção de 3.4 que faltava:** o carro criado andando usa a velocidade **projetada na frente do chassi** (`forwardSpeedOf`), a marcha pelo raio das **rodas motrizes** (não da roda 0) e põe o **motor no giro daquela marcha**; antes o motor ficava na lenta e arrastava o carro pela embreagem (um carro a 60 km/h perdia 12 km/h em 2 s sem acelerar). `wheelContacts` já contava pelo `wheelCount` e `rebuildVehicle` (primeira parte) já resolve o `removeVehicle` tirar o chassi.
+
+**Testes** (`tests/vehicle-controllers.test.ts`, 15; `tests/heap.test.ts`, 4 novos; nenhum limite em ms):
+
+| Item | Medido |
+|---|---|
+| curva de torque | 100 N m, 3 s: curva 1 → 5,12 m/s, 0,5 → 3,33, 0 → 2,13 (o motor preso na lenta puxa o carro a ~2 m/s: *creep*); o que a curva soma acima do creep fica em 0,40 da cheia com a curva a 0,5 |
+| atrito longitudinal | curva baixa (0,1) → 4,5 m de 3 s contra 13,7 m com a curva forte |
+| atrito lateral | curva baixa → guinada 0,57 rad na mesma curva contra 1,95 rad |
+| câmbio | 4 rodas motrizes, 100 N m: trocar a 1 400 rpm → 7,0 m em 2,5 s; trocar a 5 500 → 8,1 m. **Achado:** o Jolt não troca de marcha para cima enquanto a roda motriz patina (com 300 N m na frente a marcha ficou na 1ª até o corte, igual para qualquer `shiftUpRpm`); o teste usa uma largada sem patinar |
+| diferenciais | só o diferencial do eixo traseiro listado: impulso de tração 5 088 N s atrás contra 88 na frente (mesmo com `driven` nas da frente); dois diferenciais com `torqueShare` 0,5 puxam as quatro rodas |
+| carro criado andando | 60 km/h girado 37°, 2 s com 0,4 de acelerador: perdeu −0,24 km/h (ganhou), lateral máx. 0,017 m/s, deriva de guinada 0,0001 rad. **Critério da §7.3** ("sem perder mais que 1 km/h") só vale **com o acelerador que sustenta a velocidade** (0,4 no carro do teste): a 0 o freio do motor do Jolt tira ~7 km/h em 2 s, girado ou não (medido nos dois) |
+| moto | em linha a 15 m/s o rolamento fica em 0,002 rad; com `right` 0,5 vira à direita (giro acumulado −1,87 rad em 3 s) e inclina até 0,129 rad; `maxLeanAngle` 0,2 inclina 0,028 contra 0,221 com 0,9. **Achado:** os valores de mola e amortecimento de lean do Jolt (5 000 / 1 000) são de moto com inércia real: com a caixa de 7,5 kg m² de rolamento o controlador derruba a moto (rolamento 3,1 rad); os testes usam 3 000 / 300, e `leanSpring` / `leanDamping` ficam na descrição para a T6.2 calibrar por moto |
+| esteira | `tracks[0]` é a esteira da esquerda (lado +x, frente +z, cima +y), `tracks[1]` a da direita. Reta: 37,5 m em 8 s com giro acumulado de −0,0015 rad; `right` 0,6 por 3 s → −9,55 rad (direita), −0,6 → +3,84 rad; as 8 rodas tocam o chão; sem `forward` e com `right` 1 gira −12,9 rad em 4 s parado, a 0,41 m de onde estava; sem `tracks` o erro diz `tracks`. **Cuidado de medida:** a guinada de `atan2` dá a volta em ±π; os testes somam o giro passo a passo (`turnTracker`), senão uma volta de −3,3 rad aparece como +3 |
+| `applyBuoyancy` | caixa de 500 kg (4 m³) solta a −2 m sobe e para a −0,06 m (velocidade 0,27 m/s); no ar devolve `false`; corrente de 2 m/s leva a caixa 3,8 m em 4 s |
+| heap em ciclo (§8) | esteira, moto, e "curvas + câmbio + diferenciais" criados, dirigidos, refeitos (`rebuildVehicle`) e removidos: heap plano ao byte; `applyBuoyancy` repetido: plano ao byte |
+
+**Limites do motor (registrados, não resolvidos):** (1) `NotifyShapeChanged` do Jolt 1.1.1 deixa 8 bytes por chamada (o adaptador não o usa: `SetPositionAndRotation` com a pose atual); (2) `SetShape` com forma diferente deixa 8 bytes por corpo que depois sai: **um carro danificado e removido custa 8 bytes** (1,6 KB a cada 200 danos); (3) o Jolt só troca de marcha para cima quando a roda motriz não patina; (4) o motor preso na rotação mínima puxa o carro a ~2 m/s sem acelerar (*creep*), e o freio do motor tira ~1 m/s² a 60 km/h com o acelerador a 0 (o amortecimento do motor é do Jolt, `engine.angularDamping` não está no contrato).
+
+**Gates:** `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado como antes), **149 testes passam, 3 puladas**; `game-physics test` 22 passam; `tsc --noEmit` de `game-physics` e `game-physics-jolt` limpos; `eslint packages/game-physics packages/game-physics-jolt` sem avisos.
+
+## T6.2 — Mapa da condução (2026-11-26)
+
+**Entrou** (`game-vehicles-driving`, arquivos novos `physics-desc.ts`, `physics-input.ts`, `physics-resistance.ts`; o nome do desenho era `jolt-map.ts`, mas o pacote não conhece o Jolt, só o contrato de `game-physics`; nova dependência `@adatechnology/game-physics`; `game-physics-jolt` ganha `game-vehicles-driving` só em `devDependencies`, para os testes):
+- `vehicleDescFromSemi(spec, { chassis, condition?, pedal?, wheelInertia?, wheelWidth? })`: rodas da ficha (x à esquerda, z à frente; a ficha tem z à direita), mola e amortecedor como frequência e razão de amortecimento da massa do canto, curva de torque do próprio `torqueAt` do driver (exportado), marchas e diferencial final, pontos de troca como fração da rotação máxima, curvas de pneu (lateral: pico em μ/Cα graus, 0,75μ a 90°; longitudinal: pico em 6% de patinagem, 0,8μ travado), freio 60/40 entre os eixos, freio de mão nas rodas marcadas, massa e momentos da ficha (os mesmos de `semi/driver.ts`) com `centreAtOrigin`. Pneu furado ou aro nu: raio do aro e atrito do aro (`RIM_FRICTION`) naquela roda; motor, freio e suspensão gastos rendem o que o driver rende (pisos de 0,55 e 0,5). Duas rodas: `motorcycle` com mola e amortecedor de inclinação proporcionais à inércia de rolamento. `pedal` (bicicleta): `maxTorque` = potência / rotação do pedivela × eficiência, curva plana, `minRpm` 0, marchas como o inverso da relação do câmbio da bicicleta, roda de 0,1 kg m².
+- `createPhysicsInputMapper` (controles → `VehicleInput`): acelerador e freio cancelam num pedal só; ré a partir do parado (< 0,5 m/s) e freio forte contra a marcha; `powerLimit` do controle de tração e do motor ferido corta o acelerador; `brakeFactor` do `status()` **divide** o freio (o desenho dizia multiplicar; `brakeFactor` é "quantas vezes mais longe para parar", e `impl.ts:1441` já usa `1 / brakeFactor`); direção positiva à esquerda do kit vira o `right` negativo do motor, filtrada a 5 por segundo (a resposta do arcade) e reduzida com a velocidade (0,012 por m/s, piso 0,4: **valores iniciais, não medidos**); `steerPull` soma 0,2 do batente por unidade; `canDrive` falso zera acelerador e ré (freio e direção seguem).
+- `resistanceImpulse(spec, velocidade, dt)`: `−(drag v² + rolling m g) dt` ao longo da velocidade horizontal (o rolamento some abaixo de 0,5 m/s), para o `addImpulse` na fase `actors`.
+- No contrato e no adaptador: `VehicleDesc.engineDamping` (o amortecimento do motor do Jolt, 0,2, tira 85 N m de um motor de 187 N m a 4 000 rpm; o mapa usa 0,005). **Conserto da primeira parte:** a leitura `SLIP_LONGITUDINAL` e `SLIP_LATERAL` de `vehicleWheels` usava a velocidade do corpo **do chão** no ponto de contato (zero num chão estático), então dava a velocidade do aro, não a patinagem; agora é a velocidade do chassi no ponto de contato menos a do chão. O teste da primeira parte só conferia que era finito.
+
+**O que a medida achou e o mapa corrige** (cada item custou mais de 10% da velocidade final do carro): (1) o amortecimento de 0,05 do corpo (`linearDamping` padrão) é um arrasto de 1,8 kN a 28 m/s num carro de 1,3 t: o chassi mapeado nasce com `linearDamping` e `angularDamping` 0 (o arrasto é o `resistanceImpulse`); (2) o amortecimento de giro da roda do Jolt (0,2) soma 7,8 N por m/s nas quatro rodas: o mapa usa 0,02; (3) o amortecimento do motor, acima; (4) a embreagem do Jolt passa `força × Δω` (padrão 10): numa bicicleta (28 N m a 120 rpm) isso é 32% de patinagem; o mapa põe `clutchStrength` em torque / (3% × giro máximo), nunca abaixo de 10; (5) `mEngineTorqueRatio` **não é normalizado** no Jolt ("a soma dos diferenciais deve dar 1"): dois diferenciais com o padrão dão o dobro do torque (a leitura "normalizado" no comentário de `DifferentialDesc` da primeira parte estava errada e foi corrigida; o mapa e os testes da primeira parte já passavam as frações a somar 1).
+
+**Testes** (`game-vehicles-driving/tests/physics-map.test.ts`, 25; `game-physics-jolt/tests/vehicle.test.ts`, 9 novos; asfalto seco = chão de atrito 1; nenhum limite em ms). Carro padrão da ficha (1 300 kg, tração traseira) contra o `createSemiSimDriver` com a mesma ficha:
+
+| Item | Jolt | Semi-simulação |
+|---|---|---|
+| altura parado | 0,457 m | 0,500 m (mola do Jolt usa a massa efetiva na roda, não 1/4 do carro; critério: ±6 cm) |
+| velocidade máxima, tempo suficiente | 55,3 m/s | 56,7 m/s (2,5%; critério 5%) |
+| frenagem 100 km/h → 0 | 41,9 m | 36,4 m (+15%; critério 0,9–1,3×) |
+| curva à esquerda a 15 m/s, 2 s | 1,3205 rad (direita: −1,3208) | 1,3209 rad (critério 10%) |
+| `canDrive` falso, acelerador cheio, 4 s | 0,001 m/s | |
+| pneu dianteiro esquerdo furado | assenta inclinado: arfagem 0,019 rad e rolagem 0,009 contra 0,000 do carro inteiro | |
+| criado a 60 km/h girado 37°, 2 s com 0,4 de acelerador | perde 0,79 km/h (critério da §7.3: < 1); lateral 0,009 m/s; deriva 0,00003 rad | (os 7 km/h do freio de motor a 0 vêm do Jolt, girado ou não) |
+| bicicleta, 250 W, 40 s | 8,0 m/s, rolagem máxima 0,022 rad | |
+| **arrancada 0–60 km/h** | **5,9 s** | **3,8 s** |
+
+**Aberto (a T6.2b mediu a frota inteira com o mesmo mapa; ver lá):** a arrancada do Jolt é 1,6× a da semi-simulação: com 1 300 kg e tração traseira o motor passa o que o pneu segura (grip de pico ≈ 7 kN) e as rodas patinam; o Jolt também não troca de marcha para cima com roda patinando, então a 1ª vai até o corte. A semi-simulação não tem esse limite de tração (ela dá 4,4 m/s² médios a 1,3 t). O teste `launch` registra o tempo e confere só que é maior que o da semi e menor que 9 s (valor medido depois dos acertos da T6.2b: 5,9 s); **não é um critério de equivalência**. A direção reduzida com a velocidade e a puxada (`pullShare`) também esperam medida. Um pneu furado não tem a resistência de rolamento do `FLAT_ROLLING` da semi-simulação (puxa só pela `steerPull` do `status()`, que o mapeador aplica).
+
+**Gates:** `pnpm --filter @adatechnology/game-vehicles-driving test` 7 arquivos, **92 testes passam**; `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado), **158 passam, 3 puladas** (`vehicle.test.ts` inclui as duas cenas antigas, meio-fio e rampa, **sem mudança de valor**: nenhum teste de andar ou bater precisou ser recalibrado); `tsc --noEmit` dos dois e de `game-physics` limpos; eslint dos três sem avisos.
+
+## T6.3 — Regra de sono do carro (2026-11-26)
+
+**Entrou** (`game-physics-jolt/src/vehicles.ts`, `settleVehicles`, chamada uma vez por passo fixo em `stepFixed` só quando há veículo; `world-host.ts` e `world.ts` guardam `sleepSpeed` e `sleepAfter` do mundo, com os padrões do Jolt 0,03 m/s e 0,5 s quando o mundo não diz): o veículo dorme quando ficou **parado** (abaixo do sono do mundo) com **toda roda abaixo de 0,5 rad/s**, **sem acelerador nem direção** (`driveVehicle` com `forward` e `right` zero), pelo tempo de sono do mundo; e um veículo dormindo com roda girando a 0,5 rad/s ou mais é acordado. Sem a regra, um carro que rola em roda livre leva minutos para cruzar a velocidade de sono: o Jolt sozinho deixou o carro parado, sem entrada, **dormir só aos 8,2 s** (mundo do kit: sono a 0,08 m/s, 0,5 s); a roda no ar girando **já** mantinha o carro acordado pelo Jolt, e a regra agora o garante.
+
+**Testes** (`tests/vehicle.test.ts`, descrição `T6.3`, mundo do kit `KIT_WORLD`, 120 Hz):
+
+| Cenário | Medido | Critério |
+|---|---|---|
+| carro freado até parar (chassi < 0,08 m/s), entrada zero | dorme **0,49 s** depois (antes da regra: 8,2 s) | ≤ 3 s |
+| hatch da cena do meio-fio, 60 km/h contra 30 cm, acelerador solto | dorme **3,25 s** depois da batida, 4 rodas no chão | ≤ 7 s |
+| carro sobre vigas com as rodas sobre um poço, 2 s de acelerador cheio e solto | rodas a 35 rad/s caem para 19 rad/s em 3 s (amortecimento da roda do Jolt) e o corpo **fica acordado** durante todo o tempo em que alguma roda passa de 0,5 rad/s | acordado |
+| a mesma cena com freio e freio de mão | rodas param em 0,18 s e o carro dorme **0,49 s** depois | dorme |
+
+Um carro que cai de barriga depois de pular o meio-fio (o carro do T6.2, mais leve de frente) fica acordado enquanto as rodas no ar giram: 57 rad/s a 6 rad/s em 11 s com o amortecimento padrão da roda; é o que a regra diz.
+
+**Gates:** `pnpm --filter @adatechnology/game-physics-jolt test` 32 arquivos passam (1 pulado), **161 passam, 3 puladas**; `tsc --noEmit` e eslint de `game-physics-jolt` limpos.
+
+
+## T6.2b — Rodador do banco de provas no Jolt (2026-11-26)
+
+**Entrou:** `game-vehicles-proving`: `startPhysicsRun` e `runTestOnPhysics` (`src/physics-run.ts`): os **mesmos procedimentos e faixas** do rodador da semi-simulação (`tests.ts` e `ranges.ts` não mudaram), dirigindo o veículo do motor. O chão é uma laje com o atrito da superfície (`surfaceGrip`, inclusive o aquaplanagem, por `setMaterial`), o veículo vem de `vehicleDescFromSemi` da ficha (`subjectSpec`), a entrada passa pelo `createPhysicsInputMapper`, o arrasto e o rolamento pelo `resistanceImpulse`, e o atoleiro de uma superfície `bogs` (2WD acelerando) troca o rolamento pelo `bogResistance` da ficha. O estado que os procedimentos leem (`SemiState`) vem do corpo: `u` pela frente do chassi, `yawRate` positivo à esquerda, `x`/`z` a distância percorrida; `rpm` e `gear` ficam 0 (o contrato não os lê). O motor entra por `createWorld` (injeção: o pacote só depende do contrato de `game-physics`; o Jolt é `devDependency` dos testes). `resultOf` saiu de `startRun` para os dois rodadores partilharem o veredito. Teste da frota inteira em `game-vehicles-fleet/tests/proving-physics.test.ts` (a frota é o conteúdo daquele pacote; pô-la em `game-vehicles-proving` criaria um ciclo de dependência entre os dois).
+
+**Acertos do mapa que a frota pediu** (cada um mediu efeito grande; todos em `vehicleDescFromSemi`): (1) a inércia do motor do Jolt (0,5 kg m²) vale um terço de tonelada em primeira marcha num carro e uma tonelada numa moto: `engineInertia` = 0,001 × torque de pico; (2) a inércia das quatro rodas padrão (0,9 cada) pesa o mesmo que uma moto de 150 kg: `inertia` da roda = 0,0008 × massa × (raio / 0,32)²; (3) a mola da ficha é de um carro de 1,3 t: um caminhão de 12 t afundaria além do curso e andaria de barriga, então a mola (e o amortecedor, na mesma proporção) enrijece até o afundamento estático ser metade do curso. Efeito na frota (67 corridas fora da faixa → 30): antes do ajuste 28 modelos de 48 fora, depois 21.
+
+**Resultado, frota terrestre (48 modelos; os três aeronaves do grupo `military` ficam fora porque `fleetProvingSubject` toma o domínio do grupo e os devolve como terrestres; a semi-simulação os reprova também), seis testes cada = 288 corridas:** **258 dentro da faixa, 30 fora, em 21 modelos; 27 modelos passam nos seis.** Por teste: `accel_0_100` 21, `top_speed` 3, `brake_100_0` 3, `wet_brake_80_0` 2, `turn_circle` 1; `mud_traction` 0. O teste da frota grava, por modelo, o que está fora, e falha se esse conjunto mudar (para os dois lados). A faixa não foi tocada.
+
+| Modelo | Teste | Medido | Faixa | Semi-simulação | Causa provável |
+|---|---|---|---|---|---|
+| entry_hatch, electric_hatch, beetle, family_hatch, v8_coupe | `accel_0_100` | 14,1 / 14,5 / 16,3 / 13,6 / 10,2 s | 6,5–13,5 / 6,5–13,5 / 5–10,4 / 6,5–13,5 / 3,9–8,1 | 8,7 / 8,9 / 8,4 / 8,6 / 7,1 | arrancada limitada pela tração: o motor passa o que o pneu segura, a roda patina e o Jolt não troca de marcha para cima com roda patinando; a semi-simulação não tem esse limite (1,6× a 1,8×) |
+| scooter, commuter_motorcycle, trail_bike, naked_bike, sport_bike, cruiser, delivery_bike | `accel_0_100` | 15,6 / 16,8 / 14,8 / 14,1 / 10,6 / 12,3 / 15,7 s | 3,6–7,5 … 3,9–8,1 | 7,0 … 7,9 | o mesmo (a ficha dá quatro rodas a uma moto, com o mesmo torque por kg) |
+| cargo_van, box_truck, tanker_truck, school_bus, city_bus, armored_truck | `accel_0_100` | 14,2 / 16,2 / 15,9 / 15,1 / 14,1 / 15,9 s | 6,5–13,5 … 7,3–15,1 | 8,8 / 8,6 / 7,9 / 6,5 / 6,7 / 7,9 | o mesmo, mais pesado: a ficha dá ao ônibus 0,135 N m de torque por kg, mais do que o pneu segura em primeira |
+| city_bus | `turn_circle` | 27,2 m | 10–26 | 25,8 m | giro = 2 × entre-eixos / sen(esterço): 4% acima do teto, a semi-simulação ficou 0,8% abaixo dele |
+| tractor | `top_speed`, `accel_0_100`, `brake_100_0` | 21,8 km/h; não chega ao alvo de 22 km/h (80% dos 28 da ficha) em 90 s; sem valor | 25,2–30,8; 1,7–3,6; 2,5–5,3 | 26,3; 0,9 (falha); 1,6 (falha) | máxima de 28 km/h num carro de quatro rodas com a escala de carro: no limite o Jolt perde 17% da máxima; a semi-simulação já erra as faixas de 0–alvo e de frenagem |
+| bicycle | quatro | 12,8 km/h de máxima; o resto sem valor | 22,5–27,5 … | 23 (e falha em `brake`/`wet_brake`) | a ficha trata a bicicleta como carro de quatro rodas; a pedal (`pedal`) é o caminho certo e não entra pelo `subjectSpec` |
+| step_through_scooter | `top_speed`, `accel_0_100`, `brake_100_0`, `wet_brake_80_0` | 75,2 km/h; sem valor nos outros | 85,5–104,5 … | 90,9 (falha em `brake`) | máxima de 95 km/h, alvo de 100 que cai a 76 km/h (80%): o carro de quatro rodas da ficha não chega ao alvo no Jolt (75,2 de máxima); o mesmo tipo da moto |
+
+**Não mexi na faixa nem na ficha.** O que sobra se divide em dois: a **arrancada** (21 das 30 corridas, nos 21 modelos) é a diferença de modelo entre um pneu com limite de tração e a semi-simulação sem ele, e a correção é decisão do dono (aliviar o torque da ficha por massa em `semiSpecFromStats`, que mexe também no semi, ou uma assistência de tração no mapa; um controle de tração por patinagem **piorou** a arrancada dos carros de 12,7 s para 16 s com o limiar que tentei e foi retirado); e os **veículos fora do desenho de quatro rodas** (bicicleta, tractor, `step_through_scooter`), que a ficha trata como carro.
+
+**Gates:** `pnpm --filter @adatechnology/game-vehicles-proving test` 2 arquivos, 6 testes novos; `pnpm --filter @adatechnology/game-vehicles-fleet exec vitest run tests/proving-physics.test.ts` 50 testes; `game-vehicles-driving test` 92; `game-physics-jolt test` conferido em seguida; `tsc --noEmit` e eslint dos pacotes tocados.
+
+## T6.2b — Diagnóstico da arrancada (2026-11-26; nenhum código de condução mudou)
+
+**De onde vêm as faixas.** `game-vehicles-proving/src/ranges.ts`: `accelerationSeconds` é uma tabela **única, escrita à mão, por nota de aceleração da ficha (0–10)**, igual para toda classe: 1 → 34 s, 3 → 21, 5 → 14, 7 → 10, 9 → 6, 10 → 4,2, com ±35%. O comentário diz "bandas do mundo real" e **não cita fonte**; veio inteira no commit `046a1915e` (fase 1 do banco de provas) e **não foi calibrada sobre a semi-simulação**. A ficha (`semiSpecFromStats`) dá o torque de pico por massa pela nota: `0,06 + 0,015 × nota` N m/kg, também igual para toda classe. Efeito: a semi-simulação dá **8,4 a 8,7 s para qualquer carro, caminhão ou moto de nota 7** (ela não tem inércia de motor e de roda, nem tempo de troca, nem rigidez de pneu), e isso cai dentro de 6,5–13,5 por coincidência da tabela, não por desenho.
+
+**Tabela real × semi × Jolt** (0–100 km/h; `accel_0_100`, mesma ficha, banco de provas dos dois rodadores; o modelo do jogo é a "inspiração" da ficha do próprio repositório, `cards.pt-BR.json`):
+
+| Modelo (inspiração) | Massa / tração | Semi | Jolt | Faixa | Real (fonte) |
+|---|---|---|---|---|---|
+| `entry_hatch` (Renault Kwid 1.0) | 895 kg, traseira | 8,7 s | **14,1 s** | 6,5–13,5 | 14,9 s (Quatro Rodas, via [car.blog.br](https://www.car.blog.br/2017/10/renault-kwid-pontos-negativos-positivos.html), segunda mão); 15,5 s (dado Renault, via [iCarros](https://www.icarros.com.br/noticias/testes-e-comparativos/como-anda-o-renault-kwid-intense,-de-r$-39.990-/23022.html)) |
+| `midsize_sedan` (Toyota Corolla 2.0) | 1 169 kg, traseira | 8,4 s | **12,2 s** | 6,5–13,5 | 9,9 s (medição [Motor Show](https://motorshow.com.br/blog-sobre-rodas-avaliacao-toyota-corolla-gli-e-o-melhor-carro-que-voce-pode-comprar-hoje-com-r-110-mil), GLi); ~9 s ([Autoo](https://www.autoo.com.br/teste-toyota-corolla-xei-2020/), XEi) |
+| `midsize_pickup` (Toyota Hilux 2.8) | 2 081 kg, 4x4 | 8,5 s | **7,9 s** | 6,5–13,5 | 10,0 s (dado Toyota Europa, [carmag.co.za](https://www.carmag.co.za/news/refreshed-150-kw-toyota-hiluxs-claimed-0-100-kmh-time-revealed/)); 10,1–10,7 s ([auto-data.net](https://www.auto-data.net/en/toyota-hilux-double-cab-viii-facelift-2024-2.8d-204hp-4x4-53909)) |
+| `sport_bike` (Kawasaki Ninja 400) | 146 kg, **quatro rodas** na ficha | 7,1 s | **10,6 s** | 3,9–8,1 | 4,35 s a 5,4 s ([MotoStatz](https://motostatz.com/?p=369), [Zigwheels](https://www.zigwheels.com/reviews-advice/reviews/kawasaki-ninja-400-road-test-review/32146/{{url}})) |
+| `box_truck` (VW Delivery 11.180) | 9 363 kg, traseira | 8,6 s | **16,2 s** | 6,9–14,3 | **sem fonte verificada** para o 11.180 (só "cerca de 20 s" do Delivery Express, outro modelo, sem método: [encontracarros](https://www.encontracarros.com.br/vw-delivery-2026/amp/)) |
+| `city_bus` | 15 179 kg, traseira | 6,7 s | **14,1 s** | 6,6–13,6 | sem fonte |
+
+Todos os modelos de nota 7 e carga leve ficam na semi em 8,4–8,7 s; no Jolt: `family_hatch` 13,6, `v8_coupe` (nota 9) 10,2, `commuter_motorcycle` 16,8, `cargo_van`, `school_bus` e demais entre 14 e 16 s.
+
+**O que o Jolt faz com o `entry_hatch` (895 kg, traseira; o mesmo vale para os outros, medido por telemetria das rodas):** a carga no eixo motriz é 4,4 kN parado e 5,1 kN acelerando (centro de massa no meio do entre-eixos, mapa certo); o pneu tem pico de μ = 1,01 e o pico de tração é 5,2 kN. Em 1ª marcha o empuxo pedido (4,3–5,0 kN até 50 km/h) é **da ordem** do que o pneu segura, mas **o que limita não é o atrito**: com o chão em μ 3 e a curva longitudinal do pneu com pico 5, o tempo não muda (chão em μ 3: 14,22 s contra 14,15 s; curva com pico 5 e troca de 0,05 s: 11,85 s contra 11,21 s). Os fatores que a medida acha, cada um com o seu efeito no `entry_hatch` (14,15 s de base):
+
+| Item | Valor medido | Efeito |
+|---|---|---|
+| tempo de troca de marcha: o mapa **não** passa `switchTime`, `clutchReleaseTime` e `switchLatency`, então valem os padrões do Jolt (0,5 + 0,3 + 0,5 s) e a semi troca em 0 s | 3 trocas até 100 km/h; com 0,05 s cada: **11,2 s (−2,9 s)** | maior |
+| patinagem da roda de tração em 1ª e 2ª: 1,7 a 3,4 m/s acima do chão (patinagem de 25–50%), a rotação do motor sobe a 6 500 e **o Jolt não troca para cima com roda patinando**: a 1ª vai de 0 a 55 km/h (a semi troca a 85% da rotação máxima, em 50 km/h) | força média nas rodas 2,8–3,7 kN em 1ª (ideal 4,3–5,0) e 1,9–2,4 kN de 5 a 12 s (ideal 2,2–3,4) | médio |
+| joelho da curva longitudinal (6% de patinagem para atingir o pico): joelho em 0,1% | 12,07 → 10,68 s (−1,4 s), a patinagem cai de 2,2 para 0,6–1,7 m/s | médio |
+| inércia do motor (`0,001 × torque` = 0,148 kg m², reflete 29% da massa em 1ª) | 0,02 kg m²: −0,5 s | pequeno |
+| μ do chão ou pico do pneu | sem efeito (ver acima) | nenhum |
+
+**Conclusão: (b) e (c), não (a).** (1) **O Jolt não está com defeito de pneu nem de centro de massa**: μ e distribuição de peso estão certos, e mexer no atrito não muda a arrancada. A diferença para a semi-simulação é que a semi é um modelo **sem** inércia de motor/roda, sem tempo de troca e sem rigidez de pneu, e o Jolt tem os três; o que nele é ajustável (tempo de troca, joelho do pneu) são **parâmetros de modelo, não consertos**. (2) **A faixa não foi calibrada na semi**: é uma tabela por nota, igual para toda classe, sem fonte. Contra os reais acima, ela **não distingue** um Kwid de 15 s (nota 7 → 10 s) de um Corolla de 10 s (nota 7 também); o Jolt acerta o Kwid (14,1 contra 14,9–15,5) e erra o Corolla (12,2 contra ~10); a semi erra o Kwid por 6 s e chega perto do Corolla (8,4 contra ~10). (3) **A ficha é a mesma por classe** (0,06 + 0,015 × nota N m/kg): ônibus e moto saem como carro, e a moto vem com quatro rodas (`subjectSpec`), o que invalida a comparação das motos nos dois rodadores. Quem decide o que fazer é o dono: trocar a tabela da faixa por faixa de classe com fonte, ou a nota de aceleração dos 21 modelos, ou o tempo de troca e o pneu do mapa (cada um desloca a arrancada de 1 a 3 s, mas ajustado para entrar na faixa, e não para o real, e o Kwid real já está dentro do que o Jolt dá hoje). **Faixa e ficha intactas; nenhum arquivo de condução alterado.** Os números da tabela vieram de `scratchpad` (o diagnóstico foi um teste temporário sobre `vehicleDescFromSemi`, `WHEEL_READ` e o `GetCurrentGear` do controlador, descartado).
+
+## T6.4 — Cascos convexos: maquinário e medida (2026-11-26) — **sem ✅: H2, H3 e H4 reprovam; a contagem de cascos é 12× a estimativa do desenho**
+
+**Entrou** (`game-vehicles-three`): `src/hull-geometry.ts` (casco convexo incremental, volume, redução de pontos: o extremo de cada uma das 26 direções mais os mais distantes, sempre vértices desenhados); `src/vehicle-hulls.ts` (`hullsOf`: célula de partida de 1,6 m por peça; a célula é cortada ao meio quando uma face do casco fica a mais de 3 cm do desenhado para dentro ou a mais de 1 cm para fora, no maior vão entre os centros dos triângulos de qualquer eixo (≥ 3 cm: separa as duas chapas de uma porta) ou, sem vão, no meio do lado mais longo; peça fina (< 3 cm) é extrudada para dentro, para o meio do veículo, até 3 cm, nunca para fora; peça sólida (motor, bateria, tanque, roda, aro, pneu, farol, retrovisor…) é um casco só, inteiro; ≤ 64 pontos); `createVehicleColliders({ hulls: true }).hulls()` e `vehicleHulls`: cada peça nas suas células de 1,6 m, só a célula que a batida tocou é refeita (as outras voltam o mesmo objeto). Os testes de `vehicle-hulls.test.ts` (geometria, redução, extrusão, corte, peça sólida, cache incremental) e `vehicle-hulls-fleet.test.ts` (os 69 modelos: ≤ 64 pontos, volume, teto da classe) **passam**; `tests/vehicle-hulls-support.ts` e `vehicle-hulls-check.ts` são o rodador de raios (26 direções, grade de 5 cm; profundidades medidas em 1 cm, que dão a folga de 1 cm de H2 e H4) e de volume de H5.
+
+**Medido, frota inteira (69 modelos, `vehicleHulls` de cada, 126 s no total; a classe de cada modelo é o `fleetGroupOf`):**
+
+| Classe | Modelos | Cascos: mín. / média / máx. | Estimativa do desenho (10.3) | Teto medido (arredondado a 50) |
+|---|---|---|---|---|
+| moto e bicicleta | 12 | 72 / 119 / 166 | 32 | **200** |
+| carro | 15 | 1 172 / 1 269 / 1 401 | 96 | **1 450** |
+| SUV | 4 | 1 345 / 1 373 / 1 448 | 96 | **1 450** |
+| picape | 4 | 1 223 / 1 346 / 1 466 | 96 | **1 500** |
+| van | 2 | 1 141 / 1 161 / 1 182 | 96 | **1 200** |
+| caminhão, ônibus (`heavy`) | 5 | 1 315 / 1 629 / 1 948 | 160 / 192 | **2 000** |
+| trator | 1 | 818 | 96 | **850** |
+| militar | 8 | 1 132 / 1 774 / 3 050 | 96 | **3 100** |
+| aéreo | 11 | 696 / 1 602 / 2 960 | 96–192 | **3 000** |
+| barco | 7 | 572 / 1 027 / 1 784 | 64–192 | **1 800** |
+
+Nenhum casco passa de 64 pontos. A contagem é dominada pela regra de 3 cm: com a tolerância para fora de 1, 2 e 3 cm o `family_hatch` dá 1 588, 1 614 (2) e 1 403 (3) antes do corte pelo vão; com o corte pelo vão (final) 1 172. Quase todos os cascos são folhas de 10 a 20 cm: porta, para-brisa, para-choque e subchassi têm 20 a 80 cascos **cada**, porque o desenho tem vincos e chanfros de 1 a 3 cm por todo lado.
+
+**H2 a H5 (rodador de raios e de volume), `family_hatch` e `naked_bike`:**
+
+| Modelo | Cascos | Raios que acertam o desenhado | H3: cobertos (≥ 95%) | H2: casco mais de 1 cm à frente do desenhado | pior | H4: casco sem desenho (folga de 1 cm) | H5 (volume, peças sólidas fechadas) |
+|---|---|---|---|---|---|---|---|
+| `family_hatch` | 1 172 | 54 074 | **66,3%** | **17 921 raios (33%)** | 2,17 m | **168** | 1 peça medida, passa |
+| `naked_bike` | 108 | 9 574 | **41,6%** | **5 375 raios (56%)** | 0,88 m | **896** | falha: roda dianteira 0,0226 m³ contra 0,0138 m³ desenhado; pneus sem casco próprio (o desenho entrega o pneu à roda) |
+
+O sanity do rodador (o desenhado contra o próprio desenhado) dá 12 259 de 12 259, 0 à frente, 0 fantasma. Os cascos que mais passam do desenhado no `family_hatch` são `roof`, `hood`, `underbody` e `windshield` (por raio na direção −y: o teto tem cascos de 18 cm de espessura com 25 cm de excesso sobre a descida do vidro traseiro). A causa provável, **não resolvida**: o corte parte de triângulos grandes (um painel é poucos triângulos de 1 m, cujo centro cai numa célula e os vértices em outra), e o corte pelo meio/vão não separa a concavidade; o limite de 6 cortes (célula de 2,5 cm de lado nominal) termina antes de a regra fechar.
+
+**Decisão que cabe ao dono:** H2 (≤ 1 cm para fora) e H3 (≥ 95% de cobertura), da forma como o desenho os escreveu, **não saem com o algoritmo da 10.1 a um custo de ~100 cascos por carro**: o que se mede é ~1 200 a 1 400 cascos por carro e as regras ainda reprovam. Memória (T6.21): um casco de 64 pontos custa **5,46 KB** no heap do wasm (o pior caso: todos os pontos no casco); um modelo de 96 cascos 0,5 MB, de 1 200 cascos 6,24 MB, de 1 800 cascos 9,37 MB, de um heap fixo de 128 MB: **12 modelos de 1 270 cascos pesam 83 MB, acima dos 64 MB da guarda da 10.4**, e a guarda só aguenta 9 modelos distintos na frota medida. Saídas a decidir: (i) afrouxar o 3 cm e o 1 cm (o corte para de ser uma regra de 1–3 cm); (ii) casco só das peças de casca que a batida alcança (carroceria baixa), o resto na caixa do `describe()`; (iii) mais profundidade e corte por triângulo (não por centro); (iv) reduzir o detalhe do desenho (vincos < 3 cm) que a frota tem. Os tetos medidos acima já estão em `vehicle-hulls-fleet.test.ts`.
+
+### Método B (decisão do dono em 2026-11-26): K3 reprova nos 69 modelos, T6.4 sem ✅
+
+**Entrou** (`game-vehicles-three`): `hullOf` (`src/vehicle-hulls.ts`): um casco por pedaço da T3.0b (peça × célula de 0,8 m) dos vértices desenhados, ≤ 64 pontos por `reducePoints` (sempre o extremo das 26 direções), pedaço plano (< 5 mm ao longo da normal) com `FLAT_PAD` = 2,5 mm de cada lado, em linha também de lado; peça sólida (`SOLID_ROLES` menos rodas) um casco de todos os pedaços; roda, pneu, freio e amortecedor sem casco (a roda do adaptador vem dos descritores de roda, `vehicles.ts`); cache por pedaço (a batida refaz só o pedaço que tocou); `drawnPointsOf(hull)` (os vértices de onde o casco saiu, para o K2). Saíram o corte por concavidade, a extrusão para dentro, o corte pelo vão e `HULL_CELL`, `MAX_STANDOFF_*` e `THIN_UNDER` (e H1–H6 do desenho 10.3, registrados como substituídos). Testes: `tests/vehicle-hulls-support.ts` (a esfera de r = 10 cm: o primeiro toque sobre o mapa de 1 cm, K3 a K5), `vehicle-hulls-check.ts` (K2 a K6 de um modelo), `vehicle-hulls-fleet.test.ts` (K1 a K7 nos 69), `fixtures/hull-excess-ledger.json` (catraca do K4, `UPDATE_HULL_EXCESS=1` baixa), `pnpm test:cost` (K7 em ms, na faixa de custo).
+
+**Medido, 69 modelos (as porcentagens são de todas as esferas que tocam o desenhado nas 26 direções; o tempo é o dos cascos depois das peças, com carga de outras sessões):**
+
+| Classe | Modelos | Cascos (mín. / média / máx.) | K3: esferas flutuando | K4 à frente: de cima / de baixo / lateral | K5: sem casco atrás (máx.) | Tempo ms (média / máx.) | Teto K7 | Passa o teto |
+|---|---|---|---|---|---|---|---|---|
+| moto e bicicleta | 12 | 14 / 18 / 20 | 28% a 61% | 16,1% / 17,7% / 13,3% | 0,73% | 30 / 58 | 64 | sim |
+| carro | 15 | 100 / 158 / 182 | 13% a 25% | 7,0% / 13,8% / 3,9% | 0,36% | 142 / 202 | 256 | sim |
+| SUV | 4 | 176 / 194 / 222 | 17% a 24% | 10,1% / 12,7% / 3,8% | 0,33% | 148 / 160 | 256 | sim |
+| picape | 4 | 183 / 221 / 251 | 18% a 44% | 9,2% / 15,3% / 5,3% | 0,31% | 178 / 240 | 256 | sim |
+| van | 2 | 273 / 276 / 280 | 14% a 16% | 5,8% / 8,7% / 3,6% | 0,10% | 178 / 195 | 256 | **não** (280) |
+| caminhão, ônibus (`heavy`) | 5 | 302 / 381 / 520 | 9% a 34% | 8,3% / 14,4% / 5,9% | 0,11% | 182 / 227 | 384 | **não** (`city_bus` 520, `school_bus` 431) |
+| trator | 1 | 111 | 42% | 9,1% / 20,5% / 11,0% | 0,31% | 125 | 150 | sim |
+| militar | 8 | 186 / 300 / 464 | 17% a 41% | 10,7% / 12,8% / 6,8% | 0,21% | 201 / 408 | 500 | sim |
+| aéreo | 11 | 98 / 251 / 492 | 18% a 43% | 9,4% / 11,5% / 6,2% | 0,11% | 99 / 177 | 500 | sim |
+| barco | 7 | 54 / 212 / 406 | 14% a 61% | 16,3% / 9,6% / 8,2% | 0,48% | 45 / 81 | 450 | sim |
+
+- **K1, K2, K5, K6, ≤ 64 pontos: passam nos 69.** K2: 0 falhas (os pedaços planos passam o `FLAT_PAD`, previsto). K5: no máximo 0,73% (moto). K6: 0 falhas (nenhuma roda com casco, toda peça sólida um casco só de vértices desenhados). K1: o tiro (`surfaceRay`) dá os mesmos acertos antes e depois de os cascos serem feitos, e nenhum vértice se mexe (`family_hatch`, `naked_bike`, `city_bus`).
+- **K3: reprova nos 69 (0 modelo com zero).** A regra pede 0; o método B dá de 9% a 61% das esferas. **K7: o teto da van (256) e o do `heavy` (384) não fecham** (280, 431, 520); **o tempo de ≤ 100 ms não fecha** (média de 142 ms nos carros, no computador carregado: confirmar com `pnpm test:cost`, mas a ordem de grandeza já passa de 100).
+- **Excesso no teto e no para-brisa (`family_hatch`, K4: 15 421 esferas à frente; teto 4 032 + 1 195, para-brisa 1 429, assoalho 5 774):** a suspeita da atribuição em `colliders.ts` (a menor caixa de dano que contém o triângulo) **não é o defeito**: atribuir pelos três vértices em vez do centro dá os mesmos números (K4 15 421 -> 15 638, K3 12 473 -> 12 583). A causa é a **concavidade do próprio pedaço**: o pedaço do teto tem cinco vértices de **antena** a 1,84 m (o teto está a 1,46 m) e o casco, que guarda o extremo exato (K2), vira um cone da ponta da antena até a borda do teto; o pedaço também leva os vincos das colunas (vértices a 1,02 m). O assoalho (`underbody`) é uma chapa em U (túnel e longarinas) de 0,05 a 0,88 m de altura, e o casco convexo enche o vão.
+- **O tamanho da célula não resolve o K3.** `family_hatch` (K3 / K4 / cascos): célula 0,8 m 12 473 / 15 421 / 163; 0,4 m 7 665 / 10 722 / 417; 0,2 m 1 563 / 3 630 / 1 383; 0,1 m **268** / 1 454 / 4 292 (e a moto, 940 ainda). K5 sobe com a célula menor (3 641 -> 4 587). Para o K3 chegar a 0 sai o corte pela concavidade (o que o método B tirou) ou o pedaço sem a antena e o vinco (um critério novo).
+
+**Decisão que cabe ao dono (K3):** (a) aceitar um valor de K3 diferente de 0 (hoje 9% a 61%) e gravá-lo como catraca, como o K4; (b) o refinamento (C): cortar o pedaço cujo casco passa do aceite, o que leva a contagem de cascos para a ordem da primeira versão (1 000 ou mais por carro); (c) tirar do pedaço o que é saliência fina (antena, retrovisor, maçaneta) antes do casco, o que quebra o K2 exato nessas peças; (d) célula menor, que não fecha e multiplica os cascos.
+
+**T6.21 com os cascos reais (12 modelos: 6 carros, 2 SUVs, 2 picapes, 2 vans; 2 113 cascos, 167 a 280 por modelo):** formas compartilhadas **5,27 MB** (2,40 KB por casco, não os 5,46 KB do pior caso), 200 corpos 0,06 MB, pico com 20 danificados **5,55 MB** (≤ 64 MB, K7), tudo solto sobrou 136 bytes (≤ 8 por carro danificado). O B6 com 20 carros de 167 cascos: o hash é o mesmo duas vezes; com os carros do tamanho real o cenário do teste (carros de 4 m em grade de 2,4 × 1,6 m) se sobrepõe e a bomba não dispara, e numa grade sem sobreposição os carros não acordam; a mediana do passo depois do sopro foi 2,9 ms (0,8 sem os carros) e o p99 38 ms (8,9 sem), numa máquina com carga: o aceite de tempo do B6 é medido em AMD, fora do CI, e fica para depois da decisão do K3.
+
+### Saliências e divisão (decisão do dono em 2026-11-26): **sem ✅** — K3 na catraca, mas K7 reprova (van e `heavy` acima do teto, tempo) e o K4 de um modelo subiu 3 esferas
+
+**Entrou** (`game-vehicles-three`): `src/hull-split.ts` (saliência fina, corte), `src/hull-excess.ts` (K3 local: área flutuante do casco), `src/hull-plan.ts` (divisão adaptativa e o plano congelado), `colliders.ts` (`options.maxHulls`, o plano guardado por carro). Regra e desenho: `design/veiculos.md` 10.1, 10.3 e 10.3.1.
+
+**Regra de saliência (item 1).** Uma saliência é fina quando o casco dela tem no máximo 200 cm³ e ela passa do corpo do pedaço em mais de 3 cm, de um de dois jeitos: (a) é uma parte conectada do pedaço (cantos soldados a 0,1 mm) de seção fina (lados menores da caixa ≤ 8 cm) que passa da caixa do que não é fino; (b) está soldada ao corpo e os triângulos dela são a **cauda** do pedaço (centro a mais de 3 cm além do ponto que guarda 99% da área, nos seis eixos). Só sai se esticar o casco do resto em mais de 40 cm² de superfície flutuante (amostras das faces sem triângulo desenhado a menos de 5 cm). Ganha casco próprio (`peça#célula~n`). Não precisou de `meta`: a antena do `family_hatch` é uma fita de 5 vértices soldada ao teto na mesma malha (caso b). Peça já própria (retrovisor, farol, motor) segue como peça sólida, um casco só. O K2 passa nos 69 (0 falhas): o extremo de cada casco é o dos vértices de que ele saiu.
+
+**Divisão (item 2).** Cada pedaço começa com um casco; o que mais flutua (empate: o primeiro da lista) devolve primeiro as saliências que o esticam e depois é cortado ao meio do maior lado (a caixa dos centros dos triângulos, não dos cantos: com a caixa dos cantos a ponta da antena levava o corte para fora do pedaço e 4 000 triângulos ficavam sem cortar), até nenhum passar de 40 cm², nenhum poder ser cortado ou o modelo chegar ao teto da classe (as peças sólidas contam). O plano (cortes e saliências tiradas) é feito uma vez, quando o carro intacto tem todos os pedaços, e congelado: o teste `vehicle-hulls-division.test.ts` confere que o dano não muda os nomes dos cascos (as alças) e que os mesmos cortes dão as mesmas folhas.
+
+**Antes (método B) e depois, 69 modelos, por classe** (K3 e K4: parte das esferas que tocam o desenhado, em todas as direções, soma da classe; K5: pior modelo; tempo ms dos cascos depois das peças, média / máx., numa máquina com carga de outras sessões):
+
+| Classe | Cascos antes (mín / média / máx) | Cascos depois | K3 cima / baixo / lateral antes | K3 depois | K4 cima / baixo / lateral antes | K4 depois | K5 máx antes / depois | Tempo antes | Tempo depois |
+|---|---|---|---|---|---|---|---|---|---|
+| moto e bicicleta | 14 / 18 / 20 | 64 / 64 / 64 | 14,9 / 16,0 / 12,3% | **5,8 / 5,8 / 4,5%** | 16,6 / 18,1 / 13,4% | 8,6 / 9,1 / 6,5% | 0,73 / 0,19% | 25 / 39 | 145 / 219 |
+| carro | 100 / 158 / 182 | 256 / 256 / 256 | 4,8 / 11,1 / 2,9% | **3,7 / 6,7 / 2,3%** | 6,9 / 13,8 / 3,8% | 5,7 / 9,8 / 3,4% | 0,36 / 0,32% | 147 / 183 | 421 / 549 |
+| SUV | 176 / 194 / 222 | 256 / 256 / 256 | 7,1 / 9,6 / 2,7% | **4,7 / 7,5 / 2,5%** | 10,1 / 12,8 / 3,9% | 7,6 / 10,6 / 3,7% | 0,33 / 0,27% | 150 / 165 | 317 / 356 |
+| picape | 183 / 221 / 251 | 256 / 256 / 256 | 7,9 / 13,8 / 5,2% | **7,2 / 12,3 / 5,0%** | 9,4 / 16,0 / 5,7% | 8,9 / 14,7 / 5,6% | 0,31 / 0,27% | 157 / 167 | 237 / 294 |
+| van | 273 / 276 / 280 | **273 / 276 / 280 (acima de 256)** | 4,6 / 7,5 / 2,9% | 4,6 / 7,5 / 2,9% (igual: sem teto sobrando, nada muda) | 5,7 / 8,8 / 3,6% | igual | 0,10 / 0,10% | 203 / 237 | 267 / 293 |
+| caminhão, ônibus (`heavy`) | 302 / 381 / 520 | **384 / 421 / 520 (acima de 384: `school_bus` 431, `city_bus` 520)** | 5,7 / 11,3 / 4,4% | 5,5 / 10,4 / 4,1% | 7,8 / 13,3 / 5,4% | 7,6 / 12,4 / 5,1% | 0,11 / 0,11% | 282 / 341 | 342 / 421 |
+| trator | 111 | 150 | 9,3 / 20,0 / 12,4% | **7,0 / 14,6 / 9,8%** | 9,1 / 20,5 / 11,0% | 7,7 / 16,1 / 8,7% | 0,31 / 0,30% | 97 | 189 |
+| militar | 186 / 300 / 464 | 500 / 500 / 500 | 9,1 / 11,4 / 6,4% | **5,8 / 7,4 / 4,6%** | 10,0 / 12,0 / 6,5% | 7,1 / 8,5 / 5,1% | 0,21 / 0,14% | 228 / 421 | 730 / 1 276 |
+| aéreo | 98 / 251 / 492 | 500 / 500 / 500 | 8,6 / 11,0 / 6,1% | **5,1 / 5,5 / 3,3%** | 8,6 / 11,0 / 5,6% | 5,5 / 5,9 / 3,5% | 0,11 / 0,08% | 141 / 248 | 510 / 944 |
+| barco | 54 / 212 / 406 | 369 / 435 / 450 | 15,9 / 8,5 / 10,9% | **10,0 / 6,4 / 7,9%** | 17,0 / 10,2 / 10,3% | 11,2 / 8,0 / 8,0% | 0,48 / 0,05% | 68 / 122 | 253 / 315 |
+
+- **K1, K2, K5, K6, ≤ 64 pontos: passam nos 69.** K3 vira catraca (`tests/fixtures/hull-floating-ledger.json`, `UPDATE_HULL_EXCESS=1` só baixa) e passa nos 69; a meta por classe e grupo está em `design/veiculos.md` 10.3.1.
+- **K3 é limitado pelo teto, não pelo método:** sem teto de casco o `family_hatch` vai a 1,1% de esferas flutuando (1 678 cascos) e a `naked_bike` a 5,8% (215 cascos). Toda classe com teto sobrando usa o teto inteiro (carro 256, aéreo 500…): a divisão pára no teto, com o K3 local ainda acima do limite.
+- **K4 (catraca): 68 de 69 passam; `v8_coupe`, "de cima": 4 534 esferas contra 4 531 na catraca (+3, 0,07%).** A causa provável é a redução a 64 pontos: o casco do pedaço inteiro foi reduzido com uns pontos, e os dois cascos dos meios guardam outros, que passam do casco antigo por alguns milímetros. **Não subi a catraca**: a decisão é do dono (subir 3 esferas num modelo, ou um critério no corte que recuse a divisão que piora o K4).
+- **K7, teto de cascos: van (273 e 280 contra 256) e `heavy` (`school_bus` 431, `city_bus` 520 contra 384) continuam acima; não subi o teto.** O método novo não mexe neles: a contagem de partida (um casco por pedaço) já passa do teto, então não sobra nada para as saliências nem para a divisão. Para esses quatro modelos o K3 ficou igual ao do método B. As demais classes ficam no teto (`CEILING`, sem mudança).
+- **K7, tempo (≤ 100 ms): reprova, e piorou.** Média por classe de 140 a 1 000 ms (carro 421, aéreo 510, militar 730), contra 25 a 230 ms antes; na faixa de custo (`pnpm test:cost`) a máquina estava com carga 25 a 32 de outras sessões e 67 de 69 modelos passam de 100 ms (2 passam). Nem o método B (média de 142 ms nos carros) fechava os 100 ms. Perfil de um carro (`family_hatch`, 410 ms): `hullOf` 34% (`reducePoints` sobre o pedaço inteiro a cada folha), área flutuante 33%, e a retirada de saliências, que usa as duas, metade do total (`planDivision` é 98% do tempo dos cascos). O plano roda uma vez, com o carro intacto, e o dano só refaz o pedaço; o custo é de nascer, que a 10.2 já manda espalhar por quadros. Candidato de corte: `reducePoints` incremental e planejar fora do quadro (worker).
+- **Goldens: nenhum mudou.** A T6.21 e os demais testes dos pacotes passam (abaixo).
+
+**T6.21 com cascos reais** (`game-physics-jolt/tests/heap.test.ts`, agora de um fixture `tests/fixtures/car-hulls.json.gz`, 911 KB, gerado por `HULLS_FIXTURE=… vitest run tests/vehicle-hulls-fixture.test.ts` em `game-vehicles-three`; 6 carros, 2 SUVs, 2 picapes, 2 vans no teto da classe): **3 113 cascos** nos 12 modelos (≈ 260 por modelo), 2 312 bytes por casco, formas compartilhadas **6,86 MB**, 200 corpos 0,06 MB, cópias dos 20 danificados 0,30 MB, **pico 7,23 MB (≤ 64 MB)**; tudo solto devolve o heap (≤ 8 bytes por carro danificado) e os 200 sem dano devolvem ao byte. Os 96 cascos sintéticos saíram desses dois testes (o de 96/500/1 200/1 800 por modelo, só relatório, ficou).
+
+**Gates** (um pacote por vez): `game-vehicles-three` 719 passam, 5 falham (os 4 K7 acima e o K4 do `v8_coupe`); `game-vehicles-fleet` 1 416 de 1 416; `game-physics-jolt` 225 passam, 3 puladas; typecheck e eslint de `game-vehicles-three` e `game-physics-jolt`: limpos.
+
+### Fechamento (decisões do dono de 2026-11-26): tetos 300 e 550, cache por modelo e plano no worker; **✅ com a catraca do K4 subida em `v8_coupe` e `city_bus` (decisão do dono, ver abaixo)**
+
+**Passo 0 (juntar).** `spec/008-fase6-ficha` (T6.2c, `05c725f8e`) entrou por `git merge --no-ff` (`a30ce62d6`), sem conflito. A `origin/main` (16 commits novos) entrou por merge (`21f424670`): conflito em `evidence.md` (os dois lados só acrescentaram: mantidos) e em `game-physics-jolt/tests/cascade.test.ts` (a main passou `run` a receber a build `single`/`multithread`, esta branch a receber os carros estacionados: `run(build = 'single', parked = 0)`). Depois do merge `pnpm install --frozen-lockfile` e **`pnpm build` do repositório inteiro verde**; sem refazer o build, `proving-physics.test.ts` do `game-vehicles-fleet` reprovou 20 modelos (dist velho de `game-vehicles-driving`), e depois do build passou inteiro.
+
+**1. Tetos do K7**: van **300** (era 256; os dois modelos: 273 e 280) e `heavy` **550** (era 384; 302 a 520), o medido arredondado, escrito em `design/veiculos.md` 10.3 (K7) com a data; os outros tetos ficam. Com o teto sobrando a divisão passa a trabalhar nesses sete modelos (todos chegam no teto: van 300/300, `heavy` 550 ×5) e a K3 e a K4 deles **caem** (a catraca foi baixada: `UPDATE_HULL_EXCESS=1`, só `ambulance`, `armored_truck`, `box_truck`, `cargo_van`, `city_bus`, `school_bus`, `tanker_truck` mudaram, nenhum valor subiu). K3 do pior modelo (cima/baixo/lateral): van 6,3/7,8/3,0% -> **5,3/6,9/2,4%**; `heavy` 11,5/15,0/7,0% -> **8,8/11,0/5,6%** (10.3.1 refeito).
+
+**2. Tempo de nascer: cache por modelo e plano no worker** (`design/veiculos.md` 10.4b).
+- `hull-plan-cache.ts`: `createHullPlanCache()` guarda por modelo o plano, os cascos de cada pedaço (os mesmos objetos para todo carro), os cascos das peças sólidas e a divisão em voo (dois carros que nascem juntos mandam um plano só). Chave: chave do veículo, `seedKey` (`spec.seedKey || key`, de que o `game-vehicles` tira `strHash(seedKey + estado)`) e estado de construção, mais o teto; a assinatura (nomes e vértices de cada pedaço) confere antes de reaproveitar. Só carro intacto dá e recebe (vértice mexido ou peça que saiu tira o carro do cache). `dispose()` solta tudo e depois dele nada entra.
+- `hull-plan-kind.ts` (+ `worker-kinds.ts`, export `@adatechnology/game-vehicles-three/worker-kinds`, três-livre): categoria **`vehicles.hull-plan`** (`WORKER_KIND_ID.VEHICLE_HULL_PLAN` em `game-contracts`), faixa **`build`**, prioridade **120**, atraso **`keep-waiting`** (sem prazo em quadros). Não é `sim`: a faixa `sim` roda o kernel no quadro principal quando o worker atrasa (plano de centenas de ms) e o primeiro carro voltaria a bloquear o quadro. **Kernel puro** `planHulls(job)`: lê só os pedaços finos e os das peças sólidas do carro intacto (vértices em `Float64Array`, cantos em `Uint32Array`, buffers entregues ao worker, não copiados) e o teto; devolve dados simples (cortes, saliências, cascos com pontos `Float32Array` e vértices desenhados, o casco de cada peça sólida; buffers transferidos de volta). Sem worker, ou com o worker em falha, o mesmo `planHulls` roda no quadro principal.
+- **A entrada do worker é montada aos poucos**: converter `number[]` em bytes custa uns 5 ns por número (6 ms num `taxi`, 17 ms num `battle_tank`); `hulls()` faz até 200 000 números por chamada (cerca de 1 ms) e a primeira que fecha a entrada a manda.
+- **Enquanto o plano não chega**: `hulls()` devolve vazio, `isHullPending()` é verdadeiro e o carro usa o colisor da T3.0b (`pieces()`, caixas por pedaço). A troca é a chamada seguinte de `hulls()` depois da resposta, que o adaptador faz no passo fixo; a regra de contato da 10.5 vale para a troca (os cascos entram como cascos refeitos).
+- **Equivalência** (`tests/vehicle-hulls-cache.test.ts`): `checkTaskKind` (quadro principal, worker na mesma thread e `worker_threads` de verdade, byte a byte) sobre uma amostra pequena e o trabalho real de uma `naked_bike`; o carro inteiro: o plano feito por um worker de verdade dá os cascos que a thread principal faz, byte a byte, e `stats()` mostra 1 enviado, 0 em fallback, 0 falhas; plano pendente (`hulls()` vazio, `pieces()` com as caixas, instala na chamada seguinte); dois carros juntos mandam um plano; o segundo carro recebe os mesmos objetos (identidade), sem divisão (`stats()`: 1 planejado, 1 reaproveitado), o dano num carro refaz só o pedaço tocado e não mexe no outro, `dispose()` zera, carro amassado antes não dá, e a mesma chave com outro desenho faz o seu.
+
+**K7 de tempo (faixa de custo, `pnpm test:cost`, sob `perf-measure.lock`, carga 0,86 no começo e 2,3 no fim, os 69 modelos, worker `worker_threads` de verdade já aquecido):**
+
+| Medida (ms) | mín. | mediana | p90 | máx. | Aceite |
+|---|---|---|---|---|---|
+| **Segundo carro do modelo** (`hulls()` com o cache) | 0,10 | 0,50 | 0,82 | **1,23** (`apc_6x6`) | ≤ 2 ✓ nos 69 |
+| Primeiro carro: a chamada mais longa de `hulls()` enquanto a entrada é montada e mandada | 0,28 | 0,95 | 2,20 | **3,89** (`midsize_sedan`) | ≤ 5 ✓ nos 69 |
+| Primeiro carro: a chamada que instala o plano | 0,11 | 0,47 | 0,74 | **1,87** (`apc_6x6`) | ≤ 5 ✓ nos 69 |
+| Primeiro carro: do pedido até instalado (a divisão está no worker; com 1 ms de espera entre as chamadas) | 87 | 365 | 679 | 1 260 (`battle_tank`) | só relato |
+
+Antes disso, a divisão rodava dentro da chamada: 140 a 1 000 ms por modelo (média por classe de 267 ms a 1 276 ms, tabela "Saliências e divisão"). O limite de 5 ms do primeiro carro é novo (o dono pediu "não bloqueia o quadro", sem número): é o que a medida deixa com folga, 1,3× o pior caso; a espera de 1 ms entre as chamadas é o que um quadro faz.
+
+**3. K4 do `v8_coupe`: a recusa foi implementada, medida, e não entra; K4 fica 67 de 69.** `v8_coupe` "de cima" 4 534 contra 4 531 (+3) e, **novo com o teto do `heavy`**, `city_bus` "de cima" 9 540 contra 9 539 (+1; com o teto de 384 o ônibus de 520 cascos não dividia, com 550 divide e uma esfera passa). A catraca **não subiu**; os dois testes do K4 reprovam e o resto (K1, K2, K3, K5, K6, ≤ 64 pontos, K7) passa nos 69.
+
+Como se chegou lá (`planDivision`, recusar o corte cujas duas metades têm mais área do casco à frente do desenhado, a menos de 3 cm de qualquer triângulo, que o casco cortado; a face onde as duas metades se encostam não conta: está dentro do casco do vizinho):
+| Variante | Resultado |
+|---|---|
+| Recusa na hora do corte, K4 local do pedaço, qualquer aumento | `v8_coupe` 4 274 "de cima" mas 11 226 "de baixo" (catraca 10 547), e **77 testes de catraca reprovam** (39 de K3 e 38 de K4) nos 69 modelos |
+| Idem, com 1% de ruído (a amostra é de dez pontos por face) | `v8_coupe` passa inteiro (4 531, 10 426, 3 256), mas **71 reprovam** (K3 36, K4 35: barcos e aviões sobem 1 500 a 2 800 esferas, carros 8 a 850) |
+| Recusa contra o desenhado do carro inteiro (não só do pedaço) | 10 modelos medidos: mistura de -500 e +2 900 esferas por modelo |
+| Desfazer o corte depois do plano (sem devolver o teto, só um corte e o que está acima dele) | só mexe nos cortes recusados, mas **`v8_coupe` continua em +3** "de cima" (-112 "de baixo") e o `family_hatch` sobe 1/9/4 |
+| Recusa na hora, reservando o teto do corte recusado | `v8_coupe` +3, `entry_hatch` +211 |
+
+**Por que não fecha:** a catraca é uma contagem exata de esferas por modelo e por lado. Recusar um corte devolve o teto de cascos a outros cortes e muda a ordem do resto do plano (a divisão é gulosa e todo carro termina no teto), e qualquer mudança do plano move a K3 e a K4 de todo modelo, para cima e para baixo, em dezenas a milhares de esferas. O K4 local de 3 cm também não enxerga o que o K4 mede: nos pares do `v8_coupe` todo corte do capô melhora a área à frente (queda de 18% a 100% conforme o alcance) e os do assoalho caem de 6% a 100% (um deles 0%), e mesmo assim, com a divisão só nessa família e o resto do carro sem dividir, o capô soma 28 esferas "de cima" a mais que o método B (4 559 contra 4 531) e o assoalho 3 (4 534). Por família, cada uma sozinha, "de cima": capô 4 559, para-choque dianteiro 4 509, para-choque traseiro 4 464, para-lamas 4 386, portas 4 122, laterais 4 492, assoalho 4 534, teto 4 451, vidros 2 185, o resto 4 536, contra 4 531 do método B (os números não se somam: os cascos de uma família escondem os da outra). **Decisão do dono (2026-11-26, "pode subir"): subir a catraca do K4** em `v8_coupe` "de cima" 4 531 -> 4 534 (+3) e `city_bus` "de cima" 9 539 -> 9 540 (+1) e "lateral" 5 954 -> 6 009 (+55: a lateral só apareceu depois, o teste para no primeiro lado que reprova; também vem do teto de 550). Nenhuma outra catraca subiu; K4 passa nos 69.
+
+**Tabela K1 a K7, 69 modelos (parte das esferas que tocam o desenhado, em todas as direções, soma da classe; `HULLS_REPORT`):**
+
+| Classe | Modelos | Cascos (mín / média / máx) | Teto | K3 cima / baixo / lateral | K4 cima / baixo / lateral | K5 máx. | K1, K2, K6, ≤ 64 pontos | K7 teto | K7 tempo (2.º carro / 1.º) |
+|---|---|---|---|---|---|---|---|---|---|
+| moto e bicicleta | 12 | 64 / 64 / 64 | 64 | 5,8 / 5,8 / 4,4% | 8,6 / 9,1 / 6,5% | 0,19% | passam | ✓ | ✓ / ✓ |
+| carro | 15 | 256 / 256 / 256 | 256 | 3,7 / 6,7 / 2,3% | 5,7 / 9,8 / 3,4% | 0,32% | passam | ✓ | ✓ / ✓ |
+| SUV | 4 | 256 / 256 / 256 | 256 | 4,7 / 7,5 / 2,5% | 7,6 / 10,6 / 3,7% | 0,27% | passam | ✓ | ✓ / ✓ |
+| picape | 4 | 256 / 256 / 256 | 256 | 7,2 / 12,3 / 5,0% | 8,9 / 14,7 / 5,6% | 0,27% | passam | ✓ | ✓ / ✓ |
+| van | 2 | 300 / 300 / 300 | **300** | 3,8 / 6,6 / 2,3% | 5,0 / 8,0 / 3,0% | 0,10% | passam | ✓ | ✓ / ✓ |
+| caminhão, ônibus (`heavy`) | 5 | 550 / 550 / 550 | **550** | 4,4 / 8,1 / 3,3% | 6,2 / 10,0 / 4,2% | 0,04% | passam | ✓ | ✓ / ✓ |
+| trator | 1 | 150 | 150 | 7,0 / 14,6 / 9,8% | 7,7 / 16,1 / 8,7% | 0,30% | passam | ✓ | ✓ / ✓ |
+| militar | 8 | 500 / 500 / 500 | 500 | 5,8 / 7,4 / 4,6% | 7,1 / 8,5 / 5,1% | 0,14% | passam | ✓ | ✓ / ✓ |
+| aéreo | 11 | 500 / 500 / 500 | 500 | 5,1 / 5,5 / 3,3% | 5,5 / 5,9 / 3,5% | 0,08% | passam | ✓ | ✓ / ✓ |
+| barco | 7 | 369 / 435 / 450 | 450 | 10,0 / 6,4 / 7,9% | 11,2 / 8,0 / 8,0% | 0,05% | passam | ✓ | ✓ / ✓ |
+
+K1 (tiro e vértices, `family_hatch`, `naked_bike`, `city_bus`), K2 (0 falhas de encosto), K5 (≤ 0,32% por classe, o pior modelo da moto 0,19%), K6 (0 falhas) e ≤ 64 pontos passam nos 69. **K3 passa nos 69** (catraca por modelo e por lado, só baixou). **K4: 69 de 69 depois da subida da catraca** (67 antes). **K7: teto ✓ nos 69; tempo ✓ nos 69.** Com a catraca subida como acima, K1 a K7 passam nos 69: **T6.4 ✅** (e a T6.21, que usa os mesmos cascos, segue ✅).
+
+**T6.21 com os cascos novos** (`car-hulls.json.gz` regerado por `HULLS_FIXTURE=… vitest run tests/vehicle-hulls-fixture.test.ts`: as duas vans agora têm 300 cascos e as peças sólidas vêm depois das finas; não é golden): 12 modelos, **3 160 cascos**, 2 301 bytes por casco, formas compartilhadas 6,93 MB, 200 corpos 0,06 MB, cópias dos 20 danificados 0,30 MB, **pico 7,3 MB (≤ 64 MB)**; tudo solto devolve o heap. A T6.21 já estava ✅ (aceite do heap com os cascos reais) e segue passando; o ✅ pedido para a T6.21 junto da T6.4 vale quando o K4 fechar.
+
+**Gates** (uma suíte por vez; a máquina esteve com carga 5 a 16 de outras sessões nos gates): `game-vehicles-three` 732 passam, 0 falham (depois da subida da catraca; antes 730 e os 2 K4), 70 puladas (69 da faixa de custo, 1 do fixture); `game-vehicles-fleet` 42 arquivos, 1 478 testes; `game-vehicles-driving` 97; `game-vehicles-proving` 20; `game-workers` 23; `game-physics-jolt` 231 passam, 3 puladas; `game-contracts` 129; `game-kit-defaults` 68; `tsc --noEmit` dos sete pacotes limpo; eslint de `game-vehicles-three`, `workers.ts` e `cascade.test.ts` sem erros. **Nenhum golden mudou** (`team-golden`, `exact-vehicles-three.json`); mudaram `hull-excess-ledger.json` (para baixo em 7 modelos; para cima só `v8_coupe` e `city_bus`, acima) e `hull-floating-ledger.json` (só para baixo, 7 modelos) e `car-hulls.json.gz`.
+
+**Não feito:** `hullPlanKind` **não** está em `KIT_WORKER_KINDS` de `game-kit-defaults`: o pacote `game-vehicles-three` já depende dele por `devDependencies` (ciclo). O jogo lista `hullPlanKind` no `installWorkerHost` do próprio arquivo de worker e chama `warm([hullPlanKind])` na carga. A medição na sala (§14: pior quadro e p99 com 0 workers e com o automático, em AMD) fica para quando o adaptador do Jolt usar `hulls()` (T6.9).
+
+### Catraca do K4 (decisão do dono de 2026-11-26): `v8_coupe` +3, `city_bus` +1 e lateral do `city_bus` +55; **✅ T6.4 e T6.21**
+
+O dono aprovou subir a catraca do K4 em **três** linhas, e só nelas: `v8_coupe` "de cima" 4 531 -> **4 534** (+3), `city_bus` "de cima" 9 539 -> **9 540** (+1) e `city_bus` "lateral" 5 954 -> **6 009** (+55). Motivo: o teto do `heavy` subiu para 550 (decisão do mesmo dia), então o plano de divisão do ônibus mudou; recusar o corte que piora o K4 derruba 71 a 77 testes de catraca dos outros modelos (seção "Fechamento"), e subir 59 esferas em dois modelos é o menor custo. A lateral do `city_bus` só apareceu depois: o teste confere os lados em ordem (cima, baixo, lateral) e para no primeiro que reprova, escondida atrás do "de cima". Conferido em `hull-excess-ledger.json` contra `2be66d1c4`: exatamente essas três subidas, nenhuma outra linha mudou (`git diff` de 3 linhas). Medido (`HULLS_REPORT`): `city_bus` 9 540 / 22 159 / 6 009 e `v8_coupe` 4 534 / 10 547 / 3 261, iguais à catraca.
+
+## T6.21 — Heap dos 200 estacionados e B6 com 20 carros (2026-11-26)
+
+`game-physics-jolt/tests/heap.test.ts` (descrição `T6.21`) e `cascade.test.ts` (teste `T6.21`); medidos neste computador, com carga de outras sessões.
+
+| Cena | Medido | Aceite |
+|---|---|---|
+| 200 carros de 12 modelos de **96 cascos** (o teto do desenho; cada casco de 64 pontos no pior caso), compostos compartilhados, 20 deles danificados (`setChildShape` copia o composto) | formas compartilhadas 5,99 MB (5 457 B por casco), 200 corpos 0,06 MB, 20 cópias do dano **0,11 MB** (o Jolt copia a lista dos filhos, não os cascos), **pico 6,17 MB** | ≤ 64 MB ✓ |
+| tudo removido e as formas soltas, sem carros danificados | **mesmo byte** do início | ✓ |
+| tudo removido, com os 20 danificados | dentro de 8 bytes por carro danificado (o `setChildShape` deixa 8 bytes ao remover o corpo, como o `setShape`, jolt-physics 1.1.1) | ✓ |
+| um modelo por número de cascos | 96: 0,50 MB; 500: 2,60; 1 200: 6,24; 1 800: 9,37 | só relato |
+| B6 com 20 carros de 24 cascos na ilha do sopro (cascata de 500) | acordam 323 corpos num quadro (318 sem os carros); mediana do passo depois do sopro **2,50 ms** (0,41 sem os carros), p99 6,01 ms (3,84), máx. 7,96 ms; o hash é o mesmo duas vezes | determinismo ✓; o aceite de tempo do B6 (mediana ≤ 4 ms e nenhuma rodada acima de 5 ms) é medido em AMD, fora do CI: este p99 passa de 5 ms numa máquina com carga |
+
+O aceite escrito passa, mas com o teto de **96 cascos** do desenho; com os 1 270 que a T6.4 mediu, o primeiro quadro desta tabela vira 83 MB (acima da guarda), ver T6.4.
+
+## T6.2b — Notas de aceleração pelos dados reais (2026-11-26)
+
+**Decisão do dono (2026-11-26):** cada modelo inspirado num veículo real recebe a nota de aceleração que o 0-100 real dele dá na faixa da classe (`accelerationByClass` em `game-vehicles-proving/src/ranges.ts`: carros 15,5 s na nota 1 a 4,8 s na 10; SUVs 12,7 s a 6,7 s), arredondada à nota mais próxima. A fonte de cada modelo está em `game-vehicles-fleet/src/acceleration-sources.ts` (e o teste `proving-physics.test.ts` confere que a nota de cada um é a mais próxima do tempo citado). Modelo sem fonte verificada mantém a nota e leva a marca "sem fonte". Motos, pesados, militares, bicicleta, trator e `step_through_scooter` não entram (T6.2c no `tasks.md`).
+
+| Modelo (inspiração) | 0-100 real (fonte) | Nota antes -> depois |
+|---|---|---|
+| `compact_hatch` (Onix 1.0) | 13,3 s (GM; Webmotors, Fichacompleta) | 7 -> 3 |
+| `taxi` (Onix Plus 1.0) | 13,3 s (Garagem360) | 7 -> 3 |
+| `entry_hatch` (Kwid) | 15,5 s (Renault; 14,9 s Quatro Rodas) | 7 -> 1 |
+| `electric_hatch` (Dolphin 95 cv) | 12,3 s (fichas; teste colombiano 10,9 s) | 7 -> 4 |
+| `midsize_sedan` (Corolla 2.0) | 9,9 s (Motor Show) | 7 -> 6 |
+| `police_sedan`, `highway_police_sedan` (Cruze 1.4 T) | 9,0 s (Motor Show; 8,8 s Autopapo) | 7 -> 6 |
+| `beetle` (Fusca 1300) | 30,9 s (base de fichas; fontes de 24 a 45 s) | 8 -> 1 (abaixo da banda) |
+| `boxy_hatch` (Uno Mille Fire) | 14,7 s | 6 -> 2 |
+| `family_hatch` (Gol G5 1.0) | 12,3 s (Webmotors) | 7 -> 4 |
+| `rideshare_hatch` (HB20 1.0) | 14,5 s etanol (catálogo Hyundai) | 7 -> 2 |
+| `turbo_hatch` (Polo 200 TSI) | 9,9 s (Autoentusiastas; Motor Show 10,1/9,6) | 7 -> 6 |
+| `fastback_sedan` (Civic 1.5 T) | 8,2 s (ficha; 8,43 s medido) | 7 (igual) |
+| `classic_six_sedan` (Opala Comodoro 4.1) | 12,2 s (base de fichas) | 7 -> 4 |
+| `v8_coupe` (Mustang GT) | 4,8 s (Ford) | 9 -> 10 |
+| `compact_suv` (T-Cross 200 TSI) | 10,0 s (ficha VW) | 7 -> 5 |
+| `hybrid_suv` (Corolla Cross Hybrid) | 11,8 s (Motor Show) | 7 -> 2 |
+| `midsize_suv` (Compass), `large_suv` (SW4) | **sem fonte** (só motores e mercados diferentes; o SW4 atual não tem 0-100 publicado) | 7 (mantida) |
+
+Pickups, vans e o resto não têm banda por classe (um só ponto de fonte no caso da Hilux) e ficam como estavam.
+
+**Frota nos dois motores, 48 modelos terrestres x 6 testes = 288 corridas (mesmas faixas, mesmo código; só as notas mudaram):**
+
+| Motor | Antes (faixas por classe, notas antigas) | Depois (notas pelos dados reais) |
+|---|---|---|
+| Jolt | 24 modelos fora, 33 corridas | **21 modelos fora, 30 corridas** |
+| Semi-simulação | 12 modelos fora, 22 corridas | **15 modelos fora, 25 corridas** |
+
+- Jolt, saíram da lista: `compact_hatch`, `taxi`, `electric_hatch`, `family_hatch`, `classic_six_sedan`; entraram: `hybrid_suv`, `boxy_hatch`. Seguem fora na arrancada: `entry_hatch` (23,3 s contra 15,5 ± 35%), `beetle`, `rideshare_hatch`, `v8_coupe`, `boxy_hatch`, `hybrid_suv`.
+- Semi-simulação, entraram: `beetle` (21,0 s contra banda máxima de 20,9), `hybrid_suv` (16,3 s contra 16,2) e `v8_coupe` (6,7 s contra 6,5); a semi tem torque por kg da nota (0,06 + 0,015 x nota) e não acompanha os extremos reais da banda (nota 1 e 10): o Jolt dá 1,4x a 1,8x o tempo da semi. A correção é da ficha por tipo e do modelo da semi (T6.2c), não das notas.
+- Tempos medidos antes -> depois (semi / Jolt, s): `compact_hatch` 8,6 -> 13,8 / 11,7 -> 16,7; `entry_hatch` 8,7 -> 20,2 / 12,3 -> 23,3; `midsize_sedan` 8,4 -> 9,3 / 11,1 -> 11,9 (real 9,9); `v8_coupe` 7,1 -> 6,7 / 9,1 -> 8,7; `hybrid_suv` 8,6 -> 16,3 / 10,9 -> 19,1.
+- Os tempos que a banda espera (nota 1 a 10) agora são os reais; o que a semi e o Jolt medem fica 30 a 50% acima nos carros lentos (Kwid 20,2 s na semi contra 15,5 real).
+
+**Gates (uma suíte por vez):** `game-vehicles-fleet` `tsc --noEmit`, `eslint`, `tests/proving-physics.test.ts` + `tests/data.test.ts` 71 testes; `game-vehicles-proving test` 20 testes.
+
+## T6.2c — Ficha por tipo de veículo (2026-11-26) — **sem ✅: 17 dos 48 modelos terrestres seguem fora no Jolt (eram 21), 15 na semi-simulação (eram 15, outros modelos)**
+
+**Entrou** (`game-vehicles-driving`, `game-vehicles-fleet`; nada em `game-vehicles-three`, `game-vehicles-proving` só herda os tipos):
+- `BodyDimensions` ganha `type` (`car` | `motorcycle` | `bicycle` | `truck` | `tractor` | `tracked`; sem tipo é o carro de sempre), `axles` (eixos do modelo, da frente para trás: x, distância entre as rodas de fora, raio) e `tracks`. `semiSpecFromStats` monta as rodas dos eixos (um par por eixo; só o da frente esterça; os demais tracionam, ou todos nos 4x4; o último leva o freio de mão; moto: duas rodas na linha de centro, só a traseira traciona), o raio da roda é o dos eixos motrizes, o câmbio vem do tipo (`semi/vehicle-type.ts`) e a esteira ganha `spec.tracks` (a semi segue com quatro rodas de apoio, o motor monta as rodas de apoio).
+- `vehicleDescFromSemi`: `spec.tracks` vira `controller: 'tracked'` com duas esteiras de rodas de apoio (atrito lateral 0,5: com o do pneu, ~0,9, o tanque de 41 t **não girava no lugar**; com 0,6 ou menos gira, medido), duas rodas é `motorcycle` (já era), e a bicicleta lê `spec.pedal` (o ciclista de 250 W da T6.2, agora com as marchas derivadas da velocidade máxima: a de cima gira a pedivela a 80 rpm na máxima da ficha; troca em 0,95 da cadência).
+- `game-vehicles-fleet`: `src/data/wheel-layouts.json` (eixos e esteiras **lidos do modelo construído**; `tests/wheel-layouts.test.ts` reconstrói os 48 modelos e reprova se o arquivo estiver velho; `UPDATE_WHEEL_LAYOUTS=1` regrava), `fleetWheelLayout`, `fleetVehicleTypeOf`, e `fleetProvingSubject` passa `type`, `axles` e `tracks` e usa o **entre-eixos e a bitola do modelo** em vez de 0,6 do comprimento. Tipos: motos do grupo `motorcycles` (menos `quad_bike`, que tem 4 rodas e segue carro), `bicycle`, grupo `heavy` e `troop_truck`, `apc_6x6`, `armored_car_6x6` são `truck`, `tractor`, `battle_tank` é `tracked`.
+
+**Fontes.**
+- Moto: potência por kg do par que ancora a banda do 0-100 da classe (`ranges.ts`): nota 1 = Honda PCX 160, 11,8 kW a 8 500 rpm, 132 kg (https://zigwheels.com/honda-bikes/pcx150/specifications; outras fichas dão 12 kW), nota 10 = Kawasaki Ninja 400, 33,4 kW a 10 000 rpm, 168 kg (https://www.motorcyclespecs.co.za/model/kawasaki/kawasaki_ninja_400_21.html), linear entre elas, **sobre moto + piloto de 75 kg** (suposição minha: os 0-100 reais são medidos com piloto; a moto da ficha agora pesa 75 kg mais). Um fator 1,3 sobre essa potência é **ajustado, não citado**: sem ele as dez motos fazem 8,6 a 8,9 s na nota 9 (banda 3,9-8,1); com 1,3 as dez entram. Constante `MOTORCYCLE_POWER_FACTOR`.
+- Bicicleta: 250 W é o meio da faixa de 150-400 W do `design/veiculos.md` §14.2 (já era da T6.2).
+- Caminhão, trator, esteira, pesados e militares: **sem fonte nova**. Potência por kg igual à do carro (a da ficha de antes), banda igual à de antes ("sem fonte"). As rotações (diesel 600/1 500/2 500 rpm; trator 800/1 600/2 300), as marchas (cinco, passo de 1,5 entre elas: ver abaixo por que cinco) e a relação final 4,5 são **escolhas de modelagem**, não dados. Procurei fonte para a banda de 0-100 de caminhão, ônibus e militar e não achei um par verificável; não inventei.
+- `city_bus`: a causa do giro de 27,2 m (4% acima do teto de 26) **não era o ângulo de esterço**: a ficha usava 0,6 do comprimento do modelo como entre-eixos (7,64 m) e o modelo é de 6,40 m entre os eixos (eixos em x = 3,55 e −2,85 no construtor, comentário do modelo: "wheelbase 6.40 m"). Pela geometria do modelo o giro passa na banda (e a semi também). Mesma correção vale para todos os 48 modelos.
+
+**O que a medida achou do motor** (cada item mudou o resultado em mais de 10%):
+1. **A caixa automática do Jolt para de subir de marcha com seis marchas ou mais** (cena: `scooter`, uma roda patinando em regime): sobe até a 3ª a 9 950 rpm (corte de giro em 10 000, `shiftUpRpm` 8 500) e fica ali, a 56-82 km/h conforme a ficha; com 3, 4 ou 5 marchas, mesma ficha, chega a 100 km/h. Por isso as fichas por tipo usam **cinco marchas no máximo**. (Medido lendo `GetCurrentGear` e `GetCurrentRPM` do controlador.) A causa interna não foi isolada; o padrão é o do diagnóstico da T6.2b ("não troca para cima com roda patinando"): sem troca, o giro encosta no corte e a força cai a zero.
+2. Pela mesma razão a moto troca em **0,6 da rotação máxima** (`upshiftFraction`) e o carro continua em 0,85: com 0,85 o `sport_bike` fica a 108-121 km/h de uma máxima de 190 e o resultado muda de caótico a cada 1% de massa. A 0,6 as dez motos deram um resultado coerente (nas varreduras de `topShare` e de fator de potência o conjunto de fora mudava de modelo a cada passo; com 0,6 passou a variar só pelos parâmetros que eu mexia).
+3. A marcha mais alta é dimensionada para a rotação de `topShare` do corte na máxima: 0,95 (como era) para todos, **0,8 para moto**: a roda traseira patina uns 4% e empurra o motor contra o corte.
+4. A drag da ficha usava 0,76 do torque de pico no corte (calibração do carro); com a curva de uma moto (pico em 75% do corte) isso dava drag 4 vezes alta. Fora do carro agora é o torque da curva do próprio motor (`torqueAt`); o carro fica com 0,76 para não mexer nos seus números.
+
+**A frota nos dois motores, 48 modelos terrestres × 6 testes = 288 corridas (mesmos procedimentos e faixas; nenhuma faixa nem teste afrouxado):**
+
+| Motor | Antes (T6.2b, notas pelos dados reais) | Depois |
+|---|---|---|
+| Jolt | 21 modelos fora, 30 corridas | **17 modelos fora, 18 corridas** |
+| Semi-simulação | 15 modelos fora, 25 corridas | **15 modelos fora, 25 corridas** (outros modelos; a semi não tem troca nem tração limitada, e a moto agora freia mais curto que a banda sem estourar a frente) |
+
+Jolt, saíram da lista (5 modelos): `commuter_motorcycle`, `naked_bike`, `sport_bike` (arrancada e máxima), `city_bus` (giro: entre-eixos do modelo) e `boxy_hatch` (rodas e eixos do modelo); `scooter`, `trail_bike`, `step_through_scooter`, `delivery_bike` e `tractor` continuam na lista, mas com menos corridas (o `tractor` passa arrancada, máxima e freada seca, falha só a molhada; as motos falham só a freada molhada). Entrou: `tanker_truck` (arrancada rápida demais: três eixos com tração tandem; com as quatro rodas de antes patinava e passava). Semi: saiu `school_bus`, entrou `troop_truck` (6,6 s contra mínimo 6,9, rápido demais como no Jolt). Modelo a modelo, o que continua fora e por quê, está no comentário de `OUT_OF_RANGE` em `game-vehicles-fleet/tests/proving-physics.test.ts` (o teste agora também prende o conjunto da semi, `SEMI_OUT_OF_RANGE`):
+- **Carros e SUVs, arrancada** (`entry_hatch` 23,0 s contra 10,1-20,9; `beetle` 25,7 contra 9,7-20,1; `hybrid_suv` 19,2 contra 7,8-16,2; `rideshare_hatch` 19,3 contra 19,3; `v8_coupe` 8,7 contra 3,1-6,5): a ficha do carro não mudou; a diferença é a do diagnóstico da T6.2b (pneu com limite de tração e câmbio no motor, 1,4× a 1,8× a semi), sobre uma banda que tem fonte.
+- **Pesados e militares, arrancada, RÁPIDOS DEMAIS** (`monster_truck` 6,1 contra mínimo 6,9; `tanker_truck` 5,9/7,3; `troop_truck` 5,2/6,9; `apc_6x6` 5,0/7,3; `armored_car_6x6` 4,4/7,3; `battle_tank` 2,8/5,9): a potência por kg é a do carro (59 kW/t na nota 5, um blindado de 20 t em 4,4 s), que ninguém citou, e a banda é a tabela por nota sem fonte. Calibrar um número sem fonte contra uma banda sem fonte seria inventar os dois; **fica para o dono**: uma fonte de potência por tonelada e de 0-100 para pesados e militares (a faixa atual tem o centro em 10 s e a realidade desses veículos é bem maior).
+- **`bicycle`, arrancada** (29,9 s a 22 km/h contra 0,6-1,2 s): a banda pede 5 m/s² de um ciclista de 250 W; a nota 10 da bicicleta (cartão) é a causa. Máxima, freada, freada molhada e giro passam nos dois motores.
+- **`battle_tank`, giro**: sobre esteira ele gira no lugar (círculo de 0,1 m) e a banda da classe começa em 9 m.
+- **`tractor`, freada molhada**: no asfalto molhado não chega aos 22 km/h do alvo (18,7 km/h): roda motriz patinando, caixa sem trocar (item 1).
+- **Motos, freada molhada**: o Jolt combina o atrito do pneu e o do chão pela média geométrica (0,9 g numa pista de 0,75), a semi pelo produto (0,8 g); as motos ficam 0,2 a 1,2 m abaixo do mínimo da banda.
+
+**Gates (uma suíte por vez, ao lado de uma sessão com `game-vehicles-three`):** `game-vehicles-driving` 8 arquivos, 97 testes (5 novos); `game-vehicles-proving` 2 arquivos, 20; `game-physics-jolt` 42 arquivos passam (1 pulado), 225 testes (3 pulados); `game-vehicles-fleet` completo 42 arquivos, 1 478 testes passam, nenhum golden mudou; `tsc --noEmit` dos quatro limpo; eslint dos quatro sem erros (só os avisos de `max-lines` que já existiam em `game-vehicles-fleet/src/vehicles`).
+
 
 ## T7.1 — multidão no motor (2026-11-26) — ✅
 
@@ -4139,3 +4599,104 @@ A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a 
 **Caso 5 (cena de referência), `single`, 4 rodadas, carga 5 a 9:** mediana 0,44–0,50, p99 4,9–5,3, maior quadro 11,8–13,6 ms; na comparação das builds (segunda execução do processo) o `multithread` ficou em mediana 0,38–0,43 e p99 3,4–4,4 contra 0,42–0,50 e 4,2–4,9 do `single`.
 
 **Gates:** `game-physics-jolt` `pnpm test` 40 arquivos, 180 testes verdes (2 pulados); `test:cost` de `cascade-tail` (sozinho, carga 3,0 a 3,2) 2 de 2 testes verdes, nas duas builds; typecheck e eslint do pacote limpos; `pnpm build` do repositório verde e a página da sala recompilada com a nova escolha. O `test:cost` do pacote inteiro em paralelo com as outras sessões segue com as falhas de tempo de sempre (19 com carga 4 a 8; `blast-query`, `body-lod`, `queries`, `ragdoll`...), nenhuma em arquivo que esta task toque além do `cascade-tail`.
+
+
+## T6.9 — Peças soltam como corpos (2026-11-26) — ✅
+
+**O que entrou.**
+- `game-vehicles`: `VehicleDestructible.setPartSink(sink | null)` e o tipo `PartSink`. Com um sink ligado, a peça que sai (`detach`) não vira `fling`: o holder com as malhas dela é tirado de `c.flying` e entregue ao sink (a peça, o holder, a velocidade e o giro do `fling`). Sem sink, nada muda (o `fling` segue no modo próprio; o `fling` das explosões, `explosion.ts`, não foi tocado).
+- `game-physics-jolt` `shared-shapes.ts`: **correção do adaptador**. `setChildShape` falhava ("has no compound shape to change") em corpo cujo centro de massa foi movido por `setMassProperties`, porque o composto fica dentro do `OffsetCenterOfMass`; agora o composto é achado dentro do invólucro. Teste: `tests/child-after-centre.test.ts`. Sem isso o carro não pode soltar peça depois de ter o centro de massa do kit.
+- `game-vehicles-three` (`package.json`: `game-physics` em `dependencies`, `game-physics-jolt` em `devDependencies`): `createCrashParts` (`src/crash-parts.ts`, `-chassis`, `-bodies`, `-math`, `-clamp`).
+  - `shape()`: composto mutável dos cascos de `colliders.hulls()`, cada filho com o `tag` = índice da peça (o id da peça). `bind(chassis)` põe a massa, a inércia e o centro de massa do kit e liga `watchContacts`.
+  - Soltar uma peça = tirar do composto os filhos dela (`setChildShape(..., null)`) e criar um corpo com esses mesmos cascos (pontos deslocados para a caixa da peça; peça sem casco, como roda e lâmpada, leva a caixa desenhada). A massa vem de `PartDef.mass`, a inércia é a da caixa, o centro é o da caixa do que está desenhado no holder; a velocidade é a do ponto do chassi (`v + w x r`). O chassi perde a massa (`withoutPart`: massa, centro e momentos pelo teorema dos eixos paralelos) por `setMassProperties`. Tudo na mesma chamada; a peça nasce sem encostar no chassi (`ignorePair` até a caixa dela sair do chassi, conferido a cada 30 passos).
+  - Nada nasce dentro de nada (§12): depois de criar o corpo, `penetration` contra o mundo fixo; se afundou, `setPose` para fora (até 3 vezes).
+  - Dano de nível 2: por passo, a linha de contato mais forte de cada `tag` do casco vira um `crashVehicle` (ponto, direção, `approach`, massa do carro e do outro, largura da caixa da peça, `source` = id da peça).
+  - Cascos refeitos ao assentar: com o chassi parado (< 0,05 m/s por 30 passos) e algo sujo, `colliders.hulls()` de novo e os cascos que mudaram vão para o motor com `setChildShape`; os do cache por modelo ficam compartilhados e o carro amassado sai do cache (só o que o dano tocou é refeito). §10.5: o casco de uma peça que toca algo (pontos de `readContacts` dentro da caixa dele + 5 cm) só anda para dentro e, para fora, no máximo 2 mm (`holdWithin`, projeção nos planos do casco antigo); o que sobrou do movimento espera o contato acabar.
+
+**Números** (`tests/crash-parts.test.ts`, 8 testes, `family_hatch`, 256 cascos):
+- Contabilidade: massa, primeiro momento e momentos sobre o centro antigo: chassi + peças = o todo do kit (6 casas na massa e no momento, 4 na inércia). A porta leva consigo o que o desenho mostra junto (vidro, maçaneta): cada um é um corpo com a própria massa; `massOf(chassi) + soma = massa total` (3 casas).
+- Nada é lançado: `c.flying` fica vazio; o holder acompanha o corpo (distância < 0,1 mm) e cai; todos dormem.
+- §12: carro enterrado 4 cm: todo corpo de peça sai com penetração <= 3 mm, `pushedOut` > 0.
+- Parede a 15 m/s (1 200 passos a 120 Hz): 9 golpes, 62 eventos de dano, peças atingidas `underbody`, `bumper_rear`, `fender_front_right`, `bumper_front`; 1 assentamento, **246 cascos refeitos**, 0 retidos, 0 sem filho.
+- Cache: dois carros do modelo recebem os mesmos cascos (`stats` 1 planejado, 1 reaproveitado); o que bate faz os seus (>= 1 casco diferente) e o carro seguinte volta a receber os do cache (2 reaproveitados).
+- §10.5 em unidade: pontos 1 cm para fora de um cubo voltam a <= 2 mm; pontos para dentro não se mexem; casco que não é sólido não é retido.
+- **Heap em ciclo** (carro de 17 peças solto, removido, 2 passos): depois de um ciclo de aquecimento, o seguinte devolve **0 bytes** de resíduo (o teste aceita até 8 bytes por `SetShape` do centro de massa, o resíduo conhecido do Jolt 1.1.1, e múltiplo de 8). Antes disso foi achado um **crescimento de 240 KB por carro** vindo de `overlapShape` com o composto de cascos de cada peça: o adaptador guarda a forma de consulta pela identidade da descrição (até 32); a consulta passou a usar a caixa da peça (guardada pelas dimensões), e o ciclo fechou.
+
+**Gates** (uma suíte por vez): `game-vehicles-three` 740 passam, 70 puladas (69 da faixa de custo, 1 do fixture); `game-vehicles-fleet` 1 478; `game-vehicles-driving` 97; `game-physics-jolt` 232 passam, 3 puladas; `tsc --noEmit` limpo em `game-vehicles`, `game-vehicles-three`, `game-physics-jolt`, `game-vehicles-driving` e `game-vehicles-fleet`; eslint dos arquivos tocados sem erro (`visual.ts` segue acima de 1 500 linhas, aviso que já existia: 1 695 antes, 1 717 agora). Nenhum golden mudou.
+
+**Pendências.** A medição na sala em AMD (pior quadro e p99 com o `hulls()` no passo fixo) fica para a T8.6. O corpo de roda é a caixa desenhada, não um cilindro, e `onPartLost` é o gancho para o hospedeiro refazer o veículo (`rebuildVehicle`, 7.6): o hospedeiro ainda não o liga. Casco novo que o desenho passe a ter depois do dano (chave que o composto não tem) não entra (`stats().unplaced`; 0 no teste), porque um composto não ganha filho. O interior é da 009. O `fling` das explosões não passa pelo sink.
+## T6.26 — Atropelar pedestres e zumbis (2026-11-26, worktree `spec-008-atropelar`, ramo `spec/008-atropelar`) — **✅**
+
+**O que já existia:** o par `vehicle`–`agent` já estava fora de `LAYER_PAIRS` (`game-physics/src/contract.ts`; a Fase 6 o tirou e o comentário diz que atropelar é consulta do host); `RunOverRules`/`runOver()` (`arcade.ts`, `run-over.ts`: empurrar abaixo de 3 m/s, derrubar até 8, matar acima); `createAgentBodies` (cápsulas cinemáticas da Fase 7, camada `agent`, `user = índice`); no `Crowd`: `damage`, `kill` e `asPlayerCrowd().stun` (a derrubada do `arcade`); `createCorpseBodies().add({ velocity })` (R0 se a cota deixa, senão R1) e `relocateCorpse`.
+
+**O que mudou:** só `game-vehicles-driving` ganhou código (`src/physics-run-over.ts`, `createRunOver`); o resto é teste e uma dependência de teste.
+- Na fase `actors`, por carro acima de 1 m/s: `overlapShape` da caixa do carro (mais a margem e o deslocamento do passo) contra a camada `agent`. Cada agente achado, do maior índice para o menor (a morte move o último agente para o lugar do morto), é um golpe.
+- Velocidade de aproximação = velocidade do carro menos a do agente ao longo do movimento; `runOver()` classifica com as `RunOverRules`. Choque perfeitamente inelástico: o carro perde `m/(M+m)` da aproximação, o corpo sai com a velocidade comum, o impulso `−μ·v` vai ao carro por `addImpulse` no ponto do agente (à altura do centro do carro). Energia reportada: `½·μ·v²`, `μ` a massa reduzida.
+- `push`: o agente é movido 1 m/s para o lado e o carro é preso por `holdDrag` (a cada passo, enquanto empurra). `knock`: dano `(μ/70)·v²·knockDamage` pelo `crowd.damage` (o do `arcade` para um corpo de 70 kg, crescendo com a energia); se não morre, `stun` com a velocidade comum. `kill`: `crowd.kill`. Quem morre é dito ao ouvinte do `ledger` por `runOver.dyingVelocity` (o `bodies.add` do host passa `velocity`).
+- O mesmo agente é golpeado uma vez enquanto fica debaixo do carro (empurrão é exceção). `Crowd` e `RunOverCrowd` se casam por tipo estrutural: `game-vehicles-driving` não importa `game-crowd`. Pedestre e zumbi são o mesmo agente do `Crowd` com outra altura, constituição e tipo (pedestre: faixas de `AGE_PRESETS` de `game-characters-people`; zumbi: `undeadCrowdPack`); o kit do cadáver sai de `corpseBodyKit` com as medidas de cada um.
+- `game-crowd` ganhou `game-vehicles-driving` e `game-characters-people` como `devDependencies` (só os testes novos; `pnpm-lock.yaml` acompanha). Nenhum ciclo: o driving não depende do crowd.
+
+**Números (Jolt, `KIT_WORLD`, carro de 1 300 kg sem atrito):**
+| Cena | Resultado |
+|---|---|
+| carro a 30 km/h, zumbi adulto parado (126 kg) | `kill`; cadáver nasce R0; carro perde 8,8% da velocidade; quantidade de movimento conservada dentro de 5% |
+| zumbi adulto a 15 km/h | `knock`, vivo, `STUNNED`, sem cadáver |
+| zumbi adulto a 25 km/h | `knock` com dano maior que a vida: morre, cadáver R0 |
+| criança (≈ 40 kg) a 20 km/h | `knock`, viva (massa menor, menos energia) |
+| adulto pedestre a 30 km/h | `kill` |
+| carro a 5 km/h | só `push` (10 passos de aperto em 4 s), ninguém ferido nem derrubado, carro mais lento |
+| carro a 40 km/h, 20 agentes | atravessa todos (agente nunca é parede): 20 de 20 contados (cadáveres + vivos), 7 mortos, o resto derrubado; carro passa de z = 20 |
+| carro de verdade (semi-simulação) a 30 km/h, 3 cápsulas | 3 golpes (`kill` 8,31 m/s, `knock` 7,17 e 6,67), carro passa de z = 14; velocidade logo após o 1.º golpe 7,82 m/s, dentro de 5% da esperada |
+
+**Determinismo:** dois carros (36 e 28 km/h) e dez zumbis, 5 s, duas execuções: `hashCrowdState` `ecd31840` nas duas, registro de cadáveres e `rungHash` (4033033353) iguais, velocidades finais dos carros iguais (4,754265308 e 3,930306673 m/s), 10 golpes. O aceite da T7.1 (`corpse-physics-hash.test.ts`: hash igual quando nada empurra) segue verde.
+
+**Heap em ciclo:** o mundo recebe 6 ciclos de carro + agentes + cadáveres + `RunOver`, tudo desfeito no fim de cada um; depois de 3 de aquecimento, a contagem de corpos é igual e a memória em uso varia no máximo 24 bytes em 3 ciclos (a variação é da contabilidade do alocador, mede 8 a 24; o limite do teste é 256 bytes, um ragdoll vazado são quilobytes).
+
+**Testes:** `game-vehicles-driving/tests/physics-run-over.test.ts` (5, mundo e crowd de mentira: conservação, energia, empurrão, golpe único, ordem de índices), `game-crowd/tests/physics/run-over.test.ts` (9, `Crowd` real e Jolt), `game-physics-jolt/tests/vehicle.test.ts` (carro real, caso `T6.26`).
+
+**Gates:** `game-vehicles-driving` 9 arquivos, 102 testes; `game-crowd` 27 arquivos, 159; `game-crowd-three` 9 arquivos, 48; `game-physics` 4 arquivos, 32; `game-physics-jolt` 43 arquivos (1 pulado), 232 testes; typecheck dos cinco e eslint dos tocados limpos. Nenhum golden mudou. Sem GPU nem navegador.
+
+**Queda de verdade (decisão do dono, 2026-11-26):** `Crowd.knockDown(i, { x, z })` público (`game-crowd/src/crowd.ts`, corpo em `physics/engine.ts`). Só o agente `i`: soma o empurrão em `pushX/pushZ` e pede a queda ao `balance.requestFall` (causa `FALL_CAUSE.SHOVE`, nota `velocidade / shoveFall`); daí em diante é o equilíbrio que já existia (`BALANCE.FALLEN`, desliza no empurrão, `GETTING_UP`, `STANDING` no tempo do `game-crowd`). Sem `physics.balance` cai no atordoamento de 1 s com a velocidade. Não é o `blast` (de área). Não cria causa de queda nova nem evento novo (o `fall` existente sai), então `EVENT_CLASS` (do `game-destruction-three`, só de `DestructionEvent`) não muda. `createRunOver` chama `crowd.knockDown` na faixa de derrubar, no lugar do `stun`; `RunOverCrowd` troca `asPlayerCrowd()` por `knockDown`. Roda na fase `actors` do tique e a queda é aplicada no `endStep` do próximo `crowd.update`.
+- **Aceite da T7.1:** com nada empurrando nada muda (o `knockDown` só age quando chamado): `corpse-physics-hash.test.ts` e `team-golden.test.ts` verdes, sem golden alterado.
+- **Hash novo:** os mesmos dois carros (36 e 28 km/h) e dez zumbis, 5 s: `hashCrowdState` **`725bab10`** (era `ecd31840`, que tinha os derrubados só `STUNNED`), gravado em `tests/physics/run-over.test.ts` e igual em duas execuções (registro de cadáveres, `rungHash` e velocidades dos carros também).
+- **Testes novos/ajustados:** 15 km/h: o zumbi vai a `FALLEN` (causa `SHOVE`), desliza (z cresce), 1,4 s depois está `GETTING_UP` e 1,6 s depois `STANDING`, com 1 queda no total; vizinho fora do caminho do carro (1,8 m ao lado) com posição idêntica e `STANDING`; criança a 20 km/h também cai; 5 km/h só empurra (sem queda). Os mocks de `game-vehicles-driving` e `game-physics-jolt` passam a ter `knockDown`.
+- **Gates (depois da mudança):** `game-crowd` 27 arquivos, 160 testes; `game-crowd-three` 9, 48; `game-vehicles-driving` 9, 102; `game-physics-jolt` `vehicle.test.ts` 16; typecheck dos quatro e eslint dos tocados limpos (`crowd.ts` fecha em 1500 linhas, o limite). Sem GPU nem navegador. Nota: os pacotes se consomem pelo `dist`; `game-crowd` e `game-vehicles-driving` foram reconstruídos (`tsup`) antes dos testes.
+
+**O que o dono deve ver na sala (§5), sem eu ter aberto o navegador:**
+1. Carro a 5 km/h contra um grupo: os corpos são empurrados para o lado, o carro desacelera um pouco, ninguém cai nem morre.
+2. A 15 km/h: o zumbi cai de verdade (deitado, desliza, levanta-se em ~3 s) e o carro perde cerca de 9% da velocidade; criança e adulto reagem diferente na mesma velocidade.
+3. A 30 km/h ou mais: o corpo é lançado com a velocidade do carro (R0 enquanto a cota de ragdoll deixa, depois R1) e cai atrás dele; nenhum agente para o carro como parede.
+4. Dez agentes em fila: o carro os atravessa perdendo velocidade a cada golpe, e os cadáveres formam monte atrás.
+5. Conferir que o cadáver lançado não atravessa o chão nem prende o carro (camada `corpse` encontra `vehicle`).
+
+## T6.12 — Aceitação da frota com motor e cascos (2026-11-26) — ✅
+
+**O que entrou.** Nenhum código: a aceitação do `CLAUDE.md` §7 já está nos testes do `game-vehicles-fleet` e passou sem mudança depois da T6.4 (cascos), da T6.9 (peças soltas) e da T6.26.
+- Tiro acerta o desenhado: `surface-ray-exact.test.ts` (o raio responde como o three.js, intacto, danificado, posado e movido) e `vehicle-acceptance.test.ts` (por modelo, o tiro cai na peça desenhada; todo vidro desenhado é peça de vidro e nada fica na frente dele).
+- Marca vai com a peça: `vehicle-acceptance.test.ts` (a marca fica na peça quando a porta gira; a porta leva pele, vidro e borracha), `fragments-on-the-car.test.ts`, `destructible.test.ts`.
+- Cascos K1 a K7 nos 69 modelos: `game-vehicles-three/tests/vehicle-hulls.test.ts` (T6.4, ✅).
+- Goldens da geometria intacta (`golden-*.test.ts`, `exact-golden.test.ts`, `digest.test.ts`) e z-fighting: iguais.
+
+**Gate.** `pnpm --filter @adatechnology/game-vehicles-fleet test` (depois de `pnpm build` limpo): 42 arquivos, **1 478 testes passam**, 0 falham, 0 pulados. `git status` limpo depois da suíte: nenhum golden nem ledger mudou.
+
+## T6.25 — Sonda da sala do veículo no `leak.mjs` (2026-11-26)
+
+**O que entrou.** Fase `vehicle` em `examples/test-room/leak.mjs` e `examples/test-room/leak-vehicle.mjs` (lado da página, empacotado pelo `leak.mjs` com o esbuild do `build.mjs`, pacotes pelas fontes). Um ciclo: carro nasce (kit, cascos, `createCrashParts`, corpo do chassi), bate numa parede a 15 m/s, perde peças (o que a batida não solta é desparafusado), e é removido inteiro (chassi, corpos das peças, parede, chão, objetos do kit). A fase confere que o carro perdeu pelo menos 10 peças e usa o orçamento que já existia: heap do wasm em uso (`wasmMB`, 0,25 MB por ciclo), corpos do Jolt (0) e heap de JS (2 MB). Só roda com `LEAK_PHASE=vehicle` (`node leak.mjs` a ignora). `examples/test-room/README.md` documenta como rodar.
+
+**Verificado.** `node --check` dos dois arquivos; o pacote da página é gerado pelo esbuild (3,16 MB). **Não rodei o navegador** (regra do dono, §9): a sonda nunca executou. A mesma sequência (criar, bater, soltar, remover) é a do teste de heap em ciclo da T6.9 (`crash-parts.test.ts`, 0 bytes de resíduo).
+
+**Pendência.** O comando para o dono rodar fica na T8.5: `cd examples/test-room && node build.mjs && LEAK_PHASE=vehicle node leak.mjs`. A T6.25 tem o aceite "à mão": ✅ só depois dessa corrida; a task ficou **sem ✅**.
+
+## T6.16 — README, skills e docs dos veículos (2026-11-26) — ✅
+
+**O que entrou.** READMEs de `game-vehicles` (`setPartSink`), `game-vehicles-three` (`createCrashParts`), `game-vehicles-driving` (`createRunOver`, `vehicleDescFromSemi`), `game-vehicles-proving` (rodador no Jolt e o estado da T6.2d), `game-vehicles-fleet` (eixos, aceleração com fonte, aceitação), `game-physics-jolt` e `game-crowd` (`knockDown`); as cinco referências de `.claude/skills/kit-veiculos/references/`; `docs/veiculos-verificacao.md` e `docs/veiculos-pecas-por-categoria.md`.
+**Achado e corrigido.** `kit-audit --check` já saía 1 antes das docs: `game-vehicles-proving/src/physics-run.ts:75` (a caixa do chassi do carro de teste no mundo Jolt, T6.2b) caía em "FORA do SDK dono". Entrou em `tools/kit-audit/allowlist.json` com o motivo (colisão do rodador, nada é desenhado).
+**Gate.** `node tools/kit-audit/audit.mjs --check`: saída 0 (0 novos fora do SDK dono, 9 pendentes conhecidos, 20 permitidos).
+
+## Revisão do #528 (2026-11-26)
+
+**Item 4 — `settle` do casco retido.** `crash-parts.ts` passa a conferir de novo a cada 30 passos (`SETTLE_STEPS`) enquanto houver casco retido e o plano não estiver em voo; um golpe novo zera a espera. `isTouching` perdeu as alocações por chamada (vetores, `every`, `rotateBy`): limites e rotação do contato em escalares.
+**Medição (carro parado, `family_hatch` depois do choque na parede, 600 passos de repouso).** `settles` na janela de repouso: **0**; no total, 1 `settle` em 1 800 passos, com `held` 0. **Não consegui montar um carro parado com casco retido**: o `held` só nasce de golpe com evento de contato, e o choque na parede termina sem retenção. O ganho de 1 chamada a cada 30 passos (em vez de a cada passo) vem do código e do teto de `settles` posto no teste da parede (`<= 600 / 30` na janela de repouso); não há número medido do caso retido.
+
+**Item 11 — custo do `vehicle-hulls-fleet.test.ts` no CI.** `pnpm exec vitest run --shard=i/6` de `game-vehicles-three` nesta máquina (um shard por vez, depois das correções): 51 s, **324 s**, 48 s, 87 s, 44 s, 73 s. O shard 2 é o que leva `vehicle-hulls-fleet.test.ts` (K3 e K4 dos 69 modelos): o arquivo sozinho dura **322 s** e é o piso do shard (o resto do shard roda em paralelo a ele). Com o fator de 1,0 a 1,5 do runner (CONTRIBUTING.md), o shard 2 cai entre 322 s e ~480 s: na borda do `TEST_BUDGET_SECONDS` (480) e sem folga para outro arquivo cair no mesmo bloco por causa do hash.
+**Proposta (não aplicada, fora da lista da revisão; o teste não é afrouxado).** Fatiar o arquivo como o `vehicle-colliders-surface-<n>.test.ts` já faz: `vehicle-hulls-fleet-<n>.test.ts`, 4 fatias, cada uma com os modelos de `fleetVehicleIds` distribuídos em rodízio, nomes dos testes iguais, e a mesma trava de contagem de arquivos do `vehicle-colliders-support.ts`. Cada fatia levaria ~80 s e os 6 shards ficariam abaixo de ~130 s; se preferir uma faixa própria, a alternativa é `SHARDS` de `game-vehicles-three` subir de 6 para 8 depois do fatiamento. Aguarda decisão do dono.

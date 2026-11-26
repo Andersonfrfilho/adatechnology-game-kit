@@ -21,6 +21,18 @@ export interface BodyEntry {
   sliding: boolean
   /** The coefficient Jolt holds for it now (`updateFriction`, `SetFriction`). */
   friction: number
+  /** Its compound once `setChildShape` made it one whose children change, and the handle of each child by current index (handles do not move when another child goes). */
+  mutable?: JoltNS.MutableCompoundShape
+  handles?: number[]
+}
+
+/** The contact points of a body asked for with `watchContacts`: x y z, normal, depth, as many as `POINTS_PER_BODY`, of the step in `step`. */
+export interface WatchedContacts {
+  readonly data: Float32Array
+  n: number
+  step: number
+  /** Its `points` entry was made by watching, so it goes when the watch does. */
+  readonly ownsPoints: boolean
 }
 
 export interface JointEntry {
@@ -45,11 +57,17 @@ export interface RagdollEntry {
 export interface VehicleEntry {
   readonly body: BodyId
   readonly constraint: JoltNS.VehicleConstraint
-  readonly controller: JoltNS.WheeledVehicleController
+  readonly controller: JoltNS.WheeledVehicleController | JoltNS.TrackedVehicleController
+  /** A tracked vehicle reads its input as a forward and one ratio per track. */
+  readonly tracked: boolean
   readonly listener: JoltNS.VehicleConstraintStepListener
   readonly tester: JoltNS.VehicleCollisionTester
   /** How many wheels it was made with: a motorbike has 2, and Jolt must not be asked for a third. */
   readonly wheelCount: number
+  /** Seconds the vehicle has been still with no throttle and no steering (`settleVehicles`). */
+  quietFor: number
+  /** The last `driveVehicle` asked for a throttle or a steer. */
+  driven: boolean
 }
 
 export interface JoltCharacter {

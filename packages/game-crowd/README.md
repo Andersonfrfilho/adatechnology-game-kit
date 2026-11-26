@@ -156,3 +156,7 @@ Measured with `bench/dense-update.mjs` (node, 2000 agents pressed against a wall
 
 The drawing and the test area are in `@adatechnology/game-crowd-three`. The game's multi-floor houses (`ANDARES`) and the roof (`ROOF`) are not ported: the crowd walks one
 ground grid (`floor` is kept on each agent for a game that adds floors).
+
+## Knock down by a car (`knockDown`, spec 008 T6.26)
+
+`crowd.knockDown(i, { x, z })` shoves only agent `i` and asks the balance to make it fall (cause `SHOVE`): it lies, slides with the push and gets up in the `game-crowd` time. Without `physics.balance` it falls back to a one-second stun. It is not the area `blast`. `createRunOver` (`game-vehicles-driving`) calls it in the knock band.

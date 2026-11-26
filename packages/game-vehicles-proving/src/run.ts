@@ -1,7 +1,7 @@
 import { createScheduler } from '@adatechnology/game-runtime'
 import type { Scheduler } from '@adatechnology/game-runtime'
 import { createSemiSimDriver, createSurfaces, semiSpecFromStats } from '@adatechnology/game-vehicles-driving'
-import type { SemiDriver, SemiInput, SemiSimSpec, SurfaceRegistry } from '@adatechnology/game-vehicles-driving'
+import type { SemiDriver, SemiInput, SemiSimSpec, SemiState, SurfaceRegistry } from '@adatechnology/game-vehicles-driving'
 
 import { inRange } from './ranges'
 import type { ProvingMemo, ProvingResult, ProvingSubject, ProvingTest } from './types'
@@ -44,6 +44,30 @@ export interface RunOptions {
   sampleEvery?: number
   /** Fixed step of the simulation (default 1/120 s): the seconds one `stepFixed` step integrates. */
   fixedStep?: number
+}
+
+/** What a measured test's result is made from: shared by the semi-simulation run and the physics-engine run. */
+export interface ResultInput {
+  readonly test: ProvingTest
+  readonly subject: ProvingSubject
+  readonly memo: ProvingMemo
+  readonly trace: ReadonlyArray<[number, number]>
+  readonly done: boolean
+  readonly state: SemiState
+  readonly time: number
+}
+
+export function resultOf({ test, subject, memo, trace, done, state, time }: ResultInput): ProvingResult {
+  const procedure = test.procedure
+  if (!procedure) throw new Error(`resultOf: ${test.id} is not a measured test`)
+  const range = test.range?.(subject) ?? {}
+  const base = { test: test.id, kind: test.kind, unit: test.unit, range, trace: [...trace] }
+  if (!done) return { ...base, verdict: 'pending', value: null, note: 'running' }
+  const value = procedure.value(state, time, memo)
+  const lowered = memo.target > 0 && /_100|_80/.test(test.id) && memo.target < (test.id.includes('80') ? 80 : 100)
+  const note = lowered ? `target ${memo.target} km/h` : undefined
+  if (value == null) return { ...base, verdict: 'fail', value: null, note: `did not finish in ${procedure.maxSeconds} s` }
+  return { ...base, verdict: inRange(value, range) ? 'pass' : 'fail', value, ...(note ? { note } : {}) }
 }
 
 export function startRun(test: ProvingTest, subject: ProvingSubject, options: RunOptions = {}): ProvingRun {
@@ -104,14 +128,7 @@ export function startRun(test: ProvingTest, subject: ProvingSubject, options: Ru
       scheduler.frame(seconds, { exact: true, render: false })
     },
     result() {
-      const range = test.range?.(subject) ?? {}
-      const base = { test: test.id, kind: test.kind, unit: test.unit, range, trace: [...trace] }
-      if (!done) return { ...base, verdict: 'pending', value: null, note: 'running' }
-      const value = procedure.value(driver.state, time, memo)
-      const lowered = memo.target > 0 && /_100|_80/.test(test.id) && memo.target < (test.id.includes('80') ? 80 : 100)
-      const note = lowered ? `target ${memo.target} km/h` : undefined
-      if (value == null) return { ...base, verdict: 'fail', value: null, note: `did not finish in ${procedure.maxSeconds} s` }
-      return { ...base, verdict: inRange(value, range) ? 'pass' : 'fail', value, ...(note ? { note } : {}) }
+      return resultOf({ test, subject, memo, trace, done, state: driver.state, time })
     },
   }
 }

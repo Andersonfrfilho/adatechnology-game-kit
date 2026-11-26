@@ -35,7 +35,11 @@ export type ShapeDesc =
        * became boxes (spec 008 T3.8ag); kept, tested (`game-physics-jolt` `hull-cache.test.ts`), for a host whose compound of hulls is made again often.
        */
       readonly reuseHulls?: boolean
+      /** Children can be replaced, moved and taken out later (`setChildShape`); a compound that is not is still made mutable by its first `setChildShape`. Not with `centreAtOrigin`. */
+      readonly mutable?: boolean
     }
+  /** A compound held by the engine (`createSharedShape`): every body made from it uses the same one, until its first `setChildShape` gives that body a copy of its own. */
+  | { readonly kind: 'shared'; readonly id: SharedShapeId }
 
 /** A rectangle of height field samples: from sample (`x`, `z`), `sizeX` by `sizeZ` of them. */
 export interface HeightRegion {
@@ -55,7 +59,8 @@ export type Layer = 'static' | 'debris' | 'prop' | 'character' | 'agent' | 'vehi
 export const LAYERS: readonly Layer[] = ['static', 'debris', 'prop', 'character', 'agent', 'vehicle', 'sensor', 'corpse']
 
 /**
- * Which layers meet (symmetric). Crowd agents (kinematic, driven by game-crowd) do not meet each other: game-crowd separates them itself. A `corpse` (a dead body of any
+ * Which layers meet (symmetric). Crowd agents (kinematic, driven by game-crowd) do not meet each other: game-crowd separates them itself. They do not meet a `vehicle`
+ * either: a parked car must not stop on a person, and running one over is the host's own query (veiculos.md 7.8), not a contact. A `corpse` (a dead body of any
  * rung of the body LOD) meets the fixed world, debris, props, characters and vehicles, other corpses, and sensors, and not agents: a horde climbing a pile does not shove it.
  */
 export const LAYER_PAIRS: ReadonlyArray<readonly [Layer, Layer]> = [
@@ -63,7 +68,7 @@ export const LAYER_PAIRS: ReadonlyArray<readonly [Layer, Layer]> = [
   ['debris', 'debris'], ['debris', 'prop'], ['debris', 'character'], ['debris', 'vehicle'], ['debris', 'agent'],
   ['prop', 'prop'], ['prop', 'character'], ['prop', 'vehicle'], ['prop', 'agent'],
   ['character', 'character'], ['character', 'vehicle'], ['character', 'agent'],
-  ['vehicle', 'vehicle'], ['vehicle', 'agent'],
+  ['vehicle', 'vehicle'],
   ['sensor', 'debris'], ['sensor', 'prop'], ['sensor', 'character'], ['sensor', 'agent'], ['sensor', 'vehicle'],
   ['corpse', 'static'], ['corpse', 'debris'], ['corpse', 'prop'], ['corpse', 'character'], ['corpse', 'vehicle'], ['corpse', 'sensor'], ['corpse', 'corpse'],
 ]
@@ -192,11 +197,78 @@ export interface WheelDesc {
   readonly driven: boolean
   readonly maxBrakeTorque: number
   readonly maxHandBrakeTorque: number
+  /** Grip along the wheel by slip ratio (0 = rolling, 1 = locked): (slip, grip coefficient) pairs, slip rising. The engine's own curve when omitted. */
+  readonly longitudinalFriction?: Curve
+  /** Grip across the wheel by slip angle in degrees (0 to 90): (angle, grip coefficient) pairs, angle rising. The engine's own curve when omitted. */
+  readonly lateralFriction?: Curve
+  /** Rotational inertia of the wheel and its spin damping (kg m^2, 1/s). */
+  readonly inertia?: number
+  readonly angularDamping?: number
+}
+
+/** A piecewise-linear curve: (x, y) pairs with x rising. */
+export type Curve = ReadonlyArray<readonly [number, number]>
+
+export type VehicleController = 'wheeled' | 'motorcycle' | 'tracked'
+
+/** One differential: the two wheels it drives (indices into `wheels`; `right` -1 for a wheel alone), its gearing and how it shares and holds the torque. */
+export interface DifferentialDesc {
+  readonly left: number
+  readonly right: number
+  /** `differentialRatio` of the vehicle when omitted. */
+  readonly ratio?: number
+  /** How much more torque the wheel with the grip may take than the other (1 = locked together, large = open); the engine's own when omitted. */
+  readonly limitedSlip?: number
+  /** Share of the engine torque this differential takes, against the others' shares (they are normalised). */
+  readonly torqueShare?: number
+}
+
+/** Gearbox timing; each is the engine's own when omitted. */
+export interface TransmissionDesc {
+  readonly shiftUpRpm?: number
+  readonly shiftDownRpm?: number
+  /** Seconds a shift takes, and how long the clutch takes to close after it. */
+  readonly switchTime?: number
+  readonly clutchReleaseTime?: number
+  /** Seconds to wait after a shift before the next one. */
+  readonly switchLatency?: number
+  readonly clutchStrength?: number
+}
+
+/** A motorcycle's lean (`controller: 'motorcycle'`); each is the engine's own when omitted. */
+export interface MotorcycleDesc {
+  /** Rad. */
+  readonly maxLeanAngle?: number
+  readonly leanSpring?: number
+  readonly leanDamping?: number
+}
+
+/** One side of a tracked vehicle: the wheels (indices) the track runs over, the one that drives it, and its grip and brake. */
+export interface TrackDesc {
+  readonly wheels: readonly number[]
+  readonly drivenWheel: number
+  readonly longitudinalFriction?: number
+  readonly lateralFriction?: number
+  readonly maxBrakeTorque?: number
+  readonly differentialRatio?: number
 }
 
 export interface VehicleDesc {
   readonly chassis: BodyDesc
   readonly wheels: readonly WheelDesc[]
+  /** The kind of controller; a car's (`wheeled`) when omitted. `tracked` takes `tracks`, reads `right` as the steer (a pivot at 0 forward) and ignores the wheels' `driven`. */
+  readonly controller?: VehicleController
+  /** The left track (the +x side of the chassis, forward +z and up +y), then the right one. */
+  readonly tracks?: readonly [TrackDesc, TrackDesc]
+  readonly motorcycle?: MotorcycleDesc
+  /** Engine torque by rpm / `maxRpm`, as a fraction of `maxTorque`: (x, y) pairs. The engine's own when omitted. */
+  readonly torqueCurve?: Curve
+  readonly engineInertia?: number
+  /** The engine's own friction (N m s/rad: torque lost per rad/s of its speed); the engine's own value is large (0.2: 85 N m at 4 000 rpm) and takes half the torque of a small engine. */
+  readonly engineDamping?: number
+  readonly transmission?: TransmissionDesc
+  /** One per driven axle, derived from the wheels when omitted. */
+  readonly differentials?: readonly DifferentialDesc[]
   /** Engine torque (N m) and rpm range. */
   readonly maxTorque: number
   readonly minRpm: number
@@ -213,6 +285,56 @@ export interface VehicleInput {
   readonly right: number
   readonly brake: number
   readonly handBrake: number
+}
+
+/** What `applyBuoyancy` needs of the water. */
+export interface FluidDesc {
+  readonly surface: Vec3
+  readonly normal: Vec3
+  readonly buoyancy: number
+  readonly linearDrag: number
+  readonly angularDrag: number
+  readonly flow?: Vec3
+}
+
+/** A shape made once and held by the engine (`createSharedShape`), for bodies that stay whole to share: a parked car's hulls. */
+export type SharedShapeId = number & { readonly __sharedShape: unique symbol }
+
+/** What `readContacts` writes per point: x, y, z of the point (world), the normal (unit, out of the other body, into this one), the penetration depth (m). */
+export const CONTACT_READ_STRIDE = 7
+
+/** Where each reading of a wheel sits in what `vehicleWheels` writes: `WHEEL_READ_STRIDE` numbers per wheel, in the order the wheels were listed. */
+export const WHEEL_READ = {
+  /** 1 when the wheel touches something, else 0. */
+  CONTACT: 0,
+  /** The `BodyId` it stands on, -1 for none. */
+  BODY: 1,
+  /** Rolling angle (rad). */
+  ANGLE: 2,
+  /** Steering angle (rad). */
+  STEER: 3,
+  /** Spin (rad/s). */
+  SPIN: 4,
+  /** Suspension length now (m): between `suspensionMin` and `suspensionMax`. */
+  COMPRESSION: 5,
+  /** Rim speed minus ground speed along the wheel (m/s): a wheel spin or a lock. 0 off the ground. */
+  SLIP_LONGITUDINAL: 6,
+  /** Ground speed across the wheel (m/s). 0 off the ground. */
+  SLIP_LATERAL: 7,
+  /** The three impulses the solver applied in the last step (N s): the spring, the drive and brake along the wheel, the grip across it. */
+  SUSPENSION_IMPULSE: 8,
+  LONGITUDINAL_IMPULSE: 9,
+  LATERAL_IMPULSE: 10,
+} as const
+export const WHEEL_READ_STRIDE = 11
+
+/** A dynamic body's mass properties as the kit holds them: what a part that came off takes from the chassis, what a settled crash moves. */
+export interface MassProperties {
+  readonly mass: number
+  /** Moments about the principal axes of the body's frame (kg m^2). */
+  readonly inertia: Vec3
+  /** The new centre of mass, in the body's frame (the frame of its shape): the body's shape stays where it is in the world. Omit to keep it. */
+  readonly centreOfMass?: Vec3
 }
 
 /**
@@ -385,6 +507,31 @@ export interface PhysicsWorld {
   driveVehicle(id: VehicleId, input: VehicleInput): void
   vehicleBody(id: VehicleId): BodyId
   removeVehicle(id: VehicleId): void
+  /**
+   * Makes the vehicle's constraint again over the same chassis body (a wheel lost, an axle bent): `desc.wheels` and the engine are read, `desc.chassis` is not.
+   * The chassis keeps its pose, speed and shape; a wheel that was there keeps its spin. `removeVehicle` still takes everything.
+   */
+  rebuildVehicle(id: VehicleId, desc: VehicleDesc): void
+  /** What each wheel is doing now, `WHEEL_READ_STRIDE` numbers a wheel (`WHEEL_READ`) into `out`; returns how many wheels. */
+  vehicleWheels(id: VehicleId, out: Float64Array): number
+  /** Holds a shape for bodies to share (`ShapeDesc` `shared`). A compound is the use of it; the engine keeps one copy however many bodies use it. */
+  createSharedShape(shape: ShapeDesc): SharedShapeId
+  /** Lets go of it: bodies already made from it keep it until they go. */
+  releaseSharedShape(id: SharedShapeId): void
+  /**
+   * Replaces child `child` of a compound body (its index in the `children` the body was made with: it does not move when another child goes) by `shape`, put at `pose`
+   * (the child's own if omitted), or takes it out (`null`). A body made from a shared shape gets its own copy first, so the others keep the whole one. The kit's mass and
+   * inertia stay: change them with `setMassProperties`.
+   */
+  setChildShape(id: BodyId, child: number, shape: ShapeDesc | null, pose?: { readonly position: Vec3; readonly rotation?: Quat }): void
+  /** A dynamic body's mass, inertia and (when given) centre of mass from now on. */
+  setMassProperties(id: BodyId, properties: MassProperties): void
+  /** Swept collision (`linearCast`: nothing gets through a thin wall) or the plain kind: a fast car, a fast part, a plane. */
+  setMotionQuality(id: BodyId, quality: 'discrete' | 'linearCast'): void
+  /** From the next step the body's contact points are kept with their normal and depth (`readContacts`); off again when it stops being watched. */
+  watchContacts(id: BodyId, on: boolean): void
+  /** The watched body's contact points of the last step (`CONTACT_READ_STRIDE` numbers each) into `out`; returns how many points (at most what `out` holds). */
+  readContacts(id: BodyId, out: Float32Array): number
   createCharacter(desc: CharacterDesc): CharacterId
   /**
    * Walks it for one fixed step `dt` at the wanted horizontal velocity (m/s, world x and z; 0 stands still) plus what `pushCharacter` gave it. The caller
@@ -400,6 +547,12 @@ export interface PhysicsWorld {
   /** Whether the feet stand on something. */
   characterSupported(id: CharacterId): boolean
   removeCharacter(id: CharacterId): void
+  /**
+   * Floats a body in a fluid for one fixed step: call it in a `beforeStep` while it is in the water. `surface` is a point of the water plane, `normal` its up; `buoyancy`
+   * is 1 for a body that floats with its density equal to the water's, more for lighter; the drags slow it through the water; `flow` is the water's own velocity.
+   * Returns false when nothing of the body is below the surface.
+   */
+  applyBuoyancy(id: BodyId, fluid: FluidDesc): boolean
   /** How many of the vehicle's wheels touch the ground now (a car with none is airborne: its sleep rule reads this). */
   wheelContacts(id: VehicleId): number
   /** Every hit along the ray, nearest first, into `out` (cleared); returns the count. */

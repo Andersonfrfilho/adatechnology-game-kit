@@ -8,7 +8,10 @@ export type Jolt = typeof JoltNS
 /** Object layers: the contract's layers, plus one the queries run as (meets everything but sensors). */
 export const LAYER_INDEX = new Map<Layer, number>(LAYERS.map((layer, i) => [layer, i]))
 export const QUERY_LAYER = LAYERS.length
-export const NUM_OBJECT_LAYERS = LAYERS.length + 1
+/** The layer a vehicle's wheel probes run as: it meets what a wheel can stand on and not people, dead bodies or sensors. */
+export const WHEEL_PROBE_LAYER = LAYERS.length + 1
+export const WHEEL_BLIND_LAYERS: readonly string[] = ['agent', 'corpse', 'sensor']
+export const NUM_OBJECT_LAYERS = LAYERS.length + 2
 /** Broadphase layers: what does not move, what moves, and the crowd agents (many, kinematic, moved every frame). */
 export const BP_STATIC = 0
 export const BP_MOVING = 1
@@ -27,3 +30,7 @@ export const POINTS_PER_BODY = 16
 export const NO_TAG = 0xffffffff
 
 export const layerOf = (layer: Layer): number => LAYER_INDEX.get(layer) ?? 0
+
+/** Jolt's own sleep speed (m/s) and sleep time (s), for a world that does not say. */
+export const DEFAULT_SLEEP_SPEED = 0.03
+export const DEFAULT_SLEEP_AFTER = 0.5

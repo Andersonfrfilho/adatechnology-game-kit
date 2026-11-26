@@ -32,6 +32,7 @@ import { engineBayVent } from '../engine-smoke'
 import { buildVehicleModel, kindOf, type JointDef, type PartDef, type PartRole, type VehicleModel } from './model'
 import type { CreaseQueue } from './crease-queue'
 import { VehicleVisuals } from './visual'
+import type { PartSink } from './visual'
 import { createVehicleClips } from './clips'
 import { raycastMeshesLikeThree } from '../tri-index'
 
@@ -128,6 +129,8 @@ export interface VehicleDestructible extends DestructibleImpl {
   rollFlat(meters: number, speed: number): number
   /** Pushes the drawn body in by `depth` metres around `point` (world), along `direction`: the crumple of a crash. Drawing only. */
   crumple(point: Vec3, direction: Vec3, depth: number): void
+  /** Takes the parts that come off in place of the ballistic fling (a physics engine makes them bodies); `null` gives the fling back. Does nothing on a headless vehicle. */
+  setPartSink(sink: PartSink | null): void
 }
 
 export type DriveReport = {
@@ -1446,6 +1449,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       return d ? toWorld(d.box.center) : [0, 0, 0]
     },
     rollover,
+    setPartSink: (sink) => {
+      if (vis) vis.sink = sink
+    },
     detachedParts: () =>
       [...ps.values()]
         .filter((p) => (!p.lost && !attached(p.def.id)) || (p.lost && p.def.visual && js.some((j) => j.open && j.def.a === p.def.id)))

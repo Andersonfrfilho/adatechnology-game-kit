@@ -54,3 +54,7 @@ Como a categoria de base (carro, caminhão), com blindagem `III` ou maior, vidro
 - Peça que abre leva tudo o que está desenhado nela.
 - Nada de cubo, esfera ou placa solta saindo da forma do veículo (o compressor do v8 virou uma bola por um erro de escala, a placa sob o para-brisa aparecia por dentro).
 - Cada modelo novo passa pelo teste de aceitação da frota e ganha linha em `veiculos-verificacao.md`, com print no jogo real, fechado e com a porta aberta.
+
+## Peças soltas no motor (spec 008, T6.9)
+
+No modo do motor físico (`createCrashParts`), toda peça da tabela que sai vira corpo com os cascos, a massa (`PartDef.mass`) e a inércia da caixa dela; o chassi perde essa massa. Roda e lâmpada sem casco usam a caixa desenhada, e o interior ainda não solta (spec 009). A marca de tiro e o vidro continuam filhos da peça.

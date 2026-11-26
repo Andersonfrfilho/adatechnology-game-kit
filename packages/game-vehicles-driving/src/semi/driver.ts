@@ -8,19 +8,19 @@ import type { SemiEvent, SemiInput, SemiSimSpec, SemiState, SemiWorld, VehicleCo
 const G = 9.81
 const clamp = (x: number, a: number, b: number): number => Math.max(a, Math.min(b, x))
 const MAX_SUBSTEP = 1 / 240
-const FLAT_BELOW = 0.2
+export const FLAT_BELOW = 0.2
 /**
  * A wheel without its tyre (chosen by the physics of a bare rim on asphalt): the rim is about seven tenths of the wheel's radius (the sidewall is gone),
  * steel or aluminium sliding on asphalt holds about 0.4 of the load (rubber 1.05), and the flange gouging the road drags like a coefficient of 0.25
  * against the 0.015 of a tyre: the corner drops, grips less and brakes, so the car pulls to that side and loses speed. A flat tyre sags this much, metres,
  * and drags six times a whole one.
  */
-const RIM_RADIUS_SHARE = 0.7
-const RIM_FRICTION = 0.4
+export const RIM_RADIUS_SHARE = 0.7
+export const RIM_FRICTION = 0.4
 const RIM_ROLLING = 0.25
-const FLAT_SAG = 0.05
+export const FLAT_SAG = 0.05
 const FLAT_ROLLING = 6
-const STALL_HEALTH = 0.3
+export const STALL_HEALTH = 0.3
 /** Clutch: engaged past this share it drags the engine; below this share of the idle, with less gas than `STALL_GAS`, the engine dies. */
 const CLUTCH_BITE = 0.7
 const STALL_RPM = 0.5
@@ -72,7 +72,7 @@ export interface SemiDriver extends Omit<Driver, 'step' | 'state'> {
   step(input: SemiInput, dt: number, world?: SemiWorld): { state: SemiState; events: SemiEvent[] }
 }
 
-const torqueAt = (spec: SemiSimSpec, rpm: number): number => {
+export const torqueAt = (spec: SemiSimSpec, rpm: number): number => {
   const e = spec.engine
   if (rpm >= e.redlineRpm) return 0
   const t = rpm <= e.peakRpm ? 0.7 + 0.3 * clamp((rpm - e.idleRpm) / (e.peakRpm - e.idleRpm), 0, 1) : 1 - 0.4 * ((rpm - e.peakRpm) / (e.redlineRpm - e.peakRpm))

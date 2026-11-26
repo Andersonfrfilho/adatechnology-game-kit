@@ -71,3 +71,6 @@ Rodar: `pnpm --filter @adatechnology/game-vehicles-fleet test` (demora, uns 2 mi
 - V2: entra o que o artefato da garagem tem e o SDK não tem (frotas de aviões, barcos, helicópteros, militares); a comparação a fundo vem primeiro.
 - V5: módulos de teste de veículos (8 itens, 11 cenários) em `examples/vehicles-test-area`.
 - Linha da horda e sangue vão para o repositório do jogo; `game-crowd` (P12) cuida da multidão.
+
+## Eixos, esteiras e aceleração com fonte (spec 008)
+`fleetWheelLayout(id)` (eixos e esteiras do modelo, `wheel-layouts.json`) e `FLEET_ACCELERATION_SOURCES` (0-100 real e fonte por modelo). Aceitação do §7 com o motor e os cascos (T6.12): tiro no desenhado, marca com a peça, vidro é peça de vidro, goldens iguais (1 478 testes).

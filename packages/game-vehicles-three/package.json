@@ -35,6 +35,10 @@
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js"
     },
+    "./worker-kinds": {
+      "types": "./dist/worker-kinds.d.ts",
+      "import": "./dist/worker-kinds.js"
+    },
     "./global": "./dist/index.global.js"
   },
   "files": [
@@ -43,12 +47,14 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cost": "mkdir -p ~/.cache/adatechnology-game-kit && HULLS_COST=1 flock ~/.cache/adatechnology-game-kit/perf-measure.lock vitest run tests/vehicle-hulls-fleet.test.ts"
   },
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",
     "@adatechnology/game-camera": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
     "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
@@ -59,7 +65,9 @@
   },
   "devDependencies": {
     "@adatechnology/game-kit-defaults": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
+    "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

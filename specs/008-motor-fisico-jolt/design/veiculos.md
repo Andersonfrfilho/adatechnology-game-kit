@@ -294,7 +294,7 @@ interface VehicleLattice {                      // game-vehicles: o reticulado e
 | `setMassProperties(id, { mass, inertia, centreOfMass })` | peça que solta tira a sua massa, inércia e centro de massa do chassi (11); o reticulado assentado move o centro de massa (4.2, item 5) |
 | `setMotionQuality(id, 'discrete' \| 'linearCast')` | CCD do carro rápido, da peça solta rápida e do avião |
 | `watchContacts(id, on)` | liga os pontos de contato mantidos (com normal e penetração) só para o veículo que bate (custo só enquanto observado) |
-| camadas: tirar o par `vehicle`–`agent` de `LAYER_PAIRS`; camada `ragdoll` separada de `prop`; testador das rodas numa camada que não encontra `agent` nem `ragdoll` | atropelar (7.8) e carro estacionado (10.4); muda o §6 da `arquitetura.md` |
+| camadas: tirar o par `vehicle`–`agent` de `LAYER_PAIRS`; camada `corpse` separada de `prop` (a mesma que a Fase 5 criou; este desenho a chamava `ragdoll`); testador das rodas numa camada que não encontra `agent` nem `ragdoll` | atropelar (7.8) e carro estacionado (10.4); muda o §6 da `arquitetura.md` |
 | `vehicleWheels(id, out)` | por roda: contato, corpo e `tag` do chão, ângulo, giro, compressão, deslizamento e os três *lambdas* (impulso das rodas, 4.2; sono, 7.7; som e marcas de pneu) |
 | `rebuildVehicle(id, desc)` | recria a constraint sobre o **mesmo** corpo (roda perdida, alinhamento torto); `removeVehicle` continua tirando tudo |
 | `applyBuoyancy(id, surface, normal, buoyancy, linearDrag, angularDrag, flow)` | barco e anfíbio (`ApplyBuoyancyImpulse`, 3.1) |
@@ -421,17 +421,42 @@ longe. Não são apagados.
 
 ## 10. Cascos convexos: construção, reconstrução e o novo aceite
 
-### 10.1 Construção
+### 10.1 Construção (método B, decisão do dono em 2026-11-26, proposta do `architect`)
 
-Porta a montagem incremental da T3.0b (`createVehicleColliders`: triângulos de cada malha por parte × célula, estável por chave,
-refaz só o que mudou): no lugar dos triângulos, cada peça vira um casco convexo dos seus vértices desenhados (≤ 64 pontos, escolhidos por
-extremos em 26 direções mais os mais distantes, sempre vértices desenhados), raio convexo 0 (`mMaxConvexRadius = 0`, para não inchar).
+Porta a montagem incremental da T3.0b (`createVehicleColliders`: triângulos de cada malha por parte × célula de 0,8 m, estável por chave,
+refaz só o que mudou): no lugar dos triângulos, **cada pedaço da T3.0b (peça × célula) vira um casco convexo** dos seus vértices desenhados,
+com no máximo 64 pontos por `reducePoints` (que sempre inclui o extremo de cada uma das 26 direções) e raio convexo 0
+(`mMaxConvexRadius = 0`, para não inchar).
 
-- **Célula dividida pela concavidade, não só pela distância**: célula de partida maior que a da T3.0b (1,6 m); enquanto o casco da célula
-  passar mais de 3 cm do desenhado (distância da face do casco à casca desenhada, para dentro), a célula é cortada ao meio no eixo mais longo.
-  Painel plano fica num casco só; para-lama com caixa de roda vira vários.
-- **Casco fino é extrudado para dentro até 3 cm, nunca para fora**: pontos desenhados copiados ao longo da normal interna; mantém H2 e evita
-  atravessar chapa fina.
+- **Peça sólida** (`SOLID_ROLES` menos as rodas: lâmpada, retrovisor, motor, radiador, tanque, cárter, bateria, alternador, câmbio, direção,
+  engate) é **um casco inteiro**, de todos os pedaços dela.
+- **Roda, pneu, freio e amortecedor ficam fora do composto do chassi**: a roda é do `VehicleConstraint` (T6.1b; o adaptador monta o chassi só
+  com os cascos que recebe e as rodas só pelos descritores de roda).
+- **Pedaço plano** (mais fino que 2 × `FLAT_PAD` ao longo da normal) ganha 2,5 mm (`FLAT_PAD`, `vehicle-hulls.ts`; a metade do `MIN_HALF` de 5 mm de `collider-fit.ts`) de cada lado: um casco sem
+  volume não é forma. Os pontos copiados são os únicos que não são vértices desenhados.
+- **Sem extrusão para dentro e sem corte por concavidade** (saem a célula de 1,6 m cortada por 3 cm/1 cm, a extrusão de 3 cm e o corte pelo
+  vão da primeira versão da T6.4).
+- **Saliências finas saem do pedaço** (decisão do dono em 2026-11-26; `hull-split.ts`). Uma saliência é fina (antena, limpador, haste de
+  maçaneta, estribo) quando o casco dela tem no máximo 200 cm³ (`THIN_VOLUME`) e ela passa do corpo do pedaço em mais de 3 cm
+  (`PROTRUSION_REACH`), de um destes dois jeitos: (a) é uma parte conectada do pedaço (cantos soldados a 0,1 mm) de seção fina (os dois
+  lados menores da caixa ≤ 8 cm) que passa da caixa do que não é fino; (b) está soldada ao corpo e seus triângulos são a **cauda** do
+  pedaço (centro a mais de 3 cm além do ponto que guarda 99% da área, em qualquer dos seis eixos). A saliência só sai se ela **esticar** o
+  casco do resto em mais de 40 cm² de superfície flutuante (`FLOATING_AREA`). Ganha o casco dela (chave `peça#célula~n`, n = o primeiro
+  triângulo) e **não estica o casco do corpo**. A peça que já é própria (retrovisor, farol, motor: peça sólida) segue com o casco dela.
+  O K2 vale por casco, contra os vértices de que ele saiu: o extremo da peça continua o desenhado.
+- **Divisão adaptativa** (`hull-plan.ts`): cada pedaço começa com um casco; enquanto algum casco ainda flutua mais de 40 cm² (K3 local:
+  amostras das faces do casco sem nenhum triângulo desenhado do pedaço a menos de 5 cm, `hull-excess.ts`), o que mais flutua (empate:
+  o primeiro da lista) primeiro devolve as saliências que o esticam e depois é cortado **ao meio do maior lado** (a caixa dos centros dos
+  triângulos), até nenhum passar, nenhum poder ser cortado (< 5 cm) ou o modelo chegar ao teto da classe do K7 (`maxHulls`; as peças
+  sólidas contam). **O carro intacto congela o plano** (os cortes e as saliências tiradas, por pedaço); no dano, o pedaço refaz os mesmos
+  cortes sobre os vértices novos e as alças (chaves) ficam as mesmas.
+- **Corte que piora o K4: tentado, não entra** (decisão do coordenador em 2026-11-26 depois do `v8_coupe`, +3 esferas do K4; medidas em `evidence.md`
+  `## T6.4`, "Fechamento"). A regra feita foi a pedida: o K4 local de um casco é a área das suas faces sem triângulo desenhado a menos de 3 cm, sem
+  contar a que cai dentro do casco do vizinho do corte; o corte cuja soma nas duas metades passa a do casco cortado é recusado. **A catraca do K4 e a
+  do K3 não fecham com ela**: recusar um corte devolve o teto de cascos a outros cortes e muda a ordem do resto do plano, e as catracas são contagens
+  exatas por modelo e por lado, que sobem e descem em dezenas a milhares de esferas com qualquer mudança do plano (a versão que recusa na hora reprova 71
+  testes de catraca dos 69 modelos). Desfazer o corte depois do plano (sem devolver o teto) não mexe nos outros modelos, mas também não tira as 3 esferas do `v8_coupe`.
+
 Casco é a peça **fina** (painel, assoalho, teto, vidro), nunca o volume da cabine: o interior fica oco e um banco solto cai sobre o assoalho
 e sai pela porta que não está mais lá (seção 11).
 
@@ -448,45 +473,102 @@ depois que o amassado de nível 2 assenta, com a regra da 10.5)
   é física e entra no determinismo (17).
 - O carro que nasce enche os cascos em fila (~40 cascos × 40 µs ≈ 1,6 ms, espalhados por alguns quadros): some o 1,5 s da T3.0b.
 
-### 10.3 Novo aceite (substitui a regra de 1 cm da T3.0b para veículos)
+### 10.3 Novo aceite K1–K7 (decisão do dono em 2026-11-26; substitui H1–H6 e a regra de 1 cm da T3.0b para veículos)
 
 A regra de 1 cm da T3.0b media triângulos de colisão contra triângulos desenhados. Com cascos convexos, "a menos de 1 cm" não serve: o casco
 de uma porta curva preenche o espaço entre a curva e a corda, que fica **dentro** do carro. E "cobrir X% do volume" também não serve para
-chapa: um painel de 1 mm não tem volume. Proposta:
+chapa: um painel de 1 mm não tem volume. O rodador é o de `tests/vehicle-hulls-support.ts`: 26 direções, grade de 5 cm, mapa de profundidade
+de 1 cm; a "esfera" é o primeiro toque de uma bola de r = 10 cm sobre esse mapa. Vale nos 69 modelos.
 
-| # | Regra | Valor | Por quê |
+| # | Regra | Valor |
+|---|---|---|
+| K1 | O tiro acerta o desenhado (`surfaceRay`); o casco só acha candidatos | sempre |
+| K2 | Encosto exato: para cada peça e cada uma das 26 direções, o extremo dos cascos dela é o extremo dos vértices desenhados dela | ≤ 1 mm (o casco de um pedaço plano pode passar os 2,5 mm do `FLAT_PAD`) |
+| K3 | §12: nenhuma esfera toca casco sem tocar o desenhado com raio r + 3 cm | catraca por grupo, só diminui (10.3.1; a regra pede 0) |
+| K4 | Excesso para fora: esferas com o casco mais de 3 cm à frente do desenhado, relatadas por grupo (de baixo, de cima, lateral) | ≤ o medido na frota no merge, e só pode diminuir (catraca gravada, como a do §13) |
+| K5 | Não afunda: esferas com o casco mais de 5 cm atrás do desenhado, ou sem casco | ≤ 1% por modelo |
+| K6 | Peça sólida: um casco, só de vértices desenhados; rodas fora do chassi | teste |
+| K7 | Teto: ≤ 64 pontos por casco; moto 64, carro/SUV/picape 256, **van 300** (era 256) e **`heavy` 550** (era 384): decisão do dono em 2026-11-26, o medido arredondado; as demais classes medidas. **Tempo de nascer** (decisão do dono em 2026-11-26, no lugar de "construção do modelo ≤ 100 ms"): o segundo carro do mesmo modelo recebe os cascos em **≤ 2 ms** (cache por modelo, 10.4b) e o primeiro não bloqueia o quadro (o plano roda no worker, `vehicles.hull-plan`); medido na faixa de custo, sob a trava, com carga < 4. 12 modelos distintos ≤ 64 MB | teste |
+
+**H1–H6 ficam substituídos** (histórico, não apagado): H1 virou K1; H2 (≤ 1 cm para fora) e H3 (≥ 95% de cobertura entre 3 cm antes e 1 cm
+depois) viraram K3, K4 e K5 por esfera, porque o raio de 5 cm do desenho media saliência fina e não o que um objeto do tamanho de um punho
+encontra; H4 (nenhum casco sem desenho) virou K3; H5 (volume de peça sólida) virou K6; H6 (teto) virou K7. A primeira versão da T6.4 (corte por
+concavidade, 1 172 a 1 401 cascos por carro) não passava H2 e H3 e pesava 83 MB nos 12 modelos da T6.21: ver `evidence.md` `## T6.4`.
+
+**Tetos antigos (H6, estimativa da T3.0b, e a medida da primeira versão):** moto e bicicleta 32 (medido 200) · carro, SUV, picape, van 96
+(medido 1 450) · caminhão 160 · ônibus 192 (medido 2 000) · trator 96 · blindado 96 · avião leve 128 · helicóptero 96 · barco 64–192. Os
+tetos do método B (K7) são medidos na T6.4, `evidence.md` `## T6.4`, "Método B".
+
+#### 10.3.1 Exceção ao §12 para o K3 (decisão do dono em 2026-11-26)
+
+O §12 do kit ("nada colide sem desenho") pede 0. Para veículo, **dentro dos tetos de casco do K7**, o casco convexo de uma peça côncava pode
+encostar em esferas que não tocam o desenhado, **por grupo de direção** (de baixo, de cima, lateral) e **só diminuindo**: a catraca é
+`tests/fixtures/hull-floating-ledger.json` (esferas por modelo e por grupo, o mesmo formato da do K4, baixada com `UPDATE_HULL_EXCESS=1`,
+nunca subida). Medido na T6.4 depois das saliências e da divisão (parte das esferas que tocam o desenhado, em todas as direções; o
+pior modelo de cada classe; `evidence.md` `## T6.4`, "Saliências e divisão"; as linhas da van e do `heavy` foram refeitas em 2026-11-26 com os tetos 300 e 550, "Fechamento"):
+
+| Classe | de cima | de baixo | lateral |
 |---|---|---|---|
-| H1 | **O tiro acerta o desenhado** | o acerto final é sempre `surfaceRay` na malha desenhada (deformada); o casco só acha candidatos | §7; nunca muda |
-| H2 | **Nenhum casco passa do desenhado para fora** | todo ponto amostrado das faces do casco que está **fora** do corpo desenhado fecha a ≤ **1 cm** dele (raios de fora para dentro) | é o que dava "tiro no ar acima do capô acertava o carro"; destroço não pode pousar no ar sobre o teto |
-| H3 | **Cobertura por raio** | raios de fora numa grade de 5 cm, de 26 direções: dos que acertam a casca desenhada, ≥ **95%** acertam um casco entre 3 cm antes e 1 cm depois do ponto desenhado | 5% é o que fica nas saliências finas (antena, palheta, maçaneta, haste do retrovisor, escape); essas não seguram destroço e a diferença é ≤ 3 cm na tela. 99% exigiria cascos por maçaneta (o dobro de cascos por carro) |
-| H4 | **Nenhum casco sem desenho** | dos raios que **erram** a casca desenhada, 100% erram os cascos, com folga de 1 cm | §12: nada invisível colide |
-| H5 | **Peça sólida** (bloco, bateria, banco, roda, tanque) | volume do casco ≥ **90%** do volume fechado desenhado e ≤ volume + 1 cm de pele | peça sólida tem volume que importa para empilhar e cair |
-| H6 | **Teto de custo** | ≤ 64 pontos por casco; cascos por veículo ≤ o teto da classe abaixo | a T3.0b mediu, com células de 80 cm, sedã 192 peças, carros 118–255, `city_bus` 559: 64 era errado. Com célula de 1,6 m dividida por concavidade, estimativa ~⅓–½ disso |
+| carro | até 6,7% | até 9,4% | até 3,3% |
+| SUV | 8,2% | 10,4% | 3,4% |
+| picape | 10,4% | 21,0% | 9,5% |
+| van | 5,3% | 6,9% | 2,4% |
+| `heavy` | 8,8% | 11,0% | 5,6% |
+| moto e bicicleta | 9,0% | 8,6% | 6,0% |
+| trator | 7,0% | 14,6% | 9,8% |
+| militar | 8,4% | 12,7% | 6,4% |
+| aéreo | 7,4% | 8,6% | 4,6% |
+| barco | 14,3% | 10,6% | 16,0% |
 
-**Teto de cascos por classe** (estimado da contagem da T3.0b com células mais grossas; a T6.4 mede e o número medido substitui este):
-moto e bicicleta 32 · carro, SUV, picape, van 96 · caminhão 160 · ônibus 192 · trator 96 · blindado 96 · avião leve 128 · turbo-hélice e jato
-leve 192 · helicóptero 96 · barco pequeno 64 · barco grande 192. A T6.0b mede o custo de contato e de `LinearCast` de um
-`MutableCompoundShape` com 96 e 192 filhos (a forma mutável **não tem árvore**: o teste de contato é linear nos filhos); se pesar, o composto
-volta a ser `StaticCompoundShape` (com árvore) assim que o carro assenta, e o mutável só existe durante a batida.
+Sem o teto de casco o mesmo algoritmo leva o `family_hatch` a 1,1% (1 678 cascos): **o que sobra do K3 é o preço do teto do K7**, não do
+método. Quem quiser menos esfera flutuando sobe o teto da classe (decisão do dono) ou reduz o desenho (menos vincos e nervuras).
 
-Medido na frota inteira (69 modelos), intactos e depois de três batidas de referência (seção 18). O colisor de triângulos da T3.0b sai do
-caminho da física de veículos; a montagem incremental dela fica (é a entrada dos cascos).
+A T6.0b mede o custo de contato e de `LinearCast` de um `MutableCompoundShape` com 96 e 192 filhos (a forma mutável **não tem árvore**: o
+teste de contato é linear nos filhos); se pesar, o composto volta a ser `StaticCompoundShape` (com árvore) assim que o carro assenta, e o
+mutável só existe durante a batida.
 
 ### 10.4 Carro estacionado: guardas (D3)
 
 - **Cópia na escrita**: todos os carros intactos do mesmo modelo e estado dividem **o mesmo** composto imutável (forma do Jolt com contagem de
   referência; uma por modelo). Um carro ganha o seu `MutableCompoundShape` só no **primeiro dano**.
-- **Memória**: estimativa de ~250 KB por carro com cascos próprios; 200 carros sem compartilhar = ~50 MB, 39% do heap fixo de 128 MB (o C9 limita
+- **Memória** (medido na T6.21: 5,46 KB por casco de 64 pontos no pior caso; a cópia do dano de 20 carros custou 0,11 MB, o Jolt copia a lista de filhos e não os cascos): estimativa de ~250 KB por carro com cascos próprios; 200 carros sem compartilhar = ~50 MB, 39% do heap fixo de 128 MB (o C9 limita
   o pico a 50%). Teste de heap com **200 carros estacionados** (compartilhados, mais 20 danificados) exige pico ≤ 64 MB e volta ao mesmo byte.
 - **Sem `VehicleConstraint` estacionado**: entra preguiçosa por `rebuildVehicle` quando alguém dirige ou o trânsito ativa o carro.
 - **Nenhum agente encontra carro** (7.8): o par `vehicle`–`agent` sai; o carro é obstáculo de navegação do `game-crowd`.
 - **Variante do B6**: cascata de 500 com 20 carros estacionados dentro da ilha do blast; mesmo aceite do B6.
 - **Filhos por alça**: `tag` ou alça estável; `RemoveShape` desloca os índices seguintes (`types.d.ts:1147`).
 
+### 10.4b Cache por modelo e plano no worker (decisão do dono em 2026-11-26)
+
+O plano de cascos do carro **intacto** é o mesmo para todo carro do mesmo modelo: o que custa (a divisão adaptativa, `planDivision`: 140 a 1 000
+ms por modelo) se faz **uma vez por modelo**.
+
+- **Chave do modelo**: a identidade do modelo e da semente que o `game-vehicles-fleet` usa para desenhar: a chave do veículo, a `seedKey`
+  (`spec.seedKey || key`, de que sai `strHash(seedKey + estado)`) e o estado de construção; mais o teto de cascos. Vem do `VehicleContext`
+  (`options.planKey` sobrescreve). Antes de reaproveitar, confere a assinatura: nomes e número de vértices de cada pedaço; se não bate o carro faz o seu.
+- **O que se guarda** (`HullPlanCache`, `hull-plan-cache.ts`): o plano (cortes e saliências tiradas), os cascos de cada pedaço (os mesmos objetos
+  para todo carro: o adaptador do Jolt compartilha a forma por identidade dos pontos, 10.4) e os cascos das peças sólidas. **Só carro intacto dá
+  e recebe**: vértice amassado ou peça que saiu tira o carro do cache; o dano refaz só o pedaço tocado, com os cortes do plano, e **nunca
+  mexe no que os outros carros têm**. O cache solta tudo no `dispose` (§8) e depois dele nada entra.
+- **Primeiro plano no coordenador** (CLAUDE.md §14, `specs/regras/14-workers.md`): categoria `vehicles.hull-plan` (`hull-plan-kind.ts`, entrada
+  `@adatechnology/game-vehicles-three/worker-kinds`, três-livre), faixa `build`, prioridade 120, regra de atraso `keep-waiting`, sem prazo em quadros.
+  Não é `sim`: a faixa `sim` roda o kernel no quadro principal quando o worker atrasa, e o plano pesa centenas de ms. **Kernel puro**: `planHulls(job)`
+  lê só os pedaços do carro intacto (vértices e índices) e o teto, e devolve dados simples (cortes, saliências, cascos com os pontos em `Float32Array`
+  e os vértices desenhados em `Float64Array`, os `ArrayBuffer` transferidos de volta). Sem worker, ou com o worker em falha, `planHulls` roda no
+  quadro principal com o mesmo código e dá os **mesmos bytes** (teste de equivalência: `checkTaskKind` no quadro principal, no worker na mesma
+  thread e em `worker_threads`, e o carro inteiro). Dois carros do mesmo modelo que nascem juntos mandam um plano só.
+- **Enquanto o plano não chega**, `hulls()` devolve vazio, `isHullPending()` é verdadeiro e o carro usa o colisor da T3.0b (`pieces()`: caixas por
+  pedaço). **A troca é num passo fixo**: o plano que voltou só entra na chamada seguinte de `hulls()`, que o adaptador faz dentro do passo fixo; com a
+  regra de contato da 10.5 a troca não faz salto (os cascos novos entram como cascos refeitos: para dentro livre, para fora até o *slop*).
+- **K7 de tempo**: o segundo carro do modelo ≤ 2 ms (só `make()` e achar o plano no cache); o primeiro não bloqueia o quadro porque a divisão está
+  no worker, e o que fica no quadro (montar a entrada e mandá-la) é medido e registrado em `evidence.md` `## T6.4`.
+- **Aquecer** (CLAUDE.md §14): o jogo chama `warm([hullPlanKind])` antes do primeiro carro; sem isso o primeiro plano espera o worker subir.
+
 ### 10.5 Cascos contra contatos que estão acontecendo
 
 Enquanto a parte de um casco toca algo (o `tag` aparece nos pontos de contato do passo), a reconstrução pode mover os pontos **para dentro**
-livremente e **para fora** no máximo o *slop* de penetração (2 mm, `KIT_WORLD`); o resto do movimento para fora espera o contato acabar. Assim
+livremente e **para fora** no máximo o *slop* de penetração (2 mm, `KIT_WORLD`); o resto do movimento para fora espera o contato acabar.
+A regra vale por pedaço (um casco por pedaço, método B). Assim
 um casco refeito não empurra o que está encostado (energia criada). Teste com a régua do C1: carro amassado encostado numa parede, cascos
 refeitos, energia da ilha não sobe mais que `m·g·1 mm`.
 
@@ -868,7 +950,7 @@ Decididas em 2026-11-14:
 
 Recomendação do `architect` já incorporada (o dono confirma):
 
-- **D2 — Vagas e determinismo.** N fixo na sessão pela qualidade escolhida; a medida do boot só sugere a qualidade padrão; prioridade pela
+- **D2 — Vagas e determinismo. Confirmada pelo dono em 2026-11-26; emenda do C8 gravada no `spec.md` (T6.20).** N fixo na sessão pela qualidade escolhida; a medida do boot só sugere a qualidade padrão; prioridade pela
   distância ao jogador, nunca a câmera; replays gravam as decisões; emenda do C8 como task própria (T6.20); lockstep excluído.
 - **D3 — Carro estacionado dinâmico dormindo**, só com as guardas da 10.4.
 - **D9 — `game-deform`**: porque é puro, sem dependências, e serve a props que não são veículo (não pelo tamanho do `world.ts`); dono

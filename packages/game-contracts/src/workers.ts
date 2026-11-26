@@ -163,6 +163,7 @@ export const WORKER_KIND_ID = {
   STATIC_COLLIDERS: 'destruction.static-colliders',
   SHAPES_GENERATE: 'shapes.generate',
   WORLD_REGION: 'world.region',
+  VEHICLE_HULL_PLAN: 'vehicles.hull-plan',
 } as const
 
 /** Default schedule of the kit's kinds; each kind carries its own copy, a game overrides any of them by id. */
@@ -173,6 +174,7 @@ export const WORKER_KIND_DEFAULTS = {
   [WORKER_KIND_ID.STATIC_COLLIDERS]: { lane: 'build', priority: 150, late: 'sync' },
   [WORKER_KIND_ID.SHAPES_GENERATE]: { lane: 'build', priority: 100, late: 'sync' },
   [WORKER_KIND_ID.WORLD_REGION]: { lane: 'background', priority: 10, latencyFrames: 10, late: 'drop' },
+  [WORKER_KIND_ID.VEHICLE_HULL_PLAN]: { lane: 'build', priority: 120, late: 'keep-waiting' },
 } as const satisfies Readonly<Record<string, WorkerKindSchedule>>
 
 /** The name of the error an awaited job with a transferred input (`transferAwaitedInput`) rejects with when its worker died holding it. */

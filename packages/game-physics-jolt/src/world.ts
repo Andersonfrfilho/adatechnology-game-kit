@@ -6,9 +6,11 @@ import type {
   BodyId,
   CharacterDesc,
   CharacterId,
+  FluidDesc,
   HeightRegion,
   JointDesc,
   JointId,
+  MassProperties,
   Material,
   PhysicsWorld,
   QueryFilter,
@@ -19,6 +21,7 @@ import type {
   Rolling,
   SensorEvent,
   ShapeDesc,
+  SharedShapeId,
   Vec3,
   VehicleDesc,
   VehicleId,
@@ -28,11 +31,11 @@ import type {
 
 import { createCharacter } from './character'
 import { updateHeights } from './heights'
-import { BP_AGENT, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, layerOf } from './constants'
+import { BP_AGENT, DEFAULT_SLEEP_AFTER, DEFAULT_SLEEP_SPEED, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
 import type { Jolt } from './constants'
 import { Contacts } from './contact-rows'
 import { makeListener } from './contacts'
-import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
+import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry, WatchedContacts } from './entries'
 import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, releaseGroup, removeJoint, removeRagdoll } from './joints'
 import { contactBodies, overlapShape, overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
@@ -44,7 +47,10 @@ import { checkVec3Layout, vec3At } from './vec3'
 import { SINGLE_THREAD } from './threading'
 import type { JoltThreading } from './threading'
 import type { JoltWorldHost } from './world-host'
-import { createVehicle, driveVehicle, removeVehicle, vehicleBody, wheelContacts } from './vehicles'
+import { moveCentreOfMass, createSharedShape, releaseSharedShape, setChildShape } from './shared-shapes'
+import { applyBuoyancy } from './buoyancy'
+import { createVehicle, driveVehicle, rebuildVehicle, removeVehicle, settleVehicles, vehicleBody, vehicleWheels, wheelContacts } from './vehicles'
+import { readContacts, watchContacts } from './watched-contacts'
 
 /**
  * The kit's physics contract over one Jolt `PhysicsSystem`. Its fields without `private` are the adapter's own: the files beside this one (contacts, friction,
@@ -72,10 +78,15 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly freeGroups: number[] = []
   nextJoint = 1
   nextVehicle = 1
+  readonly sharedShapes = new Map<number, JoltNS.Shape>()
+  nextShared = 1
+  readonly watched = new Map<number, WatchedContacts>()
   readonly fixedStep: number
   /** Time `step` has not run yet (less than one fixed step): saved with the state. */
   accumulator = 0
   readonly slipSpeed: number
+  readonly sleepSpeed: number
+  readonly sleepAfter: number
   readonly reportSpeed: number
   readonly maxContacts: number
   /** The kit's contact listener; null when the world runs with `contactCallbacks: 'none'` (Jolt's job threads cannot call JS). */
@@ -137,6 +148,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.threading = threading
     this.fixedStep = desc.fixedStep ?? 1 / 60
     this.slipSpeed = desc.slipSpeed ?? 0.02
+    this.sleepSpeed = desc.sleepSpeed ?? DEFAULT_SLEEP_SPEED
+    this.sleepAfter = desc.sleepAfter ?? DEFAULT_SLEEP_AFTER
     this.reportSpeed = desc.contactReportSpeed ?? 0.5
     this.maxContacts = Math.min(ROW_CAPACITY, desc.maxContacts ?? ROW_CAPACITY)
     checkVec3Layout(J)
@@ -149,6 +162,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.objectFilter = new J.ObjectLayerPairFilterTable(NUM_OBJECT_LAYERS)
     for (const [x, y] of LAYER_PAIRS) this.objectFilter.EnableCollision(layerOf(x), layerOf(y))
     for (let i = 0; i < LAYERS.length; i++) if (LAYERS[i] !== 'sensor') this.objectFilter.EnableCollision(QUERY_LAYER, i)
+    for (let i = 0; i < LAYERS.length; i++) if (!WHEEL_BLIND_LAYERS.includes(LAYERS[i])) this.objectFilter.EnableCollision(WHEEL_PROBE_LAYER, i)
     this.bpInterface = new J.BroadPhaseLayerInterfaceTable(NUM_OBJECT_LAYERS, NUM_BP)
     const bp = [new J.BroadPhaseLayer(BP_STATIC), new J.BroadPhaseLayer(BP_MOVING), new J.BroadPhaseLayer(BP_AGENT), new J.BroadPhaseLayer(BP_SENSOR)]
     for (const layer of LAYERS) {
@@ -156,6 +170,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       this.bpInterface.MapObjectToBroadPhaseLayer(layerOf(layer), bp[which])
     }
     this.bpInterface.MapObjectToBroadPhaseLayer(QUERY_LAYER, bp[BP_MOVING])
+    this.bpInterface.MapObjectToBroadPhaseLayer(WHEEL_PROBE_LAYER, bp[BP_MOVING])
     for (const b of bp) J.destroy(b)
     this.objVsBp = new J.ObjectVsBroadPhaseLayerFilterTable(this.bpInterface, NUM_BP, this.objectFilter, NUM_OBJECT_LAYERS)
     settings.mObjectLayerPairFilter = this.objectFilter
@@ -210,6 +225,12 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   makeShape(shape: ShapeDesc, centred = false, hulls?: HullSet): JoltNS.Shape {
+    if (shape.kind === 'shared') {
+      const held = this.sharedShapes.get(shape.id)
+      if (!held) throw new Error(`game-physics-jolt: no shared shape ${shape.id}`)
+      held.AddRef()
+      return held
+    }
     return centred ? makeCentredShape(this.J, this.v2, shape, hulls) : makeShape(this.J, this.v2, shape, hulls)
   }
 
@@ -410,6 +431,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   setShape(id: BodyId, shape: ShapeDesc, mass?: { readonly mass: number; readonly inertia?: Vec3 }): void {
     const e = this.entry(id)
     const made = this.shapeWith(shape, e.centred, this.hullsFor(id, shape))
+    e.mutable = undefined
+    e.handles = undefined
     const dynamic = e.body.IsDynamic()
     // a kinematic body (held in a hand) keeps the new mass too: it takes it when it is let go (`setMotion`)
     if (mass) e.kitMass = mass
@@ -532,6 +555,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       this.r1.Set(point[0], point[1], point[2])
       this.bi.AddImpulse(e.id, this.v1, this.r1)
     } else this.bi.AddImpulse(e.id, this.v1)
+  }
+
+  applyBuoyancy(id: BodyId, fluid: FluidDesc): boolean {
+    return applyBuoyancy(this, id, fluid)
   }
 
   isSleeping(id: BodyId): boolean {
@@ -709,6 +736,47 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return wheelContacts(this, id)
   }
 
+  rebuildVehicle(id: VehicleId, desc: VehicleDesc): void {
+    rebuildVehicle(this, id, desc)
+  }
+
+  vehicleWheels(id: VehicleId, out: Float64Array): number {
+    return vehicleWheels(this, id, out)
+  }
+
+  createSharedShape(shape: ShapeDesc): SharedShapeId {
+    return createSharedShape(this, shape)
+  }
+
+  releaseSharedShape(id: SharedShapeId): void {
+    releaseSharedShape(this, id)
+  }
+
+  setChildShape(id: BodyId, child: number, shape: ShapeDesc | null, pose?: { readonly position: Vec3; readonly rotation?: Quat }): void {
+    setChildShape(this, id, child, shape, pose)
+  }
+
+  setMassProperties(id: BodyId, properties: MassProperties): void {
+    const e = this.entry(id)
+    if (!e.body.IsDynamic()) throw new Error(`game-physics-jolt: body ${id} is not dynamic: it has no mass to set`)
+    if (properties.centreOfMass) moveCentreOfMass(this, e, properties.centreOfMass)
+    e.kitMass = { mass: properties.mass, inertia: properties.inertia }
+    this.putMass(e, e.body.GetShape(), e.kitMass)
+  }
+
+  setMotionQuality(id: BodyId, quality: 'discrete' | 'linearCast'): void {
+    this.setContinuous(id, quality === 'linearCast')
+  }
+
+  watchContacts(id: BodyId, on: boolean): void {
+    this.entry(id)
+    watchContacts(this, id, on)
+  }
+
+  readContacts(id: BodyId, out: Float32Array): number {
+    return readContacts(this, id, out)
+  }
+
   createCharacter(desc: CharacterDesc): CharacterId {
     return createCharacter(this, desc)
   }
@@ -787,6 +855,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     updateFriction(this)
     if (this.rollers.size > 0) roll(this, h)
     breakJoints(this, h)
+    if (this.vehicles.size > 0) settleVehicles(this, h)
   }
 
   clearEvents(): void {
@@ -828,6 +897,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const s of this.sphereShapes.values()) s.Release()
     for (const s of this.queryShapes.values()) s.Release()
     releaseRagdollCache(this)
+    for (const s of this.sharedShapes.values()) s.Release()
     for (const g of this.groups) g?.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
     if (this.among.filter) {
