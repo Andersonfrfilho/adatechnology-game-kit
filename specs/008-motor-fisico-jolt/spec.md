@@ -173,8 +173,10 @@ reescritos com apoio desenhado; o motivo de cada um vai para `evidence.md`.
 | Cenário | Mediana | p99 | Medido no gate 0 |
 |---|---|---|---|
 | Destroços 160 parados + 40 movendo (`renderer.update`) | ≤ 1,1 ms | ≤ 3,0 ms | 1,00–1,07 / 4,1–5,4 ms |
-| Cascata de 500 corpos acordados (`cascade.test.ts` 5b), fora do quadro de despertar | ≤ 0,6 ms | ≤ 4,0 ms | 0,5 / 5,9–6,4 ms (3,0 sem listener) |
-| Quadro de despertar da cascata de 500 | — | ≤ 10 ms (condição 10) | 11,7–13,1 ms (9,5 sem listener) |
+| Cascata de 500 corpos acordados em fila (`cascade-tail.test.ts` 5b, a receita da produção), fora do quadro de despertar, **build SIMD** (`multithread`, 0 threads de job: app de desktop e sala isolada) | ≤ 0,6 ms | ≤ 4,0 ms | 0,48–0,51 / 2,3 ms (carga 3,0–3,2, 9 execuções; `evidence.md` `## T7.4`) |
+| Mesma cascata, **build atual** (`single`, navegador sem isolamento, sem SIMD) | ≤ 1,0 ms | ≤ 6,0 ms | 0,587–0,954 / 3,54–5,60 ms (carga 3 a 5, 36 execuções); limite = a faixa medida em 2026-11-26, porque a build não tem SIMD |
+| Quadro de despertar da cascata de 500, as duas builds | — | ≤ 10 ms (condição 10) | SIMD 3,7–6,1; `single` 6,0–9,6 ms |
+| Caso 5, 318 corpos acordando de uma vez, sem fila (`cascade.test.ts`) — **cena de referência, sem limite** | registrado | registrado | mediana 0,44–0,50; p99 4,9–5,3; maior quadro 11,8–13,6 ms (carga 5 a 9). Sem limite porque a produção sempre desperta em fila (`WakeQueue`, `islandBodiesMax` = 300): a rajada não acontece no jogo |
 | 20 ragdolls | ≤ 3,0 ms | ≤ 4,0 ms | 2,8 mediana / 3,3 p90 (spike); **produção (2026-11-26): 20 R0 no `KIT_WORLD` dão 16,1 ms; por decisão do dono a cota é 1 R0 + o resto R1 (T5.1, `evidence.md`); `ragdollsMax` = 1 confirmado pelo dono em 2026-11-26, e a T5.6 otimiza o custo do R0 para subir a cota** |
 | 100 corpos empilhados como correntes (**mundo de 60 Hz, iterações padrão**: valor antigo, não vale no `KIT_WORLD`) | ≤ 2,5 ms | ≤ 4,0 ms | 2,2 / 2,6 ms |
 | 100 corpos empilhados, `KIT_WORLD` (120 Hz, 32/2), nascendo em sequência (um a cada 3 quadros), dormem em ≤ 14 s | ≤ 6 ms | ≤ 10 ms | ver `evidence.md` `## T5.4` (2026-11-26): mediana 4,0–4,9; p99 7,2–14,2; **5 de 13 sementes não dormem em 14 s** |

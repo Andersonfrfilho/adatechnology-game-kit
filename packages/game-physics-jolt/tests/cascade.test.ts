@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { createImpactReader, createPhysicsLoop } from '@adatechnology/game-physics'
 import type { BodyDesc, BodyId, PhysicsWorld, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
-import type { JoltWorld } from '../src/index'
+import type { JoltBuild, JoltWorld } from '../src/index'
 import { COST_LANE, ground, report, stats } from './scenes'
 
 interface Cascade {
@@ -40,8 +40,8 @@ const blast = (world: PhysicsWorld, at: Vec3, radius: number, impulse: number, n
  * Blast -> gas cylinder goes off when hit hard enough (a contact row with impulse fed to our damage) -> wall of 400 blocks -> a slab of 50 pieces on it comes down
  * -> 50 crates around. Everything starts asleep; ~500 bodies wake within a frame of the cylinder going off.
  */
-const run = async (): Promise<Cascade> => {
-  const engine = await createJoltEngine()
+const run = async (build: JoltBuild = 'single'): Promise<Cascade> => {
+  const engine = await createJoltEngine({ build })
   const world = engine.createWorld({ fixedStep: 1 / 60, maxBodies: 8192, contactReportSpeed: 1 }) as JoltWorld
   ground(world, 100)
   const descs: BodyDesc[] = []
@@ -135,6 +135,14 @@ describe('case 5: chain reaction', () => {
     expect(a.hash).toBe(b.hash)
     // the JS heap does not grow with the frames (spec.md 6.2 asks it of the cascade; the engine's own heap is `heap.test.ts`): charged only in the cost lane, as the time limits are, because the heap of a shared test run is not the cascade's alone
     if (COST_LANE) expect(a.heapBytes).toBeLessThan(2_000_000)
+  })
+
+  // the page chooses the multithreaded build (SIMD, 0 job threads) where it is isolated and the single one elsewhere: the choice must not change the physics
+  it('the single and the multithreaded (SIMD, 0 job threads) builds run the cascade to the same hash', { timeout: 300000 }, async () => {
+    const single = await run('single')
+    const multithread = await run('multithread')
+    report('cascade-builds', { single: single.hash, multithread: multithread.hash, singleStepAfterBlast: stats(single.steps.slice(30)), multithreadStepAfterBlast: stats(multithread.steps.slice(30)) })
+    expect(multithread.hash).toBe(single.hash)
   })
 
   it('the impact reader makes nothing per contact row and per frame: the bouncing frames allocate only a few bytes for each blow it tells', { timeout: 120000 }, async () => {
