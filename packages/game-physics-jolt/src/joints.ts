@@ -5,6 +5,7 @@ import type { BodyId, JointDesc, JointId, RagdollDesc, RagdollId, RagdollJoint, 
 
 import { layerOf } from './constants'
 import type { BodyEntry } from './entries'
+import { ragdollShape, ragdollSkeleton } from './ragdoll-cache'
 import type { JoltWorldHost } from './world-host'
 
 export const createGroup = (w: JoltWorldHost, subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number => {
@@ -121,7 +122,7 @@ export const createJoint = (w: JoltWorldHost, desc: JointDesc): JointId => {
 const ragdollPart = (w: JoltWorldHost, s: JoltNS.RagdollPart, part: RagdollDesc['parts'][number], desc: RagdollDesc): void => {
   const J = w.J
   const b = part.body
-  const shape = w.makeShape(b.shape)
+  const shape = ragdollShape(w, b.shape)
   s.SetShape(shape)
   shape.Release()
   const r = b.rotation ?? [0, 0, 0, 1]
@@ -158,14 +159,8 @@ const ragdollPart = (w: JoltWorldHost, s: JoltNS.RagdollPart, part: RagdollDesc[
  */
 export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly id: RagdollId; readonly bodies: readonly BodyId[]; readonly joints: readonly JointId[] } => {
   const J = w.J
-  const skeleton = new J.Skeleton()
-  desc.parts.forEach((part, i) => {
-    const name = new J.JPHString(`part${i}`, `part${i}`.length)
-    skeleton.AddJoint(name, part.parent)
-    J.destroy(name)
-  })
   const settings = new J.RagdollSettings()
-  settings.mSkeleton = skeleton
+  settings.mSkeleton = ragdollSkeleton(w, desc.parts.map((part) => part.parent))
   settings.mParts.resize(desc.parts.length)
   desc.parts.forEach((part, i) => ragdollPart(w, settings.mParts.at(i), part, desc))
   if (desc.stabilize) settings.Stabilize()

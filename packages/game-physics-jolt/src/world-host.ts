@@ -4,6 +4,7 @@ import type { BodyDesc, BodyId, JointId, Rolling, SensorEvent, ShapeDesc } from 
 
 import type { Contacts } from './contact-rows'
 import type { Jolt } from './constants'
+import type { RagdollCache } from './ragdoll-cache'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 
 /** What the files beside `world.ts` need of the world: `JoltWorld` satisfies it, and they import this, so none of them imports `world.ts` back. */
@@ -58,6 +59,8 @@ export interface JoltWorldHost {
   readonly sphereShapes: Map<number, JoltNS.Shape>
   /** The shapes `overlapShape` asked about, by the description's identity (a kit asks with the same few again and again): held up to a few, let go of at `dispose`. */
   readonly queryShapes: Map<ShapeDesc, JoltNS.Shape>
+  /** The shapes and skeletons the ragdolls made by `createRagdoll` share. */
+  readonly ragdollCache: RagdollCache
   readonly partners: Map<number, Map<number, number>>
   trackPairs: boolean
   readonly pairLog: number[]

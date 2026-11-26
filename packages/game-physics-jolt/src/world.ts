@@ -37,6 +37,7 @@ import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, releaseGroup, removeJoint, removeRagdoll } from './joints'
 import { contactBodies, overlapShape, overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { HullSet } from './hull-cache'
+import { createRagdollCache, releaseRagdollCache } from './ragdoll-cache'
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout, vec3At } from './vec3'
@@ -103,6 +104,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
   readonly queryShapes = new Map<ShapeDesc, JoltNS.Shape>()
+  readonly ragdollCache = createRagdollCache()
   /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
   readonly hulls = new Map<number, HullSet>()
   private readonly objectFilter: JoltNS.ObjectLayerPairFilterTable
@@ -825,6 +827,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
     for (const s of this.queryShapes.values()) s.Release()
+    releaseRagdollCache(this)
     for (const g of this.groups) g?.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
     if (this.among.filter) {
