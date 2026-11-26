@@ -3829,3 +3829,48 @@ Nenhum número fecha o T1. (1) **Sono:** até com 0 (tudo cápsula) 3 de 8 semen
 **T5: cache no adaptador** (`game-physics-jolt/src/ragdoll-cache.ts`): `createRagdoll` reaproveita, por mundo, a forma de cada parte (chave: tipo e dimensões exatas; no máximo 64) e o `Skeleton` (chave: lista de pais; uma `RagdollSettings` vazia segura a referência, senão a última corrente removida o libera); soltos no `dispose` (§8). Não há chave quantizada: dimensões exatas não mudam o resultado físico. As `RagdollSettings` em si **não** são reaproveitadas: os pontos das juntas são em coordenadas do mundo e mudam com a pose (e `chainOfPoses` move cabeça e pernas fora do quadro rígido). Antes/depois, 100 R2 → R1, mediana: teste real, carga ~1,6: antes 4,78 / 5,35 / 4,55 (e 4,8–5,5 da T5.4); depois, carga ~2: 5,55 / 4,43 / 4,89 / 3,90 (carga 6 a 13: 5,3 a 7,5, sem valor). A/B no mesmo processo (mundo reassentado 0,5 s entre as idas, 27 trocas por lado): sem cache 5,25 e 5,78; com cache 4,32 e 4,91, ~0,9 ms (17%). Onde vai o resto (por troca, carga ~3): `createRagdoll` ~29 µs (campos e juntas por chamada de wasm), 3 `overlapShape` ~8 µs, leituras ~2 µs. **Efeito de ordem:** sem passos entre as idas e voltas, a árvore do broadphase degrada (a mesma ida e volta sobe de ~4,3 para 12–14 ms em 30 trips), o que explica a mediana do teste variar com a carga. T5 **não** fecha com folga: passa em ~3 de 4 rodadas com a máquina a carga ≤ 2.
 
 **Gates** (carga alta, ver acima): `game-physics` 32 (30 + 2 novos), `game-characters` 396, `game-crowd` 142 com `state-hash` `7979b7a6` e `9449b822` e os 3 `team-golden` iguais (nenhum golden mudou), `game-physics-jolt` 134 + 1 teste novo passam, e 3 vermelhos sob carga de 11: T1 (acima), T5 (6,4 ms) e `ragdoll.test.ts` case 2 (3,18 ms contra 3,0: perf, a conferir em máquina quieta); `tsc --noEmit` e `eslint` limpos em `game-physics` e `game-physics-jolt`.
+
+### Fechamento 2 (2026-11-26): T1 no `KIT_WORLD` com nascimento em sequência, e onde cada limite de custo é cobrado
+
+**Decisão do dono (2026-11-26):** nova linha do C7 no `KIT_WORLD` (120 Hz, 32/2): **dorme em ≤ 14 s, mediana ≤ 6 ms, p99 ≤ 10 ms**; a linha antiga (2,5 / 4,0 ms, 10 s) fica marcada como do mundo de 60 Hz com iterações padrão (`spec.md` §6.2, `design/pilha-e-lod.md` §1 e §7). **Os 13 testes do §7 não passam (T1 vermelho); ✅ não dado. Limite não foi subido.**
+
+**Cena nova** (`tests/lod-scenes.ts` `dropPile`): os 100 corpos nascem **um a cada 3 quadros** (20 por segundo; a pilha leva 5 s para se formar), nas mesmas posições do monte contra a parede (`heapAt`). Cadência: é uma matança rápida o bastante para empilhar e lenta o bastante para nenhum par nascer no mesmo quadro, como no jogo; não foi escolhida pelo resultado. Janela de custo: os 480 primeiros quadros (5 s de nascimentos + 3 s depois do último). "Dorme" conta desde o primeiro nascimento, com todos já nascidos (o último nasce a 4,95 s). Sementes: as 8 de rotação (`yaw = id × semente`) e 5 novas (0,4 0,6 1,2 1,5 1,9), fixadas antes da medição.
+
+Tabela (13 sementes, `KIT_WORLD`, `perf-measure.lock`; última rodada, carga de 1 min 2,0–2,4; duas rodadas anteriores com carga 3,4–6,1 deram o mesmo sono, bit a bit, e custos parecidos). "-1": não dormiu em 16 s. Passa: dorme ≤ 14, mediana ≤ 6, p99 ≤ 10.
+
+| semente | dorme (s) | mediana (ms) | p99 (ms) | máx (ms) | carga | passa |
+|---|---|---|---|---|---|---|
+| 0,7 | -1 | 4,57 | 9,88 | 12,5 | 2,2 | não (sono) |
+| 0,3 | 11,6 | 4,52 | 10,06 | 12,1 | 2,1 | não (p99) |
+| 0,5 | 11,6 | 4,45 | 9,54 | 12,0 | 2,0 | sim |
+| 0,9 | 13,7 | 4,19 | 11,49 | 13,7 | 2,0 | não (p99) |
+| 1,1 | 14,9 | 4,24 | 9,15 | 12,7 | 2,0 | não (sono) |
+| 1,3 | 14,2 | 4,70 | 8,91 | 12,4 | 2,2 | não (sono) |
+| 1,7 | -1 | 4,35 | 10,59 | 12,7 | 2,1 | não (sono, p99) |
+| 2,1 | 11,4 | 4,26 | 10,38 | 11,9 | 2,0 | não (p99) |
+| 0,4 | -1 | 4,41 | 10,04 | 15,0 | 2,0 | não (sono, p99) |
+| 0,6 | 10,8 | 4,44 | 9,13 | 10,2 | 2,0 | sim |
+| 1,2 | 12,9 | 4,32 | 8,56 | 10,4 | 2,0 | sim |
+| 1,5 | 13,7 | 4,80 | 12,13 | 15,8 | 2,4 | não (p99) |
+| 1,9 | 11,3 | 6,08 | 15,93 | 16,8 | 2,4 | não (mediana, p99) |
+
+**Não fecha:** 3 de 13 passam. (1) **Sono** (determinístico, não depende de carga): 5 de 13 passam de 14 s (0,7, 1,1, 1,3, 1,7, 0,4); 3 não dormem em 16 s. (2) **Mediana**: 4,2–4,8, dentro de 6 (a 1,9 dá 6,08, com carga 2,4). (3) **p99**: 8,6–15,9; 7 de 13 acima de 10, com a máquina em carga 2. O nascimento em sequência baixou o pico dos primeiros quadros (antes 24,7 ms), mas o p99 da janela ainda passa de 10 em mais da metade das sementes. Pelo combinado, tabela registrada e parado; o limite não subiu. Opções que continuam do dono: (a) subir o sono para ~17 s (o pior medido com sono é 14,9); (b) nascer em R2 dentro da pilha cheia; (c) ragdoll da corrente fora do motor (ver "Fechamento").
+
+**Onde cada limite passou a ser cobrado.** O repositório não tinha faixa de custo para o `game-physics-jolt`: os testes de milissegundos rodavam no `pnpm test` (CI e pre-push), e as medições longas ficam atrás de variável (`PROFILE=1`, `B6_WAKE`, `DETERMINISM_*`) ou nas rodadas sob a trava (`perf-gate.mjs`, `examples/test-room/perf.mjs`, com `flock perf-measure.lock`, regra §9). Nova faixa: `pnpm --filter @adatechnology/game-physics-jolt test:cost` (`PHYSICS_COST=1` sob `flock ~/.cache/adatechnology-game-kit/perf-measure.lock`); `expectCostAtMost` (`tests/scenes.ts`) só afirma o limite com a variável ligada. Ligar essa faixa na rodada diária fica como pendência (a diária hoje é GPU e navegador).
+
+| Limite | Antes | Agora |
+|---|---|---|
+| T1 sono ≤ 14 s, nenhum R0 na pilha (13 sementes na faixa, 8 no CI) | `pnpm test` | **`pnpm test` (CI)**: é contagem de tempo simulado, determinística |
+| T1 mediana ≤ 6 ms, p99 ≤ 10 ms | `pnpm test` | faixa de custo |
+| T2 20 corpos, mediana ≤ 3,0 e p99 ≤ 4,0 | `pnpm test` | faixa de custo (`R0 ≤ 1` fica no CI) |
+| T4 morte sobre pilha, pico ≤ 10 ms | `pnpm test` | faixa de custo (sono ≤ 3 s fica no CI) |
+| T5 100 trocas ≤ 5 ms por sentido | `pnpm test` | faixa de custo (recusadas, sobreposição, profundidade, deriva ficam no CI) |
+| 300 corpos dormindo, mediana ≤ 0,5 ms | `pnpm test` | faixa de custo (cota de 900 corpos fica no CI) |
+| `ragdoll.test.ts` casos 1 e 2, 3,0 / 4,0 ms | `pnpm test` | faixa de custo (contagem de corpos fica no CI) |
+| `character.test.ts`, 50 controladores ≤ 0,5 ms | `pnpm test` | faixa de custo |
+
+Nenhum número mudou. Na faixa (carga 3,6–4,3 na rodada inteira) T2, T4, T5, 300 dormindo, `ragdoll.test.ts` 1 e 2 e `character.test.ts` passaram; só o T1 falhou.
+
+**Estado dos 13 testes do §7:** 1 vermelho (T1: sono e p99, tabela acima); 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 passam (os de custo, 2, 4 e 5, na faixa de custo).
+
+**Gates:** `game-physics` 32, `game-characters` 396, `game-crowd` 142 (`state-hash` e `team-golden` iguais; nenhum arquivo de `src` mudou neste passo), `game-physics-jolt` `pnpm test`: 139 passam, 4 vermelhos, todos o T1 por sono (0,7, 1,1, 1,3, 1,7); `tsc --noEmit` e `eslint` limpos em `game-physics-jolt/tests`.

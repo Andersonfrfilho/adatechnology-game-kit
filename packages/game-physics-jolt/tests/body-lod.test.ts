@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { loadavg } from 'node:os'
 import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
@@ -6,9 +7,9 @@ import { describe, expect, it } from 'vitest'
 import { createCorpseLedger } from '@adatechnology/game-characters'
 import type { BodyId, Quat, SettledCorpse, Vec3 } from '@adatechnology/game-physics'
 
-import { report, stats } from './scenes'
+import { COST_LANE, expectCostAtMost, report, stats } from './scenes'
 import type { Scene } from './lod-scenes'
-import { allAsleep, C7_BODIES, C7_PILE, frame, heapAt, kit, PEAK_MS, pileOf, sceneOf, scatter, seconds, torsoOf } from './lod-scenes'
+import { allAsleep, C7_BODIES, C7_PILE_KIT_WORLD, COST_WINDOW_FRAMES, dropPile, EXTRA_SEEDS, frame, heapAt, ROTATION_SEEDS, kit, PEAK_MS, pileOf, sceneOf, scatter, seconds, torsoOf } from './lod-scenes'
 
 const FRAMES_3S = 180
 
@@ -24,38 +25,18 @@ const rungHashOf = (state: { readonly records: ReadonlyArray<{ readonly id: numb
 }
 
 describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
-  it('1. 100 bodies falling against a wall in the KIT_WORLD: no ragdoll in the pile, asleep in 10 s, the step inside the C7 of a pile', { timeout: 120000 }, async () => {
-    const scene = await sceneOf({}, true)
-    const ids = Array.from({ length: 100 }, (_, i) => i + 1)
-    for (const id of ids) scene.corpses.add({ id, kit, position: heapAt(id - 1), yaw: id * 0.7 })
-    const costs: number[] = []
-    let asleepAt = -1
-    let ragdollInPile = 0
-    const owners = new Map<BodyId, number>()
-    for (let f = 0; f < 600; f++) {
-      costs.push(frame(scene.loop))
-      if (f % 6 !== 0) continue
-      owners.clear()
-      for (const id of ids) for (const body of scene.corpses.partsOf(id)) owners.set(body, id)
-      for (const id of ids.filter((candidate) => scene.corpses.rungOf(candidate) === 'r0')) {
-        const touching = new Set<number>()
-        for (const body of scene.corpses.partsOf(id)) {
-          const found: BodyId[] = []
-          scene.world.contactBodies(body, found)
-          for (const other of found) if (owners.has(other) && owners.get(other) !== id) touching.add(owners.get(other) as number)
-        }
-        if (touching.size >= 2) ragdollInPile++
-      }
-      if (asleepAt < 0 && allAsleep(scene, ids)) asleepAt = f / 60
-    }
-    report('lod-pile-100', { asleepAtS: asleepAt, first3s: stats(costs.slice(0, FRAMES_3S)), all: stats(costs), counts: scene.corpses.counts(), ragdollInPile })
-    expect(ragdollInPile).toBeLessThanOrEqual(1)
-    expect(asleepAt).toBeGreaterThan(0)
-    expect(asleepAt).toBeLessThanOrEqual(10)
-    expect(stats(costs.slice(0, FRAMES_3S)).median).toBeLessThanOrEqual(C7_PILE.median)
-    expect(stats(costs.slice(0, FRAMES_3S)).p99).toBeLessThanOrEqual(C7_PILE.p99)
+  it.each(COST_LANE ? [...ROTATION_SEEDS, ...EXTRA_SEEDS] : ROTATION_SEEDS)('1. 100 bodies falling one at a time against a wall in the KIT_WORLD (rotation seed %f): no ragdoll in the pile, asleep in 14 s; the step inside the pile C7 of the KIT_WORLD (cost lane)', { timeout: 120000 }, async (seed) => {
+    const { scene, run } = await dropPile(seed, 16)
+    const window = stats(run.costs.slice(0, COST_WINDOW_FRAMES))
     scene.world.dispose()
+    report('lod-pile-100', { seed, asleepAtS: run.asleepAt, lastBirthAtS: run.lastBirthAt, window, all: stats(run.costs), counts: run.counts, ragdollInPile: run.ragdollInPile, load: loadavg()[0] })
+    expect(run.ragdollInPile).toBeLessThanOrEqual(1)
+    expect(run.asleepAt).toBeGreaterThan(0)
+    expect(run.asleepAt).toBeLessThanOrEqual(C7_PILE_KIT_WORLD.sleepSeconds)
+    expectCostAtMost(window.median, C7_PILE_KIT_WORLD.median)
+    expectCostAtMost(window.p99, C7_PILE_KIT_WORLD.p99)
   })
+
 
   it('`pileChainsMax`: a pile of 40 against a wall keeps only its nearest chains, the rest are capsules, and the pile still comes to rest', { timeout: 120000 }, async () => {
     const scene = await sceneOf({ lod: { pileChainsMax: 5 } }, true)
@@ -79,8 +60,8 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
     const window = stats(costs.slice(0, FRAMES_3S))
     report('lod-bodies-20', { first3s: window, counts: scene.corpses.counts() })
     expect(scene.corpses.counts().r0).toBeLessThanOrEqual(1)
-    expect(window.median).toBeLessThanOrEqual(C7_BODIES.median)
-    expect(window.p99).toBeLessThanOrEqual(C7_BODIES.p99)
+    expectCostAtMost(window.median, C7_BODIES.median)
+    expectCostAtMost(window.p99, C7_BODIES.p99)
     scene.world.dispose()
   })
 
@@ -117,7 +98,7 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
       if (asleepAt < 0 && f > 30 && allAsleep(scene, [...ids, 101])) asleepAt = f / 60
     }
     report('lod-death-on-pile', { peak: Math.max(...costs), frames: stats(costs), asleepAtS: asleepAt, counts: scene.corpses.counts() })
-    expect(Math.max(...costs)).toBeLessThanOrEqual(PEAK_MS)
+    expectCostAtMost(Math.max(...costs), PEAK_MS)
     expect(asleepAt).toBeGreaterThan(0)
     expect(asleepAt).toBeLessThanOrEqual(3)
     scene.world.dispose()
@@ -169,8 +150,8 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
     const driftUp = drift
     report('lod-swap-100', { toCapsuleMs: stats(downs), toChainMs: stats(ups), refused, worstDepthM: worstDepth, overlaps, driftM: drift, counts: scene.corpses.counts() })
     expect(down.refused + up.refused).toBe(0)
-    expect(down.ms).toBeLessThanOrEqual(5)
-    expect(up.ms).toBeLessThanOrEqual(5)
+    expectCostAtMost(down.ms, 5)
+    expectCostAtMost(up.ms, 5)
     expect(overlaps).toBe(0)
     expect(worstDepth).toBeLessThanOrEqual(0.03)
     expect(driftDown).toBeLessThanOrEqual(0.02)
@@ -403,7 +384,7 @@ describe('body LOD, T5.4 tests of design/pilha-e-lod.md §7', () => {
     for (let f = 0; f < 60 * 3; f++) asleep.push(frame(scene.loop))
     report('lod-bodies-300', { rigid: scene.corpses.counts().rigidBodies, falling3s: stats(falling), asleep3s: stats(asleep) })
     expect(scene.corpses.counts().rigidBodies).toBeLessThanOrEqual(900)
-    expect(stats(asleep).median).toBeLessThanOrEqual(0.5)
+    expectCostAtMost(stats(asleep).median, 0.5)
     scene.world.dispose()
   })
 })

@@ -1,10 +1,21 @@
 import { appendFileSync } from 'node:fs'
 
+import { expect } from 'vitest'
+
 import { createRig, GUIDE, ragdollOfRig, SEGMENT_TREE } from '@adatechnology/game-characters'
 import type { BodyId, CharacterDesc, JointDesc, JointId, PhysicsWorld, Quat, RagdollDesc, Vec3 } from '@adatechnology/game-physics'
 
 /** A person: 0.3 m radius, 1.8 m tall, 75 kg, pushes with 400 N. */
 export const WALKER: CharacterDesc = { position: [0, 0, 0], radius: 0.3, halfHeight: 0.6, mass: 75, strength: 400 }
+
+/**
+ * Time limits are charged only in the cost lane (`pnpm --filter @adatechnology/game-physics-jolt test:cost`: `PHYSICS_COST=1`, under `perf-measure.lock`).
+ * A limit in milliseconds fails on a busy machine; what the pre-push and CI run keeps the counts, the steps to sleep and the overlaps, which do not depend on the load.
+ */
+export const COST_LANE = process.env.PHYSICS_COST === '1'
+export const expectCostAtMost = (value: number, limit: number): void => {
+  if (COST_LANE) expect(value).toBeLessThanOrEqual(limit)
+}
 
 /** Measurements go to the file in SPIKE_OUT (one JSON line each), and to the console. */
 export const report = (name: string, value: Record<string, unknown>): void => {

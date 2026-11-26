@@ -11,7 +11,8 @@ Herdado por T5.4 (implementar), T5.5 (quadrúpede) e T7.1 (multidão).
 |---|---|---|
 | Ragdoll completo (17 segmentos) com `stabilize`, 20/8 | dorme a 3,12 s; 2 quadros acima de 0,1 rad | gate 0 B3 |
 | 20 ragdolls caindo e empilhando | 2,8 ms mediana, 3,3 **p90** | `ragdoll.test.ts:87`: corpos e juntas soltos, sem `stabilize`, 60 Hz, **sem `expect`**. Não é o R0 de produção nem o `KIT_WORLD` |
-| 100 corpos de 3 partes (`createRagdoll`, `stabilize`) | 2,2 / 2,6 ms; dormem a 9,47 s com sono 0,08 | `crowd.test.ts:54`: `fixedStep 1/60`, iterações padrão do Jolt. **Não** é o `KIT_WORLD` (120 Hz, 32/2, `contract.ts:272`) |
+| 100 corpos de 3 partes (`createRagdoll`, `stabilize`) | 2,2 / 2,6 ms; dormem a 9,47 s com sono 0,08 | **Mundo de 60 Hz, valor antigo**: `crowd.test.ts:54`: `fixedStep 1/60`, iterações padrão do Jolt. **Não** é o `KIT_WORLD` (120 Hz, 32/2, `contract.ts:272`) |
+| 100 corpos de 3 partes no `KIT_WORLD`, nascendo em sequência (1 a cada 3 quadros) | limites: ≤ 6 / ≤ 10 ms, dormem em ≤ 14 s (decisão do dono 2026-11-26: o limite anterior foi medido a 60 Hz com iterações padrão) | medido na T5.4, `evidence.md` |
 | Pilha de ragdolls inteiros (horda) | não dorme | `tasks.md:165` (T5.3); não é medição da spec |
 
 Conclusão que não depende dos números: ragdoll completo cabe em poucos corpos perto do jogador; uma pilha de horda nunca cabe.
@@ -134,7 +135,7 @@ nos mesmos 18 m da troca de degrau.
 
 ## 7. Testes que a T5.4 tem de ter
 
-1. 100 corpos caindo contra uma parede no `KIT_WORLD`: nenhum R0 na pilha, dormem em ≤ 10 s, passo com mediana e p99 contra o C7, com `expect`.
+1. 100 corpos caindo, **um a cada 3 quadros como no jogo**, contra uma parede no `KIT_WORLD`: nenhum R0 na pilha, dormem em ≤ 14 s, mediana ≤ 6 ms e p99 ≤ 10 ms (decisão do dono 2026-11-26; a versão anterior pedia 10 s e 2,5 / 4,0 ms, medidos a 60 Hz com iterações padrão e com os 100 sobrepostos no mesmo quadro). O sono e a ausência de R0 valem no CI; a mediana e o p99, na faixa de custo (§7.1).
 2. 20 R0 de produção no `KIT_WORLD`, mediana e p99 com `expect` (substitui o número do spike).
 3. **Horda andando sobre uma pilha dormindo: a pilha continua dormindo.**
 4. **Morte nova sobre uma pilha dormindo de 100:** pico do quadro ≤ condição 10; a pilha volta a dormir em ≤ 3 s.
@@ -148,6 +149,10 @@ nos mesmos 18 m da troca de degrau.
 12. **Ciclos de troca devolvem o heap ao mesmo byte** (C9).
 13. Opção A: posição do motor e célula do monte dentro de 1 célula depois de `relocate`. Opção B: o `state-hash` do `game-crowd` igual com a
     política ligada **numa cena com cadáveres** (o `tests/physics/state-hash.ts` atual não tem cadáveres; teste novo).
+
+### 7.1 Onde cada limite de custo é cobrado (2026-11-26)
+
+Limite em milissegundos reprova por carga da máquina; por isso (regra §9, `CONTRIBUTING.md`) **não** é cobrado no `pnpm test` do CI. Roda na faixa de custo: `pnpm --filter @adatechnology/game-physics-jolt test:cost` (`PHYSICS_COST=1` sob `flock perf-measure.lock`), à mão sob a trava (a rodada diária é GPU e navegador e não roda o motor sozinho; ligar a faixa nela fica como pendência). No CI ficam as contagens, o sono em segundos simulados, a ausência de sobreposição e de R0 na pilha.
 
 ## 8. Ordem de implementação da T5.4
 

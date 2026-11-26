@@ -8,7 +8,7 @@ import type { WorldDesc } from '@adatechnology/game-physics'
 
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
-import { engineRagdoll, ground, ragdoll, report, stairs, stats } from './scenes'
+import { engineRagdoll, expectCostAtMost, ground, ragdoll, report, stairs, stats } from './scenes'
 import type { Ragdoll } from './scenes'
 
 /** 9x19 FMJ of game-weapons: 7.5 g at 365 m/s, stopped in the body: 2.74 N s. */
@@ -125,15 +125,15 @@ describe('case 2: ragdoll', () => {
     const { bodies, falling } = await costOfDead(RAGDOLLS_MAX, RAGDOLLS_MAX)
     report('ragdoll-r0-kit-world', { r0: RAGDOLLS_MAX, bodies, frameFirst3s: falling })
     expect(bodies).toBe(RAGDOLLS_MAX * 17 + 1)
-    expect(falling.median).toBeLessThanOrEqual(3.0)
-    expect(falling.p99).toBeLessThanOrEqual(4.0)
+    expectCostAtMost(falling.median, 3.0)
+    expectCostAtMost(falling.p99, 4.0)
   })
 
   it(`costs: 20 dead bodies, ${RAGDOLLS_MAX} R0 and the rest R1 chains, in the kit's world: the same C7 budget`, { timeout: 60000 }, async () => {
     const { falling } = await costOfDead(20, RAGDOLLS_MAX)
     report('ragdoll-policy-x20-kit-world', { r0: RAGDOLLS_MAX, frameFirst3s: falling })
-    expect(falling.median).toBeLessThanOrEqual(3.0)
-    expect(falling.p99).toBeLessThanOrEqual(4.0)
+    expectCostAtMost(falling.median, 3.0)
+    expectCostAtMost(falling.p99, 4.0)
   })
 
   it('costs: 20 ragdolls falling and piling (loose bodies, the spike\'s 60 Hz world, kept for comparison)', { timeout: 60000 }, async () => {
