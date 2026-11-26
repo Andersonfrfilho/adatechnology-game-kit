@@ -20,10 +20,10 @@ const GONE: ReadonlySet<string> = new Set(['broken', 'melted', 'ashes'])
 const SOLID_ROLES: ReadonlySet<string> = new Set(['light', 'mirror', 'engine', 'radiator', 'fuel_tank', 'oil_pan', 'battery', 'alternator', 'gearbox', 'steering', 'hitch'])
 /** The wheel and what hangs on it belong to the vehicle constraint, not to the chassis compound: no hull of theirs. */
 const WHEEL_ROLES: ReadonlySet<string> = new Set(['rim', 'tyre', 'brakes', 'shocks'])
-/** A part's triangles are held in pieces by the cell (m) of the vehicle their centre is in: a dent in one panel makes again the pieces it touched, not the whole panel. */
 /** The cross product (twice the area, m2) a triangle needs to be drawn at all. */
 const MIN_AREA = 1e-9
-const CHUNK = Number(process.env.CHUNK ?? 0.8)
+/** A part's triangles are held in pieces by the cell (m) of the vehicle their centre is in: a dent in one panel makes again the pieces it touched, not the whole panel. */
+const CHUNK = 0.8
 const CELL_BIAS = 512
 const CELL_SPAN = 1024
 const PART_SPAN = 2 ** 30
