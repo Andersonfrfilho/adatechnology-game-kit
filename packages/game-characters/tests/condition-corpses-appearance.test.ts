@@ -75,6 +75,42 @@ describe('corpses', () => {
     expect(ledger.remove(9)).toBeUndefined()
   })
 
+  it('every corpse has an id that outlives the swaps and is never reused, and a listener hears each add and removal with its reason', () => {
+    const ledger = createCorpseLedger<string>({ max: 3, seconds: 10 })
+    const heard: string[] = []
+    const stop = ledger.subscribe({
+      added: (entry) => heard.push(`+${entry.data}#${entry.id}`),
+      removed: (entry, reason) => heard.push(`-${entry.data}#${entry.id}:${reason}`),
+    })
+    ledger.add('a')
+    ledger.update(4)
+    ledger.add('b')
+    ledger.update(4)
+    ledger.add('c')
+    ledger.add('d')
+    ledger.remove(1)
+    ledger.update(11)
+    ledger.add('x')
+    ledger.clear()
+    expect(heard).toEqual(['+a#1', '+b#2', '+c#3', '-a#1:replaced', '+d#4', '-b#2:taken', '-d#4:expired', '-c#3:expired', '+x#5', '-x#5:cleared'])
+    stop()
+    ledger.add('e')
+    expect(heard).toHaveLength(10)
+    expect(ledger.entries[0]?.id).toBe(6)
+  })
+
+  it('replace puts new data on a corpse by id and keeps its id, age and place', () => {
+    const ledger = createCorpseLedger<string>({ max: 3, seconds: 10 })
+    ledger.add('a')
+    ledger.add('b')
+    ledger.update(4)
+    const id = ledger.entries[1]?.id as number
+    expect(ledger.replace(id, 'b-moved')).toBe(true)
+    expect(ledger.entries.map((entry) => entry.data)).toEqual(['a', 'b-moved'])
+    expect(ledger.entries[1]).toMatchObject({ id, age: 4 })
+    expect(ledger.replace(99, 'nobody')).toBe(false)
+  })
+
   it('the kit makes a ledger with its own cap and lifetime (400 bodies, 900 s)', () => {
     const kit = createCharacters()
     const ledger = kit.createCorpses<number>()

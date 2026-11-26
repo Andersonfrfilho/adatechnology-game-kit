@@ -35,8 +35,9 @@ import { makeListener } from './contacts'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 import { roll, touch, updateFriction } from './friction'
 import { breakJoints, createGroup, createJoint, createRagdoll, jointAngles, releaseGroup, removeJoint, removeRagdoll } from './joints'
-import { overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
+import { contactBodies, overlapShape, overlapSphere, penetration, rayAll, rayFirst, sphereCastAll } from './queries'
 import { HullSet } from './hull-cache'
+import { createRagdollCache, releaseRagdollCache } from './ragdoll-cache'
 import { makeCentredShape, makeShape } from './shapes'
 import { restoreState, saveState } from './state'
 import { checkVec3Layout, vec3At } from './vec3'
@@ -93,6 +94,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly bpFilter: JoltNS.DefaultBroadPhaseLayerFilter
   readonly objFilter: JoltNS.DefaultObjectLayerFilter
   readonly bodyFilter: JoltNS.BodyFilter
+  ignoreFilter: JoltNS.IgnoreMultipleBodiesFilter | null = null
   readonly shapeFilter: JoltNS.ShapeFilter
   readonly layerFilters = new Map<string, JoltNS.ObjectLayerFilterJS>()
   readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId>; self: number } = { filter: null, set: new Set(), self: -1 }
@@ -101,6 +103,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly castSettings: JoltNS.ShapeCastSettings
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
+  readonly queryShapes = new Map<string, JoltNS.Shape>()
+  readonly ragdollCache = createRagdollCache()
   /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
   readonly hulls = new Map<number, HullSet>()
   private readonly objectFilter: JoltNS.ObjectLayerPairFilterTable
@@ -355,6 +359,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   removeBody(id: BodyId): void {
     const e = this.bodies.get(id)
     if (!e) return
+    if (e.ragdoll !== undefined) throw new Error(`body ${id} belongs to ragdoll ${e.ragdoll}: it leaves with removeRagdoll`)
     this.byPointer.delete(this.J.getPointer(e.body))
     this.bi.RemoveBody(e.id)
     this.bi.DestroyBody(e.id)
@@ -440,6 +445,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     mp.SetInverseInertia(this.v2, mp.GetInertiaRotation())
     mp.SetInverseMass(1 / kit.mass)
     e.invMass = 1 / kit.mass
+  }
+
+  massOf(id: BodyId): number {
+    return 1 / this.entry(id).body.GetMotionProperties().GetInverseMass()
   }
 
   /** A dynamic body's mass and its moments about its own axes (kg m^2), as Jolt holds them: for checks. */
@@ -742,6 +751,14 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return overlapSphere(this, { center, radius }, out, filter)
   }
 
+  overlapShape(shape: ShapeDesc, position: Vec3, rotation: Quat, out: BodyId[], filter?: QueryFilter): number {
+    return overlapShape(this, { shape, position, rotation }, out, filter)
+  }
+
+  contactBodies(id: BodyId, out: BodyId[]): number {
+    return contactBodies(this, id, out)
+  }
+
   penetration(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number {
     return penetration(this, id, out, among)
   }
@@ -809,6 +826,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const id of [...this.joints.keys()]) this.removeJoint(id as JointId)
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
+    for (const s of this.queryShapes.values()) s.Release()
+    releaseRagdollCache(this)
     for (const g of this.groups) g?.Release()
     for (const f of this.layerFilters.values()) J.destroy(f)
     if (this.among.filter) {
@@ -816,6 +835,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       this.among.filter = null
     }
     for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
+    if (this.ignoreFilter) J.destroy(this.ignoreFilter)
     J.destroy(this.iface)
     if (this.listener) J.destroy(this.listener)
     this.onDispose?.()

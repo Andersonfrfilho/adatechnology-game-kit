@@ -35,4 +35,22 @@ describe('ignored pairs when Jolt reuses a removed body index', () => {
     expect(heightOf(world, b)).toBeLessThan(1.5)
     world.dispose()
   })
+
+  it('overlapShape with QueryFilter.ignore leaves out the bodies named, and only those (a shape made once is asked again with a different list)', async () => {
+    const world = await newWorld()
+    const near = world.createBody({ shape: { kind: 'box', half: [0.5, 0.5, 0.5] }, motion: 'static', position: [0, 0.5, 0], user: 0 })
+    const far = world.createBody({ shape: { kind: 'box', half: [0.5, 0.5, 0.5] }, motion: 'static', position: [0.8, 0.5, 0], user: 1 })
+    const out: BodyId[] = []
+    const probe = { kind: 'sphere', radius: 0.6 } as const
+    const ask = (ignore?: readonly BodyId[]): BodyId[] => {
+      world.overlapShape(probe, [0.4, 0.5, 0], [0, 0, 0, 1], out, ignore ? { ignore } : undefined)
+      return [...out].sort((a, b) => a - b)
+    }
+    expect(ask()).toEqual([near, far].sort((a, b) => a - b))
+    expect(ask([near])).toEqual([far])
+    expect(ask([far])).toEqual([near])
+    expect(ask([near, far])).toEqual([])
+    expect(ask()).toEqual([near, far].sort((a, b) => a - b))
+    world.dispose()
+  })
 })

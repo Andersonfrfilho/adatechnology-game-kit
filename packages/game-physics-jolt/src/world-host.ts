@@ -4,6 +4,7 @@ import type { BodyDesc, BodyId, JointId, Rolling, SensorEvent, ShapeDesc } from 
 
 import type { Contacts } from './contact-rows'
 import type { Jolt } from './constants'
+import type { RagdollCache } from './ragdoll-cache'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry } from './entries'
 
 /** What the files beside `world.ts` need of the world: `JoltWorld` satisfies it, and they import this, so none of them imports `world.ts` back. */
@@ -45,6 +46,8 @@ export interface JoltWorldHost {
   readonly bpFilter: JoltNS.DefaultBroadPhaseLayerFilter
   readonly objFilter: JoltNS.DefaultObjectLayerFilter
   readonly bodyFilter: JoltNS.BodyFilter
+  /** The body filter of a query with `QueryFilter.ignore` (made on first use): cleared and loaded for each query. */
+  ignoreFilter: JoltNS.IgnoreMultipleBodiesFilter | null
   readonly shapeFilter: JoltNS.ShapeFilter
   readonly layerFilters: Map<string, JoltNS.ObjectLayerFilterJS>
   /** The body filter of `penetration` with `among` (made on first use), the set it lets through and the queried body it leaves out, both cleared after each query. */
@@ -54,6 +57,10 @@ export interface JoltWorldHost {
   readonly castSettings: JoltNS.ShapeCastSettings
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes: Map<number, JoltNS.Shape>
+  /** The shapes `overlapShape` asked about, by the description's identity (a kit asks with the same few again and again): held up to a few, let go of at `dispose`. */
+  readonly queryShapes: Map<string, JoltNS.Shape>
+  /** The shapes and skeletons the ragdolls made by `createRagdoll` share. */
+  readonly ragdollCache: RagdollCache
   readonly partners: Map<number, Map<number, number>>
   trackPairs: boolean
   readonly pairLog: number[]

@@ -157,17 +157,24 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 5 — Ragdoll
 > 🤖 Modelo: `sonnet` (T5.3 é 🧠 → `opus`)
 
-- **T5.1 Ragdoll de pessoa e zumbi** pelo ragdoll do Jolt, 20/8, `Stabilize`, a partir de `describeBody(createRig(...))`. Aceite (B3): nenhuma
-  junta > 0,1 rad além do limite por mais de 3 quadros; dorme em ≤ 4 s; 20 ragdolls dentro do orçamento do C7.
+- ✅ **T5.1 Ragdoll de pessoa e zumbi** (2026-11-26: B3 passa no `KIT_WORLD`; 20 R0 davam 16,1 ms contra 3,0 do C7; decisão do dono: `ragdollsMax` 1 R0 + o resto R1, dentro do C7, `evidence.md` `## T5.1`) pelo ragdoll do Jolt, 20/8, `Stabilize`, a partir de `describeBody(createRig(...))`. Aceite (B3): nenhuma
+  junta > 0,1 rad além do limite por mais de 3 quadros; dorme em ≤ 4 s; 20 corpos mortos (cota de R0 + o resto R1) dentro do orçamento do C7.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/ragdoll.test.ts` · `sonnet`.
-- **T5.2 Desmembrar e cortar** com `setShape` e juntas que quebram, mantendo a massa (bug 1 já corrigido).
+- ✅ **T5.2 Desmembrar e cortar** (2026-11-26: `tearOff`/`cutSegment` em `game-characters`, `removeJoint` de junta de ragdoll e `massOf` no contrato, massa constante a 1e-7, `evidence.md` `## T5.2`) com `setShape` e juntas que quebram, mantendo a massa (bug 1 já corrigido).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-characters-three test` · `sonnet`.
-- **T5.3 🧠 Regra da pilha:** pilhas são correntes ou cápsulas, nunca ragdolls inteiros (1 700 corpos não dormem em nenhum motor); LOD
+- ✅ **T5.3 🧠 Regra da pilha** (feito em 2026-11-26: `design/pilha-e-lod.md` v2, reprovada a v1 pelo `architect` com 12 mudanças, todas aplicadas; D-T5.3a decidida pelo dono, opção A): pilhas são correntes ou cápsulas, nunca ragdolls inteiros (1 700 corpos não dormem em nenhum motor); LOD
   ragdoll → cápsula pela distância. Decisão em `design/pilha-e-lod.md`, revisada por `architect`.
   Mecânica? não · Aceite por comando? não · `opus`.
-- **T5.4 Implementar a regra da pilha.** Aceite: 100 corpos empilhados dormem em ≤ 10 s a ≤ 4 ms; troca de LOD de 100 corpos ≤ 5 ms.
-  Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/crowd.test.ts` · `sonnet`.
-- **T5.5 Ragdoll de quadrúpede** (`game-animals-three`). Aceite: mesmo critério de T5.1.
+- **T5.4 Implementar a regra da pilha** (2026-11-26, **sem ✅**: 11 dos 13 testes do §7 passam; o T1 — 100 corpos a 5,9 ms e dormindo a ~12 s no `KIT_WORLD` contra 2,5 ms e 10 s — falha e o T5 fica no limite, R2 → R1 em 4,8–5,5 ms contra 5; `evidence.md` `## T5.4`, subseção "Fechamento": `pileChainsMax` de 0 a 30 não fecha o T1, T5 em 3,9–5,5 ms com o cache do adaptador; decisão do dono pedida). Aceite: 100 corpos empilhados dormem em ≤ 10 s a ≤ 4 ms; troca de LOD de 100 corpos ≤ 5 ms.
+  Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/body-lod.test.ts` · `sonnet`.
+  Pendências nomeadas desta task (nada disso está feito):
+  - **T5.4f** achar por que a pilha de R2 (cápsulas) não dorme em 14 s com `pileChainsMax` de 10 a 40 (`evidence.md`, "Nascer como cápsula"): sem isso o teto de correntes não fecha o T1.
+  - **T5.4a** desenho de R0/R1 perto por esqueleto (`game-characters-three`, §5.3 do desenho): o `game-crowd-three` segue desenhando cadáver como instância de pose fixa e `y: 0` (`instances.ts`); troca nos mesmos 18 m. Exige §5 do CLAUDE.md (1ª e 3ª pessoa, print por câmera).
+  - **T5.4b** canal novo de instância (y + quaternion) em `game-crowd-three` para R2, R2f e R3.
+  - **T5.4c** ligar `createCorpseBodies` ao jogo/sala: `interest` do jogador, `follower` no registro de cadáveres, `onSettled` → `relocateCorpse`, `budget` do host (`beginFrame`); hoje só os testes usam.
+  - **T5.4d** restaurar num mundo novo depois de trocas (C8): as chaves dos corpos levam o número de sequência, então `restoreState` só vale no mesmo mundo; recriar na ordem de criação exige o número de sequência no estado salvo.
+  - **T5.4e** o orçamento somado do §2.3 (20 R0 + pilha + 1 000 agentes + destroços) na sala de teste.
+- ✅ **T5.5 Ragdoll de quadrúpede** (2026-11-26: `ragdollOfAnimal`/`chainOfAnimal`/`corpseBodyKitOfAnimal` puros em `game-animals`; B3 em cão, gato, vaca e cavalo, dorme em 2,1 a 2,7 s e excesso máximo 0,024 rad; R0 de 0,5 a 0,8 ms; `evidence.md` `## T5.5`). Aceite: mesmo critério de T5.1.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-animals-three test` · `sonnet`.
 
 ## Fase 6 — Veículos
@@ -192,7 +199,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 > 🤖 Modelo: `sonnet`
 
 - **T7.1 Multidão:** agentes como cápsulas cinemáticas (`game-crowd` move, o motor só empurra), corpos no chão como correntes, porta que cede
-  por junta. Aceite: 1 000 agentes ≤ 0,5 ms; `state-hash` e `team-golden` de `game-crowd` iguais.
+  por junta. Aceite: 1 000 agentes ≤ 0,5 ms; `state-hash` e `team-golden` de `game-crowd` iguais **quando nada empurra corpos** (D-T5.3a, opção A, dono em 2026-11-26: a física manda a posição do cadáver empurrado por `corpses.relocate`; `design/pilha-e-lod.md` §4).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-crowd test` e `... game-crowd-three test` · `sonnet`.
 - **T7.2 Consultas:** broadphase do motor sob `surfaceRay` (o acerto final continua a superfície desenhada), raio com vários acertos, esfera
   varrida, corpos criados no mesmo quadro. Aceite: 1 000 raios ≤ 2 ms; mesmo resultado que o caminho antigo nos testes do §7.
@@ -220,6 +227,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim (à mão, nunca em commit) · `sonnet`.
 - **T8.6 AMD, Firefox e ARM** conforme a resposta do dono (`spec.md` §11). Aceite: orçamentos do C7 na faixa medida; C8 em Firefox.
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.
+- **T5.6 Otimizar o custo do R0** (depois da Fase 8; decisão do dono em 2026-11-26: `ragdollsMax` = 1 até aqui). Caminho mais promissor: R0 a 60 Hz em vez de 120 e sem os passes 20/8 (`KIT_RAGDOLL_SOLVER`). Aceite: 3 a 4 R0 dentro do C7 (3,0 / 4,0 ms, 20 corpos mortos) sem perder o B3 (ragdoll estável, `stabilize`).
+  Mecânica? não (mede e decide por passo) · Aceite por comando? sim (`pnpm --filter @adatechnology/game-physics-jolt test:cost`) · `sonnet`.
 - **Revisão final:** `code-reviewer` com `model=sonnet`. PR só com o ok do dono, aberto e mostrado no Chrome dele.
 
 ## Prompt de execução

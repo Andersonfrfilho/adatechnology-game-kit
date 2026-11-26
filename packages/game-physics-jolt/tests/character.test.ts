@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { KIT_WORLD } from '@adatechnology/game-physics'
 import type { CharacterDesc, CharacterId, PhysicsWorld, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
-import { WALKER, eulerXYZ, ground, report, stats } from './scenes'
+import { WALKER, eulerXYZ, expectCostAtMost, ground, report, stats } from './scenes'
 
 const H = 1 / 120
 
@@ -138,7 +138,7 @@ describe('character controller behind the contract (spec 008 T4.1)', () => {
     }
     const cost = stats(samples)
     report('character50', { fixedStepMs: cost })
-    expect(cost.median).toBeLessThanOrEqual(0.5)
+    expectCostAtMost(cost.median, 0.5)
     for (const id of crowd) world.removeCharacter(id)
     world.dispose()
   })

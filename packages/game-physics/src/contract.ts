@@ -51,10 +51,13 @@ export type Motion = 'static' | 'kinematic' | 'dynamic'
  * What the body is, for filtering. The adapter maps layers to its broadphase; `collides` is the default pair table (`LAYER_PAIRS`).
  * `sensor` bodies report overlap and never push.
  */
-export type Layer = 'static' | 'debris' | 'prop' | 'character' | 'agent' | 'vehicle' | 'sensor'
-export const LAYERS: readonly Layer[] = ['static', 'debris', 'prop', 'character', 'agent', 'vehicle', 'sensor']
+export type Layer = 'static' | 'debris' | 'prop' | 'character' | 'agent' | 'vehicle' | 'sensor' | 'corpse'
+export const LAYERS: readonly Layer[] = ['static', 'debris', 'prop', 'character', 'agent', 'vehicle', 'sensor', 'corpse']
 
-/** Which layers meet (symmetric). Crowd agents (kinematic, driven by game-crowd) do not meet each other: game-crowd separates them itself. */
+/**
+ * Which layers meet (symmetric). Crowd agents (kinematic, driven by game-crowd) do not meet each other: game-crowd separates them itself. A `corpse` (a dead body of any
+ * rung of the body LOD) meets the fixed world, debris, props, characters and vehicles, other corpses, and sensors, and not agents: a horde climbing a pile does not shove it.
+ */
 export const LAYER_PAIRS: ReadonlyArray<readonly [Layer, Layer]> = [
   ['static', 'debris'], ['static', 'prop'], ['static', 'character'], ['static', 'vehicle'],
   ['debris', 'debris'], ['debris', 'prop'], ['debris', 'character'], ['debris', 'vehicle'], ['debris', 'agent'],
@@ -62,6 +65,7 @@ export const LAYER_PAIRS: ReadonlyArray<readonly [Layer, Layer]> = [
   ['character', 'character'], ['character', 'vehicle'], ['character', 'agent'],
   ['vehicle', 'vehicle'], ['vehicle', 'agent'],
   ['sensor', 'debris'], ['sensor', 'prop'], ['sensor', 'character'], ['sensor', 'agent'], ['sensor', 'vehicle'],
+  ['corpse', 'static'], ['corpse', 'debris'], ['corpse', 'prop'], ['corpse', 'character'], ['corpse', 'vehicle'], ['corpse', 'sensor'], ['corpse', 'corpse'],
 ]
 
 /** Coulomb friction of a surface: static (what holds it still) and dynamic (what drags it while it slides). Mixed by geometric mean. */
@@ -166,6 +170,8 @@ export interface RagdollPart {
 export interface RagdollDesc {
   readonly parts: readonly RagdollPart[]
   readonly stabilize?: boolean
+  /** Born asleep (a body of a pile that was put down, a loaded game): it wakes when something touches it or `wake` is called. Default awake. */
+  readonly sleeping?: boolean
   /** Solver passes for its bodies and joints in place of the world's (velocity, position): more holds the limits through a hard landing. */
   readonly solverSteps?: { readonly velocity: number; readonly position: number }
 }
@@ -240,6 +246,8 @@ export interface RayHit {
 /** Bodies the queries skip (by layer), or only these layers. */
 export interface QueryFilter {
   readonly layers?: readonly Layer[]
+  /** Bodies the query leaves out before the narrow phase (a corpse asking what is in its way does not meet its own parts). */
+  readonly ignore?: readonly BodyId[]
 }
 
 /**
@@ -327,6 +335,8 @@ export interface PhysicsWorld {
    * (`setShape`).
    */
   updateHeights(id: BodyId, region: HeightRegion, heights: ArrayLike<number>): boolean
+  /** A dynamic body's mass now, kg: the engine's own for a ragdoll's parts (`stabilize` evens them out), the kit's for the rest. */
+  massOf(id: BodyId): number
   /** Writes x, y, z then x, y, z, w into `out` at `offset`. */
   readPose(id: BodyId, out: Float32Array | Float64Array, offset: number): void
   readVelocity(id: BodyId, out: Float32Array | Float64Array, offset: number): void
@@ -356,6 +366,7 @@ export interface PhysicsWorld {
   /** The two bodies stop meeting (true) or meet again (false): our rule handles the pair (chunks born inside each other go apart along the ground). */
   ignorePair(a: BodyId, b: BodyId, ignore: boolean): void
   createJoint(desc: JointDesc): JointId
+  /** The joint goes. A ragdoll's own joint too (a limb torn off): its two sides stay bodies of that ragdoll, free of each other, and leave with it (`removeRagdoll`). */
   removeJoint(id: JointId): void
   /** Angles of a joint now (radians), for checking limits: `hinge` for hinge, fixed and ragdoll hinge joints; `swing` and `twist` for swing-twist; 0 for the rest. */
   jointAngles(id: JointId): { swing: number; twist: number; hinge: number }
@@ -396,6 +407,16 @@ export interface PhysicsWorld {
   rayFirst(from: Vec3, direction: Vec3, length: number, filter?: QueryFilter): RayHit | null
   /** Bodies a sphere overlaps (user values into `out`); returns the count. */
   overlapSphere(center: Vec3, radius: number, out: BodyId[], filter?: QueryFilter): number
+  /**
+   * The bodies (all but sensors) in `filter`'s layers that a shape overlaps when put at `position` with `rotation`, into `out` (cleared; each body once); returns the count.
+   * For asking before making a body: nothing is made inside what is there. Compound shapes, convex hulls and the rest of `ShapeDesc` work; a trimesh or height field does not (they do not move).
+   */
+  overlapShape(shape: ShapeDesc, position: Vec3, rotation: Quat, out: BodyId[], filter?: QueryFilter): number
+  /**
+   * The bodies this one touches now (resting contact too, which `contacts` does not report: it holds only the ones that closed fast), into `out` (cleared); returns the count.
+   * A sensor is overlapped, never touched, and is not listed.
+   */
+  contactBodies(id: BodyId, out: BodyId[]): number
   /**
    * How deep (m) a body is inside the fixed bodies (layer `static`) where it stands now, and the way to move it out (unit, world) into `out`; 0 when it is in none.
    * The deepest overlap is reported: a host that places a body checks it, so nothing is made or put inside what does not move. `among` counts only those bodies.

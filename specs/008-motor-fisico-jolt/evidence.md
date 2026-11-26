@@ -3677,3 +3677,324 @@ Os 41 goldens das casas seguem iguais.
 | 447 | 4.89 | 3.79 | | 497 | 4.99 | 5.21 |
 | 448 | 5.42 | 4.83 | | 498 | 5.69 | 4.37 |
 | 449 | 5.54 | 5.52 | | 499 | 5.23 | 5.07 |
+## T5.1 — ragdoll de pessoa e zumbi (2026-11-26) — **B3 passa; 20 R0 estouram o C7 no `KIT_WORLD`: parado, o coordenador decide**
+
+## T5.1 — ragdoll de pessoa e zumbi (2026-11-26) — **B3 passa; 20 R0 estouravam o C7; decisão do dono: `ragdollsMax` = 1 R0 + o resto R1 (fecha ✅)**
+
+**Portado** (de `game-physics-jolt/tests/scenes.ts:49-102`, comportamento igual): `LIMITS` e `ragdollSpec` viraram `ragdollOfRig({ rig, body, build, at?, user? })` e `RAGDOLL_LIMITS` (`game-characters/src/body/ragdoll.ts`, devolve `RagdollDesc`, R0), e o corpo de 3 partes que estava escrito à mão em `crowd.test.ts` virou `chainOfRig` (`.../body/chain.ts`, R1; as medidas do spike escaladas por altura e corpo; derivar da posição das juntas do rig fez a pilha de 100 não dormir em 10 s, então ficou o porte fiel: dorme a 9,8 s como antes). `game-characters` ganhou `@adatechnology/game-physics` só para tipos. `scenes.ts`, `ragdoll.test.ts` e `crowd.test.ts` importam de `game-characters`: o gate mede o código de produção. As camadas são `character` (a `corpse` é da T5.4).
+
+**B3, um R0 de produção no `KIT_WORLD`** (120 Hz, 32/2, `stabilize`, `KIT_RAGDOLL_SOLVER` 20/8; cai de 2 m na escada e numa caixa, tiro de 9 mm em 1,5 s; `ragdoll.test.ts`, com `expect`):
+
+| Critério | Medido | Limite |
+|---|---|---|
+| maior excesso de junta | 0,106 rad (junta 15, quadro 37) | — |
+| mais passos seguidos > 0,1 rad | 1 | ≤ 3 |
+| dorme em | 2,95 s | ≤ 4 s |
+
+**C7, 20 R0 de produção no `KIT_WORLD`**, caindo e empilhando; custo de um quadro de 1/60 s (dois passos fixos), `ragdoll.test.ts` "costs: 20 production R0...":
+
+| Janela | Mediana | p90 | p99 | Limite C7 |
+|---|---|---|---|---|
+| primeiros 3 s (caindo) | **16,1 ms** | 16,9 | **18,8** | ≤ 3,0 mediana, ≤ 4,0 p99 |
+| 10 s inteiros | 0,004 (dormem a 2,9 s) | 16,3 | 17,9 | — |
+
+**Reprova o C7 por 5x** (a máquina estava com carga 8–9, mas a razão entre variantes é estável). Sonda descartável, 20 R0, primeiros 3 s, mediana do quadro de 1/60 s:
+
+| Variante | Mediana (ms) | p99 |
+|---|---|---|
+| `KIT_WORLD` + 20/8 + `stabilize` (produção) | 16,1 | 17,2 |
+| `KIT_WORLD` sem `solverSteps` (32/2 do mundo) | 6,7 | 7,7 |
+| `KIT_WORLD` + 20/8, sem `stabilize` | 16,3 | 19,2 |
+| mundo de 60 Hz padrão + 20/8 + `stabilize` | 7,8 | 10,2 |
+| mundo de 60 Hz padrão, sem `solverSteps` | 3,0 | 3,7 |
+| `KIT_WORLD` com passo de 60 Hz + 20/8 | 8,8 | 10,3 |
+
+Leitura: o spike media 60 Hz com as iterações padrão do Jolt (3,0 ms). O custo vem dos 120 Hz (2 passos por quadro) e dos 20/8 do ragdoll (que, no `KIT_WORLD`, são MAIS caros que os 32/2 do mundo: 16,1 contra 6,7); `stabilize` não pesa. Nem o melhor caso do `KIT_WORLD` (6,7) cabe em 3,0. As cotas do desenho (`ragdollsMax` 20 R0) são provisórias: decidir entre baixar a cota, mudar o solver do ragdoll ou subir o C7. O teste do custo fica **vermelho de propósito** até lá; nada foi afrouxado.
+
+`crowd.test.ts` (100 corpos de 3 partes, sono 0,08, via `chainOfRig`): dorme a 9,8 s, como antes.
+
+**Decisão do dono (2026-11-26): menos ragdolls completos.** `ragdollsMax` cai de 20 para o maior N cujos 20 corpos mortos (N R0 + 20-N R1 de `chainOfRig`) cabem no C7. Medido no `KIT_WORLD` (120 Hz, 32/2, `stabilize`, R0 em 20/8), primeiros 3 s (180 quadros de 1/60 s, tudo caindo ao mesmo tempo), trava de medição do repositório (`flock perf-measure.lock`), carga 1 min 3,1 a 3,8 (abaixo de 4; a de 15 min, 10 a 14: outras sessões) em 10 rodadas; mediana e p99 em ms, faixa das rodadas:
+
+| N R0 sozinhos | Mediana | p99 | Cabe (3,0 / 4,0) |
+|---|---|---|---|
+| 2 | 1,29 a 1,76 | 2,01 a 3,06 | sim, 7/7 |
+| 3 | 1,88 a 3,06 | 2,08 a 4,45 | sim em 6 de 7 (a falha: rodada com carga alta) |
+| 4 | 2,57 a 4,29 | 3,25 a 6,22 | não: p99 estoura em 3 de 6 |
+| 5 | 3,23 a 3,80 | 4,53 a 4,71 | não |
+| 6 | 4,01 a 4,76 | 4,61 a 7,08 | não |
+
+| N R0 + (20-N) R1 | Mediana | p99 | Cabe |
+|---|---|---|---|
+| 0 (20 R1) | 0,76 a 1,20 | 1,58 a 2,42 | sim |
+| **1** | 1,47 a 1,99 | 1,96 a 4,08 | **sim, 7 de 8 (p99 4,08 em uma rodada)**; 5 de 5 no teste |
+| 2 | 2,36 a 3,12 | 3,20 a 4,65 | não é estável: p99 estoura em 5 de 11; no teste, 2 de 3 vermelhas |
+| 3 | 3,07 a 3,90 | 3,95 a 5,45 | não (mediana > 3,0 em 5 de 6) |
+| 4 | 4,02 a 4,89 | 5,78 a 6,31 | não |
+| 5 | 5,12 a 6,02 | 7,38 a 11,03 | não |
+| 6 | 6,15 a 8,83 | 9,18 a 10,57 | não |
+
+Cada R1 custa 0,04 a 0,06 ms; cada R0, 0,65 a 0,9 ms. **N escolhido: 1**: é o maior com a política inteira (R0 + o resto R1) estável no C7. O esperado "perto de 4" vale só para R0 sozinhos (até 3, 4 não é estável); os R1 dos outros 19 corpos comem o resto do orçamento. O custo vem de o `KIT_WORLD` rodar 2 passos por quadro. Subir a cota exige baixar o custo do R0 (solver, outra rodada de medição na T5.4) ou decisão do dono sobre o C7, e não afrouxar o teste.
+
+`ragdoll.test.ts`: "costs: 1 production R0" (limites do C7 intactos) e "costs: 20 dead bodies, 1 R0 and the rest R1 chains". Verde.
+
+## T5.2 — desmembrar e cortar (2026-11-26) — ✅
+
+**Já existia e foi reaproveitado**: o modelo de dano por segmento (`game-characters/src/damage`: `BodyOps.sever`, `destroy`, evento `detach` com `groups`, `segmentsBelow`) só decide e emite; nada disso tocava a física. `ragdollOfRig`/`chainOfRig` (T5.1) dão as peças desenhadas, `describeBody` as massas, `setShape` com a massa do kit (bug 1, `set-shape-mass.test.ts`) e `ignorePair`. Nada de desmembramento existia em `game-characters-three` nem `-undead`.
+
+**Mudou**
+- `game-physics`: `removeJoint` vale também para junta de ragdoll do motor; novo `massOf(id)` (massa de agora, a do motor depois do `stabilize`).
+- `game-physics-jolt`: `removeJoint` de junta de ragdoll tira a junta do sistema e a guarda em `RagdollEntry.severed`; `removeRagdoll` a devolve antes de remover o ragdoll (o Jolt quebra se removerem uma junta que não está no sistema). `removeBody` de corpo de ragdoll agora lança (o corpo sai com `removeRagdoll`, nunca sozinho). Teste novo `ragdoll-joint-removal.test.ts` (heap igual ao byte em 10 ciclos).
+- `game-characters`: `createDoll` (R0 ou R1 como ragdoll do motor), `tearOff` e `cutSegment` (`src/body/doll.ts`, `dismember.ts`, `dismember-parts.ts`, `rigid.ts`).
+- `game-characters-three`: `tests/dismember.test.ts` (5 testes) e `game-physics`/`game-physics-jolt` como devDependencies.
+
+**Decisões**
+1. **R0, membro arrancado**: o motor não deixa tirar um corpo de um ragdoll sem destruí-lo, então o membro **não é recriado**: corta-se só a junta acima do corte e os segmentos de baixo seguem como corpos do mesmo ragdoll, com as juntas deles, a mesma forma, massa, pose e velocidade. Nada é criado nem movido: nada nasce dentro de nada e a soma de massa é a mesma por construção. O par tronco/membro já não colidia (filtro pai-filho do ragdoll) e continua sem colidir. O membro e o corpo viram dois `Doll` (`Dismembered.remaining` e `.severed`).
+2. **R1 (corrente de 3 partes)**: braço, pescoço e qualquer coisa sem corpo próprio **sai desenhada na pose de projeto** (`ragdollOfRig`), levada pelo movimento rígido do corpo da corrente que a carregava (pose e velocidade de agora), como um ragdoll novo sem `stabilize` e com as massas multiplicadas por (massa do motor / massa nominal) do portador. O portador **perde essa massa**: `setShape` encolhe a forma (raio pela raiz da fração, esfera pela raiz cúbica) com a massa do motor restante. Parte inteira dentro do membro (a cabeça) sai como no R0. Pedaços de portadores diferentes saem sem junta entre si (pescoço e cabeça). Os pares portador/pedaço ficam em `ignorePair`.
+3. **Corte (R0)**: `cutSegment(world, doll, 'forearmL', 0.5)`. O toco fica no corpo e na junta (o motor ancora a junta no centro de massa, então a forma só pode encolher em volta do centro: o toco físico fica mais curto dos dois lados, dentro da pegada do membro original; o desenho vem do rig, não daqui). O pedaço é corpo novo com a forma exata do resto do comprimento, no lugar onde ele estava, com a velocidade que tinha; o que pendia abaixo (a mão) sai como no `tearOff`. Toco, pedaço e mão não se encontram (`ignorePair`).
+4. **Só um ragdoll do motor por corpo**: o que saiu de um R0 vive e morre com o ragdoll de origem (`removeRagdoll`, uma vez por id). Soltar só o membro enquanto o corpo fica é a política da T5.4 (R0 → R1 recria).
+
+**Números** (`KIT_WORLD`, corpo-guia 1,80 m, 70,00 kg nominais; `massOf` somado sobre todos os corpos):
+
+| Caso | Antes | Depois (resto + saído) | Resto | Saído |
+|---|---|---|---|---|
+| R0, `upperArmL` arrancado (3 segmentos) | 70,00001 | 70,00001 | 58,14 | 11,86 |
+| R0, depois `shinR` cortada a 0,4 | 70,00001 | 70,00001 | | |
+| R1, `upperArmR` arrancado | 70,00000 | 70,00001 | 67,64 | 2,36 |
+
+(O `stabilize` do Jolt redistribui a massa entre as partes: o braço no R0 pesa 11,9 kg no motor contra 2,4 do R1; por isso a conta é na massa do motor, nunca na nominal.) Antebraço cortado ao meio: toco e pedaço com exatamente metade da massa do motor do antebraço (`toBeCloseTo` a 6 casas). Tolerância do aceite ±1%; o medido é 1e-7 relativo.
+Nenhuma peça sai lançada: velocidade máxima nos 0,1 s depois do corte < 3 m/s e `penetration` 0 contra o chão nos pedaços do R1.
+**Heap** (`dismember.test.ts`, 20 ciclos de R0 e R1: criar, arrancar, cortar, 0,2 s, `removeRagdoll` de cada id): `memoryInUse` igual ao byte antes e depois.
+
+**Sem motor / regressão**: `game-characters` 394 testes e `game-characters-three` 565 (inclui os 5 novos) verdes sem mudar nenhum teste existente; `game-physics-jolt` 97 passam, 2 já saltados; `tsc` dos quatro pacotes e eslint dos arquivos tocados limpos.
+
+**Para a T8.4 (§5 do CLAUDE.md, com prints, não feito aqui)**: ver em 1ª e 3ª pessoa, parado e andando, um braço arrancado (R0 e R1) e um antebraço cortado ao meio: o membro sai do lugar certo (R1 sai da pose de projeto, não da pose deitada do desenho), o toco tem a forma que o rig desenha, e o desenho do segmento ausente some junto com o corpo físico. O desenho do ausente (`body.pieces`, `detach`) continua sendo o do `game-characters-three`; ligar o evento `severed` ao `tearOff` é da integração do jogo (T5.4).
+
+## T5.4 — regra da pilha e LOD do corpo (2026-11-26) — **11 dos 13 testes do §7 passam; T1 (pilha de 100) e T5 (R2 → R1) ficam vermelhos por número medido, nada afrouxado; ✅ não dado**
+
+Máquina: Intel Core Ultra 9 275HX, Linux, Node, Jolt `wasm-compat` em uma thread, `KIT_WORLD` (120 Hz, 32/2), `PhysicsLoop.step(1/60)` = 2 passos fixos por quadro. Medidas sob `flock ~/.cache/adatechnology-game-kit/perf-measure.lock`, carga de 1 minuto de 2,3 a 3,9 (a de 15 min, 6 a 8,5: outras sessões); três rodadas, faixa entre elas. Testes em `game-physics-jolt/tests/body-lod.test.ts` (+ `lod-scenes.ts`), `game-physics/tests/body-lod.test.ts`, `game-crowd/tests/physics/relocate.test.ts`.
+
+**Passos do §8, um commit cada**
+1. Contrato e adaptador: `overlapShape`, `contactBodies`, `RagdollDesc.sleeping`, camada `corpse` (colide com `static`, `debris`, `prop`, `character`, `vehicle`, `sensor` e `corpse`; não com `agent`), `WorkKind` `'lod'`; `QueryFilter.ignore` (veio no passo 4). **Achado:** o Jolt solta os contatos de um corpo quando ele adormece (`touching` volta `false` com o corpo parado em cima de outro), então `contactBodies` de corpo dormindo consulta a própria forma alargada em 1 cm (`TOUCH_MARGIN`) e o de corpo acordado lê a tabela de parceiros do adaptador. `corpse-layer.test.ts`, 5 testes.
+2. Já feito na T5.1 (`ragdoll.test.ts` e `crowd.test.ts` importam `ragdollOfRig`/`chainOfRig`): conferido.
+3. `CorpseEntry.id` (contador, nunca reaproveitado) e `CorpseLedger.subscribe({ added, removed(entry, reason) })` com `expired`/`taken`/`replaced`/`cleared`. O corpo físico sai pelo aplicador (`follower.removed`), ver passo 4.
+4. Política pura `createBodyLod` (`game-physics/src/body-lod.ts`, 8 testes) e **um** aplicador `createCorpseBodies(SeamWorld | PhysicsLoop)` (`engine-corpses*.ts`): R0/R1/R2/R2f/R3; pilha (R0 vira R1 no passo em que encosta em 2 corpos ou o monte passa de 50 cm); distância amostrada em `interest()` no passo fixo, histerese 18/55-50/80-75 e permanência de 1 s (`dwellSeconds`: o corpo que passa a borda não pisca); cotas; troca sem salto de pose (corrente nasce do tronco, cabeça e coxas do R0; cápsula do tronco; velocidade vai junto) e com `overlapShape` antes (a forma encolhida 5 mm, para o repouso de 2 mm não contar; sobe até 5 cm); composto estático por pilha (R2f) refeito em lote, filho marcado com o id do cadáver; o que repousa em corpo removido (comido, expirado, despejado; dinâmico ou congelado) volta a R1 e cai (cascata por distância entre eixos das cápsulas). Troca por distância gasta `WorkBudget` `'lod'` (`LOD_UNITS`); pilha, cota e remoção não esperam. `corpseBodyKit` (`game-characters`) monta R0, R1, R2 e os índices que os ligam.
+5. Medidas abaixo; cotas fechadas ou com ressalva.
+6. `relocateCorpse(crowd, { id, x, z, yaw })` (`game-crowd`) sobre `CorpseLedger.replace`; o aplicador chama `onSettled` uma vez, no passo fixo, quando um corpo dorme a mais de 2 m de onde o registro o tem (o tombo do próprio corpo move o tronco até ~1,3 m). `state-hash` (2 testes) e `team-golden` (15) do `game-crowd` **iguais**, nenhum golden mudou: a física só escreve no registro quando um corpo foi empurrado.
+
+**Os 13 testes do §7**
+
+| # | Teste | Resultado | Medido |
+|---|---|---|---|
+| 1 | 100 corpos contra a parede no `KIT_WORLD`: nenhum R0 na pilha; dormem em ≤ 10 s; passo dentro do C7 da pilha (2,5 / 4,0) | **FALHA em 2 de 3 critérios** | nenhum R0 na pilha: passa (≤ 1 quadro de atraso). Dormem a **11,9 s** com a semente do teste (mais de 10 s nas 3 rodadas); mudando só a semente da rotação: 9,0, 10,5 e 11,9 s; 4 amortecimentos de corrente × 3 sementes: de 7,1 a 13,1 s, sem tendência (caos do empilhamento). Primeiros 3 s: mediana **5,88–5,98 ms**, p99 **7,5–9,8** (C7: 2,5 / 4,0). Cada R1 acordado custa ~0,055 ms (300 corpos rígidos = ~5,5 ms por quadro): o C7 da pilha (2,2 / 2,6, `crowd.test.ts`) foi medido a 60 Hz com as iterações padrão, não no `KIT_WORLD`. Sobrescrever `solverSteps` do R1 não muda nada (o do ragdoll só sobe o mínimo do mundo) |
+| 2 | 20 corpos mortos com a cota de produção (1 R0 + R1), mediana e p99 no C7 | passa | mediana 0,26–0,30, p99 0,49–1,5 (C7: 3,0 / 4,0); R0 ≤ 1 (a pilha logo rebaixa o R0) |
+| 3 | horda de 200 agentes sobre pilha de 100 dormindo: a pilha continua dormindo | passa | 0 quadros com corpo acordado em 600; 61 congelados em 8 compostos, 39 R1 |
+| 4 | morte nova sobre pilha dormindo de 100: pico ≤ 10 ms; dorme em ≤ 3 s | passa | pico **1,08–1,17 ms**; todos dormem a **2,08 s** |
+| 5 | 100 trocas R1 → R2 e de volta ≤ 5 ms, sem sobreposição, nada abaixo do chão, tronco ± 2 cm | **R1 → R2 passa; R2 → R1 no limite** | R1 → R2 mediana de 5 idas e voltas **1,7–2,1 ms** (p90 2,5–3,9); R2 → R1 **4,8–5,5 ms** (p90 6,0–8,0), uma rodada passa e duas não. Sem sobreposição, profundidade máx. 0,02 mm, deriva do tronco 6e-7 m, 0 recusadas. **Piso:** `createRagdoll` da corrente de 3 partes custa 43 µs no adaptador (4,3 ms em 100), com ou sem `stabilize`; o resto da troca (consulta, leituras, remoção) soma ~0,6 ms |
+| 6 | empurrado 3 m, desce a R3 e volta: sem teleporte; monte na célula nova | passa | tronco volta a 2 cm do guardado; `onSettled` 1 vez, a < 5 cm do tronco |
+| 7 | comido, expirado ou despejado com corpo em cima: o de cima cai e assenta | passa (6 variantes: 3 causas × em cima dinâmico ou congelado) | de 0,52 m a 0,171 m, dorme |
+| 8 | cota: com os R0 cheios a nova morte rebaixa o R0 dormindo mais longe; sem nenhum dormindo nasce R1 | passa | `ragdollsMax` 3, desempate pelo menor id |
+| 9 | histerese: corpo que passa a borda troca no máx. 1 vez por segundo | passa | 20 trocas em 60 s, intervalo mínimo 1,07 s |
+| 10 | mesmo hash de degraus a 60, 120 e 144 Hz | passa | `rungHash` 1802184475 nos três, e as poses do tronco arredondadas a 1e-6 iguais; 39 de 40 corpos chegam a R3 |
+| 11 | salvar e carregar depois de 200 trocas, bit a bit | passa | `saveState` do mundo e dos cadáveres voltam aos mesmos bytes e correm a 120 passos iguais. **Limite:** o `restoreState` do Jolt exige os mesmos corpos na mesma ordem; recarregar num mundo novo depois de trocas não é suportado (as chaves dos corpos levam o número de sequência). Pendência abaixo |
+| 12 | ciclos de troca devolvem o heap ao mesmo byte | passa | 12 ciclos (criar, R2, R1, congelar, R3, remover) depois de 3 de aquecimento: `memoryInUse` igual, 0 corpos |
+| 13 | opção A: motor e célula do monte dentro de 1 célula após `relocate` | passa | monte na célula do tronco (3×3) e **zero** na antiga |
+
+**Cotas**
+- `ragdollsMax` 1 (T5.1), mantida: 20 mortes, mediana 0,26–0,30 ms.
+- `islandBodiesMax` 300: **fica, com a ressalva do T1**. Uma ilha de 300 corpos rígidos acordados (a pilha de 100 correntes) custa mediana 5,9 ms e p99 7,5–9,8 no `KIT_WORLD`: dentro da condição 10 (pico ≤ 10 ms) e fora do C7 (2,5 / 4,0). Teste: `islandBodiesMax` 60 e 40 corpos, congelam os mais antigos que dormem (18 R2f).
+- `dynamicBodiesMax` 900: **fica, com a ressalva**. 300 correntes dormindo (900 corpos rígidos): a política custa **0,02 ms** por quadro (mediana de 180). O pior quadro com todas caindo juntas, medido: p99 6,8–8,3 ms, máx. 12,2–12,6 ms: passa da condição 10 uma vez. O teto só tira os que dormem; a cota de unidades do `WorkBudget` espalha as trocas.
+- Orçamento somado do §2.3 (20 R0 + pilha + 1 000 agentes + destroços no mesmo quadro): **não medido**: exige a sala de teste (navegador, §9).
+
+**Gates:** `game-physics` 30, `game-physics-jolt` 133 passam + 1 vermelho (T1, acima) e 2 já saltados, `game-characters` 396, `game-characters-three` 565, `game-crowd` 142, `game-crowd-three` 48 (dependências `dist` refeitas antes); `tsc --noEmit` e `eslint` limpos nos seis pacotes tocados.
+
+**Para o dono decidir (T1):** (a) o C7 da pilha de 100 passa a valer no `KIT_WORLD` (6 / 9 ms) e o "10 s" vira "13 s"; ou (b) a pilha usa R2 (cápsula, 0,02 ms cada) para o que dorme em pilha longe do jogador e R1 só nos ~30 corpos mais próximos; ou (c) o ragdoll da corrente deixa de ser do motor (loose bodies não custam menos). Recomendo (b): é o que o desenho pede para o longe e é medível.
+
+### Fechamento (2026-11-26): T1 e T5 depois da decisão (b)
+
+Medidas sob `flock perf-measure.lock`; carga de 1 minuto de 2 a 5,6 no T1 (a de 15 min, 6,5 a 6,9: outras sessões rodando vitest sem a trava) e de 2 a 13 no T5. **Os 13 testes do §7 não passam; ✅ não dado.**
+
+**T1: opção `pileChainsMax` (`BodyLodOptions`, `BodyLodInput.pileRank`, `rankPiles`)**. Cada ilha de corpos que se tocam ordena os corpos em pilha por distância ao ponto de interesse (o menor id entre iguais; sem `interest` todas as distâncias são 0); acima do número, R1 → R2 **forçado** no passo em que é visto (a troca não-forçada pedia lugar ao `overlapShape` e parava em ~20 R2: a cápsula do corpo inteiro encosta nos vizinhos da pilha), pela mesma `switchRung` do §3 (pose sem salto, velocidade levada). R2 acordado não volta a R1 enquanto passa do número; R2 que dorme sob outro corpo na pilha congela (R2f) como o R1. Tabela, 8 sementes de rotação por número (`yaw = id × semente`: 0,7 0,3 0,5 0,9 1,1 1,3 1,7 2,1), `KIT_WORLD`, 600+ quadros de 1/60 s; "dorme" em segundos (-1: não dormiu em 14 s):
+
+| `pileChainsMax` | tempo para dormir (8 sementes) | ≤ 10 s | mediana 3 s (ms) | p99 3 s (ms) | carga 1 min |
+|---|---|---|---|---|---|
+| `Infinity` (hoje) | semente 0,7: 11,9 (e 9,0, 10,5, 11,9 nas medidas anteriores) | não | 5,4 | 7,2 | 4,5 |
+| 30 | 11,6 / -1 / 10,4 / 11,4 / 11,6 / -1 / -1 / 12,9 | 0 de 8 | 3,5–4,0 | 6,1–7,1 | 3,5 |
+| 20 | 10,4 / 12,2 / 10,4 / -1 / -1 / 13,1 / -1 / 8,7 | 1 de 8 | 3,1–3,7 | 6,1–8,2 | 3,8 |
+| 10 | -1 / 12,4 / 12,5 / 10,9 / 7,7 / -1 / -1 / -1 | 1 de 8 | 2,9–3,5 | 5,8–7,8 | 4,0 |
+| 5 | 12,6 / -1 / 12,8 / -1 / 12,8 / 10,6 / 13,9 / -1 | 0 de 8 | 2,6–2,8 | 5,2–6,8 | 4,7 |
+| 0 | 10,2 / 9,2 / 8,8 / 13,8 / 10,1 / 9,9 / 10,0 / 9,6 | 5 de 8 | 2,2–2,4 | 6,0–9,3 | 5,6 |
+
+Nenhum número fecha o T1. (1) **Sono:** até com 0 (tudo cápsula) 3 de 8 sementes passam de 10 s; piso de 8,8 s; uma pilha de postes de cápsula não assenta mais rápido que a de correntes, e 5–30 ficam piores que 0 (mistura). (2) **p99:** vem dos quadros 0 a 3 (24,7; 10,2; 8,6; 6,1 ms com 0), em que 100 correntes nascem sobrepostas num monte; a troca só roda depois e não os alcança: só nascer em R2 dentro da pilha os baixaria (mudança de nascimento, não pedida). (3) **Mediana:** só 0 chega perto de 2,5 (2,2–2,4, sob carga). **Padrão: `Infinity` (desligado)**, nada muda para quem não ligar; a opção, o `pileRank` e o congelamento de R2 ficam, com testes de política (2) e de integração (`pileChainsMax: 5`, 40 corpos). **Decisão do dono:** (a) subir o limite do C7/10 s no `KIT_WORLD`; (b) nascer R2 em pilha cheia (novo, reduz o p99, não o sono); (c) o ragdoll da corrente fora do motor.
+
+**T5: cache no adaptador** (`game-physics-jolt/src/ragdoll-cache.ts`): `createRagdoll` reaproveita, por mundo, a forma de cada parte (chave: tipo e dimensões exatas; no máximo 64) e o `Skeleton` (chave: lista de pais; uma `RagdollSettings` vazia segura a referência, senão a última corrente removida o libera); soltos no `dispose` (§8). Não há chave quantizada: dimensões exatas não mudam o resultado físico. As `RagdollSettings` em si **não** são reaproveitadas: os pontos das juntas são em coordenadas do mundo e mudam com a pose (e `chainOfPoses` move cabeça e pernas fora do quadro rígido). Antes/depois, 100 R2 → R1, mediana: teste real, carga ~1,6: antes 4,78 / 5,35 / 4,55 (e 4,8–5,5 da T5.4); depois, carga ~2: 5,55 / 4,43 / 4,89 / 3,90 (carga 6 a 13: 5,3 a 7,5, sem valor). A/B no mesmo processo (mundo reassentado 0,5 s entre as idas, 27 trocas por lado): sem cache 5,25 e 5,78; com cache 4,32 e 4,91, ~0,9 ms (17%). Onde vai o resto (por troca, carga ~3): `createRagdoll` ~29 µs (campos e juntas por chamada de wasm), 3 `overlapShape` ~8 µs, leituras ~2 µs. **Efeito de ordem:** sem passos entre as idas e voltas, a árvore do broadphase degrada (a mesma ida e volta sobe de ~4,3 para 12–14 ms em 30 trips), o que explica a mediana do teste variar com a carga. T5 **não** fecha com folga: passa em ~3 de 4 rodadas com a máquina a carga ≤ 2.
+
+**Gates** (carga alta, ver acima): `game-physics` 32 (30 + 2 novos), `game-characters` 396, `game-crowd` 142 com `state-hash` `7979b7a6` e `9449b822` e os 3 `team-golden` iguais (nenhum golden mudou), `game-physics-jolt` 134 + 1 teste novo passam, e 3 vermelhos sob carga de 11: T1 (acima), T5 (6,4 ms) e `ragdoll.test.ts` case 2 (3,18 ms contra 3,0: perf, a conferir em máquina quieta); `tsc --noEmit` e `eslint` limpos em `game-physics` e `game-physics-jolt`.
+
+### Fechamento 2 (2026-11-26): T1 no `KIT_WORLD` com nascimento em sequência, e onde cada limite de custo é cobrado
+
+**Decisão do dono (2026-11-26):** nova linha do C7 no `KIT_WORLD` (120 Hz, 32/2): **dorme em ≤ 14 s, mediana ≤ 6 ms, p99 ≤ 10 ms**; a linha antiga (2,5 / 4,0 ms, 10 s) fica marcada como do mundo de 60 Hz com iterações padrão (`spec.md` §6.2, `design/pilha-e-lod.md` §1 e §7). **Os 13 testes do §7 não passam (T1 vermelho); ✅ não dado. Limite não foi subido.**
+
+**Cena nova** (`tests/lod-scenes.ts` `dropPile`): os 100 corpos nascem **um a cada 3 quadros** (20 por segundo; a pilha leva 5 s para se formar), nas mesmas posições do monte contra a parede (`heapAt`). Cadência: é uma matança rápida o bastante para empilhar e lenta o bastante para nenhum par nascer no mesmo quadro, como no jogo; não foi escolhida pelo resultado. Janela de custo: os 480 primeiros quadros (5 s de nascimentos + 3 s depois do último). "Dorme" conta desde o primeiro nascimento, com todos já nascidos (o último nasce a 4,95 s). Sementes: as 8 de rotação (`yaw = id × semente`) e 5 novas (0,4 0,6 1,2 1,5 1,9), fixadas antes da medição.
+
+Tabela (13 sementes, `KIT_WORLD`, `perf-measure.lock`; última rodada, carga de 1 min 2,0–2,4; duas rodadas anteriores com carga 3,4–6,1 deram o mesmo sono, bit a bit, e custos parecidos). "-1": não dormiu em 16 s. Passa: dorme ≤ 14, mediana ≤ 6, p99 ≤ 10.
+
+| semente | dorme (s) | mediana (ms) | p99 (ms) | máx (ms) | carga | passa |
+|---|---|---|---|---|---|---|
+| 0,7 | -1 | 4,57 | 9,88 | 12,5 | 2,2 | não (sono) |
+| 0,3 | 11,6 | 4,52 | 10,06 | 12,1 | 2,1 | não (p99) |
+| 0,5 | 11,6 | 4,45 | 9,54 | 12,0 | 2,0 | sim |
+| 0,9 | 13,7 | 4,19 | 11,49 | 13,7 | 2,0 | não (p99) |
+| 1,1 | 14,9 | 4,24 | 9,15 | 12,7 | 2,0 | não (sono) |
+| 1,3 | 14,2 | 4,70 | 8,91 | 12,4 | 2,2 | não (sono) |
+| 1,7 | -1 | 4,35 | 10,59 | 12,7 | 2,1 | não (sono, p99) |
+| 2,1 | 11,4 | 4,26 | 10,38 | 11,9 | 2,0 | não (p99) |
+| 0,4 | -1 | 4,41 | 10,04 | 15,0 | 2,0 | não (sono, p99) |
+| 0,6 | 10,8 | 4,44 | 9,13 | 10,2 | 2,0 | sim |
+| 1,2 | 12,9 | 4,32 | 8,56 | 10,4 | 2,0 | sim |
+| 1,5 | 13,7 | 4,80 | 12,13 | 15,8 | 2,4 | não (p99) |
+| 1,9 | 11,3 | 6,08 | 15,93 | 16,8 | 2,4 | não (mediana, p99) |
+
+**Não fecha:** 3 de 13 passam. (1) **Sono** (determinístico, não depende de carga): 5 de 13 passam de 14 s (0,7, 1,1, 1,3, 1,7, 0,4); 3 não dormem em 16 s. (2) **Mediana**: 4,2–4,8, dentro de 6 (a 1,9 dá 6,08, com carga 2,4). (3) **p99**: 8,6–15,9; 7 de 13 acima de 10, com a máquina em carga 2. O nascimento em sequência baixou o pico dos primeiros quadros (antes 24,7 ms), mas o p99 da janela ainda passa de 10 em mais da metade das sementes. Pelo combinado, tabela registrada e parado; o limite não subiu. Opções que continuam do dono: (a) subir o sono para ~17 s (o pior medido com sono é 14,9); (b) nascer em R2 dentro da pilha cheia; (c) ragdoll da corrente fora do motor (ver "Fechamento").
+
+**Onde cada limite passou a ser cobrado.** O repositório não tinha faixa de custo para o `game-physics-jolt`: os testes de milissegundos rodavam no `pnpm test` (CI e pre-push), e as medições longas ficam atrás de variável (`PROFILE=1`, `B6_WAKE`, `DETERMINISM_*`) ou nas rodadas sob a trava (`perf-gate.mjs`, `examples/test-room/perf.mjs`, com `flock perf-measure.lock`, regra §9). Nova faixa: `pnpm --filter @adatechnology/game-physics-jolt test:cost` (`PHYSICS_COST=1` sob `flock ~/.cache/adatechnology-game-kit/perf-measure.lock`); `expectCostAtMost` (`tests/scenes.ts`) só afirma o limite com a variável ligada. Ligar essa faixa na rodada diária fica como pendência (a diária hoje é GPU e navegador).
+
+| Limite | Antes | Agora |
+|---|---|---|
+| T1 sono ≤ 14 s, nenhum R0 na pilha (13 sementes na faixa, 8 no CI) | `pnpm test` | **`pnpm test` (CI)**: é contagem de tempo simulado, determinística |
+| T1 mediana ≤ 6 ms, p99 ≤ 10 ms | `pnpm test` | faixa de custo |
+| T2 20 corpos, mediana ≤ 3,0 e p99 ≤ 4,0 | `pnpm test` | faixa de custo (`R0 ≤ 1` fica no CI) |
+| T4 morte sobre pilha, pico ≤ 10 ms | `pnpm test` | faixa de custo (sono ≤ 3 s fica no CI) |
+| T5 100 trocas ≤ 5 ms por sentido | `pnpm test` | faixa de custo (recusadas, sobreposição, profundidade, deriva ficam no CI) |
+| 300 corpos dormindo, mediana ≤ 0,5 ms | `pnpm test` | faixa de custo (cota de 900 corpos fica no CI) |
+| `ragdoll.test.ts` casos 1 e 2, 3,0 / 4,0 ms | `pnpm test` | faixa de custo (contagem de corpos fica no CI) |
+| `character.test.ts`, 50 controladores ≤ 0,5 ms | `pnpm test` | faixa de custo |
+
+Nenhum número mudou. Na faixa (carga 3,6–4,3 na rodada inteira) T2, T4, T5, 300 dormindo, `ragdoll.test.ts` 1 e 2 e `character.test.ts` passaram; só o T1 falhou.
+
+**Estado dos 13 testes do §7:** 1 vermelho (T1: sono e p99, tabela acima); 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 passam (os de custo, 2, 4 e 5, na faixa de custo).
+
+**Gates:** `game-physics` 32, `game-characters` 396, `game-crowd` 142 (`state-hash` e `team-golden` iguais; nenhum arquivo de `src` mudou neste passo), `game-physics-jolt` `pnpm test`: 139 passam, 4 vermelhos, todos o T1 por sono (0,7, 1,1, 1,3, 1,7); `tsc --noEmit` e `eslint` limpos em `game-physics-jolt/tests`.
+
+### Pilha que não dorme (2026-11-26): a corrente (R1) não tinha o corpo do R0 e do R2
+
+**Causa.** `chainOfRig` (`packages/game-characters/src/body/chain.ts`) montava o pescoço e o quadril **sem atrito de junta** e as três partes com a **superfície padrão do motor** (atrito 0,7 / 0,6, restituição 0,2), enquanto o R0 (`ragdoll.ts:79,81,108`: `friction: 2`, `{0,8; 0,6; 0,05}`) e o R2 (`engine-corpses-swap.ts` `capsuleDesc`: o mesmo material) já tinham. Uma cabeça de 5 kg numa junta sem atrito é um pêndulo: o único freio é o amortecimento padrão do Jolt (5 %/s). O Jolt dorme **por ilha**; os 300 corpos rígidos da pilha são uma ilha só, então uma cabeça balançando 3 cm mantém os 100 cadáveres acordados.
+
+**Sonda** (por semente vermelha, `KIT_WORLD`, nascimento 1 a cada 3 quadros, sem alterar código; sonda apagada):
+- 0,7 / 1,7 / 0,4, aos 15,5 s: **15 / 21 / 24 partes** ainda se mexem (lin > 0,02 m/s ou ang > 0,2 rad/s); **12 / 21 / 23 são cabeças** (as outras: torsos e pernas puxados por elas). Nenhum corpo oscila entre dois vizinhos, nenhum acordado por contato novo: nenhum evento de acordar depois dos 5 s.
+- Corpo 8 da semente 0,7: torso e pernas a 0,000 m/s, cabeça a 0,2 m/s e 1,5 rad/s, indo e voltando 3,3 cm em z com meio período de 0,5 s, **ângulo do pescoço colado no limite de balanço (0,500 rad) e a torção correndo de -0,35 a -0,49**. Pico de velocidade da cabeça por segundo, de 7 s a 16 s: 0,302, 0,287, 0,274, 0,261, 0,249, 0,239, 0,229, 0,220, 0,211, 0,203, ou seja, **-4,4 %/s = e^-0,045**, o amortecimento padrão do Jolt. Para cair de 0,2 m/s abaixo do limite de sono (0,08 m/s de ponto) faltam ~36 s.
+- A política do kit **não participa**: contagem `r1 100, r2 0, r2f 0, piles 0` do começo ao fim (ninguém dorme, então nada congela), 0 trocas de degrau, 0 `overlapShape`. A prova em contrário: o mesmo custo por quadro com `evaluateEvery: 1e9` (política desligada): semente 1,7 p99 12,65 contra 12,41; 2,1 13,12 contra 13,10.
+
+**Correção** (`chain.ts`): `friction: 2` nas duas juntas (o mesmo número do R0) e `material` `{0,8; 0,6; 0,05}` nas três partes (o do R0 e do R2). Nenhum limite de teste, de junta ou de cota mudou; não há amortecimento novo (`angularDamping` do R1 segue o padrão). Teste: `game-characters/tests/ragdoll-of-rig.test.ts` (vermelho antes: `[undefined, undefined]` contra `[2, 2]`; verde depois).
+
+**Passo a passo** (13 sementes, segundos até todos dormirem; -1 = não dormiu em 16 s):
+
+| semente | antes | só atrito de junta | atrito + material (final) |
+|---|---|---|---|
+| 0,7 | -1 | 8,5 | 11,3 |
+| 0,3 | 11,6 | 9,8 | 8,7 |
+| 0,5 | 11,6 | 9,4 | 9,8 |
+| 0,9 | 13,7 | 8,7 | 9,4 |
+| 1,1 | 14,9 | 9,5 | 9,3 |
+| 1,3 | 14,2 | 9,0 | 10,9 |
+| 1,7 | -1 | 10,4 | 9,5 |
+| 2,1 | 11,4 | 9,3 | 8,9 |
+| 0,4 | -1 | 8,9 | 9,4 |
+| 0,6 | 10,8 | 9,1 | 10,2 |
+| 1,2 | 12,9 | 9,7 | 9,9 |
+| 1,5 | 13,7 | 11,0 | 13,1 |
+| 1,9 | 11,3 | 14,1 | 11,2 |
+
+Só o atrito de junta já tira 12 de 13 sementes de 11,0 s ou menos; a 1,9 ficava em 14,1 s (a pilha escorregando a cada ~1 s, uma perna ou cabeça caindo 4 cm a 0,9 m/s, sem nenhuma ação da política) e o T4 (morte sobre pilha dormindo, 3 s) passou a 5,68 s. Com o material junto a pior semente dorme a 13,1 s e o T4 fica em 2,4 s (média de 6 pontos de queda da morte nova: 2,9 s com a correção inteira, 4,1 só com o atrito, 3,8 sem nenhuma; o 2,08 s de antes era um dos pontos, de 2,1 a 5,7 s). O material sozinho **não foi medido**. A intensidade de cada efeito entre as sementes não é monótona: o empilhamento é caótico (a ordem muda de uma configuração para outra), por isso a tabela traz a configuração e não só a média.
+
+**Medido no final** (`flock perf-measure.lock`, carga de 1 minuto de 2,6 a 3,5; sono é determinístico e não depende dela): dorme **8,7 a 13,1 s nas 13 sementes** (antes: 3 não dormiam em 16 s, 2 passavam de 14 s); mediana da janela **4,2 a 4,8 ms** (limite 6); p99 **7,2 a 12,9 ms** (limite 10: 7 de 13 acima; antes 7,0 a 12,8 com 9 de 13 acima); máx. 8,5 a 14,3.
+
+**O que continua vermelho no `pnpm test` do `game-physics-jolt`** (141 passam, 2 vermelhos, ambos o T1):
+1. Seeds 0,5 e 1,3: `ragdollInPile` 2 contra o teto de 1. Medido quadro a quadro: o R0 que cai na pilha dura **no máximo 1 quadro** (a política o rebaixa no passo seguinte; as 3 sementes medidas têm 3 ou 4 quadros assim em 12 s). O teste só olha 1 em cada 6 quadros e soma as vezes que pega; com a pilha de antes pegava 0 ou 1 por sorte da amostragem. Medir cada quadro e exigir sequência ≤ 1 é o que a regra do §2.1 pede; não alterei o teste.
+2. As falhas de p99 e a do T4 (3 s) estão na faixa de custo e na dependência do ponto de queda, não no sono.
+
+**p99 não é problema de sono.** O custo da janela sobe 1,5, 4,3, 6,0 ms (mediana por 160 quadros): são 300 corpos rígidos acordados em contato a 120 Hz, 32/2 iterações; os piores quadros são os de 5,5 a 5,9 s, logo depois do último nascimento. Para baixá-lo é preciso dormir antes ou ter menos corpos acordados (opção (b) do "Fechamento": nascer em R2 na pilha cheia).
+
+**Gates:** `game-characters` 397 (1 teste novo), `game-characters-three` 565, `game-physics` 32, `game-crowd` 142 (`state-hash` `7979b7a6` e `9449b822` iguais, `team-golden` iguais), `game-crowd-three` 48, `game-physics-jolt` `pnpm test` 141 + 2 vermelhos (acima), `pnpm test:cost` 139 + 9 vermelhos (T1: p99 em 7 sementes, mediana 0,7 a 8,4 ms por um pico de 57 ms com a carga em 5,3 numa rodada, e os 2 do `ragdollInPile`); T2, T4, T5, 300 dormindo e `ragdoll.test.ts` passam na faixa; `tsc --noEmit` e `eslint` limpos. **✅ não dado: T1 continua vermelho.**
+
+### Nascer como cápsula, `ragdollInPile` por quadro e `ragdollsMax` (2026-11-26)
+
+**1. Nascer como cápsula em pilha cheia** (decisão do dono, para o p99 do T1). `createCorpseBodies.add` pergunta `bornInFullPile` (`engine-corpses-eval.ts`) antes de escolher o degrau: o corpo cai numa pilha quando a cápsula em pé, alargada 25 cm, toca `pileContacts` (2) cadáveres da camada `corpse`, ou 1 deles sobre monte acima de `pileHeight` (o critério do §2.1); a pilha está cheia quando já há `pileChainsMax` R1 num raio de 4 m do ponto da morte. Então o corpo **nasce R2** (`bornAt` com `'r2'`, em `engine-corpses-swap.ts`), sem passar por R1, e `overlapShape` vem antes de criar: a cápsula sobe de 5 em 5 cm (até 3 m) até não estar dentro de nada, e cai de lá. Fora de pilha e com `pileChainsMax` = `Infinity` nada muda (o `add` devolve o que devolvia). Contagem por raio, não por ilha de contatos: nos primeiros 5 s da pilha os corpos acabaram de cair e as listas de contato ainda são curtas (ilhas de 1 a 3 corpos medidas com 26 mortos), então a ilha nunca chegava a `pileChainsMax`. Teste: `pileChainsMax` de 5 em 40 mortos, 14 nascem R2 e a pilha dorme em 16 s.
+
+**Padrão de `pileChainsMax`: segue `Infinity` (desligado). Nenhum número fecha o T1.** Sono é determinístico e não depende da carga; 13 sementes, `-1` = não dormiu em 16 s, com o nascimento como cápsula ligado:
+
+| `pileChainsMax` | sementes que dormem em ≤ 14 s | R1 / R2 no fim | mediana / p99 (carga 3 a 5; onde a carga passou de 10 a medida é descartada) |
+|---|---|---|---|
+| `Infinity` | **13 de 13** (8,7 a 13,1 s) | 100 / 0 | 4,5 a 5,1 / 7,3 a 15,3 |
+| 40 | 3 de 13 | 45 / 55 | só com carga de 20 a 29: sem valor |
+| 30 | 3 de 13 (13,7; 12,4; 14,3; as outras `-1`) | 35 / 65 | 3,8 a 4,5 / 6,8 a 11,9 |
+| 20 | 1 de 13 | 25 / 75 | só com carga de 20 a 28: sem valor |
+| 10 | 4 de 13 (13,6 a 14,9) | 17 / 83 | 3,0 a 4,9 / 6,0 a 11,8 |
+
+Com o corpo que cai nascendo R2 os números de sono são os mesmos de antes (a pilha de cápsulas não adormece; a ordem de nascimento não é a causa). Menos corpos rígidos baixam o custo (mediana 3,0 a 4,5 ms, p99 até 10 ms), mas a pilha com R2 fica acordada: o limite de 14 s não fecha em nenhum valor de 10 a 40. A causa de a pilha de cápsulas não dormir **não foi investigada** (hipótese: cápsulas rolando umas sobre as outras; um `angularDamping` de 2 no R2 foi tentado numa sonda e não mudou nenhum tempo de sono, mas a sonda rodou sem recompilar `game-physics`, então não vale como evidência). Fica como pendência T5.4f: achar por que a pilha de R2 não dorme.
+
+**T1 nas 13 sementes com o padrão (`Infinity`)**, `pnpm --filter @adatechnology/game-physics-jolt test:cost` sob `flock perf-measure.lock`, limite **inalterado** (14 s, 6 ms, 10 ms). As quatro últimas sementes rodaram com carga de 9 a 17 (outras sessões fora da trava): valores só indicativos.
+
+| semente | dorme (s) | mediana (ms) | p99 (ms) | carga 1 min |
+|---|---|---|---|---|
+| 0,7 | 11,3 | 8,66 | 41,97 | 4,8 |
+| 0,3 | 8,7 | 5,98 | 9,52 | 4,8 |
+| 0,5 | 9,8 | 6,04 | 9,10 | 4,8 |
+| 0,9 | 9,4 | 5,77 | 10,73 | 4,7 |
+| 1,1 | 9,3 | 5,47 | 12,20 | 4,6 |
+| 1,3 | 10,9 | 4,98 | 11,07 | 4,6 |
+| 1,7 | 9,5 | 6,89 | 15,14 | 4,5 |
+| 2,1 | 8,9 | 5,25 | 9,29 | 4,5 |
+| 0,4 | 9,4 | 4,68 | 11,65 | 4,2 |
+| 0,6 | 10,2 | 5,35 | 60,74 | 8,9 |
+| 1,2 | 9,9 | 10,69 | 33,16 | 14,7 |
+| 1,5 | 13,1 | 12,75 | 58,62 | 17,4 |
+| 1,9 | 11,2 | 5,68 | 13,46 | 16,6 |
+
+Sono: 13 de 13 passam. Custo: mediana passa em 6 de 13 e p99 em 3 de 13 nas 9 sementes de carga baixa; o p99 da 0,7 (41,97) é um pico isolado. Nas passadas anteriores, com carga de 2,6 a 3,5, a mediana ficava em 4,2 a 4,8 ms e o p99 em 7,2 a 12,9: a máquina de hoje está mais carregada por outras sessões, então o piso real do custo está entre as duas medidas. **Não fecha o limite de 6 / 10 ms; nada foi subido.**
+
+**2. `ragdollInPile` por quadro.** `dropPile` (`lod-scenes.ts`) media 1 quadro em cada 6 e somava as vezes que pegava um R0 encostando em 2 corpos; passava ou falhava por sorte de amostragem (a política rebaixa o R0 no passo seguinte, então o mesmo R0 pegava 0 ou 1 vez). Agora mede **todo quadro** e devolve a **maior sequência** de quadros com R0 em pilha; o teste exige ≤ 1, que é o que o §2.1 pede ("ao entrar numa pilha, um R0 vira R1 no mesmo passo fixo"). É mais rigoroso: um R0 que ficasse 2 quadros seguidos em pilha, que a amostragem de 1 em 6 deixava passar, agora reprova. Resultado nas 13 sementes: sequência máxima **1** em todas (`r0run` 1).
+
+**3. `ragdollsMax` = 1, decisão do dono (2026-11-26).** Registrado em `design/pilha-e-lod.md` §2.3 e em `spec.md` §6.2. Nova task `T5.6 Otimizar o custo do R0` em `tasks.md` (depois da Fase 8, `sonnet`): R0 a 60 Hz em vez de 120 e sem os passes 20/8; aceite: 3 a 4 R0 dentro do C7 sem perder o B3.
+
+**Gates** (`game-physics-jolt` `pnpm test`: **143 passam, 2 ignorados, 0 vermelhos**; `test:cost` (carga de 4 a 17): 136 passam, 12 vermelhos, 11 do T1 por mediana ou p99 (tabela) e `ragdoll.test.ts` caso 2, 20 mortos, p99 4,8 contra 4,0 com a carga alta; o T5 passou nessa rodada (numa rodada anterior, com carga de 25, deu 9,7 ms: sem valor); `game-physics` 32; `game-characters` 397; `game-crowd` 142, `state-hash` e `team-golden` iguais, nenhum arquivo de `game-crowd` tocado). `tsc --noEmit` e `eslint` limpos nos pacotes tocados. **✅ da T5.4 não dado:** o T1 segue vermelho na faixa de custo (mediana e p99) e o limite não foi mexido.
+
+## T5.5 — ragdoll de quadrúpede (2026-11-26) — ✅
+
+**O que já existia** (§1): `game-animals` tem a espécie como dado (`QuadrupedSpec`: corpo, pernas com ângulos de repouso, pescoço, cabeça) e `quadrupedLayout` (altura dos quadris e do corpo); o esqueleto do bicho é three.js (`game-animals-three/src/quadruped.ts`), então o R0 sai da pose de repouso pura (`design/pilha-e-lod.md` v2 §5.2). Mesmo desenho do T5.1/T5.2 (`ragdollOfRig`, `chainOfRig`, `corpseBodyKit` em `game-characters`).
+
+**O que mudou** (`game-animals`, puro: só tipos de `game-physics`, sem three nem Jolt; dependência nova `@adatechnology/game-physics`):
+- `anatomy.ts` `anatomyOf(spec)`: tronco, pescoço, cabeça e osso de cima e de baixo de cada perna, em metros, de pé, virado para +z, com os mesmos números do desenhista (ângulos `fa1/fa2/ha1/ha2`, `neck.ang`, `head.down`, `quadrupedLayout`); o osso de baixo vai até o chão (inclui o casco/pé).
+- `ragdoll.ts` `ragdollOfAnimal({ body, at?, user? })` (R0, `RagdollDesc`): 11 partes (tronco, pescoço, cabeça, 4 x cima + baixo), pais primeiro; massa = 900 kg/m³ x volume da cápsula do osso (vaca ~ 600 kg, cão ~ 15 kg). `ANIMAL_RAGDOLL_LIMITS`: pescoço 0,6/0,5/0,3 e cabeça 0,6/0,5/0,4 (sagital/lateral/torção, rad), ombro 0,9/0,45/0,25, quadril 0,9/0,4/0,25, carpo (dobradiça) -0,1 a 2,0 e jarrete -0,6 a 1,8, com o pé indo para trás (+), como as pernas da página.
+- `chain.ts` `chainOfAnimal` (R1): tronco, pescoço+cabeça num osso, as 4 pernas numa caixa sob o tronco (as mesmas 3 partes da corrente da pessoa: tronco, cabeça, pernas), 2 juntas, mesma massa total do R0.
+- `corpse-kit.ts` `corpseBodyKitOfAnimal` (`CorpseBodyKit`: R0, R1, cápsula R2 ao longo do tronco, âncoras torso 0, cabeça 2, pernas 3 e 9): o quadrúpede entra em `createCorpseBodies`/`createBodyLod` **sem uma linha de bicho no aplicador**.
+- Testes: `game-animals/tests/ragdoll.test.ts` (6 + 1), `game-animals-three/tests/ragdoll-rig.test.ts` (as 9 espécies de quatro patas: todo corpo cai dentro da caixa do bicho desenhado e os pés ficam no chão), `game-physics-jolt/tests/ragdoll-animal.test.ts` (B3, custo, pilha).
+
+**B3 por espécie** (R0 de produção no `KIT_WORLD`: 120 Hz, 32/2, `stabilize`, 20/8; cai de 2 m na escada e numa caixa, tiro de 9 mm no tronco em 1,5 s; `expect` no teste):
+
+| Espécie | Maior excesso de junta | Passos seguidos > 0,1 rad | Dorme em | Limite |
+|---|---|---|---|---|
+| cão | 0,013 rad | 0 | 2,70 s | ≤ 3 / ≤ 4 s |
+| gato | 0,024 | 0 | 2,50 s | idem |
+| vaca | 0,024 | 0 | 2,13 s | idem |
+| cavalo | 0,016 | 0 | 2,72 s | idem |
+| R1 cão | 0,002 | 0 | 2,63 s | idem |
+| R1 cavalo | 0,020 | 0 | 2,32 s | idem |
+
+Passou de primeira, sem ajustar limite nenhum (a pessoa chegou a 0,106 rad num quadro).
+
+**Pilha** (`ragdoll-animal.test.ts`): 4 cães e 1 cavalo mortos no `KIT_WORLD` pela política do motor: `counts` r0 1, r1 4, dormem em 14 s; um cão morto longe do jogador nasce cápsula e dorme.
+
+**Custo de 1 R0** (`pnpm --filter @adatechnology/game-physics-jolt test:cost`, sob `perf-measure.lock`; quadro de 1/60 s = 2 passos, primeiros 3 s caindo e empilhando; limites C7 3,0 mediana e 4,0 p99). **Carga da máquina 10 a 14 (acima de 4: outras sessões), número a repetir com a máquina livre**:
+
+| Espécie | Mediana (ms) | p99 (ms) | 2ª rodada: mediana / p99 |
+|---|---|---|---|
+| cão | 0,11 | 0,67 | 0,12 / 1,79 (pico de carga) |
+| vaca | 0,51 | 0,70 | 0,48 / 0,65 |
+| cavalo | 0,62 | 0,83 | 0,54 / 0,68 |
+
+Cada R0 de quadrúpede custa o mesmo que um de pessoa ou menos (0,5 a 0,8 ms contra 0,65 a 0,9); com 11 partes e 11 juntas. A cota `ragdollsMax` = 1 não muda.
+
+**Gates**: `game-animals` 15 testes, `game-animals-three` 72, `game-physics-jolt` 154 (2 pulados de antes); typecheck e eslint dos três limpos. Nenhum golden mudou.
+
+**Para o dono ver na sala (§5, sem GPU aqui)**: um cão e uma vaca mortos em 1ª e 3ª pessoa caindo na escada; o desenho do cadáver de bicho ainda é a pose fixa (o R0/R1 de bicho com esqueleto desenhado é a T5.4a, que serve a pessoa e o bicho). Não escolhi limites de cauda e orelhas: ficam fora do R0.
+

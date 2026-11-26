@@ -4,7 +4,8 @@ import { DEFAULT_MATERIAL } from '@adatechnology/game-physics'
 import type { BodyId, JointDesc, JointId, RagdollDesc, RagdollId, RagdollJoint, Vec3 } from '@adatechnology/game-physics'
 
 import { layerOf } from './constants'
-import type { BodyEntry } from './entries'
+import type { BodyEntry, JointEntry, RagdollEntry } from './entries'
+import { ragdollShape, ragdollSkeleton } from './ragdoll-cache'
 import type { JoltWorldHost } from './world-host'
 
 export const createGroup = (w: JoltWorldHost, subCount: number, disabledPairs: ReadonlyArray<readonly [number, number]>): number => {
@@ -91,7 +92,6 @@ const constraintSettings = (w: JoltWorldHost, desc: JointDesc | RagdollJoint): J
 interface JointMade {
   readonly kind: JointDesc['kind']
   readonly breakImpulse: number
-  readonly ragdoll: boolean
 }
 
 const addJointEntry = (w: JoltWorldHost, constraint: JoltNS.TwoBodyConstraint, made: JointMade): JointId => {
@@ -104,7 +104,7 @@ const addJointEntry = (w: JoltWorldHost, constraint: JoltNS.TwoBodyConstraint, m
     hinge: made.kind === 'hinge' || made.kind === 'fixed' ? J.castObject(constraint, J.HingeConstraint) : null,
     swing: made.kind === 'swingTwist' ? J.castObject(constraint, J.SwingTwistConstraint) : null,
     slider: made.kind === 'slider' ? J.castObject(constraint, J.SliderConstraint) : null,
-    ragdoll: made.ragdoll,
+    owner: null,
   })
   return id
 }
@@ -114,14 +114,14 @@ export const createJoint = (w: JoltWorldHost, desc: JointDesc): JointId => {
   const constraint = w.J.castObject(settings.Create(w.entry(desc.a).body, w.entry(desc.b).body), w.J.TwoBodyConstraint)
   w.J.destroy(settings)
   w.system.AddConstraint(constraint)
-  return addJointEntry(w, constraint, { kind: desc.kind, breakImpulse: desc.breakImpulse ?? Infinity, ragdoll: false })
+  return addJointEntry(w, constraint, { kind: desc.kind, breakImpulse: desc.breakImpulse ?? Infinity })
 }
 
 /** One part's body settings in a ragdoll's settings: shape, pose, layer, material, mass and solver steps as the contract gives them. */
 const ragdollPart = (w: JoltWorldHost, s: JoltNS.RagdollPart, part: RagdollDesc['parts'][number], desc: RagdollDesc): void => {
   const J = w.J
   const b = part.body
-  const shape = w.makeShape(b.shape)
+  const shape = ragdollShape(w, b.shape)
   s.SetShape(shape)
   shape.Release()
   const r = b.rotation ?? [0, 0, 0, 1]
@@ -158,14 +158,8 @@ const ragdollPart = (w: JoltWorldHost, s: JoltNS.RagdollPart, part: RagdollDesc[
  */
 export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly id: RagdollId; readonly bodies: readonly BodyId[]; readonly joints: readonly JointId[] } => {
   const J = w.J
-  const skeleton = new J.Skeleton()
-  desc.parts.forEach((part, i) => {
-    const name = new J.JPHString(`part${i}`, `part${i}`.length)
-    skeleton.AddJoint(name, part.parent)
-    J.destroy(name)
-  })
   const settings = new J.RagdollSettings()
-  settings.mSkeleton = skeleton
+  settings.mSkeleton = ragdollSkeleton(w, desc.parts.map((part) => part.parent))
   settings.mParts.resize(desc.parts.length)
   desc.parts.forEach((part, i) => ragdollPart(w, settings.mParts.at(i), part, desc))
   if (desc.stabilize) settings.Stabilize()
@@ -175,12 +169,12 @@ export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly i
   settings.CalculateConstraintIndexToBodyIdxPair()
   // the ragdoll keeps its settings (and they their skeleton and joint settings) by reference: all go when it is destroyed
   const ragdoll = settings.CreateRagdoll(w.nextRagdoll, 0, w.system)
-  ragdoll.AddToPhysicsSystem(J.EActivation_Activate)
+  ragdoll.AddToPhysicsSystem(desc.sleeping ? J.EActivation_DontActivate : J.EActivation_Activate)
   const lock = w.system.GetBodyLockInterfaceNoLock()
   const bodies: BodyId[] = desc.parts.map((part, i) => {
     const body = lock.TryGetBody(ragdoll.GetBodyID(i))
     const key = body.GetID().GetIndexAndSequenceNumber()
-    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, centred: false, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
+    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, centred: false, ragdoll: w.nextRagdoll, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
     w.bodies.set(key, entry)
     w.byPointer.set(J.getPointer(body), entry)
     if (part.body.rolling) w.rollers.set(key, part.body.rolling)
@@ -190,10 +184,12 @@ export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly i
   let k = 0
   for (const part of desc.parts) {
     if (!part.joint) continue
-    joints.push(addJointEntry(w, ragdoll.GetConstraint(k++), { kind: part.joint.kind, breakImpulse: Infinity, ragdoll: true }))
+    joints.push(addJointEntry(w, ragdoll.GetConstraint(k++), { kind: part.joint.kind, breakImpulse: Infinity }))
   }
   const id = w.nextRagdoll++ as RagdollId
-  w.ragdolls.set(id, { ragdoll, bodies, joints })
+  const owner: RagdollEntry = { ragdoll, bodies, joints, severed: [] }
+  for (const joint of joints) (w.joints.get(joint) as JointEntry).owner = owner
+  w.ragdolls.set(id, owner)
   return { id, bodies, joints }
 }
 
@@ -209,6 +205,7 @@ export const removeRagdoll = (w: JoltWorldHost, id: RagdollId): void => {
     }
     w.forget(b)
   }
+  for (const constraint of e.severed) w.system.AddConstraint(constraint)
   // destroying the ragdoll destroys its bodies and constraints and lets go of its settings
   e.ragdoll.RemoveFromPhysicsSystem()
   w.J.destroy(e.ragdoll)
@@ -217,9 +214,10 @@ export const removeRagdoll = (w: JoltWorldHost, id: RagdollId): void => {
 
 export const removeJoint = (w: JoltWorldHost, id: JointId): void => {
   const e = w.joints.get(id)
-  if (!e || e.ragdoll) return
+  if (!e) return
   w.system.RemoveConstraint(e.constraint)
   w.joints.delete(id)
+  e.owner?.severed.push(e.constraint)
 }
 
 /** Swing and twist of a swing-twist joint now (radians), for checking limits. */

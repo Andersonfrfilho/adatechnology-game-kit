@@ -194,6 +194,10 @@ importers:
         version: 3.2.7(@types/node@22.20.5)(happy-dom@17.6.3)
 
   packages/game-animals:
+    dependencies:
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
     devDependencies:
       '@types/node':
         specifier: ^22.10.7
@@ -333,6 +337,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
     devDependencies:
       '@adatechnology/game-destruction':
         specifier: workspace:^
@@ -402,6 +409,12 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
@@ -507,6 +520,12 @@ importers:
       '@adatechnology/game-infection':
         specifier: workspace:^
         version: link:../game-infection
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-workers':
         specifier: workspace:^
         version: link:../game-workers
@@ -1493,6 +1512,12 @@ importers:
         specifier: 1.1.1
         version: 1.1.1
     devDependencies:
+      '@adatechnology/game-animals':
+        specifier: workspace:^
+        version: link:../game-animals
+      '@adatechnology/game-animals-species':
+        specifier: workspace:^
+        version: link:../game-animals-species
       '@adatechnology/game-characters':
         specifier: workspace:^
         version: link:../game-characters

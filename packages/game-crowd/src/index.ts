@@ -5,6 +5,7 @@
  * The pack (types, ages, outfits) is data: `game-characters-undead` gives the undead one.
  */
 export { CROWD_DEFAULTS, createCrowd } from './crowd'
+export { relocateCorpse } from './corpse-relocate'
 export type { Corpse, Crowd, CrowdBand, CrowdNumbers, CrowdOptions, CrowdPlugin, CrowdUpdateContext, CrowdView, MigrationOptions, PlayerCrowdLike } from './crowd'
 export { DOOR_DEFAULTS, createDoors } from './doors'
 export type { Door, DoorEventMap, DoorEventName, DoorNumbers, Doors } from './doors'

@@ -1,9 +1,9 @@
 /**
  * The kinds of deferred work that draw from one frame's budget, in the fixed order they draw (spec 008, `design/orcamento-da-explosao.md` §4 E2): the events of the frame
  * first (their effects show in the frame they happen), then the loose groups that become pieces, the fragments still to spawn, the box fits ahead of a blow, the ground
- * laid under new pieces, the bodies made for them and the debris woken.
+ * laid under new pieces, the bodies made for them, the debris woken and a dead body's change of rung (`design/pilha-e-lod.md` §3).
  */
-export const WORK_KINDS = ['event', 'split', 'fragment', 'prefit', 'ground', 'body', 'wake'] as const
+export const WORK_KINDS = ['event', 'split', 'fragment', 'prefit', 'ground', 'body', 'wake', 'lod'] as const
 export type WorkKind = (typeof WORK_KINDS)[number]
 
 export interface WorkBudgetOptions {
