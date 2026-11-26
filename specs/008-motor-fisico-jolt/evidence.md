@@ -3915,3 +3915,45 @@ Só o atrito de junta já tira 12 de 13 sementes de 11,0 s ou menos; a 1,9 ficav
 **p99 não é problema de sono.** O custo da janela sobe 1,5, 4,3, 6,0 ms (mediana por 160 quadros): são 300 corpos rígidos acordados em contato a 120 Hz, 32/2 iterações; os piores quadros são os de 5,5 a 5,9 s, logo depois do último nascimento. Para baixá-lo é preciso dormir antes ou ter menos corpos acordados (opção (b) do "Fechamento": nascer em R2 na pilha cheia).
 
 **Gates:** `game-characters` 397 (1 teste novo), `game-characters-three` 565, `game-physics` 32, `game-crowd` 142 (`state-hash` `7979b7a6` e `9449b822` iguais, `team-golden` iguais), `game-crowd-three` 48, `game-physics-jolt` `pnpm test` 141 + 2 vermelhos (acima), `pnpm test:cost` 139 + 9 vermelhos (T1: p99 em 7 sementes, mediana 0,7 a 8,4 ms por um pico de 57 ms com a carga em 5,3 numa rodada, e os 2 do `ragdollInPile`); T2, T4, T5, 300 dormindo e `ragdoll.test.ts` passam na faixa; `tsc --noEmit` e `eslint` limpos. **✅ não dado: T1 continua vermelho.**
+
+### Nascer como cápsula, `ragdollInPile` por quadro e `ragdollsMax` (2026-11-26)
+
+**1. Nascer como cápsula em pilha cheia** (decisão do dono, para o p99 do T1). `createCorpseBodies.add` pergunta `bornInFullPile` (`engine-corpses-eval.ts`) antes de escolher o degrau: o corpo cai numa pilha quando a cápsula em pé, alargada 25 cm, toca `pileContacts` (2) cadáveres da camada `corpse`, ou 1 deles sobre monte acima de `pileHeight` (o critério do §2.1); a pilha está cheia quando já há `pileChainsMax` R1 num raio de 4 m do ponto da morte. Então o corpo **nasce R2** (`bornAt` com `'r2'`, em `engine-corpses-swap.ts`), sem passar por R1, e `overlapShape` vem antes de criar: a cápsula sobe de 5 em 5 cm (até 3 m) até não estar dentro de nada, e cai de lá. Fora de pilha e com `pileChainsMax` = `Infinity` nada muda (o `add` devolve o que devolvia). Contagem por raio, não por ilha de contatos: nos primeiros 5 s da pilha os corpos acabaram de cair e as listas de contato ainda são curtas (ilhas de 1 a 3 corpos medidas com 26 mortos), então a ilha nunca chegava a `pileChainsMax`. Teste: `pileChainsMax` de 5 em 40 mortos, 14 nascem R2 e a pilha dorme em 16 s.
+
+**Padrão de `pileChainsMax`: segue `Infinity` (desligado). Nenhum número fecha o T1.** Sono é determinístico e não depende da carga; 13 sementes, `-1` = não dormiu em 16 s, com o nascimento como cápsula ligado:
+
+| `pileChainsMax` | sementes que dormem em ≤ 14 s | R1 / R2 no fim | mediana / p99 (carga 3 a 5; onde a carga passou de 10 a medida é descartada) |
+|---|---|---|---|
+| `Infinity` | **13 de 13** (8,7 a 13,1 s) | 100 / 0 | 4,5 a 5,1 / 7,3 a 15,3 |
+| 40 | 3 de 13 | 45 / 55 | só com carga de 20 a 29: sem valor |
+| 30 | 3 de 13 (13,7; 12,4; 14,3; as outras `-1`) | 35 / 65 | 3,8 a 4,5 / 6,8 a 11,9 |
+| 20 | 1 de 13 | 25 / 75 | só com carga de 20 a 28: sem valor |
+| 10 | 4 de 13 (13,6 a 14,9) | 17 / 83 | 3,0 a 4,9 / 6,0 a 11,8 |
+
+Com o corpo que cai nascendo R2 os números de sono são os mesmos de antes (a pilha de cápsulas não adormece; a ordem de nascimento não é a causa). Menos corpos rígidos baixam o custo (mediana 3,0 a 4,5 ms, p99 até 10 ms), mas a pilha com R2 fica acordada: o limite de 14 s não fecha em nenhum valor de 10 a 40. A causa de a pilha de cápsulas não dormir **não foi investigada** (hipótese: cápsulas rolando umas sobre as outras; um `angularDamping` de 2 no R2 foi tentado numa sonda e não mudou nenhum tempo de sono, mas a sonda rodou sem recompilar `game-physics`, então não vale como evidência). Fica como pendência T5.4f: achar por que a pilha de R2 não dorme.
+
+**T1 nas 13 sementes com o padrão (`Infinity`)**, `pnpm --filter @adatechnology/game-physics-jolt test:cost` sob `flock perf-measure.lock`, limite **inalterado** (14 s, 6 ms, 10 ms). As quatro últimas sementes rodaram com carga de 9 a 17 (outras sessões fora da trava): valores só indicativos.
+
+| semente | dorme (s) | mediana (ms) | p99 (ms) | carga 1 min |
+|---|---|---|---|---|
+| 0,7 | 11,3 | 8,66 | 41,97 | 4,8 |
+| 0,3 | 8,7 | 5,98 | 9,52 | 4,8 |
+| 0,5 | 9,8 | 6,04 | 9,10 | 4,8 |
+| 0,9 | 9,4 | 5,77 | 10,73 | 4,7 |
+| 1,1 | 9,3 | 5,47 | 12,20 | 4,6 |
+| 1,3 | 10,9 | 4,98 | 11,07 | 4,6 |
+| 1,7 | 9,5 | 6,89 | 15,14 | 4,5 |
+| 2,1 | 8,9 | 5,25 | 9,29 | 4,5 |
+| 0,4 | 9,4 | 4,68 | 11,65 | 4,2 |
+| 0,6 | 10,2 | 5,35 | 60,74 | 8,9 |
+| 1,2 | 9,9 | 10,69 | 33,16 | 14,7 |
+| 1,5 | 13,1 | 12,75 | 58,62 | 17,4 |
+| 1,9 | 11,2 | 5,68 | 13,46 | 16,6 |
+
+Sono: 13 de 13 passam. Custo: mediana passa em 6 de 13 e p99 em 3 de 13 nas 9 sementes de carga baixa; o p99 da 0,7 (41,97) é um pico isolado. Nas passadas anteriores, com carga de 2,6 a 3,5, a mediana ficava em 4,2 a 4,8 ms e o p99 em 7,2 a 12,9: a máquina de hoje está mais carregada por outras sessões, então o piso real do custo está entre as duas medidas. **Não fecha o limite de 6 / 10 ms; nada foi subido.**
+
+**2. `ragdollInPile` por quadro.** `dropPile` (`lod-scenes.ts`) media 1 quadro em cada 6 e somava as vezes que pegava um R0 encostando em 2 corpos; passava ou falhava por sorte de amostragem (a política rebaixa o R0 no passo seguinte, então o mesmo R0 pegava 0 ou 1 vez). Agora mede **todo quadro** e devolve a **maior sequência** de quadros com R0 em pilha; o teste exige ≤ 1, que é o que o §2.1 pede ("ao entrar numa pilha, um R0 vira R1 no mesmo passo fixo"). É mais rigoroso: um R0 que ficasse 2 quadros seguidos em pilha, que a amostragem de 1 em 6 deixava passar, agora reprova. Resultado nas 13 sementes: sequência máxima **1** em todas (`r0run` 1).
+
+**3. `ragdollsMax` = 1, decisão do dono (2026-11-26).** Registrado em `design/pilha-e-lod.md` §2.3 e em `spec.md` §6.2. Nova task `T5.6 Otimizar o custo do R0` em `tasks.md` (depois da Fase 8, `sonnet`): R0 a 60 Hz em vez de 120 e sem os passes 20/8; aceite: 3 a 4 R0 dentro do C7 sem perder o B3.
+
+**Gates** (`game-physics-jolt` `pnpm test`: **143 passam, 2 ignorados, 0 vermelhos**; `test:cost` (carga de 4 a 17): 136 passam, 12 vermelhos, 11 do T1 por mediana ou p99 (tabela) e `ragdoll.test.ts` caso 2, 20 mortos, p99 4,8 contra 4,0 com a carga alta; o T5 passou nessa rodada (numa rodada anterior, com carga de 25, deu 9,7 ms: sem valor); `game-physics` 32; `game-characters` 397; `game-crowd` 142, `state-hash` e `team-golden` iguais, nenhum arquivo de `game-crowd` tocado). `tsc --noEmit` e `eslint` limpos nos pacotes tocados. **✅ da T5.4 não dado:** o T1 segue vermelho na faixa de custo (mediana e p99) e o limite não foi mexido.

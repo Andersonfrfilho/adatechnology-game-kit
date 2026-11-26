@@ -168,6 +168,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - **T5.4 Implementar a regra da pilha** (2026-11-26, **sem ✅**: 11 dos 13 testes do §7 passam; o T1 — 100 corpos a 5,9 ms e dormindo a ~12 s no `KIT_WORLD` contra 2,5 ms e 10 s — falha e o T5 fica no limite, R2 → R1 em 4,8–5,5 ms contra 5; `evidence.md` `## T5.4`, subseção "Fechamento": `pileChainsMax` de 0 a 30 não fecha o T1, T5 em 3,9–5,5 ms com o cache do adaptador; decisão do dono pedida). Aceite: 100 corpos empilhados dormem em ≤ 10 s a ≤ 4 ms; troca de LOD de 100 corpos ≤ 5 ms.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/body-lod.test.ts` · `sonnet`.
   Pendências nomeadas desta task (nada disso está feito):
+  - **T5.4f** achar por que a pilha de R2 (cápsulas) não dorme em 14 s com `pileChainsMax` de 10 a 40 (`evidence.md`, "Nascer como cápsula"): sem isso o teto de correntes não fecha o T1.
   - **T5.4a** desenho de R0/R1 perto por esqueleto (`game-characters-three`, §5.3 do desenho): o `game-crowd-three` segue desenhando cadáver como instância de pose fixa e `y: 0` (`instances.ts`); troca nos mesmos 18 m. Exige §5 do CLAUDE.md (1ª e 3ª pessoa, print por câmera).
   - **T5.4b** canal novo de instância (y + quaternion) em `game-crowd-three` para R2, R2f e R3.
   - **T5.4c** ligar `createCorpseBodies` ao jogo/sala: `interest` do jogador, `follower` no registro de cadáveres, `onSettled` → `relocateCorpse`, `budget` do host (`beginFrame`); hoje só os testes usam.
@@ -226,6 +227,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim (à mão, nunca em commit) · `sonnet`.
 - **T8.6 AMD, Firefox e ARM** conforme a resposta do dono (`spec.md` §11). Aceite: orçamentos do C7 na faixa medida; C8 em Firefox.
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.
+- **T5.6 Otimizar o custo do R0** (depois da Fase 8; decisão do dono em 2026-11-26: `ragdollsMax` = 1 até aqui). Caminho mais promissor: R0 a 60 Hz em vez de 120 e sem os passes 20/8 (`KIT_RAGDOLL_SOLVER`). Aceite: 3 a 4 R0 dentro do C7 (3,0 / 4,0 ms, 20 corpos mortos) sem perder o B3 (ragdoll estável, `stabilize`).
+  Mecânica? não (mede e decide por passo) · Aceite por comando? sim (`pnpm --filter @adatechnology/game-physics-jolt test:cost`) · `sonnet`.
 - **Revisão final:** `code-reviewer` com `model=sonnet`. PR só com o ok do dono, aberto e mostrado no Chrome dele.
 
 ## Prompt de execução
