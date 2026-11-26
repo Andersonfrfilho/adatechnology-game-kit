@@ -95,6 +95,40 @@ describe('T7.1: the crowd as kinematic capsules in the engine', () => {
     dispose()
   })
 
+  it('a removal does not sweep the capsule that takes the vacancy through the world: it jumps there, pushing nothing on the way, and bodyOf(i) is agent i', async () => {
+    const grid = createNavGrid({ size: 128 })
+    const crowd = createCrowd({ pack: packWithBalance(), seed: 3, grid, capacity: 10, flow: { cellsPerStep: 20000, clock: () => 0 }, physics: physicsOptions({ personality: false }) })
+    const world = (await createJoltEngine()).createWorld(KIT_WORLD)
+    world.createBody({ shape: { kind: 'box', half: [100, 0.5, 100] }, motion: 'static', position: [0, -0.5, 0], user: -1 })
+    const loop = createPhysicsLoop(world)
+    for (const x of [0, 4, 10]) crowd.store.height[crowd.spawn(x, 0, 0)] = 1.7
+    const prop = world.createBody({ shape: { kind: 'box', half: [0.25, 0.25, 0.25] }, motion: 'dynamic', mass: 5, position: [7, 0.25, 0], user: -2 })
+    const agents = createAgentBodies(loop, crowd)
+    loop.stepFixed(1)
+    const readPose = (id: ReturnType<typeof world.createBody>): number[] => {
+      const out = new Float32Array(7)
+      world.readPose(id, out, 0)
+      return [...out]
+    }
+    const before = readPose(prop)
+    // agent 2 (at x = 10) takes the place of agent 0 (at x = 0): capsule 0 has to be at x = 10 without crossing the prop at x = 7
+    crowd.remove(0)
+    loop.stepFixed(1)
+    readPose(prop).forEach((value, k) => expect(value).toBeCloseTo(before[k]!, 3))
+    expect(agents.count).toBe(2)
+    for (let i = 0; i < crowd.store.n; i++) {
+      // a kinematic move across ten metres leaves the capsule with the speed it needed to cover them
+      const velocity = new Float32Array(6)
+      world.readVelocity(agents.bodyOf(i)!, velocity, 0)
+      expect(Math.hypot(velocity[0]!, velocity[1]!, velocity[2]!)).toBeLessThan(0.01)
+      const pose = readPose(agents.bodyOf(i)!)
+      expect(pose[0]).toBeCloseTo(crowd.store.x[i]!, 3)
+      expect(pose[2]).toBeCloseTo(crowd.store.z[i]!, 3)
+    }
+    agents.dispose()
+    world.dispose()
+  })
+
   it('the state-hash of the crowd is the same with its agents in the engine as without it: nothing the engine does writes back into the store', { timeout: 120000 }, async () => {
     const run = async (withBodies: boolean): Promise<string> => {
       const grid = createNavGrid({ size: 128 })

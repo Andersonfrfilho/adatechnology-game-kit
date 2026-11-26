@@ -1,5 +1,6 @@
 import type { BodyId, PhysicsLoop, Quat, Vec3 } from '@adatechnology/game-physics'
 
+import type { Crowd } from './crowd'
 import type { CrowdStore } from './store'
 
 export type AgentBodiesOptions = {
@@ -24,8 +25,9 @@ const DEFAULT_HEIGHT = 1.7
 /**
  * Every agent of the crowd as a kinematic capsule on the `agent` layer: game-crowd moves them, the engine only lets them push what they meet (a door leaf, a prop, debris).
  * Capsule `i` follows agent `i` of the store, whichever agent that is after a removal moved the last one into its place; it moves in the loop's `crowd` phase, before each fixed step.
+ * An agent that takes a vacancy (a removal's last agent, a spawn) is placed there with `setPose`: a kinematic move across the world would push whatever is on the way.
  */
-export const createAgentBodies = (loop: PhysicsLoop, crowd: { readonly store: CrowdStore }, options: AgentBodiesOptions = {}): AgentBodies => {
+export const createAgentBodies = (loop: PhysicsLoop, crowd: Pick<Crowd, 'on'> & { readonly store: CrowdStore }, options: AgentBodiesOptions = {}): AgentBodies => {
   const { store } = crowd
   const world = loop.world
   const radius = options.radius ?? DEFAULT_RADIUS
@@ -34,6 +36,15 @@ export const createAgentBodies = (loop: PhysicsLoop, crowd: { readonly store: Cr
   const centreHeight = new Float32Array(store.capacity)
   const target: [number, number, number] = [0, 0, 0]
   const rotation: [number, number, number, number] = [0, 0, 0, 1]
+  const shouldTeleport = new Uint8Array(store.capacity)
+  const stopTakingVacancies = [
+    crowd.on('remove', (event) => {
+      if (event.moved >= 0) shouldTeleport[event.agent] = 1
+    }),
+    crowd.on('spawn', (event) => {
+      shouldTeleport[event.agent] = 1
+    }),
+  ]
 
   const create = (i: number): BodyId => {
     const height = store.height[i]! > 0 ? store.height[i]! : fallbackHeight
@@ -55,6 +66,7 @@ export const createAgentBodies = (loop: PhysicsLoop, crowd: { readonly store: Cr
       const body = bodies[i]
       if (body === undefined) {
         bodies.push(create(i))
+        shouldTeleport[i] = 0
         continue
       }
       const half = store.yaw[i]! / 2
@@ -63,7 +75,10 @@ export const createAgentBodies = (loop: PhysicsLoop, crowd: { readonly store: Cr
       target[2] = store.z[i]!
       rotation[1] = Math.sin(half)
       rotation[3] = Math.cos(half)
-      world.moveKinematic(body, target as Vec3, rotation as Quat, h)
+      if (shouldTeleport[i]) {
+        shouldTeleport[i] = 0
+        world.setPose(body, target as Vec3, rotation as Quat, true)
+      } else world.moveKinematic(body, target as Vec3, rotation as Quat, h)
     }
   }
 
@@ -75,6 +90,7 @@ export const createAgentBodies = (loop: PhysicsLoop, crowd: { readonly store: Cr
     bodyOf: (i) => bodies[i],
     dispose: () => {
       removePhase()
+      for (const stop of stopTakingVacancies) stop()
       for (const body of bodies) if (world.has(body)) world.removeBody(body)
       bodies.length = 0
     },
