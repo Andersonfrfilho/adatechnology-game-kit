@@ -49,8 +49,9 @@ export interface VehicleEntry {
 }
 
 export interface JoltCharacter {
-  update(dt: number, vx: number, vz: number): void
-  position(out: Float64Array): void
+  move(vx: number, vz: number, dt: number): void
+  push(impulseX: number, impulseZ: number): void
+  read(out: Float32Array | Float64Array, offset: number): void
   supported(): boolean
   dispose(): void
 }

@@ -123,6 +123,7 @@ export interface Rolling {
 export type BodyId = number & { readonly __body: unique symbol }
 export type JointId = number & { readonly __joint: unique symbol }
 export type VehicleId = number & { readonly __vehicle: unique symbol }
+export type CharacterId = number & { readonly __character: unique symbol }
 
 export type JointDesc =
   | { readonly kind: 'fixed'; readonly a: BodyId; readonly b: BodyId; readonly point: Vec3; readonly breakImpulse?: number }
@@ -205,6 +206,26 @@ export interface VehicleInput {
   readonly right: number
   readonly brake: number
   readonly handBrake: number
+}
+
+/**
+ * A walking capsule: not a body. It moves by sweeps against the world, steps up what is `stepHeight` or lower, climbs slopes up to `maxSlopeDegrees`, sticks
+ * to the floor going down, falls under gravity and pushes dynamic bodies with at most `strength` N. Moved by `moveCharacter` once per fixed step, in the loop's `actors` phase.
+ */
+export interface CharacterDesc {
+  /** Where the feet are. */
+  readonly position: Vec3
+  readonly radius: number
+  /** Half the straight part of the capsule (its height is `2 * (halfHeight + radius)`). */
+  readonly halfHeight: number
+  /** What it weighs (kg): what a body that pushes back feels. */
+  readonly mass: number
+  /** Most force (N) it pushes a dynamic body with: 400 N moves a 30 kg crate over wood, not a wardrobe. */
+  readonly strength: number
+  /** Default 0.4 m. */
+  readonly stepHeight?: number
+  /** Default 45 degrees: steeper ground it slides down. */
+  readonly maxSlopeDegrees?: number
 }
 
 export interface RayHit {
@@ -346,6 +367,19 @@ export interface PhysicsWorld {
   driveVehicle(id: VehicleId, input: VehicleInput): void
   vehicleBody(id: VehicleId): BodyId
   removeVehicle(id: VehicleId): void
+  createCharacter(desc: CharacterDesc): CharacterId
+  /**
+   * Walks it for one fixed step `dt` at the wanted horizontal velocity (m/s, world x and z; 0 stands still) plus what `pushCharacter` gave it. The caller
+   * calls it before `stepFixed` (a `beforeStep` of the loop), never with the frame's `dt`.
+   */
+  moveCharacter(id: CharacterId, velocityX: number, velocityZ: number, dt: number): void
+  /** Shoves it: `impulse` (N s, horizontal part) is a change of velocity of impulse / mass that fades in about a quarter of a second and cannot go through a wall. */
+  pushCharacter(id: CharacterId, impulse: Vec3): void
+  /** Feet position into `out` at `offset` (x, y, z). */
+  readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void
+  /** Whether the feet stand on something. */
+  characterSupported(id: CharacterId): boolean
+  removeCharacter(id: CharacterId): void
   /** How many of the vehicle's wheels touch the ground now (a car with none is airborne: its sleep rule reads this). */
   wheelContacts(id: VehicleId): number
   /** Every hit along the ray, nearest first, into `out` (cleared); returns the count. */

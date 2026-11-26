@@ -20,7 +20,8 @@ export interface JoltWorldHost {
   readonly joints: Map<number, JointEntry>
   readonly vehicles: Map<number, VehicleEntry>
   readonly ragdolls: Map<number, RagdollEntry>
-  readonly characters: Set<JoltCharacter>
+  readonly characters: Map<number, JoltCharacter>
+  nextCharacter: number
   nextRagdoll: number
   readonly groups: JoltNS.GroupFilterTable[]
   nextJoint: number
