@@ -35,6 +35,10 @@
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js"
     },
+    "./worker-kinds": {
+      "types": "./dist/worker-kinds.d.ts",
+      "import": "./dist/worker-kinds.js"
+    },
     "./global": "./dist/index.global.js"
   },
   "files": [
@@ -61,6 +65,7 @@
   "devDependencies": {
     "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
+    "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

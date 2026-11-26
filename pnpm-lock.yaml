@@ -2214,6 +2214,9 @@ importers:
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
+      '@adatechnology/game-workers':
+        specifier: workspace:^
+        version: link:../game-workers
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden

@@ -5,9 +5,9 @@
     "side": 1974
   },
   "ambulance": {
-    "above": 9803,
-    "below": 10358,
-    "side": 4554
+    "above": 8798,
+    "below": 9579,
+    "side": 3583
   },
   "amphibian_turboprop": {
     "above": 28754,
@@ -25,9 +25,9 @@
     "side": 8297
   },
   "armored_truck": {
-    "above": 23057,
-    "below": 40448,
-    "side": 15934
+    "above": 19770,
+    "below": 31444,
+    "side": 12054
   },
   "attack_helicopter": {
     "above": 38430,
@@ -50,9 +50,9 @@
     "side": 188
   },
   "box_truck": {
-    "above": 17668,
-    "below": 42199,
-    "side": 17785
+    "above": 14034,
+    "below": 31149,
+    "side": 13171
   },
   "boxy_hatch": {
     "above": 4427,
@@ -60,13 +60,13 @@
     "side": 2333
   },
   "cargo_van": {
-    "above": 5142,
-    "below": 12687,
-    "side": 5019
+    "above": 4455,
+    "below": 11383,
+    "side": 4328
   },
   "city_bus": {
     "above": 9539,
-    "below": 23589,
+    "below": 22159,
     "side": 5954
   },
   "classic_six_sedan": {
@@ -260,9 +260,9 @@
     "side": 40840
   },
   "school_bus": {
-    "above": 18210,
-    "below": 24084,
-    "side": 8915
+    "above": 13890,
+    "below": 22078,
+    "side": 7708
   },
   "scooter": {
     "above": 1323,
@@ -295,9 +295,9 @@
     "side": 5543
   },
   "tanker_truck": {
-    "above": 40219,
-    "below": 48305,
-    "side": 24321
+    "above": 31935,
+    "below": 37380,
+    "side": 20668
   },
   "taxi": {
     "above": 6460,

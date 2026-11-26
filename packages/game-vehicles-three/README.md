@@ -19,6 +19,13 @@ car.triangles // 19286 · car.drawCalls // 6 · car.damageables // metal, glass,
 - The colour comes from `color` or from `seed` through the palette of the vehicle's group (`colorFromSeed`).
 - Tested against the team's page on three r160 (triangles, draw calls, size, per-class vertices, damageable boxes) and against `DIMS` for the 69 vehicles.
 
+## Collision hulls
+
+`createVehicleColliders(THREE, vehicle, frame, { hulls: true, maxHulls })` gives the engine the convex hulls of a vehicle (`hulls()`) next to the boxes of `pieces()`. The division of a car into hulls is the same for every car of a model, so it is made once per model:
+
+- `planCache: createHullPlanCache()` shares the hulls of the intact cars of a model (key: the vehicle key, its seed key and its build state, or `planKey`); the second car of a model is given the same hull objects in under 2 ms. A dented car neither gives nor takes. `cache.dispose()` lets everything go.
+- `workers` (a `WorkerCoordinator` of `@adatechnology/game-workers`) sends the division of the first car of a model to the `vehicles.hull-plan` kind (`@adatechnology/game-vehicles-three/worker-kinds`, three-free; list `hullPlanKind` in the worker file's `installWorkerHost` and `warm([hullPlanKind])` at load). Until it is back `hulls()` answers an empty list and `isHullPending()` is true: the car keeps the boxes of `pieces()`. The call after the answer installs the plan, so call `hulls()` in the fixed step. Without `workers` the division is made in the call, with the same bytes.
+
 ## Test area
 
 `createVehiclesTestModule({ locale, document?, three?, vehicles?, effects? })` is a `TestableModule` for the shared test room (`room.loadModule`, or `loadVehiclesTestModule(room)`, which learns the room's three.js to compute the door, hood and trunk clips). It lays the eight vehicles of the Frota test, each with its own `DestructibleImpl`, and brings 13 scenarios: the eleven of the team's test page, literal (`vehicles_9mm_windshield`, `vehicles_shotgun_door`, `vehicles_ram_front`, `vehicles_engine_fire`, `vehicles_fuel_tank`, `vehicles_unbolt_wheel`, `vehicles_tear_bumper`, `vehicles_break_mirror`, `vehicles_kill_battery`, `vehicles_rollover`, `vehicles_melt`; the page ids are in `PAGE_SCENARIO_ALIASES`), plus `vehicles_drive_arcade` and `vehicles_drive_semi` for `@adatechnology/game-vehicles-driving`.

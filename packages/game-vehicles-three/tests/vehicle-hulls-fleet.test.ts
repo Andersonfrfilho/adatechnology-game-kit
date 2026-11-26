@@ -1,33 +1,41 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import * as THREE from 'three'
 import { afterAll, afterEach, describe, expect, it } from 'vitest'
 
+import { createWorkerCoordinator } from '@adatechnology/game-workers'
+import { nodeSpawn } from '@adatechnology/game-workers/node'
 import { fleetGroupOf, fleetVehicleIds } from '@adatechnology/game-vehicles-fleet'
 
 import { FLAT_PAD, MAX_HULL_POINTS, vehicleHulls } from '../src'
 import { build } from './vehicle-colliders-support'
 import { MAX_BEHIND_SHARE, checkHulls } from './vehicle-hulls-check'
+import { birthCostOf } from './vehicle-hulls-cost'
 import type { HullReport, Side } from './vehicle-hulls-check'
 
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
 
-/** Hulls a vehicle of each class may have (design 10.3, K7): motorcycle, car, SUV, pickup, van and `heavy` as the design wrote them, the others the most the 69 models made (`evidence.md` `## T6.4`, "Método B"), rounded up to the next 50. */
+const workers = createWorkerCoordinator({ spawn: nodeSpawn(new URL('./fixtures/hull-worker.mjs', import.meta.url)), workers: 1 })
+afterAll(() => workers.dispose())
+
+/** Hulls a vehicle of each class may have (design 10.3, K7): motorcycle, car, SUV and pickup as the design wrote them, van 300 and `heavy` 550 (the owner's decision of 2026-11-26: what the 69 models made, rounded), the others the most the 69 models made (`evidence.md` `## T6.4`, "Método B"), rounded up to the next 50. */
 const CEILING: Readonly<Record<string, number>> = {
   motorcycles: 64,
   cars: 256,
   suvs: 256,
   pickups: 256,
-  vans: 256,
-  heavy: 384,
+  vans: 300,
+  heavy: 550,
   agricultural: 150,
   military: 500,
   air: 500,
   water: 450,
 }
-/** K7: what the hulls of a model cost to make on top of its pieces (ms), measured only in the cost lane (`pnpm test:cost`: one suite on the machine, nothing else running). */
-const MAX_HULL_MS = 100
+/** K7, the time to be born (the owner's decision of 2026-11-26): the second car of a model is given its hulls in this many ms, measured only in the cost lane (`pnpm test:cost`: one suite on the machine, load under 4, nothing else running). */
+const MAX_SECOND_CAR_MS = 2
+/** K7: what is left in a frame by the first car of a model, whose plan is in a worker: its longest call of `hulls()` while the job is made and sent, and the call that installs the plan (ms; the division itself is not counted: it is not in the frame). */
+const MAX_FIRST_CAR_MS = 5
 const IS_COST_LANE = process.env.HULLS_COST === '1'
 /** K4: the balls that meet a hull more than 3 cm before the drawn shell, per model and side, as measured when the method went in; it only goes down (`UPDATE_HULL_EXCESS=1` writes what a run measured when it is lower, and adds a new model). */
 const LEDGER = join(process.cwd(), 'tests/fixtures/hull-excess-ledger.json')
@@ -106,8 +114,12 @@ describe('the hulls of the whole fleet (design 10.3, K1 to K7)', () => {
     expect(reportOf(id).hulls).toBeLessThanOrEqual(CEILING[fleetGroupOf(id) ?? '']!)
   }, 240000)
 
-  it.skipIf(!IS_COST_LANE).each(fleetVehicleIds)('%s: K7 the hulls cost at most 100 ms (cost lane)', (id) => {
-    expect(reportOf(id).hullMs).toBeLessThanOrEqual(MAX_HULL_MS)
+  it.skipIf(!IS_COST_LANE).each(fleetVehicleIds)('%s: K7 the second car of the model is given its hulls in at most 2 ms, and the first sends its plan to the worker without waiting (cost lane)', async (id) => {
+    const cost = await birthCostOf(id, workers, CEILING[fleetGroupOf(id) ?? '']!)
+    if (process.env.HULLS_COST_REPORT) appendFileSync(process.env.HULLS_COST_REPORT, `${JSON.stringify(cost)}\n`)
+    expect(cost.secondMs, `${id} second car`).toBeLessThanOrEqual(MAX_SECOND_CAR_MS)
+    expect(cost.firstMs, `${id} first car`).toBeLessThanOrEqual(MAX_FIRST_CAR_MS)
+    expect(cost.installMs, `${id} the call that installs the plan`).toBeLessThanOrEqual(MAX_FIRST_CAR_MS)
   }, 240000)
 
   it.each(['family_hatch', 'naked_bike', 'city_bus'])('%s: K1 the shot still meets the drawn shell: building the hulls changes no ray and no vertex', (id) => {

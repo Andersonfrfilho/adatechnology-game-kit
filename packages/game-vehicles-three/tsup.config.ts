@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup'
 // so a script tag needs only three.js.
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/testing.ts'],
+    entry: ['src/index.ts', 'src/testing.ts', 'src/worker-kinds.ts'],
     format: ['esm'],
     dts: true,
     // one copy of the registries and module state, shared by the root and the ./testing entries

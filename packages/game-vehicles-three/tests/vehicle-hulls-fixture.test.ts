@@ -11,7 +11,7 @@ import { createVehicleColliders } from '../src'
 import { build } from './vehicle-colliders-support'
 
 /** Hulls a model of each class may have (the K7 ceilings of `vehicle-hulls-fleet.test.ts`). */
-const CEILING: Readonly<Record<string, number>> = { cars: 256, suvs: 256, pickups: 256, vans: 256 }
+const CEILING: Readonly<Record<string, number>> = { cars: 256, suvs: 256, pickups: 256, vans: 300 }
 /** The 12 models of the heap test of T6.21 (`game-physics-jolt/tests/heap.test.ts`): how many of each class. */
 const MODELS: ReadonlyArray<readonly [string, number]> = [['cars', 6], ['suvs', 2], ['pickups', 2], ['vans', 2]]
 
