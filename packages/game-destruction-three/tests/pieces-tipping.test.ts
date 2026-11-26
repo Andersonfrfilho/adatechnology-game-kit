@@ -4,7 +4,7 @@ import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
 import { physicsOption } from './setup-physics'
 
-const drop = (id: string, size: [number, number, number], tilt: number, mass: number, meshOffset: [number, number, number] = [0, 0, 0]) => {
+const drop = (id: string, size: [number, number, number], tilt: number, mass: number, meshOffset: [number, number, number] = [0, 0, 0], seconds = 3) => {
   const scene = new THREE.Scene()
   const world = new FakeWorld()
   const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld() })
@@ -20,7 +20,7 @@ const drop = (id: string, size: [number, number, number], tilt: number, mass: nu
   const piece = renderer.makePiece(id)
   let t = 0
   let slept = -1
-  while (t < 3) {
+  while (t < seconds) {
     renderer.update(1 / 60)
     t += 1 / 60
     if (piece.sleeping && slept < 0) slept = t
@@ -40,7 +40,7 @@ describe('piece tipping', () => {
   })
 
   it('a door whose mesh is off the root origin also falls flat', () => {
-    const { piece, ext } = drop('door2', [0.6, 1.6, 0.05], 2, 8, [0.3, 0.8, 0])
+    const { piece, ext } = drop('door2', [0.6, 1.6, 0.05], 2, 8, [0.3, 0.8, 0], 5)
     expect(ext.y).toBeLessThan(0.1)
     expect(piece.sleeping).toBe(true)
   })

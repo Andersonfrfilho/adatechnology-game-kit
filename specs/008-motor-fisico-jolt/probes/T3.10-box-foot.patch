@@ -1,0 +1,37 @@
+diff --git a/packages/game-destruction-three/src/engine-pieces.ts b/packages/game-destruction-three/src/engine-pieces.ts
+index 320b356bf..646116479 100644
+--- a/packages/game-destruction-three/src/engine-pieces.ts
++++ b/packages/game-destruction-three/src/engine-pieces.ts
+@@ -150,6 +150,8 @@ const TOPPLE = 3
+ const HOLD_MARGIN = 4
+ /** A support whose middle is closer than this (m) to the centre of mass is under it: which way it goes over is then not read from the contact points, which flicker. */
+ const SIDE_DEAD = 0.01
++/** How far (m) the lowest corners of a piece's box may be from the floor it stands on to count as its support (`topple`). */
++const BOX_FOOT = 0.02
+ /** The strong push stops once it has turned a column this fast (rad/s): a 5 cm leg tips from it; measured on the bowl, 0.1 made 4.2 cm in seed 57 and 1 made 31 cm in seed 61, 0.3 is clean in all 128. */
+ const PUSH_SPIN = 0.3
+ /** Corners this close (m) to the lowest one are what it stands on. */
+@@ -962,6 +964,23 @@ export class EnginePieces {
+       x0 = Math.min(x0, rx); x1 = Math.max(x1, rx)
+       z0 = Math.min(z0, rz); z1 = Math.max(z1, rz)
+     }
++    // a piece with no contacts of its own stands on its box (`setContacts`: past `CONTACT_MESHES` meshes), as the kit's solver holds it: when the engine has it on the
++    // floor of that box, the box's lowest corners are its support, not only the feet it is drawn with (a pedestal basin's column, a tree's trunk)
++    if (!b.contacts && !b.round) {
++      const [hx, hy, hz] = b.halfExtents
++      const corner = this.w
++      let lowest = Infinity
++      for (let k = 0; k < 8; k++) lowest = Math.min(lowest, corner.set(k & 1 ? hx : -hx, k & 2 ? hy : -hy, k & 4 ? hz : -hz).applyQuaternion(q).y)
++      if (Math.abs(lowest - low) < BOX_FOOT) {
++        for (let k = 0; k < 8; k++) {
++          corner.set(k & 1 ? hx : -hx, k & 2 ? hy : -hy, k & 4 ? hz : -hz).applyQuaternion(q)
++          if (corner.y > lowest + BOX_FOOT) continue
++          x0 = Math.min(x0, corner.x); x1 = Math.max(x1, corner.x)
++          z0 = Math.min(z0, corner.z); z1 = Math.max(z1, corner.z)
++        }
++        low = Math.min(low, lowest)
++      }
++    }
+     const height = -low
+     const wx = x1 - x0
+     const wz = z1 - z0

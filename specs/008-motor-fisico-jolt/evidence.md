@@ -3408,3 +3408,209 @@ Cinco achados da revisão, um commit por item, cada um com teste que falhava ant
 **Não mexido:** `GRENADE_ROLLING_DAMPING` (decisão do dono). **Limite:** `jointAngles` ainda devolve um objeto por chamada (contrato do adaptador); com a parte dormindo ele não é chamado, e só a parte em movimento paga.
 
 **Gates (pacotes tocados, uma suíte por vez):** `game-physics` 22 testes, `game-physics-jolt` 110 (2 puladas, 1 arquivo pulado como antes), `game-interactables` 169, `game-interactables-three` 541, `game-weapons-three` 2087, `game-player` 115, todos passam; `tsc --noEmit` e `eslint` limpos nos seis (só o aviso `max-lines` de `world.ts`, que já existia). Dependências de `dist` refeitas (`game-physics`, `game-physics-jolt`, `game-interactables`) antes.
+
+## T3.10 — Jolt como padrão (2026-11-26)
+
+Branch `spec/008-jolt-padrao` sobre `origin/main` (`a134e3fc8`). Nenhum golden regravado.
+
+**O que mudou (só a chave padrão; `own` continua, apagá-la é a T8.1):**
+- Sala: `examples/test-room/build.mjs` (`__joltBoot` só pula o wasm com `?solver=own`), `src/main.js` (comentário; `?? 'own'` fica para o caso `?solver=own`),
+  `leak.mjs` (`LEAK_SOLVER=own` escolhe o antigo), `tools/gpu/room-explosion.mjs` (variante `own` agora é `&solver=own`), `tools/serve-room/README.md`.
+- Testes: `tests/setup-physics.ts` de `game-destruction-three` e `game-floorplan-three` (`IS_JOLT = PIECE_SOLVER !== 'own'`); os `describe.skipIf`
+  de `fitted-pieces`, `engine-hosted`, `seam-allocations`, `engine-sweep` pulam só com `PIECE_SOLVER=own`; `bowl-energy`, `bench-pieces`, `sweep-c6`,
+  `determinism-scene`, `c5-behaviours` acompanham.
+- `packages/game-test-room/src/room.ts` (`options.physics ?? 'own'`) **não mudou**: a sala não cria o motor (wasm assíncrono); quem entrega o laço Jolt é a
+  página (`window.__roomPhysics`). `examples/reference-district` já era Jolt por padrão.
+
+**Gates (máquina carregada por outras sessões: carga 5–9; testes de 5 s estouram sob carga, os de 120 s também):**
+
+| Gate | Resultado |
+|---|---|
+| `game-destruction test` | 90 arquivos, **699/699 passam** |
+| `game-destruction-three test` (Jolt padrão) | **7 falham / 840 passam / 89 pulados** (6 arquivos de 114); com `PIECE_SOLVER=own` os mesmos arquivos passam |
+| `game-floorplan-three test` (Jolt padrão) | **5 falham / 1616 passam** (3 arquivos de 90); com `PIECE_SOLVER=own` os três arquivos passam (3/3, 44/44, 6/6) |
+| `typecheck` destruction-three e floorplan-three | sem erros |
+| `eslint` nos arquivos tocados | 0 erros (3 avisos de arquivo ignorado) |
+
+**Falhas de `game-destruction-three` (todas determinísticas, reproduzidas isoladas; nenhum teste afrouxado):**
+
+| Teste | Número | Causa provável |
+|---|---|---|
+| `asleep-on-steep-top` "o celular, a lata e o laptop dormindo no tampo escorregam para o chão" | altura final 0,748 m, limite < 0,1 | objetos dormindo em tampo inclinado não escorregam no Jolt (atrito/sono); mesma família da T1.2 (`slope-friction`) |
+| `book-knocked-over` "livro lançado de lado a 1 m/s" | 0,284 m, limite < 0,12 | livro em pé não tomba no Jolt com esse impacto lateral |
+| `rolling` "can thrown into a still one" | velocidade da lata parada 0,867, esperado 2,4 (e = 0,6) | restituição lata-lata no Jolt bem abaixo de 0,6 (o teto de giro/atrito do T1.1 não explica) |
+| `rolling` "fifty cans" | y mínimo 0,0263, limite > 0,027 | lata afunda 0,7 mm no chão (penetração do Jolt, `penetrationSlop`) |
+| `separate-pair` "pilha depois do colapso" | `expected false to be true` (bloco sobe ou fica no ar) | pilha de blocos não assenta como o solver antigo |
+| `shelf-swings-on-hinge` | ponta livre y 0,530, esperado < 0,429 | prateleira presa por um parafuso gira menos no Jolt (junta/dobradiça) |
+| `engine-ground-ahead` "twenty notices… each tile laid at most once" | `tile.dirty` ficou `{minX 0.85, maxX 2.15, minZ -2.15, maxZ 0.65}`, esperado `null` | ladrilho segue sujo depois de um `update`: possível limite de ladrilhos por quadro do motor; investigar na T3.8 |
+
+Quatro outros testes (`book-knocked-over` "0,6 m awake", `engine-ground-ahead` "explosion", `engine-ground-inplace` "200 changes", `engine-ground-net`
+"any spot") estouraram 5 s só na rodada concorrente com o floorplan e passaram na rodada limpa: tempo sob carga, não física.
+
+**Falhas de `game-floorplan-three` (Jolt padrão; passam com `own`):**
+- `exact-golden` — **3 goldens mudariam, não regravados**: `destruction/breach` hash `4a2638b7` → `701da5b8`, objetos 842 → 832 (−10);
+  `destruction/spall` `e112e96c` → `1ef91d0a`, 851 → 824 (−27); `destruction/fracture` `66c76666` → `eeee1eaa`, 935 → 911 (−24). Os outros 41 goldens iguais.
+- `furniture-laid-still` — 72 partes de peças do catálogo andam mais de 1 cm em 2 s (de 0,459 m a 1,896 m; ex. `pedestal_basin/plain_0` 0,459 m,
+  `metal_2` 1,330 m): móvel deitado não fica parado no Jolt.
+- `bookcase-topple` "orçamento da sala de teste" — 24 objetos (`obj_20`…) não chegam ao repouso no tempo do teste.
+
+**Conclusão:** o aceite "C1–C6, C8 verdes" da T3.10 **não está atendido** com o Jolt padrão nos testes: 12 falhas físicas e 3 goldens. A troca de padrão
+está commitada (reversível por `PIECE_SOLVER=own`); decidir antes de mergear se os 3 goldens e as falhas entram como dívida ou bloqueiam.
+
+### Correções (investigação da T3.10, 2026-11-26): nenhuma entrou no código
+
+Resultado honesto: causas achadas para quase todos, **nenhuma correção commitada**, porque cada uma que testei ou regride outro teste ou só esconde o sintoma. O código de `packages/` está igual ao `HEAD`. Os dois remendos medidos ficam em `probes/` (não aplicados). Linha de base nesta rodada: destruction-three 7 falhas, floorplan-three 5 (3 goldens, `furniture-laid-still`, `bookcase-topple` orçamento).
+
+| Teste | Causa encontrada | Remendo medido | Antes → depois |
+|---|---|---|---|
+| `furniture-laid-still` (72 partes) | Cinco tipos, três causas. (a) `pedestal_basin`, `tree_small`, `bicycle`: sem `contacts` próprios (mais de 12 malhas) o solver antigo apoia a peça nos cantos da **caixa**; no Jolt o apoio real é o pé desenhado (coluna de 14 cm) e a regra `topple` (`engine-pieces.ts:945`, `NARROW`) o derruba desde o quadro 2. (b) `mailbox`: o poste fica a 18 cm do centro de massa do kit (centro da caixa), a caixa na frente: o centro de massa está fora do pé, tomba de verdade. (c) `bbq_simple`: 40 caixas, rodas 10 cm abaixo da caixa da peça; assenta 0,5° torto e anda 1,0–1,6 cm (limite 1 cm). | `probes/T3.10-box-foot.patch`: em `topple`, sem `contacts`, os cantos baixos da caixa entram no apoio (o contrato documentado em `CONTACT_MESHES`). Resolve (a): 72 → 48 partes (só mailbox 8 e bbq 40). | **Reprova `pieces-stack` "a board on two legs in a line falls over too"**: destruction-three 7 → 8 falhas. Não commitado. |
+| Lâmina fina inflada (`MIN_PIECE_HALF` 0,02 em `renderer.ts:145/804` e `Math.max(0.01,…)` em `pieces.ts:641`) | Confirmada como defeito real: o notebook (2 cm) entra no Jolt com caixa de 4 cm e fica preso no tampo a 41,6°; com o tamanho desenhado desliza até o chão (y 0,780 → 0,010). Mas o celular (9 mm) segue preso por outra causa (abaixo). | Mínimos para 0,001. | destruction-three igual (7); floorplan-three: `bookcase-topple` passa de 1 para 2 falhas (livros finos de verdade tremem e não repousam no prazo). Revertido. |
+| `asleep-on-steep-top` | Além da inflação, o celular (0,2 kg) para com velocidade zero e acordado sobre a mesa dinâmica inclinada; com atrito 0,1 (misto 0,2) segue parado, com 0,01 desliza: força normal efetiva bem acima do peso. Mesma cena com tampo estático (sonda) desliza. Causa não achada (mesa dinâmica sobre as pernas); descartei costura das tábuas, convexRadius e chamadas do kit (`setPose` etc.). | – | sem mudança |
+| `fifty cans` (y mínimo 0,0263) | **Defeito real do adaptador**: `BoxShapeSettings` arredonda as arestas (`shapes.ts:16`, até 5 cm). Os ladrilhos do chão são caixas lado a lado, então a emenda entre dois ladrilhos é um **sulco em V** de até 5 mm de fundo (a lata de 3,3 cm de raio assenta 5,3 mm abaixo do chão sobre a emenda em (0,0)). Sonda isolada: cilindro sobre caixa única assenta em 0,0330 exato. | `probes/T3.10-seam-grooves.patch`: `convexRadius` opcional em `ShapeDesc` box (contrato `game-physics`), 0 nos ladrilhos, passos e fixos do `engine-statics`. `fifty cans` passa. | **Reprova** 3 testes de `book-knocked-over` e `can … wardrobe` em `rolling`: eles passavam porque o livro em pé fica sobre a emenda (0,0), inclina 12° dentro do sulco e dorme; com chão liso o livro não tomba com o golpe de raspão. Não commitado. |
+| `book-knocked-over` (sideways awake) | Mesmo sulco: o livro fica inclinado 12,3° dormindo, apoiado na aresta dentro da emenda; sem o sulco o golpe de raspão não o derruba (física plausível; o solver antigo derruba por `tip`). | – | sem mudança |
+| `rolling` restituição (0,867 em vez de 2,4) | Duas coisas medidas: (1) o teste lê a velocidade no primeiro quadro em que a lata parada passa de 0,05 m/s, com contato especulativo do Jolt já no meio da troca; o valor final é 0,812/2,188 (e efetivo 0,459); (2) Jolt com formas curvas perde restituição: esfera e caixa dão e = 0,6 exato, cilindro 0,46, cápsula/casco de 24 faces também abaixo (com e = 1: caixa 1,00, cilindro 0,89). Causa dentro do Jolt (contato de superfície curva), não achei ajuste do adaptador. | – | sem mudança |
+| `bookcase-topple`, `separate-pair`, `shelf-swings-on-hinge`, `engine-ground-ahead` | Não investigados a fundo. `shelf-swings-on-hinge`: o `hinge` do kit é "só do solver próprio" (`pieces.ts` `hangOn`, "`physics` swings nothing"): o teste mede um comportamento que o caminho Jolt não implementa. `engine-ground-ahead`: o motor só relê os ladrilhos ao alcance de peça acordada (`tilesAround`, margem 0,5 m); o teste espera os nove limpos com uma placa no meio, então reprova no `HEAD` com `PIECE_SOLVER=jolt` desde antes da T3.10 (código igual). | – | sem mudança |
+
+**Goldens** (não regravados; `exact-golden` rodado de novo no `HEAD`): `destruction/breach` `701da5b8`, 832 objetos (esperado `4a2638b7`, 842); `destruction/spall` `1ef91d0a`, 824 (esperado `e112e96c`, 851); `destruction/fracture` `eeee1eaa`, 911 (esperado `66c76666`, 935). Os mesmos números da primeira rodada: os três seguem mudando.
+
+**Opções para o dono:** (1) aceitar o remendo do sulco e reescrever os testes de livro/lata para não depender da emenda do chão, o que é mudança de teste; (2) marcar como fixos (plantados) mailbox, tree_small, pedestal_basin no `spec.ts` (`rooted`/`sunk`), o que é dado do catálogo e tira o teste do que ele cobre; (3) manter `own` para o que depende de `tip`/`hinge`/apoio na caixa até a T8.1.
+
+### T3.10, rodada 2 (2026-11-26): correções por decisão do dono
+
+Cada correção: teste vermelho antes, verde depois, commit isolado. Os mesmos testes seguem verdes com `PIECE_SOLVER=own` (a única falha do `own` na suíte inteira é `settle-every-material`, a mesma da `main` vermelha que outro agente investiga).
+
+| Teste | Causa | Correção (commit) | Antes → depois |
+|---|---|---|---|
+| `rolling` "fifty cans" | `BoxShapeSettings` arredonda as arestas; a emenda entre ladrilhos do chão era um sulco em V | `ShapeDesc` box com `convexRadius` opcional, 0 nos ladrilhos planos e nos passos (`db68a522e`) | y mínimo 0,0263 → passa |
+| `book-knocked-over` ×3, `rolling` guarda-roupa, `pieces-tipping` porta fora da origem | passavam por causa do sulco (livro inclinado 12° na emenda (0,0); lata presa nela; porta caía mais cedo) | testes reescritos, critério igual (ver abaixo) | verdes no Jolt e no `own` |
+| `furniture-laid-still` (72 partes) | (a) a regra de tombar lia o centro da caixa como centro de massa; (b) pia de coluna e bicicleta: no Jolt o apoio é o pé desenhado, a regra os derrubava; (c) caixa de correio, varal, árvore pequena e churrasqueira de tijolo não ficam em pé soltas no mundo real | `PieceBody.massCentre` (centro de cada parte pesado pela massa, em `setContacts`) lido por `topple`; peça que nunca perdeu parte apoia na caixa (contrato de `CONTACT_MESHES`), a que perdeu (`apart`) apoia no que sobrou, e `pieces-stack` "board on two legs" segue verde; `PLANTED` em `furniture/spec.ts` torna fixas mailbox, correio, clothesline, tree_small, bbq_simple (`3e7656e05`) | 72 partes → 0; goldens das casas iguais |
+| `shelf-swings-on-hinge` | `PieceSystem.hinge` era só do solver próprio | âncora fixa no parafuso e junta `hinge` do contrato; solta em 40° ou 1,5 s como o `own` (`7965ef7e1`) | y livre 0,530 → passa |
+
+Reescritas (motivo de cada):
+- `book-knocked-over` queda de 0,6 m: o livro cai chato sobre a aresta de 5 cm e empurra na vertical; no Jolt só tomba se o peso passar da borda (x 0,15); no `own` a regra `tip` aceita x 0,03. Varrida medida: Jolt tomba em x 0,15 (e 0,08 a 1 m); `own` só até x 0,05. Passou a `LANDING_X = IS_JOLT ? 0.15 : 0.03`.
+- `book-knocked-over` arremesso lateral a 1 m/s: x 0,08 → 0,2 (tomba nos dois solvers, acordado e dormindo; vizinhos 0,25 também).
+- `rolling` guarda-roupa: a lata para encostada, sem atravessar (0,467 = 0,5 − raio). **Não quica no Jolt**: a caixa tem restituição 0 por regra do kit (`material()` em `engine-pieces.ts`). Dar restituição às caixas reprova `topple-energy` ×2 (a caixa ganha energia ao pousar: o Jolt aplica o máximo das duas nos contatos mantidos, não a média). O quique segue exigido no `own`. **Decisão do dono**: a lata deve quicar no móvel?
+- `pieces-tipping` porta: sem o sulco a porta leva 2,8 s para cair e o sono vem depois dos 3 s; janela 5 s, mesmo critério.
+
+**Abertos (nenhum afrouxado):**
+- `rolling` restituição lata-lata (0,867 em vez de 2,4): limite do motor, parado a pedido. Medição isolada: esfera e caixa dão e = 0,6; cilindro 0,46; cápsula/casco de 24 faces também abaixo; com e = 1, caixa 1,00 e cilindro 0,89. O teste lê o primeiro quadro acima de 0,05 m/s (valor final 0,812/2,188, e efetivo 0,459).
+- `asleep-on-steep-top` (mesa longa): celular e laptop ficam parados (v = 0, acordados, 41,6°); a lata desliza. Com tampo único dinâmico a 42° os três deslizam. Não é sono (acordados desde o início), nem iterações (`JOLT_ITERATIONS=30`, `JOLT_STEP=240`), nem raio das arestas das tábuas (0 nelas). A inflação mínima (`MIN_PIECE_HALF`, `pieces.ts:641`) explica o laptop (com 0,001 ele desliza) mas **não o celular** (segue em 0,74). Causa não achada.
+- `bookcase-topple` (orçamento): 24 livros parados (v = 0, `still` 10 s) ficam acordados; 24 = `SUGGESTED_MAX_AWAKE_PIECES`. Sem `maxAwakePieces` passa; com `settledBatches` sozinho passa. A interação do orçamento (`keepBudget` põe 28 para dormir) com as ilhas do Jolt deixa os 24 restantes acordados. Não corrigido.
+- `separate-pair` colapso: o bloco 3 (inclinado 45°, apoiado na aresta de outros, v = 0, e acordado ele fica) reprova só a heurística `standsOnSomething` (canto sobre topo). Física plausível; mexer na heurística é afrouxar o teste.
+- `engine-ground-ahead`: o motor só relê ladrilhos ao alcance de peça acordada (spec 010 T2.3); dois dos nove ficam sujos (fora da margem de 0,5 m da placa). O teste espera os nove limpos. Conflito entre o teste e o desenho preguiçoso.
+- **Dependência (item 3, não mexido):** inflação de lâmina fina (`MIN_PIECE_HALF` 0,02 em `renderer.ts:145/804`, mínimo 0,01 em `pieces.ts:641`), na frente do outro agente (`fix-madeira-samba`). Medido: com 0,001 o laptop da mesa desliza; o celular não.
+
+### T3.10, rodada 3 (2026-11-26): decisões do dono de 26/11, sobre a `main` com o #519
+
+Branch rebaseada sobre a `origin/main` (inclui o #519: `onSteepSupport`, `slidesOn`, `sweepPiece`; `bookcase-one-side-gone` e `settle-every-material` passam). Cada correção com teste vermelho antes e verde depois, commit isolado; os mesmos testes verdes com `PIECE_SOLVER=own`.
+
+| Item | Causa | Correção (commit) | Antes → depois |
+|---|---|---|---|
+| 1. Quique | O adaptador já gravava a média geométrica (a do solver antigo) no contato **novo**; o contato visto antes do toque (especulativo) fecha num passo seguinte com o padrão do Jolt, **o maior** das duas. E o kit dava restituição 0 às caixas (`material()`), então a lata nunca quicava num móvel | `OnContactPersisted` grava a mesma média (`e11d10a96`, teste `restitution.test.ts` no `game-physics-jolt`); caixa de peça com a restituição do material (`8eb17c10d`); o teste do guarda-roupa volta ao original (a lata quica) | bola 0,6 em superfície 0,4 a 1,4 m/s subia 0,042 m (o maior), agora 0,031 (média: e² h = 0,024 + a folga especulativa); `topple-energy` ×2 segue verde com restituição nas caixas; `rolling` guarda-roupa e perna da mesa quicam |
+| 1b. Lata contra lata | Limite do motor, registrado: o cilindro perde restituição (e = 0,6 → 0,458; esfera e caixa dão 0,6 exato) | o teste exige o valor medido no Jolt: lata parada sai a 0,7292 e a que bateu a 0,2708 da velocidade (3 m/s: 2,1875 e 0,8125), tolerância 0,005, lidos quando a troca termina (o teste lia o primeiro quadro, no meio dela: 0,867). `own` mantém e = 0,6 | `rolling` 19/19 nos dois solvers. Medição isolada: a de acima (esfera/caixa 0,6, cilindro 0,46; com e = 1 caixa 1,00, cilindro 0,89) |
+| 2a. `engine-ground-ahead` | Spec 010 T2.3: o motor só relê os ladrilhos a 0,5 m de peça acordada | o teste espera limpos os 4 ao alcance da placa e ainda marcados os 2 fora dele (`(1,-1)`, `(1,0)`), cada ladrilho lido no máximo uma vez | falhava → 7/7 |
+| 2b. `separate-pair` colapso | "Apoiado" era a heurística de caixa `standsOnSomething` (canto sob um topo); o bloco inclinado 45° sobre arestas de outros está parado e apoiado | no Jolt "apoiado" = o motor tem a peça tocando algo (`touching`, lido a cada passo em que ela está acordada: o motor não guarda contato de quem dorme); `own` segue com a heurística | falhava → 11/11 nos dois |
+| 2c. `pieces-tipping` porta fora da origem | sem o sulco do chão a porta leva 2,8 s para cair e o sono vem depois dos 3 s: a janela passou de 3 s para 5 s (feito na rodada 2, `f87157331`; o teste `drop(..., seconds)` ganhou o prazo); o critério é o mesmo (cai, fica chata, dorme) | – | verde nos dois |
+| 3. `bookcase-topple` (orçamento) | **Dois defeitos no caminho Jolt.** (a) O Jolt acorda a cada passo o dorminhoco que encosta num corpo acordado (23 `sleep` e 1 `wake` por quadro, medido); o orçamento só agia acima da contagem, então as 24 paradas que sobravam nunca dormiam sozinhas (o motor não dorme uma ilha cujos vizinhos acordam a cada quadro). (b) com o livro fino como desenhado (item 5): o sono do orçamento apagava a inclinação mantida (`steady = null`), e o motor acordava cada livro de pé da fileira logo depois: cada um recomeçava 1,5 s, nunca dormiam juntos | (a) peça parada há `SLEEP_AFTER` dorme sob o orçamento qualquer que seja a contagem, sem tirar o teto (`84907dea3`; teste `budget-rest.test.ts`: 40 livros lado a lado, 24 ficavam acordados, agora 0); (b) `sleepByBudget` guarda o `steady` (`347586b0a`) | 24 acordados em 12 s → 0; com 7 livros finos como desenhados: 7 acordados → 0 |
+| 5. Lâmina fina | `MIN_PIECE_HALF` 0,02 (`renderer.ts`) e `Math.max(0.01, …)` (`pieces.ts`) inflavam o notebook (2 cm) para uma caixa de 4 cm, enfiada no tampo | piso único de 1 mm no caminho do motor; o solver próprio guarda 0,02/0,01 até a T8.1 (com 1 mm nos dois, os goldens das casas mudavam também no `own`: `f5cb99c97` + `42d1c6cd9`). Piso medido: placa de 0,5 mm a 10 mm assenta e dorme sobre o chão do Jolt, caindo de 0,3 m parada ou a 8 m/s, sem diferença de espessura (o que entra no chão a 8 m/s sai igual, 4,3 cm, em todas) | teste `thin-piece-box.test.ts` (laptop 2 cm, celular 9 mm, folha de 0,2 mm → 2 mm) vermelho → verde; laptop e lata do `asleep-on-steep-top` deslizam (0,000), `bookcase-one-side-gone`, `settle-every-material`, `furniture-laid-still`, `fragment-rest`, `bookcase-topple` verdes |
+
+**4. `asleep-on-steep-top` — o celular segue parado (aberto, duas tentativas gastas e mais algumas medições).** Depois do rebase e do item 5 o resultado é: lata 0,000, laptop 0,000, **celular 0,737 m** (limite 0,1). Com `own`: os três deslizam.
+O que a investigação fechou:
+- Não é a inflação: com piso 0,01, 0,005, 0,0025 e 0,001 o celular fica em 0,741, 0,737, 0,737 e 0,737. Não é a folga de penetração: `JOLT_SLOP`/`JOLT_PUSHOUT` 0,0005, 0,001 e 0,004 dão 0,739, 0,738 e 0,736. Não é a regra de tombar (`topple` desligada: igual), nem chamada do kit: nenhum `set*`/`wake`/`sleep` chega ao corpo do celular depois do primeiro quadro.
+- **É a emenda entre as tábuas do tampo (6 caixas do composto).** O celular desliza dois centímetros e para exatamente quando a face dele cobre uma tábua (z local 0,075 = a largura de uma tábua), isto é, quando a aresta da frente chega à emenda. Com o tampo de **1 tábua** ou de **3** (mesma cena) ele desliza até o chão; com 6 tábuas e as mesmas massas, não; com 6 tábuas **sobrepostas** em 1,2× ele anda um pouco e para, em 1,6× desliza (y 0,136). Com a mesa acordada à força e 1 tábua ele também desliza: não é "mesa acordada". `convexRadius: 0` nas caixas do composto não muda.
+- Leitura: caixa fina (9 mm, afundada 2 mm) contra duas caixas do mesmo composto lado a lado: na emenda o eixo de menor penetração é o do lado da tábua vizinha, e o contato empurra o celular de volta. É o mesmo gênero do sulco do chão (T3.10 rodada 1/2), agora entre as peças de um composto dinâmico. Correção possível, **não feita** (muda a forma das peças do kit): fundir as tábuas vizinhas coplanares do mesmo material numa caixa só ao montar o composto (`shapeOf`, `engine-pieces.ts:669`), ou dar ao composto a forma de uma só. O teste continua vermelho e **não foi afrouxado**.
+
+**Goldens** (não regravados). Jolt: `destruction/breach` `e5885aa5`, 832 objetos (esperado `4a2638b7`, 842); `destruction/spall` `c9147fc8`, 824 (esperado `e112e96c`, 851); `destruction/fracture` `29f5eb6b`, 908 (esperado `66c76666`, 935) — os mesmos três da rodada anterior (`701da5b8`/832, `1ef91d0a`/824, `eeee1eaa`/911: mudaram de hash porque as peças mudaram de caixa). **Os outros 41 goldens (as casas) seguem iguais** no Jolt e os 44 passam com `PIECE_SOLVER=own`.
+
+**Gates (rodada 3):**
+| Gate | Jolt (padrão) | `PIECE_SOLVER=own` |
+|---|---|---|
+| `game-physics-jolt test` | 96 passam, 2 pulados (27 arquivos; `restitution.test.ts` novo) | – |
+| `game-destruction test` | 699/699 (rodada 1; o pacote não foi tocado) | – |
+| `game-destruction-three test` | **1 falha** (`asleep-on-steep-top`, celular 0,737) / 850 passam / 89 pulados | 738 passam, 0 falham, 197 pulados |
+| `game-floorplan-three test` | **3 falhas** (os 3 goldens de `destruction`) / 1618 passam | 1616 passam, 0 falham, 5 pulados |
+| `tsc --noEmit` | sem erros em `game-physics-jolt`, `game-destruction-three`, `game-floorplan-three` | – |
+| `eslint` nos arquivos tocados | 0 erros (avisos de `max-lines` que já existiam em `pieces.ts` e `renderer.ts`) | – |
+
+Falhas fechadas desde a rodada 2: `topple-energy` (segue verde com restituição nas caixas), `rolling` (guarda-roupa e lata contra lata), `engine-ground-ahead`, `separate-pair`, `bookcase-topple`, `furniture-laid-still`, `fragment-rest`. Abertos: `asleep-on-steep-top` (celular) e os três goldens, que mudam por decisão (a física é outra; o dono decide regravar). O `floorplan-three` no Jolt foi rodado inteiro antes do último commit (que só mexe no caminho `own`); depois dele rodaram o `exact-golden` e o `bookcase-topple`.
+
+### T3.10, rodada 4 (2026-11-26): o celular e os goldens de `destruction`
+
+Branch rebaseada sobre a `origin/main` (a4ab2f28e, com o #518); `dist` refeitos.
+
+**1. `asleep-on-steep-top` (celular): causa e correção.**
+- `mEnhancedInternalEdgeRemoval` **existe** no binding (`jolt-physics` 1.1.1: `BodyCreationSettings.mEnhancedInternalEdgeRemoval`, `Body.SetEnhancedInternalEdgeRemoval`). Foi ligada de duas formas pelo adaptador (`BodyDesc.smoothEdges`, ligada só nos compostos e depois em **todos** os corpos de peça): o celular ficou em **0,737 m nas duas**, igual ao vermelho. A opção do Jolt remove a aresta interna de malha de triângulos e de composto de triângulos; entre caixas de um composto ela não age. Por isso **não ficou no código** (revertida).
+- Correção: `shapeOf` (`engine-pieces.ts`) passa as caixas por `mergeFlushBoxes` (`merge-flush-boxes.ts`): caixas sem folga e com o mesmo tamanho e lugar nos outros dois eixos, mesma rotação, viram uma caixa só. As 6 tábuas do tampo viram 1. Só o caminho do motor; `own` não muda (`shapeOf` não é dele).
+- Teste: `asleep-on-steep-top` (o do celular, sem afrouxar) vermelho (0,737 m, limite 0,1) → verde (4/4); `merge-flush-boxes.test.ts` novo (6 tábuas → 1 caixa; folga, espessura diferente ou rotação mantêm separadas).
+- Efeito nos outros: `furniture-laid-still`, `bookcase-*`, `settle-every-material`, `pieces-*` verdes (suíte inteira abaixo). Custo: a fusão é O(n²) nas caixas de um composto, só ao (re)montar a forma; sem custo por passo, e o composto fica com menos filhos (o Jolt testa menos formas por contato).
+
+**2. Goldens de `destruction` no Jolt** (não regravados; o dono decide). Rodados nos dois solvers, mesma cena (`sobrado:3`, semente 5, 1 s), lista de objetos da cena comparada (tipo, nome, material, tamanho, posição), mais os eventos do mundo (`world.on('*')`) e a trilha de cada peça (`renderer.pieces()`, a cada 0,05 s). Os 41 goldens das casas seguem iguais.
+
+Todos os objetos que mudam são **fragmentos de detrito** (`fragment`, e as `fragment-instances` que os desenham); as peças (`obj_*`), as paredes e o resto da cena são os mesmos. Contagens por material (`own` → Jolt):
+
+| Golden | Objetos | Fragmentos por material | Eventos do mundo | Causa |
+|---|---|---|---|---|
+| `breach` | 842 → 832 (−10) | vidro 11 → 20 (+9); reboco 24 → 13 (−11); tijolo 77 → 71 (−6); madeira 1 → 0 (−1); instâncias −1 | 36 → 38 | (a) o vidro da janela (`window:w0_0`, peça `obj_4`) cai em 0,35 s no Jolt e em 0,55 s no `own`, e estilhaça em **20** cacos contra 11; (b) o orçamento de 160 fragmentos vivos (`maxFragments`) faz os cacos pequenos mais velhos (reboco e tijolo) sumirem para dar lugar aos 9 a mais: o Jolt termina com exatamente 160; (c) o batente da janela cai e lasca no `own` (1 caco de madeira), no Jolt não |
+| `spall` | 851 → 824 (−27) | MDF 19 → 0 (−19); madeira 5 → 0 (−5); tijolo +4; instâncias −7 (MDF 5, madeira 2) | 104 → 84 | as peças soltas do andar de cima (porta do guarda-roupa, 2 gavetas das mesinhas, batente e porta `d1_5`) **caem 2,8 m e batem a −7,4 m/s no `own`** (cinco `fall`: lascas de MDF e madeira, vinte eventos a mais); no Jolt elas **ficam sobre a laje** e não há `fall` |
+| `fracture` | 935 → 908 (−27) | MDF 9 → 4 (−5); madeira 10 → 1 (−9); vidro 15 → 20 (+5); instâncias −7 | 460 → 443 | as duas: as mesmas peças de MDF e madeira (guarda-roupa, gaveta, batente) não caem no Jolt (`chip`/`crack`/`damage` de `ix:door:…wardrobe`, `ix:drawer:…nightstand_left`, `jamb:d1_5` somem), e o vidro da janela estilhaça em 20 (o `own`: 15) |
+
+Por que o Jolt segura as peças do andar de cima: a laje `slab_1_p0` fica `damaged` (2 trincas, 0 furos, 86 785 de 87 752 de vida) **nos dois solvers**, isto é, intacta como superfície. No `own` as nove peças caem em queda livre desde o primeiro quadro (`vy` −0,49 m/s em 0,05 s, sem apoio) por 2,8 m; no Jolt elas estão sobre os sólidos fixos da casa (`onGround`, `y` ≈ 0 a 0,1 m). O `own` só conhece o chão plano (`groundAt` = 0 aqui) e a varredura contra as partes do mundo, e passa as peças pela laje; o Jolt tem a laje como corpo fixo. Leitura: **o Jolt é o que está certo** nesse ponto (inferência de medida: não conferi o `own` linha a linha).
+
+Por que o vidro estilhaça em 20 no Jolt: a chapa fina agora tem a espessura desenhada (item 5 da rodada 3: meia espessura 0,006 contra 0,02 do `own`, que inflava), e cai e bate em outro lugar: o vidro e o batente descem juntos e pousam a ~0,34 m acima de onde o `own` os pousa. **Não identifiquei no que o vidro pousa** (a peça sob ele não é um sólido fixo que eu tenha listado): é o ponto que eu pediria ao dono para ver na sala.
+
+**Veredito por golden:** `breach`, `spall` e `fracture` mudam por **física legítima do motor novo** (peças apoiadas na laje em vez de atravessá-la, chapa de vidro com a espessura real), sem objeto que deveria existir e sumiu por defeito; as contagens (−10, −27, −27) vêm só de fragmentos de detrito, e o orçamento de 160 distribui o que sobra. **Dois pontos que eu não chamaria de resolvidos e que não mudam a contagem:**
+- as **gavetas** (`obj_6` a `obj_9`, MDF, 6 kg) **sobem** a 6,2–6,4 m no Jolt (e 2,4–2,6 m no `own`: aparece nos dois solvers, só maior no Jolt) por empurrões de posição, não por velocidade (a velocidade lida fica em 0,05–0,9 m/s enquanto `y` sobe 0,4 a 1,5 m por quadro). É defeito, de causa não achada (o `fellThrough` e o `liftFor` não explicam sozinhos: pede sonda);
+- o pouso do vidro (acima).
+
+**Gates (rodada 4):**
+| Gate | Jolt (padrão) | `PIECE_SOLVER=own` |
+|---|---|---|
+| `game-physics-jolt test` | 114 passam, 2 pulados | – |
+| `game-destruction test` | 699/699 | – |
+| `game-destruction-three test` | 853 passam, 0 falham, 89 pulados | 740 passam, 0 falham, 197 pulados |
+| `game-floorplan-three test` | **3 falhas** (os 3 goldens, não regravados: `breach` 832, `spall` 824, `fracture` 908 objetos) / 1618 passam | 1616 passam, 0 falham, 5 pulados |
+| `tsc --noEmit` | sem erro nos arquivos tocados (os erros que o `tsc` lista são de `game-interactables`/`game-items-three`, sem `.d.ts` no `dist` desta máquina) | – |
+| `eslint` | 0 erros (aviso de `max-lines` que já existia em `engine-pieces.ts`) | – |
+
+### T3.10, rodada 5 (2026-11-26): Gavetas que sobem
+
+**Resultado: a gaveta não sobe. O "subir a 6,2–6,4 m" da rodada 4 é artefato de medição; não há correção de posição para consertar.** Nenhum código do kit mudou.
+
+Sonda (cena `sobrado:3`, semente 5, 1 s, `spall`; `[DEBUG-7c1a]` em `moveBy`, `underGround`, `reshape`, o `setPose` do `sync`, `fellThrough` e a leitura do motor a cada quadro; removida) e leitura da altura pelo **centro da peça no mundo** (`root.localToWorld(localCenter)`), nos dois solvers:
+
+| O que | Jolt | `own` |
+|---|---|---|
+| Altura real das gavetas `obj_6`–`obj_9`: início → máximo → fim | 2,97/3,21 → 2,97/3,21 → **2,815** (descem 0,16 a 0,4 m e param na laje) | 2,97/3,21 → 2,97/3,21 → 0,11–0,17 (caem 2,8 m: o `own` atravessa a laje, rodada 4) |
+| Subida máxima do centro de qualquer peça (`breach`/`spall`/`fracture`) | 0,000 / 0,002 / 0,066 m | 0,022 / 0,000 / 0,002 m |
+| Subida máxima da base da caixa (Box3 do desenho) | 0,000 / 0,000 / 0,022 m | 0,028 / 0,000 / 0,001 m |
+| Salto de posição acima do que a velocidade explica, por quadro | ≤ 0,024 m | ≤ 0,056 m |
+| Peças que passam de 0,5 m acima de onde estavam | **0** | **0** |
+| Correções de posição aplicadas nas 3 cenas | 3 × `moveBy` de 6–8 mm (de lado, saída de dentro de fixo); 0 `underGround`, 0 `fellThrough`, 0 `reshape` de gaveta | – |
+
+Causa do número da rodada 4 (`engine-pieces.ts:1598`, `b.root.position.set(pos - R·centerV)`): a raiz da peça é a origem da casa e o centro da gaveta fica a `localCenter` = (3,49; 2,99–3,22; 1,44) dela. Quando a gaveta gira 90° em torno de z (cai de lado sobre a laje: `ang` 72° em 0,35 s, 159° em 0,5 s, 90° no fim), `root.position.y` varre esse braço de ~3,5 m: 6,15–6,42 no Jolt, 2,44–2,57 no `own` (gira 69° no fim), exatamente os valores da rodada 4. A velocidade lida é a do centro de massa e estava certa (0,05–0,9 m/s); o que "subia 0,4 a 1,5 m por quadro" era a origem da raiz, que não é onde a peça está nem onde o desenho aparece (o desenho é raiz + R·localCenter = o centro). Por isso `fellThrough` e `liftFor` "não explicavam": não havia subida a explicar.
+
+Teste: `packages/game-floorplan-three/tests/destruction-pieces-never-rise.test.ts` (3 cenas, nenhuma peça sobe 0,5 m ou mais acima da altura inicial do centro). **Não ficou vermelho antes**, porque não há defeito nesta cena: entra como guarda, verde nos dois solvers. Não escrevi cena pequena de gaveta saindo de mesinha porque ela também passaria (inventar o vermelho seria afrouxar o critério ao contrário).
+
+Goldens (não regravados), `destruction`: Jolt `breach` `e5885aa5`/832, `spall` `26c3349`/824, `fracture` `fb65e788`/908 (esperados `4a2638b7`/842, `e112e96c`/851, `66c76666`/935); `own` 44/44 passam. Os 41 das casas seguem iguais nos dois.
+
+**Não resolvido:** a queixa do dono na sala ("partes de madeira sobem e ficam sambando depois de tiro") **não foi reproduzida por esta cena**. Precisa de um caso real (qual peça, qual tiro) ou da sala com a sonda. Quem lê `root.position.y` de peça para medir altura repete o erro: ler o centro (`localToWorld(localCenter)`).
+
+Gates (rodada 5): `game-physics-jolt` 114 passam, 2 pulados; `game-destruction-three` Jolt 853 / `own` 740, 0 falhas; `game-floorplan-three` Jolt 1621 passam e **3 falhas (os 3 goldens, não regravados)**, `own` 1619 passam, 0 falhas; `eslint` e `tsc` do teste novo sem erro (nenhum código do kit tocado).
+
+### T3.10, rodada 6 (2026-11-26): goldens de `destruction` regravados por decisão do dono
+
+Branch rebaseada sobre a `origin/main` (sem commits novos), `dist` refeitos. Decisão do dono (2026-11-26): regravar os 3 goldens de `destruction`; o diagnóstico das rodadas 4 e 5 (física legítima do motor novo: a laje segura as peças, o vidro tem a espessura real) fica como a causa.
+
+Regravados com `UPDATE_EXACT=1` em `tests/exact-golden.test.ts`. O diff do `tests/fixtures/exact-floorplan.json` tem **só 3 linhas**:
+
+| Golden | Antes | Depois |
+|---|---|---|
+| `destruction/breach` | `4a2638b7`, 842 objetos | `e5885aa5`, 832 |
+| `destruction/spall` | `e112e96c`, 851 | `26c3349`, 824 |
+| `destruction/fracture` | `66c76666`, 935 | `fb65e788`, 908 |
+
+Os 41 goldens das casas seguem iguais.
+
+**Limites do motor (registrados, não corrigidos):**
+- **Restituição do cilindro:** no Jolt o cilindro (a lata) perde restituição, e = 0,46 onde o material pede 0,6 (esfera e caixa dão 0,6 exato; com e = 1, caixa 1,00 e cilindro 0,89). Causa dentro do Jolt (contato de superfície curva); o teste `rolling` lata contra lata exige o valor medido (0,7292 / 0,2708 da velocidade). O `own` mantém 0,6.
+- **Ponto para o dono ver na sala:** a janela e o batente pousam cerca de 34 cm acima de onde pousavam no `own`; não identifiquei no que o vidro pousa.

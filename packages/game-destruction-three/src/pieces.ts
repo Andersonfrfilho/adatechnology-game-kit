@@ -3,7 +3,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import { AwakeList } from './awake-list'
 import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
-import { squareBoxOf } from './internal'
+import { HINGE_RELEASE, HINGE_SECONDS, squareBoxOf } from './internal'
 import { GROUND_ROLLING_DAMPING, PIECE_ROLLING_DAMPING } from './friction'
 import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
@@ -108,6 +108,13 @@ const SLIP_SPEED = 0.02
 const ROLLING_RESISTANCE = 0.015
 /** A round piece whose axis leans more than 45 degrees from upright lies on its side (the share of the world's down across its axis). */
 const ROUND_LYING = Math.SQRT1_2
+/** The least half side (m) of a piece's box on the engine, however thin what is drawn of it: the box is the drawing (a 2 cm laptop is a 2 cm box); this much is only so that a face is not a plane. */
+const MIN_PIECE_HALF = 0.001
+/** The own solver's least half side of a piece (it goes with the solver, T8.1): its goldens hold the boxes it was fitted with. */
+const OWN_MIN_PIECE_HALF = 0.01
+const OWN_MIN_MEASURED_HALF = 0.02
+/** The least half side of the box measured around the meshes of a piece: the engine's, or the own solver's. */
+export const minPieceHalf = (physics: unknown): number => (physics === 'own' ? OWN_MIN_MEASURED_HALF : MIN_PIECE_HALF)
 const SLEEP_AFTER = 0.5
 /** A piece on the ground slower than this (m/s) and turning slower than this (rad/s) is still: it sleeps after `SLEEP_AFTER`, or at once over `maxAwake`. */
 const STILL_SPEED = 0.12
@@ -200,12 +207,6 @@ const MAX_COLLISION_STEPS = 8
 const MIN_ROUND_RADIUS = 0.005
 /** Two pieces closing slower than this (m/s) only stop against each other; faster, they bounce by their restitution. */
 const BOUNCE_MIN_SPEED = 0.1
-/**
- * A piece hung on a hinge (`hinge`: a shelf that lost the side at one end swings on the screw at the other) lets go once it has turned this far (rad) or after
- * `HINGE_SECONDS`: the screw tears out of the board.
- */
-const HINGE_RELEASE = (40 * Math.PI) / 180
-const HINGE_SECONDS = 1.5
 /** Two boxes closing faster than this (m/s) hit each other (`boxImpact`): a fall of 11 cm. Slower, they only rest on or lean against each other. */
 const BOX_IMPACT_SPEED = 1.5
 /** A contact normal at least this level (its share along the ground) puts two pieces apart along the ground only. */
@@ -611,10 +612,9 @@ export class PieceSystem {
 
   /**
    * Hangs a piece on a hinge at `point` (world): that point of it stays where it is while the rest swings down about it, as a shelf that lost the side at one end swings on
-   * the screw at the other and pours what lay on it off its free end. It lets go past `HINGE_RELEASE` or `HINGE_SECONDS`. The kit's own solver only (`physics` swings nothing).
+   * the screw at the other and pours what lay on it off its free end. It lets go past `HINGE_RELEASE` or `HINGE_SECONDS`. On the engine it is a hinge joint to a fixed anchor (`EnginePieces.hang`).
    */
   hinge(body: PieceBody, point: Vec3): void {
-    if (this.engine) return
     const c = this.centerOf(body, this.p)
     const q = body.root.quaternion
     const local = this.ax.set(point[0] - c.x, point[1] - c.y, point[2] - c.z).applyQuaternion(this.dq.copy(q).invert())
@@ -634,6 +634,7 @@ export class PieceSystem {
       return existing
     }
     const awake = this.awake
+    const least = this.engine ? MIN_PIECE_HALF : OWN_MIN_PIECE_HALF
     let asleep = false
     let inHand = false
     const body: PieceBody = {
@@ -643,7 +644,7 @@ export class PieceSystem {
       root,
       velocity: velocity ? [...velocity] : [0, 0, 0],
       angularVelocity: angular ? [...angular] : [0, 0, 0],
-      halfExtents: [Math.max(0.01, halfExtents[0]), Math.max(0.01, halfExtents[1]), Math.max(0.01, halfExtents[2])],
+      halfExtents: [Math.max(least, halfExtents[0]), Math.max(least, halfExtents[1]), Math.max(least, halfExtents[2])],
       mass: Math.max(0.05, mass),
       // asleep or held is read and written as a plain flag; waking or taking it in hand puts the piece among the awake ones
       get sleeping() {
@@ -1788,8 +1789,9 @@ export class PieceSystem {
     let awake = 0
     for (const b of this.list) {
       if (b.sleeping || b.held) continue
-      // one held up at an angle never sleeps by itself (`still`), though it has come to rest: with a budget it does, whatever the count
-      if (b.balancing && this.hasComeToRest(b)) this.sleepByBudget(b)
+      // one held up at an angle never sleeps by itself (`still`), though it has come to rest: with a budget it does, whatever the count. One that has lain still for `SLEEP_AFTER`
+      // sleeps whatever the count too: the engine wakes a sleeper that touches an awake body at every step, so the ones left awake under the count would never sleep by themselves
+      if (this.hasComeToRest(b) && (b.balancing || (b.still >= SLEEP_AFTER && !b.hinge && !this.onSteepSupport(b)))) this.sleepByBudget(b)
       else awake++
     }
     for (const b of this.list) {
@@ -1874,7 +1876,10 @@ export class PieceSystem {
 
   /** Sleeps sooner than it would by itself, so it answers to every point it lies on (`restPoints`). */
   private sleepByBudget(b: PieceBody): void {
+    // the tilt it kept goes with it: the engine wakes a sleeper that touches an awake body, and one that has to keep its tilt anew each time never sleeps with the row it leans on
+    const steady = b.steady
     this.sleep(b)
+    b.steady = steady
     b.restPoints = this.restPointsOf(b)
   }
 

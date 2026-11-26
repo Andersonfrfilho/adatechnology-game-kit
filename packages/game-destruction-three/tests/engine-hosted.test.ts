@@ -53,7 +53,7 @@ const drop = (at: Vec3, seconds: number, setup?: (world: ReturnType<typeof creat
   return { y, sleeping: renderer.piece(id)?.sleeping ?? false, world, step }
 }
 
-describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a body another module draws is in the engine as its parts', () => {
+describe.skipIf(process.env.PIECE_SOLVER === 'own')('a body another module draws is in the engine as its parts', () => {
   it('a crate dropped on a parked car rests on its roof and sleeps; the roof broken, it falls to the body; the car moved away, to the ground', () => {
     let car: ReturnType<typeof parked> | null = null
     const r = drop([0.3, 2.5, 0], 3, (world, renderer) => {

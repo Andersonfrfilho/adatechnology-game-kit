@@ -161,7 +161,7 @@ export const FRAME_EXTRAS = ['renderCpu', 'gpuWait', 'gpu', 'calls', 'triangles'
 // the room's ground tiles go through its worker coordinator by default (2026-11-18): the other jolt-d4 variants keep them on the main thread
 // (`groundWorker=0`, unpaced back to back a worker never answers in time), `jolt-d4-worker` is the default page, paced: it is the default and the gated variant, so the gate measures the page
 export const DEFAULT_VARIANT = 'jolt-d4-worker'
-export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1&groundWorker=0', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0&groundWorker=0', 'jolt-d4-worker': '&solver=jolt&blastDebris=1&groundWorker=1', jolt: '&solver=jolt', own: '' })
+export const VARIANTS = /** @type {const} */ ({ 'jolt-d4': '&solver=jolt&blastDebris=1&groundWorker=0', 'jolt-d4-cold': '&solver=jolt&blastDebris=1&warmup=0&groundWorker=0', 'jolt-d4-worker': '&solver=jolt&blastDebris=1&groundWorker=1', jolt: '&solver=jolt', own: '&solver=own' })
 export const PROXY_NOTE = 'CPU throttling (CDP Emulation.setCPUThrottlingRate) is a proxy for a weaker or AMD machine, not real AMD hardware: it slows the main thread evenly and reproduces no AMD IPC, cache or memory behaviour.'
 
 /** The kinds of explosion one round fires. */

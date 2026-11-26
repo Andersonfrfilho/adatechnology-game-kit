@@ -9,7 +9,7 @@ import type { BowlResult } from './bowl-energy'
 
 const SEEDS = Array.from({ length: Number(process.env.BOWL_SEEDS ?? 16) }, (_, i) => i + Number(process.env.BOWL_FROM ?? 1))
 // the bowl is the Jolt gate; BOWL_OWN=1 runs it on the kit's own solver too, to read the same columns (it does not pass there: gate 0 measured 46/128)
-const RUNS_HERE = process.env.PIECE_SOLVER === 'jolt' || process.env.BOWL_OWN === '1'
+const RUNS_HERE = process.env.PIECE_SOLVER !== 'own' || process.env.BOWL_OWN === '1'
 
 const runs: BowlResult[] = []
 
@@ -18,7 +18,7 @@ describe.skipIf(!RUNS_HERE)('deepening bowl, energy criteria (DECISION-fable §2
     if (runs.length === 0) return
     const worst = (pick: (r: BowlResult) => number): number => Math.max(...runs.map(pick))
     const summary = {
-      solver: process.env.PIECE_SOLVER ?? 'own',
+      solver: process.env.PIECE_SOLVER ?? 'jolt',
       iterations: Number(process.env.JOLT_ITERATIONS ?? KIT_WORLD.velocityIterations),
       cases: runs.length,
       worstC1: worst((r) => r.c1Excess),
@@ -41,7 +41,7 @@ for (const dt of FRAME_STEPS.filter((d) => !process.env.BOWL_DT || Math.abs(d - 
       await new Promise((resolve) => setTimeout(resolve, 0))
       const r = bowl(seed, dt)
       runs.push(r)
-      const line = JSON.stringify({ solver: process.env.PIECE_SOLVER ?? 'own', iterations: Number(process.env.JOLT_ITERATIONS ?? KIT_WORLD.velocityIterations), dt: Number(dt.toFixed(4)), seed, ...r })
+      const line = JSON.stringify({ solver: process.env.PIECE_SOLVER ?? 'jolt', iterations: Number(process.env.JOLT_ITERATIONS ?? KIT_WORLD.velocityIterations), dt: Number(dt.toFixed(4)), seed, ...r })
       if (process.env.SPIKE_OUT) appendFileSync(process.env.SPIKE_OUT, `${line}\n`)
       expect.soft(r.c1Excess, 'C1').toBeLessThanOrEqual(0)
       expect.soft(r.c2Gain, 'C2').toBeLessThanOrEqual(0.035)

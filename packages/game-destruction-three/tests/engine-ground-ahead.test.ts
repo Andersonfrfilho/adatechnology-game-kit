@@ -120,7 +120,7 @@ describe.skipIf(!IS_JOLT)('the ground a blast reaches is laid at the blast (T3.8
 })
 
 describe.skipIf(!IS_JOLT)('the notices of one frame lay a tile once (T3.8ad)', () => {
-  it('twenty notices over the same nine tiles, then one update with a piece over them: each tile is laid at most once', () => {
+  it('twenty notices over the same nine tiles, then one update with a piece over them: each tile is laid at most once, and only the ones within reach of the piece', () => {
     const l = lab({ blastGroundTiles: 0 })
     for (let ix = -1; ix <= 1; ix++) for (let iz = -1; iz <= 1; iz++) l.engine.layTile(keyOf(ix, iz), ix, iz, undefined)
     const root = new THREE.Object3D()
@@ -133,7 +133,10 @@ describe.skipIf(!IS_JOLT)('the notices of one frame lay a tile once (T3.8ad)', (
     const laid = lay.mock.calls.map((call) => call[0])
     expect(new Set(laid).size).toBe(laid.length)
     expect(laid.length).toBeGreaterThan(0)
-    for (const tile of l.engine.tiles.values()) expect(tile.dirty).toBeNull()
+    // spec 010 T2.3: the engine reads again only the tiles within 0.5 m of an awake piece (the plate's 0.2 m box reaches the four tiles around the origin); the others stay marked
+    // until a piece comes near them
+    for (const [ix, iz] of [[-1, -1], [-1, 0], [0, -1], [0, 0]] as const) expect(l.engine.tiles.get(keyOf(ix, iz))!.dirty).toBeNull()
+    for (const [ix, iz] of [[1, -1], [1, 0]] as const) expect(l.engine.tiles.get(keyOf(ix, iz))!.dirty).not.toBeNull()
   })
 
   it('two notices in one tile mark one rectangle that holds both', () => {

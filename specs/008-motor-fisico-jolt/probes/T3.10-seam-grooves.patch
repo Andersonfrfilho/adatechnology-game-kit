@@ -1,0 +1,49 @@
+diff --git a/packages/game-destruction-three/src/engine-pieces.ts b/packages/game-destruction-three/src/engine-pieces.ts
+index 320b356bf..c4e744ce4 100644
+--- a/packages/game-destruction-three/src/engine-pieces.ts
++++ b/packages/game-destruction-three/src/engine-pieces.ts
+@@ -1416,7 +1416,7 @@ export class EnginePieces {
+   private replaceGround(tile: Tile | undefined, made: GroundTile, ix: number, iz: number, material: Material): BodyId {
+     if (tile) this.world.removeBody(tile.ground)
+     if (made.level === null) return this.world.createBody({ shape: this.heightField(made, ix, iz), motion: 'static', position: [0, 0, 0], material, user: 0 })
+-    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
++    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2], convexRadius: 0 }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
+   }
+ 
+   /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Boxes only: a box costs nothing to make, a hull did (T3.8ag). */
+@@ -1444,7 +1444,7 @@ export class EnginePieces {
+ 
+   private stepBoxes(boxes: ArrayLike<number>): ShapeDesc {
+     const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
+-    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]] }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
++    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]], convexRadius: 0 }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
+     return { kind: 'compound', children }
+   }
+ 
+diff --git a/packages/game-physics-jolt/src/shapes.ts b/packages/game-physics-jolt/src/shapes.ts
+index 4251ac710..f727d0008 100644
+--- a/packages/game-physics-jolt/src/shapes.ts
++++ b/packages/game-physics-jolt/src/shapes.ts
+@@ -13,7 +13,7 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, h
+       const smallest = Math.min(shape.half[0], shape.half[1], shape.half[2])
+       scratch.Set(shape.half[0], shape.half[1], shape.half[2])
+       // the convex radius rounds the edges; kept under a fifth of the thinnest half so a 4 cm plate stays a plate
+-      return new J.BoxShapeSettings(scratch, Math.min(0.05, smallest * 0.2))
++      return new J.BoxShapeSettings(scratch, shape.convexRadius ?? Math.min(0.05, smallest * 0.2))
+     }
+     case 'sphere':
+       return new J.SphereShapeSettings(shape.radius)
+diff --git a/packages/game-physics/src/contract.ts b/packages/game-physics/src/contract.ts
+index 674e45975..2da574a6f 100644
+--- a/packages/game-physics/src/contract.ts
++++ b/packages/game-physics/src/contract.ts
+@@ -12,7 +12,8 @@ export const IDENTITY: Quat = [0, 0, 0, 1]
+ 
+ /** A shape in the body's frame. Capsules and cylinders run along local y. */
+ export type ShapeDesc =
+-  | { readonly kind: 'box'; readonly half: Vec3 }
++  /** `convexRadius` rounds the edges (the engine's default is a fifth of the thinnest half, up to 5 cm); 0 for a fixed box, whose seams with its neighbours would be grooves. */
++  | { readonly kind: 'box'; readonly half: Vec3; readonly convexRadius?: number }
+   | { readonly kind: 'sphere'; readonly radius: number }
+   | { readonly kind: 'capsule'; readonly halfHeight: number; readonly radius: number }
+   | { readonly kind: 'cylinder'; readonly halfHeight: number; readonly radius: number }

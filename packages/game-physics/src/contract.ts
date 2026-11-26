@@ -12,7 +12,8 @@ export const IDENTITY: Quat = [0, 0, 0, 1]
 
 /** A shape in the body's frame. Capsules and cylinders run along local y. */
 export type ShapeDesc =
-  | { readonly kind: 'box'; readonly half: Vec3 }
+  /** `convexRadius` rounds the edges (the engine's default is a fifth of the thinnest half, up to 5 cm); 0 for a fixed box, whose seams with its neighbours would be grooves. */
+  | { readonly kind: 'box'; readonly half: Vec3; readonly convexRadius?: number }
   | { readonly kind: 'sphere'; readonly radius: number }
   | { readonly kind: 'capsule'; readonly halfHeight: number; readonly radius: number }
   | { readonly kind: 'cylinder'; readonly halfHeight: number; readonly radius: number }

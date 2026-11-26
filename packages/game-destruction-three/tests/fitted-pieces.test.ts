@@ -13,7 +13,7 @@ const roofSheet = (): THREE.BufferGeometry => new THREE.PlaneGeometry(4, 3, 4, 4
 
 const pointsOf = (g: THREE.BufferGeometry): number[] => Array.from(g.getAttribute('position').array as ArrayLike<number>)
 
-describe.skipIf(process.env.PIECE_SOLVER !== 'jolt')('a piece collides as it is drawn, not as the box around it', () => {
+describe.skipIf(process.env.PIECE_SOLVER === 'own')('a piece collides as it is drawn, not as the box around it', () => {
   it('fits a tilted sheet as one thin plate, and a gable (two slopes) as two', () => {
     const sheet = fitOrientedBoxes(pointsOf(roofSheet()))
     expect(sheet.length).toBe(1)

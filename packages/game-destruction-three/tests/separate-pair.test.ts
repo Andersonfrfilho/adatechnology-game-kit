@@ -5,7 +5,7 @@ import { createDestructionRenderer } from '../src/renderer'
 import { boxesAlongGround, shapeContact, type ContactShape } from '../src/piece-contacts'
 import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
-import { physicsOption } from './setup-physics'
+import { IS_JOLT, physicsOption } from './setup-physics'
 
 const IDENTITY = new THREE.Matrix4().elements
 
@@ -90,10 +90,21 @@ const setup = () => {
     renderer.bind(id, root, { parts: { body: mesh } })
     return renderer.makePiece(id)
   }
-  const run = (seconds: number): void => {
-    for (let t = 0; t < seconds; t += 1 / 60) renderer.update(1 / 60)
+  // what the engine has the piece touching (the ground or another piece under it, held up by it: at rest, with nothing in the air), asked of the engine itself
+  const engine = (renderer as unknown as { pieceSys: { engine?: { links: Map<Piece, { id: number }>; world: { touching(id: number): boolean } } } }).pieceSys.engine
+  const touching = (p: Piece): boolean => {
+    const link = engine?.links.get(p)
+    return link ? engine!.world.touching(link.id) : false
   }
-  return { box, run }
+  // the engine keeps no contacts for a body asleep: what it touched is read at each step it is awake, and a sleeper keeps what it had when it fell asleep
+  const lastTouched = new Map<Piece, boolean>()
+  const runWatching = (seconds: number): void => {
+    for (let t = 0; t < seconds; t += 1 / 60) {
+      renderer.update(1 / 60)
+      for (const p of engine?.links.keys() ?? []) if (!p.sleeping) lastTouched.set(p, touching(p))
+    }
+  }
+  return { box, run: runWatching, touchesSomething: (p: Piece): boolean => lastTouched.get(p) ?? false }
 }
 
 const bounds = (p: Piece): THREE.Box3 => {
@@ -196,8 +207,8 @@ const standsOnSomething = (p: Piece, others: Piece[], gap: number): boolean => {
 }
 
 /** A collapse's pile: blocks of a wall dropped on each other from 0.2-1.4 m, many born inside each other, by a fixed seed. */
-const collapse = (): { pieces: Piece[]; run: (seconds: number) => void } => {
-  const { box, run } = setup()
+const collapse = (): { pieces: Piece[]; run: (seconds: number) => void; touchesSomething: (p: Piece) => boolean } => {
+  const { box, run, touchesSomething } = setup()
   let seed = 7
   const next = (): number => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
   const pieces: Piece[] = []
@@ -205,7 +216,7 @@ const collapse = (): { pieces: Piece[]; run: (seconds: number) => void } => {
     const size: [number, number, number] = [0.3 + next() * 0.9, 0.2 + next() * 0.4, 0.3 + next() * 0.6]
     pieces.push(box(`block${i}`, size, [(next() - 0.5) * 1.6, size[1] / 2 + 0.2 + next() * 1.2, (next() - 0.5) * 1.2]))
   }
-  return { pieces, run }
+  return { pieces, run, touchesSomething }
 }
 
 describe('overlapping boxes are not launched', () => {
@@ -252,7 +263,10 @@ describe('overlapping boxes are not launched', () => {
     // a block born a few centimetres into the one under it is lifted out of that overlap, and the one under it out of its own: a few centimetres, never a metre
     for (const r of rise) expect(r).toBeLessThan(0.1)
     for (const p of first.pieces) {
-      expect(standsOnSomething(p, first.pieces, 0.04)).toBe(true)
+      // on Jolt "held up" is what the engine's contacts say: a block at rest (v ~ 0) that touches the ground or another block. The corner-over-a-top rule misses a block
+      // leaning at 45 degrees on the edges of others, which stands, and is the heuristic of the own solver, which has no contacts to ask
+      if (IS_JOLT) expect(first.touchesSomething(p)).toBe(true)
+      else expect(standsOnSomething(p, first.pieces, 0.04)).toBe(true)
       expect(Math.hypot(...p.velocity)).toBeLessThan(0.1)
     }
     const again = collapse()

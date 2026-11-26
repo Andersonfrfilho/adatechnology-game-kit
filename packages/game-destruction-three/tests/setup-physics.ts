@@ -6,14 +6,14 @@ import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 
 import type { PiecePhysics } from '../src/physics-option'
 
-// every renderer made in the tests steps on the kit's own solver, unless PIECE_SOLVER=jolt (then on Jolt); the one place that decides, so the tests change in one spot
-export const IS_JOLT = process.env.PIECE_SOLVER === 'jolt'
+// every renderer made in the tests steps on Jolt, unless PIECE_SOLVER=own (then on the old solver); the one place that decides, so the tests change in one spot
+export const IS_JOLT = process.env.PIECE_SOLVER !== 'own'
 
 const engine = IS_JOLT ? await createJoltEngine() : null
 const alive: PhysicsWorld[] = []
 
 const newWorld = (): PhysicsWorld => {
-  if (!engine) throw new Error('setup-physics: a world is only made with PIECE_SOLVER=jolt')
+  if (!engine) throw new Error('setup-physics: a world is not made with PIECE_SOLVER=own')
   // the wasm heap holds about six worlds (a fixed 128 MB, ~18 MB each): a test uses at most a few renderers at once, so the oldest of four goes when a fifth is made
   if (alive.length >= 4) alive.shift()?.dispose()
   const world = engine.createWorld({

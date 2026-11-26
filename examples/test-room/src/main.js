@@ -100,7 +100,7 @@ const scenery = isFloorplan
 
 const room = createTestRoom({
   THREE,
-  // ?solver=jolt: the page's boot made the world and its loop (build.mjs); without it the kit's own solver
+  // the page's boot made the world and its loop (build.mjs); with ?solver=own it did not, and the old solver steps
   physics: /** @type {any} */ (window).__roomPhysics ?? 'own',
   container: /** @type {HTMLElement} */ (document.getElementById('app')),
   locale,

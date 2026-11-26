@@ -1,6 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { BodyDesc, BodyId, HeightRegion, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyDesc, BodyId, HeightRegion, JointId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 import { samePatch } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
 
@@ -18,7 +18,9 @@ import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameNumbers, sameSolid } from
 import type { SolidVolume } from './engine-ground-solid'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
+import { HINGE_RELEASE } from './internal'
 import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
+import { mergeFlushBoxes } from './merge-flush-boxes'
 
 export type { StaticSolid } from './engine-statics'
 
@@ -150,6 +152,8 @@ const TOPPLE = 3
 const HOLD_MARGIN = 4
 /** A support whose middle is closer than this (m) to the centre of mass is under it: which way it goes over is then not read from the contact points, which flicker. */
 const SIDE_DEAD = 0.01
+/** How far (m) the lowest corners of a piece's box may be from the floor it stands on to count as its support (`topple`). */
+const BOX_FOOT = 0.02
 /** The strong push stops once it has turned a column this fast (rad/s): a 5 cm leg tips from it; measured on the bowl, 0.1 made 4.2 cm in seed 57 and 1 made 31 cm in seed 61, 0.3 is clean in all 128. */
 const PUSH_SPIN = 0.3
 /** Corners this close (m) to the lowest one are what it stands on. */
@@ -279,6 +283,8 @@ export class EnginePieces {
   private readonly pose = new Float64Array(7)
   private readonly velocity = new Float64Array(6)
   private readonly contactXYZ = new Float32Array(48)
+  /** The pieces hung on a hinge: the fixed anchor at the screw and the joint that holds them to it. */
+  private readonly hung = new Map<PieceBody, { readonly anchor: BodyId; readonly joint: JointId }>()
   private readonly outAxis = new Float64Array(3)
   private readonly wayAxis = new Float64Array(3)
   /** The centre `readBack` reads into (the sweep may move it). */
@@ -326,6 +332,8 @@ export class EnginePieces {
   remove(b: PieceBody, wakeNeighbours = true): void {
     const link = this.links.get(b)
     if (!link) return
+    const held = this.hung.get(b)
+    if (held) this.letGo(b, held)
     this.world.removeBody(link.id)
     // an awake piece shares its island with what rests on it, so only a sleeping one leaves sleepers behind: asleep for the kit now, or asleep when the engine last
     // stepped and woken (a blow, its support looked at again) in this same frame, before the engine could wake what lay on it (CLAUDE.md §12)
@@ -489,6 +497,7 @@ export class EnginePieces {
     this.applyDueGround()
     this.layBlastGround()
     this.makeBodies(each)
+    each((b) => this.hang(b))
     each((b) => this.sync(b, dt, h))
     if (this.schedule) this.layGroundLater(each, dt)
     else this.layGround(each, dt)
@@ -524,7 +533,46 @@ export class EnginePieces {
       this.readActive(awake)
       awake.walk((b) => this.readBack(b, dt, time, this.active))
     } else for (const b of list) this.readBack(b, dt, time, null)
+    this.wearHinges(dt)
     this.knock(time)
+  }
+
+  /** A piece with a hinge asked for (`PieceSystem.hinge`) gets a fixed anchor at the screw and a hinge joint to it, once its body exists. It swings in the vertical plane through the screw and its centre. */
+  private hang(b: PieceBody): void {
+    const hinge = b.hinge
+    const link = this.links.get(b)
+    if (!hinge || !link || this.hung.has(b)) return
+    const c = this.centre(b)
+    const dx = c.x - hinge.point[0]
+    const dz = c.z - hinge.point[2]
+    const along = Math.hypot(dx, dz)
+    const axis: Vec3 = along < 1e-3 ? [0, 0, 1] : [dz / along, 0, -dx / along]
+    const anchor = this.world.createBody({ shape: { kind: 'box', half: [0.005, 0.005, 0.005] }, motion: 'static', position: hinge.point, user: 0 })
+    this.world.ignorePair(anchor, link.id, true)
+    const joint = this.world.createJoint({ kind: 'hinge', a: anchor, b: link.id, point: hinge.point, axis, normal: [0, 1, 0], min: -Math.PI / 2, max: Math.PI / 2 })
+    this.hung.set(b, { anchor, joint })
+  }
+
+  /** The screw tears out: past `HINGE_RELEASE` of turn, or after `HINGE_SECONDS`, the piece falls free. */
+  private wearHinges(dt: number): void {
+    for (const [b, held] of this.hung) {
+      const hinge = b.hinge
+      if (hinge) {
+        hinge.seconds -= dt
+        const [x, y, z, w] = hinge.from
+        const q = b.root.quaternion
+        const turned = 2 * Math.acos(Math.min(1, Math.abs(q.x * x + q.y * y + q.z * z + q.w * w)))
+        if (turned < HINGE_RELEASE && hinge.seconds > 0) continue
+      }
+      this.letGo(b, held)
+    }
+  }
+
+  private letGo(b: PieceBody, held: { readonly anchor: BodyId; readonly joint: JointId }): void {
+    this.world.removeJoint(held.joint)
+    this.world.removeBody(held.anchor)
+    this.hung.delete(b)
+    b.hinge = undefined
   }
 
   /** The engine's awake bodies in one crossing: a sleeping piece one of them wakes (a blow) is among the awake pieces from now on, and read back in this same step. */
@@ -619,7 +667,7 @@ export class EnginePieces {
       return { kind: 'compound', children: [{ shape: { kind: 'cylinder', halfHeight: b.halfExtents[round.axis], radius: round.radius }, position: [0, 0, 0], rotation }] }
     }
     if (b.partBoxes && b.partBoxes.length > 0) {
-      return { kind: 'compound', children: b.partBoxes.map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
+      return { kind: 'compound', children: mergeFlushBoxes(b.partBoxes).map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
     }
     return { kind: 'box', half: b.halfExtents }
   }
@@ -692,8 +740,7 @@ export class EnginePieces {
     return {
       frictionStatic: b.friction?.static ?? MU_STATIC,
       frictionDynamic: b.friction?.dynamic ?? MU_DYNAMIC,
-      // a box lands dead (the kit never bounced them); a round piece bounces by its material
-      restitution: b.round ? (b.restitution ?? SLAM_BOUNCE) : 0,
+      restitution: b.restitution ?? SLAM_BOUNCE,
       rolling: b.friction?.rolling ?? ROLLING_RESISTANCE,
     }
   }
@@ -951,8 +998,15 @@ export class EnginePieces {
       this.slip(b, link, false)
       return
     }
-    const c = this.centre(b)
     const q = b.root.quaternion
+    const c = this.centre(b)
+    // the weight is where the drawn parts put it, not in the middle of the box around them
+    let shiftX = 0, shiftY = 0, shiftZ = 0
+    if (b.massCentre) {
+      this.w.set(b.massCentre[0], b.massCentre[1], b.massCentre[2]).applyQuaternion(q)
+      shiftX = this.w.x; shiftY = this.w.y; shiftZ = this.w.z
+      c.add(this.w)
+    }
     let low = Infinity
     for (let i = 0; i < n; i++) low = Math.min(low, this.contactXYZ[i * 3 + 1] - c.y)
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity
@@ -961,6 +1015,23 @@ export class EnginePieces {
       const rz = this.contactXYZ[i * 3 + 2] - c.z
       x0 = Math.min(x0, rx); x1 = Math.max(x1, rx)
       z0 = Math.min(z0, rz); z1 = Math.max(z1, rz)
+    }
+    // a piece that never lost a part stands on its box, as the kit's solver holds it: when the engine has it on the floor of that box, the box's lowest corners are its
+    // support, not only the feet it is drawn with (a pedestal basin's column, a bicycle's two wheels). One that lost a part stands on what is left of it (`apart`)
+    if (!b.contacts && !b.round && !b.apart) {
+      const [hx, hy, hz] = b.halfExtents
+      const corner = this.w
+      let lowest = Infinity
+      for (let k = 0; k < 8; k++) lowest = Math.min(lowest, corner.set(k & 1 ? hx : -hx, k & 2 ? hy : -hy, k & 4 ? hz : -hz).applyQuaternion(q).y - shiftY)
+      if (Math.abs(lowest - low) < BOX_FOOT) {
+        for (let k = 0; k < 8; k++) {
+          corner.set(k & 1 ? hx : -hx, k & 2 ? hy : -hy, k & 4 ? hz : -hz).applyQuaternion(q)
+          if (corner.y - shiftY > lowest + BOX_FOOT) continue
+          x0 = Math.min(x0, corner.x - shiftX); x1 = Math.max(x1, corner.x - shiftX)
+          z0 = Math.min(z0, corner.z - shiftZ); z1 = Math.max(z1, corner.z - shiftZ)
+        }
+        low = Math.min(low, lowest)
+      }
     }
     const height = -low
     const wx = x1 - x0
@@ -1416,7 +1487,7 @@ export class EnginePieces {
   private replaceGround(tile: Tile | undefined, made: GroundTile, ix: number, iz: number, material: Material): BodyId {
     if (tile) this.world.removeBody(tile.ground)
     if (made.level === null) return this.world.createBody({ shape: this.heightField(made, ix, iz), motion: 'static', position: [0, 0, 0], material, user: 0 })
-    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2] }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
+    return this.world.createBody({ shape: { kind: 'box', half: [TILE / 2, 0.5, TILE / 2], convexRadius: 0 }, motion: 'static', position: [(ix + 0.5) * TILE, made.level - 0.5, (iz + 0.5) * TILE], material, user: 0 })
   }
 
   /** The solid under a height field, on its own body, swapped in place when the ground changed; none under a slab. Boxes only: a box costs nothing to make, a hull did (T3.8ag). */
@@ -1444,7 +1515,7 @@ export class EnginePieces {
 
   private stepBoxes(boxes: ArrayLike<number>): ShapeDesc {
     const children: Array<{ shape: ShapeDesc; position: Vec3 }> = []
-    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]] }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
+    for (let i = 0; i < boxes.length; i += 6) children.push({ shape: { kind: 'box', half: [boxes[i + 3], boxes[i + 4], boxes[i + 5]], convexRadius: 0 }, position: [boxes[i], boxes[i + 1], boxes[i + 2]] })
     return { kind: 'compound', children }
   }
 

@@ -13,7 +13,7 @@ export const shapeSettings = (J: Jolt, scratch: JoltNS.Vec3, shape: ShapeDesc, h
       const smallest = Math.min(shape.half[0], shape.half[1], shape.half[2])
       scratch.Set(shape.half[0], shape.half[1], shape.half[2])
       // the convex radius rounds the edges; kept under a fifth of the thinnest half so a 4 cm plate stays a plate
-      return new J.BoxShapeSettings(scratch, Math.min(0.05, smallest * 0.2))
+      return new J.BoxShapeSettings(scratch, shape.convexRadius ?? Math.min(0.05, smallest * 0.2))
     }
     case 'sphere':
       return new J.SphereShapeSettings(shape.radius)
