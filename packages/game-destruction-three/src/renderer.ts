@@ -2472,6 +2472,7 @@ class Renderer implements DestructionRenderer {
       old.halfExtents = half
       this.pieceSys.setCenter(old, center)
       old.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId) - (old.massOffset ?? 0))
+      old.apart = true
       // what came off no longer touches the ground for it: its contacts are those of what is left
       // and what others meet it by are the boxes of what is left (`partBoxes`): nothing invisible collides
       if (old.contacts || old.round) {
@@ -2483,6 +2484,7 @@ class Renderer implements DestructionRenderer {
     } else if (kitOriginOf(b.root)?.kind === 'furniture' && !this.splittingAtLoad) {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples; at load it stands as it stood
       const piece = this.makePiece(objectId)
+      ;(piece as PieceBody).apart = true
       this.tipIfTopHeavy(b, true)
       // the host stops keeping the footprint it had where it stood: it is a body that moves now
       this.o.onLoosened?.(objectId, piece, 'apart')
@@ -2757,6 +2759,7 @@ class Renderer implements DestructionRenderer {
     }
     const piece = this.pieceSys.create(newId, group, half, center, this.massOf(newId), vel, ang)
     nb.piece = piece
+    piece.apart = true
     this.fitSurface(nb, piece)
     // what lands on it meets its parts as drawn (a board come off with its books), not the box around them all: nothing invisible collides
     this.fitPartBoxes(nb, piece)
@@ -2788,6 +2791,7 @@ class Renderer implements DestructionRenderer {
       body.halfExtents = half
       this.pieceSys.setCenter(body, center)
       body.mass = Math.max(MIN_PIECE_MASS_KG, this.massOf(objectId) - (body.massOffset ?? 0))
+      body.apart = true
       if (!structural) {
         // what is left may be round (a can's label torn off) or not any more (a stool that lost its legs): its contacts follow
         this.fitSurface(b, body)
@@ -2824,6 +2828,7 @@ class Renderer implements DestructionRenderer {
       away = hull.length >= 3 ? inside.out : null
     }
     const piece = this.makePiece(objectId)
+    ;(b.piece ?? (piece as PieceBody)).apart = true
     this.setContacts(b, b.piece ?? (piece as PieceBody), left)
     // balanced on an edge it is started over it, and gravity does the rest: turning about (z, 0, -x) moves the top toward (x, z)
     const loose = b.piece
@@ -2881,6 +2886,7 @@ class Renderer implements DestructionRenderer {
     }
     if (!this.standsOn(objectId, wholeBoxes) || this.standsOn(objectId, boxes)) return false
     const piece = this.makePiece(objectId)
+    ;(b.piece ?? (piece as PieceBody)).apart = true
     this.setContacts(b, b.piece ?? (piece as PieceBody), this.meshesOf(b).filter((mv) => this.visuals.shown(mv)))
     this.tipIfTopHeavy(b)
     this.o.onLoosened?.(objectId, piece, 'apart')
@@ -2971,6 +2977,37 @@ class Renderer implements DestructionRenderer {
     body.contacts = points.length > 0 && meshes.length <= CONTACT_MESHES ? points : undefined
     // one box turned as drawn (a roof sheet lying askew) is kept too: the box of the piece would be the air around it
     body.partBoxes = boxes.length > 1 || (boxes.length === 1 && isTurned(boxes[0])) ? boxes : undefined
+    body.massCentre = this.massCentreOf(b, body)
+  }
+
+  /** Where the weight of what is drawn of `b` is, from the middle of its box (`PieceBody.massCentre`): each part's box centre weighed by the part's mass. */
+  private massCentreOf(b: Bound, body: PieceBody): Vec3 | undefined {
+    if (b.parts.size < 2) return undefined
+    const inv = specFrameInverse(this.THREE, b.root)
+    const m4 = new this.THREE.Matrix4()
+    const lb = new this.THREE.Box3()
+    const box = new this.THREE.Box3()
+    const middle = new this.THREE.Vector3()
+    let weight = 0
+    const sum: Vec3 = [0, 0, 0]
+    for (const [partId, pv] of b.parts) {
+      const mass = pv.gone === 'none' ? (this.world.part(b.id, partId)?.mass ?? 0) : 0
+      if (mass <= 0) continue
+      box.makeEmpty()
+      for (const mv of pv.meshes) {
+        if (!this.visuals.shown(mv)) continue
+        mv.mesh.updateWorldMatrix(true, false)
+        this.visuals.localBox(mv, lb)
+        if (!lb.isEmpty()) box.union(lb.applyMatrix4(m4.multiplyMatrices(inv, mv.mesh.matrixWorld)))
+      }
+      if (box.isEmpty()) continue
+      box.getCenter(middle)
+      sum[0] += middle.x * mass; sum[1] += middle.y * mass; sum[2] += middle.z * mass
+      weight += mass
+    }
+    if (weight <= 0) return undefined
+    const [cx, cy, cz] = body.localCenter
+    return [sum[0] / weight - cx, sum[1] / weight - cy, sum[2] / weight - cz]
   }
 
   /** `fitOrientedBoxes` of a ranged part's points, taken from what it gave before when the points and the triangles are the very same numbers. */

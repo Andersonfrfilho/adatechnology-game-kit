@@ -140,6 +140,8 @@ function shadeBoard(color: number, board: number): number {
 
 const FLOOR_TOUCH = 0.005
 const LOOSE = new Set(['paper'])
+/** Never loose in the world: set in the ground by a post or roots (a mailbox, a clothesline, a small tree) or built in masonry on the spot (a brick barbecue). */
+const PLANTED = new Set(['mailbox', 'correio', 'clothesline', 'tree_small', 'bbq_simple'])
 const BASE_MATERIAL: Record<string, string> = {
   wood: 'wood_hard',
   metal: 'steel',
@@ -267,7 +269,7 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
   const wallMounted = parts.some((part) => part.anchored && low(part) > FLOOR_TOUCH)
   const sunk = parts.some((part) => low(part) < -FLOOR_TOUCH)
   const rooted = parts.some((part) => part.material === 'foliage') && parts.some((part) => part.material.startsWith('wood') && low(part) <= FLOOR_TOUCH)
-  const fixed = wallMounted || sunk || rooted
+  const fixed = wallMounted || sunk || rooted || PLANTED.has(name)
 
   // the top: among the boxes that cover most of the footprint, the highest upper face (not fabric: a cloth lies on the top)
   const all = drawn.reduce(

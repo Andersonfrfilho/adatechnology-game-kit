@@ -150,6 +150,8 @@ const TOPPLE = 3
 const HOLD_MARGIN = 4
 /** A support whose middle is closer than this (m) to the centre of mass is under it: which way it goes over is then not read from the contact points, which flicker. */
 const SIDE_DEAD = 0.01
+/** How far (m) the lowest corners of a piece's box may be from the floor it stands on to count as its support (`topple`). */
+const BOX_FOOT = 0.02
 /** The strong push stops once it has turned a column this fast (rad/s): a 5 cm leg tips from it; measured on the bowl, 0.1 made 4.2 cm in seed 57 and 1 made 31 cm in seed 61, 0.3 is clean in all 128. */
 const PUSH_SPIN = 0.3
 /** Corners this close (m) to the lowest one are what it stands on. */
@@ -951,8 +953,15 @@ export class EnginePieces {
       this.slip(b, link, false)
       return
     }
-    const c = this.centre(b)
     const q = b.root.quaternion
+    const c = this.centre(b)
+    // the weight is where the drawn parts put it, not in the middle of the box around them
+    let shiftX = 0, shiftY = 0, shiftZ = 0
+    if (b.massCentre) {
+      this.w.set(b.massCentre[0], b.massCentre[1], b.massCentre[2]).applyQuaternion(q)
+      shiftX = this.w.x; shiftY = this.w.y; shiftZ = this.w.z
+      c.add(this.w)
+    }
     let low = Infinity
     for (let i = 0; i < n; i++) low = Math.min(low, this.contactXYZ[i * 3 + 1] - c.y)
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity
@@ -961,6 +970,23 @@ export class EnginePieces {
       const rz = this.contactXYZ[i * 3 + 2] - c.z
       x0 = Math.min(x0, rx); x1 = Math.max(x1, rx)
       z0 = Math.min(z0, rz); z1 = Math.max(z1, rz)
+    }
+    // a piece that never lost a part stands on its box, as the kit's solver holds it: when the engine has it on the floor of that box, the box's lowest corners are its
+    // support, not only the feet it is drawn with (a pedestal basin's column, a bicycle's two wheels). One that lost a part stands on what is left of it (`apart`)
+    if (!b.contacts && !b.round && !b.apart) {
+      const [hx, hy, hz] = b.halfExtents
+      const corner = this.w
+      let lowest = Infinity
+      for (let k = 0; k < 8; k++) lowest = Math.min(lowest, corner.set(k & 1 ? hx : -hx, k & 2 ? hy : -hy, k & 4 ? hz : -hz).applyQuaternion(q).y - shiftY)
+      if (Math.abs(lowest - low) < BOX_FOOT) {
+        for (let k = 0; k < 8; k++) {
+          corner.set(k & 1 ? hx : -hx, k & 2 ? hy : -hy, k & 4 ? hz : -hz).applyQuaternion(q)
+          if (corner.y - shiftY > lowest + BOX_FOOT) continue
+          x0 = Math.min(x0, corner.x - shiftX); x1 = Math.max(x1, corner.x - shiftX)
+          z0 = Math.min(z0, corner.z - shiftZ); z1 = Math.max(z1, corner.z - shiftZ)
+        }
+        low = Math.min(low, lowest)
+      }
     }
     const height = -low
     const wx = x1 - x0

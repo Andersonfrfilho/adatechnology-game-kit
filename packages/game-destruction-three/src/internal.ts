@@ -176,6 +176,10 @@ export interface PieceBody extends Piece {
    * its box: a shelf's boards, a table's top and legs, a roof sheet lying askew.
    */
   partBoxes?: PartBox[]
+  /** It lost a part (or came off an object as a group): it stands on what is left of it, not on its box. */
+  apart?: boolean
+  /** Where the weight of its parts is (their boxes' centres weighed by the mass of each), in its frame from the middle of its box; none when the drawing is one part. What the balancing rule reads as its centre of mass. */
+  massCentre?: Vec3
   /** The friction of its surface (by its material); against another surface the two are mixed (geometric mean). Default 0.7 static, 0.6 dynamic. */
   friction?: PieceFriction
   /** The normal of the surface a round piece last lay on: where it touches is across it from the centre. */
