@@ -1,5 +1,13 @@
 # @adatechnology/game-floorplan-three
 
+## 4.0.0
+
+### Patch Changes
+
+- Updated dependencies [dd746b4]
+  - @adatechnology/game-interactables@0.6.0
+  - @adatechnology/game-floorplan-interactables@6.0.0
+
 ## 3.1.1
 
 ### Patch Changes

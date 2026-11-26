@@ -1,5 +1,12 @@
 # @adatechnology/game-interactables-three
 
+## 0.3.4
+
+### Patch Changes
+
+- Updated dependencies [dd746b4]
+  - @adatechnology/game-interactables@0.6.0
+
 ## 0.3.3
 
 ### Patch Changes

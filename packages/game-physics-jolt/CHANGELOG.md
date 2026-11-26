@@ -1,5 +1,18 @@
 # @adatechnology/game-physics-jolt
 
+## 0.3.0
+
+### Minor Changes
+
+- 7e40a5b: Controlador de personagem atrás do contrato (spec 008, T4.1). `game-physics` ganha `createCharacter`, `moveCharacter`, `pushCharacter`, `readCharacter`, `teleportCharacter`, `characterSupported` e `removeCharacter` (sobe degrau de 18 cm, rampa de 30 graus, empurra caixa de 30 kg, é empurrado); `game-physics-jolt` os implementa com o `CharacterVirtual` por `CharacterId`; `game-player` aceita `PlayerWorld.controller` e traz `createPhysicsController`. Sem controlador o jogador anda pela grade como antes.
+
+  Segurar, soltar e arremessar (T4.2): `grabBody` em `game-physics` (cinemático varrido contra o que é fixo, sem atravessar parede; solta como dinâmico e varrido) e `setContinuous` no contrato.
+
+### Patch Changes
+
+- Updated dependencies [7e40a5b]
+  - @adatechnology/game-physics@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

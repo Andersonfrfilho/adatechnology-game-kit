@@ -1,5 +1,12 @@
 # @adatechnology/game-crowd-three
 
+## 0.7.6
+
+### Patch Changes
+
+- Updated dependencies [7e40a5b]
+  - @adatechnology/game-player@0.10.0
+
 ## 0.7.5
 
 ### Patch Changes

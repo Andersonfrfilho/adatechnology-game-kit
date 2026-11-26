@@ -1,5 +1,18 @@
 # @adatechnology/game-weapons-three
 
+## 0.25.0
+
+### Minor Changes
+
+- ff790ea: Granada M67 como desenhada e cápsulas no motor físico (spec 008, T4.3). `game-weapons-three` ganha `explosiveCollider` (corpo, espoleta e alavanca, lidos das mesmas medidas do desenho em `M67_PARTS`), `casingCollider`, `spawnLoose`, `syncLoose`, `dropLoose` e a opção `physics` em `createWeaponFx`: com um mundo do `game-physics`, as cápsulas ejetadas pelos modelos da galeria viram corpos dele (C_rr 0,015, varridos, dormem sozinhos). Sem a opção, o salto próprio da galeria continua.
+
+### Patch Changes
+
+- Updated dependencies [7e40a5b]
+  - @adatechnology/game-physics@0.3.0
+  - @adatechnology/game-floorplan-three@4.0.0
+  - @adatechnology/game-items-three@0.10.4
+
 ## 0.24.4
 
 ### Patch Changes
