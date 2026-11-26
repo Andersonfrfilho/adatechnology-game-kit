@@ -1,9 +1,20 @@
 import type { CorpseOptions } from './types'
 
 export type CorpseEntry<TData> = {
+  /** Stable while it lasts, never reused (a counter): the ledger swaps the removed for the last and overwrites the oldest when full, so an index names no corpse for long. */
+  readonly id: number
   /** Seconds since it fell. */
   age: number
   readonly data: TData
+}
+
+/** Why a corpse left the ledger: past its life, taken away (eaten, dragged off), overwritten by a new one when the ledger was full, or the ledger was cleared. */
+export type CorpseRemoval = 'expired' | 'taken' | 'replaced' | 'cleared'
+
+/** What follows the ledger: the body a corpse has in the physics world is made and removed by these. Called as it happens, in the ledger's order. */
+export type CorpseListener<TData> = {
+  readonly added?: (entry: CorpseEntry<TData>) => void
+  readonly removed?: (entry: CorpseEntry<TData>, reason: CorpseRemoval) => void
 }
 
 export type CorpseLedger<TData> = {
@@ -16,11 +27,21 @@ export type CorpseLedger<TData> = {
   /** Takes one corpse away (eaten, searched and dragged off): the last one moves into its place, like the game's `CP`. Returns its data. */
   remove(index: number): TData | undefined
   clear(): void
+  /** `listener` hears every add and removal from now on; returns the call that stops it. */
+  subscribe(listener: CorpseListener<TData>): () => void
 }
 
 /** The bodies left on the ground: capped (400) and gone after a lifetime (900 s); generic over what each one carries. */
 export const createCorpseLedger = <TData>(options: CorpseOptions): CorpseLedger<TData> => {
   const entries: CorpseEntry<TData>[] = []
+  const listeners = new Set<CorpseListener<TData>>()
+  let nextId = 1
+  const announceAdded = (entry: CorpseEntry<TData>): void => {
+    for (const listener of listeners) listener.added?.(entry)
+  }
+  const announceRemoved = (entry: CorpseEntry<TData>, reason: CorpseRemoval): void => {
+    for (const listener of listeners) listener.removed?.(entry, reason)
+  }
   return {
     entries,
     get count() {
@@ -28,14 +49,19 @@ export const createCorpseLedger = <TData>(options: CorpseOptions): CorpseLedger<
     },
     add(data) {
       if (entries.length < options.max) {
-        entries.push({ age: 0, data })
+        const added = { id: nextId++, age: 0, data }
+        entries.push(added)
+        announceAdded(added)
         return undefined
       }
       let oldest = 0
       for (let index = 1; index < entries.length; index++) if ((entries[index] as CorpseEntry<TData>).age > (entries[oldest] as CorpseEntry<TData>).age) oldest = index
-      const replaced = (entries[oldest] as CorpseEntry<TData>).data
-      entries[oldest] = { age: 0, data }
-      return replaced
+      const evicted = entries[oldest] as CorpseEntry<TData>
+      const added = { id: nextId++, age: 0, data }
+      entries[oldest] = added
+      announceRemoved(evicted, 'replaced')
+      announceAdded(added)
+      return evicted.data
     },
     update(dt) {
       const removed: TData[] = []
@@ -46,6 +72,7 @@ export const createCorpseLedger = <TData>(options: CorpseOptions): CorpseLedger<
         removed.push(entry.data)
         entries[index] = entries[entries.length - 1] as CorpseEntry<TData>
         entries.pop()
+        announceRemoved(entry, 'expired')
         index--
       }
       return removed
@@ -55,10 +82,16 @@ export const createCorpseLedger = <TData>(options: CorpseOptions): CorpseLedger<
       if (!entry) return undefined
       entries[index] = entries[entries.length - 1] as CorpseEntry<TData>
       entries.pop()
+      announceRemoved(entry, 'taken')
       return entry.data
     },
     clear() {
-      entries.length = 0
+      const gone = entries.splice(0)
+      for (const entry of gone) announceRemoved(entry, 'cleared')
+    },
+    subscribe(listener) {
+      listeners.add(listener)
+      return () => void listeners.delete(listener)
     },
   }
 }
