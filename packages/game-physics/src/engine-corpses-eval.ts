@@ -1,9 +1,10 @@
 import { farthestSleeping, rungBelow } from './body-lod'
-import type { BodyLodDecision, BodyLodInput, BodyRung } from './body-lod'
+import type { BodyLodDecision, BodyLodInput } from './body-lod'
 import type { BodyId, Vec3 } from './contract'
 import { freezeCorpses } from './engine-corpses-pile'
+import { advanceTravel, ARRIVED, collectArrived, compactHeap, marginOf, wakeThoseWoken } from './engine-corpses-dormant'
 import { anchorBody, readTouching, rigidBodies, switchRung, switchUnits } from './engine-corpses-swap'
-import type { CorpseContext, CorpseRecord, SettledCorpse } from './engine-corpses-types'
+import type { CorpseContext, CorpseRecord, PendingChange, SettledCorpse } from './engine-corpses-types'
 import { capsuleOfTorso, rotateVector, standingTorso } from './corpse-pose'
 import type { CorpseBodyKit, Rigid } from './corpse-pose'
 
@@ -87,12 +88,6 @@ export const bornInFullPile = (ctx: CorpseContext, kit: CorpseBodyKit, frame: Ri
   return chains >= pileChainsMax
 }
 
-interface Pending {
-  readonly record: CorpseRecord
-  readonly to: BodyRung
-  readonly forced: boolean
-}
-
 type Mutable<T> = { -readonly [K in keyof T]: T[K] }
 
 /** What the policy is asked about one corpse: read from the engine when it has bodies (and kept while it sleeps), else from what was kept. */
@@ -111,6 +106,7 @@ const inputOf = (ctx: CorpseContext, record: CorpseRecord, moundAt: ((x: number,
 
 /** Looks at one corpse: sleep, contacts and distance, as the policy needs them. Awake bodies are read each time; a sleeper is read once, as it falls asleep. */
 const look = (ctx: CorpseContext, record: CorpseRecord, step: EvaluateOptions): void => {
+  ctx.looks++
   const elapsed = (ctx.tick - record.lastLookedAt) * step.h
   record.lastLookedAt = ctx.tick
   record.sinceChangeSeconds += elapsed
@@ -159,25 +155,51 @@ export interface EvaluateOptions {
 
 const due = (ctx: CorpseContext, record: CorpseRecord, every: number): boolean => record.rung === 'r0' || (ctx.tick + record.id) % every === 0
 
-/** One fixed step of the policy: each corpse that is due is looked at and asked; the changes then run, the forced ones first, the rest as the frame's units allow. */
-export const evaluateCorpses = (ctx: CorpseContext, options: EvaluateOptions): void => {
-  const input = { rung: 'r1', distance: 0, asleepSeconds: 0, sinceChangeSeconds: 0, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, pileRank: 0, woken: false } as Mutable<BodyLodInput>
-  const decision: BodyLodDecision = { to: 'r1', forced: false }
-  const pending: Pending[] = []
-  const freezing: CorpseRecord[] = []
-  for (const record of ctx.records.values()) {
-    if (!due(ctx, record, options.every)) continue
-    look(ctx, record, options)
-    ctx.lod.decide(inputOf(ctx, record, options.moundAt, input), decision)
-    if (decision.to === record.rung) continue
-    if (decision.to === 'r2f') freezing.push(record)
-    else pending.push({ record, to: decision.to, forced: decision.forced })
+const INPUT = { rung: 'r1', distance: 0, asleepSeconds: 0, sinceChangeSeconds: 0, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, pileRank: 0, woken: false } as Mutable<BodyLodInput>
+const DECISION: BodyLodDecision = { to: 'r1', forced: false }
+
+/** Looks at one corpse and asks the policy; a corpse that stays and has nothing that could change it leaves the list the step walks. */
+const visit = (ctx: CorpseContext, record: CorpseRecord, options: EvaluateOptions): void => {
+  look(ctx, record, options)
+  ctx.lod.decide(inputOf(ctx, record, options.moundAt, INPUT), DECISION)
+  if (DECISION.to !== record.rung) {
+    if (DECISION.to === 'r2f') ctx.freezing.push(record)
+    else ctx.pending.push({ record, to: DECISION.to, forced: DECISION.forced })
+    return
   }
-  if (freezing.length > 0) freezeCorpses(ctx, freezing)
-  runChanges(ctx, pending)
+  const margin = marginOf(ctx, record, INPUT.hasBodyAbove)
+  if (margin === undefined) return
+  record.dormant = true
+  record.dormantKey = ctx.travel + margin
+  ctx.live.delete(record)
+  if (margin !== Infinity) ctx.dormant.push(record.dormantKey, record)
 }
 
-const runChanges = (ctx: CorpseContext, pending: readonly Pending[]): void => {
+const byBirth = (a: { readonly born: number }, b: { readonly born: number }): number => a.born - b.born
+
+/**
+ * One fixed step of the policy. A step walks only the corpses that are not dormant (awake, changing, or with a change by distance in reach) plus those the interest has come near
+ * to; a sleeper is not asked each time. The changes then run, the forced ones first, the rest as the frame's units allow.
+ */
+export const evaluateCorpses = (ctx: CorpseContext, options: EvaluateOptions): void => {
+  ctx.pending.length = 0
+  ctx.freezing.length = 0
+  advanceTravel(ctx, options.interest)
+  if (ctx.tick % options.every === 0) {
+    wakeThoseWoken(ctx)
+    compactHeap(ctx)
+  }
+  collectArrived(ctx)
+  for (const record of ARRIVED) visit(ctx, record, options)
+  for (const record of ctx.live) if (record.lastLookedAt !== ctx.tick && due(ctx, record, options.every)) visit(ctx, record, options)
+  if (ctx.freezing.length > 0) freezeCorpses(ctx, ctx.freezing.sort(byBirth))
+  runChanges(ctx, ctx.pending.sort(byBirth2))
+}
+
+const byBirth2 = (a: PendingChange, b: PendingChange): number => a.record.born - b.record.born
+
+const runChanges = (ctx: CorpseContext, pending: readonly PendingChange[]): void => {
+  if (pending.length === 0) return
   for (const change of pending.filter((item) => item.forced)) {
     ctx.budget?.take('lod', switchUnits(change.record, change.to))
     switchRung(ctx, change.record, change.to, true)
@@ -190,27 +212,23 @@ const runChanges = (ctx: CorpseContext, pending: readonly Pending[]): void => {
   }
 }
 
-export const countRigid = (ctx: CorpseContext): number => {
-  let total = 0
-  for (const record of ctx.records.values()) total += rigidBodies(record, record.rung)
-  return total
+/** The distances a dormant corpse kept are from when it was last looked at: a quota that takes the farthest asks again, from where the interest is now. */
+const refreshDistances = (ctx: CorpseContext): void => {
+  const interest = ctx.readInterest()
+  for (const record of ctx.records.values()) record.distance = distanceTo(interest, record.torso[0] as number, record.torso[2] as number)
 }
 
-export const countRung = (ctx: CorpseContext, rung: BodyRung): number => {
-  let total = 0
-  for (const record of ctx.records.values()) if (record.rung === rung) total++
-  return total
-}
-
-/** The quotas: ragdolls at most `ragdollsMax`, rigid bodies at most `dynamicBodiesMax`; the farthest sleeper goes down a rung until each fits (or none sleeps). */
+/** The quotas: ragdolls at most `ragdollsMax`, rigid bodies at most `dynamicBodiesMax`; the farthest sleeper goes down a rung until each fits (or none sleeps). Free when they hold. */
 export const enforceQuotas = (ctx: CorpseContext): void => {
   const { ragdollsMax, dynamicBodiesMax } = ctx.lod.numbers
-  for (let guard = 0; guard < 64 && countRung(ctx, 'r0') > ragdollsMax; guard++) {
+  if (ctx.rungCounts.r0 <= ragdollsMax && ctx.rigidCount <= dynamicBodiesMax) return
+  refreshDistances(ctx)
+  for (let guard = 0; guard < 64 && ctx.rungCounts.r0 > ragdollsMax; guard++) {
     const victim = farthestSleeping(ctx.records.values(), 'r0')
     if (victim < 0) break
     switchRung(ctx, ctx.records.get(victim) as CorpseRecord, 'r1', true)
   }
-  for (let guard = 0; guard < 64 && countRigid(ctx) > dynamicBodiesMax; guard++) {
+  for (let guard = 0; guard < 64 && ctx.rigidCount > dynamicBodiesMax; guard++) {
     const rung = (['r0', 'r1', 'r2'] as const).find((candidate) => farthestSleeping(ctx.records.values(), candidate) >= 0)
     if (!rung) break
     const record = ctx.records.get(farthestSleeping(ctx.records.values(), rung)) as CorpseRecord
@@ -247,7 +265,7 @@ const islands = (ctx: CorpseContext): CorpseRecord[][] => {
 /** The island quota: an island of more than `islandBodiesMax` rigid bodies has its oldest sleepers frozen into its pile, a few at a time. */
 export const enforceIslands = (ctx: CorpseContext, perRound = 8): void => {
   const { islandBodiesMax } = ctx.lod.numbers
-  if (countRigid(ctx) <= islandBodiesMax) return
+  if (ctx.rigidCount <= islandBodiesMax) return
   const oldest: CorpseRecord[] = []
   for (const island of islands(ctx)) {
     const bodies = island.reduce((total, record) => total + rigidBodies(record, record.rung), 0)

@@ -1,4 +1,5 @@
 import type { BodyLod, BodyLodOptions, BodyRung } from './body-lod'
+import type { CorpseHeap } from './engine-corpses-heap'
 import type { BodyId, RagdollId, SeamWorld, Vec3 } from './contract'
 import type { CorpseBodyKit, Rigid } from './corpse-pose'
 import type { WorkBudget } from './work-budget'
@@ -84,6 +85,9 @@ export interface CorpseRecord {
   originZ: number
   lastLookedAt: number
   distance: number
+  /** Asleep with nothing that can change its rung until the interest has travelled `dormantKey` (or something wakes it): it is in no list that is walked each step. */
+  dormant: boolean
+  dormantKey: number
 }
 
 export interface Pile {
@@ -105,4 +109,26 @@ export interface CorpseContext {
   nextPile: number
   born: number
   tick: number
+  /** Corpses by rung and the rigid bodies they hold: kept by the changes, so a quota asks in one read instead of a walk. */
+  readonly rungCounts: Record<BodyRung, number>
+  rigidCount: number
+  /** The corpses a step walks: all but the dormant ones. */
+  readonly live: Set<CorpseRecord>
+  /** The dormant ones by the distance the interest must still travel (`travel` is the total so far) before their rung could change. */
+  readonly dormant: CorpseHeap
+  travel: number
+  /** The interest as of the last step (x, z per point), to measure how far it moved. */
+  interest: Float64Array
+  /** Looks taken at corpses, in all: what a step costs is in how many. */
+  looks: number
+  /** The interest now, read afresh (a quota that needs distances; a step reads it once and hands it on). */
+  readonly readInterest: () => readonly Vec3[]
+  readonly pending: PendingChange[]
+  readonly freezing: CorpseRecord[]
+}
+
+export interface PendingChange {
+  readonly record: CorpseRecord
+  readonly to: BodyRung
+  readonly forced: boolean
 }

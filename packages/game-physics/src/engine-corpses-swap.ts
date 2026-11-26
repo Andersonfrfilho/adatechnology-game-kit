@@ -16,6 +16,8 @@ const FOUND: BodyId[] = []
 const NO_SPIN: Vec3 = [0, 0, 0]
 const NO_PARTNERS: BodyId[] = []
 const PARTNERS: BodyId[] = []
+const OWN = new Set<BodyId>()
+const FOUND_PARTNERS = new Set<BodyId>()
 const IDENTITY: Quat = [0, 0, 0, 1]
 
 export const rigidOf = (ctx: CorpseContext, body: BodyId): Rigid => {
@@ -49,12 +51,27 @@ export const storeTorso = (record: CorpseRecord, torso: Rigid): void => {
 
 const remember = (ctx: CorpseContext, record: CorpseRecord, bodies: readonly BodyId[]): void => {
   record.bodies = [...bodies]
+  ctx.rigidCount += bodies.length
   for (const body of bodies) ctx.ownerOf.set(body, record.id)
+}
+
+/** The only place a corpse's rung changes after it is made: the counts by rung follow it. */
+export const setRung = (ctx: CorpseContext, record: CorpseRecord, to: BodyRung): void => {
+  ctx.rungCounts[record.rung]--
+  ctx.rungCounts[to]++
+  record.rung = to
+}
+
+/** Back in the list a step walks: something changed (a rung, a pile, a wake), so the next look is its own. */
+export const wakeRecord = (ctx: CorpseContext, record: CorpseRecord): void => {
+  record.dormant = false
+  ctx.live.add(record)
 }
 
 /** Takes a rung's bodies out of the world and the maps: a ragdoll or chain leaves as one engine object. */
 export const removeRungBodies = (ctx: CorpseContext, record: CorpseRecord): void => {
   for (const body of record.bodies) ctx.ownerOf.delete(body)
+  ctx.rigidCount -= record.bodies.length
   if (record.ragdoll !== 0) ctx.world.removeRagdoll(record.ragdoll)
   else if (record.rung === 'r2') ctx.world.removeBody(record.bodies[0] as BodyId)
   record.ragdoll = 0
@@ -197,7 +214,8 @@ export const switchRung = (ctx: CorpseContext, record: CorpseRecord, to: BodyRun
   const before = record.rung
   const torsoBefore = torsoOf(ctx, record)
   removeOrKeep(ctx, record, before, to, torsoBefore)
-  record.rung = to
+  setRung(ctx, record, to)
+  wakeRecord(ctx, record)
   record.sinceChangeSeconds = 0
   record.woken = false
   record.pile = 0
@@ -250,11 +268,12 @@ export const bornAt = (ctx: CorpseContext, record: CorpseRecord, rung: 'r0' | 'r
 
 /** The bodies of other things that touch any of the corpse's own (deduplicated, in the order found). */
 export const readTouching = (ctx: CorpseContext, record: CorpseRecord): BodyId[] => {
-  const own = new Set(record.bodies)
-  const found = new Set<BodyId>()
+  OWN.clear()
+  FOUND_PARTNERS.clear()
+  for (const body of record.bodies) OWN.add(body)
   for (const body of record.bodies) {
     ctx.world.contactBodies(body, PARTNERS)
-    for (const other of PARTNERS) if (!own.has(other)) found.add(other)
+    for (const other of PARTNERS) if (!OWN.has(other)) FOUND_PARTNERS.add(other)
   }
-  return found.size === 0 ? NO_PARTNERS : [...found]
+  return FOUND_PARTNERS.size === 0 ? NO_PARTNERS : [...FOUND_PARTNERS]
 }

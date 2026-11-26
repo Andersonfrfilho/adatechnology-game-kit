@@ -1,7 +1,7 @@
 import type { Vec3 } from './contract'
 import { capsuleOfTorso, rotateVector } from './corpse-pose'
 import type { Rigid } from './corpse-pose'
-import { readTouching, removeRungBodies, storeTorso, switchRung, torsoOf } from './engine-corpses-swap'
+import { readTouching, removeRungBodies, setRung, storeTorso, switchRung, torsoOf, wakeRecord } from './engine-corpses-swap'
 import type { CorpseContext, CorpseRecord, Pile } from './engine-corpses-types'
 
 /** How near (m) two frozen capsules must be for one to count as resting on the other. */
@@ -118,7 +118,8 @@ export const freezeCorpses = (ctx: CorpseContext, candidates: readonly CorpseRec
     for (const record of records) removeRungBodies(ctx, record)
     const pile = buildCompound(ctx, id, members)
     for (const record of records) {
-      record.rung = 'r2f'
+      setRung(ctx, record, 'r2f')
+      wakeRecord(ctx, record)
       record.pile = id
       record.sinceChangeSeconds = 0
       record.touching = []

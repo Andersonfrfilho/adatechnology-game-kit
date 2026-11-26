@@ -1,11 +1,12 @@
 import { createBodyLod, farthestSleeping } from './body-lod'
+import { createCorpseHeap } from './engine-corpses-heap'
 import type { BodyRung } from './body-lod'
 import type { BodyId, Quat, SeamWorld, Vec3 } from './contract'
 import { yawQuat } from './corpse-pose'
 import type { CorpseBodyKit, Rigid } from './corpse-pose'
 import { bornInFullPile, distanceTo, enforceIslands, enforceQuotas, evaluateCorpses, rankPiles } from './engine-corpses-eval'
 import { freezeCorpses, releaseResting } from './engine-corpses-pile'
-import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf } from './engine-corpses-swap'
+import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf, wakeRecord } from './engine-corpses-swap'
 import type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, CorpseContext, CorpseRecord } from './engine-corpses-types'
 import { isPhysicsLoop } from './loop'
 import type { PhysicsLoop } from './loop'
@@ -35,6 +36,9 @@ export interface CorpseBodiesState {
   readonly tick: number
   readonly born: number
   readonly nextPile: number
+  /** How far (m) the interest has travelled in all, and where it was (x, z per point): what the dormant corpses' keys are measured against. */
+  readonly travel: number
+  readonly interest: readonly number[]
   readonly records: ReadonlyArray<{
     readonly id: number
     readonly rung: BodyRung
@@ -54,6 +58,9 @@ export interface CorpseBodiesState {
     readonly originZ: number
     readonly lastLookedAt: number
     readonly distance: number
+    readonly dormant: boolean
+    /** The travel of the interest it waits for; -1 for a corpse that waits for nothing (frozen into a pile). */
+    readonly dormantKey: number
   }>
   readonly piles: ReadonlyArray<{ readonly id: number; readonly body: number; readonly members: readonly number[] }>
 }
@@ -84,6 +91,8 @@ export interface CorpseBodies {
   /** The torso's pose (x y z, then x y z w) at `offset`, for any rung; false for a corpse the world does not know. */
   readTorso(id: number, out: Float32Array | Float64Array, offset: number): boolean
   counts(): CorpseCounts
+  /** Corpses looked at since the start, in all: a step that leaves the sleepers alone adds none (read it before and after to count what a step visited). */
+  looks(): number
   /** A hash of every corpse's id and rung in id order: equal runs have equal hashes. */
   rungHash(): number
   saveState(): CorpseBodiesState
@@ -102,9 +111,12 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
   const loop = isPhysicsLoop(host) ? host : null
   const world = loop ? loop.world : (host as SeamWorld)
   const lod = createBodyLod(options.lod)
-  const ctx: CorpseContext = { world, lod, budget: options.budget, records: new Map(), piles: new Map(), ownerOf: new Map(), pileOf: new Map(), nextPile: 1, born: 0, tick: 0 }
-  const every = Math.max(1, Math.floor(options.evaluateEvery ?? DEFAULT_EVALUATE_EVERY))
   const interest = (): readonly Vec3[] => options.interest?.() ?? NO_INTEREST
+  const ctx: CorpseContext = {
+    world, lod, budget: options.budget, records: new Map(), piles: new Map(), ownerOf: new Map(), pileOf: new Map(), nextPile: 1, born: 0, tick: 0,
+    rungCounts: { r0: 0, r1: 0, r2: 0, r2f: 0, r3: 0 }, rigidCount: 0, live: new Set(), dormant: createCorpseHeap(), travel: 0, interest: new Float64Array(0), looks: 0, readInterest: interest, pending: [], freezing: [],
+  }
+  const every = Math.max(1, Math.floor(options.evaluateEvery ?? DEFAULT_EVALUATE_EVERY))
 
   const step = (h: number): void => {
     ctx.tick++
@@ -118,9 +130,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
   const bornRung = (distance: number, kit: CorpseBodyKit, frame: Rigid): 'r0' | 'r1' | 'r2' => {
     if (bornInFullPile(ctx, kit, frame, options.moundAt)) return 'r2'
     if (distance > lod.numbers.ragdollDistance) return 'r1'
-    let ragdolls = 0
-    for (const record of ctx.records.values()) if (record.rung === 'r0') ragdolls++
-    if (ragdolls < lod.numbers.ragdollsMax) return 'r0'
+    if (ctx.rungCounts.r0 < lod.numbers.ragdollsMax) return 'r0'
     const victim = farthestSleeping(ctx.records.values(), 'r0')
     if (victim < 0) return 'r1'
     switchRung(ctx, ctx.records.get(victim) as CorpseRecord, 'r1', true)
@@ -134,10 +144,12 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     const rung = bornRung(distance, params.kit, frame)
     const record: CorpseRecord = {
       id: params.id, kit: params.kit, rung, ragdoll: 0, bodies: [], pile: 0, pileRank: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: false, stale: true,
-      touching: [], born: ctx.born++, originX: params.position[0], originZ: params.position[2], lastLookedAt: ctx.tick, distance,
+      touching: [], born: ctx.born++, originX: params.position[0], originZ: params.position[2], lastLookedAt: ctx.tick, distance, dormant: false, dormantKey: 0,
     }
     storeTorso(record, standingTorso(params.kit, frame))
     ctx.records.set(params.id, record)
+    ctx.live.add(record)
+    ctx.rungCounts[rung]++
     bornAt(ctx, record, rung, frame, params.velocity ?? [0, 0, 0])
     enforceQuotas(ctx)
     return record.rung
@@ -147,10 +159,12 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     if (ctx.records.has(params.id)) throw new Error(`game-physics: corpse ${params.id} is already in the world`)
     const record: CorpseRecord = {
       id: params.id, kit: params.kit, rung: 'r3', ragdoll: 0, bodies: [], pile: 0, pileRank: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: true, stale: true,
-      touching: [], born: ctx.born++, originX: params.torso.position[0], originZ: params.torso.position[2], lastLookedAt: ctx.tick, distance: 0,
+      touching: [], born: ctx.born++, originX: params.torso.position[0], originZ: params.torso.position[2], lastLookedAt: ctx.tick, distance: 0, dormant: false, dormantKey: 0,
     }
     storeTorso(record, params.torso)
     ctx.records.set(params.id, record)
+    ctx.live.add(record)
+    ctx.rungCounts.r3++
     if (params.rung === 'r3') return 'r3'
     switchRung(ctx, record, 'r2', true)
     if (params.rung === 'r1') switchRung(ctx, record, 'r1', true)
@@ -165,6 +179,9 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     storeTorso(record, torsoOf(ctx, record))
     if (record.rung !== 'r2f' && record.rung !== 'r3') removeRungBodies(ctx, record)
     if (record.rung !== 'r3') releaseResting(ctx, record)
+    ctx.rungCounts[record.rung]--
+    record.dormant = false
+    ctx.live.delete(record)
     ctx.records.delete(id)
   }
 
@@ -180,6 +197,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
       releaseResting(ctx, record)
       record.pile = 0
     }
+    wakeRecord(ctx, record)
     return switchRung(ctx, record, rung, false)
   }
 
@@ -187,9 +205,11 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     tick: ctx.tick,
     born: ctx.born,
     nextPile: ctx.nextPile,
+    travel: ctx.travel,
+    interest: [...ctx.interest],
     records: [...ctx.records.values()].map((record) => ({
       id: record.id, rung: record.rung, ragdoll: record.ragdoll, bodies: [...record.bodies], pile: record.pile, pileRank: record.pileRank, torso: [...record.torso], asleepSeconds: record.asleepSeconds,
-      sinceChangeSeconds: record.sinceChangeSeconds, woken: record.woken, asleep: record.asleep, stale: record.stale, touching: [...record.touching], born: record.born, originX: record.originX, originZ: record.originZ, lastLookedAt: record.lastLookedAt, distance: record.distance,
+      sinceChangeSeconds: record.sinceChangeSeconds, woken: record.woken, asleep: record.asleep, stale: record.stale, touching: [...record.touching], born: record.born, originX: record.originX, originZ: record.originZ, lastLookedAt: record.lastLookedAt, distance: record.distance, dormant: record.dormant, dormantKey: record.dormantKey === Infinity ? -1 : record.dormantKey,
     })),
     piles: [...ctx.piles.values()].map((pile) => ({ id: pile.id, body: pile.body, members: [...pile.members] })),
   })
@@ -205,14 +225,25 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     ctx.tick = state.tick
     ctx.born = state.born
     ctx.nextPile = state.nextPile
+    ctx.travel = state.travel
+    ctx.interest = Float64Array.from(state.interest)
+    ctx.live.clear()
+    ctx.dormant.clear()
+    ctx.rigidCount = 0
+    for (const key of Object.keys(ctx.rungCounts)) ctx.rungCounts[key as BodyRung] = 0
     for (const saved of state.records) {
       const record: CorpseRecord = {
         id: saved.id, kit: kits.get(saved.id) as CorpseRecord['kit'], rung: saved.rung, ragdoll: saved.ragdoll as CorpseRecord['ragdoll'], bodies: saved.bodies as BodyId[], pile: saved.pile, pileRank: saved.pileRank,
         torso: Float64Array.from(saved.torso), asleepSeconds: saved.asleepSeconds, sinceChangeSeconds: saved.sinceChangeSeconds, woken: saved.woken, asleep: saved.asleep, stale: saved.stale,
         touching: saved.touching as BodyId[], born: saved.born, originX: saved.originX, originZ: saved.originZ, lastLookedAt: saved.lastLookedAt, distance: saved.distance,
+        dormant: saved.dormant, dormantKey: saved.dormantKey === -1 ? Infinity : saved.dormantKey,
       }
       ctx.records.set(record.id, record)
+      ctx.rungCounts[record.rung]++
+      ctx.rigidCount += record.bodies.length
       for (const body of record.bodies) ctx.ownerOf.set(body, record.id)
+      if (!record.dormant) ctx.live.add(record)
+      else if (record.dormantKey !== Infinity) ctx.dormant.push(record.dormantKey, record)
     }
     for (const pile of state.piles) {
       ctx.piles.set(pile.id, { id: pile.id, body: pile.body as BodyId, members: [...pile.members] })
@@ -239,15 +270,8 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
       out.set([...torso.position, ...rotation], offset)
       return true
     },
-    counts() {
-      const counts = { r0: 0, r1: 0, r2: 0, r2f: 0, r3: 0 }
-      let rigid = 0
-      for (const record of ctx.records.values()) {
-        counts[record.rung]++
-        rigid += record.bodies.length
-      }
-      return { ...counts, rigidBodies: rigid, piles: ctx.piles.size }
-    },
+    counts: () => ({ ...ctx.rungCounts, rigidBodies: ctx.rigidCount, piles: ctx.piles.size }),
+    looks: () => ctx.looks,
     rungHash() {
       let hash = 0x811c9dc5
       for (const id of [...ctx.records.keys()].sort((a, b) => a - b)) {
