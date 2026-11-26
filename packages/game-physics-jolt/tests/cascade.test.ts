@@ -1,12 +1,15 @@
 import { createHash } from 'node:crypto'
 import { performance } from 'node:perf_hooks'
+import { setFlagsFromString } from 'node:v8'
+import { runInNewContext } from 'node:vm'
 
 import { describe, expect, it } from 'vitest'
 
+import { createImpactReader, createPhysicsLoop } from '@adatechnology/game-physics'
 import type { BodyDesc, BodyId, PhysicsWorld, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
-import type { JoltWorld } from '../src/index'
-import { ground, report, stats } from './scenes'
+import type { JoltBuild, JoltWorld } from '../src/index'
+import { COST_LANE, ground, report, stats } from './scenes'
 
 interface Cascade {
   readonly hash: string
@@ -53,8 +56,8 @@ const parkedCar: ShapeDesc = {
   }),
 }
 
-const run = async (parked = 0): Promise<Cascade> => {
-  const engine = await createJoltEngine()
+const run = async (build: JoltBuild = 'single', parked = 0): Promise<Cascade> => {
+  const engine = await createJoltEngine({ build })
   const world = engine.createWorld({ fixedStep: 1 / 60, maxBodies: 8192, contactReportSpeed: 1 }) as JoltWorld
   ground(world, 100)
   const descs: BodyDesc[] = []
@@ -84,9 +87,21 @@ const run = async (parked = 0): Promise<Cascade> => {
   let hitsToDamage = 0
   let heap0 = 0
   let wasm0 = 0
-  // what our damage keeps of each blow: the strongest per body this frame, in arrays made once (no allocation per contact)
-  const blow = new Float32Array(16384)
+  // contacts -> damage through the engine's impact reader: the strongest blow on each body of the frame, told once, with arrays made once (no allocation per contact)
+  const loop = createPhysicsLoop(world)
+  let blows = 0
+  const stopReader = createImpactReader(loop, {
+    minImpulse: 1,
+    bodiesMax: 1024,
+    onImpact: (impact) => {
+      blows++
+      // the cylinder goes off on a blow over 150 N s (a crate thrown into it), then blows the wall apart
+      if (wentOff < 0 && impact.body === cylinder && impact.impulse > 150) wentOff = frame / 60
+    },
+  })
+  let frame = 0
   for (let f = 0; f < 600; f++) {
+    frame = f
     if (f === 30) blast(world, [3, 0.5, 1.5], 3, 400, near, pose)
     if (f === 31) {
       heap0 = process.memoryUsage().heapUsed
@@ -94,20 +109,10 @@ const run = async (parked = 0): Promise<Cascade> => {
     }
     const t0 = performance.now()
     const before = world.activeCount
-    world.step(1 / 60)
+    loop.stepFixed(1)
     steps.push(performance.now() - t0)
-    const c = world.contacts
-    contactRows.push(c.count)
-    // contacts -> damage: the impulse each row carries, by the user value (our part), the cylinder among them
-    for (let i = 0; i < c.count; i++) {
-      const j = c.impulse[i]
-      if (c.userA[i] >= 0 && c.userA[i] < blow.length) blow[c.userA[i]] = Math.max(blow[c.userA[i]], j)
-      if (c.userB[i] >= 0 && c.userB[i] < blow.length) blow[c.userB[i]] = Math.max(blow[c.userB[i]], j)
-      hitsToDamage++
-      // the cylinder goes off on a blow over 150 N s (a crate thrown into it), then blows the wall apart
-      if (wentOff < 0 && (c.userA[i] === 99999 || c.userB[i] === 99999) && j > 150) wentOff = f / 60
-    }
-    blow.fill(0)
+    contactRows.push(world.contacts.count)
+    hitsToDamage = blows
     if (wentOff >= 0 && Math.round(wentOff * 60) === f) {
       world.readPose(cylinder, pose, 0)
       const at: Vec3 = [pose[0], pose[1], pose[2]]
@@ -119,6 +124,7 @@ const run = async (parked = 0): Promise<Cascade> => {
     }
     woke = Math.max(woke, world.activeCount - before)
   }
+  stopReader()
   const hash = createHash('sha256')
   const all = new Float64Array(7)
   for (const id of ids) {
@@ -148,11 +154,52 @@ describe('case 5: chain reaction', () => {
       wrapperCacheEntries: a.wrapperCache, hash: a.hash, sameInProcess: a.hash === b.hash,
     })
     expect(a.hash).toBe(b.hash)
+    // the JS heap does not grow with the frames (spec.md 6.2 asks it of the cascade; the engine's own heap is `heap.test.ts`): charged only in the cost lane, as the time limits are, because the heap of a shared test run is not the cascade's alone
+    if (COST_LANE) expect(a.heapBytes).toBeLessThan(2_000_000)
+  })
+
+  // the page chooses the multithreaded build (SIMD, 0 job threads) where it is isolated and the single one elsewhere: the choice must not change the physics
+  it('the single and the multithreaded (SIMD, 0 job threads) builds run the cascade to the same hash', { timeout: 300000 }, async () => {
+    const single = await run('single')
+    const multithread = await run('multithread')
+    report('cascade-builds', { single: single.hash, multithread: multithread.hash, singleStepAfterBlast: stats(single.steps.slice(30)), multithreadStepAfterBlast: stats(multithread.steps.slice(30)) })
+    expect(multithread.hash).toBe(single.hash)
+  })
+
+  it('the impact reader makes nothing per contact row and per frame: the bouncing frames allocate only a few bytes for each blow it tells', { timeout: 120000 }, async () => {
+    setFlagsFromString('--expose_gc')
+    const collect = runInNewContext('gc') as () => void
+    const engine = await createJoltEngine()
+    const frames = async (withReader: boolean): Promise<{ readonly allocated: number; readonly told: number }> => {
+      const world = engine.createWorld({ fixedStep: 1 / 60, maxBodies: 1024, contactReportSpeed: 0.2 })
+      ground(world, 20)
+      const loop = createPhysicsLoop(world)
+      for (let i = 0; i < 80; i++) {
+        world.createBody({ shape: { kind: 'sphere', radius: 0.15 }, motion: 'dynamic', mass: 2, position: [(i % 10) * 0.35 - 1.6, 0.5 + Math.floor(i / 10) * 0.4, 0], material: { frictionStatic: 0.5, frictionDynamic: 0.4, restitution: 0.85 }, layer: 'debris', user: i })
+      }
+      let told = 0
+      const stop = withReader ? createImpactReader(loop, { minImpulse: 0.01, bodiesMax: 256, onImpact: () => told++ }) : undefined
+      for (let f = 0; f < 60; f++) loop.stepFixed(1)
+      collect()
+      const before = process.memoryUsage().heapUsed
+      for (let f = 0; f < 240; f++) loop.stepFixed(1)
+      const allocated = process.memoryUsage().heapUsed - before
+      stop?.()
+      world.dispose()
+      return { allocated, told }
+    }
+    await frames(true)
+    const without = await frames(false)
+    const withReader = await frames(true)
+    report('impact-reader-allocation', { withoutBytes: without.allocated, withBytes: withReader.allocated, blowsTold: withReader.told })
+    expect(withReader.told).toBeGreaterThan(200)
+    // a blow told is the unit: the numbers handed to `onImpact` cost a few bytes each (about 100), a row that is not told costs none, and a frame with no blow nothing (cost lane only: it reads the shared heap)
+    if (COST_LANE) expect((withReader.allocated - without.allocated) / withReader.told).toBeLessThan(200)
   })
 
   it('T6.21: the same with 20 parked cars of hulls in the island of the blast: they wake, and the run is the same twice', { timeout: 300000 }, async () => {
-    const a = await run(20)
-    const b = await run(20)
+    const a = await run('single', 20)
+    const b = await run('single', 20)
     const plain = await run()
     report('cascade-parked-cars', {
       cars: 20, hullsPerCar: PARKED_CAR_HULLS, wokeInOneFrame: a.wokeInOneFrame, plainWokeInOneFrame: plain.wokeInOneFrame, stepAfterBlast: stats(a.steps.slice(30)), plainStepAfterBlast: stats(plain.steps.slice(30)),

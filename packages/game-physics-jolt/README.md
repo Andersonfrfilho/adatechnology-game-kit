@@ -45,7 +45,7 @@ const loop = createPhysicsLoop(world)
 (`wasm-compat-multithread`, SIMD on), and `workerThreads` (Jolt's `mMaxWorkerThreads`, job threads besides the caller's). The multithreaded build
 needs `SharedArrayBuffer`: a cross-origin isolated page (COOP `same-origin` + COEP `require-corp` or `credentialless`: `pnpm serve:room --isolate`,
 or the desktop app in `apps/desktop`). Its pthreads load `jolt-physics.multithread.wasm-compat.js` by URL, so a bundled page serves that file next
-to itself and passes `moduleUrl` (the test room does: `?joltBuild=multithread`, `?joltThreads=N|auto`).
+to itself and passes `moduleUrl` (the test room does: it picks `multithread` on its own when the page is `crossOriginIsolated` and `single` elsewhere, `?joltBuild=single|multithread` forces one, `?joltThreads=N|auto`).
 
 **Worker threads and the kit's contact rules do not run together.** Jolt calls the contact listener from the job that finds the contact; with
 `workerThreads > 0` that job runs on a worker, where the JS listener (`ContactListenerJS`: contact rows, sensors, friction partners, restitution mix,

@@ -125,6 +125,12 @@ crowd.stats.physics // falls by cause, fallsBeyondBlast, climbers, moundMax, thr
 - **Far band (R1):** no pairs. Every 12th step a coarse grid of 2 m counts the standing walkers of band R1 per cell; above 4 bodies the wanted speed is `4 / bodies` and the field is `(bodies − 4) · 150` N, which the same balance rule reads (`physics.density`, needs `balance`). A body that falls there lies without entering the mound, and joins it when it comes into R0.
 - **Player pressure:** `playerPressure` reports the pressure of the horde on the target through `knock` and `hurt` (off in the package; a game turns it on).
 
+### The crowd in the physics engine
+
+`createAgentBodies(loop, crowd, { radius })` gives each agent of the store a kinematic capsule on the `agent` layer, moved in the loop's `crowd` phase before every fixed step: game-crowd moves, the engine only lets the agents push what they meet (a door leaf, a prop, debris); agents meet neither each other nor the ground (`LAYER_PAIRS`). Capsule `i` follows agent `i`, also after a removal moved the last agent into `i`. Nothing the engine does is written back into the store, so `state-hash` and the team goldens are the same with or without it.
+`createDoorBodies(loop, doors, { leafMass, breakImpulse })` hangs each closed door on a hinge: a dynamic leaf on the `prop` layer with a `breakImpulse`; when the agents tear the hinge off, the crowd's door is `broken` through `doors.hit` (grid opened, events fired). A door that opens or breaks by another cause loses its leaf, and one shut again or added gets one. The corpses go through `createCorpseBodies` of `game-physics` (`onSettled` → `relocateCorpse`).
+Cost (spec 008, 1 000 agents and a door, `pnpm --filter @adatechnology/game-crowd test:cost`): median 0.34 ms, p99 0.5 ms per fixed step.
+
 ### The contact and the pressure in a worker
 
 `physics.worker` is `'off'` by default (the step runs where it always did). `'auto'` moves the contact and the pressure to a worker when one can be made and stays in the step when it cannot; `'on'` throws instead of staying.

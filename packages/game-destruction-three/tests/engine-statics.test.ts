@@ -86,4 +86,43 @@ describe("a fixed object's boxes changing in the engine", () => {
     expect(root.position.y).toBeCloseTo(0.55, 1)
     world.dispose()
   })
+  it('an object the host calls unsure (measured in part, or with a part left out) is not covered until it is whole, and the revision moves with it', async () => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120 })
+    let unsure = new Set<string>(['house'])
+    const system = new PieceSystem(THREE, {
+      groundAt: () => 0,
+      gravity: 9.81,
+      onHardLanding: () => undefined,
+      scene: new THREE.Scene(),
+      physics: world,
+      staticSolids: () => new Map([['house', [solid([0, 0.25, 0], [2, 0.25, 2])]]]),
+      staticUnsure: () => unsure,
+    })
+    system.update(0.05)
+    const broad = system.rayBroadPhase()!.candidates!
+    expect(broad.covers('house')).toBe(false)
+    const revision = broad.revision()
+    unsure = new Set()
+    system.update(0.05)
+    expect(broad.covers('house')).toBe(true)
+    expect(broad.revision()).not.toBe(revision)
+    world.dispose()
+  })
+  it('the part a body draws is the key without its mesh number, also for a part whose id has a colon', async () => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120 })
+    const system = new PieceSystem(THREE, {
+      groundAt: () => 0,
+      gravity: 9.81,
+      onHardLanding: () => undefined,
+      scene: new THREE.Scene(),
+      physics: world,
+      staticSolids: () => new Map([['house', [{ ...solid([0, 0.25, 0], [2, 0.25, 2]), key: 'wall:north:0' }, { ...solid([5, 0.25, 0], [1, 0.25, 1]), key: 'door:1' }, { ...solid([8, 0.25, 0], [1, 0.25, 1]), key: 'hosted:left' }]]]),
+    })
+    system.update(0.05)
+    const { statics } = (system as unknown as { engine: { statics: { partOf: ReadonlyMap<number, string> } } }).engine
+    expect([...statics.partOf.values()].sort()).toEqual(['door', 'hosted:left', 'wall:north'])
+    world.dispose()
+  })
 })

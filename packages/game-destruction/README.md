@@ -380,6 +380,10 @@ valid (unique ids, known materials, joints reference parts), a 500 J ballistic h
 
 `IMPACT_CONTRACT` holds this table as data and `checkHit(hit)` returns the problems of a hit.
 
+## A broad phase from the physics engine
+
+`world.setRayBroadPhase({ begin, mayMeet })` lets a host narrow the objects a ray reads: `begin(origin, direction, maxDistance)` prepares the answer (false: it cannot tell, every object is tried), `mayMeet(objectId)` leaves out only objects the host proves out of the ray's way. The hit stays the drawn surface the world tests. `game-destruction-three` makes one from the engine's fixed bodies (`rayBroadPhase: true` in the renderer options); off by default.
+
 ## Events
 
 `damage`, `dent`, `hole`, `crack`, `ricochet`, `debris`, `fracture` (with oriented `fragments` in world space), `detach`, `disassemble_progress`,

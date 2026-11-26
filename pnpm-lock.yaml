@@ -507,6 +507,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
     devDependencies:
       '@adatechnology/game-animals':
         specifier: workspace:^
@@ -520,9 +523,6 @@ importers:
       '@adatechnology/game-infection':
         specifier: workspace:^
         version: link:../game-infection
-      '@adatechnology/game-physics':
-        specifier: workspace:^
-        version: link:../game-physics
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt

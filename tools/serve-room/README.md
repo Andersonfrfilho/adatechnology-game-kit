@@ -9,6 +9,6 @@ pnpm serve:room --isolate=credentialless # COEP credentialless
 pnpm serve:room --port 4290 --dir examples/test-room/dist
 ```
 
-Também por ambiente: `ROOM_ISOLATE`, `ROOM_PORT`, `ROOM_HOST`, `ROOM_DIR`. Com `--isolate`, a sala aceita `?solver=jolt&joltBuild=multithread`
-(e `joltThreads`/`joltContacts`, ver `packages/game-physics-jolt/README.md`). Sem a flag, o comportamento padrão não muda. O app de desktop
+Também por ambiente: `ROOM_ISOLATE`, `ROOM_PORT`, `ROOM_HOST`, `ROOM_DIR`. Com `--isolate` (`crossOriginIsolated`), a sala carrega sozinha a build `multithread` do Jolt, com SIMD e 0 threads de job (mesma física; `?joltBuild=single` força a outra);
+sem a flag, ou se a build não carregar, fica a `single`, sem erro (`window.__joltInfo.fallback` diz por quê). `joltThreads`/`joltContacts`: ver `packages/game-physics-jolt/README.md`. O app de desktop
 (`apps/desktop`) usa o mesmo `createRoomHandler`, sempre isolado.

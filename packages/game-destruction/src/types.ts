@@ -707,6 +707,11 @@ export interface DestructionWorld {
    * cracks or loses its support there (`subside` events), and what is left without a load path falls (`collapse`).
    */
   groundLoss(loss: GroundLoss): void
+  /**
+   * A broad phase from outside (the physics engine) for the rays of the world: before a ray reads an object's parts it asks whether the object may be met; the answer only
+   * leaves objects out, so the hit is still the drawn surface the world tests. Null (the default) tries every object by its bounding sphere, as always.
+   */
+  setRayBroadPhase(broadPhase: RayBroadPhase | null): void
   /** Raycast against every part shape (world space). `options` leaves out what a query has no use for (loose pieces, small objects) before testing it. */
   raycast(origin: Vec3, direction: Vec3, maxDistance?: number, options?: RaycastOptions): RayHit | null
   /**
@@ -835,6 +840,24 @@ export interface PartRuntime {
 }
 
 /** Opaque bookkeeping of an object (see `PartRuntime`). `joints` holds the last disassembly step reported per joint id. */
+/** What the engine tells the world about one ray (`DestructionWorld.setRayBroadPhase`). */
+export interface RayBroadPhase {
+  /** Prepares the answer for a ray; false when it cannot tell (an endless ray): then every object is tried. Called once per ray, before `mayMeet`. */
+  begin(origin: Vec3, direction: Vec3, maxDistance: number): boolean
+  /** Whether the object may be met by the ray `begin` was given: true for any object the engine knows nothing about, false only for one it proves out of the ray's way. */
+  mayMeet(objectId: string): boolean
+  /**
+   * Lets the world visit only the objects the ray may meet instead of asking `mayMeet` of each: the engine's answer is exact for the objects it covers (`met` after `begin`, `covers`
+   * says whether the engine holds every part of an object), and `revision` changes whenever a `covers` answer may have. The world tries every object that is not covered, and visits
+   * them all in its own order, so the hit is the same as with `mayMeet`.
+   */
+  readonly candidates?: {
+    met(): readonly string[]
+    covers(objectId: string): boolean
+    revision(): number
+  }
+}
+
 /** What a `DestructionWorld.raycast` leaves out before testing it, so the ray never reads its shapes. Nothing by default. */
 export interface RaycastOptions {
   /** Leaves out the loose pieces: the objects `splitGroup` made of what came off, whatever their size. A part that fell but is still part of its object (`collapsed`) still counts. */

@@ -25,6 +25,7 @@ interface Held {
 }
 
 interface Fixed {
+  readonly objectId: string
   /** The list the host gave (by reference: the same list is the same parts), and the parts the engine holds. */
   solids: readonly StaticSolid[]
   held: Map<string, Held>
@@ -62,6 +63,15 @@ const sameBox = (a: StaticSolid, b: StaticSolid): boolean => a === b || (sameSha
 
 export const sameSolids = (a: readonly StaticSolid[], b: readonly StaticSolid[]): boolean => a.length === b.length && a.every((s, i) => sameBox(s, b[i]))
 
+const NONE: ReadonlySet<string> = new Set()
+
+/** `top:0` is mesh 0 of the part `top`. */
+const partOfKey = (key: string): string => {
+  const colon = key.lastIndexOf(':')
+  // a key from a module of its own is the part id as it is: only a number after the last colon is a mesh number
+  return colon < 0 || !/^\d+$/.test(key.slice(colon + 1)) ? key : key.slice(0, colon)
+}
+
 const hasSize = (s: StaticSolid): boolean => s.half[0] > 0 && s.half[1] > 0 && s.half[2] > 0
 
 const shapeOf = (s: StaticSolid): ShapeDesc => (s.mesh ? { kind: 'trimesh', vertices: s.mesh.vertices, indices: s.mesh.indices } : { kind: 'box', half: s.half })
@@ -79,6 +89,13 @@ export class EngineStatics {
   readonly changed = new Set<BodyId>()
   /** Every body it holds now: what a piece made or put is checked against (`EnginePieces.outOfStatics`; the ground has its own rule). */
   readonly ids = new Set<BodyId>()
+  /** The object each held body is a part of (what a ray that meets the body says about the object). */
+  readonly ownerOf = new Map<BodyId, string>()
+  /** The part of the object each held body draws (the key without its mesh number): what a blow on the body hits. */
+  readonly partOf = new Map<BodyId, string>()
+  /** Changes whenever an answer of `covers` may have (an object came, went, or was fitted again). */
+  coverageRevision = 0
+  private unsure: ReadonlySet<string> = NONE
 
   constructor(
     private readonly world: SeamWorld,
@@ -91,20 +108,36 @@ export class EngineStatics {
     return f !== undefined && f.held.size > 0
   }
 
-  lay(now: ReadonlyMap<string, readonly StaticSolid[]>): void {
+  /**
+   * Whether every part a ray can hit has its body: only then is a ray's miss of its bodies a miss of the object. An object whose list is only partly measured, or leaves out a part the
+   * world still tests (a loose or hidden one), is not covered: `lay`'s `unsure`.
+   */
+  covers(objectId: string): boolean {
+    const f = this.bodies.get(objectId)
+    return f !== undefined && f.held.size > 0 && f.waiting === 0 && !this.unsure.has(objectId)
+  }
+
+  /** `now` is the host's list per object; `unsure` names the objects whose list is not all of what a ray can hit (see `covers`). */
+  lay(now: ReadonlyMap<string, readonly StaticSolid[]>, unsure: ReadonlySet<string> = NONE): void {
     this.changed.clear()
+    if (unsure.size !== this.unsure.size || [...unsure].some((id) => !this.unsure.has(id))) {
+      this.unsure = new Set(unsure)
+      this.coverageRevision++
+    }
     for (const [id, f] of this.bodies) {
       if (now.has(id)) continue
       for (const h of f.held.values()) this.release(h, f.settled)
       this.bodies.delete(id)
+      this.coverageRevision++
     }
     const budget = { triangles: TRIANGLES_PER_UPDATE }
     for (const [id, solids] of now) {
       const f = this.bodies.get(id)
       if (f?.solids === solids && f.waiting === 0) continue
-      const fixed = f ?? { solids, held: new Map<string, Held>(), waiting: 0, settled: false }
+      const fixed = f ?? { objectId: id, solids, held: new Map<string, Held>(), waiting: 0, settled: false }
       this.bodies.set(id, fixed)
       fixed.solids = solids
+      this.coverageRevision++
       this.fit(fixed, budget)
     }
   }
@@ -112,6 +145,7 @@ export class EngineStatics {
   clear(): void {
     for (const f of this.bodies.values()) for (const h of f.held.values()) this.drop(h.id)
     this.bodies.clear()
+    this.coverageRevision++
     this.changed.clear()
   }
 
@@ -162,6 +196,8 @@ export class EngineStatics {
         const id = ids[i]
         f.held.set(x.key, { solid: x.solid, id })
         this.ids.add(id)
+        this.ownerOf.set(id, f.objectId)
+        this.partOf.set(id, partOfKey(x.key))
         this.changed.add(id)
         if (f.settled) this.wakeAround(x.solid)
       })
@@ -197,6 +233,8 @@ export class EngineStatics {
 
   private drop(id: BodyId): void {
     this.ids.delete(id)
+    this.ownerOf.delete(id)
+    this.partOf.delete(id)
     this.world.removeBody(id)
   }
 
