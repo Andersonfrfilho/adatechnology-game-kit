@@ -435,7 +435,21 @@ com no máximo 64 pontos por `reducePoints` (que sempre inclui o extremo de cada
 - **Pedaço plano** (mais fino que 2 × `FLAT_PAD` ao longo da normal) ganha 2,5 mm (`FLAT_PAD`, `vehicle-hulls.ts`; a metade do `MIN_HALF` de 5 mm de `collider-fit.ts`) de cada lado: um casco sem
   volume não é forma. Os pontos copiados são os únicos que não são vértices desenhados.
 - **Sem extrusão para dentro e sem corte por concavidade** (saem a célula de 1,6 m cortada por 3 cm/1 cm, a extrusão de 3 cm e o corte pelo
-  vão da primeira versão da T6.4). O refinamento opcional (C: cortar o pedaço que passar do aceite) **não entra agora**.
+  vão da primeira versão da T6.4).
+- **Saliências finas saem do pedaço** (decisão do dono em 2026-11-26; `hull-split.ts`). Uma saliência é fina (antena, limpador, haste de
+  maçaneta, estribo) quando o casco dela tem no máximo 200 cm³ (`THIN_VOLUME`) e ela passa do corpo do pedaço em mais de 3 cm
+  (`PROTRUSION_REACH`), de um destes dois jeitos: (a) é uma parte conectada do pedaço (cantos soldados a 0,1 mm) de seção fina (os dois
+  lados menores da caixa ≤ 8 cm) que passa da caixa do que não é fino; (b) está soldada ao corpo e seus triângulos são a **cauda** do
+  pedaço (centro a mais de 3 cm além do ponto que guarda 99% da área, em qualquer dos seis eixos). A saliência só sai se ela **esticar** o
+  casco do resto em mais de 40 cm² de superfície flutuante (`FLOATING_AREA`). Ganha o casco dela (chave `peça#célula~n`, n = o primeiro
+  triângulo) e **não estica o casco do corpo**. A peça que já é própria (retrovisor, farol, motor: peça sólida) segue com o casco dela.
+  O K2 vale por casco, contra os vértices de que ele saiu: o extremo da peça continua o desenhado.
+- **Divisão adaptativa** (`hull-plan.ts`): cada pedaço começa com um casco; enquanto algum casco ainda flutua mais de 40 cm² (K3 local:
+  amostras das faces do casco sem nenhum triângulo desenhado do pedaço a menos de 5 cm, `hull-excess.ts`), o que mais flutua (empate:
+  o primeiro da lista) primeiro devolve as saliências que o esticam e depois é cortado **ao meio do maior lado** (a caixa dos centros dos
+  triângulos), até nenhum passar, nenhum poder ser cortado (< 5 cm) ou o modelo chegar ao teto da classe do K7 (`maxHulls`; as peças
+  sólidas contam). **O carro intacto congela o plano** (os cortes e as saliências tiradas, por pedaço); no dano, o pedaço refaz os mesmos
+  cortes sobre os vértices novos e as alças (chaves) ficam as mesmas.
 
 Casco é a peça **fina** (painel, assoalho, teto, vidro), nunca o volume da cabine: o interior fica oco e um banco solto cai sobre o assoalho
 e sai pela porta que não está mais lá (seção 11).
@@ -464,7 +478,7 @@ de 1 cm; a "esfera" é o primeiro toque de uma bola de r = 10 cm sobre esse mapa
 |---|---|---|
 | K1 | O tiro acerta o desenhado (`surfaceRay`); o casco só acha candidatos | sempre |
 | K2 | Encosto exato: para cada peça e cada uma das 26 direções, o extremo dos cascos dela é o extremo dos vértices desenhados dela | ≤ 1 mm (o casco de um pedaço plano pode passar os 2,5 mm do `FLAT_PAD`) |
-| K3 | §12: nenhuma esfera toca casco sem tocar o desenhado com raio r + 3 cm | 0 |
+| K3 | §12: nenhuma esfera toca casco sem tocar o desenhado com raio r + 3 cm | catraca por grupo, só diminui (10.3.1; a regra pede 0) |
 | K4 | Excesso para fora: esferas com o casco mais de 3 cm à frente do desenhado, relatadas por grupo (de baixo, de cima, lateral) | ≤ o medido na frota no merge, e só pode diminuir (catraca gravada, como a do §13) |
 | K5 | Não afunda: esferas com o casco mais de 5 cm atrás do desenhado, ou sem casco | ≤ 1% por modelo |
 | K6 | Peça sólida: um casco, só de vértices desenhados; rodas fora do chassi | teste |
@@ -478,6 +492,30 @@ concavidade, 1 172 a 1 401 cascos por carro) não passava H2 e H3 e pesava 83 MB
 **Tetos antigos (H6, estimativa da T3.0b, e a medida da primeira versão):** moto e bicicleta 32 (medido 200) · carro, SUV, picape, van 96
 (medido 1 450) · caminhão 160 · ônibus 192 (medido 2 000) · trator 96 · blindado 96 · avião leve 128 · helicóptero 96 · barco 64–192. Os
 tetos do método B (K7) são medidos na T6.4, `evidence.md` `## T6.4`, "Método B".
+
+#### 10.3.1 Exceção ao §12 para o K3 (decisão do dono em 2026-11-26)
+
+O §12 do kit ("nada colide sem desenho") pede 0. Para veículo, **dentro dos tetos de casco do K7**, o casco convexo de uma peça côncava pode
+encostar em esferas que não tocam o desenhado, **por grupo de direção** (de baixo, de cima, lateral) e **só diminuindo**: a catraca é
+`tests/fixtures/hull-floating-ledger.json` (esferas por modelo e por grupo, o mesmo formato da do K4, baixada com `UPDATE_HULL_EXCESS=1`,
+nunca subida). Medido na T6.4 depois das saliências e da divisão (parte das esferas que tocam o desenhado, em todas as direções; o
+pior modelo de cada classe; `evidence.md` `## T6.4`, "Saliências e divisão"):
+
+| Classe | de cima | de baixo | lateral |
+|---|---|---|---|
+| carro | até 6,7% | até 9,4% | até 3,3% |
+| SUV | 8,2% | 10,4% | 3,4% |
+| picape | 10,4% | 21,0% | 9,5% |
+| van | 6,3% | 7,8% | 3,0% |
+| `heavy` | 11,5% | 15,0% | 7,0% |
+| moto e bicicleta | 9,0% | 8,6% | 6,0% |
+| trator | 7,0% | 14,6% | 9,8% |
+| militar | 8,4% | 12,7% | 6,4% |
+| aéreo | 7,4% | 8,6% | 4,6% |
+| barco | 14,3% | 10,6% | 16,0% |
+
+Sem o teto de casco o mesmo algoritmo leva o `family_hatch` a 1,1% (1 678 cascos): **o que sobra do K3 é o preço do teto do K7**, não do
+método. Quem quiser menos esfera flutuando sobe o teto da classe (decisão do dono) ou reduz o desenho (menos vincos e nervuras).
 
 A T6.0b mede o custo de contato e de `LinearCast` de um `MutableCompoundShape` com 96 e 192 filhos (a forma mutável **não tem árvore**: o
 teste de contato é linear nos filhos); se pesar, o composto volta a ser `StaticCompoundShape` (com árvore) assim que o carro assenta, e o
