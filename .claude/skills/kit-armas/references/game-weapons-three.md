@@ -150,7 +150,7 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 
 ## Peças soltas no motor (spec 008, T4.3)
 - `createWeaponFx({ physics })` (um `SeamWorld`): as cápsulas dos modelos da galeria viram corpos do motor (`casingCollider`, C_rr 0,015, varridos), rolam e dormem pelo chão do mundo; o laço do host dá o passo. Sem a opção, o salto próprio de antes.
-- `spawnLoose` / `syncLoose` / `dropLoose` põem a peça solta no mundo, copiam a pose para a malha e a tiram. A granada (`explosiveCollider`) **saiu** da T4.3 (reaberta): sem amortecimento artificial ela repousa em 5,4 s de mediana (limite 5); ver `evidence.md`.
+- `explosiveCollider(THREE, 'm67')`: a granada como desenhada (as medidas de `M67_PARTS` são as do desenho e do colisor: uma fonte só), C_rr 0,015, **sem amortecimento artificial** (decisão do dono, 2026-11-26: ela rola e balança sobre a espoleta, o limite é repouso em ≤ 6,5 s e ≤ 8 m, não os 5 s da esfera). `spawnLoose` / `syncLoose` / `dropLoose` põem a peça no mundo, copiam a pose para a malha e a tiram.
 - Limites: a sala de teste ainda lança a granada com a balística própria; cápsulas de `box-fx` e carregadores seguem no salto próprio. Teste: `tests/engine-loose.test.ts`.
 
 ## O que ainda vem pela migração (spec 001)

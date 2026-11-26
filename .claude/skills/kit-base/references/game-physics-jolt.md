@@ -49,7 +49,7 @@ const loop = createPhysicsLoop(world) // um laço por mundo
 
 ## Personagem e peças soltas (fase 4)
 - Personagem: `CharacterVirtual` do Jolt por `CharacterId` (sem corpo interno: entulho o atravessa); `pushCharacter` soma `impulso / massa` e some com constante de 0,25 s; `dispose` do mundo libera o que sobrar. `setContinuous` = `LinearCast`.
-- B2 em produção (T4.3, reaberta): 200/200 cápsulas dormindo a 5 s. A granada como desenhada (C_rr 0,015, sem amortecimento) repousa em 5,4 s de mediana (limite 5) e ficou fora do PR; ver `evidence.md`.
+- B2 em produção (T4.3): granada como desenhada (composto de corpo, espoleta e alavanca, C_rr 0,015, sem amortecimento) em repouso até 5,95 s e ≤ 7,39 m do pouso em 48 arremessos semeados (limite do dono: 6,5 s e 8 m); 200/200 cápsulas dormindo a 5 s. Margem fina: medir de novo ao mexer em rolamento ou sono.
 
 ## Cuidados
 

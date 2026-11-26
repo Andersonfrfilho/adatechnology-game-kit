@@ -3313,6 +3313,51 @@ Leitura: a esfera lisa com C_rr 0,015 leva 12,8 s (Coulomb: 0,015 g = 0,15 m/s²
 
 **Reaberta.** A T4.3 volta a 🔄 no `tasks.md`. **Saiu do PR #518:** `explosiveCollider` (colisor da granada), o amortecimento, o teste de aceite da granada (cena aberta, varredura de 18, parede) e os testes do colisor; os textos de README e skills foram ajustados. **Ficou:** `casingCollider`, `spawnLoose`/`syncLoose`/`dropLoose`, `createParticles` com mundo, 200/200 cápsulas dormindo e `M67_PARTS` (o desenho segue lendo as medidas). A decisão que falta ao dono: aceitar que a granada só com C_rr 0,015 repousa em torno de 5,4 s (e mudar o limite), ou outro C_rr/colisor para a granada, ou o `sleepSpeed` do kit.
 
+### Limite novo, decisão do dono (2026-11-26)
+
+**Decisão do dono:** o limite de 5 s foi escolhido para uma esfera; a granada desenhada (corpo, espoleta, alavanca) rola e balança. O novo limite da granada é **dormir em ≤ 6,5 s e ≤ 8 m do pouso, sem nenhum amortecimento artificial**, só com C_rr 0,015. Cápsulas seguem em ≥ 95% de 200 dormindo a 5 s.
+
+**O que voltou:** `explosiveCollider` (de `e40ae97b1`/`ff790ea97`, sem `GRENADE_ROLLING_DAMPING`, sem o campo `damping`) e os testes de aceite da granada com o limite novo (`GRENADE_REST_LIMIT_S` 6,5 e `GRENADE_REACH_LIMIT_M` 8): chão aberto, parede a 8 m, varredura de 18 e dois lotes de 24 arremessos semeados (`tests/engine-loose.test.ts`; semente = pose, velocidade e giro por `mulberry32`). O teste "colisor igual ao desenho" (pedido pela revisão do #518) agora compara com o modelo desenhado a posição da espoleta (x, y, z), a da alavanca, **o sinal e o valor da inclinação da alavanca** (quaternião inteiro) e a esfera, não só a esfera.
+
+Mesma máquina, `KIT_WORLD`, chão de produção, C_rr 0,015, sem amortecimento. Sementes 200 a 223 são as da calibração; **300 a 323 estão fora dela**.
+
+| Semente | repouso (s) | do pouso (m) | | Semente | repouso (s) | do pouso (m) |
+|---|---|---|---|---|---|---|
+| 200 | 5.6 | 5.27 | | 300 | 5.29 | 5.36 |
+| 201 | 5.22 | 6.12 | | 301 | 5.02 | 4.96 |
+| 202 | 5.47 | 4.17 | | 302 | 5.77 | 4.07 |
+| 203 | 5.68 | 5.23 | | 303 | 5.4 | 4.57 |
+| 204 | 5.57 | 5.36 | | 304 | 5.09 | 3.91 |
+| 205 | 5.38 | 5.99 | | 305 | 4.88 | 3.88 |
+| 206 | 5.43 | 5.23 | | 306 | 5.27 | 5.37 |
+| 207 | 5.54 | 4.18 | | 307 | 5.9 | 6.09 |
+| 208 | 5.39 | 5.73 | | 308 | 4.89 | 4.5 |
+| 209 | 5.21 | 4.15 | | 309 | 5.55 | 3.66 |
+| 210 | 4.28 | 4.8 | | 310 | 5.33 | 4.82 |
+| 211 | 5.39 | 4.83 | | 311 | 5.33 | 3.98 |
+| 212 | 5.06 | 5.36 | | 312 | 5.32 | 4.34 |
+| 213 | 4.68 | 5.09 | | 313 | 5.58 | 4.96 |
+| 214 | 4.03 | 4.04 | | 314 | 5.77 | 4.27 |
+| 215 | 5 | 3.88 | | 315 | 5.54 | 4.01 |
+| 216 | 5.29 | 5.06 | | 316 | 5.09 | 4.03 |
+| 217 | 5.95 | 6.5 | | 317 | 5.38 | 5.39 |
+| 218 | 5.84 | 5.22 | | 318 | 5.9 | 6.22 |
+| 219 | 4.91 | 4.74 | | 319 | 5.38 | 5.1 |
+| 220 | 5.13 | 5.07 | | 320 | 5.49 | 5.06 |
+| 221 | 5.3 | 5.26 | | 321 | 5.31 | 5.52 |
+| 222 | 5.08 | 4.97 | | 322 | 5.85 | 7.39 |
+| 223 | 5.54 | 5.12 | | 323 | 5.86 | 4.27 |
+
+| Cena | Repouso | Do pouso | Limite |
+|---|---|---|---|
+| chão aberto (11 m/s, sobe 4 m/s, de 1,5 m) | 5,51 s | 5,45 m | ≤ 6,5 s, ≤ 8 m |
+| varredura de 18 (10/11/12 m/s, 3/4/5, giro 0/6) | 2,68 a 5,74 s | até 6,40 m | idem |
+| parede a 8 m | 1,72 s | 7,89 m do arremesso (0,14 m do pouso) | ≤ 6,5 s, ≤ 8 m |
+| sementes 200-223 | 4,03 a 5,95 s (mediana 5.34 s) | até 6,50 m | idem |
+| sementes 300-323 (fora da calibração) | 4,88 a 5,90 s (mediana 5.38 s) | até 7,39 m | idem |
+
+Margens: pior repouso 5,95 s de 6,5 (0,55 s); pior distância 7,39 m de 8 (semente 322; a parede a 8 m do arremesso fica em 7,89 m, igual ao desenho do gate). **T4.3 fechada (✅).** Cápsulas: 200/200 dormindo, 0 abaixo do chão (inalterado).
+
 ## T4.4 — Juntas dos interativos (2026-11-26)
 
 2026-11-26, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz), o `update` do mundo a 60 Hz.
