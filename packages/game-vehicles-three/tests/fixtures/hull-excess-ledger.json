@@ -65,7 +65,7 @@
     "side": 4328
   },
   "city_bus": {
-    "above": 9539,
+    "above": 9540,
     "below": 22159,
     "side": 5954
   },
@@ -340,7 +340,7 @@
     "side": 2781
   },
   "v8_coupe": {
-    "above": 4531,
+    "above": 4534,
     "below": 10547,
     "side": 3261
   }
