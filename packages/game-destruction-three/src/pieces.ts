@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Vec3 } from '@adatechnology/game-destruction'
+import type { DestructionWorld, RayBroadPhase, Vec3 } from '@adatechnology/game-destruction'
 import { AwakeList } from './awake-list'
 import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
@@ -9,6 +9,8 @@ import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
 import type { PhysicsLoop } from '@adatechnology/game-physics'
+import { createEngineImpacts } from './engine-impacts'
+import type { EngineImpactsOptions } from './engine-impacts'
 import { EnginePieces, groundTileKey, tileRollingAt } from './engine-pieces'
 import type { StaticSolid } from './engine-pieces'
 import type { GroundGrid } from './engine-ground'
@@ -87,6 +89,8 @@ export interface PieceSystemOptions {
   physics: PiecePhysics
   /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
   staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
+  /** With `staticSolids`: the objects whose list is not all of what a ray can hit. */
+  staticUnsure?: () => ReadonlySet<string>
 }
 
 /** Slower than this (m/s) into a wall a piece only stops against it: no blow, no sound. */
@@ -453,6 +457,7 @@ export class PieceSystem {
           ...(o.blastGroundTiles !== undefined ? { blastTiles: o.blastGroundTiles } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,
+          staticUnsure: o.staticUnsure,
           sweep: o.sweep,
           onSlam: o.onSlam,
           onKnock: o.onKnock,
@@ -464,6 +469,16 @@ export class PieceSystem {
       : null
     this.groundWorker = o.groundWorker ?? null
     if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)
+  }
+
+  /** Contact blows on the fixed parts become `blunt` hits of `destruction` (`engine-impacts.ts`); null when the pieces are not in the engine's loop. Returns the way to stop it. */
+  contactHits(destruction: DestructionWorld, options?: EngineImpactsOptions): (() => void) | null {
+    return this.engine && this.loop ? createEngineImpacts(this.loop, this.engine.statics, destruction, options) : null
+  }
+
+  /** The engine's fixed bodies as the broad phase of the world's rays, or null when the pieces are not in the engine. */
+  rayBroadPhase(): RayBroadPhase | null {
+    return this.engine?.rayBroadPhase() ?? null
   }
 
   /**

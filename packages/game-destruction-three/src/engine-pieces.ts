@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Vec3 } from '@adatechnology/game-destruction'
+import type { RayBroadPhase, Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, JointId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 import { samePatch } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
@@ -16,6 +16,7 @@ import type { PendingGround } from './engine-ground-schedule'
 import { SOLID_RING } from './engine-ground-ring'
 import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameNumbers, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
+import { createEngineRayBroadPhase } from './engine-rays'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
 import { HINGE_RELEASE } from './internal'
@@ -48,6 +49,8 @@ export interface EnginePieceOptions {
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
+  /** The objects whose `staticSolids` list is not all of what a ray can hit (measured in part, or a loose or hidden part left out): the ray broad phase tries them whatever the engine says. */
+  readonly staticUnsure?: () => ReadonlySet<string>
   readonly sweep?: (piece: PieceBody, from: Vec3, to: Vec3) => PieceSweepHit | null
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
@@ -310,6 +313,11 @@ export class EnginePieces {
     this.statics = new EngineStatics(world, GROUND)
     this.schedule = o.groundWorker ? new GroundSchedule(o.groundWorker, Math.max(1, Math.round(o.groundWorkerFrames ?? GROUND_WORKER_FRAMES))) : null
     if (this.schedule) this.warmGround(this.schedule)
+  }
+
+  /** The fixed bodies as a broad phase for the destruction world's rays (`engine-rays.ts`). */
+  rayBroadPhase(): RayBroadPhase {
+    return createEngineRayBroadPhase(this.world, this.statics)
   }
 
   /** The worker's first job, a sloped tile with steps away from the host's ground (no host call): its code is parsed and hot before the first blast asks for real ones. */
@@ -1522,7 +1530,7 @@ export class EnginePieces {
   /** The host's fixed boxes, one static body per object (`EngineStatics`). */
   private layStatics(): void {
     const now = this.o.staticSolids?.()
-    if (now) this.statics.lay(now)
+    if (now) this.statics.lay(now, this.o.staticUnsure?.())
   }
 
   private keepApart(apart: ReadonlySet<string>): void {

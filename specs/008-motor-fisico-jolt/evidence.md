@@ -3998,3 +3998,73 @@ Cada R0 de quadrúpede custa o mesmo que um de pessoa ou menos (0,5 a 0,8 ms con
 
 **Para o dono ver na sala (§5, sem GPU aqui)**: um cão e uma vaca mortos em 1ª e 3ª pessoa caindo na escada; o desenho do cadáver de bicho ainda é a pose fixa (o R0/R1 de bicho com esqueleto desenhado é a T5.4a, que serve a pessoa e o bicho). Não escolhi limites de cauda e orelhas: ficam fora do R0.
 
+
+## T7.1 — multidão no motor (2026-11-26) — ✅
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; outras sessões usando a máquina (carga 7 a 22 durante as medições).
+
+**O que já existia (não recriado):** `createCorpseBodies` e `relocateCorpse` (Fase 5), o teste `corpse-physics-hash.test.ts` (hash e registro de cadáveres iguais sem empurrão) e `relocate.test.ts` (caso empurrado), a camada `corpse` e a tabela `LAYER_PAIRS` (`agent` sem par com `agent` nem `static`), `moveKinematic`, junta de dobradiça com `breakImpulse` e `brokenJoints` no contrato. O spike de `game-physics-jolt/tests/crowd.test.ts` media 1 000 agentes a 0,29 ms só no passo do mundo.
+
+**O que mudou:** `packages/game-crowd/src/engine-agents.ts` (`createAgentBodies`: uma cápsula cinemática por agente da loja, fase `crowd` do laço, `moveKinematic` com o passo do laço; a cápsula `i` segue o agente `i`, também depois de um `remove`), `engine-doors.ts` (`createDoorBodies`: folha dinâmica de 40 kg na camada `prop` numa dobradiça com `breakImpulse` 40; ao romper, `doors.hit` com a vida toda da porta; porta aberta ou quebrada por outra causa perde a folha, porta fechada de novo ganha uma), `tests/physics/engine-agents.test.ts` (3 testes), script `test:cost` do `game-crowd`, `@adatechnology/game-physics` de `devDependencies` para `dependencies` (os tipos aparecem no `.d.ts`), README e skill.
+
+**Números** (`pnpm --filter @adatechnology/game-crowd test:cost`, sob `perf-measure.lock`; 1 000 agentes e uma porta, `KIT_WORLD` 120 Hz, mediana e p99 de um passo com a fase `crowd` e o passo do mundo): carga 22 → 0,474 / 0,727 ms; carga 7 (três rodadas) → 0,340 / 0,537, 0,336 / 0,560, 0,336 / 0,495 ms. Limite do `spec.md` §6.2: 0,5 / 1,0 ms. A porta cede em 2,275 s. O limite em ms só é cobrado com `PHYSICS_COST=1`.
+
+**Gates:** `pnpm --filter @adatechnology/game-crowd test` 26 arquivos, 147 testes verdes (inclui `team-golden` e `state-hash`, sem golden alterado); `pnpm --filter @adatechnology/game-crowd-three test` 9 arquivos, 48 testes verdes; typecheck e eslint dos arquivos novos limpos; `kit-audit --check` sem novos.
+
+## T7.2 — consultas e broadphase do motor (2026-11-26) — ✅ (o mundo de destruição visita só os candidatos: 500 paredes e 1 000 raios em 3,5 ms contra 14,9 ms sem o motor)
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 2 a 7 nas medições de custo, sob `perf-measure.lock`.
+
+**O que já existia:** no contrato e no adaptador, `rayAll` (vários acertos, mais perto primeiro), `rayFirst`, `overlapSphere`, `sphereCastAll` (esfera varrida) e `overlapShape`; corpos criados no mesmo quadro e adormecidos aparecem nas consultas (`queries.test.ts`: `seesFresh`, `seesSleeping`). O `game-destruction` já tinha broad phase própria (esfera de cada objeto, grade de partes) e o `surfaceRay` dos hospedados.
+
+**O que mudou:** `RayBroadPhase` e `DestructionWorld.setRayBroadPhase` (`game-destruction`, acréscimo; `raycastInternal` pula o objeto que o gancho prova fora do caminho; o raio do `sweepBox` segue com o escopo dele); `game-destruction-three/src/engine-rays.ts` (`createEngineRayBroadPhase`: esfera varrida de 25 cm mais a esfera da origem contra a camada `static`, objetos pelos corpos de `EngineStatics.ownerOf`; objeto do qual o motor não tem todas as partes — `covers` falso — é sempre tentado); opção `rayBroadPhase: true` do renderizador (desligada por padrão); `queries.test.ts` passa a cobrar 1 000 raios de primeiro acerto em 2 ms na faixa de custo.
+
+**Números** (`pnpm --filter @adatechnology/game-physics-jolt test:cost`, `tests/queries.test.ts`, rua de 3 casas, 10 carros, 300 agentes): 1 000 raios de primeiro acerto, mediana 1,575 e 1,365 ms (limite 2 ms); 1 000 raios com vários acertos 2,23 e 1,96 ms (1,3 acertos por raio); o caminho próprio, 8,4 e 7,9 ms; esfera varrida de 200 raios 1,0 ms.
+
+**Mesmo resultado:** `game-destruction-three/tests/engine-rays.test.ts`: 500 paredes no mundo real de destruição, 1 000 raios com e sem o gancho dão o mesmo objeto, parte e distância; o gancho dispensa 99,9 % dos objetos por raio. `pnpm --filter @adatechnology/game-destruction test`: 90 arquivos, 699 testes; `game-destruction-three test`: 112 arquivos, 855 testes (6 pulados, solver próprio); typecheck e eslint limpos.
+
+**Ganho do mundo de destruição (correção da medida anterior).** A primeira versão media 72 ms com o motor contra 61 ms sem (500 paredes, 1 000 raios) e a explicação dada era que iterar só os candidatos perderia a ordem de desempate. As duas coisas estavam erradas, e o problema real era a medida: o teste ligava só as 500 paredes ao renderizador e as paredes (três painéis sem junta) se partiam em 1 500 objetos; os 1 000 pedaços soltos nunca ganharam corpo no motor, ficavam sempre "não cobertos" e eram sempre tentados. O gancho dispensava 99,9 % das 500 paredes, mas o laço continuava nos 1 500 objetos.
+
+**O que mudou agora:** o gancho ganha `candidates` (`met()` os objetos que o raio fino encontrou, `covers(id)` se o motor tem todas as partes do objeto, `revision()` que muda quando algum `covers` pode ter mudado; `EngineStatics.coverageRevision`). O `raycast` do mundo visita só os objetos encontrados mais os não cobertos (lista refeita só quando a revisão ou o conjunto de objetos muda), **na ordem de inserção de `objects`** (cada objeto guarda seu lugar em `slots`: chave reposta mantém o lugar, apagada e acrescentada de novo vai para o fim, como no `Map`), de modo que o empate exato vai para o mesmo objeto do laço de antes. Se mais da metade dos objetos não está coberta, o mundo faz o laço de todos (como antes). O teste `engine-rays.test.ts` passa a usar paredes de painéis juntos (um objeto cada).
+
+**Números** (`engine-rays.test.ts`, 500 paredes, 1 000 raios, mediana de 5 rodadas alternadas, sob `perf-measure.lock`, **carga 14 a 15 de outras sessões**, três execuções): com o motor e `candidates` 3,5 / 3,5 / 3,7 ms; com o motor perguntando `mayMeet` a cada objeto (o caminho antigo) 14,0 / 13,9 / 14,7 ms; sem o motor 14,9 / 14,7 / 15,0 ms. Ou seja, 4 vezes mais rápido que os dois caminhos de antes. O mesmo teste com os 1 500 objetos, dos quais 1 000 sem corpo (a medida antiga): 75,9 ms com o motor e `candidates` caindo para o laço de todos, 77,1 ms no caminho antigo, 57,1 ms sem o motor: o motor sozinho custa mais do que o laço quando quase nada é coberto.
+
+**Mesmo resultado, inclusive no empate:** o teste compara os três caminhos nos 1 000 raios (mesmo objeto, parte e distância); `tie`: duas paredes exatamente no mesmo lugar, mesmo objeto nos dois caminhos, também depois de uma ser apagada e acrescentada de novo (então a outra vence) e com um objeto sem corpo no motor antes da parede com que empata (ele vence); `game-destruction/tests/raycast-broad-phase.test.ts`: o mesmo, no mundo sozinho com um gancho falso (ordem em que o motor nomeia os objetos não muda o resultado). A opção `rayBroadPhase` continua **desligada por padrão**: o ganho existe quando o host liga todos os objetos ao renderizador, que é a condição de "coberto"; objeto sem corpo é sempre tentado, e com o motor devolvendo candidatos o custo extra é a consulta de esfera varrida (cerca de 1,4 ms por mil raios, acima). Proposta, sem ligar: ligar por padrão só depois de medir numa cena do jogo com todos os objetos ligados.
+
+## T7.3 — blast, fragmentos e sensores de fumaça (2026-11-26) — ✅
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 4 a 5, sob `perf-measure.lock`.
+
+**O que já existia:** `rayFirst`, `overlapSphere`, `sensorEvents` e a camada `sensor` no contrato e no adaptador; o spike de `queries.test.ts` media 300 raios + sobreposição + 2 linhas de visada em 0,37 ms. O `game-destruction` tem o próprio cálculo de fragmentos do casco (`blast-fragments.test.ts`) e, desde a T7.2, pode usar os corpos fixos do motor como broad phase dos raios dele (inclusive os do blast, que passam por `raycastInternal`). `game-weapons` e `game-vfx` não conhecem o motor e não foram tocados.
+
+**O que mudou:** `game-physics/src/blast-query.ts` (`createBlastQuery`: 300 direções iguais sobre a esfera feitas uma vez, `rayFirst` por fragmento, `overlapSphere` do raio e `rayFirst` do centro a cada corpo com a cobertura `static`/`prop`/`debris`/`vehicle`; resultado em arrays tipados reaproveitados) e `sensor-volumes.ts` (`createSensorVolumes`: esfera na camada `sensor`, `add`/`move`/`remove`, entra e sai pela fase `contacts` do laço), exportados; `game-physics-jolt/tests/blast-query.test.ts` (3 testes), README e skill.
+
+**Números** (`PHYSICS_COST=1`, três rodadas, um blast no meio de 300 agentes com 300 raios e cerca de 190 linhas de visada): mediana 0,686 / 0,679 / 0,680 ms, p99 0,82 / 0,96 / 0,87 ms. Limite do `spec.md` §6: 1 ms.
+
+**Gates:** `game-physics-jolt test`: 40 arquivos, 177 testes verdes (1 arquivo e 2 testes pulados, como antes); `game-vfx test` 437 e `game-weapons test` 596 verdes; typecheck do `game-physics` e eslint dos arquivos novos limpos.
+
+## T7.4 — reação em cadeia (2026-11-26) — **parcial, sem ✅: a mediana e o p99 do caso 5b e o quadro de despertar do caso 5 não fecham; números abaixo, decisão do dono**
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; três rodadas sob `perf-measure.lock`, carga 1,8 a 2,5 (outras sessões na máquina).
+
+**O que já existia:** o spike do caso 5 (`cascade.test.ts`: a lata de gás vira bomba por um golpe de 150 N s lido das linhas de contato dentro do próprio teste, a parede de 400 blocos, a laje, 50 caixas; hash determinístico) e o caso 5b (`cascade-tail.test.ts`: 500 candidatos, a receita de produção `WakeQueue` + `physicsPieceCount` + `chooseForPhysics`, no `KIT_WORLD`); `ContactBuffer.impulse` e `approach` no contrato; as linhas de contato do `EnginePieces.knock` só tocavam som.
+
+**O que mudou:** `game-physics/src/impact-reader.ts` (`createImpactReader`: o golpe mais forte de cada corpo no quadro, dito uma vez na fase `contacts`, tabela de busca e arrays feitos uma vez; uma linha de contato não aloca, um golpe dito aloca poucos bytes — o objeto `Impact` reaproveitado); `game-destruction-three/src/engine-impacts.ts` (`createEngineImpacts`: golpe numa parte fixa desenhada vira `hitPart(objeto, parte, { type: 'blunt', energy ≈ impulso × velocidade / 2, direction, point })`, até 32 partes por quadro, mínimo 30 N s) com `EngineStatics.partOf`, `PieceSystem.contactHits` e a opção `contactHits` do renderizador (desligada por padrão); o caso 5 passou a ler os golpes pelo `createImpactReader` (o **hash da simulação é o mesmo, `645d812254fd0a98`**); testes `engine-impacts.test.ts` (uma caixa jogada na parede dá `hitPart` blunt com 300 a 1 500 J, direção -z) e `cascade.test.ts` (alocação por golpe dito < 200 bytes; crescimento do heap de JS do caso 5 < 2 MB).
+
+**Números** (3 rodadas, faixa de custo):
+
+| Medida | Limite (`spec.md` §6.2 / cond. 10) | Medido | |
+|---|---|---|---|
+| Caso 5b, quadro de despertar, receita de produção, aquecido | ≤ 10 ms | 6,3 a 8,2 ms (9 execuções) | passa |
+| Caso 5b, mediana dos 3 s, aquecido | ≤ 0,6 ms | 0,607 / 0,614 / 0,612 / 0,631 / 0,651 / 0,659 / 0,711 / 0,728 / 0,732 | **não fecha** (3 de 9 até 0,62; 6 de 9 acima de 0,65) |
+| Caso 5b, p99 dos 3 s, aquecido | ≤ 4,0 ms | 3,69 a 4,29 ms | **na beira** (4 de 9 acima de 4,0) |
+| Caso 5b, quadro de despertar, a frio (primeiro da processo) | (não está na tabela) | 15,9 a 18,9 ms | registrado |
+| Caso 5, mediana depois do golpe | ≤ 0,6 ms | 0,45 | passa |
+| Caso 5, p99 depois do golpe | ≤ 4,0 ms | 5,1 a 6,0 | **não fecha** |
+| Caso 5, maior quadro (318 corpos acordam de uma vez, sem a fila) | ≤ 10 ms | 11,8 a 15,0 | **não fecha** |
+| Heap de JS no caso 5 | estável | -0,6 a -0,8 MB (cai) | passa |
+| Heap do wasm, `heap.test.ts` | estável | 0 por ciclo nos 11 cenários | passa |
+
+Os limites que passam estão cobrados na faixa de custo (`cascade-tail`: despertar ≤ 10 ms; `cascade`: heap de JS). Os que não fecham **não foram cobrados nem afrouxados**: ficam no relatório. O caso 5 acorda 318 corpos de uma vez (rajada), que a produção não faz: a fila do 5b espalha o despertar e fica a 6 a 8 ms; a mediana e o p99 do 5b (0,6 / 4,0) são o que depende de decisão do dono (subir os limites para a faixa medida, ou otimizar o passo de 500 corpos acordados).
+
+**Gates:** `game-physics-jolt test` 40 arquivos, 178 testes verdes; `game-destruction-three test` 112 arquivos (uma rodada com 2 falhas de tempo-limite de 5 s com carga 18 de outras sessões, os mesmos arquivos passam sozinhos); typecheck e eslint dos arquivos tocados limpos.

@@ -6,7 +6,7 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import type { DestructibleSpec, Vec3 as DVec3 } from '@adatechnology/game-destruction'
 import type { BodyId, RayHit, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
-import { ground, report, stats } from './scenes'
+import { expectCostAtMost, ground, report, stats } from './scenes'
 
 /** A house shell as wall panels (1 x 1 m, 20 cm thick) on a 10 x 8 m plan, two storeys: 288 boxes, plus a slab per storey. */
 const housePanels = (ox: number, oz: number): Array<{ center: Vec3; half: Vec3 }> => {
@@ -151,6 +151,8 @@ describe('case 6: ballistics and queries', () => {
       rowAgentsHit: row.length, rowSorted: row.every((h, i) => i === 0 || h.distance >= row[i - 1].distance), rowUsers: row.slice(0, 3).map((h) => h.user),
       seesFresh, sleepingCar, seesSleeping, smokeEntered: entered, smokeLeft: left, agentsInSmokeNow: inside, bodies: world.bodyCount,
     })
+    // spec.md 6: 1 000 first-hit rays in 2 ms (the cost lane), the spike's number being 1.6 ms
+    expectCostAtMost(stats(first).median, 2)
     expect(row.length).toBe(30)
     expect(seesFresh && seesSleeping).toBe(true)
     expect(entered).toBeGreaterThan(0)

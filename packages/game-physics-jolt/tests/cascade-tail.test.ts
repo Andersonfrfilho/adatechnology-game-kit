@@ -6,7 +6,7 @@ import { KIT_WORLD, PhysicsCostMeter, WakeQueue, chooseForPhysics, physicsPieceC
 import type { BodyDesc, Vec3, WorldDesc } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
-import { ground, report, stats } from './scenes'
+import { expectCostAtMost, ground, report, stats } from './scenes'
 
 interface Tail {
   readonly bodies: number
@@ -99,6 +99,8 @@ describe('case 5b: cascade tail (gate 0 B6), cold and warm', () => {
     for (let i = 0; i < WARM_RUNS; i++) {
       const warm = await tail(MODE)
       report('cascade-tail', { phase: 'warm', run: i + 1, wake: MODE, wokeInOneFrame: warm.woke, firstFrameMs: ms(warm.firstFrameMs), first1s: stats(warm.steps.slice(0, 60)), all3s: stats(warm.steps), head: warm.steps.slice(0, 12).map(ms), over5ms: over(warm.steps, 5), over6ms: over(warm.steps, 6) })
+      // condition 10: the frame the island wakes in costs at most 10 ms, the production recipe (`queue`) warm; the median and the p99 of the 3 s (0.6 / 4.0 ms, spec.md 6.2) are in the report, not here: see evidence.md T7.4
+      if (MODE === 'queue') expectCostAtMost(warm.firstFrameMs, 10)
       if (MODE === 'burst') expect(warm.woke).toBe(500)
       if (MODE !== 'burst') expect(warm.bodies).toBe(250)
     }

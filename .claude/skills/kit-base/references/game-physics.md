@@ -67,3 +67,6 @@ Não há testes próprios neste pacote (só tipos e o laço); os testes que roda
 - `PhysicsFrame.stepMs`: milissegundos dos passos fixos do último quadro.
 - `velocityIterations` é opção do mundo; padrão do `KIT_WORLD` 32 (decisão do dono, 2026-11-14).
 
+## Explosão e sensores (fase 7)
+`createBlastQuery(world).run({ origin, radius })` acha ~300 fragmentos (primeiro acerto), os corpos no raio e a linha de visada a cada um (`visible`; coberta por fixo, prop, destroço e veículo; gente não cobre), com buffers reaproveitados; só acha, o que a explosão faz é de quem chama. `createSensorVolumes(loop, { onEnter, onExit })` põe esferas na camada `sensor` (fumaça, gás) e avisa quem entra e sai na fase `contacts`; `move` para a nuvem que anda.
+`createImpactReader(loop, { minImpulse, onImpact })` dá o golpe mais forte de cada corpo no quadro (impulso, velocidade de aproximação, ponto, normal), uma vez, na fase `contacts`; o `game-destruction-three` o liga em `hitPart` blunt nas partes fixas (`contactHits: true` no renderizador, desligado por padrão).

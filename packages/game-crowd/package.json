@@ -41,18 +41,19 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cost": "mkdir -p ~/.cache/adatechnology-game-kit && PHYSICS_COST=1 flock ~/.cache/adatechnology-game-kit/perf-measure.lock vitest run tests/physics/engine-agents.test.ts"
   },
   "dependencies": {
     "@adatechnology/game-characters": "workspace:^",
-    "@adatechnology/game-contracts": "workspace:^"
+    "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^"
   },
   "devDependencies": {
     "@adatechnology/game-animals": "workspace:^",
     "@adatechnology/game-animals-species": "workspace:^",
     "@adatechnology/game-characters-undead": "workspace:^",
     "@adatechnology/game-infection": "workspace:^",
-    "@adatechnology/game-physics": "workspace:^",
     "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",

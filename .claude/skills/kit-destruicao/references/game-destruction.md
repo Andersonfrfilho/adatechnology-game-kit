@@ -103,3 +103,6 @@ Detalhes e números no README do pacote; exemplos de pilares e vigas em `tests/b
 - Destruição passa a usar o futuro `game-vfx` para os efeitos (E4).
 - Solo (T10 §8): `DestructibleSpec.soil` (id ou camadas) liga o solo; sem ele nada muda. Sapata/radier = molas `E/(B(1−ν²)Iw)` que cedem a 3·qa; peça sobre `terrain` ganha sapata de 0,6 m; `structure.pile` = estaca (Décourt-Quaresma). O objeto recalca, inclina (desaprumo 1/200, P-delta) e tomba quando o centro de massa passa da borda (`settle` → `collapse`). `ObjectState.soil` e `position`/`rotation` já com o recalque; `setTransform` dá a pose do host. Opções em `soil` (`SOIL_DEFAULTS`).
 - `contains.outflow`: direção (local) em que o fluido sai pelo furo (água da manta da cobertura: `[0, -1, 0]`); sem ela sai pelo furo.
+
+## Broad phase de fora (motor)
+`world.setRayBroadPhase({ begin, mayMeet })` deixa o jogo estreitar os objetos que um raio lê; só tira objeto, o acerto continua a superfície desenhada. O `game-destruction-three` monta uma com os corpos fixos do motor (`rayBroadPhase: true` no renderizador, desligado por padrão). Mesmo resultado que o caminho antigo: `tests/engine-rays.test.ts`.

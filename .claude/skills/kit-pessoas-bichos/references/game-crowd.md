@@ -36,6 +36,9 @@ crowd.updateTrail(dt); crowd.update(dt, { nightFactor, viewYaw }); crowd.updateP
 | `createFlock({ count, mode })`, `carrionCenter` | Urubus em volta dos corpos (`carrion`) e o anel de pássaros do mapa vivo (`orbit`), pelas fórmulas das entregas |
 | `bindInfection(crowd, infection, { place, typeFor, civilians, regionOf })` | Ponte com o `game-infection`: `materialize` vira agentes, a morte volta como removido, os de longe voltam com `giveBack`, a mordida de civil é `infect` |
 
+## No motor físico
+`createAgentBodies(loop, crowd)` (cápsula cinemática por agente, camada `agent`, na fase `crowd` do laço) e `createDoorBodies(loop, doors)` (folha em dobradiça que cede e chama `doors.hit`); cadáveres por `createCorpseBodies` de `game-physics` com `relocateCorpse`. O motor nunca escreve na loja: `state-hash` e golden iguais. Custo: `pnpm --filter @adatechnology/game-crowd test:cost`.
+
 ## Compõe com
 `game-characters-undead` (`undeadCrowdPack()`, os 13 tipos com os números da horda), `game-characters` (o livro de corpos `createCorpseLedger`),
 `game-player` (`asPlayerCrowd()` e o `noise` dos passos), `game-audio` e `game-vfx` (via `host.audio` e `host.effects`), `game-weapons` (o calibre do tiro).
