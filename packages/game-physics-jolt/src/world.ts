@@ -568,6 +568,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     if (motion === 'dynamic' && e.kitMass) this.putMass(e, e.body.GetShape(), e.kitMass)
   }
 
+  setContinuous(id: BodyId, continuous: boolean): void {
+    this.bi.SetMotionQuality(this.entry(id).id, continuous ? this.J.EMotionQuality_LinearCast : this.J.EMotionQuality_Discrete)
+  }
+
   contactPoints(id: BodyId, out: Float32Array): number {
     let p = this.points.get(id)
     if (!p) {

@@ -144,7 +144,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - ✅ **T4.1 Controlador de personagem** (`CharacterVirtual`) atrás do contrato, usado por `game-player`: degrau de 18 cm, rampa de 30°, empurrar
   caixa de 30 kg, ser empurrado. Aceite: testes novos; 50 controladores ≤ 0,5 ms.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-player test` e `... game-physics-jolt test` · `sonnet`.
-- **T4.2 Segurar, soltar, arremessar** (dinâmico ↔ cinemático). Aceite: teste de pegar e arremessar sem atravessar parede.
+- ✅ **T4.2 Segurar, soltar, arremessar** (dinâmico ↔ cinemático). Aceite: teste de pegar e arremessar sem atravessar parede.
   Mecânica? não · Aceite por comando? sim · `sonnet`.
 - **T4.3 B2 em produção:** granada como desenhada (corpo, espoleta, alavanca) com C_rr 0,015 e cápsulas com rolamento. Aceite: granada em
   repouso ≤ 5 s e ≤ 8 m; ≥ 95% de 200 cápsulas dormindo a 5 s; nenhuma abaixo do chão.

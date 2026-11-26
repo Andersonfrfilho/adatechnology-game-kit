@@ -346,6 +346,8 @@ export interface PhysicsWorld {
   setRolling(id: BodyId, rolling: Rolling | undefined): void
   /** Dynamic <-> kinematic (a piece picked up and put down). */
   setMotion(id: BodyId, motion: 'kinematic' | 'dynamic'): void
+  /** Swept collision from now on (`BodyDesc.continuous`) or discrete again: a thrown piece is fast and small. */
+  setContinuous(id: BodyId, continuous: boolean): void
   /** The points (world, x y z each) where the body touched anything in the last step, into `out`; returns how many points (at most `out.length / 3`). */
   contactPoints(id: BodyId, out: Float32Array): number
   /** Whether the body touched anything in the last step. */

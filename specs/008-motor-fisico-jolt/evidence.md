@@ -3240,3 +3240,22 @@ Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm 
 - O host chama `player.update(h, input)` no passo fixo (`beforeStep` da fase `actors`), não com o `dt` do quadro.
 
 **Gates**: `game-physics` 22 testes; `game-physics-jolt` 100 passam, 2 pulados, 26 arquivos (1 pulado); `game-player` 115 (13 arquivos); `tsc --noEmit` dos três limpo; `eslint src tests` dos três limpo; `kit-audit --check` 0 novos. `pnpm typecheck` da raiz para em `apps/desktop` (falta o `@adatechnology/serve-room-tool` buildado; não é desta mudança).
+
+## T4.2 — Segurar, soltar, arremessar: dinâmico ↔ cinemático (2026-11-25)
+
+2026-11-25, Intel Core Ultra 9 275HX, Linux, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz).
+
+**O que já existia e foi reaproveitado:** `setMotion` (dinâmico ↔ cinemático, devolve a massa do kit ao soltar), `moveKinematic`, `setVelocity`, `sphereCastAll` com filtro de camada, `continuous` na criação do corpo, e o uso que `game-destruction-three/src/engine-pieces.ts` já faz (peça `held` vira cinemática). A demonstração (b) do `extras.test.ts` já pegava, carregava e arremessava uma lata, mas no campo aberto.
+
+**O buraco que a T4.2 fecha:** um corpo cinemático movido pela mão **atravessa parede fixa** (cinemático não colide com estático). Teste de controle: caixa cinemática levada a x = 4 por uma parede de 10 cm em x = 3 acaba depois da parede (`hold.test.ts`, "without the sweep ... goes through the wall"). E uma peça pequena arremessada rápido passa por parede fina se for discreta: caixa de 6 cm a 25 m/s (21 cm por passo, parede de 10 cm) sem varredura termina depois da parede (teste de controle verde, o que prova que o teste pega).
+
+**O que mudou**
+- `game-physics/src/hold.ts`: `grabBody(world, id, { radius, skin? })` devolve `Hold` (`moveTo(posição, rotação, h)`, `release(linear, angular?)`, `held`). Pegar zera a velocidade e põe cinemático; `moveTo` varre uma esfera (a menor meia-medida do corpo menos a folga) do ponto atual até a pose da mão contra a camada `static` e para `skin` (1 cm) antes do primeiro corpo fixo, devolvendo `false` quando algo fixo estava no caminho; soltar põe dinâmico (com a massa do kit), liga a varredura (`setContinuous`) e dá a velocidade (zero = largar). Soltar de novo não faz nada. Só usa o contrato (`SeamWorld`); nada do Jolt.
+- Contrato: `setContinuous(id, boolean)`; adaptador: `SetMotionQuality` (`LinearCast` / `Discrete`).
+- O raio da varredura é a menor meia-medida, não a esfera que envolve o corpo: uma caixa deitada no chão tem o centro mais baixo que o raio que a envolve e contaria como presa no chão (teste "a hand sliding along the floor").
+
+**Testes** (`game-physics-jolt/tests/hold.test.ts`, 8, todos verdes): pegar do chão e segurar na mão por 1 s sem cair (pose final 0,5 / 1,2 / 0 a 1 cm, `moveTo` devolve `true`); levada a uma parede por uma mão que está dentro dela, para a menos de 5 cm antes da face com folga (nunca além de x = 2,851) e `moveTo` devolve `false`; controle sem varredura atravessa; arremesso de uma caixa de 20 cm a 15 m/s contra parede de 10 cm a 1,5 m fica deste lado (x < 2,95 e > 2,65); peça de 6 cm a 25 m/s não faz túnel; controle da mesma peça com chamadas cruas faz túnel; largar cai com a massa dela, assenta (y = 0,1) e dorme; a mão deslizando rente ao chão não é parada pelo chão.
+
+**Gates**: `game-physics` 22 testes; `game-physics-jolt` 108 passam, 2 pulados (27 arquivos, 1 pulado); `game-player` 115; `tsc --noEmit` dos três e de `game-destruction-three` limpos; `eslint src tests` dos três limpo; `kit-audit --check` 0 novos.
+
+**Limites:** `engine-pieces.ts` (peça na mão do jogo) ainda usa `setMotion` + `moveKinematic` sem a varredura: ligar `grabBody` lá muda o que a mão faz com a peça no jogo inteiro e fica como passo próprio (o dono decide; não é parte da T4.2, cujo aceite é o teste de pegar e arremessar sem atravessar parede). O soltar liga `continuous` e não o desliga depois (custa só enquanto a peça anda rápido).
