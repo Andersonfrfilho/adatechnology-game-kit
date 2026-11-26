@@ -91,7 +91,7 @@ export interface PileRun {
   /** Seconds since the first death until every body sleeps; -1 if they did not in `seconds`. */
   readonly asleepAt: number
   readonly lastBirthAt: number
-  /** Ragdolls (R0) seen touching two other bodies: the pile must have none. */
+  /** The longest run of frames (every frame is read) with a ragdoll (R0) touching two other bodies: the rule of `design/pilha-e-lod.md` §2.1 lets it last one. */
   readonly ragdollInPile: number
   readonly counts: ReturnType<CorpseBodies['counts']>
 }
@@ -119,6 +119,7 @@ export const dropPile = async (seed: number, limitSeconds: number, options: Corp
   const costs: number[] = []
   let asleepAt = -1
   let ragdollInPile = 0
+  let ragdollRun = 0
   const lastBirthFrame = (ids.length - 1) * BIRTH_EVERY_FRAMES
   for (let f = 0; f < limitSeconds * 60; f++) {
     if (f % BIRTH_EVERY_FRAMES === 0 && f / BIRTH_EVERY_FRAMES < ids.length) {
@@ -126,8 +127,9 @@ export const dropPile = async (seed: number, limitSeconds: number, options: Corp
       scene.corpses.add({ id, kit, position: heapAt(id - 1), yaw: id * seed })
     }
     costs.push(frame(scene.loop))
+    ragdollRun = ragdollsInPile(scene, ids.filter((id) => id <= f / BIRTH_EVERY_FRAMES + 1)) > 0 ? ragdollRun + 1 : 0
+    ragdollInPile = Math.max(ragdollInPile, ragdollRun)
     if (f % 6 !== 0) continue
-    ragdollInPile += ragdollsInPile(scene, ids.filter((id) => id <= f / BIRTH_EVERY_FRAMES + 1))
     if (asleepAt < 0 && f > lastBirthFrame && allAsleep(scene, ids)) asleepAt = f / 60
     if (asleepAt >= 0 && f >= COST_WINDOW_FRAMES) break
   }
