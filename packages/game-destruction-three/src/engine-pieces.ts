@@ -739,8 +739,7 @@ export class EnginePieces {
     return {
       frictionStatic: b.friction?.static ?? MU_STATIC,
       frictionDynamic: b.friction?.dynamic ?? MU_DYNAMIC,
-      // a box lands dead (the kit never bounced them); a round piece bounces by its material
-      restitution: b.round ? (b.restitution ?? SLAM_BOUNCE) : 0,
+      restitution: b.restitution ?? SLAM_BOUNCE,
       rolling: b.friction?.rolling ?? ROLLING_RESISTANCE,
     }
   }
