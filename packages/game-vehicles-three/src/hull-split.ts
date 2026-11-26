@@ -121,7 +121,12 @@ const tailOf = (soup: HullSoup): number[] => {
   const tail = new Set<number>()
   for (const [axis, sign] of AXES) {
     const values = centres.map((centre) => sign * centre[axis]!)
-    const low = Math.min(...values), step = (Math.max(...values) - low) / BULK_BINS || 1
+    let low = Infinity, high = -Infinity
+    for (const value of values) {
+      if (value < low) low = value
+      if (value > high) high = value
+    }
+    const step = (high - low) / BULK_BINS || 1
     const area = new Float64Array(BULK_BINS + 1)
     values.forEach((value, t) => { area[Math.floor((value - low) / step)]! += areas[t]! })
     let reached = 0, bin = 0
