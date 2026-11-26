@@ -246,6 +246,8 @@ export interface RayHit {
 /** Bodies the queries skip (by layer), or only these layers. */
 export interface QueryFilter {
   readonly layers?: readonly Layer[]
+  /** Bodies the query leaves out before the narrow phase (a corpse asking what is in its way does not meet its own parts). */
+  readonly ignore?: readonly BodyId[]
 }
 
 /**

@@ -1,0 +1,205 @@
+import { farthestSleeping, rungBelow } from './body-lod'
+import type { BodyLodDecision, BodyLodInput, BodyRung } from './body-lod'
+import type { Vec3 } from './contract'
+import { freezeCorpses } from './engine-corpses-pile'
+import { anchorBody, readTouching, rigidBodies, switchRung, switchUnits } from './engine-corpses-swap'
+import type { CorpseContext, CorpseRecord, SettledCorpse } from './engine-corpses-types'
+import { rotateVector } from './corpse-pose'
+
+/** How far (m) above another body's centre a body is to count as resting on it. */
+const ABOVE = 0.1
+
+export const distanceTo = (interest: readonly Vec3[], x: number, z: number): number => {
+  let nearest = interest.length === 0 ? 0 : Infinity
+  for (const point of interest) nearest = Math.min(nearest, Math.hypot(point[0] - x, point[2] - z))
+  return nearest
+}
+
+const countCorpses = (ctx: CorpseContext, record: CorpseRecord): number => {
+  const seen = new Set<number>()
+  for (const body of record.touching) {
+    const owner = ctx.ownerOf.get(body)
+    if (owner !== undefined && owner !== record.id) seen.add(owner)
+    else if (ctx.pileOf.has(body)) seen.add(-(ctx.pileOf.get(body) as number))
+  }
+  return seen.size
+}
+
+const hasBodyAbove = (ctx: CorpseContext, record: CorpseRecord): boolean => {
+  for (const body of record.touching) {
+    const owner = ctx.ownerOf.get(body)
+    const other = owner === undefined ? undefined : ctx.records.get(owner)
+    if (other && (other.torso[1] as number) > (record.torso[1] as number) + ABOVE) return true
+  }
+  return false
+}
+
+interface Pending {
+  readonly record: CorpseRecord
+  readonly to: BodyRung
+  readonly forced: boolean
+}
+
+type Mutable<T> = { -readonly [K in keyof T]: T[K] }
+
+/** What the policy is asked about one corpse: read from the engine when it has bodies (and kept while it sleeps), else from what was kept. */
+const inputOf = (ctx: CorpseContext, record: CorpseRecord, moundAt: ((x: number, z: number) => number) | undefined, into: Mutable<BodyLodInput>): BodyLodInput => {
+  into.rung = record.rung
+  into.distance = record.distance
+  into.asleepSeconds = record.asleepSeconds
+  into.sinceChangeSeconds = record.sinceChangeSeconds
+  into.touchingCorpses = countCorpses(ctx, record)
+  into.moundHeight = moundAt?.(record.torso[0] as number, record.torso[2] as number) ?? 0
+  into.hasBodyAbove = hasBodyAbove(ctx, record)
+  into.woken = record.woken
+  return into
+}
+
+/** Looks at one corpse: sleep, contacts and distance, as the policy needs them. Awake bodies are read each time; a sleeper is read once, as it falls asleep. */
+const look = (ctx: CorpseContext, record: CorpseRecord, step: EvaluateOptions): void => {
+  const elapsed = (ctx.tick - record.lastLookedAt) * step.h
+  record.lastLookedAt = ctx.tick
+  record.sinceChangeSeconds += elapsed
+  if (record.bodies.length > 0) {
+    const body = anchorBody(record)
+    const asleep = ctx.world.isSleeping(body)
+    if (asleep) record.asleepSeconds += elapsed
+    else {
+      record.asleepSeconds = 0
+      if (record.rung === 'r2') record.woken = true
+    }
+    if (!(asleep && record.asleep) || record.stale) {
+      ctx.world.readPose(body, POSE, 0)
+      record.torso[0] = POSE[0] as number
+      record.torso[1] = POSE[1] as number
+      record.torso[2] = POSE[2] as number
+      record.touching = readTouching(ctx, record)
+      record.stale = false
+      if (asleep) tellSettled(record, step)
+    }
+    record.asleep = asleep
+  }
+  record.distance = distanceTo(step.interest, record.torso[0] as number, record.torso[2] as number)
+}
+
+const POSE = new Float64Array(7)
+const HEAD_UP: Vec3 = [0, 1, 0]
+
+/** A corpse that has just fallen asleep far from where the host has it: the host is told where it lies (once; the new place is the one it has from then on). */
+const tellSettled = (record: CorpseRecord, step: EvaluateOptions): void => {
+  if (!step.onSettled || Math.hypot((POSE[0] as number) - record.originX, (POSE[2] as number) - record.originZ) <= step.settleDistance) return
+  const head = rotateVector([POSE[3] as number, POSE[4] as number, POSE[5] as number, POSE[6] as number], HEAD_UP)
+  record.originX = POSE[0] as number
+  record.originZ = POSE[2] as number
+  step.onSettled({ id: record.id, x: record.originX, z: record.originZ, yaw: Math.atan2(-head[0], -head[2]) } satisfies SettledCorpse)
+}
+
+export interface EvaluateOptions {
+  readonly h: number
+  readonly onSettled: ((corpse: SettledCorpse) => void) | undefined
+  readonly settleDistance: number
+  readonly interest: readonly Vec3[]
+  readonly every: number
+  readonly moundAt: ((x: number, z: number) => number) | undefined
+}
+
+const due = (ctx: CorpseContext, record: CorpseRecord, every: number): boolean => record.rung === 'r0' || (ctx.tick + record.id) % every === 0
+
+/** One fixed step of the policy: each corpse that is due is looked at and asked; the changes then run, the forced ones first, the rest as the frame's units allow. */
+export const evaluateCorpses = (ctx: CorpseContext, options: EvaluateOptions): void => {
+  const input = { rung: 'r1', distance: 0, asleepSeconds: 0, sinceChangeSeconds: 0, touchingCorpses: 0, moundHeight: 0, hasBodyAbove: false, woken: false } as Mutable<BodyLodInput>
+  const decision: BodyLodDecision = { to: 'r1', forced: false }
+  const pending: Pending[] = []
+  const freezing: CorpseRecord[] = []
+  for (const record of ctx.records.values()) {
+    if (!due(ctx, record, options.every)) continue
+    look(ctx, record, options)
+    ctx.lod.decide(inputOf(ctx, record, options.moundAt, input), decision)
+    if (decision.to === record.rung) continue
+    if (decision.to === 'r2f') freezing.push(record)
+    else pending.push({ record, to: decision.to, forced: decision.forced })
+  }
+  if (freezing.length > 0) freezeCorpses(ctx, freezing)
+  runChanges(ctx, pending)
+}
+
+const runChanges = (ctx: CorpseContext, pending: readonly Pending[]): void => {
+  for (const change of pending.filter((item) => item.forced)) {
+    ctx.budget?.take('lod', switchUnits(change.record, change.to))
+    switchRung(ctx, change.record, change.to, true)
+  }
+  for (const change of pending.filter((item) => !item.forced)) {
+    if (ctx.budget && !ctx.budget.tryTake('lod', switchUnits(change.record, change.to))) continue
+    const fromNothing = change.record.rung === 'r3'
+    if (!switchRung(ctx, change.record, change.to, false)) continue
+    if (fromNothing) change.record.asleepSeconds = ctx.lod.numbers.sleepSeconds
+  }
+}
+
+export const countRigid = (ctx: CorpseContext): number => {
+  let total = 0
+  for (const record of ctx.records.values()) total += rigidBodies(record, record.rung)
+  return total
+}
+
+export const countRung = (ctx: CorpseContext, rung: BodyRung): number => {
+  let total = 0
+  for (const record of ctx.records.values()) if (record.rung === rung) total++
+  return total
+}
+
+/** The quotas: ragdolls at most `ragdollsMax`, rigid bodies at most `dynamicBodiesMax`; the farthest sleeper goes down a rung until each fits (or none sleeps). */
+export const enforceQuotas = (ctx: CorpseContext): void => {
+  const { ragdollsMax, dynamicBodiesMax } = ctx.lod.numbers
+  for (let guard = 0; guard < 64 && countRung(ctx, 'r0') > ragdollsMax; guard++) {
+    const victim = farthestSleeping(ctx.records.values(), 'r0')
+    if (victim < 0) break
+    switchRung(ctx, ctx.records.get(victim) as CorpseRecord, 'r1', true)
+  }
+  for (let guard = 0; guard < 64 && countRigid(ctx) > dynamicBodiesMax; guard++) {
+    const rung = (['r0', 'r1', 'r2'] as const).find((candidate) => farthestSleeping(ctx.records.values(), candidate) >= 0)
+    if (!rung) break
+    const record = ctx.records.get(farthestSleeping(ctx.records.values(), rung)) as CorpseRecord
+    switchRung(ctx, record, rungBelow(rung), true)
+  }
+}
+
+/** Groups of corpses that touch (each other's `touching` list), for the island quota. */
+const islands = (ctx: CorpseContext): CorpseRecord[][] => {
+  const seen = new Set<number>()
+  const groups: CorpseRecord[][] = []
+  for (const start of ctx.records.values()) {
+    if (seen.has(start.id) || start.bodies.length === 0) continue
+    seen.add(start.id)
+    const group: CorpseRecord[] = []
+    const queue = [start]
+    for (let head = 0; head < queue.length; head++) {
+      const here = queue[head] as CorpseRecord
+      group.push(here)
+      for (const body of here.touching) {
+        const owner = ctx.ownerOf.get(body)
+        const next = owner === undefined ? undefined : ctx.records.get(owner)
+        if (next && next.bodies.length > 0 && !seen.has(next.id)) {
+          seen.add(next.id)
+          queue.push(next)
+        }
+      }
+    }
+    groups.push(group)
+  }
+  return groups
+}
+
+/** The island quota: an island of more than `islandBodiesMax` rigid bodies has its oldest sleepers frozen into its pile, a few at a time. */
+export const enforceIslands = (ctx: CorpseContext, perRound = 8): void => {
+  const { islandBodiesMax } = ctx.lod.numbers
+  if (countRigid(ctx) <= islandBodiesMax) return
+  const oldest: CorpseRecord[] = []
+  for (const island of islands(ctx)) {
+    const bodies = island.reduce((total, record) => total + rigidBodies(record, record.rung), 0)
+    if (bodies <= islandBodiesMax) continue
+    const sleepers = island.filter((record) => record.rung === 'r1' && record.asleep).sort((a, b) => a.born - b.born)
+    oldest.push(...sleepers.slice(0, perRound))
+  }
+  if (oldest.length > 0) freezeCorpses(ctx, oldest)
+}

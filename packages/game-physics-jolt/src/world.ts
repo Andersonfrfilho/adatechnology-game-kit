@@ -93,6 +93,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly bpFilter: JoltNS.DefaultBroadPhaseLayerFilter
   readonly objFilter: JoltNS.DefaultObjectLayerFilter
   readonly bodyFilter: JoltNS.BodyFilter
+  ignoreFilter: JoltNS.IgnoreMultipleBodiesFilter | null = null
   readonly shapeFilter: JoltNS.ShapeFilter
   readonly layerFilters = new Map<string, JoltNS.ObjectLayerFilterJS>()
   readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId>; self: number } = { filter: null, set: new Set(), self: -1 }
@@ -829,6 +830,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       this.among.filter = null
     }
     for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
+    if (this.ignoreFilter) J.destroy(this.ignoreFilter)
     J.destroy(this.iface)
     if (this.listener) J.destroy(this.listener)
     this.onDispose?.()

@@ -45,6 +45,8 @@ export interface JoltWorldHost {
   readonly bpFilter: JoltNS.DefaultBroadPhaseLayerFilter
   readonly objFilter: JoltNS.DefaultObjectLayerFilter
   readonly bodyFilter: JoltNS.BodyFilter
+  /** The body filter of a query with `QueryFilter.ignore` (made on first use): cleared and loaded for each query. */
+  ignoreFilter: JoltNS.IgnoreMultipleBodiesFilter | null
   readonly shapeFilter: JoltNS.ShapeFilter
   readonly layerFilters: Map<string, JoltNS.ObjectLayerFilterJS>
   /** The body filter of `penetration` with `among` (made on first use), the set it lets through and the queried body it leaves out, both cleared after each query. */

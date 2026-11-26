@@ -26,6 +26,15 @@ const filterFor = (w: JoltWorldHost, filter?: QueryFilter): JoltNS.ObjectLayerFi
   return f
 }
 
+/** The body filter of a query: the world's (lets everything through) unless the query names bodies to leave out. */
+const bodiesFor = (w: JoltWorldHost, filter?: QueryFilter): JoltNS.BodyFilter => {
+  if (!filter?.ignore || filter.ignore.length === 0) return w.bodyFilter
+  const ignoring = (w.ignoreFilter ??= new w.J.IgnoreMultipleBodiesFilter())
+  ignoring.Clear()
+  for (const id of filter.ignore) ignoring.IgnoreBody(w.entry(id).id)
+  return ignoring
+}
+
 const hitOf = (w: JoltWorldHost, bodyKey: number, sub: JoltNS.SubShapeID, distance: number): RayHit => {
   const e = w.bodies.get(bodyKey)
   const tag = e ? e.body.GetShape().GetSubShapeUserData(sub) | 0 : -1
@@ -41,7 +50,7 @@ export const rayAll = (w: JoltWorldHost, c: Cast, out: RayHit[], filter?: QueryF
   aimRay(w, c)
   const col = w.rayCollector
   col.Reset()
-  w.system.GetNarrowPhaseQuery().CastRay(w.ray, w.raySettings, col, w.bpFilter, filterFor(w, filter), w.bodyFilter, w.shapeFilter)
+  w.system.GetNarrowPhaseQuery().CastRay(w.ray, w.raySettings, col, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   col.Sort()
   out.length = 0
   const hits = col.mHits
@@ -56,7 +65,7 @@ export const rayFirst = (w: JoltWorldHost, c: Cast, filter?: QueryFilter): RayHi
   aimRay(w, c)
   const col = w.rayClosest
   col.Reset()
-  w.system.GetNarrowPhaseQuery().CastRay(w.ray, w.raySettings, col, w.bpFilter, filterFor(w, filter), w.bodyFilter, w.shapeFilter)
+  w.system.GetNarrowPhaseQuery().CastRay(w.ray, w.raySettings, col, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   if (!col.HadHit()) return null
   return hitOf(w, col.mHit.mBodyID.GetIndexAndSequenceNumber(), col.mHit.mSubShapeID2, col.mHit.mFraction * c.length)
 }
@@ -80,7 +89,7 @@ export const overlapSphere = (w: JoltWorldHost, at: { readonly center: Vec3; rea
   const c = w.collideCollector
   c.Reset()
   w.r1.Set(0, 0, 0)
-  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), w.bodyFilter, w.shapeFilter)
+  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   out.length = 0
   const hits = c.mHits
   const seen = new Set<number>()
@@ -105,7 +114,7 @@ export const overlapShape = (w: JoltWorldHost, at: { readonly shape: ShapeDesc; 
   const c = w.collideCollector
   c.Reset()
   w.r1.Set(0, 0, 0)
-  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), w.bodyFilter, w.shapeFilter)
+  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   J.destroy(m)
   shape.Release()
   out.length = 0
@@ -167,7 +176,7 @@ export const sphereCastAll = (w: JoltWorldHost, c: Cast & { readonly radius: num
   const col = w.castCollector
   col.Reset()
   w.r1.Set(0, 0, 0)
-  w.system.GetNarrowPhaseQuery().CastShape(cast, w.castSettings, w.r1, col, w.bpFilter, filterFor(w, filter), w.bodyFilter, w.shapeFilter)
+  w.system.GetNarrowPhaseQuery().CastShape(cast, w.castSettings, w.r1, col, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   J.destroy(cast)
   col.Sort()
   out.length = 0
