@@ -421,17 +421,22 @@ longe. Não são apagados.
 
 ## 10. Cascos convexos: construção, reconstrução e o novo aceite
 
-### 10.1 Construção
+### 10.1 Construção (método B, decisão do dono em 2026-11-26, proposta do `architect`)
 
-Porta a montagem incremental da T3.0b (`createVehicleColliders`: triângulos de cada malha por parte × célula, estável por chave,
-refaz só o que mudou): no lugar dos triângulos, cada peça vira um casco convexo dos seus vértices desenhados (≤ 64 pontos, escolhidos por
-extremos em 26 direções mais os mais distantes, sempre vértices desenhados), raio convexo 0 (`mMaxConvexRadius = 0`, para não inchar).
+Porta a montagem incremental da T3.0b (`createVehicleColliders`: triângulos de cada malha por parte × célula de 0,8 m, estável por chave,
+refaz só o que mudou): no lugar dos triângulos, **cada pedaço da T3.0b (peça × célula) vira um casco convexo** dos seus vértices desenhados,
+com no máximo 64 pontos por `reducePoints` (que sempre inclui o extremo de cada uma das 26 direções) e raio convexo 0
+(`mMaxConvexRadius = 0`, para não inchar).
 
-- **Célula dividida pela concavidade, não só pela distância**: célula de partida maior que a da T3.0b (1,6 m); enquanto o casco da célula
-  passar mais de 3 cm do desenhado (distância da face do casco à casca desenhada, para dentro), a célula é cortada ao meio no eixo mais longo.
-  Painel plano fica num casco só; para-lama com caixa de roda vira vários.
-- **Casco fino é extrudado para dentro até 3 cm, nunca para fora**: pontos desenhados copiados ao longo da normal interna; mantém H2 e evita
-  atravessar chapa fina.
+- **Peça sólida** (`SOLID_ROLES` menos as rodas: lâmpada, retrovisor, motor, radiador, tanque, cárter, bateria, alternador, câmbio, direção,
+  engate) é **um casco inteiro**, de todos os pedaços dela.
+- **Roda, pneu, freio e amortecedor ficam fora do composto do chassi**: a roda é do `VehicleConstraint` (T6.1b; o adaptador monta o chassi só
+  com os cascos que recebe e as rodas só pelos descritores de roda).
+- **Pedaço plano** (mais fino que 2 × `FLAT_PAD` ao longo da normal) ganha 2,5 mm (`FLAT_PAD`, `vehicle-hulls.ts`; a metade do `MIN_HALF` de 5 mm de `collider-fit.ts`) de cada lado: um casco sem
+  volume não é forma. Os pontos copiados são os únicos que não são vértices desenhados.
+- **Sem extrusão para dentro e sem corte por concavidade** (saem a célula de 1,6 m cortada por 3 cm/1 cm, a extrusão de 3 cm e o corte pelo
+  vão da primeira versão da T6.4). O refinamento opcional (C: cortar o pedaço que passar do aceite) **não entra agora**.
+
 Casco é a peça **fina** (painel, assoalho, teto, vidro), nunca o volume da cabine: o interior fica oco e um banco solto cai sobre o assoalho
 e sai pela porta que não está mais lá (seção 11).
 
@@ -448,31 +453,35 @@ depois que o amassado de nível 2 assenta, com a regra da 10.5)
   é física e entra no determinismo (17).
 - O carro que nasce enche os cascos em fila (~40 cascos × 40 µs ≈ 1,6 ms, espalhados por alguns quadros): some o 1,5 s da T3.0b.
 
-### 10.3 Novo aceite (substitui a regra de 1 cm da T3.0b para veículos)
+### 10.3 Novo aceite K1–K7 (decisão do dono em 2026-11-26; substitui H1–H6 e a regra de 1 cm da T3.0b para veículos)
 
 A regra de 1 cm da T3.0b media triângulos de colisão contra triângulos desenhados. Com cascos convexos, "a menos de 1 cm" não serve: o casco
 de uma porta curva preenche o espaço entre a curva e a corda, que fica **dentro** do carro. E "cobrir X% do volume" também não serve para
-chapa: um painel de 1 mm não tem volume. Proposta:
+chapa: um painel de 1 mm não tem volume. O rodador é o de `tests/vehicle-hulls-support.ts`: 26 direções, grade de 5 cm, mapa de profundidade
+de 1 cm; a "esfera" é o primeiro toque de uma bola de r = 10 cm sobre esse mapa. Vale nos 69 modelos.
 
-| # | Regra | Valor | Por quê |
-|---|---|---|---|
-| H1 | **O tiro acerta o desenhado** | o acerto final é sempre `surfaceRay` na malha desenhada (deformada); o casco só acha candidatos | §7; nunca muda |
-| H2 | **Nenhum casco passa do desenhado para fora** | todo ponto amostrado das faces do casco que está **fora** do corpo desenhado fecha a ≤ **1 cm** dele (raios de fora para dentro) | é o que dava "tiro no ar acima do capô acertava o carro"; destroço não pode pousar no ar sobre o teto |
-| H3 | **Cobertura por raio** | raios de fora numa grade de 5 cm, de 26 direções: dos que acertam a casca desenhada, ≥ **95%** acertam um casco entre 3 cm antes e 1 cm depois do ponto desenhado | 5% é o que fica nas saliências finas (antena, palheta, maçaneta, haste do retrovisor, escape); essas não seguram destroço e a diferença é ≤ 3 cm na tela. 99% exigiria cascos por maçaneta (o dobro de cascos por carro) |
-| H4 | **Nenhum casco sem desenho** | dos raios que **erram** a casca desenhada, 100% erram os cascos, com folga de 1 cm | §12: nada invisível colide |
-| H5 | **Peça sólida** (bloco, bateria, banco, roda, tanque) | volume do casco ≥ **90%** do volume fechado desenhado e ≤ volume + 1 cm de pele | peça sólida tem volume que importa para empilhar e cair |
-| H6 | **Teto de custo** | ≤ 64 pontos por casco; cascos por veículo ≤ o teto da classe abaixo | a T3.0b mediu, com células de 80 cm, sedã 192 peças, carros 118–255, `city_bus` 559: 64 era errado. Com célula de 1,6 m dividida por concavidade, estimativa ~⅓–½ disso |
+| # | Regra | Valor |
+|---|---|---|
+| K1 | O tiro acerta o desenhado (`surfaceRay`); o casco só acha candidatos | sempre |
+| K2 | Encosto exato: para cada peça e cada uma das 26 direções, o extremo dos cascos dela é o extremo dos vértices desenhados dela | ≤ 1 mm (o casco de um pedaço plano pode passar os 2,5 mm do `FLAT_PAD`) |
+| K3 | §12: nenhuma esfera toca casco sem tocar o desenhado com raio r + 3 cm | 0 |
+| K4 | Excesso para fora: esferas com o casco mais de 3 cm à frente do desenhado, relatadas por grupo (de baixo, de cima, lateral) | ≤ o medido na frota no merge, e só pode diminuir (catraca gravada, como a do §13) |
+| K5 | Não afunda: esferas com o casco mais de 5 cm atrás do desenhado, ou sem casco | ≤ 1% por modelo |
+| K6 | Peça sólida: um casco, só de vértices desenhados; rodas fora do chassi | teste |
+| K7 | Teto: ≤ 64 pontos por casco; moto 64, carro/SUV/picape/van 256, `heavy` 384, as demais classes medidas; construção do modelo ≤ 100 ms em Node (faixa de custo); 12 modelos distintos ≤ 64 MB | teste |
 
-**Teto de cascos por classe** (estimado da contagem da T3.0b com células mais grossas; a T6.4 mede e o número medido substitui este):
-moto e bicicleta 32 · carro, SUV, picape, van 96 · caminhão 160 · ônibus 192 · trator 96 · blindado 96 · avião leve 128 · turbo-hélice e jato
-leve 192 · helicóptero 96 · barco pequeno 64 · barco grande 192. A T6.0b mede o custo de contato e de `LinearCast` de um
-`MutableCompoundShape` com 96 e 192 filhos (a forma mutável **não tem árvore**: o teste de contato é linear nos filhos); se pesar, o composto
-volta a ser `StaticCompoundShape` (com árvore) assim que o carro assenta, e o mutável só existe durante a batida.
+**H1–H6 ficam substituídos** (histórico, não apagado): H1 virou K1; H2 (≤ 1 cm para fora) e H3 (≥ 95% de cobertura entre 3 cm antes e 1 cm
+depois) viraram K3, K4 e K5 por esfera, porque o raio de 5 cm do desenho media saliência fina e não o que um objeto do tamanho de um punho
+encontra; H4 (nenhum casco sem desenho) virou K3; H5 (volume de peça sólida) virou K6; H6 (teto) virou K7. A primeira versão da T6.4 (corte por
+concavidade, 1 172 a 1 401 cascos por carro) não passava H2 e H3 e pesava 83 MB nos 12 modelos da T6.21: ver `evidence.md` `## T6.4`.
 
-**Medido na T6.4 (2026-11-26, `evidence.md` `## T6.4`), 69 modelos intactos, o número medido substitui a estimativa acima:** moto e bicicleta 200 (medido 72–166) · carro 1 450 (1 172–1 401) · SUV 1 450 · picape 1 500 · van 1 200 · caminhão e ônibus 2 000 · trator 850 · militar 3 100 · avião 3 000 · barco 1 800. Ficou **12× a estimativa**, e H2 e H3 ainda reprovam nos dois modelos medidos (`family_hatch` 66% de cobertura e 33% dos raios com casco à frente do desenhado; `naked_bike` 42% e 56%); a memória da guarda da 10.4 (5,46 KB por casco de 64 pontos) não fecha com esses números (12 modelos de 1 270 cascos = 83 MB contra 64 MB). Decisão do dono pendente (opções em `evidence.md`).
+**Tetos antigos (H6, estimativa da T3.0b, e a medida da primeira versão):** moto e bicicleta 32 (medido 200) · carro, SUV, picape, van 96
+(medido 1 450) · caminhão 160 · ônibus 192 (medido 2 000) · trator 96 · blindado 96 · avião leve 128 · helicóptero 96 · barco 64–192. Os
+tetos do método B (K7) são medidos na T6.4, `evidence.md` `## T6.4`, "Método B".
 
-Medido na frota inteira (69 modelos), intactos e depois de três batidas de referência (seção 18). O colisor de triângulos da T3.0b sai do
-caminho da física de veículos; a montagem incremental dela fica (é a entrada dos cascos).
+A T6.0b mede o custo de contato e de `LinearCast` de um `MutableCompoundShape` com 96 e 192 filhos (a forma mutável **não tem árvore**: o
+teste de contato é linear nos filhos); se pesar, o composto volta a ser `StaticCompoundShape` (com árvore) assim que o carro assenta, e o
+mutável só existe durante a batida.
 
 ### 10.4 Carro estacionado: guardas (D3)
 
@@ -488,7 +497,8 @@ caminho da física de veículos; a montagem incremental dela fica (é a entrada 
 ### 10.5 Cascos contra contatos que estão acontecendo
 
 Enquanto a parte de um casco toca algo (o `tag` aparece nos pontos de contato do passo), a reconstrução pode mover os pontos **para dentro**
-livremente e **para fora** no máximo o *slop* de penetração (2 mm, `KIT_WORLD`); o resto do movimento para fora espera o contato acabar. Assim
+livremente e **para fora** no máximo o *slop* de penetração (2 mm, `KIT_WORLD`); o resto do movimento para fora espera o contato acabar.
+A regra vale por pedaço (um casco por pedaço, método B). Assim
 um casco refeito não empurra o que está encostado (energia criada). Teste com a régua do C1: carro amassado encostado numa parede, cascos
 refeitos, energia da ilha não sobe mais que `m·g·1 mm`.
 
