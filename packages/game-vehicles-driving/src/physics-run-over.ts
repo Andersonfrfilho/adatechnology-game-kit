@@ -54,6 +54,8 @@ export type RunOver = {
   dispose(): void
 }
 
+const byIndexDescending = (a: number, b: number): number => b - a
+
 /** Slowest car (m/s) that runs anyone over. */
 const MIN_SPEED = 1
 /** Mass (kg) of the body the arcade damage (`knockDamage`) is written for, and of an agent whose mass is not seated. */
@@ -82,14 +84,32 @@ export const createRunOver = (loop: PhysicsLoop, options: RunOverOptions): RunOv
   const rotation: [number, number, number, number] = [0, 0, 0, 1]
   const impulse: [number, number, number] = [0, 0, 0]
   const point: [number, number, number] = [0, 0, 0]
+  const direction: [number, number] = [0, 0]
+  const car = { speed: 0, mass: 0 }
+  const found: number[] = []
+  const now = new Set<number>()
+  /** The index of each agent's capsule, made when a hit needs it and again after a hit that may have moved the last agent into a slot. */
+  const indexOfBody = new Map<BodyId, number>()
+  let isIndexStale = true
   let dying: Vec3 | undefined
   let diedLast = false
 
   /** The agent indices whose capsule is among `bodies`, descending: a death moves the last agent into its slot, so the ones not yet handled keep their index. */
   const agentsOf = (bodies: readonly BodyId[]): number[] => {
-    const found: number[] = []
-    for (let index = agents.count - 1; index >= 0; index--) if (bodies.includes(agents.bodyOf(index)!)) found.push(index)
-    return found
+    if (isIndexStale) {
+      indexOfBody.clear()
+      for (let index = 0; index < agents.count; index++) {
+        const body = agents.bodyOf(index)
+        if (body !== undefined) indexOfBody.set(body, index)
+      }
+      isIndexStale = false
+    }
+    found.length = 0
+    for (const body of bodies) {
+      const index = indexOfBody.get(body)
+      if (index !== undefined) found.push(index)
+    }
+    return found.sort(byIndexDescending)
   }
 
   /** What the body in the way does to the car and to itself; returns the momentum (N s) the car loses. */
@@ -134,7 +154,8 @@ export const createRunOver = (loop: PhysicsLoop, options: RunOverOptions): RunOv
     const speed = Math.hypot(velocity[0]!, velocity[2]!)
     if (speed < MIN_SPEED) return
     world.readPose(vehicle.body, pose, 0)
-    const direction: [number, number] = [velocity[0]! / speed, velocity[2]! / speed]
+    direction[0] = velocity[0]! / speed
+    direction[1] = velocity[2]! / speed
     const reach = (speed * h) / 2
     box.half[0] = vehicle.half[0] + rules.margin
     box.half[1] = vehicle.half[1]
@@ -148,9 +169,13 @@ export const createRunOver = (loop: PhysicsLoop, options: RunOverOptions): RunOv
       struck.delete(vehicle)
       return
     }
-    const car = { speed, mass: world.massOf(vehicle.body) }
-    const before = struck.get(vehicle) ?? new Set<number>()
-    const now = new Set<number>()
+    car.speed = speed
+    car.mass = world.massOf(vehicle.body)
+    let before = struck.get(vehicle)
+    if (!before) {
+      before = new Set<number>()
+      struck.set(vehicle, before)
+    }
     for (const index of agentsOf(hits)) {
       const identity = crowd.store.identity[index]!
       if (before.has(identity)) {
@@ -159,12 +184,18 @@ export const createRunOver = (loop: PhysicsLoop, options: RunOverOptions): RunOv
       }
       point[0] = crowd.store.x[index]!
       point[2] = crowd.store.z[index]!
-      if (hitOne(vehicle, index, direction, car, h) !== 'push') now.add(identity)
+      const outcome = hitOne(vehicle, index, direction, car, h)
+      if (outcome === 'push') continue
+      now.add(identity)
+      if (outcome !== undefined) isIndexStale = true
     }
-    struck.set(vehicle, now)
+    before.clear()
+    for (const identity of now) before.add(identity)
+    now.clear()
   }
 
   const beforeStep = (h: number): void => {
+    isIndexStale = true
     for (const vehicle of vehicles) sweep(vehicle, h)
   }
 
