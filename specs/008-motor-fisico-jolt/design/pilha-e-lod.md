@@ -3,7 +3,7 @@
 Desenho da T5.3 (🧠, `opus`). v1 em 2026-11-25, reprovada pelo `architect` no mesmo dia (12 mudanças). Esta é a **v2**, com as 12 aplicadas.
 Herdado por T5.4 (implementar), T5.5 (quadrúpede) e T7.1 (multidão).
 
-**Decisão pendente do dono: D-T5.3a (§4).** Até a resposta, a T5.4 implementa só o que não depende dela (§8).
+**D-T5.3a decidida pelo dono em 2026-11-26: opção A** (`corpses.relocate`; §4). O aceite da T7.1 muda com ela.
 
 ## 1. O problema e o que está medido
 
@@ -81,7 +81,7 @@ que o raio acerta.
 - **Ordem:** juntas antes dos corpos; o que sai passa pelo `release` (§8). O ragdoll pode nascer dormindo (`RagdollDesc.sleeping`, §5.1).
 - **Prazo:** 100 trocas ≤ 5 ms (aceite da T5.4).
 
-## 4. Uma verdade para a posição — **D-T5.3a, decisão do dono**
+## 4. Uma verdade para a posição — D-T5.3a: **opção A, decidida pelo dono em 2026-11-26**
 
 Hoje o monte do `game-crowd` é refeito a cada passo a partir de `x/z/yaw` do registro de cadáveres (`mound.ts:63-76`), que é só leitura. Um
 corpo empurrado 3 m por um blast fica desenhado num lugar e com o monte em outro: a horda sobe um monte invisível. Isso já acontece em R0–R2,
@@ -92,7 +92,7 @@ não só em R3. Não há como ter as duas coisas por inteiro; uma delas cede.
 | **A (recomendada): `corpses.relocate(id, x, z, yaw)`.** Quando um corpo dorme a mais de uma célula da origem, o aplicador manda a posição para o `game-crowd` como evento estrutural dentro do tique (§15, `EVENT_CLASS`) | uma verdade só: monte, desenho e física concordam; R3 → R2 nasce onde está desenhado | o estado do `game-crowd` passa a depender da física quando há empurrão. **O aceite da T7.1 muda** de "`state-hash` e `team-golden` iguais" para "iguais quando nada empurra corpos" |
 | B: o motor nunca escreve no `game-crowd` | o hash do `game-crowd` fica intocado em qualquer cena | monte errado depois de todo empurrão; um terceiro registro de poses no aplicador |
 
-A opção A muda um critério de aceite da spec, por isso não decido sozinho.
+Decisão do dono: **A**. O aceite da T7.1 passa a ser "`state-hash` e `team-golden` do `game-crowd` iguais quando nada empurra corpos", e o teste 13 do §7 cobre o caso empurrado.
 
 ## 5. Contrato e onde mora cada peça
 
@@ -156,7 +156,7 @@ nos mesmos 18 m da troca de degrau.
 3. `id` estável no registro de cadáveres.
 4. Política pura e aplicador, sem o `relocate`.
 5. Medições do §1 refeitas no `KIT_WORLD`; as cotas do §2.3 deixam de ser provisórias.
-6. Só depois da D-T5.3a: `relocate` (A) ou o registro de poses do aplicador (B).
+6. `corpses.relocate` no `game-crowd` (D-T5.3a, opção A) e o teste 13.
 
 ## 9. O que fica fora
 

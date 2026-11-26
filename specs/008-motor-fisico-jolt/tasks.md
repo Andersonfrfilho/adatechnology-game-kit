@@ -162,7 +162,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/ragdoll.test.ts` · `sonnet`.
 - **T5.2 Desmembrar e cortar** com `setShape` e juntas que quebram, mantendo a massa (bug 1 já corrigido).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-characters-three test` · `sonnet`.
-- **T5.3 🧠 Regra da pilha:** pilhas são correntes ou cápsulas, nunca ragdolls inteiros (1 700 corpos não dormem em nenhum motor); LOD
+- ✅ **T5.3 🧠 Regra da pilha** (feito em 2026-11-26: `design/pilha-e-lod.md` v2, reprovada a v1 pelo `architect` com 12 mudanças, todas aplicadas; D-T5.3a decidida pelo dono, opção A): pilhas são correntes ou cápsulas, nunca ragdolls inteiros (1 700 corpos não dormem em nenhum motor); LOD
   ragdoll → cápsula pela distância. Decisão em `design/pilha-e-lod.md`, revisada por `architect`.
   Mecânica? não · Aceite por comando? não · `opus`.
 - **T5.4 Implementar a regra da pilha.** Aceite: 100 corpos empilhados dormem em ≤ 10 s a ≤ 4 ms; troca de LOD de 100 corpos ≤ 5 ms.
@@ -192,7 +192,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 > 🤖 Modelo: `sonnet`
 
 - **T7.1 Multidão:** agentes como cápsulas cinemáticas (`game-crowd` move, o motor só empurra), corpos no chão como correntes, porta que cede
-  por junta. Aceite: 1 000 agentes ≤ 0,5 ms; `state-hash` e `team-golden` de `game-crowd` iguais.
+  por junta. Aceite: 1 000 agentes ≤ 0,5 ms; `state-hash` e `team-golden` de `game-crowd` iguais **quando nada empurra corpos** (D-T5.3a, opção A, dono em 2026-11-26: a física manda a posição do cadáver empurrado por `corpses.relocate`; `design/pilha-e-lod.md` §4).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-crowd test` e `... game-crowd-three test` · `sonnet`.
 - **T7.2 Consultas:** broadphase do motor sob `surfaceRay` (o acerto final continua a superfície desenhada), raio com vários acertos, esfera
   varrida, corpos criados no mesmo quadro. Aceite: 1 000 raios ≤ 2 ms; mesmo resultado que o caminho antigo nos testes do §7.
