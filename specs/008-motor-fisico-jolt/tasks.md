@@ -209,7 +209,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
 - ✅ **T6.19 Atualizar o §6 da `arquitetura.md`:** carro estacionado dinâmico (D3), sem par `vehicle`–`agent`, camada de corpo morto (`corpse`, da Fase 5), camada do testador das rodas.
   Mecânica? sim · Aceite por comando? sim: `grep` das camadas novas na `arquitetura.md` · `haiku`.
-- **T6.20 Emenda do C8 no `spec.md`** (D2) com o texto aprovado pelo dono.
+- ✅ **T6.20 Emenda do C8 no `spec.md`** (D2) com o texto aprovado pelo dono (feito em 2026-11-26, texto do dono sem mudar uma palavra, logo abaixo da tabela de condições; D2 confirmada no §20 do `design/veiculos.md`).
   Mecânica? sim · Aceite por comando? sim: `grep` da emenda · `haiku`.
 - ✅ **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4; feito em 2026-11-26, `evidence.md` `## T6.21`; passa com o teto de 96 cascos do desenho, e **não** com os ~1 270 que a T6.4 mediu: ver lá).
   Mecânica? sim · Aceite por comando? sim: `heap.test.ts`, `cascade.test.ts` · `sonnet`.

@@ -152,6 +152,8 @@ do gate 0. **Altura de energia** de uma peça = `y do centro de massa + (|v|² +
 | C9 | **Memória (§8).** O heap do wasm volta ao mesmo byte após ciclos de criar e descartar; pico da cena pior ≤ 50% do heap; `leak.mjs` ganha a sonda do wasm | volta ao mesmo byte; pico 21 MB (16%); sonda do `leak.mjs` não existe | `heap.test.ts`; `leak.mjs` na rodada diária |
 | C10 | **Sem troca de solver no meio do jogo.** O motor carrega antes de qualquer mundo existir; um mundo por jogo | room e testes já esperam o wasm antes | teste do boot da sala (sem GPU) e do `setup-physics.ts` |
 
+**Emenda do C8 (2026-11-26, decisão do dono, D2 do `design/veiculos.md`):** C8 vale por sessão: o número de vagas de deformação de veículos fica fixo na sessão pela qualidade escolhida; a medida do boot só sugere a qualidade padrão; a prioridade das vagas é pela distância ao jogador, nunca pela câmera; replays gravam essas decisões; lockstep multijogador fica fora do C8.
+
 ### 6.1 Comportamentos do §12 que o C5 nomeia (um teste cada)
 
 1. Apoio perdido: o que sobrou cai e se apoia nos cantos das partes que restaram.

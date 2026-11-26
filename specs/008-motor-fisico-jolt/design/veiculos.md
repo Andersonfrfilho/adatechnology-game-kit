@@ -950,7 +950,7 @@ Decididas em 2026-11-14:
 
 Recomendação do `architect` já incorporada (o dono confirma):
 
-- **D2 — Vagas e determinismo.** N fixo na sessão pela qualidade escolhida; a medida do boot só sugere a qualidade padrão; prioridade pela
+- **D2 — Vagas e determinismo. Confirmada pelo dono em 2026-11-26; emenda do C8 gravada no `spec.md` (T6.20).** N fixo na sessão pela qualidade escolhida; a medida do boot só sugere a qualidade padrão; prioridade pela
   distância ao jogador, nunca a câmera; replays gravam as decisões; emenda do C8 como task própria (T6.20); lockstep excluído.
 - **D3 — Carro estacionado dinâmico dormindo**, só com as guardas da 10.4.
 - **D9 — `game-deform`**: porque é puro, sem dependências, e serve a props que não são veículo (não pelo tamanho do `world.ts`); dono
