@@ -240,7 +240,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 
 - [x] TS.1 ✅ Canal `ModuleHost.physics`/`workers`, `PhysicsServices` no `game-physics`, `servicesOf` no preset, `physicsHostOf` na sala (0 linhas líquidas no `room.ts`). Aceite: `physics-channel.test.ts` e `world-physics-services.test.ts` verdes.
 - [x] TS.2 ✅ `hullPlanKind` em `KIT_WORKER_KINDS`. Aceite: `workers.test.ts` com `VEHICLE_HULL_PLAN`.
-- [ ] TS.3a `rayBroadPhase` ligado quando há laço. Aceite: testes do `game-kit-defaults` verdes, goldens iguais.
+- [x] TS.3a ✅ `rayBroadPhase` ligado quando há laço. Aceite: testes do `game-kit-defaults` verdes, goldens iguais.
 - [ ] TS.4 Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`).
 - [ ] TS.5 Armas: cápsulas e granada no motor.
 - [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
