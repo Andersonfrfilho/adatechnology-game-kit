@@ -7,7 +7,7 @@ describe('WorkBudget', () => {
     expect(new WorkBudget().unitsPerFrame).toBe(DEFAULT_WORK_BUDGET_MS * DEFAULT_WORK_UNITS_PER_MS)
     expect(new WorkBudget().maxWaitFrames).toBe(DEFAULT_MAX_WAIT_FRAMES)
     expect(new WorkBudget({ budgetMs: 4, unitsPerMs: 100, tier: 4 }).unitsPerFrame).toBe(100)
-    expect(WORK_KINDS).toEqual(['event', 'split', 'fragment', 'prefit', 'ground', 'body', 'wake'])
+    expect(WORK_KINDS).toEqual(['event', 'split', 'fragment', 'prefit', 'ground', 'body', 'wake', 'lod'])
   })
 
   it('takes what fits, refuses what does not, and forced work may go over until the next frame', () => {

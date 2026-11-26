@@ -1,6 +1,7 @@
 import type JoltNS from 'jolt-physics/wasm-compat'
 
-import type { BodyId, QueryFilter, RayHit, Vec3 } from '@adatechnology/game-physics'
+import { LAYER_PAIRS, LAYERS } from '@adatechnology/game-physics'
+import type { BodyId, Layer, QueryFilter, Quat, RayHit, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 
 import { layerOf } from './constants'
 import type { JoltWorldHost } from './world-host'
@@ -90,6 +91,68 @@ export const overlapSphere = (w: JoltWorldHost, at: { readonly center: Vec3; rea
       out.push(k as BodyId)
     }
   }
+  return out.length
+}
+
+/** The bodies a shape overlaps when put at `at` (`PhysicsWorld.overlapShape`): the shape is made for the query and let go of after it. */
+export const overlapShape = (w: JoltWorldHost, at: { readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation: Quat }, out: BodyId[], filter?: QueryFilter): number => {
+  const J = w.J
+  const shape = w.makeShape(at.shape)
+  w.r1.Set(at.position[0], at.position[1], at.position[2])
+  w.q1.Set(at.rotation[0], at.rotation[1], at.rotation[2], at.rotation[3])
+  const m = J.RMat44.prototype.sRotationTranslation(w.q1, w.r1)
+  w.v2.Set(1, 1, 1)
+  const c = w.collideCollector
+  c.Reset()
+  w.r1.Set(0, 0, 0)
+  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), w.bodyFilter, w.shapeFilter)
+  J.destroy(m)
+  shape.Release()
+  out.length = 0
+  const hits = c.mHits
+  for (let i = 0; i < hits.size(); i++) {
+    const k = hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId
+    if (!out.includes(k)) out.push(k)
+  }
+  return out.length
+}
+
+/** How close (m) a body must be to another for them to count as touching when it sleeps (resting bodies overlap by up to the slop, or sit at 0). */
+const TOUCH_MARGIN = 0.01
+
+/** The layers a body of `layer` meets, without sensors (they are overlapped, never touched): what its touching partners are looked for among. */
+const touchableBy = (layer: Layer): QueryFilter => ({
+  layers: LAYERS.filter((other) => other !== 'sensor' && LAYER_PAIRS.some(([a, b]) => (a === layer && b === other) || (b === layer && a === other))),
+})
+
+/**
+ * The bodies a body touches now (`PhysicsWorld.contactBodies`). A body that sleeps has no contacts in the engine (they are dropped as it falls asleep), so its touching
+ * partners are found by a query of its own shape widened by `TOUCH_MARGIN`.
+ */
+export const contactBodies = (w: JoltWorldHost, id: BodyId, out: BodyId[]): number => {
+  out.length = 0
+  const e = w.entry(id)
+  if (!w.bi.IsActive(e.id)) {
+    const J = w.J
+    w.v2.Set(1, 1, 1)
+    const c = w.collideCollector
+    c.Reset()
+    w.r1.Set(0, 0, 0)
+    const was = w.collideSettings.mMaxSeparationDistance
+    w.collideSettings.mMaxSeparationDistance = TOUCH_MARGIN
+    const self = new J.IgnoreSingleBodyFilter(e.id)
+    w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, touchableBy(e.layer)), self, w.shapeFilter)
+    w.collideSettings.mMaxSeparationDistance = was
+    J.destroy(self)
+    const hits = c.mHits
+    for (let i = 0; i < hits.size(); i++) {
+      const k = hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId
+      if (!out.includes(k)) out.push(k)
+    }
+    return out.length
+  }
+  const partners = w.partners.get(id)
+  if (partners) for (const other of partners.keys()) out.push(other as BodyId)
   return out.length
 }
 

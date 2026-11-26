@@ -175,7 +175,7 @@ export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly i
   settings.CalculateConstraintIndexToBodyIdxPair()
   // the ragdoll keeps its settings (and they their skeleton and joint settings) by reference: all go when it is destroyed
   const ragdoll = settings.CreateRagdoll(w.nextRagdoll, 0, w.system)
-  ragdoll.AddToPhysicsSystem(J.EActivation_Activate)
+  ragdoll.AddToPhysicsSystem(desc.sleeping ? J.EActivation_DontActivate : J.EActivation_Activate)
   const lock = w.system.GetBodyLockInterfaceNoLock()
   const bodies: BodyId[] = desc.parts.map((part, i) => {
     const body = lock.TryGetBody(ragdoll.GetBodyID(i))
