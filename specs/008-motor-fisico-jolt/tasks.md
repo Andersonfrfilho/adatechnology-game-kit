@@ -213,7 +213,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `grep` da emenda · `haiku`.
 - ✅ **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4; feito em 2026-11-26, `evidence.md` `## T6.21`; passa com o teto de 96 cascos do desenho, e **não** com os ~1 270 que a T6.4 mediu: ver lá).
   Mecânica? sim · Aceite por comando? sim: `heap.test.ts`, `cascade.test.ts` · `sonnet`.
-- **T6.25 Sonda da sala do veículo no `leak.mjs`** (§8).
+- **T6.25 Sonda da sala do veículo no `leak.mjs`** (§8). **Sonda escrita em 2026-11-26 (`evidence.md` `## T6.25`, fase `vehicle`, README em `examples/test-room/`); sem ✅: o aceite é à mão e o navegador não foi aberto; o dono roda na T8.5.**
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.
 - ✅ **T6.26 Atropelar pedestres e zumbis** (7.8; feito em 2026-11-26, `evidence.md` `## T6.26`; `createRunOver` em `game-vehicles-driving`, provado com o `Crowd` real em `game-crowd` e com um carro do Jolt em `vehicle.test.ts`).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
@@ -248,7 +248,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - **T8.4 Sala em GPU real** (à mão): blast, martelo, carro, ragdoll, horda; 5 rodadas; print por câmera (`CLAUDE.md` §5). Aceite: C2 e C4 da sala.
   Mecânica? não · Aceite por comando? não · `sonnet`.
 - **T8.5 Rodada diária à mão na branch:** `GPU_SCOPE=nightly PRE_PUSH_BROWSER=all node tools/gpu/browser-checks.mjs`, `node tools/gpu/perf-gate.mjs`,
-  `node examples/test-room/leak.mjs` com a sonda do wasm nova (C9). Aceite: tudo verde.
+  `node examples/test-room/leak.mjs` com a sonda do wasm nova (C9) e a sonda do veículo da T6.25: `cd examples/test-room && node build.mjs && LEAK_PHASE=vehicle node leak.mjs` (o dono roda; se ela passar, a T6.25 ganha ✅). Aceite: tudo verde.
   Mecânica? sim · Aceite por comando? sim (à mão, nunca em commit) · `sonnet`.
 - **T8.6 AMD, Firefox e ARM** conforme a resposta do dono (`spec.md` §11). Aceite: orçamentos do C7 na faixa medida; C8 em Firefox.
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.

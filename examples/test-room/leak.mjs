@@ -3,14 +3,15 @@
 // canvases still alive after a forced GC, the event listeners on window, document and the canvas, the intervals still running, and the JS heap
 // (the total of a heap snapshot, so garbage does not count).
 //   node leak.mjs                       every phase
-//   LEAK_PHASE=explosions|glass|areas|more|world|hands|floorplan|shots|craters   one phase, or several split by commas
+//   LEAK_PHASE=explosions|glass|areas|more|world|hands|floorplan|shots|craters|vehicle   one phase, or several split by commas
 //   LEAK_SCENARIOS=a;b                  with LEAK_PHASE, only these scenarios
 //   LEAK_ROUNDS=3                       measured cycles
 //   LEAK_WARMUP=2                       warm-up cycles before the first count
 //   LEAK_SOLVER=own                     the room on the old solver (?solver=own); by default it is on Jolt and also counts the Jolt bodies and the wasm heap in use
+//   LEAK_PHASE=vehicle                  by hand, Jolt only (T6.25): a car is born, hits a wall, loses parts and is removed; the wasm heap in use, the Jolt bodies and the JS heap must come back (README, "The vehicle memory probe")
 // Writes dist/leak.json. Exit code 1 when a budget fails.
 import { createRequire } from 'node:module'
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -39,7 +40,11 @@ const PHASES = {
   shots: { scenarios: ['target_concrete_stops_bullet', 'target_plywood_shotgun_holes', 'target_steel_heavy_through_hole'], shots: 60 },
   // blasts on open ground: each digs a crater, throws soil and leaves soot, and the next cycle's clear puts the ground back
   craters: { craters: 6 },
+  // a car made, crashed into a wall, stripped of parts and removed (leak-vehicle.mjs, bundled into the page); by hand only: `node leak.mjs` skips it
+  vehicle: { vehicle: 3 },
 }
+// phases that only run when asked for by LEAK_PHASE (they need Jolt and build a bundle of their own)
+const MANUAL_ONLY = new Set(['vehicle'])
 // What a cycle may leave behind, per measured cycle (above it the room keeps something it removed). Measured after the fixes of 2026-11-02:
 // buffers +0 to +70, textures 0, canvases 0, heap under 0.5 MB.
 const BUDGET = { buffer: 150, vao: 80, texture: 2, framebuffer: 0, program: 2, canvases: 2, listeners: 0, intervals: 0, heapMB: 2 }
@@ -109,6 +114,25 @@ const dist = join(here, 'dist/test-room.html')
 if (!existsSync(dist)) execFileSync(process.execPath, [join(here, 'build.mjs')], { stdio: 'inherit' })
 mkdirSync(join(here, 'dist'), { recursive: true })
 
+/** Bundles leak-vehicle.mjs (and the vehicle packages from their sources) into one script for the page; esbuild is the one build.mjs uses. */
+async function vehicleProbeBundle() {
+  const store = join(here, '../../node_modules/.pnpm')
+  const found = readdirSync(store).filter((d) => d.startsWith('esbuild@')).sort().reverse().map((d) => join(store, d, 'node_modules/esbuild')).find((p) => existsSync(join(p, 'lib/main.js')))
+  if (!found) throw new Error('leak: esbuild not found in node_modules/.pnpm (run pnpm install)')
+  const pkg = (/** @type {string} */ name) => join(here, '../../packages', name, 'src/index.ts')
+  const result = await require(found).build({
+    entryPoints: [join(here, 'leak-vehicle.mjs')],
+    bundle: true,
+    write: false,
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2020',
+    alias: Object.fromEntries(['game-vehicles', 'game-vehicles-fleet', 'game-vehicles-three', 'game-physics'].map((name) => [`@adatechnology/${name}`, pkg(name)])),
+    nodePaths: [join(here, '../../node_modules'), join(here, '../../packages/game-vehicles-three/node_modules')],
+  })
+  return result.outputFiles[0].text
+}
+
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 /** @type {{ budget: typeof BUDGET; rounds: number; phases: Record<string, unknown> }} */
 const report = { budget: BUDGET, rounds: ROUNDS, phases: {} }
@@ -133,6 +157,8 @@ async function heapMB(cdp) {
 
 for (const [name, phase] of Object.entries(PHASES)) {
   if (ONLY_SET.size && !ONLY_SET.has(name)) continue
+  if (!ONLY_SET.size && MANUAL_ONLY.has(name)) continue
+  if (phase.vehicle && !JOLT) throw new Error('leak: the vehicle phase needs the Jolt world (do not set LEAK_SOLVER=own)')
   const page = await browser.newPage({ viewport: { width: 640, height: 360 } })
   /** @type {string[]} */
   const errors = []
@@ -141,6 +167,7 @@ for (const [name, phase] of Object.entries(PHASES)) {
   await page.goto(`${pathToFileURL(dist).href}?table=0&ui=0${JOLT ? '' : '&solver=own'}`, { timeout: 180000 })
   await page.waitForFunction(() => window.__testRoom, null, { timeout: 300000 })
   if (JOLT && !(await page.evaluate(() => Boolean(window.__joltWorld)))) throw new Error('leak: the page made no Jolt world (LEAK_SOLVER is not own)')
+  if (phase.vehicle) await page.addScriptTag({ content: await vehicleProbeBundle() })
   const cdp = await page.context().newCDPSession(page)
   const cycle = () =>
     page.evaluate(async (p) => {
@@ -152,6 +179,12 @@ for (const [name, phase] of Object.entries(PHASES)) {
         const missing = wanted.filter((id) => !found.some((s) => s.id === id))
         if (missing.length) throw new Error(`leak: the room has no scenario ${missing.join(', ')}`)
         await room.runScenarios(found)
+      }
+      if (p.vehicle) {
+        for (let i = 0; i < p.vehicle; i++) {
+          const released = window.__vehicleLeakCycle()
+          if (released < 10) throw new Error(`leak: the probe car lost only ${released} parts, the crash did not happen`)
+        }
       }
       if (p.shots) {
         // rounds fired from eye height into the ground around the player, a ring of points, each with a frame between

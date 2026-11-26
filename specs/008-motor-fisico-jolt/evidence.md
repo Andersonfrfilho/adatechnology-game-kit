@@ -4678,3 +4678,11 @@ A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a 
 - Goldens da geometria intacta (`golden-*.test.ts`, `exact-golden.test.ts`, `digest.test.ts`) e z-fighting: iguais.
 
 **Gate.** `pnpm --filter @adatechnology/game-vehicles-fleet test` (depois de `pnpm build` limpo): 42 arquivos, **1 478 testes passam**, 0 falham, 0 pulados. `git status` limpo depois da suíte: nenhum golden nem ledger mudou.
+
+## T6.25 — Sonda da sala do veículo no `leak.mjs` (2026-11-26)
+
+**O que entrou.** Fase `vehicle` em `examples/test-room/leak.mjs` e `examples/test-room/leak-vehicle.mjs` (lado da página, empacotado pelo `leak.mjs` com o esbuild do `build.mjs`, pacotes pelas fontes). Um ciclo: carro nasce (kit, cascos, `createCrashParts`, corpo do chassi), bate numa parede a 15 m/s, perde peças (o que a batida não solta é desparafusado), e é removido inteiro (chassi, corpos das peças, parede, chão, objetos do kit). A fase confere que o carro perdeu pelo menos 10 peças e usa o orçamento que já existia: heap do wasm em uso (`wasmMB`, 0,25 MB por ciclo), corpos do Jolt (0) e heap de JS (2 MB). Só roda com `LEAK_PHASE=vehicle` (`node leak.mjs` a ignora). `examples/test-room/README.md` documenta como rodar.
+
+**Verificado.** `node --check` dos dois arquivos; o pacote da página é gerado pelo esbuild (3,16 MB). **Não rodei o navegador** (regra do dono, §9): a sonda nunca executou. A mesma sequência (criar, bater, soltar, remover) é a do teste de heap em ciclo da T6.9 (`crash-parts.test.ts`, 0 bytes de resíduo).
+
+**Pendência.** O comando para o dono rodar fica na T8.5: `cd examples/test-room && node build.mjs && LEAK_PHASE=vehicle node leak.mjs`. A T6.25 tem o aceite "à mão": ✅ só depois dessa corrida; a task ficou **sem ✅**.
