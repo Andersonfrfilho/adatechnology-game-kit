@@ -89,6 +89,8 @@ export interface PieceSystemOptions {
   physics: PiecePhysics
   /** With `physics`: the fixed boxes of what does not move, as drawn (turned), per object. */
   staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
+  /** With `staticSolids`: the objects whose list is not all of what a ray can hit. */
+  staticUnsure?: () => ReadonlySet<string>
 }
 
 /** Slower than this (m/s) into a wall a piece only stops against it: no blow, no sound. */
@@ -455,6 +457,7 @@ export class PieceSystem {
           ...(o.blastGroundTiles !== undefined ? { blastTiles: o.blastGroundTiles } : {}),
           gravity: o.gravity,
           staticSolids: o.staticSolids,
+          staticUnsure: o.staticUnsure,
           sweep: o.sweep,
           onSlam: o.onSlam,
           onKnock: o.onKnock,

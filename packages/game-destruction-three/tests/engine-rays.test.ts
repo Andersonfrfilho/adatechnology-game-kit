@@ -26,7 +26,7 @@ const wallSpec = (): DestructibleSpec => ({
   ],
 })
 
-const addWall = (world: ReturnType<typeof createDestruction>, scene: THREE.Scene, renderer: ReturnType<typeof createDestructionRenderer>, id: string, x: number, z: number): void => {
+const addWall = (world: ReturnType<typeof createDestruction>, scene: THREE.Scene, renderer: ReturnType<typeof createDestructionRenderer>, id: string, x: number, z: number, hiddenPart?: string): void => {
   const spec = wallSpec()
   world.add(spec, { id, position: [x, 0, z] })
   const root = new THREE.Group()
@@ -35,6 +35,7 @@ const addWall = (world: ReturnType<typeof createDestruction>, scene: THREE.Scene
     const size = part.shape.kind === 'box' ? part.shape.size : [1, 1, 1]
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(size[0], size[1], size[2]))
     mesh.position.set(...part.position)
+    mesh.visible = part.id !== hiddenPart
     root.add(mesh)
     meshes[part.id] = mesh
   }
@@ -118,6 +119,24 @@ engineOnly('the engine as the broad phase of the destruction world rays', () => 
     }
     console.log(JSON.stringify({ name: 'T7.2-ray-broad-phase', walls: WALLS, rays: RAYS, engineMsFor1000: Math.round(engineMs * 10) / 10, ownMsFor1000: Math.round(ownMs * 10) / 10, scanMsFor1000: Math.round(median(scanRuns) * 10) / 10, scanRuns: scanRuns.map((v) => Math.round(v * 10) / 10), engineRuns: engineRuns.map((v) => Math.round(v * 10) / 10), ownRuns: ownRuns.map((v) => Math.round(v * 10) / 10), objectsAsked: asked, objectsSkipped: skipped }))
     expect(skipped / asked).toBeGreaterThan(0.8)
+    renderer.dispose()
+  })
+  it('an object whose list lacks a part the world can still hit (a hidden one) is not covered: the ray still finds that part', () => {
+    const world = createDestruction()
+    const scene = new THREE.Scene()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, eventBudgetMs: Infinity, rayBroadPhase: true })
+    addWall(world, scene, renderer, 'wall_hidden', 0, 0, 'panel_2')
+    for (let k = 1; k < 4; k++) addWall(world, scene, renderer, `wall_${k}`, k * 8, 0)
+    settle(renderer)
+    const pieces = (renderer as unknown as { pieceSys: { rayBroadPhase(): RayBroadPhaseLike } }).pieceSys
+    // panel_2 is the one at x = 1
+    const from: Vec3 = [1, 0.5, -3]
+    const direction: Vec3 = [0, 0, 1]
+    world.setRayBroadPhase(null)
+    const without = world.raycast(from, direction, 10)
+    expect(without?.part).toBe('panel_2')
+    world.setRayBroadPhase(pieces.rayBroadPhase())
+    expect(same(world.raycast(from, direction, 10), without)).toBe(true)
     renderer.dispose()
   })
   it('a tie between two objects goes to the one the world holds first, with or without the broad phase, also after one is added again', () => {

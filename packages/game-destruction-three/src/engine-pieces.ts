@@ -49,6 +49,8 @@ export interface EnginePieceOptions {
   readonly gravity: number
   /** The fixed boxes per object; a new array for an object means it changed (measured again, broken, gone). */
   readonly staticSolids?: () => ReadonlyMap<string, readonly StaticSolid[]>
+  /** The objects whose `staticSolids` list is not all of what a ray can hit (measured in part, or a loose or hidden part left out): the ray broad phase tries them whatever the engine says. */
+  readonly staticUnsure?: () => ReadonlySet<string>
   readonly sweep?: (piece: PieceBody, from: Vec3, to: Vec3) => PieceSweepHit | null
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
@@ -1528,7 +1530,7 @@ export class EnginePieces {
   /** The host's fixed boxes, one static body per object (`EngineStatics`). */
   private layStatics(): void {
     const now = this.o.staticSolids?.()
-    if (now) this.statics.lay(now)
+    if (now) this.statics.lay(now, this.o.staticUnsure?.())
   }
 
   private keepApart(apart: ReadonlySet<string>): void {

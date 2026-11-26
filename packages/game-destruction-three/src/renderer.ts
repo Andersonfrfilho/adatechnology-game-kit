@@ -392,7 +392,9 @@ class Renderer implements DestructionRenderer {
   /** World boxes (min xyz, max xyz) of the drawn meshes of the bound objects that are not pieces, for the pieces to land on. */
   private readonly staticBoxes = new Map<string, number[]>()
   /** `staticSolids` per object, kept until `staticNow` measures the object again for a reason. */
-  private readonly solidCache = new Map<string, { solids: StaticSolid[] }>()
+  private readonly solidCache = new Map<string, { solids: StaticSolid[]; leftOut: boolean }>()
+  /** The objects whose last `staticSolids` list is not all of what a ray can hit: measured in part, or with a loose or hidden part left out. */
+  private readonly unsureSolids = new Set<string>()
   /** The objects `staticNow` measured again for a reason (an event, a moved root, boxes that changed): their `staticSolids` are measured again too. */
   private readonly solidStale = new Set<string>()
   /** The world matrix of each root when `staticNow` last measured it. */
@@ -597,6 +599,7 @@ class Renderer implements DestructionRenderer {
       ...(o.blastGroundTiles !== undefined ? { blastGroundTiles: o.blastGroundTiles } : {}),
       staticTopAt: (x, z, y, step) => this.staticTopAt(x, z, y, step),
       staticSolids: () => this.staticSolids(),
+      staticUnsure: () => this.unsureSolids,
       gravity: this.gravity,
       scene: o.scene,
       maxAwake: o.maxAwakePieces ?? Infinity,
@@ -1572,6 +1575,10 @@ class Renderer implements DestructionRenderer {
     const budget: MeasureBudget = { left: VERTICES_PER_UPDATE, incomplete: false, updated: this.measuredMeshes, workers: this.o.workers ?? null }
     try {
       this.measureEach(now, budget, out)
+      this.unsureSolids.clear()
+      for (const id of out.keys()) {
+        if (this.solidStale.has(id) || this.solidCache.get(id)?.leftOut) this.unsureSolids.add(id)
+      }
     } finally {
       // holds no mesh past the call (a mesh that leaves the scene is not kept here)
       this.measuredMeshes.clear()
@@ -1600,13 +1607,26 @@ class Renderer implements DestructionRenderer {
       // some parts wait for the next update: this object is measured again then, the parts done are kept
       if (budget.incomplete) this.solidStale.add(id)
       // measured again often to the same numbers: the same boxes keep the same list (an engine rebuilds what changed)
+      const leftOut = this.hasUnlistedPart(id)
       if (cached && sameSolids(cached.solids, solids)) {
+        cached.leftOut = leftOut
         out.set(id, cached.solids)
         continue
       }
-      this.solidCache.set(id, { solids })
+      this.solidCache.set(id, { solids, leftOut })
       out.set(id, solids)
     }
+  }
+
+  /** Whether a part the world still lets a ray hit is not in the object's list: a loose or hidden mesh (a lost part is no hit either). */
+  private hasUnlistedPart(id: string): boolean {
+    const b = this.bounds.get(id)
+    if (!b) return false
+    for (const pv of b.parts.values()) {
+      if (pv.gone !== 'none') continue
+      if (pv.meshes.some((mv) => mv.loose || !this.visuals.shown(mv))) return true
+    }
+    return false
   }
 
   /**
