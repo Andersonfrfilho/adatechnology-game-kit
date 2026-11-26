@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ShapeDesc, Vec3 } from '@adatechnology/game-physics'
+import type { RayHit, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { ground } from './scenes'
@@ -29,6 +29,40 @@ describe('a mutable compound whose centre of mass was moved still has children t
     world.readPose(car, pose, 0)
     expect(Number.isFinite(pose[1])).toBe(true)
     expect(pose[1]).toBeLessThan(1)
+    world.dispose()
+  })
+})
+
+describe('a child set again without a pose, or copied from a shared compound, stays where it was (its centre of mass is not its origin)', () => {
+  const THICKNESS: Vec3 = [0.3, 0.2, 0.4]
+  const children = (): { shape: ShapeDesc; position: Vec3; tag: number }[] => [-2, 2].map((x, tag) => ({ shape: hull(THICKNESS, [x, 0, 0]), position: [0, 0, 0] as Vec3, tag }))
+  /** The tags a ray going down through x finds in the body whose compound sits at height 5. */
+  const tagsAt = (world: JoltWorld, x: number): number[] => {
+    const out: RayHit[] = []
+    world.rayAll([x, 10, 0], [0, -1, 0], 10, out)
+    return out.map((hit) => hit.tag)
+  }
+
+  it('setChildShape with no pose leaves the child in its place', async () => {
+    const world = (await createJoltEngine()).createWorld() as JoltWorld
+    const car = world.createBody({ shape: { kind: 'compound', mutable: true, children: children() }, motion: 'dynamic', mass: 900, inertia: [200, 300, 250], position: [0, 5, 0], user: 1, sleeping: true })
+    expect(tagsAt(world, 2)).toContain(1)
+    world.setChildShape(car, 1, hull(THICKNESS, [2, 0, 0]))
+    expect(tagsAt(world, 2)).toContain(1)
+    expect(tagsAt(world, 4)).toEqual([])
+    expect(tagsAt(world, -2)).toContain(0)
+    world.dispose()
+  })
+
+  it('the first copy of a shared compound keeps every child in its place', async () => {
+    const world = (await createJoltEngine()).createWorld() as JoltWorld
+    const shared = world.createSharedShape({ kind: 'compound', children: children() })
+    const car = world.createBody({ shape: { kind: 'shared', id: shared }, motion: 'dynamic', mass: 900, position: [0, 5, 0], user: 1, sleeping: true })
+    world.setChildShape(car, 0, hull(THICKNESS, [-2, 0, 0]))
+    expect(tagsAt(world, -2)).toContain(0)
+    expect(tagsAt(world, 2)).toContain(1)
+    expect(tagsAt(world, 4)).toEqual([])
+    expect(tagsAt(world, -4)).toEqual([])
     world.dispose()
   })
 })

@@ -45,6 +45,15 @@ const keepMutable = (e: BodyEntry, mutable: JoltNS.MutableCompoundShape): JoltNS
   return mutable
 }
 
+/** Where a child's origin is in the compound's shape frame: Jolt keeps the child's centre of mass (relative to the compound's), so the child's own centre of mass is taken back off. */
+const originOf = (w: JoltWorldHost, sub: JoltNS.CompoundShapeSubShape, compoundCentre: Vec3): Vec3 => {
+  const p = sub.GetPositionCOM()
+  const own = sub.mShape.GetCenterOfMass()
+  w.v2.Set(own.GetX(), own.GetY(), own.GetZ())
+  const turned = sub.GetRotation().MulVec3(w.v2)
+  return [p.GetX() + compoundCentre[0] - turned.GetX(), p.GetY() + compoundCentre[1] - turned.GetY(), p.GetZ() + compoundCentre[2] - turned.GetZ()]
+}
+
 const copyAsMutable = (w: JoltWorldHost, e: BodyEntry, shape: JoltNS.Shape): void => {
   const J = w.J
   const source = J.castObject(shape, J.CompoundShape)
@@ -55,8 +64,8 @@ const copyAsMutable = (w: JoltWorldHost, e: BodyEntry, shape: JoltNS.Shape): voi
   const count = source.GetNumSubShapes()
   for (let i = 0; i < count; i++) {
     const sub = source.GetSubShape(i)
-    const p = sub.GetPositionCOM()
-    at.Set(p.GetX() + centre[0], p.GetY() + centre[1], p.GetZ() + centre[2])
+    const origin = originOf(w, sub, centre)
+    at.Set(origin[0], origin[1], origin[2])
     settings.AddShapeShape(at, sub.GetRotation(), sub.mShape, sub.mUserData)
   }
   const result = settings.Create()
@@ -90,8 +99,7 @@ export const setChildShape = (w: JoltWorldHost, id: BodyId, child: number, shape
     handles.splice(index, 1)
   } else {
     const sub = mutable.GetSubShape(index)
-    const p = sub.GetPositionCOM()
-    const position = pose?.position ?? ([p.GetX() + before[0], p.GetY() + before[1], p.GetZ() + before[2]] as const)
+    const position = pose?.position ?? originOf(w, sub, before)
     const q = sub.GetRotation()
     const rotation = pose?.rotation ?? ([q.GetX(), q.GetY(), q.GetZ(), q.GetW()] as const)
     const tag = sub.mUserData
