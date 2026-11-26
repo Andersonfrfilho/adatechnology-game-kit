@@ -9,7 +9,7 @@ import { createImpactReader, createPhysicsLoop } from '@adatechnology/game-physi
 import type { BodyDesc, BodyId, PhysicsWorld, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
-import { ground, report, stats } from './scenes'
+import { COST_LANE, ground, report, stats } from './scenes'
 
 interface Cascade {
   readonly hash: string
@@ -133,8 +133,8 @@ describe('case 5: chain reaction', () => {
       wrapperCacheEntries: a.wrapperCache, hash: a.hash, sameInProcess: a.hash === b.hash,
     })
     expect(a.hash).toBe(b.hash)
-    // the JS heap does not grow with the frames (the cost lane's note: spec.md 6.2 asks it of the cascade; the engine's own heap is `heap.test.ts`)
-    expect(a.heapBytes).toBeLessThan(2_000_000)
+    // the JS heap does not grow with the frames (spec.md 6.2 asks it of the cascade; the engine's own heap is `heap.test.ts`): charged only in the cost lane, as the time limits are, because the heap of a shared test run is not the cascade's alone
+    if (COST_LANE) expect(a.heapBytes).toBeLessThan(2_000_000)
   })
 
   it('the impact reader makes nothing per contact row and per frame: the bouncing frames allocate only a few bytes for each blow it tells', { timeout: 120000 }, async () => {
@@ -164,7 +164,7 @@ describe('case 5: chain reaction', () => {
     const withReader = await frames(true)
     report('impact-reader-allocation', { withoutBytes: without.allocated, withBytes: withReader.allocated, blowsTold: withReader.told })
     expect(withReader.told).toBeGreaterThan(200)
-    // a blow told is the unit: the numbers handed to `onImpact` cost a few bytes each (about 100), a row that is not told costs none, and a frame with no blow nothing
-    expect((withReader.allocated - without.allocated) / withReader.told).toBeLessThan(200)
+    // a blow told is the unit: the numbers handed to `onImpact` cost a few bytes each (about 100), a row that is not told costs none, and a frame with no blow nothing (cost lane only: it reads the shared heap)
+    if (COST_LANE) expect((withReader.allocated - without.allocated) / withReader.told).toBeLessThan(200)
   })
 })
