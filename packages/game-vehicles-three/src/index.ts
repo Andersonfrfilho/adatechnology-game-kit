@@ -29,4 +29,4 @@ export { createVehicleColliders, vehicleColliders, vehicleHulls } from './collid
 export type { VehicleColliders, VehicleCollidersOptions, VehicleHull } from './colliders'
 export { convexFaces, hullVolume, reducePoints } from './hull-geometry'
 export type { HullFace } from './hull-geometry'
-export { HULL_CELL, MAX_HULL_POINTS, MAX_STANDOFF_INSIDE, MAX_STANDOFF_OUTSIDE, THIN_UNDER } from './vehicle-hulls'
+export { FLAT_PAD, MAX_HULL_POINTS } from './vehicle-hulls'

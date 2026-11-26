@@ -24,7 +24,7 @@ const STRIDE = Math.round(RAY_GRID / FINE)
 export type Triangles = Float32Array
 
 /** The triangles of every drawn mesh under `root`, in the frame. */
-export const drawnTriangles = (root: THREE.Object3D, frame: THREE.Object3D): Triangles => {
+export const drawnTriangles = (root: THREE.Object3D, frame: THREE.Object3D, skip: ReadonlySet<THREE.Object3D> = new Set()): Triangles => {
   const toFrame = new THREE.Matrix4().copy(frame.matrixWorld).invert()
   const matrix = new THREE.Matrix4()
   const v = new THREE.Vector3()
@@ -32,6 +32,7 @@ export const drawnTriangles = (root: THREE.Object3D, frame: THREE.Object3D): Tri
   root.traverse((node) => {
     const mesh = node as THREE.Mesh
     if (!isDrawn(mesh)) return
+    for (let node: THREE.Object3D | null = mesh; node; node = node.parent) if (skip.has(node)) return
     mesh.updateWorldMatrix(true, false)
     matrix.multiplyMatrices(toFrame, mesh.matrixWorld)
     const position = mesh.geometry.getAttribute('position')
@@ -47,15 +48,19 @@ export const drawnTriangles = (root: THREE.Object3D, frame: THREE.Object3D): Tri
   return Float32Array.from(out)
 }
 
-/** The faces of the hulls (the ones of `parts`, or all) as triangles. */
-export const hullTriangles = (hulls: readonly VehicleHull[]): Triangles => {
+/** The faces of the hulls as triangles, and for each triangle the number of the part (`partNumbers`, by id) its hull belongs to. */
+export const hullTriangles = (hulls: readonly VehicleHull[], partNumbers: ReadonlyMap<string, number>): { triangles: Triangles; owners: Int32Array } => {
   const out: number[] = []
+  const owners: number[] = []
   for (const hull of hulls) {
     const faces = convexFaces(hull.points)
     if (!faces) continue
-    for (const face of faces) for (const corner of face) out.push(hull.points[corner * 3]!, hull.points[corner * 3 + 1]!, hull.points[corner * 3 + 2]!)
+    for (const face of faces) {
+      for (const corner of face) out.push(hull.points[corner * 3]!, hull.points[corner * 3 + 1]!, hull.points[corner * 3 + 2]!)
+      owners.push(partNumbers.get(hull.id) ?? -1)
+    }
   }
-  return Float32Array.from(out)
+  return { triangles: Float32Array.from(out), owners: Int32Array.from(owners) }
 }
 
 /** The depth (along the ray direction, from the near side) of the nearest triangle at each cell of a plane across the direction; NaN where there is none. */
@@ -63,6 +68,8 @@ export interface DepthMap {
   readonly width: number
   readonly height: number
   readonly depth: Float32Array
+  /** The set a cell's nearest triangle belongs to (`owners`, one number per triangle), -1 where there is none; only when `owners` was given. */
+  readonly owner: Int32Array | null
 }
 
 export interface RayFrame {
@@ -104,8 +111,9 @@ export const frameFor = (direction: readonly [number, number, number], sets: rea
 }
 
 /** What a ray along the direction meets first, at the centre of every cell. */
-export const depthMap = (triangles: Triangles, frame: RayFrame): DepthMap => {
+export const depthMap = (triangles: Triangles, frame: RayFrame, owners?: ArrayLike<number>): DepthMap => {
   const depth = new Float32Array(frame.width * frame.height).fill(NaN)
+  const owner = owners ? new Int32Array(frame.width * frame.height).fill(-1) : null
   for (let t = 0; t < triangles.length; t += 9) {
     const pa: number[] = [], pb: number[] = [], pq: number[] = []
     for (let k = 0; k < 3; k++) {
@@ -130,86 +138,98 @@ export const depthMap = (triangles: Triangles, frame: RayFrame): DepthMap => {
         if (w0 < -1e-9 || w1 < -1e-9 || w2 < -1e-9) continue
         const q = w0 * pq[0]! + w1 * pq[1]! + w2 * pq[2]!
         const at = j * frame.width + i
-        if (!(q >= depth[at]!)) depth[at] = q
+        if (!(q >= depth[at]!)) {
+          depth[at] = q
+          if (owner) owner[at] = owners![t / 9]!
+        }
       }
     }
   }
-  return { width: frame.width, height: frame.height, depth }
+  return { width: frame.width, height: frame.height, depth, owner }
 }
 
-export interface RayCounts {
-  /** Rays of the 5 cm grid that hit the drawn shell. */
+/** The ball of K3 to K5 (m): the first touch of a ball of this radius on the depth map is where a thing the size of a fist stops. */
+export const BALL = 0.1
+/** K3: a ball that touches a hull has the drawn surface within its radius plus this (m). */
+export const REACH_EXTRA = 0.03
+/** K4: a hull is ahead of the drawn surface when a ball meets it this much (m) before the drawn one. */
+export const AHEAD = 0.03
+/** K5: a hull is behind the drawn surface when a ball meets it this much (m) after the drawn one, or never. */
+export const BEHIND = 0.05
+
+const offsetsOf = (radius: number): ReadonlyArray<readonly [number, number, number]> => {
+  const cells = Math.round(radius / FINE)
+  const out: Array<readonly [number, number, number]> = []
+  for (let dj = -cells; dj <= cells; dj++) {
+    for (let di = -cells; di <= cells; di++) {
+      const d2 = (di * di + dj * dj) * FINE * FINE
+      if (d2 <= radius * radius) out.push([di, dj, Math.sqrt(radius * radius - d2)])
+    }
+  }
+  return out
+}
+const BALL_CELLS = offsetsOf(BALL)
+const REACH_CELLS = offsetsOf(BALL + REACH_EXTRA)
+
+/** Where the centre of a ball of `BALL` is when it first touches the map coming along the ray at the cell (depth of the centre); NaN when it touches nothing. */
+export const ballCentre = (map: DepthMap, i: number, j: number): number => {
+  let best = Infinity
+  for (const [di, dj, rise] of BALL_CELLS) {
+    const ii = i + di, jj = j + dj
+    if (ii < 0 || jj < 0 || ii >= map.width || jj >= map.height) continue
+    const d = map.depth[jj * map.width + ii]!
+    if (Number.isNaN(d)) continue
+    if (d - rise < best) best = d - rise
+  }
+  return best === Infinity ? NaN : best
+}
+
+/** Whether the map has a surface within `BALL + REACH_EXTRA` of the point at the cell and depth. */
+const hasSurfaceWithin = (map: DepthMap, i: number, j: number, depth: number): boolean => {
+  for (const [di, dj, reach] of REACH_CELLS) {
+    const ii = i + di, jj = j + dj
+    if (ii < 0 || jj < 0 || ii >= map.width || jj >= map.height) continue
+    const d = map.depth[jj * map.width + ii]!
+    if (!Number.isNaN(d) && Math.abs(d - depth) <= reach) return true
+  }
+  return false
+}
+
+export interface BallCounts {
+  /** Balls on the 5 cm grid that touch the drawn shell. */
   drawn: number
-  /** Of those, the ones whose nearest hull hit is between `inside` before the drawn point and `outside` after it (H3). */
-  covered: number
-  /** Rays where a hull is met more than `outside` before the drawn point (H2). */
-  standingOut: number
-  /** Rays that miss the drawn shell and every ray within 1 cm of them also does, and still meet a hull (H4). */
-  phantom: number
-  /** The worst the hull stands out, m. */
-  worstOut: number
+  /** K3: the ball meets a hull first and there is no drawn surface within its radius plus `REACH_EXTRA` of where it stops. */
+  floating: number
+  /** K4: the ball meets a hull more than `AHEAD` before the drawn shell; the hull of each is named in `aheadByOwner`. */
+  ahead: number
+  /** K5: the ball meets a hull more than `BEHIND` after the drawn shell, or no hull. */
+  behind: number
+  readonly aheadByOwner: Map<number, number>
+  readonly floatingByOwner: Map<number, number>
 }
 
-/** H2, H3 and H4 for one direction: the rays are the cells every `STRIDE` along the grid; a hull may stand out `outside` in front of the drawn surface and be `inside` behind it. */
-export const compareRays = (drawn: DepthMap, hull: DepthMap, outside: number, inside: number): RayCounts => {
-  const counts: RayCounts = { drawn: 0, covered: 0, standingOut: 0, phantom: 0, worstOut: 0 }
-  const slack = Math.round(0.01 / FINE)
+/** K3, K4 and K5 for one direction: balls on a grid of `RAY_GRID` come along the ray onto the drawn map and onto the hull map. */
+export const compareBalls = (drawn: DepthMap, hull: DepthMap): BallCounts => {
+  const counts: BallCounts = { drawn: 0, floating: 0, ahead: 0, behind: 0, aheadByOwner: new Map(), floatingByOwner: new Map() }
   for (let j = Math.floor(STRIDE / 2); j < drawn.height; j += STRIDE) {
     for (let i = Math.floor(STRIDE / 2); i < drawn.width; i += STRIDE) {
-      const at = j * drawn.width + i
-      const d = drawn.depth[at]!, h = hull.depth[at]!
-      if (Number.isNaN(d)) {
-        if (Number.isNaN(h)) continue
-        let near = false
-        for (let dj = -slack; dj <= slack && !near; dj++) {
-          for (let di = -slack; di <= slack && !near; di++) {
-            const jj = j + dj, ii = i + di
-            if (jj >= 0 && jj < drawn.height && ii >= 0 && ii < drawn.width && !Number.isNaN(drawn.depth[jj * drawn.width + ii]!)) near = true
-          }
-        }
-        if (!near) counts.phantom++
-        continue
+      const d = ballCentre(drawn, i, j)
+      const h = ballCentre(hull, i, j)
+      if (!Number.isNaN(d)) {
+        counts.drawn++
+        if (Number.isNaN(h) || h > d + BEHIND) counts.behind++
       }
-      counts.drawn++
-      if (!Number.isNaN(h) && h >= d - outside && h <= d + inside) counts.covered++
-      if (!Number.isNaN(h) && h < d - outside) {
-        counts.standingOut++
-        counts.worstOut = Math.max(counts.worstOut, d - h)
+      if (Number.isNaN(h) || (!Number.isNaN(d) && h >= d)) continue
+      const owner = hull.owner?.[j * hull.width + i] ?? -1
+      if (!hasSurfaceWithin(drawn, i, j, h)) {
+        counts.floating++
+        counts.floatingByOwner.set(owner, (counts.floatingByOwner.get(owner) ?? 0) + 1)
+      }
+      if (!Number.isNaN(d) && h < d - AHEAD) {
+        counts.ahead++
+        counts.aheadByOwner.set(owner, (counts.aheadByOwner.get(owner) ?? 0) + 1)
       }
     }
   }
   return counts
-}
-
-/** Parts that are a solid block: one hull whole, its volume held by H5. */
-export const SOLID_CHECKED: ReadonlySet<string> = new Set(['rim', 'tyre', 'battery', 'fuel_tank', 'engine', 'gearbox', 'oil_pan', 'alternator', 'radiator'])
-
-/** Whether every edge of the triangles is shared by exactly two (vertices welded at 0.1 mm): only then the signed volume is a volume. */
-const isClosed = (triangles: Triangles): boolean => {
-  const key = (i: number): string => `${Math.round(triangles[i]! * 1e4)},${Math.round(triangles[i + 1]! * 1e4)},${Math.round(triangles[i + 2]! * 1e4)}`
-  const edges = new Map<string, number>()
-  for (let t = 0; t < triangles.length; t += 9) {
-    const corners = [key(t), key(t + 3), key(t + 6)]
-    for (let k = 0; k < 3; k++) {
-      const a = corners[k]!, b = corners[(k + 1) % 3]!
-      if (a === b) continue
-      const edge = a < b ? `${a}|${b}` : `${b}|${a}`
-      edges.set(edge, (edges.get(edge) ?? 0) + 1)
-    }
-  }
-  for (const count of edges.values()) if (count !== 2) return false
-  return true
-}
-
-/** The volume (m3) and the area (m2) of a closed set of triangles, or null when it is not closed. */
-export const solidOf = (triangles: Triangles): { volume: number; area: number } | null => {
-  if (triangles.length === 0 || !isClosed(triangles)) return null
-  let volume = 0
-  let area = 0
-  for (let t = 0; t < triangles.length; t += 9) {
-    const [ax, ay, az, bx, by, bz, cx, cy, cz] = [triangles[t]!, triangles[t + 1]!, triangles[t + 2]!, triangles[t + 3]!, triangles[t + 4]!, triangles[t + 5]!, triangles[t + 6]!, triangles[t + 7]!, triangles[t + 8]!]
-    volume += ax * (by * cz - bz * cy) + ay * (bz * cx - bx * cz) + az * (bx * cy - by * cx)
-    area += Math.hypot((by - ay) * (cz - az) - (bz - az) * (cy - ay), (bz - az) * (cx - ax) - (bx - ax) * (cz - az), (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)) / 2
-  }
-  return { volume: Math.abs(volume) / 6, area }
 }

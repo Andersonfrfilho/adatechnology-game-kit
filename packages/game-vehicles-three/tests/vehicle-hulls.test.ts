@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
-import { HULL_CELL, MAX_HULL_POINTS, THIN_UNDER, convexFaces, createVehicleColliders, hullVolume, reducePoints, vehicleHulls } from '../src'
-import { hullsOf } from '../src/vehicle-hulls'
+import { FLAT_PAD, MAX_HULL_POINTS, convexFaces, createVehicleColliders, hullVolume, reducePoints, vehicleHulls } from '../src'
+import { hullOf } from '../src/vehicle-hulls'
 import { build } from './vehicle-colliders-support'
-import { checkHulls } from './vehicle-hulls-check'
 
 const CUBE = [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1]
 
@@ -50,65 +49,62 @@ describe('the convex hull and the points it is made of (design 10.1)', () => {
   })
 })
 
-describe('hulls of a drawn soup (design 10.1)', () => {
-  it('a flat sheet is one hull, extruded toward the middle of the vehicle up to 3 cm and never away from it', () => {
-    const soup = sheet(1, 0.5)
-    const [hull] = hullsOf(soup, soup.all, [0.5, 0, 0.5])
-    expect(hullsOf(soup, soup.all, [0.5, 0, 0.5])).toHaveLength(1)
-    const heights = hull!.filter((_, i) => i % 3 === 1)
-    expect(Math.max(...heights)).toBeCloseTo(0.5, 9)
-    expect(Math.min(...heights)).toBeCloseTo(0.5 - THIN_UNDER, 9)
-    const above = hullsOf(soup, soup.all, [0.5, 2, 0.5])[0]!.filter((_, i) => i % 3 === 1)
-    expect(Math.min(...above)).toBeCloseTo(0.5, 9)
-    expect(Math.max(...above)).toBeCloseTo(0.5 + THIN_UNDER, 9)
+describe('the hull of a drawn piece (design 10.1, method B)', () => {
+  it('a piece with volume is one hull of its own drawn vertices, never padded', () => {
+    const soup = { vertices: CUBE, indices: [0, 1, 2, 1, 3, 2, 4, 5, 6, 5, 7, 6] }
+    const hull = hullOf(soup)!
+    const corners = (points: readonly number[]): string[] => Array.from({ length: points.length / 3 }, (_, i) => points.slice(i * 3, i * 3 + 3).join(',')).sort()
+    expect(corners(hull)).toEqual(corners(CUBE))
+    expect(hullVolume(hull, convexFaces(hull)!)).toBeCloseTo(1, 9)
   })
 
-  it('a hull has at most 64 points, every one of them a drawn point, or an extrusion of one', () => {
-    const soup = sheet(1.2, 0.2, 12)
-    for (const hull of hullsOf(soup, soup.all, [0.6, -1, 0.6])) expect(hull.length / 3).toBeLessThanOrEqual(MAX_HULL_POINTS)
+  it('a flat sheet gets FLAT_PAD on each side of its plane: 5 mm thick, 64 points at most', () => {
+    const soup = sheet(1, 0.5, 12)
+    const hull = hullOf(soup)!
+    const heights = hull.filter((_, i) => i % 3 === 1)
+    expect(Math.max(...heights)).toBeCloseTo(0.5 + FLAT_PAD, 9)
+    expect(Math.min(...heights)).toBeCloseTo(0.5 - FLAT_PAD, 9)
+    expect(hull.length / 3).toBeLessThanOrEqual(MAX_HULL_POINTS)
+    expect(convexFaces(hull)).not.toBeNull()
   })
 
-  it('an L of two sheets is cut where the hull of the whole would stand off the drawn shell by more than 3 cm', () => {
-    const floor = sheet(1, 0, 4)
-    const wall = sheet(1, 0, 4)
-    const vertices = [...floor.vertices]
-    for (let i = 0; i < wall.vertices.length; i += 3) vertices.push(wall.vertices[i]!, wall.vertices[i + 2]!, 0)
-    const offset = floor.vertices.length / 3
-    const indices = [...floor.indices, ...wall.indices.map((i) => i + offset)]
-    const all = Array.from({ length: indices.length / 3 }, (_, t) => t)
-    const hulls = hullsOf({ vertices, indices }, all, [0.5, 0.5, 0.5])
-    expect(hulls.length).toBeGreaterThanOrEqual(2)
-    for (const hull of hulls) expect(hull.length / 3).toBeLessThanOrEqual(MAX_HULL_POINTS)
+  it('a strip (a line) is padded across its plane too, so it is still a volume', () => {
+    const soup = { vertices: [0, 0, 0, 1, 0, 0, 2, 0, 0, 0.5, 0, 0, 1.5, 0, 0, 0.2, 0, 0], indices: [0, 1, 2, 3, 4, 5] }
+    const hull = hullOf(soup)!
+    expect(hull.length / 3).toBeLessThanOrEqual(MAX_HULL_POINTS)
+    expect(convexFaces(hull)).not.toBeNull()
   })
 
-  it('a solid part is one hull however it is shaped', () => {
-    const floor = sheet(1, 0, 4)
-    const wall = sheet(1, 0, 4)
-    const vertices = [...floor.vertices]
-    for (let i = 0; i < wall.vertices.length; i += 3) vertices.push(wall.vertices[i]!, wall.vertices[i + 2]!, 0)
-    const offset = floor.vertices.length / 3
-    const indices = [...floor.indices, ...wall.indices.map((i) => i + offset)]
-    const all = Array.from({ length: indices.length / 3 }, (_, t) => t)
-    expect(hullsOf({ vertices, indices }, all, [0.5, 0.5, 0.5], true)).toHaveLength(1)
+  it('a hull of a piece of many points keeps the extreme of the cube directions and at most 64 points', () => {
+    const vertices: number[] = []
+    for (let i = 0; i < 3000; i++) vertices.push(Math.sin(i * 12.9898) * 0.4, Math.sin(i * 78.233) * 0.3 + 1, Math.sin(i * 37.719) * 0.2)
+    const hull = hullOf({ vertices, indices: [0, 1, 2] })!
+    expect(hull.length / 3).toBeLessThanOrEqual(MAX_HULL_POINTS)
+    expect(Math.max(...hull.filter((_, i) => i % 3 === 0))).toBe(Math.max(...vertices.filter((_, i) => i % 3 === 0)))
+  })
+
+  it('fewer than three points is no hull', () => {
+    expect(hullOf({ vertices: [0, 0, 0, 1, 0, 0], indices: [] })).toBeNull()
   })
 })
 
 describe('the hulls of a model made and kept (design 10.1, 10.2)', () => {
-  it('every hull belongs to a part of the model, has at most 64 points, and the cell is 1.6 m', () => {
-    expect(HULL_CELL).toBe(1.6)
+  it('every hull belongs to a part of the model, has at most 64 points, and a wheel has none', () => {
     const { vehicle, frame, dispose } = build('naked_bike')
     const hulls = vehicleHulls(THREE, vehicle, frame)
     const parts = new Set(vehicle.model.parts.map((part) => part.id))
+    const wheels = new Set(vehicle.model.parts.filter((part) => ['rim', 'tyre', 'brakes', 'shocks'].includes(part.role)).map((part) => part.id))
     expect(hulls.length).toBeGreaterThan(0)
     for (const hull of hulls) {
       expect(parts.has(hull.id)).toBe(true)
+      expect(wheels.has(hull.id)).toBe(false)
       expect(hull.points.length / 3).toBeLessThanOrEqual(MAX_HULL_POINTS)
       expect(convexFaces(hull.points)).not.toBeNull()
     }
     dispose()
   })
 
-  it('asked again with nothing changed, the same hulls come back; a dent makes again only the cell it touched', () => {
+  it('asked again with nothing changed, the same hulls come back; a dent makes again only the piece it touched', () => {
     const { vehicle, frame, dispose } = build('naked_bike')
     const colliders = createVehicleColliders(THREE, vehicle, frame, { hulls: true })
     const first = colliders.hulls()
@@ -135,12 +131,5 @@ describe('the hulls of a model made and kept (design 10.1, 10.2)', () => {
     const { vehicle, frame, dispose } = build('naked_bike')
     expect(() => createVehicleColliders(THREE, vehicle, frame).hulls()).toThrow(/options.hulls/)
     dispose()
-  })
-
-  it('the ray and volume check (H2 to H5) runs on a model and reports; it does not pass yet (evidence.md, T6.4)', () => {
-    const report = checkHulls('naked_bike')
-    console.log(JSON.stringify({ name: 'hull-check-naked_bike', ...report }))
-    expect(report.maxPoints).toBeLessThanOrEqual(MAX_HULL_POINTS)
-    expect(report.rays).toBeGreaterThan(0)
   })
 })
