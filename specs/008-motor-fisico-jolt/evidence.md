@@ -3998,3 +3998,29 @@ Cada R0 de quadrúpede custa o mesmo que um de pessoa ou menos (0,5 a 0,8 ms con
 
 **Para o dono ver na sala (§5, sem GPU aqui)**: um cão e uma vaca mortos em 1ª e 3ª pessoa caindo na escada; o desenho do cadáver de bicho ainda é a pose fixa (o R0/R1 de bicho com esqueleto desenhado é a T5.4a, que serve a pessoa e o bicho). Não escolhi limites de cauda e orelhas: ficam fora do R0.
 
+## T6.0 — Micro-benchmark do reticulado XPBD (2026-11-26)
+
+Script descartável (`lattice-bench.mjs`, na pasta de rascunho da sessão; **não entra em commit**, como a T6.0 pede). XPBD de passos pequenos em Node, `Float64Array`, uma passada de vigas por iteração, plasticidade (escoamento a força fixa de 8 kN, vigas densificam em 30% do comprimento), 9 rodadas depois de uma de aquecimento, mediana. Máquina: carga 3,36 no início (abaixo de 4), sob `perf-measure.lock`. Grades de 60, 150, 300 e 400 nós (329, 957, 1 973 e 2 658 vigas); massa realista (4 nós de 300 partes para 1 de painel, 1 500 kg no total); entrada: todos os nós a 15 m/s contra um plano, 0,3 s. Referência de erro: 1 920 Hz com 4 iterações (a mais convergida que o script roda).
+
+| Nós | Hz | Iterações | ms por quadro de 60 Hz | Erro RMS dos nós (m) | Erro da frente esmagada (m) | Erro do impulso do plano | Deriva do momento angular |
+|---|---|---|---|---|---|---|---|
+| 300 | 1 920 | 1 | 0,799 | 0,886 | 0,630 | 5,2% | 0,010% |
+| 300 | 1 920 | 2 | 1,613 | 0,495 | 0,309 | 3,4% | 0,010% |
+| 300 | 960 | 1 | 0,410 | 1,227 | 0,752 | 7,7% | 0,022% |
+| 300 | 960 | 2 | 0,873 | 0,937 | 0,595 | 6,1% | 0,022% |
+| 300 | **480** | **1** | **0,240** | 1,485 | 0,860 | 8,8% | 0,045% |
+| 300 | 480 | 2 | 0,443 | 1,278 | 0,679 | 3,8% | 0,044% |
+| 300 | 240 | 1 | 0,118 | 1,604 | 0,892 | 9,1% | 0,086% |
+| 300 | 240 | 2 | 0,235 | 1,481 | 0,790 | 6,0% | 0,087% |
+| 400 | 480 | 1 | 0,318 | 1,185 | 0,633 | 8,2% | 0,055% |
+| 400 | 1 920 | 2 | 2,549 | 0,447 | 0,365 | 4,6% | 0,013% |
+
+(60 e 150 nós: 480 Hz com uma iteração custa 0,044 e 0,123 ms; as outras 22 linhas da grade (4 tamanhos × 4 frequências × 1 e 2 iterações) seguem a mesma forma e saíram só na sessão. Deriva do momento linear: 0 em todas.)
+
+**O que os números dizem (registrado, a decisão da 009 não é tomada aqui):**
+
+1. **Custo:** 300 nós a 480 Hz com uma iteração custa **0,24 ms por quadro de 60 Hz**, ou 0,03 ms por subpasso: abaixo da estimativa B do desenho (≈0,05 ms por subpasso, 15.1) e bem abaixo da A (0,1 ms). O custo é linear nas vigas, nos subpassos e nas iterações.
+2. **Erro:** o erro RMS dos nós contra a referência fica entre 0,4 e 2,1 m em **todas** as configurações e **não** cai de forma regular com a frequência: com 300:1 de razão de massas e vigas perfeitamente plásticas, uma iteração por subpasso não segura a rigidez, e a resposta (a frente esmagada, 0,3 a 1,1 m de diferença) depende do passo. Só 1 920 Hz com 2 iterações chega perto da referência (RMS 0,5 m) e custa 1,6 ms por quadro para 300 nós, acima do 1,2 ms do §15.1. A referência de 4 iterações também não é uma solução exata; um resultado limpo exigiria uma referência independente (por exemplo, um passo de 7 680 Hz com 8 iterações), que este script não roda.
+3. **Deriva do referencial flutuante:** momento linear sem deriva; momento angular 0,005% a 0,11% de variação em 0,3 s (sobe com a frequência baixa e com os nós), sem importância para o aceite de 4.2.
+
+**Conclusão para o desenho:** 480 Hz com uma iteração (D5) é barato e **não** foi demonstrado exato contra a referência deste script; a decisão da 009 deve tratar o ganho de precisão (iterações, passo menor ou vigas menos rígidas) e a razão 300:1 como risco aberto, medido com um lote de referência melhor.
