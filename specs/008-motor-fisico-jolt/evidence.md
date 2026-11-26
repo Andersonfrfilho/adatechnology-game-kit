@@ -3363,3 +3363,51 @@ Cinco achados da revisão, um commit por item, cada um com teste que falhava ant
 **Não mexido:** `GRENADE_ROLLING_DAMPING` (decisão do dono). **Limite:** `jointAngles` ainda devolve um objeto por chamada (contrato do adaptador); com a parte dormindo ele não é chamado, e só a parte em movimento paga.
 
 **Gates (pacotes tocados, uma suíte por vez):** `game-physics` 22 testes, `game-physics-jolt` 110 (2 puladas, 1 arquivo pulado como antes), `game-interactables` 169, `game-interactables-three` 541, `game-weapons-three` 2087, `game-player` 115, todos passam; `tsc --noEmit` e `eslint` limpos nos seis (só o aviso `max-lines` de `world.ts`, que já existia). Dependências de `dist` refeitas (`game-physics`, `game-physics-jolt`, `game-interactables`) antes.
+
+## T3.10 — Jolt como padrão (2026-11-26)
+
+Branch `spec/008-jolt-padrao` sobre `origin/main` (`a134e3fc8`). Nenhum golden regravado.
+
+**O que mudou (só a chave padrão; `own` continua, apagá-la é a T8.1):**
+- Sala: `examples/test-room/build.mjs` (`__joltBoot` só pula o wasm com `?solver=own`), `src/main.js` (comentário; `?? 'own'` fica para o caso `?solver=own`),
+  `leak.mjs` (`LEAK_SOLVER=own` escolhe o antigo), `tools/gpu/room-explosion.mjs` (variante `own` agora é `&solver=own`), `tools/serve-room/README.md`.
+- Testes: `tests/setup-physics.ts` de `game-destruction-three` e `game-floorplan-three` (`IS_JOLT = PIECE_SOLVER !== 'own'`); os `describe.skipIf`
+  de `fitted-pieces`, `engine-hosted`, `seam-allocations`, `engine-sweep` pulam só com `PIECE_SOLVER=own`; `bowl-energy`, `bench-pieces`, `sweep-c6`,
+  `determinism-scene`, `c5-behaviours` acompanham.
+- `packages/game-test-room/src/room.ts` (`options.physics ?? 'own'`) **não mudou**: a sala não cria o motor (wasm assíncrono); quem entrega o laço Jolt é a
+  página (`window.__roomPhysics`). `examples/reference-district` já era Jolt por padrão.
+
+**Gates (máquina carregada por outras sessões: carga 5–9; testes de 5 s estouram sob carga, os de 120 s também):**
+
+| Gate | Resultado |
+|---|---|
+| `game-destruction test` | 90 arquivos, **699/699 passam** |
+| `game-destruction-three test` (Jolt padrão) | **7 falham / 840 passam / 89 pulados** (6 arquivos de 114); com `PIECE_SOLVER=own` os mesmos arquivos passam |
+| `game-floorplan-three test` (Jolt padrão) | **5 falham / 1616 passam** (3 arquivos de 90); com `PIECE_SOLVER=own` os três arquivos passam (3/3, 44/44, 6/6) |
+| `typecheck` destruction-three e floorplan-three | sem erros |
+| `eslint` nos arquivos tocados | 0 erros (3 avisos de arquivo ignorado) |
+
+**Falhas de `game-destruction-three` (todas determinísticas, reproduzidas isoladas; nenhum teste afrouxado):**
+
+| Teste | Número | Causa provável |
+|---|---|---|
+| `asleep-on-steep-top` "o celular, a lata e o laptop dormindo no tampo escorregam para o chão" | altura final 0,748 m, limite < 0,1 | objetos dormindo em tampo inclinado não escorregam no Jolt (atrito/sono); mesma família da T1.2 (`slope-friction`) |
+| `book-knocked-over` "livro lançado de lado a 1 m/s" | 0,284 m, limite < 0,12 | livro em pé não tomba no Jolt com esse impacto lateral |
+| `rolling` "can thrown into a still one" | velocidade da lata parada 0,867, esperado 2,4 (e = 0,6) | restituição lata-lata no Jolt bem abaixo de 0,6 (o teto de giro/atrito do T1.1 não explica) |
+| `rolling` "fifty cans" | y mínimo 0,0263, limite > 0,027 | lata afunda 0,7 mm no chão (penetração do Jolt, `penetrationSlop`) |
+| `separate-pair` "pilha depois do colapso" | `expected false to be true` (bloco sobe ou fica no ar) | pilha de blocos não assenta como o solver antigo |
+| `shelf-swings-on-hinge` | ponta livre y 0,530, esperado < 0,429 | prateleira presa por um parafuso gira menos no Jolt (junta/dobradiça) |
+| `engine-ground-ahead` "twenty notices… each tile laid at most once" | `tile.dirty` ficou `{minX 0.85, maxX 2.15, minZ -2.15, maxZ 0.65}`, esperado `null` | ladrilho segue sujo depois de um `update`: possível limite de ladrilhos por quadro do motor; investigar na T3.8 |
+
+Quatro outros testes (`book-knocked-over` "0,6 m awake", `engine-ground-ahead` "explosion", `engine-ground-inplace` "200 changes", `engine-ground-net`
+"any spot") estouraram 5 s só na rodada concorrente com o floorplan e passaram na rodada limpa: tempo sob carga, não física.
+
+**Falhas de `game-floorplan-three` (Jolt padrão; passam com `own`):**
+- `exact-golden` — **3 goldens mudariam, não regravados**: `destruction/breach` hash `4a2638b7` → `701da5b8`, objetos 842 → 832 (−10);
+  `destruction/spall` `e112e96c` → `1ef91d0a`, 851 → 824 (−27); `destruction/fracture` `66c76666` → `eeee1eaa`, 935 → 911 (−24). Os outros 41 goldens iguais.
+- `furniture-laid-still` — 72 partes de peças do catálogo andam mais de 1 cm em 2 s (de 0,459 m a 1,896 m; ex. `pedestal_basin/plain_0` 0,459 m,
+  `metal_2` 1,330 m): móvel deitado não fica parado no Jolt.
+- `bookcase-topple` "orçamento da sala de teste" — 24 objetos (`obj_20`…) não chegam ao repouso no tempo do teste.
+
+**Conclusão:** o aceite "C1–C6, C8 verdes" da T3.10 **não está atendido** com o Jolt padrão nos testes: 12 falhas físicas e 3 goldens. A troca de padrão
+está commitada (reversível por `PIECE_SOLVER=own`); decidir antes de mergear se os 3 goldens e as falhas entram como dívida ou bloqueiam.
