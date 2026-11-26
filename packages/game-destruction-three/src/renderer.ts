@@ -1068,8 +1068,8 @@ class Renderer implements DestructionRenderer {
     // a round piece and another piece meet by their shapes and trade momentum (`PieceSystem.knock`), not as a piece against a wall
     const other = this.pieceSys.get(hit.object)
     if (other && (p.round || other.round)) return null
-    // the piece it lies on is what it slides on (a table top gone over): the sweep would take it for a wall at every step and hold it there
-    if (other && this.pieceSys.liesOn(p, other)) return null
+    // the top it lies on is what it slides on (a table top gone over): the sweep would take it for a wall at every step and hold it there
+    if (other && this.pieceSys.slidesOn(p, other)) return null
     const material = this.world.part(hit.object, hit.part)?.material
     const restitution = material === undefined ? undefined : surfaceOf(material, this.world.materials.get(material))?.restitution
     return { object: hit.object, part: hit.part, distance: hit.distance, point: hit.point, normal: hit.normal, ...(restitution === undefined ? {} : { restitution }) }

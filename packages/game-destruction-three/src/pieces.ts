@@ -180,6 +180,10 @@ const SUPPORT_CHECKS = 16
 const SUPPORT_GAP = 0.02
 /** A slope steeper than the friction holds by this much (tan over the static coefficient) makes what lies on it slide: the margin keeps a piece at the edge of holding from waking and sleeping in turn. */
 const STEEP_MARGIN = 1.1
+/** A face tilted more than this (normal y, about 60 degrees) is a side a piece leans on, not a top it lies on. */
+const SLOPE_MIN_NORMAL = 0.5
+/** A piece whose face is this close (cosine, about 10 degrees) to the slope under it lies flat on it. */
+const LIES_FLAT = 0.985
 /** A piece moving faster than this (m/s) or turning faster than this (rad/s) wakes what lies asleep on it. */
 /** How often (s) the far and old rule looks at the pieces. */
 const KEEP_EVERY = 0.5
@@ -411,6 +415,7 @@ export class PieceSystem {
   /** The surface normal and the friction of what the last `supportAt` found under the point (the ground and fixed tops are level: up, and no piece). */
   private supportNormal: Vec3 = UP
   private supportFriction: PieceFriction | null = null
+  private supportBody: PieceBody | null = null
   /** The terrain's surfaces by rolling resistance and damping (`terrainSurface`), one object each. */
   private readonly terrainSurfaces = new Map<string, PieceFriction>()
   /** The terrain's surface by ground tile (`groundTileKey`) this update, null for the default: read once per tile, not per contact per substep. */
@@ -593,9 +598,9 @@ export class PieceSystem {
     return this.list.find((b) => b.objectId === objectId) ?? null
   }
 
-  /** Whether `upper` lies on a top of `lower` (a corner of it within a step of one of its parts): what holds it up, which it slides on, not a wall in its way. */
-  liesOn(upper: PieceBody, lower: PieceBody): boolean {
-    return this.restsOn(upper, lower, false)
+  /** Whether `upper` lies flat on a top of `lower` that is steeper than its friction holds: what it slides on, not a wall in its way. */
+  slidesOn(upper: PieceBody, lower: PieceBody): boolean {
+    return this.restsOn(upper, lower, false) && this.onSteepSupport(upper)
   }
 
   /** Sets a piece falling over, about the world axes x and z (a unit axis): its feet are thinner than the box that stands for it, so the box alone would hold it up. */
@@ -1279,6 +1284,7 @@ export class PieceSystem {
     if (fixed >= top) on = null
     this.supportNormal = on ? faceNormal(on, face) : UP
     this.supportFriction = on?.body.friction ?? null
+    this.supportBody = on?.body ?? null
     return Math.max(top, fixed)
   }
 
@@ -1724,22 +1730,30 @@ export class PieceSystem {
   }
 
   /**
-   * Whether what holds `b` up, under its lowest corner, is a face tilted past what the friction of the two holds (a laptop on a table top gone over at 42 degrees, held
-   * by 0.49 up to 26): it slides, it does not sleep there, and one asleep there wakes.
+   * Whether `b` lies flat on a settled top (asleep) tilted past what the friction of the two holds (a laptop on a table top gone over at 42 degrees, held by 0.49 up to 26),
+   * with every corner that touches on it: it slides, it does not sleep there, and one asleep there wakes. Held by anything else (the floor, a flat top, a side it leans on, a
+   * pile still moving) it is not this case: the contacts hold or move it.
    */
   private onSteepSupport(b: PieceBody): boolean {
     const c = this.centerOf(b, this.p)
     const e = this.m.makeRotationFromQuaternion(b.root.quaternion).elements
-    let low: Vec3 | null = null
+    let touching = false
     for (const [sx, sy, sz] of this.samples(b, false)) {
       const y = c.y + e[1] * sx + e[5] * sy + e[9] * sz
-      if (!low || y < low[1]) low = [c.x + e[0] * sx + e[4] * sy + e[8] * sz, y, c.z + e[2] * sx + e[6] * sy + e[10] * sz]
+      if (this.supportAt(b, c.x + e[0] * sx + e[4] * sy + e[8] * sz, y, c.z + e[2] * sx + e[6] * sy + e[10] * sz, STEP) < y - SUPPORT_GAP) continue
+      // a top that is itself still moving (a pile being knocked about) is not a slope that has settled
+      if (this.supportBody && !this.supportBody.sleeping) return false
+      const n = this.supportNormal
+      const ny = n[1]
+      const holds = pairFriction(b.friction, this.supportFriction).static
+      if (ny >= 1 - 1e-6 || ny < SLOPE_MIN_NORMAL || Math.sqrt(Math.max(0, 1 - ny * ny)) / ny <= holds * STEEP_MARGIN) return false
+      // lying flat on the slope: a piece that leans on a corner or wedged against a side is held by more than the friction of one face
+      let flat = 0
+      for (let axis = 0; axis < 12; axis += 4) flat = Math.max(flat, Math.abs(e[axis] * n[0] + e[axis + 1] * n[1] + e[axis + 2] * n[2]))
+      if (flat < LIES_FLAT) return false
+      touching = true
     }
-    if (!low || this.supportAt(b, low[0], low[1], low[2], STEP) < low[1] - SUPPORT_GAP) return false
-    const ny = this.supportNormal[1]
-    if (ny >= 1 - 1e-6) return false
-    const holds = pairFriction(b.friction, this.supportFriction).static
-    return Math.sqrt(Math.max(0, 1 - ny * ny)) / Math.max(ny, 1e-6) > holds * STEEP_MARGIN
+    return touching
   }
 
   /** The piece sleeps where it lies: its speeds are dropped, nothing moves it. */
