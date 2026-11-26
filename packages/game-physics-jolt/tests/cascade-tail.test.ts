@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { KIT_WORLD, PhysicsCostMeter, WakeQueue, chooseForPhysics, physicsPieceCount } from '@adatechnology/game-physics'
 import type { BodyDesc, Vec3, WorldDesc } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
-import type { JoltWorld } from '../src/index'
+import type { JoltEngineOptions, JoltWorld } from '../src/index'
 import { expectCostAtMost, ground, report, stats } from './scenes'
 
 interface Tail {
@@ -14,6 +14,9 @@ interface Tail {
   readonly firstFrameMs: number
   readonly steps: number[]
 }
+
+/** `JOLT_BUILD=multithread` runs the same scene on the multithreaded build with no job threads (SIMD; needs `SharedArrayBuffer`), the one the desktop app uses: same physics, see evidence.md T7.4. */
+const engineOptions = (): JoltEngineOptions => (process.env.JOLT_BUILD === 'multithread' ? { build: 'multithread' } : {})
 
 /** The world the bench runs in: the kit's (120 Hz, 20 passes, contact listener); `B6_LEGACY=1` brings back the gate 0 one (60 Hz, Jolt's 10 passes, no `KIT_WORLD`) for comparison. */
 const worldDesc = (): WorldDesc => (process.env.B6_LEGACY === '1' ? { fixedStep: 1 / 60, maxBodies: 8192 } : KIT_WORLD)
@@ -29,7 +32,7 @@ const PLAYER: Vec3 = [-6, 1, 6]
 type Wake = 'burst' | 'budget' | 'queue'
 
 const tail = async (wake: Wake): Promise<Tail> => {
-  const engine = await createJoltEngine()
+  const engine = await createJoltEngine(engineOptions())
   const world = engine.createWorld(worldDesc()) as JoltWorld
   ground(world, 100)
   const descs: BodyDesc[] = []
