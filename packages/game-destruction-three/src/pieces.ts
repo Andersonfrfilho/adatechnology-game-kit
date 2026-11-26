@@ -108,6 +108,8 @@ const SLIP_SPEED = 0.02
 const ROLLING_RESISTANCE = 0.015
 /** A round piece whose axis leans more than 45 degrees from upright lies on its side (the share of the world's down across its axis). */
 const ROUND_LYING = Math.SQRT1_2
+/** The least half side (m) of a piece's box, however thin what is drawn of it: the box is the drawing (a 2 cm laptop is a 2 cm box); this much is only so that a face is not a plane. */
+export const MIN_PIECE_HALF = 0.001
 const SLEEP_AFTER = 0.5
 /** A piece on the ground slower than this (m/s) and turning slower than this (rad/s) is still: it sleeps after `SLEEP_AFTER`, or at once over `maxAwake`. */
 const STILL_SPEED = 0.12
@@ -636,7 +638,7 @@ export class PieceSystem {
       root,
       velocity: velocity ? [...velocity] : [0, 0, 0],
       angularVelocity: angular ? [...angular] : [0, 0, 0],
-      halfExtents: [Math.max(0.01, halfExtents[0]), Math.max(0.01, halfExtents[1]), Math.max(0.01, halfExtents[2])],
+      halfExtents: [Math.max(MIN_PIECE_HALF, halfExtents[0]), Math.max(MIN_PIECE_HALF, halfExtents[1]), Math.max(MIN_PIECE_HALF, halfExtents[2])],
       mass: Math.max(0.05, mass),
       // asleep or held is read and written as a plain flag; waking or taking it in hand puts the piece among the awake ones
       get sleeping() {

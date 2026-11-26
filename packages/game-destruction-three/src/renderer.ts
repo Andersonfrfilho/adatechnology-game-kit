@@ -24,7 +24,7 @@ import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
 import { sameSolids } from './engine-statics'
-import { PieceSystem } from './pieces'
+import { MIN_PIECE_HALF, PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
@@ -141,8 +141,6 @@ const PART_BOX_MESHES = 64
 /** Points of the drawing looked at to tell a round piece (per mesh), how alike its two other sides must be (share of the larger) and how far past their circle a point may be. */
 const ROUND_SAMPLES = 400
 const ROUND_SIDES = 0.12
-/** The least half side (m) of a piece's box, however small what is drawn of it. */
-const MIN_PIECE_HALF = 0.02
 const ROUND_SLACK = 1.12
 /** Points around each rim of a round piece (and around a ball's three great circles). */
 const RIM_POINTS = 12
