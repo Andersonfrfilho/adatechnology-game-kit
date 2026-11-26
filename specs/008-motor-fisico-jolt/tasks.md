@@ -201,7 +201,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - ✅ **T7.1 Multidão** (2026-11-26, `evidence.md` `## T7.1`): agentes como cápsulas cinemáticas (`game-crowd` move, o motor só empurra), corpos no chão como correntes, porta que cede
   por junta. Aceite: 1 000 agentes ≤ 0,5 ms; `state-hash` e `team-golden` de `game-crowd` iguais **quando nada empurra corpos** (D-T5.3a, opção A, dono em 2026-11-26: a física manda a posição do cadáver empurrado por `corpses.relocate`; `design/pilha-e-lod.md` §4).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-crowd test` e `... game-crowd-three test` · `sonnet`.
-- **T7.2 Consultas:** broadphase do motor sob `surfaceRay` (o acerto final continua a superfície desenhada), raio com vários acertos, esfera
+- ✅ **T7.2 Consultas** (2026-11-26, `evidence.md` `## T7.2`, com a ressalva do ganho do `raycast` do mundo): broadphase do motor sob `surfaceRay` (o acerto final continua a superfície desenhada), raio com vários acertos, esfera
   varrida, corpos criados no mesmo quadro. Aceite: 1 000 raios ≤ 2 ms; mesmo resultado que o caminho antigo nos testes do §7.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction test` e `... game-physics-jolt exec vitest run tests/queries.test.ts` · `sonnet`.
 - **T7.3 Blast e fragmentos:** ~300 raios de fragmento + sobreposição + linha de visada; sensores de fumaça (entra/sai). Aceite: um blast ≤ 1 ms.

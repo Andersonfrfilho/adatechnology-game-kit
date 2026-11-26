@@ -614,6 +614,7 @@ class Renderer implements DestructionRenderer {
         this.landingSound(b.objectId, point, clamp(speed / 10, 0.2, 1))
       },
     })
+    if (o.rayBroadPhase) this.world.setRayBroadPhase(this.pieceSys.rayBroadPhase())
     this.unsubscribe = this.world.on('*', (ev) => {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
       // past the cap only what changes the simulation is kept: a blast floods the queue with damage and marks, and a dropped collapse leaves a fallen wall drawn standing
@@ -3846,6 +3847,7 @@ class Renderer implements DestructionRenderer {
     this.releaseWarmProbes()
     if (this.disposed) return
     this.unsubscribe()
+    if (this.o.rayBroadPhase) this.world.setRayBroadPhase(null)
     this.clear()
     for (const id of [...this.bounds.keys()]) this.unbind(id)
     this.fragments.dispose()

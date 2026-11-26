@@ -35,7 +35,7 @@ import { hostedPieces, hostedSolids } from './hosted-solids'
 import type { HostedSolid } from './hosted-solids'
 import type {
   AddOptions, Crack, DamageType, DebrisKind, DestructibleSpec, Dent, DestructionEvent, DestructionEventType, DestructionOptions, DestructionSnapshot,
-  DamageStage, DestructionWorld, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
+  DamageStage, DestructionWorld, RayBroadPhase, Fragment, FractureStyle, Hit, HitResult, Hole, JointSpec, JointState, MaterialDef, MaterialId, ObjectRuntime, ObjectState, PartRuntime, PartSpec, RaycastOptions,
   PartState, Quat, RayHit, ToolKind, Vec3, SoilProfile, SoilState, WindOptions, WindState, GroundLoss, PartSettlement,
   BlastCharge, BlastOptions, BlastReport, ConfinementOptions, FragmentHitOptions, ShelterOptions,
   BallisticExtras, ExplosionJob, SweepProbe, CarryHands,
@@ -2807,14 +2807,19 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     return fresh.map(([nid]) => nid)
   }
 
+  let rayBroad: RayBroadPhase | null = null
+
   const raycastInternal = (origin: Vec3, dir: Vec3, maxDist: number, ignore?: Set<string>, worldOnly = false, precise = false, skip: RaycastOptions = {}, scope?: RayScope): (RayHit & { pathLen: number }) | null => {
     const d = vec.normalize(dir)
+    // the sweep's scope is its own broad phase; the engine's answers for every other ray
+    const outside = rayBroad && !scope && rayBroad.begin(origin, d, maxDist) ? rayBroad : null
     const minRadius = skip.minObjectRadius ?? 0
     let best: (RayHit & { pathLen: number }) | null = null
     const counts = sweepCounts
     for (const o of scope ? scope.objects : objects.values()) {
       if (counts) counts.objectVisits++
       if ((skip.skipLoose && o.loose) || o.br < minRadius) continue
+      if (outside && !outside.mayMeet(o.id)) continue
       if (raySphereMiss(origin, d, worldCentreOf(o), o.br, best ? Math.min(maxDist, best.distance) : maxDist)) continue
       // the ray in the object's frame, so each part is first tried against its bounding sphere there: a house of a thousand bricks turns a handful
       const qi = quat.conjugate(o.st.rotation)
@@ -6302,6 +6307,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
     },
     beginExplosion,
     cancelExplosions,
+    setRayBroadPhase(broadPhase) {
+      rayBroad = broadPhase
+    },
     groundLoss(loss) {
       if (!(loss.radius > 0) || !(loss.depth > 0) || !Number.isFinite(loss.x) || !Number.isFinite(loss.z)) return
       pendingLosses.push({ ...loss })

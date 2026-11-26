@@ -25,6 +25,7 @@ interface Held {
 }
 
 interface Fixed {
+  readonly objectId: string
   /** The list the host gave (by reference: the same list is the same parts), and the parts the engine holds. */
   solids: readonly StaticSolid[]
   held: Map<string, Held>
@@ -79,6 +80,8 @@ export class EngineStatics {
   readonly changed = new Set<BodyId>()
   /** Every body it holds now: what a piece made or put is checked against (`EnginePieces.outOfStatics`; the ground has its own rule). */
   readonly ids = new Set<BodyId>()
+  /** The object each held body is a part of (what a ray that meets the body says about the object). */
+  readonly ownerOf = new Map<BodyId, string>()
 
   constructor(
     private readonly world: SeamWorld,
@@ -89,6 +92,12 @@ export class EngineStatics {
   has(objectId: string): boolean {
     const f = this.bodies.get(objectId)
     return f !== undefined && f.held.size > 0
+  }
+
+  /** Whether every drawn part of the object has its body: only then is a ray's miss of its bodies a miss of the object. */
+  covers(objectId: string): boolean {
+    const f = this.bodies.get(objectId)
+    return f !== undefined && f.held.size > 0 && f.waiting === 0
   }
 
   lay(now: ReadonlyMap<string, readonly StaticSolid[]>): void {
@@ -102,7 +111,7 @@ export class EngineStatics {
     for (const [id, solids] of now) {
       const f = this.bodies.get(id)
       if (f?.solids === solids && f.waiting === 0) continue
-      const fixed = f ?? { solids, held: new Map<string, Held>(), waiting: 0, settled: false }
+      const fixed = f ?? { objectId: id, solids, held: new Map<string, Held>(), waiting: 0, settled: false }
       this.bodies.set(id, fixed)
       fixed.solids = solids
       this.fit(fixed, budget)
@@ -162,6 +171,7 @@ export class EngineStatics {
         const id = ids[i]
         f.held.set(x.key, { solid: x.solid, id })
         this.ids.add(id)
+        this.ownerOf.set(id, f.objectId)
         this.changed.add(id)
         if (f.settled) this.wakeAround(x.solid)
       })
@@ -197,6 +207,7 @@ export class EngineStatics {
 
   private drop(id: BodyId): void {
     this.ids.delete(id)
+    this.ownerOf.delete(id)
     this.world.removeBody(id)
   }
 

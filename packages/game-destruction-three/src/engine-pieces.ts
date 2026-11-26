@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Vec3 } from '@adatechnology/game-destruction'
+import type { RayBroadPhase, Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, JointId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 import { samePatch } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
@@ -16,6 +16,7 @@ import type { PendingGround } from './engine-ground-schedule'
 import { SOLID_RING } from './engine-ground-ring'
 import { NO_SOLID, SOLID_STRIDE, buildSolidVolume, sameNumbers, sameSolid } from './engine-ground-solid'
 import type { SolidVolume } from './engine-ground-solid'
+import { createEngineRayBroadPhase } from './engine-rays'
 import { EngineStatics } from './engine-statics'
 import type { StaticSolid } from './engine-statics'
 import { HINGE_RELEASE } from './internal'
@@ -310,6 +311,11 @@ export class EnginePieces {
     this.statics = new EngineStatics(world, GROUND)
     this.schedule = o.groundWorker ? new GroundSchedule(o.groundWorker, Math.max(1, Math.round(o.groundWorkerFrames ?? GROUND_WORKER_FRAMES))) : null
     if (this.schedule) this.warmGround(this.schedule)
+  }
+
+  /** The fixed bodies as a broad phase for the destruction world's rays (`engine-rays.ts`). */
+  rayBroadPhase(): RayBroadPhase {
+    return createEngineRayBroadPhase(this.world, this.statics)
   }
 
   /** The worker's first job, a sloped tile with steps away from the host's ground (no host call): its code is parsed and hot before the first blast asks for real ones. */

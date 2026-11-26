@@ -4010,3 +4010,17 @@ Máquina: Intel Core Ultra 9 275HX, Node, Linux; outras sessões usando a máqui
 **Números** (`pnpm --filter @adatechnology/game-crowd test:cost`, sob `perf-measure.lock`; 1 000 agentes e uma porta, `KIT_WORLD` 120 Hz, mediana e p99 de um passo com a fase `crowd` e o passo do mundo): carga 22 → 0,474 / 0,727 ms; carga 7 (três rodadas) → 0,340 / 0,537, 0,336 / 0,560, 0,336 / 0,495 ms. Limite do `spec.md` §6.2: 0,5 / 1,0 ms. A porta cede em 2,275 s. O limite em ms só é cobrado com `PHYSICS_COST=1`.
 
 **Gates:** `pnpm --filter @adatechnology/game-crowd test` 26 arquivos, 147 testes verdes (inclui `team-golden` e `state-hash`, sem golden alterado); `pnpm --filter @adatechnology/game-crowd-three test` 9 arquivos, 48 testes verdes; typecheck e eslint dos arquivos novos limpos; `kit-audit --check` sem novos.
+
+## T7.2 — consultas e broadphase do motor (2026-11-26) — ✅ no aceite literal; **ganho do mundo de destruição não medido: ver abaixo**
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 2 a 7 nas medições de custo, sob `perf-measure.lock`.
+
+**O que já existia:** no contrato e no adaptador, `rayAll` (vários acertos, mais perto primeiro), `rayFirst`, `overlapSphere`, `sphereCastAll` (esfera varrida) e `overlapShape`; corpos criados no mesmo quadro e adormecidos aparecem nas consultas (`queries.test.ts`: `seesFresh`, `seesSleeping`). O `game-destruction` já tinha broad phase própria (esfera de cada objeto, grade de partes) e o `surfaceRay` dos hospedados.
+
+**O que mudou:** `RayBroadPhase` e `DestructionWorld.setRayBroadPhase` (`game-destruction`, acréscimo; `raycastInternal` pula o objeto que o gancho prova fora do caminho; o raio do `sweepBox` segue com o escopo dele); `game-destruction-three/src/engine-rays.ts` (`createEngineRayBroadPhase`: esfera varrida de 25 cm mais a esfera da origem contra a camada `static`, objetos pelos corpos de `EngineStatics.ownerOf`; objeto do qual o motor não tem todas as partes — `covers` falso — é sempre tentado); opção `rayBroadPhase: true` do renderizador (desligada por padrão); `queries.test.ts` passa a cobrar 1 000 raios de primeiro acerto em 2 ms na faixa de custo.
+
+**Números** (`pnpm --filter @adatechnology/game-physics-jolt test:cost`, `tests/queries.test.ts`, rua de 3 casas, 10 carros, 300 agentes): 1 000 raios de primeiro acerto, mediana 1,575 e 1,365 ms (limite 2 ms); 1 000 raios com vários acertos 2,23 e 1,96 ms (1,3 acertos por raio); o caminho próprio, 8,4 e 7,9 ms; esfera varrida de 200 raios 1,0 ms.
+
+**Mesmo resultado:** `game-destruction-three/tests/engine-rays.test.ts`: 500 paredes no mundo real de destruição, 1 000 raios com e sem o gancho dão o mesmo objeto, parte e distância; o gancho dispensa 99,9 % dos objetos por raio. `pnpm --filter @adatechnology/game-destruction test`: 90 arquivos, 699 testes; `game-destruction-three test`: 112 arquivos, 855 testes (6 pulados, solver próprio); typecheck e eslint limpos.
+
+**Ressalva que o dono precisa ver:** o `raycast` do mundo de destruição **não ficou mais rápido** com o gancho: 500 paredes, 1 000 raios, 72 ms com o motor contra 61 ms sem (e 213 contra 194 ms com 1 000 paredes). O gasto é o laço sobre todos os objetos, que o gancho só encurta na leitura de cada um; o ganho exigiria o mundo iterar só os candidatos, o que perde a ordem de desempate e exige saber quais objetos o motor não cobre. Não foi feito; fica ligado por opção e desligado por padrão. O aceite literal (1 000 raios de primeiro acerto ≤ 2 ms, mesmo resultado) passa.

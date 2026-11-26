@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { Vec3 } from '@adatechnology/game-destruction'
+import type { RayBroadPhase, Vec3 } from '@adatechnology/game-destruction'
 import { AwakeList } from './awake-list'
 import { PoseTrail } from './pose-trail'
 import type { PartBox, PieceBody, PieceFriction, PieceHinge, PieceSweepHit } from './internal'
@@ -464,6 +464,11 @@ export class PieceSystem {
       : null
     this.groundWorker = o.groundWorker ?? null
     if (resolved && !resolved.stepsItself) this.joinLoop(resolved.loop, this.engine as EnginePieces)
+  }
+
+  /** The engine's fixed bodies as the broad phase of the world's rays, or null when the pieces are not in the engine. */
+  rayBroadPhase(): RayBroadPhase | null {
+    return this.engine?.rayBroadPhase() ?? null
   }
 
   /**

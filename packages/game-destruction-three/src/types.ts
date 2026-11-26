@@ -46,6 +46,8 @@ export interface SoundDetail {
 export interface RendererOptions {
   /** What steps the loose pieces; required, so a host never ends up on the kit's solver by forgetting it. See `PieceSystemOptions.physics`. */
   physics: PiecePhysics
+  /** The engine's fixed bodies as the broad phase of the world's rays (`DestructionWorld.setRayBroadPhase`): shots, sweeps of the kit and blast sight lines skip objects the engine proves out of the way. Off by default. */
+  rayBroadPhase?: boolean
   /** Scene that receives fragments, loose pieces, decals and particles. */
   scene: THREE_NS.Scene
   world: DestructionWorld
