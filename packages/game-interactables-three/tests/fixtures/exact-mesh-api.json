@@ -674,12 +674,12 @@
   ]
  },
  "household/sink_kitchen:high": {
-  "hash": "69885d8e",
+  "hash": "d32c84df",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh d63bfc3e",
-   "0/1 Mesh 78045006",
-   "0/2 Mesh ed2be082",
+   "0/1 Mesh 47bd85c8",
+   "0/2 Mesh c49e42df",
    "0/3 Group f469a200",
    "0/3/0 Mesh f54df4fa",
    "0/4 Group a3da6d22",
@@ -693,12 +693,12 @@
   ]
  },
  "household/sink_bathroom:high": {
-  "hash": "3923defb",
+  "hash": "79a9b48f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 1ba660ab",
+   "0/0 Mesh b8a8bbcd",
    "0/1 Mesh c7db652b",
-   "0/2 Mesh b6eb454f",
+   "0/2 Mesh 5beaf841",
    "0/3 Group af55d296",
    "0/3/0 Mesh f54df4fa",
    "0/4 Group 19462e92",
@@ -1774,10 +1774,10 @@
   ]
  },
  "household/sink_kitchen:game": {
-  "hash": "b64a4f6f",
+  "hash": "3cae2b5d",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh fa803b7b",
+   "0/0 Mesh eaeef8d",
    "0/1 Group 779d2376",
    "0/1/0 Mesh 58fa83ed",
    "0/2 Group ef5cebd0",
@@ -1787,10 +1787,10 @@
   ]
  },
  "household/sink_bathroom:game": {
-  "hash": "7ad43491",
+  "hash": "ba9f1d4",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 54e06a9",
+   "0/0 Mesh 5f2d8a10",
    "0/1 Group 2fe23914",
    "0/1/0 Mesh 58fa83ed",
    "0/2 Group 1c064d04",
