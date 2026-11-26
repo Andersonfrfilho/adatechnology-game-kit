@@ -71,6 +71,8 @@ export interface VehicleColliders {
 
 /** The division of a car in a worker: how to make its job again, its answer when back, and whether the worker failed. */
 interface PlanFlight {
+  /** What the job was made for: a car whose pieces changed while it was away does not take the answer. */
+  readonly signature: string
   readonly job: () => HullPlanJob
   result?: HullPlanResult
   failed: boolean
@@ -423,7 +425,8 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
     const made = new Map<string, SharedHull[]>()
     for (const leaf of result.leaves) {
       const name = leaf.unit.split('~')[0]!
-      const owner = owners.get(name)!
+      const owner = owners.get(name)
+      if (!owner) continue
       const list = made.get(name) ?? []
       list.push({ hull: { id: owner.part, key: leaf.path ? `${leaf.unit}:${leaf.path}` : leaf.unit, points: leaf.points }, drawn: leaf.vertices })
       made.set(name, list)
@@ -467,7 +470,7 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
     const modelKey = modelKeyOf()
     const cache = options.planCache
     if (!flight) {
-      const known = modelKey && cache ? cache.get(modelKey) : undefined
+      const known = !isDamaged && modelKey && cache ? cache.get(modelKey) : undefined
       if (known && known.signature === signature) {
         adopt(known, thin)
         building = undefined
@@ -478,25 +481,27 @@ export const createVehicleColliders = (THREE: Three, vehicle: VehicleDestructibl
         install(planHulls(jobOf(thin, solids)), thin, solids, signature, modelKey)
         return true
       }
-      const going = modelKey ? cache?.flight(modelKey) : undefined
+      const going = !isDamaged && modelKey ? cache?.flight(modelKey) : undefined
       const isGoing = going !== undefined && going.signature === signature
       if (!isGoing && !hasJobBuilt(thin, solids, signature)) return false
       const promise = isGoing ? going.promise : options.workers.run(hullPlanKind, { pieces: building!.pieces, solids: building!.solids, maxHulls: (options.maxHulls ?? Infinity) - solids.size })
       if (!isGoing) {
         cache?.noteDivided()
-        if (modelKey) cache?.setFlight(modelKey, { signature, promise })
+        if (modelKey && !isDamaged) cache?.setFlight(modelKey, { signature, promise })
       }
       building = undefined
-      const mine: PlanFlight = { job: () => jobOf(thin, solids), failed: false }
+      const mine: PlanFlight = { signature, job: () => jobOf(thin, solids), failed: false }
       flight = mine
       promise.then((result) => { mine.result = result }, () => { mine.failed = true }).finally(() => { if (modelKey && cache?.flight(modelKey)?.promise === promise) cache.clearFlight(modelKey) })
     }
-    if (flight.result || flight.failed) {
-      install(flight.result ?? planHulls(flight.job()), thin, solids, signature, modelKey)
-      flight = undefined
-      return true
-    }
-    return false
+    if (!flight.result && !flight.failed) return false
+    const arrived = flight
+    flight = undefined
+    if (arrived.signature !== signature) return divide(thin, solids)
+    const known = !isDamaged && modelKey && cache ? cache.get(modelKey) : undefined
+    if (arrived.failed && known && known.signature === signature) adopt(known, thin)
+    else install(arrived.result ?? planHulls(arrived.job()), thin, solids, signature, modelKey)
+    return true
   }
 
   /** Makes the next pieces of the job for the worker, `JOB_NUMBERS_PER_CALL` numbers at most a call (a plain array is copied into bytes at some 5 ns a number: the first car of a model would hold the frame for as long as it has triangles); true when it is whole. */
