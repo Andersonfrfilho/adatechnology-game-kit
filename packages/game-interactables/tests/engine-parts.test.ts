@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import type { BodyId, PhysicsWorld, Vec3 } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
+import type { JoltWorld } from '@adatechnology/game-physics-jolt'
 
 import { buildChain, chainPoints, createEnginePartPhysics, createWorld } from '../src'
 import type { EnginePartOptions, ObjectSpec, PartSpec, WorldEvent } from '../src'
@@ -44,7 +45,7 @@ const scene = async (options: EnginePartOptions = {}) => {
     partPhysics.dispose()
     physics.dispose()
   }
-  return { physics, w, run, events, poseOf, leaf, dispose }
+  return { physics, partPhysics, w, run, events, poseOf, leaf, dispose }
 }
 
 describe('doors and drawers on the engine joints (spec 008 T4.4)', () => {
@@ -239,6 +240,43 @@ describe('what mounting and unmounting curtains leaves in the engine (spec 008 r
       cycle()
       expect(physics.memoryInUse()).toBe(warm)
     }
+    dispose()
+  })
+})
+
+describe('what is left in the engine when the parts go (spec 008 review, §8)', () => {
+  const populate = (w: Awaited<ReturnType<typeof scene>>['w']): void => {
+    w.add('c', cabinet, { x: 0, y: 0, z: 0, ry: 0 })
+    w.add('k', curtain, { x: 4, y: 0, z: 0, ry: 0 })
+  }
+
+  it('removing the objects takes every body and joint they made', { timeout: 60000 }, async () => {
+    const { physics, w, run, dispose } = await scene()
+    const joints = (physics as JoltWorld).joints
+    const floorBodies = physics.bodyCount
+    populate(w)
+    run(0.2)
+    expect(physics.bodyCount).toBeGreaterThan(floorBodies + 10)
+    expect(joints.size).toBeGreaterThan(10)
+    w.remove('c')
+    w.remove('k')
+    expect(physics.bodyCount).toBe(floorBodies)
+    expect(joints.size).toBe(0)
+    dispose()
+  })
+
+  it('disposing the part physics takes every body and joint, and the objects can be removed after', { timeout: 60000 }, async () => {
+    const { physics, partPhysics, w, run, dispose } = await scene()
+    const joints = (physics as JoltWorld).joints
+    const floorBodies = physics.bodyCount
+    populate(w)
+    run(0.2)
+    partPhysics.dispose()
+    expect(physics.bodyCount).toBe(floorBodies)
+    expect(joints.size).toBe(0)
+    w.remove('c')
+    w.remove('k')
+    expect(physics.bodyCount).toBe(floorBodies)
     dispose()
   })
 })

@@ -10,6 +10,9 @@ import type { LooseBody, LooseCollider } from '../src/engine-loose'
 import { createParticles } from '../src/fx/particles'
 import { buildExplosiveModel } from '../src/models/explosives'
 
+/** `scene` makes the floor and nothing else: the bodies a world holds when no loose piece is left. */
+const FLOOR_BODIES = 1
+
 const H = KIT_WORLD.fixedStep ?? 1 / 120
 const STEPS_PER_SECOND = Math.round(1 / H)
 
@@ -164,10 +167,45 @@ describe('the gallery particles with a physics world', () => {
     expect(object.position.y).toBeLessThan(0.02)
     expect(bounces.length).toBeGreaterThan(0)
     expect(Math.abs(positions[positions.length - 1]! - positions[positions.length - 60]!)).toBeLessThan(1e-3)
-    const before = world.memoryInUse()
     particles.dispose()
-    expect(world.memoryInUse()).toBeLessThanOrEqual(before)
+    expect(world.bodyCount).toBe(FLOOR_BODIES)
     expect(particles.count('casing')).toBe(0)
+    world.dispose()
+  })
+
+  const casingOptions = (radius: number, life: number) => ({ kind: 'casing' as const, life, radius, collider: casingCollider(radius, 0.019) })
+
+  it('a casing whose life runs out leaves the world with the particle, resting or flying', { timeout: 60000 }, async () => {
+    const { world, loop } = await scene()
+    const particles = createParticles(THREE, new THREE.Scene(), () => 0, undefined, undefined, world)
+    for (const x of [0, 1]) {
+      const object = new THREE.Object3D()
+      object.position.set(x, 1.2, 0)
+      particles.spawn(object, new THREE.Vector3(1, 1, 0), casingOptions(0.00495, 3))
+    }
+    expect(world.bodyCount).toBe(FLOOR_BODIES + 2)
+    for (let i = 0; i < 4 * STEPS_PER_SECOND; i++) {
+      loop.stepFixed(1)
+      if (i % 2 === 0) particles.update(2 * H)
+    }
+    expect(particles.count('casing')).toBe(0)
+    expect(world.bodyCount).toBe(FLOOR_BODIES)
+    world.dispose()
+  })
+
+  it('a casing pushed out by the host limit takes its body with it', { timeout: 60000 }, async () => {
+    const { world } = await scene()
+    const particles = createParticles(THREE, new THREE.Scene(), () => 0, () => 3, undefined, world)
+    for (let i = 0; i < 10; i++) {
+      const object = new THREE.Object3D()
+      object.position.set(i * 0.1, 1.2, 0)
+      particles.spawn(object, new THREE.Vector3(0, 0, 0), casingOptions(0.00495, 99))
+      expect(world.bodyCount).toBeLessThanOrEqual(FLOOR_BODIES + 3)
+    }
+    expect(particles.count('casing')).toBe(3)
+    expect(world.bodyCount).toBe(FLOOR_BODIES + 3)
+    particles.dispose()
+    expect(world.bodyCount).toBe(FLOOR_BODIES)
     world.dispose()
   })
 
