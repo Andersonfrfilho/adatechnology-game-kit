@@ -54,6 +54,7 @@
     "@adatechnology/game-audio": "workspace:^",
     "@adatechnology/game-camera": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
     "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-shapes": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^",
@@ -64,6 +65,7 @@
   },
   "devDependencies": {
     "@adatechnology/game-kit-defaults": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",

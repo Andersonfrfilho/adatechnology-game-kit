@@ -22,6 +22,9 @@ import { buildTrunkBay } from './trunk-bay'
 /** A node the visuals move, hide or cut: most are meshes of the body, read as one (a group just has no geometry). */
 type Obj = Mesh<BufferGeometry, MeshStandardMaterial> & SceneNode
 
+/** Takes a part that came off in place of the ballistic fling: the part, the holder that carries its drawn meshes (in the effects group, at the centre of the part), and the throw it would have had. */
+export type PartSink = (part: PartDef, holder: Object3D, velocity: readonly [number, number, number], spin: readonly [number, number, number]) => void
+
 export interface DetachOptions {
   /** `tool` drops the part gently, `break` throws it. */
   by: 'tool' | 'break'
@@ -208,6 +211,9 @@ export class VehicleVisuals implements CreaseWork {
   /** Hinged panels created for the doors and the lid, by part id. */
   readonly plates = new Map<string, Object3D>()
   private readonly gone = new Set<string>()
+  /** Where a part that comes off goes instead of the fling (a physics engine takes it as a body); null: the fling. */
+  sink: PartSink | null = null
+  private detaching: PartDef | null = null
   /** Shows or hides the plate and the recess of a door or lid by its state (see `showWhenOpen`). */
   private readonly syncPlates = new Map<string, () => void>()
   /** Doors and lids whose own skin was cut from the body and hung on the hinge (true), or that had none to take and keep the plate (false). */
@@ -1532,10 +1538,26 @@ export class VehicleVisuals implements CreaseWork {
   }
   private fling(obj: Object3D, v: Vector3, w: Vector3, trail: number): void {
     const piece = this.I.fling(this.c, obj, v, w)
-    if (piece) piece.trail = trail
+    if (!piece) return
+    if (!this.sink || !this.detaching) {
+      piece.trail = trail
+      return
+    }
+    const flying = this.c.flying
+    const at = flying ? flying.indexOf(piece) : -1
+    if (flying && at >= 0) flying.splice(at, 1)
+    this.sink(this.detaching, piece.o, [v.x, v.y, v.z], [w.x, w.y, w.z])
   }
   /** Brings a part off the vehicle and throws it. Returns whether something visible moved. */
   detach(p: PartDef, o: DetachOptions): boolean {
+    this.detaching = p
+    try {
+      return this.detachPart(p, o)
+    } finally {
+      this.detaching = null
+    }
+  }
+  private detachPart(p: PartDef, o: DetachOptions): boolean {
     if (this.gone.has(p.id)) return false
     const V3 = this.THREE.Vector3
     const c: BuildContext = this.c

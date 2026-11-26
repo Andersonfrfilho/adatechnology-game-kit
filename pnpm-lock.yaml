@@ -2186,6 +2186,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-render-three':
         specifier: workspace:^
         version: link:../game-render-three
@@ -2211,6 +2214,9 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room

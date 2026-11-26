@@ -27,10 +27,19 @@ const mutableOf = (w: JoltWorldHost, id: BodyId, e: BodyEntry): JoltNS.MutableCo
   if (e.mutable) return e.mutable
   const J = w.J
   const shape = e.body.GetShape()
+  // a body whose centre of mass was moved holds its compound inside the wrapper that moved it (`moveCentreOfMass`): the children change in the compound, the wrapper stays
+  if (shape.GetSubType() === J.EShapeSubType_OffsetCenterOfMass) {
+    const inner = J.castObject(shape, J.DecoratedShape).GetInnerShape()
+    if (inner.GetSubType() !== J.EShapeSubType_MutableCompound) throw new Error(`game-physics-jolt: body ${id} has no mutable compound inside its offset centre of mass to change`)
+    return keepMutable(e, J.castObject(inner, J.MutableCompoundShape))
+  }
   const type = shape.GetSubType()
   if (type !== J.EShapeSubType_MutableCompound && type !== J.EShapeSubType_StaticCompound) throw new Error(`game-physics-jolt: body ${id} has no compound shape to change`)
   if (type === J.EShapeSubType_StaticCompound) copyAsMutable(w, e, shape)
-  const mutable = J.castObject(e.body.GetShape(), J.MutableCompoundShape)
+  return keepMutable(e, J.castObject(e.body.GetShape(), J.MutableCompoundShape))
+}
+
+const keepMutable = (e: BodyEntry, mutable: JoltNS.MutableCompoundShape): JoltNS.MutableCompoundShape => {
   e.mutable = mutable
   e.handles ??= Array.from({ length: mutable.GetNumSubShapes() }, (_, i) => i)
   return mutable
