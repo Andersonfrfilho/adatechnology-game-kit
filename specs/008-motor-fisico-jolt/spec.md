@@ -49,7 +49,7 @@ fechou cinco de seis (seção 2.2).
 | Bloqueio | Resultado | Números |
 |---|---|---|
 | B1 bacia | **PASSA** | 128/128 em C2–C4 a 8, 10 e 20 iterações; rede de "caiu pelo chão" disparou 0 vezes; nenhum centro abaixo do chão (o mais perto: 3,7 cm acima); pior C2 2,5 cm, pior C3 1,7 cm, sono mais lento 2,05 s; atualizar um ladrilho de 2 m custa 0,59–0,81 ms (limite 2,5) |
-| B2 rolamento | **PASSA, margem fina** | granada de esfera em repouso a 4,83 s (limite 5) e 7,61 m (limite 8) no gate 0; **a granada desenhada (corpo, espoleta, alavanca) tem limite 6,5 s e 8 m, só com C_rr 0,015 e sem amortecimento (decisão do dono, 2026-11-26)**: 48 arremessos semeados em até 5,95 s e 7,39 m; 200/200 cápsulas dormindo a 5 s |
+| B2 rolamento | **PASSA, margem fina** | granada de esfera em repouso a 4,83 s (limite 5) e 7,61 m (limite 8) no gate 0; **a granada desenhada (corpo, espoleta, alavanca) tem limite 6,5 s e 8 m, só com C_rr 0,015 e sem amortecimento (decisão do dono, 2026-11-26)**: **régua por distribuição desde 2026-11-26 (decisão do dono; o #520 expôs a cauda que 48 sementes não pegavam): em 100 arremessos semeados (400 a 499), ≥ 95% em ≤ 6,5 s e ≤ 8 m, nenhum acima de 8 s ou 10 m; resultado 98/100, máximo 6,58 s e 8,67 m**; 200/200 cápsulas dormindo a 5 s |
 | B3 ragdoll | **PASSA com condições** | 20/8 passes: 2 quadros acima de 0,1 rad, dorme a 3,12 s; pilha de 100 corpos dorme a 9,47 s (limite 10) só com velocidade de sono 0,08 |
 | B4 heap | **PASSA** | cena pior (3 002 corpos) usa 21 MB dos 128 MB fixos (16%); o mundo sozinho ~19,7 MB |
 | C9 memória | **PASSA** | todo mundo criado e descartado devolve o heap ao mesmo byte |

@@ -3614,3 +3614,66 @@ Os 41 goldens das casas seguem iguais.
 **Limites do motor (registrados, não corrigidos):**
 - **Restituição do cilindro:** no Jolt o cilindro (a lata) perde restituição, e = 0,46 onde o material pede 0,6 (esfera e caixa dão 0,6 exato; com e = 1, caixa 1,00 e cilindro 0,89). Causa dentro do Jolt (contato de superfície curva); o teste `rolling` lata contra lata exige o valor medido (0,7292 / 0,2708 da velocidade). O `own` mantém 0,6.
 - **Ponto para o dono ver na sala:** a janela e o batente pousam cerca de 34 cm acima de onde pousavam no `own`; não identifiquei no que o vidro pousa.
+
+### Régua por distribuição, decisão do dono (2026-11-26)
+
+**Corrida entre merges.** O #522 (granada sobre o Jolt padrão) e o #520 (restituição nos contatos persistentes, `game-physics-jolt/src/contacts.ts`) entraram na `main` quase juntos; a `main` ficou vermelha: "24 seeded throws ... rest within 6.5 s and 8 m" reprovou com 6,68 s na semente 217.
+
+**Diagnóstico.** A física está certa e o #520 não se reverte (teste próprio em `restitution.test.ts`). Em 100 sementes novas (400 a 499) a média de repouso é a mesma antes e depois do #520 (5,48 s), e já antes dele 1 em 100 passava de 6,5 s (semente 416, 6,58 s) e 1 em 100 passava de 8 m (semente 400, 8,81 m). As 48 sementes dos lotes 200-223 e 300-323 não pegavam essa cauda: a régua de "todo arremesso" era frágil por construção.
+
+**Decisão do dono (2026-11-26):** a régua da granada passa a ser uma distribuição. Em 100 arremessos semeados (400 a 499, pose, velocidade e giro por `mulberry32`), **pelo menos 95% dormem em ≤ 6,5 s e ficam a ≤ 8 m do pouso**, e **nenhum** passa de **8 s** nem de **10 m** (teto contra granada que rola sem parar). Sem amortecimento, só com C_rr 0,015. Chão aberto e parede seguem cada um dentro de 6,5 s e 8 m. Os lotes 200-223 e 300-323 saíram; `tests/engine-loose.test.ts` tem agora um teste de 100 arremessos (1,2 s de execução).
+
+**Resultado (semente 400 a 499):** 98/100 dentro dos dois limites (mínimo 95); quantil 95 do repouso 6,07 s, máximo 6,58 s (teto 8 s); quantil 95 da distância 6,24 m, máximo 8,67 m (teto 10 m). Acima de 6,5 s: 1 (semente 416, 6,58 s). Acima de 8 m: 1 (semente 400, 8,67 m). Nenhuma acima dos tetos.
+
+| Semente | repouso (s) | do pouso (m) | | Semente | repouso (s) | do pouso (m) |
+|---|---|---|---|---|---|---|
+| 400 | 6.42 | 8.67 | | 450 | 5.3 | 4.72 |
+| 401 | 5.73 | 4.8 | | 451 | 5.21 | 5.76 |
+| 402 | 4.87 | 5.58 | | 452 | 5.48 | 5.26 |
+| 403 | 5.82 | 4.86 | | 453 | 5.28 | 3.75 |
+| 404 | 5.58 | 4.37 | | 454 | 5.24 | 4.1 |
+| 405 | 5.31 | 5.75 | | 455 | 5.61 | 5.92 |
+| 406 | 5.51 | 6.09 | | 456 | 5.54 | 4.8 |
+| 407 | 5.61 | 3.84 | | 457 | 5.17 | 5.1 |
+| 408 | 5.48 | 5.94 | | 458 | 5.46 | 4.47 |
+| 409 | 5.1 | 4.68 | | 459 | 5.78 | 5.97 |
+| 410 | 5.28 | 4.7 | | 460 | 5.79 | 5.42 |
+| 411 | 5.66 | 3.06 | | 461 | 5.47 | 5.02 |
+| 412 | 6 | 4.73 | | 462 | 5.2 | 4.94 |
+| 413 | 5.18 | 5.36 | | 463 | 5.9 | 5.55 |
+| 414 | 5.01 | 5.12 | | 464 | 6 | 5.55 |
+| 415 | 5.11 | 5.03 | | 465 | 5.14 | 5.51 |
+| 416 | 6.58 | 5.57 | | 466 | 5.55 | 6.31 |
+| 417 | 5.49 | 4.5 | | 467 | 5.73 | 5.29 |
+| 418 | 5.38 | 4.86 | | 468 | 5.41 | 5.16 |
+| 419 | 5.35 | 6.09 | | 469 | 5.37 | 3.41 |
+| 420 | 4.87 | 4.21 | | 470 | 5.48 | 5.14 |
+| 421 | 5.74 | 5.19 | | 471 | 5.84 | 4.96 |
+| 422 | 5.59 | 5.9 | | 472 | 5.26 | 5.39 |
+| 423 | 4.97 | 4.59 | | 473 | 5.31 | 4.58 |
+| 424 | 5.01 | 5.16 | | 474 | 5.5 | 6.3 |
+| 425 | 5.25 | 3.61 | | 475 | 5.96 | 5.02 |
+| 426 | 5.91 | 6.36 | | 476 | 5.04 | 3.78 |
+| 427 | 5.22 | 3.74 | | 477 | 4.89 | 3.62 |
+| 428 | 5.03 | 4.43 | | 478 | 5.23 | 6.15 |
+| 429 | 5.22 | 4.89 | | 479 | 6.25 | 3.86 |
+| 430 | 5.99 | 5.95 | | 480 | 5.03 | 4.37 |
+| 431 | 5.85 | 5.69 | | 481 | 5.7 | 4.78 |
+| 432 | 5.15 | 5.16 | | 482 | 5.13 | 4.34 |
+| 433 | 6.04 | 4.72 | | 483 | 5.35 | 5.46 |
+| 434 | 6.46 | 5.62 | | 484 | 6.23 | 6.18 |
+| 435 | 5.83 | 4.34 | | 485 | 5.44 | 5.95 |
+| 436 | 5.46 | 5.49 | | 486 | 5.45 | 3.81 |
+| 437 | 5.01 | 3.94 | | 487 | 5.59 | 4.1 |
+| 438 | 5.87 | 4.25 | | 488 | 5.28 | 6.22 |
+| 439 | 5.38 | 5.8 | | 489 | 5.64 | 6.18 |
+| 440 | 5.74 | 7.46 | | 490 | 5.37 | 4.58 |
+| 441 | 5.42 | 6.24 | | 491 | 5.91 | 5.6 |
+| 442 | 5.23 | 5.4 | | 492 | 5.16 | 4.78 |
+| 443 | 5.88 | 5.96 | | 493 | 5.38 | 3.92 |
+| 444 | 6.02 | 5.12 | | 494 | 6.07 | 5.29 |
+| 445 | 5.28 | 3.59 | | 495 | 4.95 | 5.14 |
+| 446 | 5.08 | 3.94 | | 496 | 5.04 | 4.43 |
+| 447 | 4.89 | 3.79 | | 497 | 4.99 | 5.21 |
+| 448 | 5.42 | 4.83 | | 498 | 5.69 | 4.37 |
+| 449 | 5.54 | 5.52 | | 499 | 5.23 | 5.07 |
