@@ -333,6 +333,9 @@ importers:
       '@adatechnology/game-contracts':
         specifier: workspace:^
         version: link:../game-contracts
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
     devDependencies:
       '@adatechnology/game-destruction':
         specifier: workspace:^

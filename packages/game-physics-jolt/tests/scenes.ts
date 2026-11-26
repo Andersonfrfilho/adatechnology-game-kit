@@ -1,7 +1,7 @@
 import { appendFileSync } from 'node:fs'
 
-import { createRig, describeBody, GUIDE, SEGMENT_TREE } from '@adatechnology/game-characters'
-import type { BodyDesc, BodyId, CharacterDesc, JointDesc, JointId, PhysicsWorld, Quat, RagdollJoint, RagdollPart, Vec3 } from '@adatechnology/game-physics'
+import { createRig, GUIDE, ragdollOfRig, SEGMENT_TREE } from '@adatechnology/game-characters'
+import type { BodyId, CharacterDesc, JointDesc, JointId, PhysicsWorld, Quat, RagdollDesc, Vec3 } from '@adatechnology/game-physics'
 
 /** A person: 0.3 m radius, 1.8 m tall, 75 kg, pushes with 400 N. */
 export const WALKER: CharacterDesc = { position: [0, 0, 0], radius: 0.3, halfHeight: 0.6, mass: 75, strength: 400 }
@@ -26,12 +26,6 @@ export const eulerXYZ = (x: number, y: number, z: number): Quat => {
   return [s1 * c2 * c3 + c1 * s2 * s3, c1 * s2 * c3 - s1 * c2 * s3, c1 * c2 * s3 + s1 * s2 * c3, c1 * c2 * c3 - s1 * s2 * s3]
 }
 
-const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-const norm = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]) || 1
-  return [a[0] / l, a[1] / l, a[2] / l]
-}
-
 export const ground = (world: PhysicsWorld, half = 50): BodyId =>
   world.createBody({ shape: { kind: 'box', half: [half, 0.5, half] }, motion: 'static', position: [0, -0.5, 0], user: -1 })
 
@@ -48,90 +42,29 @@ export interface Ragdoll {
   readonly joints: Array<{ id: JointId; desc: JointDesc }>
 }
 
-/** Cone and twist per joint kind (radians): hinge for knee and elbow, swing-twist elsewhere. */
-const LIMITS: Record<string, { cone: number; plane: number; twist: number } | { hingeMin: number; hingeMax: number }> = {
-  spine: { cone: 0.35, plane: 0.35, twist: 0.3 },
-  neck: { cone: 0.5, plane: 0.5, twist: 0.6 },
-  head: { cone: 0.3, plane: 0.3, twist: 0.3 },
-  jaw: { hingeMin: 0, hingeMax: 0.3 },
-  shoulder: { cone: 1.4, plane: 1.4, twist: 0.8 },
-  elbow: { hingeMin: -2.5, hingeMax: 0 },
-  wrist: { cone: 0.7, plane: 0.7, twist: 0.4 },
-  hip: { cone: 1.2, plane: 1.0, twist: 0.5 },
-  knee: { hingeMin: 0, hingeMax: 2.4 },
-  ankle: { cone: 0.5, plane: 0.5, twist: 0.3 },
-}
-
-interface RagdollSpec {
-  readonly bodies: Array<Omit<BodyDesc, 'group'>>
-  readonly parents: number[]
-  /** Per part but the root, its joint to its parent (world, as made). */
-  readonly joints: Array<RagdollJoint | null>
-  /** Pairs of parts that do not meet: neighbours, the thighs, the neck and the upper arms. */
-  readonly apart: Array<readonly [number, number]>
-}
-
-/** The 17-segment body of game-characters (`describeBody` of the guide rig, 1.80 m): capsules and spheres with its masses, at `at`, standing. */
-const ragdollSpec = (at: Vec3, user: number): RagdollSpec => {
-  const rig = createRig({ body: GUIDE, height: 1.8, build: 1 })
-  const spec = describeBody({ rig, body: GUIDE, build: 1 })
+/** Pairs of parts that do not meet when made as loose bodies: neighbours, the thighs, the neck and the upper arms (the engine's ragdoll does this itself). */
+const apartPairs = (): Array<readonly [number, number]> => {
   const index = new Map<string, number>(SEGMENT_TREE.map((n, i) => [n.id, i]))
-  const pairs = SEGMENT_TREE.filter((n) => n.parent).map((n) => [index.get(n.parent as string) ?? 0, index.get(n.id) ?? 0] as const)
-  // the upper arms also touch the neck and the thighs touch each other at the hip: kept apart like neighbours
-  const apart = [...pairs, [index.get('thighL') ?? 0, index.get('thighR') ?? 0] as const, [index.get('neck') ?? 0, index.get('upperArmL') ?? 0] as const, [index.get('neck') ?? 0, index.get('upperArmR') ?? 0] as const]
-  const bodies = SEGMENT_TREE.map((node, i): Omit<BodyDesc, 'group'> => {
-    const part = spec.parts.find((p) => p.id === node.id)
-    if (!part) throw new Error(node.id)
-    const pos = part.position ?? [0, 0, 0]
-    const rot = part.rotation ?? [0, 0, 0]
-    const shape = part.shape
-    const radius = shape.kind === 'sphere' || shape.kind === 'cylinder' ? shape.radius : 0.05
-    const half = shape.kind === 'cylinder' ? Math.max(0.01, shape.height / 2 - radius) : 0
-    return {
-      shape: half > 0.01 ? { kind: 'capsule', halfHeight: half, radius } : { kind: 'sphere', radius },
-      motion: 'dynamic',
-      position: [at[0] + pos[0], at[1] + pos[1], at[2] + pos[2]],
-      rotation: eulerXYZ(rot[0], rot[1], rot[2]),
-      mass: part.mass,
-      layer: 'character',
-      angularDamping: 0.3,
-      continuous: node.kind === 'foot' || node.kind === 'hand',
-      linearDamping: 0.05,
-      material: { frictionStatic: 0.8, frictionDynamic: 0.6, restitution: 0.05 },
-      user: user * 32 + i,
-    }
-  })
-  const parents = SEGMENT_TREE.map((node) => (node.parent ? (index.get(node.parent) ?? 0) : -1))
-  const joints = SEGMENT_TREE.map((node): RagdollJoint | null => {
-    if (!node.parent) return null
-    const j = rig.joints[node.joint]
-    const point: Vec3 = [at[0] + j[0], at[1] + j[1], at[2] + j[2]]
-    const child = SEGMENT_TREE.find((n) => n.parent === node.id)
-    const end = child ? rig.joints[child.joint] : ([j[0], j[1] - 0.1, j[2]] as Vec3)
-    // the head turns about the neck's line, not toward the jaw
-    const along = node.id === 'head' ? ([0, 1, 0] as Vec3) : norm(sub(end, j))
-    // the plane axis must be square to the twist axis (Jolt builds the joint frame from both)
-    const seed: Vec3 = Math.abs(along[2]) > 0.9 ? [0, 1, 0] : [0, 0, 1]
-    const d = seed[0] * along[0] + seed[1] * along[1] + seed[2] * along[2]
-    const plane = norm([seed[0] - d * along[0], seed[1] - d * along[1], seed[2] - d * along[2]])
-    const kind = node.joint.replace(/[LR]$/, '')
-    const limit = LIMITS[kind] ?? LIMITS.spine
-    return 'hingeMin' in limit
-      ? { kind: 'hinge', point, axis: [1, 0, 0], normal: plane, min: limit.hingeMin, max: limit.hingeMax, friction: 2 }
-      : { kind: 'swingTwist', point, twistAxis: along, planeAxis: plane, normalHalfCone: limit.cone, planeHalfCone: limit.plane, twistMin: -limit.twist, twistMax: limit.twist, friction: 2 }
-  })
-  return { bodies, parents, joints, apart }
+  const at = (id: string): number => index.get(id) ?? 0
+  const neighbours = SEGMENT_TREE.filter((n) => n.parent).map((n) => [at(n.parent as string), at(n.id)] as const)
+  return [...neighbours, [at('thighL'), at('thighR')], [at('neck'), at('upperArmL')], [at('neck'), at('upperArmR')]]
+}
+
+/** The 17-segment body of game-characters (`ragdollOfRig` of the guide rig, 1.80 m), at `at`, standing. */
+const ragdollDesc = (at: Vec3, user: number): RagdollDesc => {
+  const rig = createRig({ body: GUIDE, height: 1.8, build: 1 })
+  return ragdollOfRig({ rig, body: GUIDE, build: 1, at, user })
 }
 
 /** The 17-segment body as loose bodies and joints (the spike's first try). Neighbouring segments do not collide (a group). */
 export const ragdoll = (world: PhysicsWorld, at: Vec3, user: number): Ragdoll => {
-  const spec = ragdollSpec(at, user)
-  const group = world.createGroup(SEGMENT_TREE.length, spec.apart)
-  const bodies = world.createBodies(spec.bodies.map((b, i) => ({ ...b, group: { id: group, sub: i } })))
+  const { parts } = ragdollDesc(at, user)
+  const group = world.createGroup(SEGMENT_TREE.length, apartPairs())
+  const bodies = world.createBodies(parts.map((p, i) => ({ ...p.body, motion: 'dynamic', group: { id: group, sub: i } })))
   const joints: Ragdoll['joints'] = []
-  spec.joints.forEach((joint, i) => {
-    if (!joint) return
-    const desc: JointDesc = { ...joint, a: bodies[spec.parents[i]], b: bodies[i] }
+  parts.forEach((part, i) => {
+    if (!part.joint) return
+    const desc: JointDesc = { ...part.joint, a: bodies[part.parent], b: bodies[i] }
     joints.push({ id: world.createJoint(desc), desc })
   })
   return { bodies, joints }
@@ -139,17 +72,13 @@ export const ragdoll = (world: PhysicsWorld, at: Vec3, user: number): Ragdoll =>
 
 /** The 17-segment body as the engine's own ragdoll (`createRagdoll`), stabilized unless told not to. Parts are in the tree's order, parents first. */
 export const engineRagdoll = (world: PhysicsWorld, at: Vec3, user: number, stabilize = true, solverSteps?: { velocity: number; position: number }): Ragdoll => {
-  const spec = ragdollSpec(at, user)
-  const parts: RagdollPart[] = spec.bodies.map((body, i) => {
-    const joint = spec.joints[i]
-    return joint ? { body, parent: spec.parents[i], joint } : { body, parent: spec.parents[i] }
-  })
+  const { parts } = ragdollDesc(at, user)
   const made = world.createRagdoll(solverSteps ? { parts, stabilize, solverSteps } : { parts, stabilize })
   const joints: Ragdoll['joints'] = []
   let k = 0
-  spec.joints.forEach((joint, i) => {
-    if (!joint) return
-    joints.push({ id: made.joints[k++], desc: { ...joint, a: made.bodies[spec.parents[i]], b: made.bodies[i] } })
+  parts.forEach((part, i) => {
+    if (!part.joint) return
+    joints.push({ id: made.joints[k++], desc: { ...part.joint, a: made.bodies[part.parent], b: made.bodies[i] } })
   })
   return { bodies: [...made.bodies], joints }
 }

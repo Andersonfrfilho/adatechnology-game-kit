@@ -2,6 +2,9 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
+import { KIT_RAGDOLL_SOLVER, KIT_WORLD } from '@adatechnology/game-physics'
+import type { WorldDesc } from '@adatechnology/game-physics'
+
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { engineRagdoll, ground, ragdoll, report, stairs, stats } from './scenes'
@@ -12,9 +15,9 @@ const NINE_MM_IMPULSE = 0.0075 * 365
 
 describe('case 2: ragdoll', () => {
   /** Dropped from 2 m onto the stairs and a box, shot at 1.5 s: speeds, the worst joint past its limit and for how many frames in a row past 0.1 rad, sleep. */
-  const drop = async (make: (world: JoltWorld) => Ragdoll): Promise<Record<string, unknown> & { asleepAtS: number; longestFramesOver0_1rad: number; maxLimitExcessRad: number }> => {
+  const drop = async (make: (world: JoltWorld) => Ragdoll, worldDesc: WorldDesc = { fixedStep: 1 / 60 }): Promise<Record<string, unknown> & { asleepAtS: number; longestFramesOver0_1rad: number; maxLimitExcessRad: number }> => {
     const engine = await createJoltEngine()
-    const world = engine.createWorld({ fixedStep: 1 / 60 }) as JoltWorld
+    const world = engine.createWorld(worldDesc) as JoltWorld
     ground(world)
     stairs(world, [0, 0, 0])
     world.createBody({ shape: { kind: 'box', half: [0.4, 0.3, 0.4] }, motion: 'static', position: [0.5, 0.3, 1.2], user: -1 })
@@ -84,7 +87,36 @@ describe('case 2: ragdoll', () => {
     expect(r.longestFramesOver0_1rad).toBeLessThanOrEqual(3)
   })
 
-  it('costs: 20 ragdolls falling and piling', { timeout: 60000 }, async () => {
+  it('production R0 in the kit\'s world (120 Hz, 32/2), stabilized, 20/8: no joint 0.1 rad past its limit for over 3 frames, asleep within 4 s (B3)', async () => {
+    const r = await drop((world) => engineRagdoll(world, [0, 2 + 0.36, -0.5], 0, true, KIT_RAGDOLL_SOLVER), KIT_WORLD)
+    report('ragdoll-stairs-kit-world', r)
+    expect(r.asleepAtS).toBeGreaterThan(0)
+    expect(r.asleepAtS).toBeLessThanOrEqual(4)
+    expect(r.longestFramesOver0_1rad).toBeLessThanOrEqual(3)
+  })
+
+  it('costs: 20 production R0 falling and piling in the kit\'s world: a 1/60 s frame (two steps) within the C7 budget, 3.0 ms median and 4.0 ms p99', { timeout: 60000 }, async () => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld(KIT_WORLD)
+    ground(world)
+    for (let i = 0; i < 20; i++) engineRagdoll(world, [(i % 5) * 0.7, 0.5 + Math.floor(i / 5) * 0.6, (i % 3) * 0.3], i, true, KIT_RAGDOLL_SOLVER)
+    const frames: number[] = []
+    let asleep = -1
+    for (let i = 0; i < 60 * 10; i++) {
+      const t0 = performance.now()
+      world.step(1 / 60)
+      frames.push(performance.now() - t0)
+      if (asleep < 0 && world.activeCount === 0) asleep = i / 60
+    }
+    const falling = stats(frames.slice(0, 180))
+    report('ragdoll-x20-kit-world', { bodies: world.bodyCount, asleepAtS: asleep, activeAtEnd: world.activeCount, frameFirst3s: falling, frameAll: stats(frames) })
+    expect(world.bodyCount).toBe(20 * 17 + 1)
+    world.dispose()
+    expect(falling.median).toBeLessThanOrEqual(3.0)
+    expect(falling.p99).toBeLessThanOrEqual(4.0)
+  })
+
+  it('costs: 20 ragdolls falling and piling (loose bodies, the spike\'s 60 Hz world, kept for comparison)', { timeout: 60000 }, async () => {
     const engine = await createJoltEngine()
     const world = engine.createWorld({ fixedStep: 1 / 60 })
     ground(world)

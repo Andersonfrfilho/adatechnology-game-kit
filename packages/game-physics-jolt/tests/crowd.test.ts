@@ -2,9 +2,12 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
+import { chainOfRig, createRig, GUIDE } from '@adatechnology/game-characters'
 import type { BodyId, JointId, PhysicsWorld, RagdollId } from '@adatechnology/game-physics'
 import { createJoltEngine } from '../src/index'
 import { ground, ragdoll, report, stats } from './scenes'
+
+const guideRig = createRig({ body: GUIDE, height: 1.8, build: 1 })
 
 /** Agents walk toward a door in a wall (game-crowd moves them; the engine only meets them): kinematic capsules, moved every frame. */
 const crowd = (world: PhysicsWorld, n: number): BodyId[] =>
@@ -71,14 +74,7 @@ describe('case 4: crowd', () => {
         }
         else if (kind === 'engineChain') {
           // the same cheap body as the engine's own ragdoll, stabilized (gate 0 B3)
-          const doll = world.createRagdoll({
-            stabilize: true,
-            parts: [
-              { body: { shape: { kind: 'capsule', halfHeight: 0.25, radius: 0.17 }, mass: 40, position: [at[0], at[1] + 1.25, at[2]], layer: 'character', user: i }, parent: -1 },
-              { body: { shape: { kind: 'sphere', radius: 0.11 }, mass: 5, position: [at[0], at[1] + 1.75, at[2]], layer: 'character', user: i }, parent: 0, joint: { kind: 'swingTwist', point: [at[0], at[1] + 1.62, at[2]], twistAxis: [0, 1, 0], planeAxis: [0, 0, 1], normalHalfCone: 0.5, planeHalfCone: 0.5, twistMin: -0.5, twistMax: 0.5 } },
-              { body: { shape: { kind: 'capsule', halfHeight: 0.3, radius: 0.15 }, mass: 25, position: [at[0], at[1] + 0.45, at[2]], layer: 'character', user: i }, parent: 0, joint: { kind: 'swingTwist', point: [at[0], at[1] + 0.92, at[2]], twistAxis: [0, -1, 0], planeAxis: [0, 0, 1], normalHalfCone: 1.2, planeHalfCone: 1.0, twistMin: -0.4, twistMax: 0.4 } },
-            ],
-          })
+          const doll = world.createRagdoll({ ...chainOfRig({ rig: guideRig, body: GUIDE, build: 1, at, user: i }), stabilize: true })
           dolls.push(doll.id)
           made.push([])
           links.push([])

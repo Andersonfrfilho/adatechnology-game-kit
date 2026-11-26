@@ -3677,3 +3677,36 @@ Os 41 goldens das casas seguem iguais.
 | 447 | 4.89 | 3.79 | | 497 | 4.99 | 5.21 |
 | 448 | 5.42 | 4.83 | | 498 | 5.69 | 4.37 |
 | 449 | 5.54 | 5.52 | | 499 | 5.23 | 5.07 |
+## T5.1 — ragdoll de pessoa e zumbi (2026-11-26) — **B3 passa; 20 R0 estouram o C7 no `KIT_WORLD`: parado, o coordenador decide**
+
+**Portado** (de `game-physics-jolt/tests/scenes.ts:49-102`, comportamento igual): `LIMITS` e `ragdollSpec` viraram `ragdollOfRig({ rig, body, build, at?, user? })` e `RAGDOLL_LIMITS` (`game-characters/src/body/ragdoll.ts`, devolve `RagdollDesc`, R0), e o corpo de 3 partes que estava escrito à mão em `crowd.test.ts` virou `chainOfRig` (`.../body/chain.ts`, R1; as medidas do spike escaladas por altura e corpo; derivar da posição das juntas do rig fez a pilha de 100 não dormir em 10 s, então ficou o porte fiel: dorme a 9,8 s como antes). `game-characters` ganhou `@adatechnology/game-physics` só para tipos. `scenes.ts`, `ragdoll.test.ts` e `crowd.test.ts` importam de `game-characters`: o gate mede o código de produção. As camadas são `character` (a `corpse` é da T5.4).
+
+**B3, um R0 de produção no `KIT_WORLD`** (120 Hz, 32/2, `stabilize`, `KIT_RAGDOLL_SOLVER` 20/8; cai de 2 m na escada e numa caixa, tiro de 9 mm em 1,5 s; `ragdoll.test.ts`, com `expect`):
+
+| Critério | Medido | Limite |
+|---|---|---|
+| maior excesso de junta | 0,106 rad (junta 15, quadro 37) | — |
+| mais passos seguidos > 0,1 rad | 1 | ≤ 3 |
+| dorme em | 2,95 s | ≤ 4 s |
+
+**C7, 20 R0 de produção no `KIT_WORLD`**, caindo e empilhando; custo de um quadro de 1/60 s (dois passos fixos), `ragdoll.test.ts` "costs: 20 production R0...":
+
+| Janela | Mediana | p90 | p99 | Limite C7 |
+|---|---|---|---|---|
+| primeiros 3 s (caindo) | **16,1 ms** | 16,9 | **18,8** | ≤ 3,0 mediana, ≤ 4,0 p99 |
+| 10 s inteiros | 0,004 (dormem a 2,9 s) | 16,3 | 17,9 | — |
+
+**Reprova o C7 por 5x** (a máquina estava com carga 8–9, mas a razão entre variantes é estável). Sonda descartável, 20 R0, primeiros 3 s, mediana do quadro de 1/60 s:
+
+| Variante | Mediana (ms) | p99 |
+|---|---|---|
+| `KIT_WORLD` + 20/8 + `stabilize` (produção) | 16,1 | 17,2 |
+| `KIT_WORLD` sem `solverSteps` (32/2 do mundo) | 6,7 | 7,7 |
+| `KIT_WORLD` + 20/8, sem `stabilize` | 16,3 | 19,2 |
+| mundo de 60 Hz padrão + 20/8 + `stabilize` | 7,8 | 10,2 |
+| mundo de 60 Hz padrão, sem `solverSteps` | 3,0 | 3,7 |
+| `KIT_WORLD` com passo de 60 Hz + 20/8 | 8,8 | 10,3 |
+
+Leitura: o spike media 60 Hz com as iterações padrão do Jolt (3,0 ms). O custo vem dos 120 Hz (2 passos por quadro) e dos 20/8 do ragdoll (que, no `KIT_WORLD`, são MAIS caros que os 32/2 do mundo: 16,1 contra 6,7); `stabilize` não pesa. Nem o melhor caso do `KIT_WORLD` (6,7) cabe em 3,0. As cotas do desenho (`ragdollsMax` 20 R0) são provisórias: decidir entre baixar a cota, mudar o solver do ragdoll ou subir o C7. O teste do custo fica **vermelho de propósito** até lá; nada foi afrouxado.
+
+`crowd.test.ts` (100 corpos de 3 partes, sono 0,08, via `chainOfRig`): dorme a 9,8 s, como antes.
