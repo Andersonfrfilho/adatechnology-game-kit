@@ -9,7 +9,7 @@ import { createChassisHulls } from './crash-parts-chassis'
 import type { ChassisSettle } from './crash-parts-chassis'
 import { createPartBodies } from './crash-parts-bodies'
 import type { PartBody } from './crash-parts-bodies'
-import { boxInertia, conjugate, rotateBy, withoutPart } from './crash-parts-math'
+import { boxInertia, withoutPart } from './crash-parts-math'
 import type { BodyMass } from './crash-parts-math'
 
 type Three = typeof THREE_NS
@@ -79,6 +79,7 @@ export const createCrashParts = (options: CrashPartsOptions): CrashParts => {
   let chassis: BodyId | undefined
   let current = options.mass
   let calm = 0
+  let cooldown = 0
   let isDirty = false
   let released = 0
   let settles = 0
@@ -112,17 +113,29 @@ export const createCrashParts = (options: CrashPartsOptions): CrashParts => {
     const count = world.readContacts(chassis, touches)
     if (count === 0) return false
     world.readPose(chassis, pose, 0)
-    const back = conjugate([pose[3]!, pose[4]!, pose[5]!, pose[6]!])
-    let low: Vec3 = [Infinity, Infinity, Infinity]
-    let high: Vec3 = [-Infinity, -Infinity, -Infinity]
+    let lowX = Infinity, lowY = Infinity, lowZ = Infinity
+    let highX = -Infinity, highY = -Infinity, highZ = -Infinity
     for (let i = 0; i < points.length; i += 3) {
-      low = [Math.min(low[0], points[i]!), Math.min(low[1], points[i + 1]!), Math.min(low[2], points[i + 2]!)]
-      high = [Math.max(high[0], points[i]!), Math.max(high[1], points[i + 1]!), Math.max(high[2], points[i + 2]!)]
+      const x = points[i]!, y = points[i + 1]!, z = points[i + 2]!
+      if (x < lowX) lowX = x
+      if (x > highX) highX = x
+      if (y < lowY) lowY = y
+      if (y > highY) highY = y
+      if (z < lowZ) lowZ = z
+      if (z > highZ) highZ = z
     }
+    // the contact in the chassis frame: the pose's rotation conjugated, applied to the offset
+    const qx = -pose[3]!, qy = -pose[4]!, qz = -pose[5]!, qw = pose[6]!
     for (let c = 0; c < count; c++) {
       const at = c * CONTACT_READ_STRIDE
-      const local = rotateBy(back, [touches[at]! - pose[0]!, touches[at + 1]! - pose[1]!, touches[at + 2]! - pose[2]!])
-      if ([0, 1, 2].every((k) => local[k]! >= low[k]! - TOUCH_MARGIN && local[k]! <= high[k]! + TOUCH_MARGIN)) return true
+      const vx = touches[at]! - pose[0]!, vy = touches[at + 1]! - pose[1]!, vz = touches[at + 2]! - pose[2]!
+      const tx = 2 * (qy * vz - qz * vy)
+      const ty = 2 * (qz * vx - qx * vz)
+      const tz = 2 * (qx * vy - qy * vx)
+      const x = vx + qw * tx + qy * tz - qz * ty
+      const y = vy + qw * ty + qz * tx - qx * tz
+      const z = vz + qw * tz + qx * ty - qy * tx
+      if (x >= lowX - TOUCH_MARGIN && x <= highX + TOUCH_MARGIN && y >= lowY - TOUCH_MARGIN && y <= highY + TOUCH_MARGIN && z >= lowZ - TOUCH_MARGIN && z <= highZ + TOUCH_MARGIN) return true
     }
     return false
   }
@@ -152,7 +165,10 @@ export const createCrashParts = (options: CrashPartsOptions): CrashParts => {
       blows++
       events += result.events.length
       hitParts.add(part.id)
-      if (result.events.length > 0) isDirty = true
+      if (result.events.length > 0) {
+        isDirty = true
+        cooldown = 0
+      }
     }
   }
 
@@ -161,12 +177,17 @@ export const createCrashParts = (options: CrashPartsOptions): CrashParts => {
     const still = Math.hypot(speed[0]!, speed[1]!, speed[2]!) < SETTLED_SPEED && Math.hypot(speed[3]!, speed[4]!, speed[5]!) < SETTLED_SPEED
     calm = still ? calm + 1 : 0
     if (calm < SETTLE_STEPS || !(isDirty || chassisHulls.hasWork())) return
+    if (cooldown > 0) {
+      cooldown--
+      return
+    }
     const done: ChassisSettle = chassisHulls.settle(world, chassis!, isTouching)
     settles++
     held += done.held
     remade += done.remade
     unplaced += done.unplaced
     isDirty = done.held > 0 || colliders.isHullPending()
+    cooldown = done.held > 0 && !colliders.isHullPending() ? SETTLE_STEPS : 0
   }
 
   vehicle.setPartSink((part, holder) => {

@@ -171,7 +171,10 @@ describe('T6.9: the level-2 damage comes from the engine\'s contact rows, by the
     world.createBody({ shape: { kind: 'box', half: [6, 2, 0.5] }, motion: 'static', position: [0, 2, 4], user: -1 })
     world.setVelocity(chassis, [0, 0, 15], [0, 0, 0])
     advance(scene, 1200)
+    const crashed = parts.stats().settles
+    advance(scene, 600)
     const stats = parts.stats()
+    expect(stats.settles - crashed).toBeLessThanOrEqual(Math.ceil(600 / 30))
     expect(stats.blows).toBeGreaterThan(0)
     expect(stats.events).toBeGreaterThan(0)
     const front = [...stats.hitParts].map((id) => vehicle.model.parts.find((part) => part.id === id)!.role)
