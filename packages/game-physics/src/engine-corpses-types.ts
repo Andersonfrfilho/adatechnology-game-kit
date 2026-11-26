@@ -40,7 +40,7 @@ export interface CorpseBodiesOptions {
    * horde's mound is built from) is where the body lies. Called as a structural event of the tick.
    */
   readonly onSettled?: (corpse: SettledCorpse) => void
-  /** Metres a corpse must lie from where the host has it for `onSettled` to be told. Default 1. */
+  /** Metres a corpse must lie from where the host has it for `onSettled` to be told: more than a body's own fall moves its torso (about 1.3 m). Default 2. */
   readonly settleDistance?: number
 }
 

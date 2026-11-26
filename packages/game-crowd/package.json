@@ -52,6 +52,8 @@
     "@adatechnology/game-animals-species": "workspace:^",
     "@adatechnology/game-characters-undead": "workspace:^",
     "@adatechnology/game-infection": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-workers": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

@@ -14,7 +14,7 @@ import { standingTorso } from './corpse-pose'
 export type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, SettledCorpse } from './engine-corpses-types'
 
 const DEFAULT_EVALUATE_EVERY = 8
-const DEFAULT_SETTLE_DISTANCE = 1
+const DEFAULT_SETTLE_DISTANCE = 2
 /** Fixed steps between looks at the islands' size. */
 const ISLAND_EVERY = 60
 const NO_INTEREST: readonly Vec3[] = []

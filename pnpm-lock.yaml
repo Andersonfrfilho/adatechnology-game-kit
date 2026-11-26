@@ -516,6 +516,12 @@ importers:
       '@adatechnology/game-infection':
         specifier: workspace:^
         version: link:../game-infection
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-workers':
         specifier: workspace:^
         version: link:../game-workers

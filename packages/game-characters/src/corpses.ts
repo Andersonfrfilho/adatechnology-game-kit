@@ -27,6 +27,8 @@ export type CorpseLedger<TData> = {
   /** Takes one corpse away (eaten, searched and dragged off): the last one moves into its place, like the game's `CP`. Returns its data. */
   remove(index: number): TData | undefined
   clear(): void
+  /** Puts new data on the corpse `id` (it was pushed and lies elsewhere): same id, same age, same place in the list. False when no corpse has that id. */
+  replace(id: number, data: TData): boolean
   /** `listener` hears every add and removal from now on; returns the call that stops it. */
   subscribe(listener: CorpseListener<TData>): () => void
 }
@@ -88,6 +90,12 @@ export const createCorpseLedger = <TData>(options: CorpseOptions): CorpseLedger<
     clear() {
       const gone = entries.splice(0)
       for (const entry of gone) announceRemoved(entry, 'cleared')
+    },
+    replace(id, data) {
+      const index = entries.findIndex((entry) => entry.id === id)
+      if (index < 0) return false
+      entries[index] = { ...(entries[index] as CorpseEntry<TData>), data }
+      return true
     },
     subscribe(listener) {
       listeners.add(listener)

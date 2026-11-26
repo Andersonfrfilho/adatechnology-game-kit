@@ -99,6 +99,18 @@ describe('corpses', () => {
     expect(ledger.entries[0]?.id).toBe(6)
   })
 
+  it('replace puts new data on a corpse by id and keeps its id, age and place', () => {
+    const ledger = createCorpseLedger<string>({ max: 3, seconds: 10 })
+    ledger.add('a')
+    ledger.add('b')
+    ledger.update(4)
+    const id = ledger.entries[1]?.id as number
+    expect(ledger.replace(id, 'b-moved')).toBe(true)
+    expect(ledger.entries.map((entry) => entry.data)).toEqual(['a', 'b-moved'])
+    expect(ledger.entries[1]).toMatchObject({ id, age: 4 })
+    expect(ledger.replace(99, 'nobody')).toBe(false)
+  })
+
   it('the kit makes a ledger with its own cap and lifetime (400 bodies, 900 s)', () => {
     const kit = createCharacters()
     const ledger = kit.createCorpses<number>()
