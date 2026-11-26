@@ -204,7 +204,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-fleet test` · `sonnet`.
 - **T6.16 README, skills** (`kit-veiculos`), `docs/veiculos-verificacao.md` e `docs/veiculos-pecas-por-categoria.md`.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
-- **T6.19 Atualizar o §6 da `arquitetura.md`:** carro estacionado dinâmico (D3), sem par `vehicle`–`agent`, camada de corpo morto (`corpse`, da Fase 5), camada do testador das rodas.
+- ✅ **T6.19 Atualizar o §6 da `arquitetura.md`:** carro estacionado dinâmico (D3), sem par `vehicle`–`agent`, camada de corpo morto (`corpse`, da Fase 5), camada do testador das rodas.
   Mecânica? sim · Aceite por comando? sim: `grep` das camadas novas na `arquitetura.md` · `haiku`.
 - **T6.20 Emenda do C8 no `spec.md`** (D2) com o texto aprovado pelo dono.
   Mecânica? sim · Aceite por comando? sim: `grep` da emenda · `haiku`.

@@ -4057,3 +4057,9 @@ Leituras: (1) **o composto mutável de 96 a 192 filhos não pesa**: o `Step` do 
 **Achado do Jolt (1.1.1):** `BodyInterface::NotifyShapeChanged` deixa 8 bytes no heap do wasm a cada chamada (crescimento linear medido em 600 chamadas: 4 104 bytes); `SetShape` com outra forma num corpo que depois sai faz o mesmo. O adaptador (T6.1b) usa `SetPositionAndRotation` no lugar do primeiro (plano) e documenta o segundo.
 
 **Limites:** reticulado, acoplamento e parâmetros são do próprio espião (primeira passada, não calibrada); os cascos só se movem (não se deformam); o carro não tem rodas nem gravidade. O veredito de seguir ou parar a E3 é do dono: com a folga reprovada, o acoplamento instável e a T6.0 sem convergência clara, **recomendo não começar a 009 sem um desenho novo do reticulado (autocontato ou grade mais fina) e do acoplamento (009-f) antes**.
+
+## T6.19 — §6 da `arquitetura.md` (2026-11-26)
+
+`design/arquitetura.md` §6 agora diz: o carro estacionado é `vehicle` dinâmico dormindo (D3), não `static`; o par `vehicle`–`agent` sai (o agente também deixa de encontrar `vehicle`, e atropelar é a consulta de 7.8 do `veiculos.md`); a camada de corpo morto é a **`corpse`** da Fase 5 (PR #521: `Layer`, `LAYER_PAIRS`, `corpse` encontra o mundo fixo, `debris`, `prop`, `character`, `vehicle`, outros `corpse` e `sensor`, nunca `agent`); o testador das rodas é uma camada interna do adaptador (como a das consultas), que não encontra `agent`, `corpse` nem `sensor`. **Alinhamento com o #521** (`git diff origin/main...origin/spec/008-fase5 -- packages/game-physics/src/contract.ts`): a `ragdoll` que o `veiculos.md` 6.4 pedia é a mesma coisa que a `corpse`; **não se criou uma segunda camada**, e o 6.4 do desenho diz isso. O #521 não toca `arquitetura.md`, então a edição não conflita.
+
+Aceite: `grep -c 'corpse\|testador das rodas\|estacionado' specs/008-motor-fisico-jolt/design/arquitetura.md` dá 6 (as quatro linhas da tabela e o parágrafo seguinte).
