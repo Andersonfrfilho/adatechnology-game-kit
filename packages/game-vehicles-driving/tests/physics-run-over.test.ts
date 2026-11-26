@@ -43,7 +43,7 @@ const scene = (speed: number, agentZ: readonly number[], mass = 100) => {
     store,
     damage: (_index, hit) => ({ died: hit.amount >= 100 }),
     kill: (index) => void kills.push(index),
-    asPlayerCrowd: () => ({ stun: (index) => void stuns.push(index) }),
+    knockDown: (index) => void stuns.push(index),
   }
   const hits: RunOverHit[] = []
   const runOver = createRunOver(loop, { crowd, agents: { count: agentZ.length, bodyOf: (index) => (100 + index) as never }, onHit: (hit) => hits.push(hit) })

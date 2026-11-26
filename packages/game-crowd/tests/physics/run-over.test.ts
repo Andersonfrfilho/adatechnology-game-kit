@@ -9,7 +9,7 @@ import type { JoltWorld } from '@adatechnology/game-physics-jolt'
 import { createRunOver } from '@adatechnology/game-vehicles-driving'
 import type { RunOverHit } from '@adatechnology/game-vehicles-driving'
 
-import { createAgentBodies, createCrowd, createNavGrid, relocateCorpse, STATE } from '../../src'
+import { BALANCE, createAgentBodies, createCrowd, createNavGrid, FALL_CAUSE, relocateCorpse, STATE } from '../../src'
 import type { Crowd } from '../../src'
 import { packWithBalance, physicsOptions } from './scenes'
 import { hashCrowdState } from './state-hash'
@@ -115,7 +115,7 @@ describe('T6.26: cars run over the crowd (veiculos.md 7.8)', () => {
   })
 
   it.each([
-    ['an adult zombie at 15 km/h is knocked down and lives', ZOMBIE, 15, 'knock', false],
+    ['an adult zombie at 15 km/h is knocked down (a real fall) and lives', ZOMBIE, 15, 'knock', false],
     ['an adult zombie at 25 km/h dies of the energy of the hit', ZOMBIE, 25, 'knock', true],
     ['a child pedestrian at 20 km/h is knocked down and lives (a lighter body takes less energy)', pedestrian(CHILD), 20, 'knock', false],
     ['an adult pedestrian at 30 km/h dies', pedestrian(ADULT), 30, 'kill', true],
@@ -124,7 +124,32 @@ describe('T6.26: cars run over the crowd (veiculos.md 7.8)', () => {
     scene.untilHit(5)
     expect(scene.hits.map((hit) => hit.outcome)).toEqual([outcome])
     expect(scene.crowd.corpses.entries).toHaveLength(dies ? 1 : 0)
-    if (!dies) expect(scene.crowd.store.state[0]).toBe(STATE.STUNNED)
+    if (!dies) {
+      scene.run(1 / 30)
+      expect(scene.crowd.store.balance[0]).toBe(BALANCE.FALLEN)
+      expect(scene.crowd.store.fallCause[0]).toBe(FALL_CAUSE.SHOVE)
+    }
+    scene.dispose()
+  })
+
+  it('a zombie knocked down at 15 km/h falls, slides on the push and gets up on the crowd\'s own timing; a neighbour out of the car\'s way is untouched', { timeout: 60000 }, async () => {
+    const scene = await makeScene([{ x: 0, z: 3, ...ZOMBIE }, { x: 1.8, z: 3, ...ZOMBIE }], [{ x: 0, z: -3, kmh: 15 }])
+    const { store } = scene.crowd
+    const neighbourBefore = [store.x[1]!, store.z[1]!]
+    scene.untilHit(5)
+    expect(scene.hits.map((hit) => [hit.agent, hit.outcome])).toEqual([[0, 'knock']])
+    scene.run(0.2)
+    expect(store.balance[0]).toBe(BALANCE.FALLEN)
+    const slidFrom = store.z[0]!
+    scene.run(0.3)
+    expect(store.z[0]!).toBeGreaterThan(slidFrom)
+    scene.run(1.4)
+    expect(store.balance[0]).toBe(BALANCE.GETTING_UP)
+    scene.run(1.6)
+    expect(store.balance[0]).toBe(BALANCE.STANDING)
+    expect(scene.crowd.stats.physics.falls.reduce((sum, count) => sum + count, 0)).toBe(1)
+    expect([store.x[1]!, store.z[1]!]).toEqual(neighbourBefore)
+    expect(store.balance[1]).toBe(BALANCE.STANDING)
     scene.dispose()
   })
 
@@ -136,7 +161,6 @@ describe('T6.26: cars run over the crowd (veiculos.md 7.8)', () => {
     expect(new Set(scene.hits.map((hit) => hit.outcome))).toEqual(new Set(['push']))
     expect(scene.crowd.corpses.entries).toHaveLength(0)
     expect(scene.crowd.store.n).toBe(1)
-    expect(scene.crowd.store.state[0]).not.toBe(STATE.STUNNED)
     const after = scene.speedOf(scene.carBodies[0]!)
     expect(after).toBeLessThan(before)
     scene.dispose()
@@ -169,6 +193,7 @@ describe('T6.26: cars run over the crowd (veiculos.md 7.8)', () => {
     expect(first.hits).toBeGreaterThan(4)
     expect(JSON.parse(first.registry).length).toBeGreaterThan(0)
     expect(second).toEqual(first)
+    expect(first.hash).toBe('725bab10')
   })
 
   it('the heap is what it was after three warm-up cycles: makes and throws away the run-over, the agents and the corpses', { timeout: 120000 }, async () => {

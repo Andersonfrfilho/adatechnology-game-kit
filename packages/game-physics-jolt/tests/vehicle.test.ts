@@ -504,7 +504,7 @@ describe('T6.26: a real car runs over agents (the `vehicle` and `agent` layers d
     const store = { n: 3, x: new Float32Array([0.1, 0.1, 0.1]), z: new Float32Array([4, 8, 12]), vx: new Float32Array(3), vz: new Float32Array(3), mass: new Float32Array(3).fill(80), identity: Uint32Array.from([1, 2, 3]) }
     const hits: RunOverHit[] = []
     const runOver = createRunOver(loop, {
-      crowd: { store, damage: () => ({ died: false }), kill: () => undefined, asPlayerCrowd: () => ({ stun: () => undefined }) },
+      crowd: { store, damage: () => ({ died: false }), kill: () => undefined, knockDown: () => undefined },
       agents: { count: 3, bodyOf: (index) => capsules[index] },
       onHit: (hit) => hits.push(hit),
     })

@@ -18,7 +18,7 @@ export type RunOverCrowd = {
   }
   damage(index: number, hit: { readonly region: 1; readonly amount: number; readonly distance: number }): { readonly died: boolean }
   kill(index: number): void
-  asPlayerCrowd(): { stun(index: number, seconds: number, vx: number, vz: number): void }
+  knockDown(index: number, velocity: { readonly x: number; readonly z: number }): void
 }
 
 /** The kinematic capsules of the agents (`createAgentBodies` of `game-crowd`): capsule `i` follows agent `i`. */
@@ -104,7 +104,7 @@ export const createRunOver = (loop: PhysicsLoop, options: RunOverOptions): RunOv
     if (outcome === 'kill') crowd.kill(index)
     else if (!crowd.damage(index, { region: 1, amount: (hit.reduced / REFERENCE_MASS) * hit.closing * hit.closing * rules.knockDamage, distance: 0 }).died) {
       dying = undefined
-      crowd.asPlayerCrowd().stun(index, rules.stunSeconds, direction[0] * hit.common, direction[1] * hit.common)
+      crowd.knockDown(index, { x: direction[0] * hit.common, z: direction[1] * hit.common })
     }
     const died = dying !== undefined
     dying = undefined
