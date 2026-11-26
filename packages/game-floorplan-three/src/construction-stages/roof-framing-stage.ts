@@ -72,7 +72,7 @@ function addTimber(batch: BoxBatch, top0: Vec, top1: Vec, width: number, height:
     batch.addHexahedron([
       corner(a, -1, height), corner(a, 1, height), corner(a, 1, 0), corner(a, -1, 0),
       corner(b, -1, height), corner(b, 1, height), corner(b, 1, 0), corner(b, -1, 0),
-    ])
+    ], { start: k > 0, end: k < stretches - 1 })
   }
   if (log) batch.piece(null)
 }

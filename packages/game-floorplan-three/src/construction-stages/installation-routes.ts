@@ -56,7 +56,8 @@ export const FEED_BOX_OFFSET = 0.25
  * run lies wholly in its chase under the render (at 1.4 cm, half in the render, the pipe's face was 1.5 mm under it and showed through; a sleeve came out of it).
  */
 export function chaseDepth(diameter = CHASE_DIAMETER): number {
-  return PLASTER_PER_FACE + diameter / 2 + CHASE_CLEAR
+  // (its axis a whole diameter in, so its face half a diameter under the clearance: two runs of different sizes crossing in one wall never show faces on one plane)
+  return PLASTER_PER_FACE + CHASE_CLEAR + diameter
 }
 /** The run a chase is cut for when the caller does not say (m): a 25 mm water pipe, the thicker of the runs in a wall. */
 const CHASE_DIAMETER = 0.025

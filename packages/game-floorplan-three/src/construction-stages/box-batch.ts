@@ -58,12 +58,14 @@ export class BoxBatch {
 
   /**
    * A six-faced solid from its eight corners: four at the start (in turn around the section) and the same four at the end, for a timber laid on a slope. Each
-   * face is wound to look out of the solid.
+   * face is wound to look out of the solid. `open`: the start or end face is left out (a stretch of a timber cut into pieces, against the next one).
    */
-  addHexahedron(corners: readonly (readonly [number, number, number])[]): void {
+  addHexahedron(corners: readonly (readonly [number, number, number])[], open: { readonly start?: boolean; readonly end?: boolean } = {}): void {
     if (corners.length !== 8) return
     const centre = [0, 1, 2].map((k) => corners.reduce((sum, c) => sum + c[k]!, 0) / 8)
     for (const quad of HEXAHEDRON_FACES) {
+      // (an end laid against the next stretch of the same timber is not laid: the two faces would lie on one plane, inside the timber)
+      if ((open.start && quad === HEXAHEDRON_FACES[0]) || (open.end && quad === HEXAHEDRON_FACES[1])) continue
       const a = corners[quad[0]]!, b = corners[quad[1]]!, c = corners[quad[2]]!, d = corners[quad[3]]!
       const e1 = [b[0]! - a[0]!, b[1]! - a[1]!, b[2]! - a[2]!], e2 = [d[0]! - a[0]!, d[1]! - a[1]!, d[2]! - a[2]!]
       let n = [e1[1]! * e2[2]! - e1[2]! * e2[1]!, e1[2]! * e2[0]! - e1[0]! * e2[2]!, e1[0]! * e2[1]! - e1[1]! * e2[0]!]

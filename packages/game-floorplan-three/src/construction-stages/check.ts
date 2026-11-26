@@ -190,6 +190,9 @@ function checkNetwork(T: Three, h: StagedHouseView, plan: Plan, set: (level: num
   }
 }
 
+/** Every how many corners of the roof's timber the check looks up for the tiles over it. */
+const TIMBER_CORNER_STRIDE = 6
+
 function checkRoof(T: Three, h: StagedHouseView, plan: Plan, set: (level: number) => void, out: StageProblem[]): void {
   const roof = h.groups.roof, framing = h.groups['stage:7:roof_framing']
   if (!roof) return
@@ -208,7 +211,15 @@ function checkRoof(T: Three, h: StagedHouseView, plan: Plan, set: (level: number
     const mesh = o as THREE_NS.Mesh
     if (!mesh.isMesh) return
     const position = mesh.geometry.getAttribute('position')
-    for (let i = 0; i < position.count; i += 7) {
+    // each corner of the timber once (a vertex of three faces, and of the stretches cut on either side of it), one in TIMBER_CORNER_STRIDE of them:
+    // about as many as the vertices looked at before the timber was cut into stretches
+    const seen = new Set<string>()
+    let corner = 0
+    for (let i = 0; i < position.count; i++) {
+      const key = `${position.getX(i).toFixed(3)},${position.getY(i).toFixed(3)},${position.getZ(i).toFixed(3)}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      if (corner++ % TIMBER_CORNER_STRIDE) continue
       const p = new T.Vector3().fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld)
       const y = roofOver(p, p.y - 1)
       if (y !== null && y <= p.y) out.push({ code: STAGE_PROBLEM.FRAMING_THROUGH_TILES, level: STAGE_LEVEL.roof, detail: `timber at ${p.toArray().map((v) => v.toFixed(2))}, tiles at ${y.toFixed(2)}` })
