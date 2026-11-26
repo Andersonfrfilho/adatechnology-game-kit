@@ -78,6 +78,8 @@ The types are the whole contract; read `src/index.ts` for each field's meaning a
 - `createBlastQuery(world, { fragments?, bodiesMax? }).run({ origin, radius, fragmentReach?, spin? })`: about 300 fragment rays (first hit each, spread evenly over the sphere), the bodies within the radius, and for each a sight line from the centre (`visible`: no fixed thing, prop, debris or vehicle in the way; people do not cover). The buffers are made once and reused by the next `run`. It only finds: what a blast does to what it finds is the caller's. About 0.7 ms with 300 agents around the centre (`test:cost`, spec limit 1 ms).
 - `createSensorVolumes(loop, { onEnter, onExit })`: spheres on the `sensor` layer (smoke, gas, triggers) that tell who enters and leaves in the loop's `contacts` phase; `add`, `move` (a drifting cloud), `remove`, `dispose`. Who is inside now: `world.overlapSphere(centre, radius, out, { layers })`.
 
+- `createImpactReader(loop, { minImpulse, bodiesMax?, accepts?, onImpact })`: the frame's contact rows as one blow per body (the strongest, with its impulse, closing speed, point and normal), told once in the `contacts` phase. Its slots are arrays made once; a row makes nothing, a blow told a few bytes (the reused `Impact` object). What a blow does is the host's: `game-destruction-three` turns one on a fixed part into a `blunt` hit (`RendererOptions.contactHits`).
+
 ## Português
 
 Contrato de corpos rígidos do kit: formas, juntas, ragdolls, veículos, materiais, contatos, sono, raycast e o laço de passo fixo.

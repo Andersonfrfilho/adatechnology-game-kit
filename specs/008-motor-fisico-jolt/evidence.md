@@ -4036,3 +4036,29 @@ Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 4 a 5, sob `perf-measure.
 **Números** (`PHYSICS_COST=1`, três rodadas, um blast no meio de 300 agentes com 300 raios e cerca de 190 linhas de visada): mediana 0,686 / 0,679 / 0,680 ms, p99 0,82 / 0,96 / 0,87 ms. Limite do `spec.md` §6: 1 ms.
 
 **Gates:** `game-physics-jolt test`: 40 arquivos, 177 testes verdes (1 arquivo e 2 testes pulados, como antes); `game-vfx test` 437 e `game-weapons test` 596 verdes; typecheck do `game-physics` e eslint dos arquivos novos limpos.
+
+## T7.4 — reação em cadeia (2026-11-26) — **parcial, sem ✅: a mediana e o p99 do caso 5b e o quadro de despertar do caso 5 não fecham; números abaixo, decisão do dono**
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; três rodadas sob `perf-measure.lock`, carga 1,8 a 2,5 (outras sessões na máquina).
+
+**O que já existia:** o spike do caso 5 (`cascade.test.ts`: a lata de gás vira bomba por um golpe de 150 N s lido das linhas de contato dentro do próprio teste, a parede de 400 blocos, a laje, 50 caixas; hash determinístico) e o caso 5b (`cascade-tail.test.ts`: 500 candidatos, a receita de produção `WakeQueue` + `physicsPieceCount` + `chooseForPhysics`, no `KIT_WORLD`); `ContactBuffer.impulse` e `approach` no contrato; as linhas de contato do `EnginePieces.knock` só tocavam som.
+
+**O que mudou:** `game-physics/src/impact-reader.ts` (`createImpactReader`: o golpe mais forte de cada corpo no quadro, dito uma vez na fase `contacts`, tabela de busca e arrays feitos uma vez; uma linha de contato não aloca, um golpe dito aloca poucos bytes — o objeto `Impact` reaproveitado); `game-destruction-three/src/engine-impacts.ts` (`createEngineImpacts`: golpe numa parte fixa desenhada vira `hitPart(objeto, parte, { type: 'blunt', energy ≈ impulso × velocidade / 2, direction, point })`, até 32 partes por quadro, mínimo 30 N s) com `EngineStatics.partOf`, `PieceSystem.contactHits` e a opção `contactHits` do renderizador (desligada por padrão); o caso 5 passou a ler os golpes pelo `createImpactReader` (o **hash da simulação é o mesmo, `645d812254fd0a98`**); testes `engine-impacts.test.ts` (uma caixa jogada na parede dá `hitPart` blunt com 300 a 1 500 J, direção -z) e `cascade.test.ts` (alocação por golpe dito < 200 bytes; crescimento do heap de JS do caso 5 < 2 MB).
+
+**Números** (3 rodadas, faixa de custo):
+
+| Medida | Limite (`spec.md` §6.2 / cond. 10) | Medido | |
+|---|---|---|---|
+| Caso 5b, quadro de despertar, receita de produção, aquecido | ≤ 10 ms | 6,3 a 8,2 ms (9 execuções) | passa |
+| Caso 5b, mediana dos 3 s, aquecido | ≤ 0,6 ms | 0,607 / 0,614 / 0,612 / 0,631 / 0,651 / 0,659 / 0,711 / 0,728 / 0,732 | **não fecha** (3 de 9 até 0,62; 6 de 9 acima de 0,65) |
+| Caso 5b, p99 dos 3 s, aquecido | ≤ 4,0 ms | 3,69 a 4,29 ms | **na beira** (4 de 9 acima de 4,0) |
+| Caso 5b, quadro de despertar, a frio (primeiro da processo) | (não está na tabela) | 15,9 a 18,9 ms | registrado |
+| Caso 5, mediana depois do golpe | ≤ 0,6 ms | 0,45 | passa |
+| Caso 5, p99 depois do golpe | ≤ 4,0 ms | 5,1 a 6,0 | **não fecha** |
+| Caso 5, maior quadro (318 corpos acordam de uma vez, sem a fila) | ≤ 10 ms | 11,8 a 15,0 | **não fecha** |
+| Heap de JS no caso 5 | estável | -0,6 a -0,8 MB (cai) | passa |
+| Heap do wasm, `heap.test.ts` | estável | 0 por ciclo nos 11 cenários | passa |
+
+Os limites que passam estão cobrados na faixa de custo (`cascade-tail`: despertar ≤ 10 ms; `cascade`: heap de JS). Os que não fecham **não foram cobrados nem afrouxados**: ficam no relatório. O caso 5 acorda 318 corpos de uma vez (rajada), que a produção não faz: a fila do 5b espalha o despertar e fica a 6 a 8 ms; a mediana e o p99 do 5b (0,6 / 4,0) são o que depende de decisão do dono (subir os limites para a faixa medida, ou otimizar o passo de 500 corpos acordados).
+
+**Gates:** `game-physics-jolt test` 40 arquivos, 178 testes verdes; `game-destruction-three test` 112 arquivos (uma rodada com 2 falhas de tempo-limite de 5 s com carga 18 de outras sessões, os mesmos arquivos passam sozinhos); typecheck e eslint dos arquivos tocados limpos.

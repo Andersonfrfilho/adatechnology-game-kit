@@ -63,6 +63,12 @@ const sameBox = (a: StaticSolid, b: StaticSolid): boolean => a === b || (sameSha
 
 export const sameSolids = (a: readonly StaticSolid[], b: readonly StaticSolid[]): boolean => a.length === b.length && a.every((s, i) => sameBox(s, b[i]))
 
+/** `top:0` is mesh 0 of the part `top`. */
+const partOfKey = (key: string): string => {
+  const colon = key.indexOf(':')
+  return colon < 0 ? key : key.slice(0, colon)
+}
+
 const hasSize = (s: StaticSolid): boolean => s.half[0] > 0 && s.half[1] > 0 && s.half[2] > 0
 
 const shapeOf = (s: StaticSolid): ShapeDesc => (s.mesh ? { kind: 'trimesh', vertices: s.mesh.vertices, indices: s.mesh.indices } : { kind: 'box', half: s.half })
@@ -82,6 +88,8 @@ export class EngineStatics {
   readonly ids = new Set<BodyId>()
   /** The object each held body is a part of (what a ray that meets the body says about the object). */
   readonly ownerOf = new Map<BodyId, string>()
+  /** The part of the object each held body draws (the key without its mesh number): what a blow on the body hits. */
+  readonly partOf = new Map<BodyId, string>()
 
   constructor(
     private readonly world: SeamWorld,
@@ -172,6 +180,7 @@ export class EngineStatics {
         f.held.set(x.key, { solid: x.solid, id })
         this.ids.add(id)
         this.ownerOf.set(id, f.objectId)
+        this.partOf.set(id, partOfKey(x.key))
         this.changed.add(id)
         if (f.settled) this.wakeAround(x.solid)
       })
@@ -208,6 +217,7 @@ export class EngineStatics {
   private drop(id: BodyId): void {
     this.ids.delete(id)
     this.ownerOf.delete(id)
+    this.partOf.delete(id)
     this.world.removeBody(id)
   }
 

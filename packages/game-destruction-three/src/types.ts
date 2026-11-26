@@ -7,6 +7,7 @@
  */
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
+import type { EngineImpactsOptions } from './engine-impacts'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue, DeferredQueueOptions, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
@@ -48,6 +49,8 @@ export interface RendererOptions {
   physics: PiecePhysics
   /** The engine's fixed bodies as the broad phase of the world's rays (`DestructionWorld.setRayBroadPhase`): shots, sweeps of the kit and blast sight lines skip objects the engine proves out of the way. Off by default. */
   rayBroadPhase?: boolean
+  /** A blow of the engine on a fixed part of the drawn world (a flying piece into a wall) becomes a `blunt` hit of the world, with the energy of the blow (`engine-impacts.ts`); `true` for the defaults. Needs the pieces in a `PhysicsLoop`. Off by default. */
+  contactHits?: boolean | EngineImpactsOptions
   /** Scene that receives fragments, loose pieces, decals and particles. */
   scene: THREE_NS.Scene
   world: DestructionWorld

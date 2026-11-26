@@ -523,6 +523,7 @@ class Renderer implements DestructionRenderer {
   private time = 0
   private scanTimer = 0
   private disposed = false
+  private stopContactHits: (() => void) | null = null
   private readonly box: THREE_NS.Box3
   private readonly tmpQ: THREE_NS.Quaternion
   private readonly v1: THREE_NS.Vector3
@@ -615,6 +616,7 @@ class Renderer implements DestructionRenderer {
       },
     })
     if (o.rayBroadPhase) this.world.setRayBroadPhase(this.pieceSys.rayBroadPhase())
+    if (o.contactHits) this.stopContactHits = this.pieceSys.contactHits(this.world, o.contactHits === true ? undefined : o.contactHits)
     this.unsubscribe = this.world.on('*', (ev) => {
       if (ev.type === 'explode') this.coverWhenWentOff.set(ev, this.coverAround(ev))
       // past the cap only what changes the simulation is kept: a blast floods the queue with damage and marks, and a dropped collapse leaves a fallen wall drawn standing
@@ -3848,6 +3850,7 @@ class Renderer implements DestructionRenderer {
     if (this.disposed) return
     this.unsubscribe()
     if (this.o.rayBroadPhase) this.world.setRayBroadPhase(null)
+    this.stopContactHits?.()
     this.clear()
     for (const id of [...this.bounds.keys()]) this.unbind(id)
     this.fragments.dispose()

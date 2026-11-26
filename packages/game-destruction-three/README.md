@@ -268,6 +268,10 @@ in `@adatechnology/game-vfx` (`patchSpriteKinds(SPRITE_KINDS, { dust: { life: [1
 `DestructionRenderer`: `bind`, `unbind`, `makePiece`, `pieces`, `piece`, `impulse`, `update`, `emit`, `explode(point, energy, radius, { effect?, direction?, visual? })` (`visual: false` keeps only the shove and the sound, for a host that played the effect itself), `clear`, `restore`, `stats`, `dispose`.
 `clear()` removes fragments, decals, puddles and particles from the scene and restores every bound mesh; `dispose()` also unsubscribes from the world.
 
+## Engine hits and ray broad phase
+
+Two options, off by default, for a renderer whose pieces are in a `PhysicsLoop`: `contactHits: true` turns the engine's strongest blow on each fixed drawn part into a `blunt` hit of the world (`hitPart`, energy about `impulse × closing speed / 2`, direction the other body was going, at most 32 parts a frame, blows under 30 N s ignored; `{ minImpulse, hitsMax, contactRadius }` to tune): a flying piece into a wall, a slab onto a crate, so a blast's cascade takes the next wall by itself. `rayBroadPhase: true` lets the engine's fixed bodies narrow the objects the world's rays read.
+
 ## Português
 
 Renderizador three.js para o `@adatechnology/game-destruction`. O núcleo decide o que cada golpe faz e devolve eventos; este pacote desenha: amassados

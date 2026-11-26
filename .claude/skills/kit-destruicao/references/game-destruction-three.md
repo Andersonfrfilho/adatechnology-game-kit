@@ -93,3 +93,6 @@ Sem a opção, o blast empurra, acorda e solta tudo no próprio quadro. Com `bla
 - A explosão do Laboratório (E1) e o fogo de peça já vêm do `game-vfx` (T5.1f), com teto de 6 explosões a cada 4 s por área e menos detalhe de longe. Falta trocar os detritos pelo pool de sprites e apagar `particles.ts`.
 - Juntar as duas versões da Sala de destruição, mantendo o que cada uma tem a mais (V8).
 - Concreto armado e tijolo (T2.3b): `spall` vira remendo da cor do núcleo, `stage` 2 solta os fragmentos do tamanho da peça (furos em `marks` vão junto), `expose` desenha o vergalhão em cilindros instanciados. **Falta para a T2.4c**: abrir a abertura na malha da parede (colapsar a faixa de vértices por peça do `bind`, cortar o buraco nas duas faces), fiadas de tijolo instanciadas no LOD0 e a normal exata do remendo de lasca (hoje o eixo fino da caixa do mundo).
+
+## Golpes do motor e broad phase
+`contactHits: true` no renderizador: o golpe do motor numa parte fixa desenhada vira `hitPart` blunt com a energia ≈ impulso × velocidade / 2 e a direção em que o outro corpo ia (`engine-impacts.ts`; só partes fixas, no máximo 32 por quadro). `rayBroadPhase: true`: os corpos fixos como broad phase dos raios do mundo (`engine-rays.ts`). Os dois desligados por padrão.
