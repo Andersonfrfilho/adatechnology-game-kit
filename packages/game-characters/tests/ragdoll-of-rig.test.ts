@@ -33,4 +33,15 @@ describe('ragdollOfRig and chainOfRig', () => {
     expect(chainMass).toBeCloseTo(70, 6)
     expect(bodyMass).toBeCloseTo(70, 6)
   })
+
+  it('R1 has the body of R0 and R2 where it matters to a pile: the same joint friction and the same surface (a frictionless neck swings for a minute and keeps the whole pile awake)', () => {
+    const frictionOf = (parts: ReturnType<typeof chainOfRig>['parts']): Array<number | undefined> => parts.flatMap((part) => (part.joint ? [part.joint.friction] : []))
+    const ragdollFriction = new Set(frictionOf(ragdollOfRig({ rig, body: GUIDE, build: 1 }).parts))
+    expect(ragdollFriction.size).toBe(1)
+    const chain = chainOfRig({ rig, body: GUIDE, build: 1 }).parts
+    expect(frictionOf(chain)).toEqual([...ragdollFriction, ...ragdollFriction])
+    const surface = ragdollOfRig({ rig, body: GUIDE, build: 1 }).parts[0]?.body.material
+    expect(surface).toBeDefined()
+    for (const part of chain) expect(part.body.material).toEqual(surface)
+  })
 })

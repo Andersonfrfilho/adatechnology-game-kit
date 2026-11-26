@@ -3874,3 +3874,44 @@ Nenhum número mudou. Na faixa (carga 3,6–4,3 na rodada inteira) T2, T4, T5, 3
 **Estado dos 13 testes do §7:** 1 vermelho (T1: sono e p99, tabela acima); 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 passam (os de custo, 2, 4 e 5, na faixa de custo).
 
 **Gates:** `game-physics` 32, `game-characters` 396, `game-crowd` 142 (`state-hash` e `team-golden` iguais; nenhum arquivo de `src` mudou neste passo), `game-physics-jolt` `pnpm test`: 139 passam, 4 vermelhos, todos o T1 por sono (0,7, 1,1, 1,3, 1,7); `tsc --noEmit` e `eslint` limpos em `game-physics-jolt/tests`.
+
+### Pilha que não dorme (2026-11-26): a corrente (R1) não tinha o corpo do R0 e do R2
+
+**Causa.** `chainOfRig` (`packages/game-characters/src/body/chain.ts`) montava o pescoço e o quadril **sem atrito de junta** e as três partes com a **superfície padrão do motor** (atrito 0,7 / 0,6, restituição 0,2), enquanto o R0 (`ragdoll.ts:79,81,108`: `friction: 2`, `{0,8; 0,6; 0,05}`) e o R2 (`engine-corpses-swap.ts` `capsuleDesc`: o mesmo material) já tinham. Uma cabeça de 5 kg numa junta sem atrito é um pêndulo: o único freio é o amortecimento padrão do Jolt (5 %/s). O Jolt dorme **por ilha**; os 300 corpos rígidos da pilha são uma ilha só, então uma cabeça balançando 3 cm mantém os 100 cadáveres acordados.
+
+**Sonda** (por semente vermelha, `KIT_WORLD`, nascimento 1 a cada 3 quadros, sem alterar código; sonda apagada):
+- 0,7 / 1,7 / 0,4, aos 15,5 s: **15 / 21 / 24 partes** ainda se mexem (lin > 0,02 m/s ou ang > 0,2 rad/s); **12 / 21 / 23 são cabeças** (as outras: torsos e pernas puxados por elas). Nenhum corpo oscila entre dois vizinhos, nenhum acordado por contato novo: nenhum evento de acordar depois dos 5 s.
+- Corpo 8 da semente 0,7: torso e pernas a 0,000 m/s, cabeça a 0,2 m/s e 1,5 rad/s, indo e voltando 3,3 cm em z com meio período de 0,5 s, **ângulo do pescoço colado no limite de balanço (0,500 rad) e a torção correndo de -0,35 a -0,49**. Pico de velocidade da cabeça por segundo, de 7 s a 16 s: 0,302, 0,287, 0,274, 0,261, 0,249, 0,239, 0,229, 0,220, 0,211, 0,203, ou seja, **-4,4 %/s = e^-0,045**, o amortecimento padrão do Jolt. Para cair de 0,2 m/s abaixo do limite de sono (0,08 m/s de ponto) faltam ~36 s.
+- A política do kit **não participa**: contagem `r1 100, r2 0, r2f 0, piles 0` do começo ao fim (ninguém dorme, então nada congela), 0 trocas de degrau, 0 `overlapShape`. A prova em contrário: o mesmo custo por quadro com `evaluateEvery: 1e9` (política desligada): semente 1,7 p99 12,65 contra 12,41; 2,1 13,12 contra 13,10.
+
+**Correção** (`chain.ts`): `friction: 2` nas duas juntas (o mesmo número do R0) e `material` `{0,8; 0,6; 0,05}` nas três partes (o do R0 e do R2). Nenhum limite de teste, de junta ou de cota mudou; não há amortecimento novo (`angularDamping` do R1 segue o padrão). Teste: `game-characters/tests/ragdoll-of-rig.test.ts` (vermelho antes: `[undefined, undefined]` contra `[2, 2]`; verde depois).
+
+**Passo a passo** (13 sementes, segundos até todos dormirem; -1 = não dormiu em 16 s):
+
+| semente | antes | só atrito de junta | atrito + material (final) |
+|---|---|---|---|
+| 0,7 | -1 | 8,5 | 11,3 |
+| 0,3 | 11,6 | 9,8 | 8,7 |
+| 0,5 | 11,6 | 9,4 | 9,8 |
+| 0,9 | 13,7 | 8,7 | 9,4 |
+| 1,1 | 14,9 | 9,5 | 9,3 |
+| 1,3 | 14,2 | 9,0 | 10,9 |
+| 1,7 | -1 | 10,4 | 9,5 |
+| 2,1 | 11,4 | 9,3 | 8,9 |
+| 0,4 | -1 | 8,9 | 9,4 |
+| 0,6 | 10,8 | 9,1 | 10,2 |
+| 1,2 | 12,9 | 9,7 | 9,9 |
+| 1,5 | 13,7 | 11,0 | 13,1 |
+| 1,9 | 11,3 | 14,1 | 11,2 |
+
+Só o atrito de junta já tira 12 de 13 sementes de 11,0 s ou menos; a 1,9 ficava em 14,1 s (a pilha escorregando a cada ~1 s, uma perna ou cabeça caindo 4 cm a 0,9 m/s, sem nenhuma ação da política) e o T4 (morte sobre pilha dormindo, 3 s) passou a 5,68 s. Com o material junto a pior semente dorme a 13,1 s e o T4 fica em 2,4 s (média de 6 pontos de queda da morte nova: 2,9 s com a correção inteira, 4,1 só com o atrito, 3,8 sem nenhuma; o 2,08 s de antes era um dos pontos, de 2,1 a 5,7 s). O material sozinho **não foi medido**. A intensidade de cada efeito entre as sementes não é monótona: o empilhamento é caótico (a ordem muda de uma configuração para outra), por isso a tabela traz a configuração e não só a média.
+
+**Medido no final** (`flock perf-measure.lock`, carga de 1 minuto de 2,6 a 3,5; sono é determinístico e não depende dela): dorme **8,7 a 13,1 s nas 13 sementes** (antes: 3 não dormiam em 16 s, 2 passavam de 14 s); mediana da janela **4,2 a 4,8 ms** (limite 6); p99 **7,2 a 12,9 ms** (limite 10: 7 de 13 acima; antes 7,0 a 12,8 com 9 de 13 acima); máx. 8,5 a 14,3.
+
+**O que continua vermelho no `pnpm test` do `game-physics-jolt`** (141 passam, 2 vermelhos, ambos o T1):
+1. Seeds 0,5 e 1,3: `ragdollInPile` 2 contra o teto de 1. Medido quadro a quadro: o R0 que cai na pilha dura **no máximo 1 quadro** (a política o rebaixa no passo seguinte; as 3 sementes medidas têm 3 ou 4 quadros assim em 12 s). O teste só olha 1 em cada 6 quadros e soma as vezes que pega; com a pilha de antes pegava 0 ou 1 por sorte da amostragem. Medir cada quadro e exigir sequência ≤ 1 é o que a regra do §2.1 pede; não alterei o teste.
+2. As falhas de p99 e a do T4 (3 s) estão na faixa de custo e na dependência do ponto de queda, não no sono.
+
+**p99 não é problema de sono.** O custo da janela sobe 1,5, 4,3, 6,0 ms (mediana por 160 quadros): são 300 corpos rígidos acordados em contato a 120 Hz, 32/2 iterações; os piores quadros são os de 5,5 a 5,9 s, logo depois do último nascimento. Para baixá-lo é preciso dormir antes ou ter menos corpos acordados (opção (b) do "Fechamento": nascer em R2 na pilha cheia).
+
+**Gates:** `game-characters` 397 (1 teste novo), `game-characters-three` 565, `game-physics` 32, `game-crowd` 142 (`state-hash` `7979b7a6` e `9449b822` iguais, `team-golden` iguais), `game-crowd-three` 48, `game-physics-jolt` `pnpm test` 141 + 2 vermelhos (acima), `pnpm test:cost` 139 + 9 vermelhos (T1: p99 em 7 sementes, mediana 0,7 a 8,4 ms por um pico de 57 ms com a carga em 5,3 numa rodada, e os 2 do `ragdollInPile`); T2, T4, T5, 300 dormindo e `ragdoll.test.ts` passam na faixa; `tsc --noEmit` e `eslint` limpos. **✅ não dado: T1 continua vermelho.**
