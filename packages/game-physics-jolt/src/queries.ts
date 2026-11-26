@@ -187,9 +187,12 @@ export const contactBodies = (w: JoltWorldHost, id: BodyId, out: BodyId[]): numb
     const was = w.collideSettings.mMaxSeparationDistance
     w.collideSettings.mMaxSeparationDistance = TOUCH_MARGIN
     const self = new J.IgnoreSingleBodyFilter(e.id)
-    w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, touchableBy(e.layer)), self, w.shapeFilter)
-    w.collideSettings.mMaxSeparationDistance = was
-    J.destroy(self)
+    try {
+      w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, touchableBy(e.layer)), self, w.shapeFilter)
+    } finally {
+      w.collideSettings.mMaxSeparationDistance = was
+      J.destroy(self)
+    }
     const hits = c.mHits
     for (let i = 0; i < hits.size(); i++) {
       const k = hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId

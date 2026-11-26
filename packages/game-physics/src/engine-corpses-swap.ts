@@ -37,6 +37,23 @@ export const torsoOf = (ctx: CorpseContext, record: CorpseRecord): Rigid => {
   return chainTorsoOfRagdoll(record, now)
 }
 
+/** `torsoOf` written straight into `out` (x y z, then the quaternion) at `offset`: the rungs that hold the torso as it is do not make an object to say so. */
+export const writeTorso = (ctx: CorpseContext, record: CorpseRecord, out: Float32Array | Float64Array, offset: number): void => {
+  if (record.rung === 'r2f' || record.rung === 'r3') {
+    for (let index = 0; index < 7; index++) out[offset + index] = record.torso[index] as number
+    return
+  }
+  if (record.rung === 'r1') {
+    ctx.world.readPose(anchorBody(record), out, offset)
+    return
+  }
+  const torso = torsoOf(ctx, record)
+  out[offset] = torso.position[0]
+  out[offset + 1] = torso.position[1]
+  out[offset + 2] = torso.position[2]
+  for (let index = 0; index < 4; index++) out[offset + 3 + index] = torso.rotation[index] as number
+}
+
 const chainTorsoOfRagdoll = (record: CorpseRecord, ragdollTorso: Rigid): Rigid => {
   const part = record.kit.ragdoll.parts[record.kit.anchors.torso]
   const standing = part?.body.rotation ?? IDENTITY

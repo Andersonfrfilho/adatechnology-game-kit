@@ -30,8 +30,8 @@ export interface JointEntry {
   readonly hinge: JoltNS.HingeConstraint | null
   readonly swing: JoltNS.SwingTwistConstraint | null
   readonly slider: JoltNS.SliderConstraint | null
-  /** A ragdoll's own joint: added and removed with its ragdoll. */
-  readonly ragdoll: boolean
+  /** The ragdoll the joint is one of (added and removed with it), null for a free joint. */
+  owner: RagdollEntry | null
 }
 
 export interface RagdollEntry {

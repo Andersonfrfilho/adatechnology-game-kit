@@ -70,7 +70,7 @@ const jointOf = (node: SegmentNode, rig: Rig, at: WorldVec3): RagdollJoint => {
   const end = child ? rig.joints[child.joint] : ([joint[0], joint[1] - 0.1, joint[2]] as Vec3)
   // the head turns about the neck's line, not toward the jaw
   const along = node.id === 'head' ? ([0, 1, 0] as Vec3) : normalize(subtract(end, joint))
-  // the plane axis must be square to the twist axis (Jolt builds the joint frame from both)
+  // the plane axis must be square to the twist axis
   const seed: Vec3 = Math.abs(along[2]) > 0.9 ? [0, 1, 0] : [0, 0, 1]
   const projection = seed[0] * along[0] + seed[1] * along[1] + seed[2] * along[2]
   const plane = normalize([seed[0] - projection * along[0], seed[1] - projection * along[1], seed[2] - projection * along[2]])

@@ -1,12 +1,12 @@
 import { createBodyLod, farthestSleeping } from './body-lod'
 import { createCorpseHeap } from './engine-corpses-heap'
 import type { BodyRung } from './body-lod'
-import type { BodyId, Quat, SeamWorld, Vec3 } from './contract'
+import type { BodyId, SeamWorld, Vec3 } from './contract'
 import { yawQuat } from './corpse-pose'
 import type { CorpseBodyKit, Rigid } from './corpse-pose'
 import { bornInFullPile, distanceTo, enforceIslands, enforceQuotas, evaluateCorpses, rankPiles } from './engine-corpses-eval'
 import { freezeCorpses, releaseResting } from './engine-corpses-pile'
-import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf, wakeRecord } from './engine-corpses-swap'
+import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf, wakeRecord, writeTorso } from './engine-corpses-swap'
 import type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, CorpseContext, CorpseRecord } from './engine-corpses-types'
 import { isPhysicsLoop } from './loop'
 import type { PhysicsLoop } from './loop'
@@ -268,9 +268,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     readTorso(id, out, offset) {
       const record = ctx.records.get(id)
       if (!record) return false
-      const torso = torsoOf(ctx, record)
-      const rotation: Quat = torso.rotation
-      out.set([...torso.position, ...rotation], offset)
+      writeTorso(ctx, record, out, offset)
       return true
     },
     counts: () => ({ ...ctx.rungCounts, rigidBodies: ctx.rigidCount, piles: ctx.piles.size }),
