@@ -10,7 +10,9 @@ const MAX_HULLS = 256
 const STEP = 1 / 120
 const CRASH_STEPS = 900
 // far from everything the room puts down, so the car meets only its own ground and wall
+/** @type {[number, number, number]} */
 const ORIGIN = [4000, 0, 4000]
+/** @param {number} x @param {number} y @param {number} z @returns {[number, number, number]} */
 const at = (x, y, z) => [ORIGIN[0] + x, ORIGIN[1] + y, ORIGIN[2] + z]
 
 const kit = createVehicleKit({ THREE, document, locale: 'en' })
@@ -19,6 +21,7 @@ installFleet(kit)
 /** Runs one cycle on `world` and says how many parts came off. */
 window.__vehicleLeakCycle = () => {
   const world = window.__joltWorld
+  if (!world) throw new Error('leak-vehicle: the page made no Jolt world')
   const ground = world.createBody({ shape: { kind: 'box', half: [50, 0.5, 50] }, motion: 'static', position: at(0, -0.5, 0), user: -1 })
   const wall = world.createBody({ shape: { kind: 'box', half: [6, 2, 0.5] }, motion: 'static', position: at(0, 2, 4), user: -1 })
   const item = buildVehicleItem(kit, MODEL)
@@ -28,6 +31,7 @@ window.__vehicleLeakCycle = () => {
   colliders.pieces()
   colliders.hulls()
   const total = vehicle.model.parts.reduce((sum, part) => sum + part.mass, 0)
+  /** @type {[number, number, number]} */
   const inertia = [total * 0.4, total * 0.8, total * 0.9]
   const parts = createCrashParts({ THREE, world, vehicle, frame: item.root, colliders, mass: { mass: total, centre: [0, 0.5, 0], inertia } })
   const chassis = world.createBody({ shape: parts.shape(), motion: 'dynamic', mass: total, inertia, position: at(0, 0.02, -8), layer: 'vehicle', user: 1 })
@@ -43,7 +47,10 @@ window.__vehicleLeakCycle = () => {
     parts.step()
   }
   // what the crash did not shake off is unbolted, so the cycle always ends with a car that lost parts
-  for (const joint of vehicle.model.joints) if (joint.tools.length > 0) vehicle.disassemble(joint.id, joint.tools[0], joint.seconds)
+  for (const joint of vehicle.model.joints) {
+    const tool = joint.tools[0]
+    if (tool) vehicle.disassemble(joint.id, tool, joint.seconds)
+  }
   for (let i = 0; i < 60; i++) {
     world.step(STEP)
     parts.step()

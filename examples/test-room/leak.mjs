@@ -19,7 +19,7 @@ import { execFileSync } from 'node:child_process'
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 
-/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean; floorplans?: string[]; shots?: number; craters?: number }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take, the houses the floorplan bench switches through, rounds fired into the ground, blasts that dig craters */
+/** @typedef {{ scenarios?: string[]; areas?: string[]; hands?: boolean; floorplans?: string[]; shots?: number; craters?: number; vehicle?: number }} LeakPhase what one cycle of a phase does: scenarios to run, areas to open, the weapons to take, the houses the floorplan bench switches through, rounds fired into the ground, blasts that dig craters, cars made, crashed and removed */
 /** @type {Record<string, LeakPhase>} */
 const PHASES = {
   // the blasts: the chain of P13 bottles, a grenade among bodies, the gas of a house, a gas bottle under the barbecue

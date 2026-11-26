@@ -470,6 +470,8 @@ declare global {
     __leakCount: () => Record<string, number>
     /** The room's Jolt world, made by the page's boot with `?solver=jolt` (`examples/test-room/build.mjs`). */
     __joltWorld?: import('@adatechnology/game-physics-jolt').JoltWorld
+    /** One cycle of the `vehicle` phase of `leak.mjs` (`examples/test-room/leak-vehicle.mjs`, bundled into the page): says how many parts came off. */
+    __vehicleLeakCycle: () => number
     /** The stories area bundle (its `loadContent` takes a game's content). */
     StoriesArea: AreaEntries['stories-test-area']
     // What each area's `loadInto` returned, as its build.mjs boot line keeps it.
