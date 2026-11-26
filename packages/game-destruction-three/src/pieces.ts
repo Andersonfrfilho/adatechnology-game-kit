@@ -154,6 +154,9 @@ const TIP_LYING = 0.25
 const TIP_SECONDS = 3
 /** How far (m) above a corner a top may be and still catch it (on top of what the corner falls in one sub-step): higher is beside it, not under it. */
 const STEP = 0.03
+/** Points across a piece's footprint, per side, read for the ground under it when its root is out of a woken disc; and how far that ground must have gone down to wake it (m). */
+const WAKE_SAMPLES = 4
+const WAKE_DROP = 0.05
 /** Slots of the warm start: the 8 corners and the points along the 12 edges. */
 const WARM_SLOTS = 8 + 12 * 7
 /** Passes of the contact solver over the points that touch the ground, each substep. */
@@ -362,6 +365,7 @@ export class PieceSystem {
   private readonly m: THREE_NS.Matrix4
   private readonly hingeM: THREE_NS.Matrix4
   private readonly ax: THREE_NS.Vector3
+  private readonly wakeBox: THREE_NS.Box3
   private solids: Solid[] = []
   /** The engine stepping the pieces (`PieceSystemOptions.physics`), or null for the kit's own solver. */
   private readonly engine: EnginePieces | null
@@ -433,6 +437,7 @@ export class PieceSystem {
     this.m = new THREE.Matrix4()
     this.hingeM = new THREE.Matrix4()
     this.ax = new THREE.Vector3()
+    this.wakeBox = new THREE.Box3()
     const resolved = resolvePhysics(o.physics)
     this.loop = resolved?.loop ?? null
     this.stepsItself = resolved?.stepsItself ?? false
@@ -867,13 +872,30 @@ export class PieceSystem {
     this.engine?.groundChanged(x, z, radius)
     for (const b of this.list) {
       if (!b.sleeping || b.held) continue
-      // by where the piece lies (its centre of mass and its size), never by its root: the root of a piece cut from a whole object is that object's origin
-      const center = this.centerOf(b, this.ax)
-      if (Math.hypot(center.x - x, center.z - z) > radius + Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])) continue
+      if (Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius && !this.lostGroundIn(b, x, z, radius)) continue
       b.sleeping = false
       b.still = 0
       b.calmAt = null
     }
+  }
+
+  /**
+   * A piece whose root is elsewhere (cut from a whole object, its root is that object's origin) that lies in the disc, with the ground gone from under part of its footprint:
+   * where it lies is read from its drawn box, and only a support that went down wakes it (a piece the disc only passes over stays asleep).
+   */
+  private lostGroundIn(b: PieceBody, x: number, z: number, radius: number): boolean {
+    const center = this.centerOf(b, this.ax)
+    if (Math.hypot(center.x - x, center.z - z) > radius + Math.hypot(b.halfExtents[0], b.halfExtents[2])) return false
+    const box = this.wakeBox.setFromObject(b.root)
+    for (let i = 0; i <= WAKE_SAMPLES; i++) {
+      for (let k = 0; k <= WAKE_SAMPLES; k++) {
+        const px = box.min.x + ((box.max.x - box.min.x) * i) / WAKE_SAMPLES, pz = box.min.z + ((box.max.z - box.min.z) * k) / WAKE_SAMPLES
+        if (Math.hypot(px - x, pz - z) > radius) continue
+        const support = Math.max(this.o.groundAt(px, pz), this.o.staticTopAt?.(px, pz, box.min.y, STEP) ?? -Infinity)
+        if (support < box.min.y - WAKE_DROP) return true
+      }
+    }
+    return false
   }
 
   /** A step is about to move the pieces: the roots go back to the step's pose and the awake ones are recorded as the previous one (`interpolate`). */

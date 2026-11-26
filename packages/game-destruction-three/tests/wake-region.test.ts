@@ -67,6 +67,9 @@ describe('the ground changes under what is asleep on it', () => {
     const piece = renderer.makePiece('bin')
     run(renderer, 3)
     expect(piece.sleeping).toBe(true)
+    // a disc over it with the ground still there (what it lay on was only touched) leaves it asleep
+    renderer.wakeRegion(crater.x, crater.z, crater.radius)
+    expect(piece.sleeping).toBe(true)
     dug = true
     renderer.wakeRegion(crater.x, crater.z, crater.radius)
     expect(piece.sleeping).toBe(false)
