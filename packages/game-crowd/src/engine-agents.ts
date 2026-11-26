@@ -19,6 +19,7 @@ export type AgentBodies = {
   dispose(): void
 }
 
+const STILL: Vec3 = [0, 0, 0]
 const DEFAULT_RADIUS = 0.25
 const DEFAULT_HEIGHT = 1.7
 
@@ -37,6 +38,9 @@ export const createAgentBodies = (loop: PhysicsLoop, crowd: Pick<Crowd, 'on'> & 
   const target: [number, number, number] = [0, 0, 0]
   const rotation: [number, number, number, number] = [0, 0, 0, 1]
   const shouldTeleport = new Uint8Array(store.capacity)
+  // x, y, z, yaw last handed to the engine, per agent; `isSettled` once the engine was told the same pose twice (a kinematic body keeps the speed of its last move until it is told it is there)
+  const delivered = new Float64Array(store.capacity * 4)
+  const isSettled = new Uint8Array(store.capacity)
   const stopTakingVacancies = [
     crowd.on('remove', (event) => {
       if (event.moved >= 0) shouldTeleport[event.agent] = 1
@@ -67,17 +71,33 @@ export const createAgentBodies = (loop: PhysicsLoop, crowd: Pick<Crowd, 'on'> & 
       if (body === undefined) {
         bodies.push(create(i))
         shouldTeleport[i] = 0
+        isSettled[i] = 0
+        delivered[i * 4] = Number.NaN
         continue
       }
-      const half = store.yaw[i]! / 2
-      target[0] = store.x[i]!
-      target[1] = store.y[i]! + centreHeight[i]!
-      target[2] = store.z[i]!
+      const x = store.x[i]!
+      const y = store.y[i]! + centreHeight[i]!
+      const z = store.z[i]!
+      const yaw = store.yaw[i]!
+      const at = i * 4
+      const isSamePose = delivered[at] === x && delivered[at + 1] === y && delivered[at + 2] === z && delivered[at + 3] === yaw
+      if (isSamePose && isSettled[i] && !shouldTeleport[i]) continue
+      const half = yaw / 2
+      target[0] = x
+      target[1] = y
+      target[2] = z
       rotation[1] = Math.sin(half)
       rotation[3] = Math.cos(half)
+      delivered[at] = x
+      delivered[at + 1] = y
+      delivered[at + 2] = z
+      delivered[at + 3] = yaw
+      isSettled[i] = isSamePose ? 1 : 0
       if (shouldTeleport[i]) {
         shouldTeleport[i] = 0
         world.setPose(body, target as Vec3, rotation as Quat, true)
+        world.setVelocity(body, STILL, STILL)
+        isSettled[i] = 1
       } else world.moveKinematic(body, target as Vec3, rotation as Quat, h)
     }
   }

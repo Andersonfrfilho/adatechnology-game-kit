@@ -160,6 +160,45 @@ describe('T7.1: the crowd as kinematic capsules in the engine', () => {
     world.dispose()
   })
 
+  it('an agent that did not move is not moved again: no kinematic call for a crowd that stands still, and one that stops is told once so the capsule stops too', async () => {
+    const { crowd, loop, dispose } = await newScene()
+    const calls = { moves: 0 }
+    const world = loop.world
+    const move = world.moveKinematic.bind(world)
+    world.moveKinematic = (...args: Parameters<typeof world.moveKinematic>): void => {
+      calls.moves++
+      move(...args)
+    }
+    const agents = createAgentBodies(loop, crowd)
+    const frames: number[] = []
+    for (let f = 0; f < 120; f++) {
+      const started = performance.now()
+      loop.stepFixed(1)
+      frames.push(performance.now() - started)
+      if (f === 20) calls.moves = 0
+    }
+    console.log(JSON.stringify({ name: 'T7.1-1000-idle-agents', moveCallsIn100Steps: calls.moves, stepMedianMs: Math.round(percentile(frames.slice(20), 0.5) * 1000) / 1000 }))
+    expect(calls.moves).toBe(0)
+    // one agent walks, then stops: the capsule is told where it is once more, and has no speed left
+    const body = agents.bodyOf(7)!
+    for (let f = 0; f < 10; f++) {
+      crowd.store.x[7] = crowd.store.x[7]! + 0.05
+      loop.stepFixed(1)
+    }
+    calls.moves = 0
+    loop.stepFixed(1)
+    loop.stepFixed(1)
+    expect(calls.moves).toBeLessThanOrEqual(1)
+    const velocity = new Float32Array(6)
+    world.readVelocity(body, velocity, 0)
+    expect(Math.hypot(velocity[0]!, velocity[1]!, velocity[2]!)).toBeLessThan(0.01)
+    const pose = new Float32Array(7)
+    world.readPose(body, pose, 0)
+    expect(pose[0]).toBeCloseTo(crowd.store.x[7]!, 3)
+    agents.dispose()
+    dispose()
+  })
+
   it('the state-hash of the crowd is the same with its agents in the engine as without it: nothing the engine does writes back into the store', { timeout: 120000 }, async () => {
     const run = async (withBodies: boolean): Promise<string> => {
       const grid = createNavGrid({ size: 128 })
