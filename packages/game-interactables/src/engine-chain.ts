@@ -115,20 +115,29 @@ const swingTwist = (spec: ChainSpec, a: BodyId, b: BodyId, point: Vec3, directio
   friction: spec.jointFriction,
 })
 
-/** The two ends of every link now, as a polyline (x, y, z per point) for a host that draws the cord: the points a chain was built from, moved. */
-export function chainPoints(world: SeamWorld, chain: Chain, out: Float64Array): void {
-  const pose = new Float64Array(7)
-  chain.bodies.forEach((body, i) => {
-    world.readPose(body, pose, 0)
-    const quat: Quat = [pose[3] as number, pose[4] as number, pose[5] as number, pose[6] as number]
-    const half = rotateByQuat([0, chain.halfLengths[i] as number, 0], quat)
-    if (i === 0) writePoint(out, 0, [(pose[0] as number) - half[0], (pose[1] as number) - half[1], (pose[2] as number) - half[2]])
-    writePoint(out, i + 1, [(pose[0] as number) + half[0], (pose[1] as number) + half[1], (pose[2] as number) + half[2]])
-  })
+const pose = new Float64Array(7)
+
+/** The end of link `index` now (x, y, z into `out` at `offset`): the body's centre moved half the link's length along its own +y (the unit quaternion's y axis, unrolled). */
+const writeLinkEnd = (world: SeamWorld, chain: Chain, index: number, sign: 1 | -1, out: Float64Array, offset: number): void => {
+  world.readPose(chain.bodies[index] as BodyId, pose, 0)
+  const x = pose[3] as number
+  const y = pose[4] as number
+  const z = pose[5] as number
+  const w = pose[6] as number
+  const half = (chain.halfLengths[index] as number) * sign
+  out[offset] = (pose[0] as number) + half * 2 * (x * y - w * z)
+  out[offset + 1] = (pose[1] as number) + half * (1 - 2 * (x * x + z * z))
+  out[offset + 2] = (pose[2] as number) + half * 2 * (y * z + w * x)
 }
 
-const writePoint = (out: Float64Array, index: number, point: Vec3): void => {
-  out[index * 3] = point[0]
-  out[index * 3 + 1] = point[1]
-  out[index * 3 + 2] = point[2]
+/** The two ends of every link now, as a polyline (x, y, z per point) for a host that draws the cord: the points a chain was built from, moved. */
+export function chainPoints(world: SeamWorld, chain: Chain, out: Float64Array): void {
+  const count = chain.bodies.length
+  writeLinkEnd(world, chain, 0, -1, out, 0)
+  for (let i = 0; i < count; i++) writeLinkEnd(world, chain, i, 1, out, (i + 1) * 3)
+}
+
+/** Only the free end of the chain (x, y, z into `out`): one pose read, for a host that wants where the tip is and not the whole line. */
+export function chainEnd(world: SeamWorld, chain: Chain, out: Float64Array): void {
+  writeLinkEnd(world, chain, chain.bodies.length - 1, 1, out, 0)
 }

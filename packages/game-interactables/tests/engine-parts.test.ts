@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import type { BodyId, PhysicsWorld, Vec3 } from '@adatechnology/game-physics'
@@ -188,6 +188,37 @@ describe('curtains and cables on swing-twist chains (spec 008 T4.4)', () => {
     expect(Math.hypot(out[0]! - from[0], out[1]! - from[1], out[2]! - from[2])).toBeLessThan(0.05)
     expect(Math.hypot(out[links * 3]! - to[0], out[links * 3 + 1]! - to[1], out[links * 3 + 2]! - to[2])).toBeLessThan(0.05)
     expect(lowest).toBeGreaterThan(0)
+    dispose()
+  })
+})
+
+describe('what the world does each frame with everything asleep (spec 008 review, §15)', () => {
+  it('does not read a joint or a pose for a door, a drawer or a curtain that rests', { timeout: 60000 }, async () => {
+    const { physics, w, run, leaf, dispose } = await scene()
+    w.add('c', cabinet, { x: 0, y: 0, z: 0, ry: 0 })
+    w.add('d', cabinet, { x: -6, y: 0, z: 0, ry: 0 })
+    w.add('k', curtain, { x: 4, y: 0, z: 0, ry: 0 })
+    w.setPart('c', 'door', 1)
+    w.setPart('d', 'drawer', 1)
+    run(4)
+    w.push([4, 1.2, 0.1], 0.3, [0, 0, -1.5])
+    run(14)
+    expect(physics.isSleeping(leaf('c', 'door'))).toBe(true)
+    expect(physics.isSleeping(leaf('d', 'drawer'))).toBe(true)
+    const door = w.partT('c', 'door')
+    const sway = w.sway('k', 'veil')
+    const jointAngles = vi.spyOn(physics, 'jointAngles')
+    const readPose = vi.spyOn(physics, 'readPose')
+    for (let i = 0; i < 30; i++) w.update(FRAME)
+    expect(jointAngles).not.toHaveBeenCalled()
+    expect(readPose).not.toHaveBeenCalled()
+    expect(w.partT('c', 'door')).toBe(door)
+    expect(w.sway('k', 'veil')).toEqual(sway)
+    // woken by a push, the same door is read again
+    jointAngles.mockRestore()
+    physics.addImpulse(leaf('c', 'door'), [0, 0, -50], [0.4, 0.9, 0.3])
+    run(0.5)
+    expect(w.partT('c', 'door')).not.toBe(door)
     dispose()
   })
 })

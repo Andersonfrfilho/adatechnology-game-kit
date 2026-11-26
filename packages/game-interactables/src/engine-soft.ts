@@ -1,8 +1,8 @@
 import type { BodyId, SeamWorld } from '@adatechnology/game-physics'
 
-import { buildChain, chainPoints } from './engine-chain'
+import { buildChain, chainEnd } from './engine-chain'
 import type { Chain } from './engine-chain'
-import { localToWorld, rotY, worldToLocal } from './math'
+import { localToWorld, rotY } from './math'
 import type { SoftDriver } from './part-physics'
 import type { SoftSpec, Transform, Vec3 } from './types'
 
@@ -48,23 +48,42 @@ export function attachStrips(world: SeamWorld, soft: SoftSpec, transform: Transf
       }),
     )
   }
-  const points = new Float64Array((links + 1) * 3)
-  const tipOffset = (chain: Chain, top: Vec3): Vec3 => {
-    chainPoints(world, chain, points)
-    return [(points[links * 3] as number) - top[0], (points[links * 3 + 1] as number) - top[1], (points[links * 3 + 2] as number) - top[2]]
+  const tip = new Float64Array(3)
+  const lastLinks = chains.map((chain) => chain.bodies[chain.bodies.length - 1] as BodyId)
+  const cosYaw = Math.cos(-transform.ry)
+  const sinYaw = Math.sin(-transform.ry)
+  let restedAx = 0
+  let restedAz = 0
+  let isRested = false
+  const everyLinkAsleep = (): boolean => {
+    for (let i = 0; i < lastLinks.length; i++) if (!world.isSleeping(lastLinks[i] as BodyId)) return false
+    return true
   }
   return {
     swing(out) {
+      const asleep = everyLinkAsleep()
+      if (asleep && isRested) {
+        out[0] = restedAx
+        out[1] = restedAz
+        return
+      }
       let dx = 0
       let dz = 0
-      chains.forEach((chain, i) => {
-        const offset = worldToLocal({ ...transform, x: 0, y: 0, z: 0 }, tipOffset(chain, tops[i] as Vec3))
-        dx += offset[0]
-        dz += offset[2]
-      })
+      for (let i = 0; i < chains.length; i++) {
+        chainEnd(world, chains[i] as Chain, tip)
+        const top = tops[i] as Vec3
+        const offsetX = (tip[0] as number) - top[0]
+        const offsetZ = (tip[2] as number) - top[2]
+        // the object's yaw undone (the same turn about y as `worldToLocal`)
+        dx += offsetX * cosYaw + offsetZ * sinYaw
+        dz += -offsetX * sinYaw + offsetZ * cosYaw
+      }
       // rotation about x turns the tip toward -z for a positive angle (and about z toward +x), as the world's spring has it
       out[0] = -Math.asin(Math.max(-1, Math.min(1, dz / strips / height)))
       out[1] = Math.asin(Math.max(-1, Math.min(1, dx / strips / height)))
+      restedAx = out[0]
+      restedAz = out[1]
+      isRested = asleep
     },
     push(velocity) {
       const world3 = rotY(velocity, transform.ry)

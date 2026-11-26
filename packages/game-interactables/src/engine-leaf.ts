@@ -13,8 +13,6 @@ export interface EnginePartDriver extends PartDriver {
 const AIM_GAIN = 8
 const ARRIVED_AT = 0.004
 
-const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 const axisAngle = (axis: Vec3, angle: number): Quat => {
   const size = Math.hypot(axis[0], axis[1], axis[2]) || 1
   const k = Math.sin(angle / 2) / size
@@ -38,38 +36,58 @@ export interface LeafDriverSpec {
   readonly drive: { readonly isHinge: boolean; readonly axis: Vec3; readonly pivot: Vec3; readonly centre: Vec3; readonly range: number; readonly speed: number; readonly base: Quat }
 }
 
-const scaled = (axis: Vec3, by: number): Vec3 => [axis[0] * by, axis[1] * by, axis[2] * by]
+
+/** Scratch of every leaf: a driver reads and writes a pose, a velocity pair at a time, so no pose or vector is made per frame. */
+const pose = new Float64Array(7)
+const linearScratch: Vec3 = [0, 0, 0]
+const angularScratch: Vec3 = [0, 0, 0]
+const NO_SPIN: Vec3 = [0, 0, 0]
 
 export function createLeafDriver(spec: LeafDriverSpec): EnginePartDriver {
   const { world, leaf, frame, joint, drive } = spec
-  const pose = new Float64Array(7)
+  const { axis, pivot, centre, range } = drive
   let target = 0
   let settled = true
   let broken = false
   let lastT = 0
+  /** t of the leaf at rest, kept while it sleeps: nothing moves it, so the joint is not asked again. */
+  let restedT: number | undefined
+  const measure = (): number => {
+    if (drive.isHinge) return world.jointAngles(joint).hinge / range
+    world.readPose(leaf, pose, 0)
+    return (((pose[0] as number) - centre[0]) * axis[0] + ((pose[1] as number) - centre[1]) * axis[1] + ((pose[2] as number) - centre[2]) * axis[2]) / range
+  }
   const read = (): number => {
     if (broken) return lastT
-    if (drive.isHinge) {
-      lastT = world.jointAngles(joint).hinge / drive.range
+    if (settled && world.isSleeping(leaf)) {
+      restedT ??= measure()
+      lastT = restedT
       return lastT
     }
-    world.readPose(leaf, pose, 0)
-    const moved: Vec3 = [(pose[0] as number) - drive.centre[0], (pose[1] as number) - drive.centre[1], (pose[2] as number) - drive.centre[2]]
-    lastT = dot(moved, drive.axis) / drive.range
+    restedT = undefined
+    lastT = measure()
     return lastT
   }
   const stop = (): void => {
-    world.setVelocity(leaf, [0, 0, 0], [0, 0, 0])
+    world.setVelocity(leaf, NO_SPIN, NO_SPIN)
     settled = true
   }
   // t per second to the leaf's own velocity: a turn about the hinge carries the centre round, a slide is a line
   const move = (rate: number): void => {
     world.wake(leaf)
-    const velocity = scaled(drive.axis, rate * drive.range)
-    if (!drive.isHinge) return world.setVelocity(leaf, velocity, [0, 0, 0])
+    const speed = rate * range
+    angularScratch[0] = axis[0] * speed
+    angularScratch[1] = axis[1] * speed
+    angularScratch[2] = axis[2] * speed
+    if (!drive.isHinge) return world.setVelocity(leaf, angularScratch, NO_SPIN)
     world.readPose(leaf, pose, 0)
-    const arm: Vec3 = [(pose[0] as number) - drive.pivot[0], (pose[1] as number) - drive.pivot[1], (pose[2] as number) - drive.pivot[2]]
-    world.setVelocity(leaf, cross(velocity, arm), velocity)
+    const armX = (pose[0] as number) - pivot[0]
+    const armY = (pose[1] as number) - pivot[1]
+    const armZ = (pose[2] as number) - pivot[2]
+    linearScratch[0] = angularScratch[1] * armZ - angularScratch[2] * armY
+    linearScratch[1] = angularScratch[2] * armX - angularScratch[0] * armZ
+    linearScratch[2] = angularScratch[0] * armY - angularScratch[1] * armX
+    world.setVelocity(leaf, linearScratch, angularScratch)
   }
   const place = (t: number): void => {
     const amount = t * drive.range
@@ -87,10 +105,12 @@ export function createLeafDriver(spec: LeafDriverSpec): EnginePartDriver {
       if (broken) return
       target = next
       settled = false
+      restedT = undefined
     },
     snap(t) {
       target = t
       settled = true
+      restedT = undefined
       if (!broken) place(t)
     },
     update() {
