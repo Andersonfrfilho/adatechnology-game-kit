@@ -77,6 +77,8 @@ export interface CorpseBodies {
   /** One fixed step of the policy; a host with a `PhysicsLoop` does not call it (it is a `beforeStep` of the loop's `actors` phase). */
   step(h: number): void
   rungOf(id: number): BodyRung | undefined
+  /** Whose body `body` is: a corpse's own part, or a pile's compound with the child's `tag` (`RayHit.tag`) of the member hit; undefined for anything else. */
+  corpseOfBody(body: BodyId, tag?: number): number | undefined
   /** The rigid bodies of the corpse's rung (parts of a ragdoll or chain in kit order, the capsule), for reading their poses to draw; empty for R2f and R3. */
   partsOf(id: number): readonly BodyId[]
   /** The torso's pose (x y z, then x y z w) at `offset`, for any rung; false for a corpse the world does not know. */
@@ -227,6 +229,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     follower: { removed: (entry) => remove(entry.id) },
     step,
     rungOf: (id) => ctx.records.get(id)?.rung,
+    corpseOfBody: (body, tag = -1) => ctx.ownerOf.get(body) ?? (ctx.pileOf.has(body) && ctx.records.has(tag) ? tag : undefined),
     partsOf: (id) => ctx.records.get(id)?.bodies ?? [],
     readTorso(id, out, offset) {
       const record = ctx.records.get(id)

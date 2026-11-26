@@ -116,8 +116,17 @@ export const switchUnits = (record: CorpseRecord, rung: BodyRung): number => uni
 const rigidBodiesOf = (record: CorpseRecord, rung: BodyRung): number => (rung === 'r0' ? record.kit.ragdoll.parts.length : rung === 'r1' ? record.kit.chain.parts.length : rung === 'r2' ? 1 : 0)
 export const rigidBodies = rigidBodiesOf
 
-const engineRagdoll = (desc: RagdollDesc, rung: BodyRung, sleeping: boolean): RagdollDesc =>
-  rung === 'r0' ? { ...desc, stabilize: true, solverSteps: KIT_RAGDOLL_SOLVER, sleeping } : { ...desc, stabilize: true, sleeping }
+/** Tags every part with its corpse (a query hit names whose body it is): `id * 32 + part index` for the ragdoll, `id` for the chain, as `capsuleDesc` does. */
+const USER_STRIDE = 32
+const ownedBy = (desc: RagdollDesc, id: number, rung: BodyRung): RagdollDesc => ({
+  ...desc,
+  parts: desc.parts.map((part, index) => ({ ...part, body: { ...part.body, user: rung === 'r0' ? id * USER_STRIDE + index : id } })),
+})
+
+const engineRagdoll = (desc: RagdollDesc, rung: BodyRung, sleeping: boolean, id: number): RagdollDesc => {
+  const owned = ownedBy(desc, id, rung)
+  return rung === 'r0' ? { ...owned, stabilize: true, solverSteps: KIT_RAGDOLL_SOLVER, sleeping } : { ...owned, stabilize: true, sleeping }
+}
 
 const capsuleDesc = (record: CorpseRecord, capsule: Rigid, sleeping: boolean): BodyDesc => ({
   shape: record.kit.capsule.shape,
@@ -196,7 +205,7 @@ export const switchRung = (ctx: CorpseContext, record: CorpseRecord, to: BodyRun
   record.touching = []
   record.asleep = made.sleeping
   if (made.desc) {
-    const built = ctx.world.createRagdoll(engineRagdoll(lifted(made.desc, rise), to, made.sleeping))
+    const built = ctx.world.createRagdoll(engineRagdoll(lifted(made.desc, rise), to, made.sleeping, record.id))
     record.ragdoll = built.id
     remember(ctx, record, built.bodies)
     if (!made.sleeping) carry(ctx, built.bodies, made.velocities)
@@ -233,7 +242,7 @@ export const bornAt = (ctx: CorpseContext, record: CorpseRecord, rung: 'r0' | 'r
     return
   }
   const placed = placeRagdoll(rung === 'r0' ? record.kit.ragdoll : record.kit.chain, frame)
-  const built = ctx.world.createRagdoll(engineRagdoll(placed, rung, false))
+  const built = ctx.world.createRagdoll(engineRagdoll(placed, rung, false, record.id))
   record.ragdoll = built.id
   remember(ctx, record, built.bodies)
   carry(ctx, built.bodies, [[velocity, NO_SPIN]])
