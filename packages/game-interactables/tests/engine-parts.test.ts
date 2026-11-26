@@ -302,3 +302,31 @@ describe('a break the loop reports for one frame only (spec 008 review)', () => 
     dispose()
   })
 })
+
+describe('a driver the world removed is not kept by the part physics (spec 008 review)', () => {
+  it('disposing the part physics after the objects were removed lets go of nothing a second time', { timeout: 60000 }, async () => {
+    const { physics, partPhysics, w, dispose } = await scene()
+    w.add('c', cabinet, { x: 0, y: 0, z: 0, ry: 0 })
+    w.add('k', curtain, { x: 4, y: 0, z: 0, ry: 0 })
+    w.remove('c')
+    w.remove('k')
+    const releaseGroup = vi.spyOn(physics, 'releaseGroup')
+    const removeBody = vi.spyOn(physics, 'removeBody')
+    const removeJoint = vi.spyOn(physics, 'removeJoint')
+    partPhysics.dispose()
+    expect(releaseGroup).not.toHaveBeenCalled()
+    expect(removeBody).not.toHaveBeenCalled()
+    expect(removeJoint).not.toHaveBeenCalled()
+    dispose()
+  })
+
+  it('removing an object after the part physics was disposed does not release a group that now belongs to another chain', { timeout: 60000 }, async () => {
+    const { physics, partPhysics, w, dispose } = await scene()
+    w.add('k', curtain, { x: 4, y: 0, z: 0, ry: 0 })
+    partPhysics.dispose()
+    const releaseGroup = vi.spyOn(physics, 'releaseGroup')
+    w.remove('k')
+    expect(releaseGroup).not.toHaveBeenCalled()
+    dispose()
+  })
+})

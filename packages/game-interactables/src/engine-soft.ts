@@ -55,6 +55,7 @@ export function attachStrips(world: SeamWorld, soft: SoftSpec, transform: Transf
   let restedAx = 0
   let restedAz = 0
   let isRested = false
+  let disposed = false
   const everyLinkAsleep = (): boolean => {
     for (let i = 0; i < lastLinks.length; i++) if (!world.isSleeping(lastLinks[i] as BodyId)) return false
     return true
@@ -92,6 +93,8 @@ export function attachStrips(world: SeamWorld, soft: SoftSpec, transform: Transf
       }
     },
     dispose() {
+      if (disposed) return
+      disposed = true
       for (const chain of chains) disposeChain(world, chain)
       world.removeBody(rail)
     },

@@ -146,6 +146,31 @@ describe('casings in the engine (spec 008 T4.3, gate 0 B2)', () => {
   })
 })
 
+describe('a frame of a loose body makes nothing to collect (spec 008 review, §15)', () => {
+  it('the reading of two frames, of two bodies, is the one scratch object, and still tells each frame\'s own bounce and sleep', { timeout: 60000 }, async () => {
+    const { world, loop } = await scene(false, { ...KIT_GROUND, restitution: 0.6 })
+    const collider = casingCollider(0.00495, 0.019)
+    const first = spawnLoose(world, collider, launch([0, 1, 0], [0, 0, 0]))
+    const second = spawnLoose(world, collider, launch([2, 1, 0], [0, 0, 0]))
+    const object = new THREE.Object3D()
+    const readings = new Set<object>()
+    let bounced = false
+    let asleep = false
+    for (let i = 0; i < 6 * STEPS_PER_SECOND; i++) {
+      loop.stepFixed(1)
+      const reading = syncLoose(world, first, object)
+      readings.add(reading)
+      bounced ||= reading.bounceSpeed !== undefined
+      asleep = reading.asleep
+      readings.add(syncLoose(world, second, object))
+    }
+    expect(readings.size).toBe(1)
+    expect(bounced).toBe(true)
+    expect(asleep).toBe(true)
+    world.dispose()
+  })
+})
+
 describe('the gallery particles with a physics world', () => {
   it('a casing spawned with a collider is moved by the engine, bounces, rests on the floor and leaves the world with the particle', { timeout: 60000 }, async () => {
     const { world, loop } = await scene(false, { ...KIT_GROUND, restitution: 0.6 })

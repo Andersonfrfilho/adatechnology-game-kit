@@ -46,17 +46,24 @@ export function createEnginePartPhysics(world: SeamWorld, options: EnginePartOpt
   return {
     attachPart(object, part, transform) {
       const key = `${object}:${part.id}`
-      const driver = attachLeaf(world, options, { object, part, transform, onDispose: () => leaves.delete(key) })
+      const retire = (): void => {
+        leaves.delete(key)
+        disposers.delete(dispose)
+      }
+      const dispose = (): void => driver?.dispose()
+      const driver = attachLeaf(world, options, { object, part, transform, onDispose: retire })
       if (!driver) return undefined
       leaves.set(key, driver.leaf)
-      disposers.add(() => driver.dispose())
+      disposers.add(dispose)
       return driver
     },
     leafOf: (object, part) => leaves.get(`${object}:${part}`),
     attachSoft(_object, soft, transform) {
       const driver = SOFT_KINDS.has(soft.kind) ? attachStrips(world, soft, transform) : undefined
-      if (driver) disposers.add(() => driver.dispose())
-      return driver
+      if (!driver) return undefined
+      const dispose = (): void => driver.dispose()
+      disposers.add(dispose)
+      return { swing: driver.swing, push: driver.push, dispose: () => { disposers.delete(dispose); driver.dispose() } }
     },
     dispose() {
       for (const dispose of [...disposers]) dispose()

@@ -106,6 +106,9 @@ export interface LooseReading {
   readonly bounceSpeed: number | undefined
 }
 
+/** The one reading `syncLoose` hands back, rewritten by each call: read it before the next body is synced. */
+const scratchReading = { asleep: false, bounceSpeed: undefined as number | undefined }
+
 const pose = new Float64Array(7)
 const velocity = new Float64Array(6)
 
@@ -117,10 +120,11 @@ export function syncLoose(world: SeamWorld, body: LooseBody, object: THREE_NS.Ob
   object.quaternion.set(pose[3] ?? 0, pose[4] ?? 0, pose[5] ?? 0, pose[6] ?? 1)
   const vertical = velocity[1] ?? 0
   const bounced = body.fallSpeed > BOUNCE_FALL_SPEED && vertical > BOUNCE_RISE_SPEED
-  const bounceSpeed = bounced ? body.fallSpeed : undefined
+  scratchReading.bounceSpeed = bounced ? body.fallSpeed : undefined
   body.fallSpeed = vertical < 0 ? -vertical : 0
   if (bounced) body.bounces++
-  return { asleep: world.isSleeping(body.id), bounceSpeed }
+  scratchReading.asleep = world.isSleeping(body.id)
+  return scratchReading
 }
 
 export function dropLoose(world: SeamWorld, body: LooseBody): void {

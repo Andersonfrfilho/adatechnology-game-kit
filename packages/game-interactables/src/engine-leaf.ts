@@ -49,6 +49,7 @@ export function createLeafDriver(spec: LeafDriverSpec): EnginePartDriver {
   let target = 0
   let settled = true
   let broken = false
+  let disposed = false
   let lastT = 0
   /** t of the leaf at rest, kept while it sleeps: nothing moves it, so the joint is not asked again. */
   let restedT: number | undefined
@@ -133,6 +134,8 @@ export function createLeafDriver(spec: LeafDriverSpec): EnginePartDriver {
       return broken
     },
     dispose() {
+      if (disposed) return
+      disposed = true
       spec.onDispose()
       if (!broken) world.removeJoint(joint)
       world.removeBody(leaf)
