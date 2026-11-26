@@ -15,6 +15,8 @@ export interface BodyEntry {
   kitMass: { readonly mass: number; readonly inertia?: Vec3 } | null
   /** The kit put its centre of mass at the origin (`BodyDesc.centreAtOrigin`): kept when its shape changes. */
   readonly centred: boolean
+  /** The engine ragdoll that owns it: it goes with that ragdoll (`removeRagdoll`), never alone. */
+  readonly ragdoll?: number
   /** Whether it slides on what it touches (`updateFriction`): its friction is then the dynamic one, else the material's static coefficient. */
   sliding: boolean
   /** The coefficient Jolt holds for it now (`updateFriction`, `SetFriction`). */
@@ -36,6 +38,8 @@ export interface RagdollEntry {
   readonly ragdoll: JoltNS.Ragdoll
   readonly bodies: readonly BodyId[]
   readonly joints: readonly JointId[]
+  /** Its joints taken out of the system by `removeJoint`: put back just before the ragdoll leaves, which removes every joint it made. */
+  readonly severed: JoltNS.TwoBodyConstraint[]
 }
 
 export interface VehicleEntry {

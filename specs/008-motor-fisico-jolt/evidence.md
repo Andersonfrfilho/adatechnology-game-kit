@@ -3736,3 +3736,35 @@ Leitura: o spike media 60 Hz com as iterações padrão do Jolt (3,0 ms). O cust
 Cada R1 custa 0,04 a 0,06 ms; cada R0, 0,65 a 0,9 ms. **N escolhido: 1**: é o maior com a política inteira (R0 + o resto R1) estável no C7. O esperado "perto de 4" vale só para R0 sozinhos (até 3, 4 não é estável); os R1 dos outros 19 corpos comem o resto do orçamento. O custo vem de o `KIT_WORLD` rodar 2 passos por quadro. Subir a cota exige baixar o custo do R0 (solver, outra rodada de medição na T5.4) ou decisão do dono sobre o C7, e não afrouxar o teste.
 
 `ragdoll.test.ts`: "costs: 1 production R0" (limites do C7 intactos) e "costs: 20 dead bodies, 1 R0 and the rest R1 chains". Verde.
+
+## T5.2 — desmembrar e cortar (2026-11-26) — ✅
+
+**Já existia e foi reaproveitado**: o modelo de dano por segmento (`game-characters/src/damage`: `BodyOps.sever`, `destroy`, evento `detach` com `groups`, `segmentsBelow`) só decide e emite; nada disso tocava a física. `ragdollOfRig`/`chainOfRig` (T5.1) dão as peças desenhadas, `describeBody` as massas, `setShape` com a massa do kit (bug 1, `set-shape-mass.test.ts`) e `ignorePair`. Nada de desmembramento existia em `game-characters-three` nem `-undead`.
+
+**Mudou**
+- `game-physics`: `removeJoint` vale também para junta de ragdoll do motor; novo `massOf(id)` (massa de agora, a do motor depois do `stabilize`).
+- `game-physics-jolt`: `removeJoint` de junta de ragdoll tira a junta do sistema e a guarda em `RagdollEntry.severed`; `removeRagdoll` a devolve antes de remover o ragdoll (o Jolt quebra se removerem uma junta que não está no sistema). `removeBody` de corpo de ragdoll agora lança (o corpo sai com `removeRagdoll`, nunca sozinho). Teste novo `ragdoll-joint-removal.test.ts` (heap igual ao byte em 10 ciclos).
+- `game-characters`: `createDoll` (R0 ou R1 como ragdoll do motor), `tearOff` e `cutSegment` (`src/body/doll.ts`, `dismember.ts`, `dismember-parts.ts`, `rigid.ts`).
+- `game-characters-three`: `tests/dismember.test.ts` (5 testes) e `game-physics`/`game-physics-jolt` como devDependencies.
+
+**Decisões**
+1. **R0, membro arrancado**: o motor não deixa tirar um corpo de um ragdoll sem destruí-lo, então o membro **não é recriado**: corta-se só a junta acima do corte e os segmentos de baixo seguem como corpos do mesmo ragdoll, com as juntas deles, a mesma forma, massa, pose e velocidade. Nada é criado nem movido: nada nasce dentro de nada e a soma de massa é a mesma por construção. O par tronco/membro já não colidia (filtro pai-filho do ragdoll) e continua sem colidir. O membro e o corpo viram dois `Doll` (`Dismembered.remaining` e `.severed`).
+2. **R1 (corrente de 3 partes)**: braço, pescoço e qualquer coisa sem corpo próprio **sai desenhada na pose de projeto** (`ragdollOfRig`), levada pelo movimento rígido do corpo da corrente que a carregava (pose e velocidade de agora), como um ragdoll novo sem `stabilize` e com as massas multiplicadas por (massa do motor / massa nominal) do portador. O portador **perde essa massa**: `setShape` encolhe a forma (raio pela raiz da fração, esfera pela raiz cúbica) com a massa do motor restante. Parte inteira dentro do membro (a cabeça) sai como no R0. Pedaços de portadores diferentes saem sem junta entre si (pescoço e cabeça). Os pares portador/pedaço ficam em `ignorePair`.
+3. **Corte (R0)**: `cutSegment(world, doll, 'forearmL', 0.5)`. O toco fica no corpo e na junta (o motor ancora a junta no centro de massa, então a forma só pode encolher em volta do centro: o toco físico fica mais curto dos dois lados, dentro da pegada do membro original; o desenho vem do rig, não daqui). O pedaço é corpo novo com a forma exata do resto do comprimento, no lugar onde ele estava, com a velocidade que tinha; o que pendia abaixo (a mão) sai como no `tearOff`. Toco, pedaço e mão não se encontram (`ignorePair`).
+4. **Só um ragdoll do motor por corpo**: o que saiu de um R0 vive e morre com o ragdoll de origem (`removeRagdoll`, uma vez por id). Soltar só o membro enquanto o corpo fica é a política da T5.4 (R0 → R1 recria).
+
+**Números** (`KIT_WORLD`, corpo-guia 1,80 m, 70,00 kg nominais; `massOf` somado sobre todos os corpos):
+
+| Caso | Antes | Depois (resto + saído) | Resto | Saído |
+|---|---|---|---|---|
+| R0, `upperArmL` arrancado (3 segmentos) | 70,00001 | 70,00001 | 58,14 | 11,86 |
+| R0, depois `shinR` cortada a 0,4 | 70,00001 | 70,00001 | | |
+| R1, `upperArmR` arrancado | 70,00000 | 70,00001 | 67,64 | 2,36 |
+
+(O `stabilize` do Jolt redistribui a massa entre as partes: o braço no R0 pesa 11,9 kg no motor contra 2,4 do R1; por isso a conta é na massa do motor, nunca na nominal.) Antebraço cortado ao meio: toco e pedaço com exatamente metade da massa do motor do antebraço (`toBeCloseTo` a 6 casas). Tolerância do aceite ±1%; o medido é 1e-7 relativo.
+Nenhuma peça sai lançada: velocidade máxima nos 0,1 s depois do corte < 3 m/s e `penetration` 0 contra o chão nos pedaços do R1.
+**Heap** (`dismember.test.ts`, 20 ciclos de R0 e R1: criar, arrancar, cortar, 0,2 s, `removeRagdoll` de cada id): `memoryInUse` igual ao byte antes e depois.
+
+**Sem motor / regressão**: `game-characters` 394 testes e `game-characters-three` 565 (inclui os 5 novos) verdes sem mudar nenhum teste existente; `game-physics-jolt` 97 passam, 2 já saltados; `tsc` dos quatro pacotes e eslint dos arquivos tocados limpos.
+
+**Para a T8.4 (§5 do CLAUDE.md, com prints, não feito aqui)**: ver em 1ª e 3ª pessoa, parado e andando, um braço arrancado (R0 e R1) e um antebraço cortado ao meio: o membro sai do lugar certo (R1 sai da pose de projeto, não da pose deitada do desenho), o toco tem a forma que o rig desenha, e o desenho do segmento ausente some junto com o corpo físico. O desenho do ausente (`body.pieces`, `detach`) continua sendo o do `game-characters-three`; ligar o evento `severed` ao `tearOff` é da integração do jogo (T5.4).

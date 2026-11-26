@@ -327,6 +327,8 @@ export interface PhysicsWorld {
    * (`setShape`).
    */
   updateHeights(id: BodyId, region: HeightRegion, heights: ArrayLike<number>): boolean
+  /** A dynamic body's mass now, kg: the engine's own for a ragdoll's parts (`stabilize` evens them out), the kit's for the rest. */
+  massOf(id: BodyId): number
   /** Writes x, y, z then x, y, z, w into `out` at `offset`. */
   readPose(id: BodyId, out: Float32Array | Float64Array, offset: number): void
   readVelocity(id: BodyId, out: Float32Array | Float64Array, offset: number): void
@@ -356,6 +358,7 @@ export interface PhysicsWorld {
   /** The two bodies stop meeting (true) or meet again (false): our rule handles the pair (chunks born inside each other go apart along the ground). */
   ignorePair(a: BodyId, b: BodyId, ignore: boolean): void
   createJoint(desc: JointDesc): JointId
+  /** The joint goes. A ragdoll's own joint too (a limb torn off): its two sides stay bodies of that ragdoll, free of each other, and leave with it (`removeRagdoll`). */
   removeJoint(id: JointId): void
   /** Angles of a joint now (radians), for checking limits: `hinge` for hinge, fixed and ragdoll hinge joints; `swing` and `twist` for swing-twist; 0 for the rest. */
   jointAngles(id: JointId): { swing: number; twist: number; hinge: number }

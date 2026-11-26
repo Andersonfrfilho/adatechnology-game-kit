@@ -60,6 +60,8 @@
   "devDependencies": {
     "@adatechnology/game-characters-undead": "workspace:^",
     "@adatechnology/game-kit-defaults": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

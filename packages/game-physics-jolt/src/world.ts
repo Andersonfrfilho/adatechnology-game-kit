@@ -355,6 +355,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   removeBody(id: BodyId): void {
     const e = this.bodies.get(id)
     if (!e) return
+    if (e.ragdoll !== undefined) throw new Error(`body ${id} belongs to ragdoll ${e.ragdoll}: it leaves with removeRagdoll`)
     this.byPointer.delete(this.J.getPointer(e.body))
     this.bi.RemoveBody(e.id)
     this.bi.DestroyBody(e.id)
@@ -440,6 +441,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     mp.SetInverseInertia(this.v2, mp.GetInertiaRotation())
     mp.SetInverseMass(1 / kit.mass)
     e.invMass = 1 / kit.mass
+  }
+
+  massOf(id: BodyId): number {
+    return 1 / this.entry(id).body.GetMotionProperties().GetInverseMass()
   }
 
   /** A dynamic body's mass and its moments about its own axes (kg m^2), as Jolt holds them: for checks. */

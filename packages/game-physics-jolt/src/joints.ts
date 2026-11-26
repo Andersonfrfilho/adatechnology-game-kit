@@ -180,7 +180,7 @@ export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly i
   const bodies: BodyId[] = desc.parts.map((part, i) => {
     const body = lock.TryGetBody(ragdoll.GetBodyID(i))
     const key = body.GetID().GetIndexAndSequenceNumber()
-    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, centred: false, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
+    const entry: BodyEntry = { body, id: new J.BodyID(key), key, user: part.body.user, layer: part.body.layer ?? 'character', material: part.body.material ?? DEFAULT_MATERIAL, invMass: body.GetMotionProperties().GetInverseMass(), kitMass: null, centred: false, ragdoll: w.nextRagdoll, sliding: false, friction: (part.body.material ?? DEFAULT_MATERIAL).frictionStatic }
     w.bodies.set(key, entry)
     w.byPointer.set(J.getPointer(body), entry)
     if (part.body.rolling) w.rollers.set(key, part.body.rolling)
@@ -193,7 +193,7 @@ export const createRagdoll = (w: JoltWorldHost, desc: RagdollDesc): { readonly i
     joints.push(addJointEntry(w, ragdoll.GetConstraint(k++), { kind: part.joint.kind, breakImpulse: Infinity, ragdoll: true }))
   }
   const id = w.nextRagdoll++ as RagdollId
-  w.ragdolls.set(id, { ragdoll, bodies, joints })
+  w.ragdolls.set(id, { ragdoll, bodies, joints, severed: [] })
   return { id, bodies, joints }
 }
 
@@ -209,6 +209,7 @@ export const removeRagdoll = (w: JoltWorldHost, id: RagdollId): void => {
     }
     w.forget(b)
   }
+  for (const constraint of e.severed) w.system.AddConstraint(constraint)
   // destroying the ragdoll destroys its bodies and constraints and lets go of its settings
   e.ragdoll.RemoveFromPhysicsSystem()
   w.J.destroy(e.ragdoll)
@@ -217,9 +218,11 @@ export const removeRagdoll = (w: JoltWorldHost, id: RagdollId): void => {
 
 export const removeJoint = (w: JoltWorldHost, id: JointId): void => {
   const e = w.joints.get(id)
-  if (!e || e.ragdoll) return
+  if (!e) return
   w.system.RemoveConstraint(e.constraint)
   w.joints.delete(id)
+  if (!e.ragdoll) return
+  for (const owner of w.ragdolls.values()) if (owner.joints.includes(id)) owner.severed.push(e.constraint)
 }
 
 /** Swing and twist of a swing-twist joint now (radians), for checking limits. */
