@@ -9,10 +9,22 @@ import { engineRagdoll, ground } from './scenes'
 const ELBOW_JOINT = 5 // part 6 (left forearm) hangs from joint 5: one joint per part but the root
 const CYCLES = 10
 
-const heightOf = (world: JoltWorld, id: BodyId): number => {
+const centreOf = (world: JoltWorld, id: BodyId): [number, number, number] => {
   const pose = new Float64Array(7)
   world.readPose(id, pose, 0)
-  return pose[1]!
+  return [pose[0]!, pose[1]!, pose[2]!]
+}
+
+const distanceBetween = (world: JoltWorld, a: BodyId, b: BodyId): number => {
+  const [from, to] = [centreOf(world, a), centreOf(world, b)]
+  return Math.hypot(to[0] - from[0], to[1] - from[1], to[2] - from[2])
+}
+
+/** A velocity of `speed` m/s along the line from `from` to `to`. */
+const awayFrom = (world: JoltWorld, from: BodyId, to: BodyId, speed: number): [number, number, number] => {
+  const [a, b] = [centreOf(world, from), centreOf(world, to)]
+  const length = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])
+  return [((b[0] - a[0]) / length) * speed, ((b[1] - a[1]) / length) * speed, ((b[2] - a[2]) / length) * speed]
 }
 
 describe('removeJoint on a ragdoll\'s own joint (a limb torn off)', () => {
@@ -20,14 +32,19 @@ describe('removeJoint on a ragdoll\'s own joint (a limb torn off)', () => {
     const engine = await createJoltEngine()
     const world = engine.createWorld(KIT_WORLD) as JoltWorld
     ground(world)
-    const doll = engineRagdoll(world, [0, 1, 0], 0, true)
-    const joint = doll.joints[ELBOW_JOINT]!
-    const lower = doll.bodies[doll.joints.indexOf(joint) + 1]!
-    world.removeJoint(joint.id)
-    expect(world.jointAngles(joint.id)).toEqual({ swing: 0, twist: 0, hinge: 0 })
-    for (let i = 0; i < 240; i++) world.step(1 / 60)
-    expect(Number.isFinite(heightOf(world, lower))).toBe(true)
-    expect(() => world.removeBody(lower)).toThrow(/removeRagdoll/)
+    const torn = engineRagdoll(world, [0, 1, 0], 0, true)
+    const whole = engineRagdoll(world, [10, 1, 0], 0, true)
+    const [upperTorn, lowerTorn] = [torn.joints[ELBOW_JOINT]!.desc.a, torn.joints[ELBOW_JOINT]!.desc.b]
+    const [upperWhole, lowerWhole] = [whole.joints[ELBOW_JOINT]!.desc.a, whole.joints[ELBOW_JOINT]!.desc.b]
+    const bone = distanceBetween(world, upperTorn, lowerTorn)
+    world.removeJoint(torn.joints[ELBOW_JOINT]!.id)
+    expect(world.jointAngles(torn.joints[ELBOW_JOINT]!.id)).toEqual({ swing: 0, twist: 0, hinge: 0 })
+    // the same push on the forearm of a ragdoll whose joint was torn off and on one whose joint stands
+    for (const [upper, lower] of [[upperTorn, lowerTorn], [upperWhole, lowerWhole]] as const) world.setVelocity(lower, awayFrom(world, upper, lower, 4), [0, 0, 0])
+    for (let i = 0; i < 90; i++) world.step(1 / 60)
+    expect(distanceBetween(world, upperTorn, lowerTorn)).toBeGreaterThan(bone * 2)
+    expect(distanceBetween(world, upperWhole, lowerWhole)).toBeLessThan(bone * 1.5)
+    expect(() => world.removeBody(lowerTorn)).toThrow(/removeRagdoll/)
     world.dispose()
   })
 
