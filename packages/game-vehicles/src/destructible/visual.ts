@@ -23,7 +23,8 @@ import { buildTrunkBay } from './trunk-bay'
 type Obj = Mesh<BufferGeometry, MeshStandardMaterial> & SceneNode
 
 /** Takes a part that came off in place of the ballistic fling: the part, the holder that carries its drawn meshes (in the effects group, at the centre of the part), and the throw it would have had. */
-export type PartSink = (part: PartDef, holder: Object3D, velocity: readonly [number, number, number], spin: readonly [number, number, number]) => void
+/** Takes a part that came off: true when it will look after the part (move and, in the end, remove it); false leaves it to the vehicle's own fling. */
+export type PartSink = (part: PartDef, holder: Object3D, velocity: readonly [number, number, number], spin: readonly [number, number, number]) => boolean
 
 export interface DetachOptions {
   /** `tool` drops the part gently, `break` throws it. */
@@ -1543,10 +1544,13 @@ export class VehicleVisuals implements CreaseWork {
       piece.trail = trail
       return
     }
+    if (!this.sink(this.detaching, piece.o, [v.x, v.y, v.z], [w.x, w.y, w.z])) {
+      piece.trail = trail
+      return
+    }
     const flying = this.c.flying
     const at = flying ? flying.indexOf(piece) : -1
     if (flying && at >= 0) flying.splice(at, 1)
-    this.sink(this.detaching, piece.o, [v.x, v.y, v.z], [w.x, w.y, w.z])
   }
   /** Brings a part off the vehicle and throws it. Returns whether something visible moved. */
   detach(p: PartDef, o: DetachOptions): boolean {

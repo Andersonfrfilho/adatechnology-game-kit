@@ -192,7 +192,9 @@ export const createCrashParts = (options: CrashPartsOptions): CrashParts => {
 
   vehicle.setPartSink((part, holder) => {
     const partIndex = partIndexOf.get(part.id)
-    if (chassis !== undefined && partIndex !== undefined) takePart(part, partIndex, holder)
+    if (chassis === undefined || partIndex === undefined) return false
+    takePart(part, partIndex, holder)
+    return true
   })
 
   return {
