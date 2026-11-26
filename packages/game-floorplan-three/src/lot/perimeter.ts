@@ -90,7 +90,7 @@ export function installLotPerimeter(K: Kernel, shared: Shared): void {
   }
   // SDK paths (lot.paths): paving from the gate to the door; comes over the zone floors (lawn 0.02, ceramic 0.035)
   function paths(): void {
-    const lt = (shared.ctx.r as HouseRecord).lot; if (!lt || !lt.paths) return; cursor.group = 'lot';
+    const lt = (shared.ctx.r as HouseRecord).lot; if (!lt || !lt.paths || shared.ctx.noGroundSurfaces) return; cursor.group = 'lot';
     for (const c of lt.paths) {
       if (c.type === 'vehicle' && c.id !== 'cargo_path') continue; // the garage space already comes paved by the zone
       const color = c.type === 'pedestrian' ? 0xcfcac0 : 0xb4b0a8;

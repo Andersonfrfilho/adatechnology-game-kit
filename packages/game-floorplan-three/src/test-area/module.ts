@@ -268,6 +268,8 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
         night,
         terrain: host.setGround ? false : lot,
         noPerimeter: !lot,
+        // the room's terrain lays the lot (`updateGround`): its paths and covers are dug by a crater, a drawn pad would hang over it
+        ...(host.setGround ? { groundSurfaces: false as const } : {}),
         constructionStages: true,
         constructionLevel: settings.constructionLevel,
         ...(options.windowFrame ? { windowFrame: options.windowFrame } : {}),

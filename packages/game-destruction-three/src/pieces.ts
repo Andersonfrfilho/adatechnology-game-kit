@@ -866,7 +866,10 @@ export class PieceSystem {
   wakeRegion(x: number, z: number, radius: number): void {
     this.engine?.groundChanged(x, z, radius)
     for (const b of this.list) {
-      if (!b.sleeping || b.held || Math.hypot(b.root.position.x - x, b.root.position.z - z) > radius) continue
+      if (!b.sleeping || b.held) continue
+      // by where the piece lies (its centre of mass and its size), never by its root: the root of a piece cut from a whole object is that object's origin
+      const center = this.centerOf(b, this.ax)
+      if (Math.hypot(center.x - x, center.z - z) > radius + Math.hypot(b.halfExtents[0], b.halfExtents[1], b.halfExtents[2])) continue
       b.sleeping = false
       b.still = 0
       b.calmAt = null
