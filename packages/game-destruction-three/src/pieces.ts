@@ -1781,8 +1781,9 @@ export class PieceSystem {
     let awake = 0
     for (const b of this.list) {
       if (b.sleeping || b.held) continue
-      // one held up at an angle never sleeps by itself (`still`), though it has come to rest: with a budget it does, whatever the count
-      if (b.balancing && this.hasComeToRest(b)) this.sleepByBudget(b)
+      // one held up at an angle never sleeps by itself (`still`), though it has come to rest: with a budget it does, whatever the count. One that has lain still for `SLEEP_AFTER`
+      // sleeps whatever the count too: the engine wakes a sleeper that touches an awake body at every step, so the ones left awake under the count would never sleep by themselves
+      if (this.hasComeToRest(b) && (b.balancing || (b.still >= SLEEP_AFTER && !b.hinge && !this.onSteepSupport(b)))) this.sleepByBudget(b)
       else awake++
     }
     for (const b of this.list) {
