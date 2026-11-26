@@ -13,7 +13,7 @@ export interface AddCorpseParams {
   readonly position: Vec3
   /** Turn about +y. */
   readonly yaw: number
-  /** What it was moving at (m/s), carried to every body of the first rung. */
+  /** What it was moving at (m/s), carried to every body of the first rung; where it slides to is not a push (`onSettled` measures from there). */
   readonly velocity?: Vec3
 }
 

@@ -16,6 +16,8 @@ export type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, Settle
 
 const DEFAULT_EVALUATE_EVERY = 8
 const DEFAULT_SETTLE_DISTANCE = 2
+/** A body that dies moving slides to rest about this many seconds of its speed from where it died (measured at 2 to 7 m/s, R0 and R1: 0.75 to 0.8, give or take the tumble): the push `onSettled` looks for is measured from there. */
+const SLIDE_SECONDS = 0.8
 /** Fixed steps between looks at the islands' size. */
 const ISLAND_EVERY = 60
 const NO_INTEREST: readonly Vec3[] = []
@@ -145,7 +147,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     const rung = bornRung(distance, params.kit, frame)
     const record: CorpseRecord = {
       id: params.id, kit: params.kit, rung, ragdoll: 0, bodies: [], pile: 0, pileRank: 0, torso: new Float64Array(7), asleepSeconds: 0, sinceChangeSeconds: 0, woken: false, asleep: false, stale: true,
-      touching: [], born: ctx.born++, originX: params.position[0], originZ: params.position[2], lastLookedAt: ctx.tick, distance, dormant: false, dormantKey: 0,
+      touching: [], born: ctx.born++, originX: params.position[0] + (params.velocity?.[0] ?? 0) * SLIDE_SECONDS, originZ: params.position[2] + (params.velocity?.[2] ?? 0) * SLIDE_SECONDS, lastLookedAt: ctx.tick, distance, dormant: false, dormantKey: 0,
     }
     storeTorso(record, standingTorso(params.kit, frame))
     ctx.records.set(params.id, record)
