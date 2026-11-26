@@ -108,8 +108,13 @@ const SLIP_SPEED = 0.02
 const ROLLING_RESISTANCE = 0.015
 /** A round piece whose axis leans more than 45 degrees from upright lies on its side (the share of the world's down across its axis). */
 const ROUND_LYING = Math.SQRT1_2
-/** The least half side (m) of a piece's box, however thin what is drawn of it: the box is the drawing (a 2 cm laptop is a 2 cm box); this much is only so that a face is not a plane. */
-export const MIN_PIECE_HALF = 0.001
+/** The least half side (m) of a piece's box on the engine, however thin what is drawn of it: the box is the drawing (a 2 cm laptop is a 2 cm box); this much is only so that a face is not a plane. */
+const MIN_PIECE_HALF = 0.001
+/** The own solver's least half side of a piece (it goes with the solver, T8.1): its goldens hold the boxes it was fitted with. */
+const OWN_MIN_PIECE_HALF = 0.01
+const OWN_MIN_MEASURED_HALF = 0.02
+/** The least half side of the box measured around the meshes of a piece: the engine's, or the own solver's. */
+export const minPieceHalf = (physics: unknown): number => (physics === 'own' ? OWN_MIN_MEASURED_HALF : MIN_PIECE_HALF)
 const SLEEP_AFTER = 0.5
 /** A piece on the ground slower than this (m/s) and turning slower than this (rad/s) is still: it sleeps after `SLEEP_AFTER`, or at once over `maxAwake`. */
 const STILL_SPEED = 0.12
@@ -629,6 +634,7 @@ export class PieceSystem {
       return existing
     }
     const awake = this.awake
+    const least = this.engine ? MIN_PIECE_HALF : OWN_MIN_PIECE_HALF
     let asleep = false
     let inHand = false
     const body: PieceBody = {
@@ -638,7 +644,7 @@ export class PieceSystem {
       root,
       velocity: velocity ? [...velocity] : [0, 0, 0],
       angularVelocity: angular ? [...angular] : [0, 0, 0],
-      halfExtents: [Math.max(MIN_PIECE_HALF, halfExtents[0]), Math.max(MIN_PIECE_HALF, halfExtents[1]), Math.max(MIN_PIECE_HALF, halfExtents[2])],
+      halfExtents: [Math.max(least, halfExtents[0]), Math.max(least, halfExtents[1]), Math.max(least, halfExtents[2])],
       mass: Math.max(0.05, mass),
       // asleep or held is read and written as a plain flag; waking or taking it in hand puts the piece among the awake ones
       get sleeping() {

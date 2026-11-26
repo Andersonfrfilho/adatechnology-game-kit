@@ -24,7 +24,7 @@ import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
 import { sameSolids } from './engine-statics'
-import { MIN_PIECE_HALF, PieceSystem } from './pieces'
+import { PieceSystem, minPieceHalf } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
@@ -799,7 +799,8 @@ class Renderer implements DestructionRenderer {
     }
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
-    return { half: [Math.max(MIN_PIECE_HALF, size.x / 2), Math.max(MIN_PIECE_HALF, size.y / 2), Math.max(MIN_PIECE_HALF, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
+    const least = minPieceHalf(this.o.physics)
+    return { half: [Math.max(least, size.x / 2), Math.max(least, size.y / 2), Math.max(least, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
   }
 
   /**
