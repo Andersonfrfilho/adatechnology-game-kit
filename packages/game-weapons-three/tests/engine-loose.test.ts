@@ -5,12 +5,17 @@ import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
 import type { Material, PhysicsWorld } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 
-import { LOOSE_ROLLING_RESISTANCE, casingCollider, dropLoose, spawnLoose, syncLoose } from '../src/engine-loose'
-import type { LooseBody } from '../src/engine-loose'
+import { LOOSE_ROLLING_RESISTANCE, casingCollider, dropLoose, explosiveCollider, spawnLoose, syncLoose } from '../src/engine-loose'
+import type { LooseBody, LooseCollider } from '../src/engine-loose'
 import { createParticles } from '../src/fx/particles'
+import { buildExplosiveModel } from '../src/models/explosives'
 
 /** `scene` makes the floor and nothing else: the bodies a world holds when no loose piece is left. */
 const FLOOR_BODIES = 1
+
+/** The owner's limit for a drawn grenade (2026-11-26): it rolls and rocks on its fuze, so a smooth ball's 5 s does not apply. No artificial damping. */
+const GRENADE_REST_LIMIT_S = 6.5
+const GRENADE_REACH_LIMIT_M = 8
 
 const H = KIT_WORLD.fixedStep ?? 1 / 120
 const STEPS_PER_SECOND = Math.round(1 / H)
@@ -18,10 +23,22 @@ const STEPS_PER_SECOND = Math.round(1 / H)
 /** The ground the destruction world lays under the loose pieces (`engine-pieces.ts` GROUND): a dead floor with the kit's rolling resistance. */
 const KIT_GROUND = { frictionStatic: 0.7, frictionDynamic: 0.6, restitution: 0, rolling: LOOSE_ROLLING_RESISTANCE } as const
 
-const scene = async (ground: Material = KIT_GROUND) => {
+/** Deterministic [0, 1) stream (mulberry32): a seed is a throw anyone can repeat. */
+const seeded = (seed: number): (() => number) => {
+  let state = seed >>> 0
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0
+    let mixed = Math.imul(state ^ (state >>> 15), 1 | state)
+    mixed = (mixed + Math.imul(mixed ^ (mixed >>> 7), 61 | mixed)) ^ mixed
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const scene = async (withWall = false, ground: Material = KIT_GROUND) => {
   const engine = await createJoltEngine()
   const world: PhysicsWorld = engine.createWorld(KIT_WORLD)
   world.createBody({ shape: { kind: 'box', half: [60, 0.5, 60] }, motion: 'static', position: [0, -0.5, 0], material: ground, user: -1 })
+  if (withWall) world.createBody({ shape: { kind: 'box', half: [0.1, 1, 3] }, motion: 'static', position: [8, 1, 0], material: { ...KIT_GROUND, restitution: 0.4 }, user: -2 })
   return { world, loop: createPhysicsLoop(world) }
 }
 
@@ -35,6 +52,135 @@ const launch = (position: [number, number, number], velocity: [number, number, n
 const report = (label: string, data: Record<string, unknown>): void => {
   console.info(`[T4.3] ${label} ${JSON.stringify(data)}`)
 }
+
+describe('the M67 as drawn, in the engine (spec 008 T4.3, gate 0 B2)', () => {
+  it('has a collider of the three parts the gallery draws, rolling at C_rr 0.015', () => {
+    const collider = explosiveCollider(THREE, 'm67')
+    expect(collider?.rolling).toMatchObject({ coefficient: LOOSE_ROLLING_RESISTANCE, radius: 0.032 })
+    expect(LOOSE_ROLLING_RESISTANCE).toBe(0.015)
+    expect(collider?.shape.kind).toBe('compound')
+    if (collider?.shape.kind !== 'compound') throw new Error('not a compound')
+    expect(collider.shape.children.map((child) => child.shape.kind)).toEqual(['sphere', 'cylinder', 'box'])
+    expect(explosiveCollider(THREE, 'c4')).toBeUndefined()
+  })
+
+  it('is the drawn model: the body, the fuze and the spoon (tilt sign included) sit where the model draws them', () => {
+    const model = buildExplosiveModel(THREE, 'm67')
+    const collider = explosiveCollider(THREE, 'm67')
+    if (!model || collider?.shape.kind !== 'compound') throw new Error('no model')
+    model.updateMatrixWorld(true)
+    const box = new THREE.Box3().setFromObject(model)
+    const centre = box.getCenter(new THREE.Vector3())
+    const [sphere, fuze, spoon] = collider.shape.children
+    if (!sphere || !fuze || !spoon) throw new Error('missing part')
+    expect(sphere.position[1]).toBeCloseTo(0.032 - centre.y, 6)
+    // the collider's lowest point is the model's lowest point (the underside of the body)
+    expect(sphere.position[1] - 0.032).toBeCloseTo(box.min.y - centre.y, 6)
+
+    const drawn = (type: string): THREE.Mesh => {
+      let found: THREE.Mesh | undefined
+      model.traverse((node) => {
+        if (!found && node instanceof THREE.Mesh && node.geometry.type === type) found = node
+      })
+      if (!found) throw new Error(`no ${type} in the model`)
+      return found
+    }
+    const place = (mesh: THREE.Mesh) => ({ at: mesh.getWorldPosition(new THREE.Vector3()).sub(centre), turn: mesh.getWorldQuaternion(new THREE.Quaternion()) })
+    const drawnFuze = place(drawn('CylinderGeometry'))
+    expect(fuze.position[0]).toBeCloseTo(drawnFuze.at.x, 6)
+    expect(fuze.position[1]).toBeCloseTo(drawnFuze.at.y, 6)
+    expect(fuze.position[2]).toBeCloseTo(drawnFuze.at.z, 6)
+    const drawnSpoon = place(drawn('BoxGeometry'))
+    expect(spoon.position[0]).toBeCloseTo(drawnSpoon.at.x, 6)
+    expect(spoon.position[1]).toBeCloseTo(drawnSpoon.at.y, 6)
+    expect(spoon.position[2]).toBeCloseTo(drawnSpoon.at.z, 6)
+    const [qx, qy, qz, qw] = spoon.rotation ?? [0, 0, 0, 1]
+    expect(qz * drawnSpoon.turn.z).toBeGreaterThan(0)
+    expect(Math.abs(qz)).toBeCloseTo(Math.abs(drawnSpoon.turn.z), 6)
+    expect(qx).toBeCloseTo(drawnSpoon.turn.x, 6)
+    expect(qy).toBeCloseTo(drawnSpoon.turn.y, 6)
+    expect(qw).toBeCloseTo(drawnSpoon.turn.w, 6)
+  })
+
+  const throwGrenade = async (wall: boolean, speed = 11, rise = 4, spin = 0, seed?: number) => {
+    const { world, loop } = await scene(wall)
+    const collider = explosiveCollider(THREE, 'm67') as LooseCollider
+    const start: [number, number, number] = wall ? [0, 1.6, 0] : [0, 1.5, 5]
+    const launched = launch(start, wall ? [9, 4, 0.5] : [0, rise, speed], wall ? [0, 0, -8] : [spin, 0, 0])
+    if (seed !== undefined) {
+      const next = seeded(seed)
+      launched.rotation.set(next() - 0.5, next() - 0.5, next() - 0.5, next() - 0.5).normalize()
+      launched.velocity.set((next() - 0.5) * 2, 3 + next() * 2, 10 + next() * 2)
+      launched.spin.set((next() - 0.5) * 12, (next() - 0.5) * 12, (next() - 0.5) * 12)
+    }
+    const body = spawnLoose(world, collider, launched)
+    const object = new THREE.Object3D()
+    let landing: THREE.Vector3 | undefined
+    let restAt = -1
+    let lowest = Infinity
+    for (let i = 0; i < 12 * STEPS_PER_SECOND && restAt < 0; i++) {
+      loop.stepFixed(1)
+      syncLoose(world, body, object)
+      lowest = Math.min(lowest, object.position.y)
+      if (!landing && world.touching(body.id)) landing = object.position.clone()
+      if (world.isSleeping(body.id)) restAt = (i + 1) * H
+    }
+    const end = object.position.clone()
+    world.dispose()
+    const fromThrow = Math.hypot(end.x - start[0], end.z - start[2])
+    const fromLanding = landing ? Math.hypot(end.x - landing.x, end.z - landing.z) : -1
+    return { restAtS: Math.round(restAt * 100) / 100, fromThrowM: Math.round(fromThrow * 100) / 100, fromLandingM: Math.round(fromLanding * 100) / 100, lowest }
+  }
+
+  it('thrown onto the open floor comes to rest within 6.5 s and 8 m of where it lands', { timeout: 120000 }, async () => {
+    const open = await throwGrenade(false)
+    report('grenade open floor', open)
+    expect(open.restAtS).toBeGreaterThan(0)
+    expect(open.restAtS).toBeLessThanOrEqual(GRENADE_REST_LIMIT_S)
+    expect(open.fromLandingM).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
+    expect(open.lowest).toBeGreaterThan(0)
+  })
+
+  it('18 throws (10 / 11 / 12 m/s, rising 3 / 4 / 5 m/s, spin 0 / 6 rad/s) all rest within 6.5 s and 8 m: the one of the gate is not luck', { timeout: 120000 }, async () => {
+    const rests: number[] = []
+    const reaches: number[] = []
+    for (const speed of [10, 11, 12]) for (const rise of [3, 4, 5]) for (const spin of [0, 6]) {
+      const result = await throwGrenade(false, speed, rise, spin)
+      rests.push(result.restAtS)
+      reaches.push(result.fromLandingM)
+    }
+    report('grenade sweep', { restMax: Math.max(...rests), restMin: Math.min(...rests), fromLandingMax: Math.max(...reaches) })
+    for (const rest of rests) {
+      expect(rest).toBeGreaterThan(0)
+      expect(rest).toBeLessThanOrEqual(GRENADE_REST_LIMIT_S)
+    }
+    expect(Math.max(...reaches)).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
+  })
+
+  it.each([[200, 223], [300, 323]])('24 seeded throws (seeds %i to %i, random pose and spin) rest within 6.5 s and 8 m, with no damping', { timeout: 300000 }, async (first, last) => {
+    const rows: { seed: number; restAtS: number; fromLandingM: number }[] = []
+    for (let seed = first; seed <= last; seed++) {
+      const result = await throwGrenade(false, 11, 4, 0, seed)
+      rows.push({ seed, restAtS: result.restAtS, fromLandingM: result.fromLandingM })
+      expect(result.lowest).toBeGreaterThan(0)
+    }
+    report(`grenade seeds ${first}-${last}`, { rows })
+    for (const row of rows) {
+      expect(row.restAtS).toBeGreaterThan(0)
+      expect(row.restAtS).toBeLessThanOrEqual(GRENADE_REST_LIMIT_S)
+      expect(row.fromLandingM).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
+    }
+  })
+
+  it('thrown against a wall 8 m off comes to rest within 6.5 s and 8 m of the throw', { timeout: 120000 }, async () => {
+    const wall = await throwGrenade(true)
+    report('grenade wall', wall)
+    expect(wall.restAtS).toBeGreaterThan(0)
+    expect(wall.restAtS).toBeLessThanOrEqual(GRENADE_REST_LIMIT_S)
+    expect(wall.fromThrowM).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
+    expect(wall.lowest).toBeGreaterThan(0)
+  })
+})
 
 describe('casings in the engine (spec 008 T4.3, gate 0 B2)', () => {
   it('200 9 mm casings: 95% asleep 5 s after the last, none under the floor', { timeout: 120000 }, async () => {
@@ -65,7 +211,7 @@ describe('casings in the engine (spec 008 T4.3, gate 0 B2)', () => {
 
 describe('a frame of a loose body makes nothing to collect (spec 008 review, §15)', () => {
   it('the reading of two frames, of two bodies, is the one scratch object, and still tells each frame\'s own bounce and sleep', { timeout: 60000 }, async () => {
-    const { world, loop } = await scene({ ...KIT_GROUND, restitution: 0.6 })
+    const { world, loop } = await scene(false, { ...KIT_GROUND, restitution: 0.6 })
     const collider = casingCollider(0.00495, 0.019)
     const first = spawnLoose(world, collider, launch([0, 1, 0], [0, 0, 0]))
     const second = spawnLoose(world, collider, launch([2, 1, 0], [0, 0, 0]))
@@ -90,7 +236,7 @@ describe('a frame of a loose body makes nothing to collect (spec 008 review, §1
 
 describe('the gallery particles with a physics world', () => {
   it('a casing spawned with a collider is moved by the engine, bounces, rests on the floor and leaves the world with the particle', { timeout: 60000 }, async () => {
-    const { world, loop } = await scene({ ...KIT_GROUND, restitution: 0.6 })
+    const { world, loop } = await scene(false, { ...KIT_GROUND, restitution: 0.6 })
     const particles = createParticles(THREE, new THREE.Scene(), () => 0, undefined, undefined, world)
     const bounces: number[] = []
     particles.onBounce = (_kind, hit) => bounces.push(hit?.speed ?? 0)
