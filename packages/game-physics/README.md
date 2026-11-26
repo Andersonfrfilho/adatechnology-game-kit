@@ -73,6 +73,11 @@ The types are the whole contract; read `src/index.ts` for each field's meaning a
 - `grabBody(world, id, { radius, skin? })` returns a `Hold`: `moveTo(position, rotation, h)` carries a body (kinematic) swept against the fixed bodies so a hand never takes it
   through a wall; `release(linear, angular?)` hands it back to the engine, swept (`setContinuous`), so a fast small throw does not tunnel. Uses `SeamWorld` only.
 - `JointDesc` has the `slider` (a drawer, a rail) next to `fixed`, `hinge` and `swingTwist`; `breakImpulse` breaks any of them and `brokenJoints` reports it once.
+## Blast queries and sensor volumes (spec 008, phase 7)
+
+- `createBlastQuery(world, { fragments?, bodiesMax? }).run({ origin, radius, fragmentReach?, spin? })`: about 300 fragment rays (first hit each, spread evenly over the sphere), the bodies within the radius, and for each a sight line from the centre (`visible`: no fixed thing, prop, debris or vehicle in the way; people do not cover). The buffers are made once and reused by the next `run`. It only finds: what a blast does to what it finds is the caller's. About 0.7 ms with 300 agents around the centre (`test:cost`, spec limit 1 ms).
+- `createSensorVolumes(loop, { onEnter, onExit })`: spheres on the `sensor` layer (smoke, gas, triggers) that tell who enters and leaves in the loop's `contacts` phase; `add`, `move` (a drifting cloud), `remove`, `dispose`. Who is inside now: `world.overlapSphere(centre, radius, out, { layers })`.
+
 ## Português
 
 Contrato de corpos rígidos do kit: formas, juntas, ragdolls, veículos, materiais, contatos, sono, raycast e o laço de passo fixo.

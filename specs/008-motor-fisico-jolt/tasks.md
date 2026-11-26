@@ -204,7 +204,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - ✅ **T7.2 Consultas** (2026-11-26, `evidence.md` `## T7.2`, com a ressalva do ganho do `raycast` do mundo): broadphase do motor sob `surfaceRay` (o acerto final continua a superfície desenhada), raio com vários acertos, esfera
   varrida, corpos criados no mesmo quadro. Aceite: 1 000 raios ≤ 2 ms; mesmo resultado que o caminho antigo nos testes do §7.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction test` e `... game-physics-jolt exec vitest run tests/queries.test.ts` · `sonnet`.
-- **T7.3 Blast e fragmentos:** ~300 raios de fragmento + sobreposição + linha de visada; sensores de fumaça (entra/sai). Aceite: um blast ≤ 1 ms.
+- ✅ **T7.3 Blast e fragmentos** (2026-11-26, `evidence.md` `## T7.3`): ~300 raios de fragmento + sobreposição + linha de visada; sensores de fumaça (entra/sai). Aceite: um blast ≤ 1 ms.
   Mecânica? não · Aceite por comando? sim: testes de `game-weapons`, `game-vfx`, `jolt` · `sonnet`.
 - **T7.4 Reação em cadeia:** eventos de contato com impulso viram `hit` do `game-destruction` sem alocação por quadro; despertar em massa
   dentro da condição 10. Aceite: caso 5 e 5b dentro do orçamento; heap de JS estável.

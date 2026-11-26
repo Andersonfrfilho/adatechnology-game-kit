@@ -4024,3 +4024,15 @@ Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 2 a 7 nas medições de c
 **Mesmo resultado:** `game-destruction-three/tests/engine-rays.test.ts`: 500 paredes no mundo real de destruição, 1 000 raios com e sem o gancho dão o mesmo objeto, parte e distância; o gancho dispensa 99,9 % dos objetos por raio. `pnpm --filter @adatechnology/game-destruction test`: 90 arquivos, 699 testes; `game-destruction-three test`: 112 arquivos, 855 testes (6 pulados, solver próprio); typecheck e eslint limpos.
 
 **Ressalva que o dono precisa ver:** o `raycast` do mundo de destruição **não ficou mais rápido** com o gancho: 500 paredes, 1 000 raios, 72 ms com o motor contra 61 ms sem (e 213 contra 194 ms com 1 000 paredes). O gasto é o laço sobre todos os objetos, que o gancho só encurta na leitura de cada um; o ganho exigiria o mundo iterar só os candidatos, o que perde a ordem de desempate e exige saber quais objetos o motor não cobre. Não foi feito; fica ligado por opção e desligado por padrão. O aceite literal (1 000 raios de primeiro acerto ≤ 2 ms, mesmo resultado) passa.
+
+## T7.3 — blast, fragmentos e sensores de fumaça (2026-11-26) — ✅
+
+Máquina: Intel Core Ultra 9 275HX, Node, Linux; carga 4 a 5, sob `perf-measure.lock`.
+
+**O que já existia:** `rayFirst`, `overlapSphere`, `sensorEvents` e a camada `sensor` no contrato e no adaptador; o spike de `queries.test.ts` media 300 raios + sobreposição + 2 linhas de visada em 0,37 ms. O `game-destruction` tem o próprio cálculo de fragmentos do casco (`blast-fragments.test.ts`) e, desde a T7.2, pode usar os corpos fixos do motor como broad phase dos raios dele (inclusive os do blast, que passam por `raycastInternal`). `game-weapons` e `game-vfx` não conhecem o motor e não foram tocados.
+
+**O que mudou:** `game-physics/src/blast-query.ts` (`createBlastQuery`: 300 direções iguais sobre a esfera feitas uma vez, `rayFirst` por fragmento, `overlapSphere` do raio e `rayFirst` do centro a cada corpo com a cobertura `static`/`prop`/`debris`/`vehicle`; resultado em arrays tipados reaproveitados) e `sensor-volumes.ts` (`createSensorVolumes`: esfera na camada `sensor`, `add`/`move`/`remove`, entra e sai pela fase `contacts` do laço), exportados; `game-physics-jolt/tests/blast-query.test.ts` (3 testes), README e skill.
+
+**Números** (`PHYSICS_COST=1`, três rodadas, um blast no meio de 300 agentes com 300 raios e cerca de 190 linhas de visada): mediana 0,686 / 0,679 / 0,680 ms, p99 0,82 / 0,96 / 0,87 ms. Limite do `spec.md` §6: 1 ms.
+
+**Gates:** `game-physics-jolt test`: 40 arquivos, 177 testes verdes (1 arquivo e 2 testes pulados, como antes); `game-vfx test` 437 e `game-weapons test` 596 verdes; typecheck do `game-physics` e eslint dos arquivos novos limpos.
