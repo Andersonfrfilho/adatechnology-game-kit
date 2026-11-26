@@ -43,6 +43,9 @@ toca `step` e `flesh`), `game-characters-undead` (dados da infecção zumbi), `g
 `examples/player-test-area` (`sala-jogador.html`) carrega a bancada: a câmera da sala é o jogador; golpe, mordida, agarrão, empurrão, faca, curativo, derrubada,
 infecção ligada ou não, agilidade e vigor. Também vai junto em `examples/interactables-test-area`.
 
+## Andar pelo controlador do motor (spec 008, T4.1)
+- `createPhysicsController(world, { position, collider })` → `PlayerWorld.controller` (`move`, `read`, `teleport`): `x`, `y`, `z` do jogador são os pés do controlador (degrau de 18 cm, rampa de 30°, empurra caixa de 30 kg, é empurrado) e `blocked` não é consultado. `player.update(h, input)` roda na fase `actors` do laço, com o passo fixo. Sem controlador a grade anda como antes. Teste: `tests/physics-controller.test.ts`.
+
 ## Cuidados
 - `pressed` vale só no quadro em que a tecla desceu, como o `wasPressed` do jogo: dentro do agarrão o E e o F são gastos ali.
 - A morte por queimadura sem sangrar mostra "Fome e sede" (`hunger_thirst`), como no jogo.

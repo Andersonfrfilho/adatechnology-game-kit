@@ -198,6 +198,13 @@ alvo?.act()
 O pacote não desenha nada: você informa o `ObjectSpec` (dados), chama `update(dt)` a cada quadro e desenha o que o mundo reportar. Os textos do
 motor (`Abrir`, `Ligar`, `Sem energia`, `Sem gás`, `Sem água`...) vêm em `pt-BR`; os pacotes de conteúdo acrescentam as suas chaves em `strings`.
 
+## Physics engine for the parts (spec 008, T4.4)
+
+`createWorld({ partPhysics: createEnginePartPhysics(physicsWorld) })` (a `SeamWorld` of `@adatechnology/game-physics`) moves the parts that have `bounds` by joints: a door or lid is a leaf on a
+hinge limited to the motion's `angle`, a drawer a leaf on a slider limited to its `distance`; `t` is read from the joint, a push or a blow moves it, it stays where it is left, and the next
+`act` toggles from there. `EnginePartOptions.breakImpulse` makes a part whose joint breaks over that impulse emit `{ type: 'broke' }`, keep its last `t` and fly as a loose body (`leafOf(object, part)`
+gives the body to draw). Soft volumes `curtain`, `cloth` and `strip` hang as swing-twist chains from a rail and `world.sway` reads them; `buildChain` and `chainPoints` make a cable. Without
+`partPhysics`, or for a part with no `bounds`, `t` steps at `Motion.speed` as before.
 ## Destruction delegate
 
 Pass `destruction: { hitPart }` (the shape of `DestructionWorld.hitPart` from `@adatechnology/game-destruction`, no dependency on it) to `createWorld` and `world.damage` forwards to it as a `blunt` (`explosive` for `gas`, `slash` for `fabric`) hit with `energy: amount`; the world stops its own hp bookkeeping and `world.hp` returns `null`. Without it the deprecated `DamageSpec` behaviour is unchanged.

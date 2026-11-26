@@ -107,3 +107,9 @@ brings it back; with no sling worn it goes to the next slot that takes it (`SLOT
 a thing: its longest side through the fist along the thumb, its thinnest across the palm, its middle a palm's thickness plus half that side under the middle of the palm, the
 fingers closed by its thickness; `itemPoseInHand(hand, grip)` and `handPoseOnItem(item, grip)` turn one into the other (the hand reaches the thing where it lies, and carries it in the
 palm). The pose algebra they use is exported too (`composePose`, `poseHolding`, `blendPoses`, `quaternionOfBasis`).
+
+## Walking by the physics controller (spec 008, T4.1)
+
+`createPhysicsController(world, { position, collider })` (over `PhysicsWorld.createCharacter` of `@adatechnology/game-physics`) goes in `PlayerWorld.controller`
+(`move`, `read`, `teleport`): the player's `x`, `y`, `z` are then the controller's feet, steps up to 18 cm, climbs 30 degrees, pushes a 30 kg crate and is pushed, and `blocked`
+is not asked. Call `player.update(h, input)` in the loop's `beforeStep` (the `actors` phase) with the fixed step, not the frame's `dt`. Without a controller the grid walk is unchanged.

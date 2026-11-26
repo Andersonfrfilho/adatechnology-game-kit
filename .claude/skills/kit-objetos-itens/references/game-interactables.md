@@ -73,6 +73,11 @@ Convenções: coordenadas do spec são locais, frente em `+z`, origem no centro 
 - Com `destruction` no `createWorld`, `world.hp` devolve `null`; `DamageSpec` e `world.damage` sem o delegate são deprecated.
 - Aparelho ligado sem energia continua ligado, com `powered: false` e mensagem `no_power`.
 
+## Motor físico nas partes (spec 008, T4.4)
+- `WorldOptions.partPhysics` (`PartPhysics`, duck-typed) + `createEnginePartPhysics(seamWorld, { frameOf, breakImpulse, leafMass })`: porta e tampa em dobradiça limitada, gaveta em corrediça, cortina/pano em correntes swing-twist, porta que quebra por impulso (evento `broke`). Só parte com `bounds` (a folha); sem `bounds` ou sem a opção, `t` anda a `Motion.speed` como antes.
+- `t` vem da junta; empurrão deixa a porta onde parou e o próximo `act` alterna dali. `leafOf(object, part)` dá o corpo da folha (desenhe a folha quebrada por ele). `buildChain` / `chainPoints` fazem um cabo; a cortina não desliza no trilho (o `part` dela segue o `t` do mundo).
+- O host liga: cria o `createEnginePartPhysics` com o mundo dele e o passa ao `createWorld`; `game-floorplan-three` e a sala ainda não passam. Teste: `tests/engine-parts.test.ts`.
+
 ## O que vem pela migração (spec 001)
 - Nenhuma decisão do consolidado muda a API deste pacote. A9 (catálogo único) estende o `ItemDef` com peso, volume, empilhável, durabilidade, validade, raridade e receitas: o `items` do `createWorld` passa a receber esse catálogo.
 - Concreto armado e tijolo na destruição (item a verificar) entram pelas tags `destruction.material`.

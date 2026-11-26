@@ -151,7 +151,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/extras.test.ts` e testes de `game-weapons-three` · `sonnet`.
 - ✅ **T4.4 Juntas dos interativos:** porta (dobradiça com limite), gaveta (deslizante), cortina e cabo; porta que quebra por impulso.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-interactables test` · `sonnet`.
-- **T4.5 README e skills** dos pacotes tocados.
+- ✅ **T4.5 README e skills** dos pacotes tocados.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
 
 ## Fase 5 — Ragdoll

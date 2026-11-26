@@ -73,6 +73,13 @@ step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-mu
   rolling, ignored pairs, step count). They are valid only on a world made with the same bodies, joints and vehicles in the same order.
 - Joints whose `breakImpulse` is passed are removed by the adapter in the step they break; `brokenJoints` reports them once.
 
+## Character, hold, and loose pieces (spec 008, phase 4)
+
+- The character controller is Jolt's `CharacterVirtual` behind `createCharacter`: no internal body, so debris passes through it; `pushCharacter` adds `impulse / mass` to the wanted
+  velocity and decays it with a 0.25 s constant. `world.dispose()` frees the characters left.
+- `setContinuous(id, true)` is Jolt's `LinearCast` motion quality (swept); `grabBody` of `game-physics` turns it on at release.
+- Rolling resistance with a body's own `damping` is what makes a thrown grenade (a compound of body, fuze and spoon) and 200 casings come to rest on the kit's floor; the numbers and
+  the margins are in `specs/008-motor-fisico-jolt/evidence.md`, T4.3.
 ## Português
 
 Adaptador de `@adatechnology/game-physics` sobre o Jolt Physics (`jolt-physics` 1.1.1, build `wasm-compat`, single-thread). É o único

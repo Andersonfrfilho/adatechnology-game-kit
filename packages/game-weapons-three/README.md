@@ -62,3 +62,11 @@ Cenários: `explosives_p13_shot`, `explosives_p13_valve`, `explosives_p13_fire`,
 `createWeaponProps({ packs, patch, remove })` makes the weapon item model overrides of its own: the shipped ones plus `packs`. `packs` is a list of objects `{ [weaponId]: WeaponItemModel | null }` (`[{ axe: { item: 'hammer' }, baseball_bat: null }]`; `null` keeps the low-poly prop).
 `patch` merges fields by weapon id (`item`, `turn`, `flip`), `remove` lists weapon ids whose override is taken out. `props.buildModel`, `props.buildItemModel` and `props.itemModelOf` read that set; `buildModeledProp`, `buildTripodMountedProp` and `createWeaponsTestModule` take it as `props`.
 The global `registerWeaponItemModel` and the rest are deprecated delegates of `defaultWeaponProps()`.
+
+## Loose pieces in the physics engine (spec 008, T4.3)
+
+`createWeaponFx({ physics })` takes a `SeamWorld` of `@adatechnology/game-physics`: the casings that the gallery's models eject become bodies of it (`casingCollider`: a cylinder along x, C_rr 0.015,
+swept), roll, sleep and bounce by the world's floor; the host's loop steps the world. Without it they keep the gallery's own bounce. `explosiveCollider(THREE, 'm67')` is the grenade as drawn
+(body, fuze and spoon, read from `M67_PARTS`, the numbers the drawing uses) with C_rr 0.015 and a rolling damping of 1 (the fuze and the spoon stop it being a smooth ball); `spawnLoose`, `syncLoose`
+and `dropLoose` put a loose piece in the world, copy its pose onto a mesh (reporting a bounce and sleep) and take it out. Measured on the kit's floor (`KIT_WORLD`): 18 throws rest in 2.88-4.83 s and within 6.16 m of
+where they land; 200 of 200 casings asleep 5 s after the last, none under the floor.

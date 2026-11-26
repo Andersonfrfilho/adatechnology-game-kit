@@ -47,6 +47,10 @@ const loop = createPhysicsLoop(world) // um laço por mundo
 - **Massa do kit em `setShape`**: corpo dinâmico mantém a massa dada (em `createBody` ou em `setShape`); a inércia nova é escalada para
   essa massa. Sem isso o Jolt usaria volume × 1000 kg/m³.
 
+## Personagem e peças soltas (fase 4)
+- Personagem: `CharacterVirtual` do Jolt por `CharacterId` (sem corpo interno: entulho o atravessa); `pushCharacter` soma `impulso / massa` e some com constante de 0,25 s; `dispose` do mundo libera o que sobrar. `setContinuous` = `LinearCast`.
+- B2 em produção (T4.3): granada como desenhada (composto de corpo, espoleta e alavanca, C_rr 0,015, amortecimento de rolamento 1) em 2,88–4,83 s de repouso e ≤ 6,16 m do pouso em 18 arremessos; 200/200 cápsulas dormindo a 5 s. Margem fina: medir de novo ao mexer em rolamento ou sono.
+
 ## Cuidados
 
 - `saveState()` e `restoreState()` gravam e leem o estado exato (corpos, velocidades, sono, cache de contato, atrito, rolamento, pares

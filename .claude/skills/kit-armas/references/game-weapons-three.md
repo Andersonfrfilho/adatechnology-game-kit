@@ -148,6 +148,11 @@ Teclas: H equipa a arma mirada, clique atira ou arremessa, R recarrega, Q muda o
 - **Viewmodel:** acompanha `tool().attachments` a cada quadro (`signature`), liga luz e laser pelos `on`, atira o lançador com `shot_ugl` (clarão na ponta do tubo, som de lançamento) e usa `computeShotSound({ suppressed })` no tiro silenciado. Sons mecânicos novos: `stock_fold`, `light_click`, `attach`.
 - Dependência nova: `@adatechnology/game-interactables-three` (o cordão); entra no IIFE do pacote.
 
+## Peças soltas no motor (spec 008, T4.3)
+- `createWeaponFx({ physics })` (um `SeamWorld`): as cápsulas dos modelos da galeria viram corpos do motor (`casingCollider`, C_rr 0,015, varridos), rolam e dormem pelo chão do mundo; o laço do host dá o passo. Sem a opção, o salto próprio de antes.
+- `explosiveCollider(THREE, 'm67')`: a granada como desenhada (as medidas de `M67_PARTS` são as do desenho e do colisor: uma fonte só), C_rr 0,015 e amortecimento de rolamento 1 (`GRENADE_ROLLING_DAMPING`: sem ele 11 de 18 arremessos passam de 5 s no chão do kit). `spawnLoose` / `syncLoose` / `dropLoose` põem a peça no mundo, copiam a pose para a malha e a tiram.
+- Limites: a sala de teste ainda lança a granada com a balística própria; cápsulas de `box-fx` e carregadores seguem no salto próprio. Teste: `tests/engine-loose.test.ts`.
+
 ## O que ainda vem pela migração (spec 001)
 - Sons: o tiro (classe e abafamento do jogo + energia do calibre, S2) e os sons mecânicos estão feitos (T1.4); a síntese já está no `game-audio` genérico (T6.1e): `createWeaponAudio` é um adaptador que toca no motor próprio (mixagem do jogo, sem limite de vozes) ou, com a opção `engine` (a área usa o de `host.audio`), no motor emprestado. O traço do WebAudio é igual ao gravado antes da mudança (`tests/audio-trace.test.ts`). Os sons de recarga da Cena de Arte são o padrão de `MECHANICAL_SOUNDS` (T6.1e2).
 - Efeitos de boca e explosivos passam a vir do `game-vfx-three` (E4).
