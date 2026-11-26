@@ -2,10 +2,10 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
-import { KIT_WORLD, WHEEL_READ, WHEEL_READ_STRIDE } from '@adatechnology/game-physics'
+import { createPhysicsLoop, KIT_WORLD, WHEEL_READ, WHEEL_READ_STRIDE } from '@adatechnology/game-physics'
 import type { PhysicsWorld, VehicleDesc, VehicleId, WheelDesc } from '@adatechnology/game-physics'
-import { createPhysicsInputMapper, createSemiSimDriver, defaultSemiSpec, resistanceImpulse, vehicleDescFromSemi } from '@adatechnology/game-vehicles-driving'
-import type { DriveStatus, PedalOptions, SemiInput, SemiSimSpec, VehicleCondition } from '@adatechnology/game-vehicles-driving'
+import { createPhysicsInputMapper, createRunOver, createSemiSimDriver, defaultSemiSpec, resistanceImpulse, vehicleDescFromSemi } from '@adatechnology/game-vehicles-driving'
+import type { DriveStatus, PedalOptions, RunOverHit, SemiInput, SemiSimSpec, VehicleCondition } from '@adatechnology/game-vehicles-driving'
 import { createJoltEngine } from '../src/index'
 import type { JoltWorld } from '../src/index'
 import { eulerXYZ, ground, HATCH, report, stats } from './scenes'
@@ -489,3 +489,45 @@ const speedOfBody = (world: PhysicsWorld, body: ReturnType<PhysicsWorld['vehicle
   world.readVelocity(body, vel, 0)
   return Math.hypot(vel[0]!, vel[1]!, vel[2]!)
 }
+
+describe('T6.26: a real car runs over agents (the `vehicle` and `agent` layers do not meet; the car sweeps its box)', () => {
+  it('a semi-simulation car at 30 km/h crosses three agent capsules in its way: none is a wall, each is a hit, and the car is slower by what the momentum says', async () => {
+    const world = (await createJoltEngine()).createWorld(KIT_WORLD)
+    ground(world, 200)
+    const loop = createPhysicsLoop(world)
+    const speed = 30 / 3.6
+    const car = world.createVehicle(
+      vehicleDescFromSemi(defaultSemiSpec, { chassis: { shape: { kind: 'box', half: [0.9, 0.35, 2.2] }, position: [0, defaultSemiSpec.centreHeight + 0.05, 0], user: 1, linearVelocity: [0, 0, speed] } }),
+    )
+    const body = world.vehicleBody(car)
+    const capsules = [4, 8, 12].map((z, index) => world.createBody({ shape: { kind: 'capsule', halfHeight: 0.6, radius: 0.25 }, motion: 'kinematic', position: [0.1, 0.85, z], layer: 'agent', user: index }))
+    const store = { n: 3, x: new Float32Array([0.1, 0.1, 0.1]), z: new Float32Array([4, 8, 12]), vx: new Float32Array(3), vz: new Float32Array(3), mass: new Float32Array(3).fill(80), identity: Uint32Array.from([1, 2, 3]) }
+    const hits: RunOverHit[] = []
+    const runOver = createRunOver(loop, {
+      crowd: { store, damage: () => ({ died: false }), kill: () => undefined, asPlayerCrowd: () => ({ stun: () => undefined }) },
+      agents: { count: 3, bodyOf: (index) => capsules[index] },
+      onHit: (hit) => hits.push(hit),
+    })
+    runOver.track({ body, half: [0.9, 0.6, 2.2] })
+    const velocity = new Float64Array(6)
+    const pose = new Float64Array(7)
+    let firstHitSpeed = 0
+    for (let step = 0; step < 6 * 120 && hits.length < 3; step++) {
+      loop.stepFixed(1)
+      if (hits.length === 1 && firstHitSpeed === 0) {
+        world.readVelocity(body, velocity, 0)
+        firstHitSpeed = velocity[2]!
+      }
+    }
+    for (let step = 0; step < 120; step++) loop.stepFixed(1)
+    world.readPose(body, pose, 0)
+    report('t6.26-real-car', { hits: hits.length, outcomes: hits.map((hit) => hit.outcome), speeds: hits.map((hit) => Number(hit.speed.toFixed(2))), z: pose[2], firstHitSpeed })
+    expect(hits).toHaveLength(3)
+    expect(hits[0]!.outcome).toBe('kill')
+    expect(pose[2]!).toBeGreaterThan(14)
+    const expected = speed - (80 / (80 + world.massOf(body))) * speed
+    expect(Math.abs(firstHitSpeed - expected) / speed).toBeLessThan(0.05)
+    runOver.dispose()
+    world.dispose()
+  })
+})
