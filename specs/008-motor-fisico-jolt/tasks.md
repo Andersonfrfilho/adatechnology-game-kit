@@ -157,8 +157,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 5 — Ragdoll
 > 🤖 Modelo: `sonnet` (T5.3 é 🧠 → `opus`)
 
-- **T5.1 Ragdoll de pessoa e zumbi** (2026-11-26: B3 passa no `KIT_WORLD`; **20 R0 dão 16,1 ms de mediana contra 3,0 do C7, parado para decisão do coordenador**, `evidence.md` `## T5.1`) pelo ragdoll do Jolt, 20/8, `Stabilize`, a partir de `describeBody(createRig(...))`. Aceite (B3): nenhuma
-  junta > 0,1 rad além do limite por mais de 3 quadros; dorme em ≤ 4 s; 20 ragdolls dentro do orçamento do C7.
+- ✅ **T5.1 Ragdoll de pessoa e zumbi** (2026-11-26: B3 passa no `KIT_WORLD`; 20 R0 davam 16,1 ms contra 3,0 do C7; decisão do dono: `ragdollsMax` 1 R0 + o resto R1, dentro do C7, `evidence.md` `## T5.1`) pelo ragdoll do Jolt, 20/8, `Stabilize`, a partir de `describeBody(createRig(...))`. Aceite (B3): nenhuma
+  junta > 0,1 rad além do limite por mais de 3 quadros; dorme em ≤ 4 s; 20 corpos mortos (cota de R0 + o resto R1) dentro do orçamento do C7.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/ragdoll.test.ts` · `sonnet`.
 - **T5.2 Desmembrar e cortar** com `setShape` e juntas que quebram, mantendo a massa (bug 1 já corrigido).
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-characters-three test` · `sonnet`.

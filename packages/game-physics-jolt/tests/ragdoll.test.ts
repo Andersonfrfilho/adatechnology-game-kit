@@ -2,6 +2,7 @@ import { performance } from 'node:perf_hooks'
 
 import { describe, expect, it } from 'vitest'
 
+import { chainOfRig, createRig, GUIDE } from '@adatechnology/game-characters'
 import { KIT_RAGDOLL_SOLVER, KIT_WORLD } from '@adatechnology/game-physics'
 import type { WorldDesc } from '@adatechnology/game-physics'
 
@@ -95,23 +96,42 @@ describe('case 2: ragdoll', () => {
     expect(r.longestFramesOver0_1rad).toBeLessThanOrEqual(3)
   })
 
-  it('costs: 20 production R0 falling and piling in the kit\'s world: a 1/60 s frame (two steps) within the C7 budget, 3.0 ms median and 4.0 ms p99', { timeout: 60000 }, async () => {
+  /** The quota of full ragdolls (R0): the most that fits the C7 in the kit's world, measured (specs/008 evidence, T5.1). */
+  const RAGDOLLS_MAX = 1
+
+  /** `r0` production R0 and the rest as R1 chains, all dropped at once into the kit's world: a 1/60 s frame (two steps) over the first 3 s, while they fall and pile. */
+  const costOfDead = async (total: number, r0: number): Promise<{ bodies: number; falling: ReturnType<typeof stats> }> => {
     const engine = await createJoltEngine()
     const world = engine.createWorld(KIT_WORLD)
+    const rig = createRig({ body: GUIDE, height: 1.8, build: 1 })
     ground(world)
-    for (let i = 0; i < 20; i++) engineRagdoll(world, [(i % 5) * 0.7, 0.5 + Math.floor(i / 5) * 0.6, (i % 3) * 0.3], i, true, KIT_RAGDOLL_SOLVER)
+    for (let i = 0; i < total; i++) {
+      const at: [number, number, number] = [(i % 5) * 0.7, 0.5 + Math.floor(i / 5) * 0.6, (i % 3) * 0.3]
+      if (i < r0) engineRagdoll(world, at, i, true, KIT_RAGDOLL_SOLVER)
+      else world.createRagdoll({ ...chainOfRig({ rig, body: GUIDE, build: 1, at, user: i }), stabilize: true })
+    }
     const frames: number[] = []
-    let asleep = -1
-    for (let i = 0; i < 60 * 10; i++) {
+    for (let i = 0; i < 180; i++) {
       const t0 = performance.now()
       world.step(1 / 60)
       frames.push(performance.now() - t0)
-      if (asleep < 0 && world.activeCount === 0) asleep = i / 60
     }
-    const falling = stats(frames.slice(0, 180))
-    report('ragdoll-x20-kit-world', { bodies: world.bodyCount, asleepAtS: asleep, activeAtEnd: world.activeCount, frameFirst3s: falling, frameAll: stats(frames) })
-    expect(world.bodyCount).toBe(20 * 17 + 1)
+    const bodies = world.bodyCount
     world.dispose()
+    return { bodies, falling: stats(frames) }
+  }
+
+  it(`costs: ${RAGDOLLS_MAX} production R0 falling and piling in the kit's world: a 1/60 s frame (two steps) within the C7 budget, 3.0 ms median and 4.0 ms p99`, { timeout: 60000 }, async () => {
+    const { bodies, falling } = await costOfDead(RAGDOLLS_MAX, RAGDOLLS_MAX)
+    report('ragdoll-r0-kit-world', { r0: RAGDOLLS_MAX, bodies, frameFirst3s: falling })
+    expect(bodies).toBe(RAGDOLLS_MAX * 17 + 1)
+    expect(falling.median).toBeLessThanOrEqual(3.0)
+    expect(falling.p99).toBeLessThanOrEqual(4.0)
+  })
+
+  it(`costs: 20 dead bodies, ${RAGDOLLS_MAX} R0 and the rest R1 chains, in the kit's world: the same C7 budget`, { timeout: 60000 }, async () => {
+    const { falling } = await costOfDead(20, RAGDOLLS_MAX)
+    report('ragdoll-policy-x20-kit-world', { r0: RAGDOLLS_MAX, frameFirst3s: falling })
     expect(falling.median).toBeLessThanOrEqual(3.0)
     expect(falling.p99).toBeLessThanOrEqual(4.0)
   })

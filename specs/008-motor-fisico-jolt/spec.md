@@ -175,7 +175,7 @@ reescritos com apoio desenhado; o motivo de cada um vai para `evidence.md`.
 | Destroços 160 parados + 40 movendo (`renderer.update`) | ≤ 1,1 ms | ≤ 3,0 ms | 1,00–1,07 / 4,1–5,4 ms |
 | Cascata de 500 corpos acordados (`cascade.test.ts` 5b), fora do quadro de despertar | ≤ 0,6 ms | ≤ 4,0 ms | 0,5 / 5,9–6,4 ms (3,0 sem listener) |
 | Quadro de despertar da cascata de 500 | — | ≤ 10 ms (condição 10) | 11,7–13,1 ms (9,5 sem listener) |
-| 20 ragdolls | ≤ 3,0 ms | ≤ 4,0 ms | 2,8 mediana / 3,3 p90 (spike) |
+| 20 ragdolls | ≤ 3,0 ms | ≤ 4,0 ms | 2,8 mediana / 3,3 p90 (spike); **produção (2026-11-26): 20 R0 no `KIT_WORLD` dão 16,1 ms; por decisão do dono a cota é 1 R0 + o resto R1 (T5.1, `evidence.md`)** |
 | 100 corpos empilhados como correntes | ≤ 2,5 ms | ≤ 4,0 ms | 2,2 / 2,6 ms |
 | 10 carros andando | ≤ 0,5 ms | ≤ 1,0 ms | 0,15–0,25 ms mediana |
 | 1 000 agentes cinemáticos | ≤ 0,5 ms | ≤ 1,0 ms | 0,29 ms |

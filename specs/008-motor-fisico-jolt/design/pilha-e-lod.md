@@ -63,9 +63,9 @@ trocarem no mesmo lugar. Todos os números são opções com padrão documentado
 do rig). Trocar 3 corpos por 17 no quadro do tiro inventaria braços na frente do jogador. O tiro num R1 aplica o impulso no corpo da corrente
 que o raio acerta.
 
-### 2.3 Cotas (provisórias, a medir na T5.4)
+### 2.3 Cotas (R0 medido na T5.1; o resto provisório, a medir na T5.4)
 
-- `ragdollsMax` 20 R0. Morte nova com a cota cheia rebaixa para R1 o R0 dormindo mais longe; se nenhum dorme, o novo nasce R1.
+- `ragdollsMax` **1 R0** (medido, T5.1; decisão do dono em 2026-11-26: menos ragdolls completos, o resto em R1). É o maior N com 20 corpos mortos (N R0 + o resto R1 de 3 partes) dentro do C7 no `KIT_WORLD` (3,0 ms de mediana, 4,0 de p99, quadro de 1/60 s, 20/8, `stabilize`); N R0 sozinhos cabem até 3. Os 20 R0 do desenho davam 16,1 ms. Morte nova com a cota cheia rebaixa para R1 o R0 dormindo mais longe; se nenhum dorme, o novo nasce R1.
 - `dynamicBodiesMax` 900 corpos rígidos (R0 + R1 + R2), com o teto por ilha do §2.1.3. Acima disso, o mais longe que dorme vai para R2f ou R3.
 - Orçamento somado (escrever na T5.4): 20 R0 + uma pilha + 1 000 agentes + destroços no mesmo quadro, mediana e p99 contra o C7.
 

@@ -3679,6 +3679,8 @@ Os 41 goldens das casas seguem iguais.
 | 449 | 5.54 | 5.52 | | 499 | 5.23 | 5.07 |
 ## T5.1 — ragdoll de pessoa e zumbi (2026-11-26) — **B3 passa; 20 R0 estouram o C7 no `KIT_WORLD`: parado, o coordenador decide**
 
+## T5.1 — ragdoll de pessoa e zumbi (2026-11-26) — **B3 passa; 20 R0 estouravam o C7; decisão do dono: `ragdollsMax` = 1 R0 + o resto R1 (fecha ✅)**
+
 **Portado** (de `game-physics-jolt/tests/scenes.ts:49-102`, comportamento igual): `LIMITS` e `ragdollSpec` viraram `ragdollOfRig({ rig, body, build, at?, user? })` e `RAGDOLL_LIMITS` (`game-characters/src/body/ragdoll.ts`, devolve `RagdollDesc`, R0), e o corpo de 3 partes que estava escrito à mão em `crowd.test.ts` virou `chainOfRig` (`.../body/chain.ts`, R1; as medidas do spike escaladas por altura e corpo; derivar da posição das juntas do rig fez a pilha de 100 não dormir em 10 s, então ficou o porte fiel: dorme a 9,8 s como antes). `game-characters` ganhou `@adatechnology/game-physics` só para tipos. `scenes.ts`, `ragdoll.test.ts` e `crowd.test.ts` importam de `game-characters`: o gate mede o código de produção. As camadas são `character` (a `corpse` é da T5.4).
 
 **B3, um R0 de produção no `KIT_WORLD`** (120 Hz, 32/2, `stabilize`, `KIT_RAGDOLL_SOLVER` 20/8; cai de 2 m na escada e numa caixa, tiro de 9 mm em 1,5 s; `ragdoll.test.ts`, com `expect`):
@@ -3710,3 +3712,27 @@ Os 41 goldens das casas seguem iguais.
 Leitura: o spike media 60 Hz com as iterações padrão do Jolt (3,0 ms). O custo vem dos 120 Hz (2 passos por quadro) e dos 20/8 do ragdoll (que, no `KIT_WORLD`, são MAIS caros que os 32/2 do mundo: 16,1 contra 6,7); `stabilize` não pesa. Nem o melhor caso do `KIT_WORLD` (6,7) cabe em 3,0. As cotas do desenho (`ragdollsMax` 20 R0) são provisórias: decidir entre baixar a cota, mudar o solver do ragdoll ou subir o C7. O teste do custo fica **vermelho de propósito** até lá; nada foi afrouxado.
 
 `crowd.test.ts` (100 corpos de 3 partes, sono 0,08, via `chainOfRig`): dorme a 9,8 s, como antes.
+
+**Decisão do dono (2026-11-26): menos ragdolls completos.** `ragdollsMax` cai de 20 para o maior N cujos 20 corpos mortos (N R0 + 20-N R1 de `chainOfRig`) cabem no C7. Medido no `KIT_WORLD` (120 Hz, 32/2, `stabilize`, R0 em 20/8), primeiros 3 s (180 quadros de 1/60 s, tudo caindo ao mesmo tempo), trava de medição do repositório (`flock perf-measure.lock`), carga 1 min 3,1 a 3,8 (abaixo de 4; a de 15 min, 10 a 14: outras sessões) em 10 rodadas; mediana e p99 em ms, faixa das rodadas:
+
+| N R0 sozinhos | Mediana | p99 | Cabe (3,0 / 4,0) |
+|---|---|---|---|
+| 2 | 1,29 a 1,76 | 2,01 a 3,06 | sim, 7/7 |
+| 3 | 1,88 a 3,06 | 2,08 a 4,45 | sim em 6 de 7 (a falha: rodada com carga alta) |
+| 4 | 2,57 a 4,29 | 3,25 a 6,22 | não: p99 estoura em 3 de 6 |
+| 5 | 3,23 a 3,80 | 4,53 a 4,71 | não |
+| 6 | 4,01 a 4,76 | 4,61 a 7,08 | não |
+
+| N R0 + (20-N) R1 | Mediana | p99 | Cabe |
+|---|---|---|---|
+| 0 (20 R1) | 0,76 a 1,20 | 1,58 a 2,42 | sim |
+| **1** | 1,47 a 1,99 | 1,96 a 4,08 | **sim, 7 de 8 (p99 4,08 em uma rodada)**; 5 de 5 no teste |
+| 2 | 2,36 a 3,12 | 3,20 a 4,65 | não é estável: p99 estoura em 5 de 11; no teste, 2 de 3 vermelhas |
+| 3 | 3,07 a 3,90 | 3,95 a 5,45 | não (mediana > 3,0 em 5 de 6) |
+| 4 | 4,02 a 4,89 | 5,78 a 6,31 | não |
+| 5 | 5,12 a 6,02 | 7,38 a 11,03 | não |
+| 6 | 6,15 a 8,83 | 9,18 a 10,57 | não |
+
+Cada R1 custa 0,04 a 0,06 ms; cada R0, 0,65 a 0,9 ms. **N escolhido: 1**: é o maior com a política inteira (R0 + o resto R1) estável no C7. O esperado "perto de 4" vale só para R0 sozinhos (até 3, 4 não é estável); os R1 dos outros 19 corpos comem o resto do orçamento. O custo vem de o `KIT_WORLD` rodar 2 passos por quadro. Subir a cota exige baixar o custo do R0 (solver, outra rodada de medição na T5.4) ou decisão do dono sobre o C7, e não afrouxar o teste.
+
+`ragdoll.test.ts`: "costs: 1 production R0" (limites do C7 intactos) e "costs: 20 dead bodies, 1 R0 and the rest R1 chains". Verde.
