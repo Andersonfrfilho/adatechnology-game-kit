@@ -5,14 +5,13 @@ import { describe, expect, it } from 'vitest'
 
 import { loadJolt } from '../src/index'
 import type { Jolt } from '../src/constants'
-import { report, stats } from './scenes'
+import { COST_LANE, report, stats } from './scenes'
 
 /**
  * T6.0b, the throwaway spy (specs/008-motor-fisico-jolt/design/veiculos.md 4.2, 15.1, 21.1): one car, one wall, five components, raw Jolt. The car is a rigid body of a
  * mutable compound of convex hulls (96 or 192 children); a floating-frame lattice (XPBD, one iteration a substep, plasticity, a plane for the wall) takes the blow from
  * the impulse Jolt applied and the contact manifold. Gravity is off and there are no wheels: the ground and wheel terms of 4.2 item 1 are not measured here (the
- * contact impulse is m*dv). It prints ms per stage per frame and checks the written criteria for going on to E3. The timing part runs with `SPY=1` (cost belongs to the
- * cost lane, never the CI run); the physical criteria always run, on a small scene.
+ * contact impulse is m*dv). It prints ms per stage per frame and checks the written criteria for going on to E3. The timing part runs in the cost lane (`pnpm --filter @adatechnology/game-physics-jolt test:cost`, never the CI run); the physical criteria always run, on a small scene.
  */
 
 type Vec = [number, number, number]
@@ -579,8 +578,6 @@ const runCrash = (J: Jolt, options: CrashOptions): CrashResult => {
   }
 }
 
-const SPY = process.env.SPY === '1'
-
 describe('T6.0b crash spy: one car, one wall, five components', () => {
   it('holds the physical criteria of 4.2 (front held at the wall within 3 cm, node <= 1.5x the approach, energy <= what came in) at 480 Hz', async () => {
     const J = await loadJolt()
@@ -609,7 +606,7 @@ describe('T6.0b crash spy: one car, one wall, five components', () => {
     expect(verdict.energyNotAboveInput).toBe(true)
   })
 
-  it.skipIf(!SPY)('measures ms per stage a frame, 96 and 192 children, discrete and linear cast, hulls fed back (SPY=1)', async () => {
+  it.skipIf(!COST_LANE)('measures ms per stage a frame, 96 and 192 children, discrete and linear cast, hulls fed back (cost lane)', async () => {
     const J = await loadJolt()
     const runs = Number(process.env.SPY_RUNS ?? 5)
     const pick = (frames: Stages[], key: keyof Stages): number[] => frames.map((f) => f[key])
