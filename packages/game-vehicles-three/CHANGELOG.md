@@ -1,5 +1,27 @@
 # @adatechnology/game-vehicles-three
 
+## 0.11.0
+
+### Minor Changes
+
+- 9412886: feat(vehicles): the hulls of a model are made once (`createHullPlanCache`, `planCache`), the first division runs in the worker coordinator as the `vehicles.hull-plan` kind (`@adatechnology/game-vehicles-three/worker-kinds`, `workers` option, `isHullPending()`), and the second car of a model is given its hulls in under 2 ms. `WORKER_KIND_ID.VEHICLE_HULL_PLAN` in the contracts.
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+- Updated dependencies [cf37f9c]
+- Updated dependencies [cefa5d9]
+- Updated dependencies [d75f761]
+  - @adatechnology/game-contracts@0.42.0
+  - @adatechnology/game-physics@0.4.0
+  - @adatechnology/game-vehicles-fleet@9.0.0
+  - @adatechnology/game-vehicles-proving@0.3.0
+  - @adatechnology/game-vehicles-driving@0.2.29
+  - @adatechnology/game-audio@0.15.6
+  - @adatechnology/game-render-three@0.4.6
+  - @adatechnology/game-shapes@0.4.6
+  - @adatechnology/game-vehicles@0.7.2
+
 ## 0.10.1
 
 ### Patch Changes

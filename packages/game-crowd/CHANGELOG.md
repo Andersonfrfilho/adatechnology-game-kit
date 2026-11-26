@@ -1,5 +1,20 @@
 # @adatechnology/game-crowd
 
+## 0.8.0
+
+### Minor Changes
+
+- 9e25290: feat(crowd): `createAgentBodies` (cápsulas cinemáticas dos agentes no motor) e `createDoorBodies` (porta que cede por junta); `@adatechnology/game-physics` passa a dependência.
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+- Updated dependencies [cf37f9c]
+- Updated dependencies [cefa5d9]
+  - @adatechnology/game-contracts@0.42.0
+  - @adatechnology/game-physics@0.4.0
+  - @adatechnology/game-characters@0.2.28
+
 ## 0.7.2
 
 ### Patch Changes

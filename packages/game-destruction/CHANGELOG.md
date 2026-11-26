@@ -1,5 +1,16 @@
 # @adatechnology/game-destruction
 
+## 0.30.0
+
+### Minor Changes
+
+- 919616f: feat(destruction): `setRayBroadPhase` no mundo e `rayBroadPhase: true` no renderizador usam os corpos fixos do motor como broad phase dos raios (só tira objeto; o acerto continua a superfície desenhada).
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+  - @adatechnology/game-contracts@0.42.0
+
 ## 0.29.5
 
 ### Patch Changes

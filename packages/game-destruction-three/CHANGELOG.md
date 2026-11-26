@@ -1,5 +1,27 @@
 # @adatechnology/game-destruction-three
 
+## 0.27.0
+
+### Minor Changes
+
+- cefa5d9: feat(physics): `createImpactReader` (o golpe mais forte de cada corpo no quadro, sem alocação por linha de contato); feat(destruction-three): `contactHits` no renderizador liga o golpe do motor numa parte fixa a `hitPart` blunt.
+- 919616f: feat(destruction): `setRayBroadPhase` no mundo e `rayBroadPhase: true` no renderizador usam os corpos fixos do motor como broad phase dos raios (só tira objeto; o acerto continua a superfície desenhada).
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+- Updated dependencies [cf37f9c]
+- Updated dependencies [cefa5d9]
+- Updated dependencies [919616f]
+  - @adatechnology/game-contracts@0.42.0
+  - @adatechnology/game-physics@0.4.0
+  - @adatechnology/game-destruction@0.30.0
+  - @adatechnology/game-audio@0.15.6
+  - @adatechnology/game-render-three@0.4.6
+  - @adatechnology/game-shapes@0.4.6
+  - @adatechnology/game-terrain@0.9.6
+  - @adatechnology/game-vfx-three@0.10.10
+
 ## 0.26.6
 
 ### Patch Changes

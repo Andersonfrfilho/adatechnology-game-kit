@@ -1,5 +1,34 @@
 # @adatechnology/game-kit-defaults
 
+## 0.3.9
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+- Updated dependencies [cf37f9c]
+- Updated dependencies [cefa5d9]
+- Updated dependencies [9e25290]
+- Updated dependencies [d75f761]
+- Updated dependencies [919616f]
+  - @adatechnology/game-contracts@0.42.0
+  - @adatechnology/game-physics@0.4.0
+  - @adatechnology/game-destruction-three@0.27.0
+  - @adatechnology/game-crowd@0.8.0
+  - @adatechnology/game-vehicles-fleet@9.0.0
+  - @adatechnology/game-destruction@0.30.0
+  - @adatechnology/game-audio@0.15.6
+  - @adatechnology/game-fluids@0.6.11
+  - @adatechnology/game-fluids-three@0.6.6
+  - @adatechnology/game-render-three@0.4.6
+  - @adatechnology/game-runtime@0.3.6
+  - @adatechnology/game-shapes@0.4.6
+  - @adatechnology/game-terrain@0.9.6
+  - @adatechnology/game-terrain-three@0.6.8
+  - @adatechnology/game-urban@0.7.1
+  - @adatechnology/game-vfx-three@0.10.10
+  - @adatechnology/game-workers@0.1.6
+  - @adatechnology/game-physics-jolt@0.3.1
+
 ## 0.3.8
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @adatechnology/game-items
 
+## 0.2.24
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+- Updated dependencies [919616f]
+  - @adatechnology/game-contracts@0.42.0
+  - @adatechnology/game-destruction@0.30.0
+  - @adatechnology/game-interactables@0.6.2
+
 ## 0.2.23
 
 ### Patch Changes

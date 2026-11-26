@@ -1,5 +1,12 @@
 # @adatechnology/game-physics
 
+## 0.4.0
+
+### Minor Changes
+
+- cf37f9c: feat(physics): `createBlastQuery` (fragmentos, corpos no raio e linha de visada de uma explosão) e `createSensorVolumes` (esferas que avisam quem entra e sai).
+- cefa5d9: feat(physics): `createImpactReader` (o golpe mais forte de cada corpo no quadro, sem alocação por linha de contato); feat(destruction-three): `contactHits` no renderizador liga o golpe do motor numa parte fixa a `hitPart` blunt.
+
 ## 0.3.0
 
 ### Minor Changes

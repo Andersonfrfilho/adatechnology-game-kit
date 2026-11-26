@@ -1,5 +1,22 @@
 # @adatechnology/game-vehicles-proving
 
+## 0.3.0
+
+### Minor Changes
+
+- d75f761: Acceleration ratings of cars and SUVs follow the real 0-100 km/h of the model they are inspired by (class bands in the proving ground, sources in the fleet); the gearbox of the physics mapping gets realistic shift times.
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+- Updated dependencies [cf37f9c]
+- Updated dependencies [cefa5d9]
+- Updated dependencies [d75f761]
+  - @adatechnology/game-contracts@0.42.0
+  - @adatechnology/game-physics@0.4.0
+  - @adatechnology/game-vehicles-driving@0.2.29
+  - @adatechnology/game-runtime@0.3.6
+
 ## 0.2.5
 
 ### Patch Changes

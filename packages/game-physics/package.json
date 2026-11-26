@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-physics",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "description": "Engine-agnostic rigid-body contract of the kit: bodies, shapes, joints, materials, contacts, sleep, raycast and the fixed-step loop. Types plus tiny helpers.",
   "keywords": [

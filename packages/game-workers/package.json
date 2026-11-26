@@ -1,6 +1,6 @@
 {
   "name": "@adatechnology/game-workers",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "The coordinator of every worker of a game: how many workers (by cores or by hand), which lane each kind of job runs in, priority and deadline in frames, the same kernel on the main thread when a worker is late. Browser module workers, Node worker_threads, or none.",
   "keywords": [

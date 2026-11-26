@@ -1,5 +1,12 @@
 # @adatechnology/game-workers
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [9412886]
+  - @adatechnology/game-contracts@0.42.0
+
 ## 0.1.5
 
 ### Patch Changes
