@@ -16,6 +16,12 @@ const FLOOR_BODIES = 1
 /** The owner's limit for a drawn grenade (2026-11-26): it rolls and rocks on its fuze, so a smooth ball's 5 s does not apply. No artificial damping. */
 const GRENADE_REST_LIMIT_S = 6.5
 const GRENADE_REACH_LIMIT_M = 8
+/** Distribution rule (owner, 2026-11-26): 95% of 100 seeded throws within both limits, and a hard ceiling for the grenade that never stops. */
+const GRENADE_QUANTILE = 0.95
+const GRENADE_THROWS = 100
+const GRENADE_FIRST_SEED = 400
+const GRENADE_REST_CEILING_S = 8
+const GRENADE_REACH_CEILING_M = 10
 
 const H = KIT_WORLD.fixedStep ?? 1 / 120
 const STEPS_PER_SECOND = Math.round(1 / H)
@@ -157,19 +163,28 @@ describe('the M67 as drawn, in the engine (spec 008 T4.3, gate 0 B2)', () => {
     expect(Math.max(...reaches)).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
   })
 
-  it.each([[200, 223], [300, 323]])('24 seeded throws (seeds %i to %i, random pose and spin) rest within 6.5 s and 8 m, with no damping', { timeout: 300000 }, async (first, last) => {
+  it('100 seeded throws (seeds 400 to 499, random pose and spin): 95% rest within 6.5 s and 8 m, none past 8 s or 10 m, with no damping', { timeout: 600000 }, async () => {
     const rows: { seed: number; restAtS: number; fromLandingM: number }[] = []
-    for (let seed = first; seed <= last; seed++) {
+    for (let seed = GRENADE_FIRST_SEED; seed < GRENADE_FIRST_SEED + GRENADE_THROWS; seed++) {
       const result = await throwGrenade(false, 11, 4, 0, seed)
       rows.push({ seed, restAtS: result.restAtS, fromLandingM: result.fromLandingM })
       expect(result.lowest).toBeGreaterThan(0)
     }
-    report(`grenade seeds ${first}-${last}`, { rows })
-    for (const row of rows) {
-      expect(row.restAtS).toBeGreaterThan(0)
-      expect(row.restAtS).toBeLessThanOrEqual(GRENADE_REST_LIMIT_S)
-      expect(row.fromLandingM).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
-    }
+    // a throw that never slept in the 12 s window reads -1: it counts as past every limit
+    const restOf = (row: { restAtS: number }): number => (row.restAtS > 0 ? row.restAtS : Infinity)
+    const withinBoth = rows.filter((row) => restOf(row) <= GRENADE_REST_LIMIT_S && row.fromLandingM <= GRENADE_REACH_LIMIT_M).length
+    const rests = rows.map(restOf).sort((a, b) => a - b)
+    const reaches = rows.map((row) => row.fromLandingM).sort((a, b) => a - b)
+    const quantile95 = (sorted: number[]): number => sorted[Math.ceil(0.95 * sorted.length) - 1] as number
+    report('grenade seeds 400-499', {
+      withinBoth, rest95: quantile95(rests), restMax: rests[rests.length - 1], reach95: quantile95(reaches), reachMax: reaches[reaches.length - 1],
+      pastRest: rows.filter((row) => restOf(row) > GRENADE_REST_LIMIT_S).map((row) => row.seed),
+      pastReach: rows.filter((row) => row.fromLandingM > GRENADE_REACH_LIMIT_M).map((row) => row.seed),
+      rows,
+    })
+    expect(withinBoth).toBeGreaterThanOrEqual(Math.ceil(GRENADE_QUANTILE * GRENADE_THROWS))
+    expect(rests[rests.length - 1]).toBeLessThanOrEqual(GRENADE_REST_CEILING_S)
+    expect(reaches[reaches.length - 1]).toBeLessThanOrEqual(GRENADE_REACH_CEILING_M)
   })
 
   it('thrown against a wall 8 m off comes to rest within 6.5 s and 8 m of the throw', { timeout: 120000 }, async () => {
