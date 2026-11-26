@@ -141,7 +141,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 4 — Props
 > 🤖 Modelo: `sonnet` (T4.5 → `haiku`)
 
-- **T4.1 Controlador de personagem** (`CharacterVirtual`) atrás do contrato, usado por `game-player`: degrau de 18 cm, rampa de 30°, empurrar
+- ✅ **T4.1 Controlador de personagem** (`CharacterVirtual`) atrás do contrato, usado por `game-player`: degrau de 18 cm, rampa de 30°, empurrar
   caixa de 30 kg, ser empurrado. Aceite: testes novos; 50 controladores ≤ 0,5 ms.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-player test` e `... game-physics-jolt test` · `sonnet`.
 - **T4.2 Segurar, soltar, arremessar** (dinâmico ↔ cinemático). Aceite: teste de pegar e arremessar sem atravessar parede.

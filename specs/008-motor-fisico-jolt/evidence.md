@@ -3206,3 +3206,37 @@ Como o "Simple Collision" no mip 1 do Unreal: o ladrilho continua lido a 2,5 cm 
   - Sala (cratera do C4): 3 dos 4 ladrilhos da cratera ficam a 5 cm (o quarto, o de 5,0 mm, a 2,5 cm). `Step` do f1 aquecido, mediana de 5 (carga 6): **2,38 ms** (2,20–2,72), antes 3,48, com todo ladrilho a 5 cm 1,76 (carga 4–5).
   - Bacia com Jolt: `fellThrough` 0, `deepest` −0,0392, C1 −0,0177, C2 0, C3 0,0332 (limite 0,035), C4 0,50. `engine-ground-inplace.test.ts` ganhou uma terceira cratera pequena e afiada para o ladrilho ficar sempre a 2,5 cm (o que se escreve no lugar é o mesmo campo).
 - **Baixos da revisão aprovada do #351**: `collisionFieldOf` (era `collisionStep`) não aloca por canto (as duas diagonais num `Float64Array` do módulo) e devolve o campo que montou para `shapeGround` (antes montado duas vezes). Histerese: um ladrilho na grade lida só passa ao campo de 5 cm abaixo de 4,5 mm (`COLLISION_ENTER`); um que já está nele só volta acima de 5 mm (o limite do dono, rígido); 4 mm derrubava o ladrilho da cratera da sala em que a peça repousa (4,47 mm) e o ganho junto. Testes: um ladrilho liso que fica nos 5 cm é escrito no lugar (o mesmo corpo, `updateHeights`, os mesmos raios de um ladrilho novo a menos de 2 mm); encostas de 0,65 e 0,68 (4,71 e 4,93 mm) ficam no campo que tinham. Sala: os mesmos 3 de 4 ladrilhos da cratera a 5 cm; `Step` do f1 mediana de 5 **2,43 ms** (2,17–2,50, carga 4–6).
+
+## T4.1 — Controlador de personagem atrás do contrato (2026-11-25)
+
+2026-11-25, Intel Core Ultra 9 275HX (24 threads), Linux, Node, Jolt `wasm-compat` em uma thread, mundo `KIT_WORLD` (120 Hz).
+
+**O que já existia e foi reaproveitado:** o `CharacterVirtual` do spike (`game-physics-jolt/src/character.ts`: `ExtendedUpdate`, degrau de 0,4 m, colar no chão, `mMaxStrength`), a limpeza em `world.dispose()` (T2.5) e a demonstração (a) do `extras.test.ts` (degraus, rampa, caixa, 50 controladores). O spike só existia no adaptador (`JoltCharacter`, `createCharacter(at, r, h, m, f)`), fora do contrato.
+
+**O que mudou**
+- Contrato (`game-physics/src/contract.ts`, sem citar o motor): `CharacterId`, `CharacterDesc` (`position`, `radius`, `halfHeight`, `mass`, `strength`, `stepHeight` 0,4 m, `maxSlopeDegrees` 45) e em `PhysicsWorld`: `createCharacter`, `moveCharacter(id, vx, vz, dt)`, `pushCharacter(id, impulso)`, `readCharacter`, `teleportCharacter`, `characterSupported`, `removeCharacter`.
+- Adaptador: `createCharacter` devolve `CharacterId`; o mundo guarda `Map<id, JoltCharacter>` (`world.characters`); `dispose` do mundo descarta o que sobrou (heap plana, `heap.test.ts` verde). Empurrão recebido: `pushCharacter` soma `impulso / massa` à velocidade pedida e some com `exp(-4 t)` (constante de 0,25 s); passa pelo mesmo varrimento, então parede segura.
+- `game-player`: porta `PlayerController` em `PlayerWorld.controller` (`move`, `read`, `teleport`) e `createPhysicsController(world, { position, collider })` sobre o contrato (`src/physics-controller.ts`; cápsula com a altura e o raio do `player.collider()`, 75 kg, 400 N). Com controlador, `x`, `y`, `z` do jogador são os pés dele e `blocked` não é consultado. Sem controlador o caminho de grade é o mesmo de antes (os 115 testes do pacote, incluindo o golden da equipe, continuam verdes sem mudança). Pulo de muro e `load` teleportam o controlador. Dependência nova: `@adatechnology/game-physics` (tipos); devDependency `@adatechnology/game-physics-jolt` (teste de integração).
+- Migrados para o contrato, sem afrouxar nada: `extras.test.ts` (a) e `heap.test.ts` (character).
+
+**Testes novos** (`game-physics-jolt/tests/character.test.ts`, 8; `game-player/tests/physics-controller.test.ts`, 7)
+
+| Caso | Resultado |
+|---|---|
+| degrau de 18 cm | pés a y = 0,18 (±0,005) depois de subir; parede de 50 cm detém (y < 0,05, z > -1,6) |
+| rampa de 30° | sobe e acompanha a rampa (|y - (-z tan 30°)| < 0,15; y > 1,0); rampa de 60° não sobe (y < 0,6) |
+| empurrar caixa de 30 kg | caixa passa de z -3,2 em 3 s a 1,2 m/s e o personagem vai atrás (z < -2,6); caixa de 500 kg (400 N não move) fica a menos de 10 cm |
+| ser empurrado | impulso 225 N s em 75 kg: 0,6 a 0,9 m (esperado 3 m/s x 0,25 s = 0,75 m), sem desvio lateral; 2250 N s contra parede a 0,3 m: para a menos de 0,35 m; parado sem comando não anda |
+| teleporte | pés exatamente no ponto e sem velocidade carregada |
+| `game-player` + Jolt + `PhysicsLoop` | sobe degrau de 18 cm (y 0,18), parede do mundo físico segura sem `blocked`, empurra caixa de 30 kg, é empurrado, `load` leva o controlador ao ponto salvo |
+
+**50 controladores** (`moveCharacter` dos 50, só o controlador, sem o `stepFixed`; 300 amostras depois de 60 de aquecimento; 50 pessoas andando em círculos, mundo `KIT_WORLD`): mediana **0,107 / 0,106 / 0,109 ms** (3 levas), p90 0,138–0,164, **p99 0,27–0,30**, máximo 0,31–0,39. Meta ≤ 0,5 ms: **cumprida na mediana e no p99**. A medição da demonstração (a) do `extras.test.ts` (mesmo mundo com degraus, rampa, caixa e outros 3 controladores) deu mediana 0,133, p90 0,166, **p99 0,547, máximo 0,729**: ali o p99 passa de 0,5 ms (picos isolados; o teste novo trava na mediana). Um controlador: 0,003 ms.
+
+**Decisão de §11 da arquitetura (corpo do personagem):** o `CharacterVirtual` continua sem corpo interno (`mInnerBodyShape`): destroço o atravessa e não gera linha de contato; quem pretende ferir o jogador usa `hurt`/`pushCharacter` do próprio sistema. Um corpo interno cobraria um corpo cinemático por jogador na camada `character` e não faria o personagem ser empurrado (ele empurraria o destroço de volta). Fica para quando o dano por contato for decidido.
+
+**Limites conhecidos (não escondidos)**
+- A cápsula tem a altura de pé: agachar não a encolhe (precisa de `setShape` de personagem no contrato; não pedido na T4.1).
+- Com o jogador derrubado, agarrado, em salto de muro ou `busy`, o `update` do jogador sai antes do movimento e o controlador não anda (nem cai) nesse passo.
+- O host chama `player.update(h, input)` no passo fixo (`beforeStep` da fase `actors`), não com o `dt` do quadro.
+
+**Gates**: `game-physics` 22 testes; `game-physics-jolt` 100 passam, 2 pulados, 26 arquivos (1 pulado); `game-player` 115 (13 arquivos); `tsc --noEmit` dos três limpo; `eslint src tests` dos três limpo; `kit-audit --check` 0 novos. `pnpm typecheck` da raiz para em `apps/desktop` (falta o `@adatechnology/serve-room-tool` buildado; não é desta mudança).
