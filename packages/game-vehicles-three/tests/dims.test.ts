@@ -1,4 +1,4 @@
-import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
+import { defaultVehicleFleet } from './default-fleet'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createVehicleKit } from '@adatechnology/game-vehicles'

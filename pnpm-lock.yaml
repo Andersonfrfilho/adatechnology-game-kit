@@ -2220,9 +2220,6 @@ importers:
         specifier: workspace:^
         version: link:../game-vehicles-proving
     devDependencies:
-      '@adatechnology/game-kit-defaults':
-        specifier: workspace:^
-        version: link:../game-kit-defaults
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt

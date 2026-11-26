@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
+import { defaultVehicleFleet } from './default-fleet'
 import { describe, expect, it, vi } from 'vitest'
 
 import { defaultEffectIds, defaultSoundIds, VEHICLES_AREA_ID, VEHICLE_SCENARIO_IDS, createVehiclesTestModule } from '../src'
