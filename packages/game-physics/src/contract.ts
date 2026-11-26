@@ -197,11 +197,76 @@ export interface WheelDesc {
   readonly driven: boolean
   readonly maxBrakeTorque: number
   readonly maxHandBrakeTorque: number
+  /** Grip along the wheel by slip ratio (0 = rolling, 1 = locked): (slip, grip coefficient) pairs, slip rising. The engine's own curve when omitted. */
+  readonly longitudinalFriction?: Curve
+  /** Grip across the wheel by slip angle in degrees (0 to 90): (angle, grip coefficient) pairs, angle rising. The engine's own curve when omitted. */
+  readonly lateralFriction?: Curve
+  /** Rotational inertia of the wheel and its spin damping (kg m^2, 1/s). */
+  readonly inertia?: number
+  readonly angularDamping?: number
+}
+
+/** A piecewise-linear curve: (x, y) pairs with x rising. */
+export type Curve = ReadonlyArray<readonly [number, number]>
+
+export type VehicleController = 'wheeled' | 'motorcycle' | 'tracked'
+
+/** One differential: the two wheels it drives (indices into `wheels`; `right` -1 for a wheel alone), its gearing and how it shares and holds the torque. */
+export interface DifferentialDesc {
+  readonly left: number
+  readonly right: number
+  /** `differentialRatio` of the vehicle when omitted. */
+  readonly ratio?: number
+  /** How much more torque the wheel with the grip may take than the other (1 = locked together, large = open); the engine's own when omitted. */
+  readonly limitedSlip?: number
+  /** Share of the engine torque this differential takes, against the others' shares (they are normalised). */
+  readonly torqueShare?: number
+}
+
+/** Gearbox timing; each is the engine's own when omitted. */
+export interface TransmissionDesc {
+  readonly shiftUpRpm?: number
+  readonly shiftDownRpm?: number
+  /** Seconds a shift takes, and how long the clutch takes to close after it. */
+  readonly switchTime?: number
+  readonly clutchReleaseTime?: number
+  /** Seconds to wait after a shift before the next one. */
+  readonly switchLatency?: number
+  readonly clutchStrength?: number
+}
+
+/** A motorcycle's lean (`controller: 'motorcycle'`); each is the engine's own when omitted. */
+export interface MotorcycleDesc {
+  /** Rad. */
+  readonly maxLeanAngle?: number
+  readonly leanSpring?: number
+  readonly leanDamping?: number
+}
+
+/** One side of a tracked vehicle: the wheels (indices) the track runs over, the one that drives it, and its grip and brake. */
+export interface TrackDesc {
+  readonly wheels: readonly number[]
+  readonly drivenWheel: number
+  readonly longitudinalFriction?: number
+  readonly lateralFriction?: number
+  readonly maxBrakeTorque?: number
+  readonly differentialRatio?: number
 }
 
 export interface VehicleDesc {
   readonly chassis: BodyDesc
   readonly wheels: readonly WheelDesc[]
+  /** The kind of controller; a car's (`wheeled`) when omitted. `tracked` takes `tracks`, reads `right` as the steer (a pivot at 0 forward) and ignores the wheels' `driven`. */
+  readonly controller?: VehicleController
+  /** The left track (the +x side of the chassis, forward +z and up +y), then the right one. */
+  readonly tracks?: readonly [TrackDesc, TrackDesc]
+  readonly motorcycle?: MotorcycleDesc
+  /** Engine torque by rpm / `maxRpm`, as a fraction of `maxTorque`: (x, y) pairs. The engine's own when omitted. */
+  readonly torqueCurve?: Curve
+  readonly engineInertia?: number
+  readonly transmission?: TransmissionDesc
+  /** One per driven axle, derived from the wheels when omitted. */
+  readonly differentials?: readonly DifferentialDesc[]
   /** Engine torque (N m) and rpm range. */
   readonly maxTorque: number
   readonly minRpm: number
@@ -218,6 +283,16 @@ export interface VehicleInput {
   readonly right: number
   readonly brake: number
   readonly handBrake: number
+}
+
+/** What `applyBuoyancy` needs of the water. */
+export interface FluidDesc {
+  readonly surface: Vec3
+  readonly normal: Vec3
+  readonly buoyancy: number
+  readonly linearDrag: number
+  readonly angularDrag: number
+  readonly flow?: Vec3
 }
 
 /** A shape made once and held by the engine (`createSharedShape`), for bodies that stay whole to share: a parked car's hulls. */
@@ -470,6 +545,12 @@ export interface PhysicsWorld {
   /** Whether the feet stand on something. */
   characterSupported(id: CharacterId): boolean
   removeCharacter(id: CharacterId): void
+  /**
+   * Floats a body in a fluid for one fixed step: call it in a `beforeStep` while it is in the water. `surface` is a point of the water plane, `normal` its up; `buoyancy`
+   * is 1 for a body that floats with its density equal to the water's, more for lighter; the drags slow it through the water; `flow` is the water's own velocity.
+   * Returns false when nothing of the body is below the surface.
+   */
+  applyBuoyancy(id: BodyId, fluid: FluidDesc): boolean
   /** How many of the vehicle's wheels touch the ground now (a car with none is airborne: its sleep rule reads this). */
   wheelContacts(id: VehicleId): number
   /** Every hit along the ray, nearest first, into `out` (cleared); returns the count. */

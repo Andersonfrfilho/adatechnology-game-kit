@@ -390,3 +390,58 @@ describe('T6.1b: what a car needs of the contract leaves the heap as it found it
     world.dispose()
   })
 })
+
+describe('T6.1b part 2: controllers, curves and buoyancy leave the heap as they found it (heap in cycles)', () => {
+  const made = async (): Promise<JoltWorld> => {
+    const world = (await createJoltEngine()).createWorld() as JoltWorld
+    ground(world, 50)
+    return world
+  }
+
+  const tracked: VehicleDesc = {
+    ...vehicleDesc,
+    controller: 'tracked',
+    wheels: [-1, 1].flatMap((side) => [1.2, 0.4, -0.4, -1.2].map((z) => ({ position: [side * 1.2, -0.3, z] as Vec3, radius: 0.35, width: 0.5, suspensionMin: 0.05, suspensionMax: 0.3, frequency: 1.2, damping: 0.6, maxSteer: 0, driven: false, maxBrakeTorque: 3000, maxHandBrakeTorque: 0 }))),
+    tracks: [{ wheels: [0, 1, 2, 3], drivenWheel: 3 }, { wheels: [4, 5, 6, 7], drivenWheel: 7 }],
+  }
+  const motorcycle: VehicleDesc = {
+    ...vehicleDesc,
+    controller: 'motorcycle',
+    motorcycle: { maxLeanAngle: 0.6, leanSpring: 500, leanDamping: 50 },
+    wheels: [0.7, -0.7].map((z) => ({ position: [0, 0.1, z] as Vec3, radius: 0.3, width: 0.12, suspensionMin: 0.1, suspensionMax: 0.3, frequency: 2, damping: 0.5, maxSteer: z > 0 ? 0.5 : 0, driven: z < 0, maxBrakeTorque: 500, maxHandBrakeTorque: 0 })),
+  }
+  const curved: VehicleDesc = {
+    ...vehicleDesc,
+    torqueCurve: [[0, 0.6], [0.5, 1], [1, 0.75]],
+    transmission: { shiftUpRpm: 5000, shiftDownRpm: 2000, switchTime: 0.3 },
+    differentials: [{ left: 0, right: 1, limitedSlip: 1.4, torqueShare: 0.5 }, { left: 2, right: 3, torqueShare: 0.5 }],
+    wheels: vehicleDesc.wheels.map((wheel) => ({ ...wheel, longitudinalFriction: [[0, 0], [0.06, 1.2], [1, 1]] as const, lateralFriction: [[0, 0], [3, 1.2], [20, 1], [90, 0.8]] as const })),
+  }
+
+  for (const [name, desc] of [['tracked', tracked], ['motorcycle', motorcycle], ['curves, transmission and differentials', curved]] as const) {
+    it(`a ${name} vehicle made, driven, made again and removed`, async () => {
+      const world = await made()
+      expectFlat(`controller-${name}`, world, () => {
+        const vehicle = world.createVehicle(desc)
+        world.driveVehicle(vehicle, { forward: 1, right: 0.3, brake: 0, handBrake: 0 })
+        world.step(1 / 30)
+        world.rebuildVehicle(vehicle, desc)
+        world.step(1 / 30)
+        world.removeVehicle(vehicle)
+      })
+      world.dispose()
+    })
+  }
+
+  it('buoyancy applied to a floating body, repeatedly', async () => {
+    const world = await made()
+    const body = world.createBody({ shape: { kind: 'box', half: [1, 0.25, 2] }, motion: 'dynamic', mass: 500, position: [8, -0.1, 0], user: 7 })
+    expectFlat('buoyancy', world, () => {
+      for (let i = 0; i < 4; i++) {
+        world.applyBuoyancy(body, { surface: [0, 0, 0], normal: [0, 1, 0], buoyancy: 1.1, linearDrag: 0.5, angularDrag: 0.5, flow: [1, 0, 0] })
+        world.step(1 / 60)
+      }
+    })
+    world.dispose()
+  })
+})

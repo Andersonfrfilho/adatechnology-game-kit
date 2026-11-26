@@ -57,7 +57,9 @@ export interface RagdollEntry {
 export interface VehicleEntry {
   readonly body: BodyId
   readonly constraint: JoltNS.VehicleConstraint
-  readonly controller: JoltNS.WheeledVehicleController
+  readonly controller: JoltNS.WheeledVehicleController | JoltNS.TrackedVehicleController
+  /** A tracked vehicle reads its input as a forward and one ratio per track. */
+  readonly tracked: boolean
   readonly listener: JoltNS.VehicleConstraintStepListener
   readonly tester: JoltNS.VehicleCollisionTester
   /** How many wheels it was made with: a motorbike has 2, and Jolt must not be asked for a third. */

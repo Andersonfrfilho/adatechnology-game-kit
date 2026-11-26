@@ -6,6 +6,7 @@ import type {
   BodyId,
   CharacterDesc,
   CharacterId,
+  FluidDesc,
   HeightRegion,
   JointDesc,
   JointId,
@@ -47,6 +48,7 @@ import { SINGLE_THREAD } from './threading'
 import type { JoltThreading } from './threading'
 import type { JoltWorldHost } from './world-host'
 import { moveCentreOfMass, createSharedShape, releaseSharedShape, setChildShape } from './shared-shapes'
+import { applyBuoyancy } from './buoyancy'
 import { createVehicle, driveVehicle, rebuildVehicle, removeVehicle, vehicleBody, vehicleWheels, wheelContacts } from './vehicles'
 import { readContacts, watchContacts } from './watched-contacts'
 
@@ -549,6 +551,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       this.r1.Set(point[0], point[1], point[2])
       this.bi.AddImpulse(e.id, this.v1, this.r1)
     } else this.bi.AddImpulse(e.id, this.v1)
+  }
+
+  applyBuoyancy(id: BodyId, fluid: FluidDesc): boolean {
+    return applyBuoyancy(this, id, fluid)
   }
 
   isSleeping(id: BodyId): boolean {
