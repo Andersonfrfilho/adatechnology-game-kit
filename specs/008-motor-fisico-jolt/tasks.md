@@ -178,22 +178,44 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-animals-three test` · `sonnet`.
 
 ## Fase 6 — Veículos
-> 🤖 Modelo: `sonnet` (T6.1 é 🧠 → `opus`; T6.5 → `haiku`)
+> 🤖 Modelo: `sonnet` (T6.1 é 🧠 → `opus`; T6.16, T6.19 e T6.20 → `haiku`). Plano da seção 21.1 de `design/veiculos.md`; ordem: T6.0 + T6.0b → T6.1 (dono) → T6.19 → T6.1b → T6.2/T6.2b/T6.3 → T6.4/T6.21 → T6.9 → T6.26 → T6.20 → T6.12 → T6.25 → T6.16.
+> A camada de corpo morto da Fase 5 se chama `corpse` (PR #521); a `ragdoll` da seção 6.4 do desenho é a mesma coisa e não se cria outra.
 
 - ✅ **T6.1 🧠 Mapa do arcade para o veículo de rodas** (feito em 2026-11-14, escopo ampliado pelo dono: batida que deforma, peças que soltam, toda a frota; `design/veiculos.md`, revisado por `architect` com 12 mudanças aplicadas; divisão 008/009 e D2, D3, D4, D9, D12, D13 decididas pelo dono em 2026-11-14; o plano de tasks da fase 6 está na seção 21 do desenho e entra aqui antes da T6.2): controles → `driveVehicle`; ajustes → curvas de atrito do pneu, curva de torque,
   marchas; carro criado já andando (rodas giradas e marcha); zonas de dano como filhos marcados. Em `design/veiculos.md`, revisado por
   `architect`. Mecânica? não · Aceite por comando? não · `opus`.
-- **T6.2 Implementar o mapa** em `game-vehicles-driving` atrás do contrato. Aceite: testes do pacote (os de andar e bater recalibrados com
-  motivo).
-  Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test` · `sonnet`.
-- **T6.3 Regra de sono do carro** (roda no ar girando mantém o carro acordado). Aceite: carro parado dorme em ≤ 3 s; batida a 60 km/h no meio-fio
-  de 30 cm dorme em ≤ 7 s.
+- **T6.0 Micro-benchmark do reticulado** (alimenta a decisão de seguir com a 009; só registra): XPBD com plasticidade em Node, 60–400 nós, 1 920/960/480/240 Hz, 1 e 2 iterações, massa realista (motor : painel ≈ 300:1), entrada por plano; relata ms, erro de deformação e deriva; 9 rodadas em máquina quieta.
+  Mecânica? sim · Aceite por comando? sim (à mão, nunca em commit; números em `evidence.md`) · `sonnet`.
+- **T6.0b Espião descartável** (um arquivo de teste em `game-physics-jolt`, Jolt cru permitido): um carro, uma parede, cinco componentes (para-choque dianteiro, capô, farol esquerdo, roda dianteira esquerda, suspensão dianteira esquerda); ms por etapa por quadro; composto mutável com 96 e 192 filhos (contato e `LinearCast`); skinning na CPU; critérios escritos de seguir ou parar a E3 (4.2: folga ≤ 3 cm, nó ≤ 1,5×, energia ≤ entrada; 15.1: carro ≤ 1,2 ms a 480 Hz).
+  Mecânica? não · Aceite por comando? sim (o teste imprime e confere os critérios) · `sonnet`.
+- **T6.1b Contrato e adaptador** (6.4): forma compartilhada e cópia no primeiro dano, filho por alça, `setMassProperties`, `setMotionQuality`, `watchContacts`, `vehicleWheels`, `rebuildVehicle`, camadas (sem `vehicle`–`agent`, `corpse` separada de `prop`, testador das rodas), controladores moto e esteira, curvas; correções de 3.4.
+  Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt test` e `heap.test.ts` · `sonnet`.
+- **T6.2 Mapa da condução** (seção 7), inclusive a bicicleta a pedal: `vehicleDescFromSemi`, controles → entrada, carro criado andando, arrasto, `status()`; os testes de andar e bater recalibrados com motivo.
+  Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
+- **T6.2b Rodador do banco de provas no Jolt:** frota terrestre inteira dentro das faixas.
+  Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-proving test` · `sonnet`.
+- **T6.3 Regra de sono do carro** (7.7; roda no ar girando mantém o carro acordado). Aceite: carro parado dorme em ≤ 3 s; batida a 60 km/h no meio-fio de 30 cm dorme em ≤ 7 s.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/vehicle.test.ts` · `sonnet`.
-- **T6.4 Teste de aceitação da frota** (`CLAUDE.md` §7) com o motor: tiro acerta o desenhado, marca vai com a peça. Goldens de geometria da
-  frota iguais.
+- **T6.4 Cascos convexos** (10.1, 10.3, 10.5): concavidade, extrusão para dentro, teto por classe medido e escrito aqui, H1–H6 nos 69 modelos; estacionado dinâmico com as guardas da 10.4.
+  Mecânica? não · Aceite por comando? sim: `vehicle-hulls.test.ts` · `sonnet`.
+- **T6.9 Peças soltam como corpos** (11, sem o interior), contabilidade de massa, no lugar do `fling` no modo Jolt; nível 2 de dano alimentado pelas linhas de contato do Jolt (`crashVehicle` pelo `tag`) e cascos refeitos ao assentar.
+  Mecânica? não · Aceite por comando? sim: `crash-parts.test.ts` · `sonnet`.
+- **T6.12 Aceitação da frota** (`CLAUDE.md` §7) com motor e cascos: tiro acerta o desenhado, marca vai com a peça; goldens da geometria intacta iguais.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-fleet test` · `sonnet`.
-- **T6.5 README, skills e `docs/veiculos-verificacao.md`.**
+- **T6.16 README, skills** (`kit-veiculos`), `docs/veiculos-verificacao.md` e `docs/veiculos-pecas-por-categoria.md`.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
+- **T6.19 Atualizar o §6 da `arquitetura.md`:** carro estacionado dinâmico (D3), sem par `vehicle`–`agent`, camada de corpo morto (`corpse`, da Fase 5), camada do testador das rodas.
+  Mecânica? sim · Aceite por comando? sim: `grep` das camadas novas na `arquitetura.md` · `haiku`.
+- **T6.20 Emenda do C8 no `spec.md`** (D2) com o texto aprovado pelo dono.
+  Mecânica? sim · Aceite por comando? sim: `grep` da emenda · `haiku`.
+- **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4).
+  Mecânica? sim · Aceite por comando? sim: `heap.test.ts`, `cascade.test.ts` · `sonnet`.
+- **T6.25 Sonda da sala do veículo no `leak.mjs`** (§8).
+  Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.
+- **T6.26 Atropelar pedestres e zumbis** (7.8).
+  Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-vehicles-driving test`, `vehicle.test.ts` · `sonnet`.
+
+> Vai para a spec 009 (E3–E5: reticulado `game-deform`, propriedades mecânicas, gerador e classes de viga, skinning, acoplamento contato → reticulado → cascos, vagas, salvar, interior e fogo, calibração, linha composta do C7, ocupantes ragdoll, reboque/ônibus, barco, voo, z-fighting nas batidas, aceitação com reticulado): lista na seção 21.2 de `design/veiculos.md`. A spec 009 ainda não foi criada.
 
 ## Fase 7 — Multidão, consultas e balística, reação em cadeia
 > 🤖 Modelo: `sonnet`
@@ -247,7 +269,7 @@ Testes de GPU e de navegador não rodam em commit, pre-push nem CI: sondas da sa
 conforme o tasks.md. Nos commits, só testes sem GPU.
 Modelos: Fase 1 → opus (T1.1 🧠 e T1.4 🧠 revisados por architect antes de implementar; T1.2 e T1.3 → executor model=sonnet) ·
 Fase 2 → executor model=sonnet (T2.3, T2.6, T2.7 → haiku) · Fase 3 → executor model=sonnet (T3.9 → haiku) ·
-Fase 4 → sonnet (T4.5 → haiku) · Fase 5 → sonnet (T5.3 🧠 → opus) · Fase 6 → sonnet (T6.1 🧠 → opus; T6.5 → haiku) ·
+Fase 4 → sonnet (T4.5 → haiku) · Fase 5 → sonnet (T5.3 🧠 → opus) · Fase 6 → sonnet (T6.1 🧠 → opus; T6.16, T6.19, T6.20 → haiku) ·
 Fase 7 → sonnet · Fase 8 → haiku (T8.1–T8.3) e sonnet (T8.4–T8.6) · revisão final → code-reviewer model=sonnet.
 Escalada: gate falhou 2x → sobe um nível (haiku→sonnet→opus) e registra em evidence.md.
 Cada task fecha com typecheck + testes sem GPU dos pacotes tocados + lint dos arquivos + kit-audit --check + commit isolado, com
