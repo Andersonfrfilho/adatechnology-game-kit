@@ -679,10 +679,9 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
   let slotCounter = 0
   let objectsRevision = 0
   const putObject = (id: string, object: ObjRT): void => {
-    if (!objects.has(id)) {
-      slots.set(id, ++slotCounter)
-      objectsRevision++
-    }
+    if (!objects.has(id)) slots.set(id, ++slotCounter)
+    // every swap of an `ObjRT` counts: `uncovered` holds the objects themselves, so a rebuilt object under an old id would leave the old one in it
+    objectsRevision++
     objects.set(id, object)
   }
   const dropObject = (id: string): void => {
