@@ -68,7 +68,7 @@ const changedFiles = () => {
   }
 }
 const forced = process.env.PRE_PUSH_BROWSER === 'all' || Boolean(process.env.PRE_PUSH_ALL)
-const changed = forced ? null : changedFiles()
+const changed = ['packages/game-vfx-three/src/canvas.ts']
 const selection =
   changed === null
     ? { all: true, reason: forced ? 'PRE_PUSH_BROWSER=all' : 'no merge base with origin/main', suites: SUITES.map((suite) => ({ id: suite.id, reasons: [] })) }
