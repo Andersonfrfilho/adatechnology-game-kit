@@ -3429,3 +3429,28 @@ Resultado honesto: causas achadas para quase todos, **nenhuma correção commita
 **Goldens** (não regravados; `exact-golden` rodado de novo no `HEAD`): `destruction/breach` `701da5b8`, 832 objetos (esperado `4a2638b7`, 842); `destruction/spall` `1ef91d0a`, 824 (esperado `e112e96c`, 851); `destruction/fracture` `eeee1eaa`, 911 (esperado `66c76666`, 935). Os mesmos números da primeira rodada: os três seguem mudando.
 
 **Opções para o dono:** (1) aceitar o remendo do sulco e reescrever os testes de livro/lata para não depender da emenda do chão, o que é mudança de teste; (2) marcar como fixos (plantados) mailbox, tree_small, pedestal_basin no `spec.ts` (`rooted`/`sunk`), o que é dado do catálogo e tira o teste do que ele cobre; (3) manter `own` para o que depende de `tip`/`hinge`/apoio na caixa até a T8.1.
+
+### T3.10, rodada 2 (2026-11-26): correções por decisão do dono
+
+Cada correção: teste vermelho antes, verde depois, commit isolado. Os mesmos testes seguem verdes com `PIECE_SOLVER=own` (a única falha do `own` na suíte inteira é `settle-every-material`, a mesma da `main` vermelha que outro agente investiga).
+
+| Teste | Causa | Correção (commit) | Antes → depois |
+|---|---|---|---|
+| `rolling` "fifty cans" | `BoxShapeSettings` arredonda as arestas; a emenda entre ladrilhos do chão era um sulco em V | `ShapeDesc` box com `convexRadius` opcional, 0 nos ladrilhos planos e nos passos (`db68a522e`) | y mínimo 0,0263 → passa |
+| `book-knocked-over` ×3, `rolling` guarda-roupa, `pieces-tipping` porta fora da origem | passavam por causa do sulco (livro inclinado 12° na emenda (0,0); lata presa nela; porta caía mais cedo) | testes reescritos, critério igual (ver abaixo) | verdes no Jolt e no `own` |
+| `furniture-laid-still` (72 partes) | (a) a regra de tombar lia o centro da caixa como centro de massa; (b) pia de coluna e bicicleta: no Jolt o apoio é o pé desenhado, a regra os derrubava; (c) caixa de correio, varal, árvore pequena e churrasqueira de tijolo não ficam em pé soltas no mundo real | `PieceBody.massCentre` (centro de cada parte pesado pela massa, em `setContacts`) lido por `topple`; peça que nunca perdeu parte apoia na caixa (contrato de `CONTACT_MESHES`), a que perdeu (`apart`) apoia no que sobrou, e `pieces-stack` "board on two legs" segue verde; `PLANTED` em `furniture/spec.ts` torna fixas mailbox, correio, clothesline, tree_small, bbq_simple (`3e7656e05`) | 72 partes → 0; goldens das casas iguais |
+| `shelf-swings-on-hinge` | `PieceSystem.hinge` era só do solver próprio | âncora fixa no parafuso e junta `hinge` do contrato; solta em 40° ou 1,5 s como o `own` (`7965ef7e1`) | y livre 0,530 → passa |
+
+Reescritas (motivo de cada):
+- `book-knocked-over` queda de 0,6 m: o livro cai chato sobre a aresta de 5 cm e empurra na vertical; no Jolt só tomba se o peso passar da borda (x 0,15); no `own` a regra `tip` aceita x 0,03. Varrida medida: Jolt tomba em x 0,15 (e 0,08 a 1 m); `own` só até x 0,05. Passou a `LANDING_X = IS_JOLT ? 0.15 : 0.03`.
+- `book-knocked-over` arremesso lateral a 1 m/s: x 0,08 → 0,2 (tomba nos dois solvers, acordado e dormindo; vizinhos 0,25 também).
+- `rolling` guarda-roupa: a lata para encostada, sem atravessar (0,467 = 0,5 − raio). **Não quica no Jolt**: a caixa tem restituição 0 por regra do kit (`material()` em `engine-pieces.ts`). Dar restituição às caixas reprova `topple-energy` ×2 (a caixa ganha energia ao pousar: o Jolt aplica o máximo das duas nos contatos mantidos, não a média). O quique segue exigido no `own`. **Decisão do dono**: a lata deve quicar no móvel?
+- `pieces-tipping` porta: sem o sulco a porta leva 2,8 s para cair e o sono vem depois dos 3 s; janela 5 s, mesmo critério.
+
+**Abertos (nenhum afrouxado):**
+- `rolling` restituição lata-lata (0,867 em vez de 2,4): limite do motor, parado a pedido. Medição isolada: esfera e caixa dão e = 0,6; cilindro 0,46; cápsula/casco de 24 faces também abaixo; com e = 1, caixa 1,00 e cilindro 0,89. O teste lê o primeiro quadro acima de 0,05 m/s (valor final 0,812/2,188, e efetivo 0,459).
+- `asleep-on-steep-top` (mesa longa): celular e laptop ficam parados (v = 0, acordados, 41,6°); a lata desliza. Com tampo único dinâmico a 42° os três deslizam. Não é sono (acordados desde o início), nem iterações (`JOLT_ITERATIONS=30`, `JOLT_STEP=240`), nem raio das arestas das tábuas (0 nelas). A inflação mínima (`MIN_PIECE_HALF`, `pieces.ts:641`) explica o laptop (com 0,001 ele desliza) mas **não o celular** (segue em 0,74). Causa não achada.
+- `bookcase-topple` (orçamento): 24 livros parados (v = 0, `still` 10 s) ficam acordados; 24 = `SUGGESTED_MAX_AWAKE_PIECES`. Sem `maxAwakePieces` passa; com `settledBatches` sozinho passa. A interação do orçamento (`keepBudget` põe 28 para dormir) com as ilhas do Jolt deixa os 24 restantes acordados. Não corrigido.
+- `separate-pair` colapso: o bloco 3 (inclinado 45°, apoiado na aresta de outros, v = 0, e acordado ele fica) reprova só a heurística `standsOnSomething` (canto sobre topo). Física plausível; mexer na heurística é afrouxar o teste.
+- `engine-ground-ahead`: o motor só relê ladrilhos ao alcance de peça acordada (spec 010 T2.3); dois dos nove ficam sujos (fora da margem de 0,5 m da placa). O teste espera os nove limpos. Conflito entre o teste e o desenho preguiçoso.
+- **Dependência (item 3, não mexido):** inflação de lâmina fina (`MIN_PIECE_HALF` 0,02 em `renderer.ts:145/804`, mínimo 0,01 em `pieces.ts:641`), na frente do outro agente (`fix-madeira-samba`). Medido: com 0,001 o laptop da mesa desliza; o celular não.
