@@ -30,7 +30,7 @@ const stubRenderer = (): never => {
   const dom = document.createElement('canvas')
   return { domElement: dom, shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as never
 }
-const makeRoom = (physics: 'own' | ReturnType<typeof suiteRoomPhysics>): TestRoom => {
+const makeRoom = (physics: ReturnType<typeof suiteRoomPhysics>): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
   return createTestRoom({ physics, THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, debris: { eventBudgetMs: Infinity } })
@@ -61,9 +61,9 @@ const summary = async (room: TestRoom, id: string): Promise<{ checks: { label: s
 }
 
 describe('team golden: the module of the Viveiro artifact against the TypeScript module', () => {
-  const roomPair = (physics: 'own' | 'engine'): { page: TestRoom; mine: TestRoom } => {
-    const page = makeRoom(physics === 'own' ? physics : suiteRoomPhysics())
-    const mine = makeRoom(physics === 'own' ? physics : suiteRoomPhysics())
+  const roomPair = (): { page: TestRoom; mine: TestRoom } => {
+    const page = makeRoom(suiteRoomPhysics())
+    const mine = makeRoom(suiteRoomPhysics())
     // the artifact was written for a room whose weapons fire the moment they are taken; the room of the kit has a draw time, so the page's `setTool` waits for it
     const pageSetTool = page.setTool.bind(page)
     page.setTool = (id: string): void => {
@@ -74,7 +74,7 @@ describe('team golden: the module of the Viveiro artifact against the TypeScript
     mine.loadModule(myModule() as never)
     return { page, mine }
   }
-  const { page, mine } = roomPair('engine')
+  const { page, mine } = roomPair()
 
   it('has the same 18 items, with the same names, in both languages', () => {
     expect(VEGETATION_ITEM_IDS).toHaveLength(18)
@@ -101,10 +101,8 @@ describe('team golden: the module of the Viveiro artifact against the TypeScript
   })
 
   it.each(VEGETATION_SCENARIO_IDS.map((id) => [id]))('%s gives the same checks and the same log lines', async (id) => {
-    // the lighter does not light the crown on the engine's loop (the crown stays at 20 C): that scenario keeps the own solver until it is looked into
-    const rooms = id === 'veg_lighter_ignites_foliage' ? roomPair('own') : { page, mine }
-    const want = await summary(rooms.page, id)
-    const got = await summary(rooms.mine, id)
+    const want = await summary(page, id)
+    const got = await summary(mine, id)
     expect(want.checks.length).toBeGreaterThan(0)
     expect(want.checks.filter((check) => !check.ok), 'the artifact fails its own check on this room').toEqual([])
     expect(Object.keys(want.lines).length).toBeGreaterThan(id === 'veg_walk_on_grass' ? 0 : 2)

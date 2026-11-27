@@ -274,7 +274,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     quality,
     // the player's graphics settings (game-graphics): only on a renderer the room owns, and only when the page asks (the example page does; tests keep the fixed look)
     graphics: options.graphics ? { ...(options.graphics === true ? {} : options.graphics), loading, label: t('loading.graphics'), ui: options.ui !== false } : false,
-    debris: { ...options.debris, blast: options.debris?.blast ?? false, groundWorker: options.debris?.groundWorker ?? false },
+    debris: { ...options.debris, blast: options.debris?.blast ?? false, groundWorker: options.debris?.groundWorker ?? false, heldIgnores: () => player.shadowBody() },
     blastPacing: options.blastPacing ?? false,
     blastShove: options.blastShove,
     lightSizes: options.lightSizes,
@@ -1223,9 +1223,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       const fz = -Math.cos(player.yaw)
       const rx = Math.cos(player.yaw)
       const rz = -Math.sin(player.yaw)
-      const side = ((slot++ % 5) - 2) * 0.55
-      const x = camera.position.x + fx * 2.4 + rx * side
-      const z = camera.position.z + fz * 2.4 + rz * side
+      const side = ((slot % 5) - 2) * 0.55, depth = 2.4 + Math.floor(slot++ / 5) * 0.9
+      const x = camera.position.x + fx * depth + rx * side
+      const z = camera.position.z + fz * depth + rz * side
       const lim = arenaSize - 1
       pos = [Math.max(-lim, Math.min(lim, x)), groundAt(x, z), Math.max(-lim, Math.min(lim, z))]
     }

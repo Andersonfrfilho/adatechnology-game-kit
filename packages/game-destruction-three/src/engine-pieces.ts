@@ -66,6 +66,8 @@ export interface EnginePieceOptions {
   readonly blastTiles?: number
   /** Lay the ground under each part box of a piece of several parts, not under the box around all of them (default off: the same tiles as before). */
   readonly tilesUnderParts?: boolean
+  /** The body a piece in a hand passes through (the holder's own): ignored while the piece is held, met again when it is let go. */
+  readonly heldIgnores?: () => BodyId | undefined
   /**
    * Where the tiles that read the ground are made (`GroundWorkerPort`; `RendererOptions.groundWorker`): with it, a tile asked for at update N is applied at N + `groundWorkerFrames`
    * (`GroundSchedule`), the same tile whether the worker answered or not; a piece whose ground is not laid yet waits held still. Left out (the default), every tile is made in
@@ -823,6 +825,7 @@ export class EnginePieces {
         held: b.held, sleeping: b.sleeping, seen: this.updates, frozen: false, before: [0, 0, 0], beforeVy: 0, stepped: false, side: [1, 1], isSlipping: false,
       }
       this.links.set(b, link)
+      if (b.held) this.passThroughHolder(id, true)
       this.byUser.set(user, b)
       this.byBody.set(id, b)
       this.bodyIds.add(id)
@@ -860,6 +863,11 @@ export class EnginePieces {
     }
   }
 
+  private passThroughHolder(id: BodyId, ignore: boolean): void {
+    const holder = this.o.heldIgnores?.()
+    if (holder !== undefined) this.world.ignorePair(id, holder, ignore)
+  }
+
   /** Brings the body of a piece up to date with what changed on the piece since the last step (moved, pushed, picked up, put to sleep). */
   private sync(b: PieceBody, dt: number, h: number): void {
     const c = this.centre(b)
@@ -872,6 +880,7 @@ export class EnginePieces {
     if (b.held !== link.held) {
       link.held = b.held
       this.world.setMotion(link.id, b.held ? 'kinematic' : 'dynamic')
+      this.passThroughHolder(link.id, b.held)
     }
     if (b.held) {
       this.world.moveKinematic(link.id, [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], h)

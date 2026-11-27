@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { PhysicsServices } from '@adatechnology/game-physics'
+import type { BodyId, PhysicsServices } from '@adatechnology/game-physics'
 import type { Scheduler } from '@adatechnology/game-runtime'
 
 import { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED } from './locomotion'
@@ -100,6 +100,8 @@ export interface Player {
   readonly flying: boolean
   /** The physics services with every swept piece born from now on ignoring the player's own body (what leaves the hand must not hit it). */
   ignoringOwnBody(services: PhysicsServices): PhysicsServices
+  /** The body the world sees of the player (engine only), for what the player carries to pass through. */
+  shadowBody(): BodyId | undefined
   /** The body is a walker in the physics world (`PlayerOptions.engine`). */
   readonly engine: boolean
   toggleFly(): boolean
@@ -477,6 +479,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return locomotion.flying
     },
     ignoringOwnBody: (services) => servicesIgnoringOwnShadow(services, () => locomotion.shadowBody?.()),
+    shadowBody: () => locomotion.shadowBody?.(),
     toggleFly: () => locomotion.toggleFly(),
     setFly: (enabled) => locomotion.setFly(enabled),
     get crouching() {

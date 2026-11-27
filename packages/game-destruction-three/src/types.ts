@@ -8,6 +8,7 @@
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
 import type { EngineImpactsOptions } from './engine-impacts'
+import type { BodyId } from '@adatechnology/game-physics'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue, DeferredQueueOptions, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
@@ -97,6 +98,8 @@ export interface RendererOptions {
    * all of them, so a piece 23 m across and mostly air gets the tiles (and the solid under each) it touches, not 70. Default off: the same tiles as before (T3.8v).
    */
   tilesUnderParts?: boolean
+  /** With an engine: the body a piece in a hand passes through (the holder's own), so a carried thing wider than the arm's reach does not shove the holder. */
+  heldIgnores?: () => BodyId | undefined
   /**
    * Fit the boxes a part drawn by a range of a merged mesh gets when it comes loose (`fitOrientedBoxes`) ahead of the blow, a part at a time with the time a frame has left, so the frame
    * that splits a house reads them instead of fitting them. They are fitted in the space of the part's own vertices and carried to where the part is by its pose (a turn and a

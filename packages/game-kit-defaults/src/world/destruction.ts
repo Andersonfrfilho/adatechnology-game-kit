@@ -17,7 +17,7 @@ import type {
   SettledBatchOptions,
   SoundDetail,
 } from '@adatechnology/game-destruction-three'
-import type { BlastQuery } from '@adatechnology/game-physics'
+import type { BlastQuery, BodyId } from '@adatechnology/game-physics'
 import type { SpriteKindDef } from '@adatechnology/game-vfx'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 
@@ -40,6 +40,8 @@ export type KitWorldDebrisOptions = {
   /** The blast debris policy (D4: wake queue by step cost, how many pieces enter physics, far and old debris). On by default; `false` turns it off. */
   readonly blast?: BlastDebrisOptions | false
   readonly tilesUnderParts?: boolean
+  /** The body a piece in a hand passes through (the holder's own). */
+  readonly heldIgnores?: () => BodyId | undefined
   /** Where the engine's ground tiles are made: on by default through the coordinator when it has real workers; `false` makes them on the main thread. */
   readonly groundWorker?: GroundWorkerPort | false
   /** The coordinator for the fixed colliders measured from what is drawn (`destruction.static-colliders`). Default none: measured here. */
@@ -138,6 +140,7 @@ export function createDestructionHost(deps: DestructionDeps): KitWorldDestructio
     ...(debris?.maxAwakePieces !== undefined ? { maxAwakePieces: debris.maxAwakePieces } : {}),
     ...(debris?.maxAwakeFragments !== undefined ? { maxAwakeFragments: debris.maxAwakeFragments } : {}),
     ...(debris?.tilesUnderParts ? { tilesUnderParts: true } : {}),
+    ...(debris?.heldIgnores ? { heldIgnores: debris.heldIgnores } : {}),
     ...(groundWorker ? { groundWorker } : {}),
     ...(debris?.workers ? { workers: debris.workers } : {}),
     ...((debris?.rayBroadPhase ?? deps.hasLoop) ? { rayBroadPhase: true } : {}),

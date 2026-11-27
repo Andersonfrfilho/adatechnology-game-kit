@@ -73,6 +73,8 @@ export interface PieceSystemOptions {
   maxAwake?: number
   /** Engine only: lay the ground under each part box of a piece of several parts, not under the box around all of them (default off; `RendererOptions.tilesUnderParts`). */
   tilesUnderParts?: boolean
+  /** Engine only: the body a piece in a hand passes through (the holder's own). */
+  heldIgnores?: () => BodyId | undefined
   /** Engine only: where the ground tiles are made, on a fixed schedule (`RendererOptions.groundWorker`); default none. */
   groundWorker?: GroundWorkerPort
   groundWorkerFrames?: number
@@ -464,6 +466,7 @@ export class PieceSystem {
           onKnock: o.onKnock,
           onHardLanding: o.onHardLanding,
           ...(o.tilesUnderParts ? { tilesUnderParts: true } : {}),
+          ...(o.heldIgnores ? { heldIgnores: o.heldIgnores } : {}),
           ...(o.groundWorker ? { groundWorker: o.groundWorker } : {}),
           ...(o.groundWorkerFrames !== undefined ? { groundWorkerFrames: o.groundWorkerFrames } : {}),
         })

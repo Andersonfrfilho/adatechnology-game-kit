@@ -307,7 +307,7 @@ describe('blockers', () => {
 
 describe('a carried thing and the walls of a module', () => {
   it('stays on the player\'s side of a module\'s wall as the player walks up to it, and lands there when let go', () => {
-    const room = makeRoom({ physics: 'own' })
+    const room = makeRoom()
     room.loadModule(benchModule((host) => { host.addBlocker?.((x, z, radius) => x + radius > 0.8 && x - radius < 1.2 && z > -2 && z < 6) }))
     room.look([-0.6, 1.6, 4], [-0.6, 0.1, 3.3])
     const { objectId } = room.spawn('wooden_crate', [-0.6, 0, 3.3], 0)
