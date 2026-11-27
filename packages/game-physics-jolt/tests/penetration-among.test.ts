@@ -23,12 +23,17 @@ const BOXES: Array<{ center: Vec3; half: Vec3; among: boolean }> = [
   { center: [2.2, -0.1, 2.4], half: [1, 0.05, 1], among: false },
 ]
 
-/** The hits the last query's collector holds on bodies outside `among`: what reached the narrow phase without being asked for. */
-const hitsOutside = (world: JoltWorld, among: ReadonlySet<BodyId>): number => {
-  const hits = world.collideCollector.mHits
-  let n = 0
-  for (let i = 0; i < hits.size(); i++) if (!among.has(hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId)) n++
-  return n
+/** Counts the hits the collector is handed on bodies outside `among` (the collector keeps none): what reached the narrow phase without being asked for. */
+const watchOutside = (world: JoltWorld, among: ReadonlySet<BodyId>): { readonly count: () => number; readonly reset: () => void } => {
+  const collector = world.collideCollector
+  const J = world.J
+  const addHit = collector.AddHit
+  let outside = 0
+  collector.AddHit = (pointer: number) => {
+    if (!among.has(J.wrapPointer(pointer, J.CollideShapeResult).mBodyID2.GetIndexAndSequenceNumber() as BodyId)) outside++
+    addHit(pointer)
+  }
+  return { count: () => outside, reset: () => { outside = 0 } }
 }
 
 /** A world with the ground (a crater as a height field) and the boxes, the ones outside `among` only when `withOthers`; then a thin plate. */
@@ -49,6 +54,7 @@ describe('penetration among a set of fixed bodies', () => {
   it('answers the same depth and way out as a world that holds only those bodies, at every pose, with the ground and other boxes around', async () => {
     const full = await build(true)
     const only = await build(false)
+    const watch = watchOutside(full.world, full.among)
     const a = new Float64Array(3)
     const b = new Float64Array(3)
     let overlapping = 0
@@ -61,9 +67,10 @@ describe('penetration among a set of fixed bodies', () => {
       only.world.setPose(only.plate, position, rotation, false)
       a.fill(0)
       b.fill(0)
+      watch.reset()
       const depth = full.world.penetration!(full.plate, a, full.among)
       // nothing outside the set reached the narrow phase (the old query collided with the ground and the other boxes, and threw the hits away after)
-      expect(hitsOutside(full.world, full.among)).toBe(0)
+      expect(watch.count()).toBe(0)
       expect(depth).toBe(only.world.penetration!(only.plate, b))
       expect([...a]).toEqual([...b])
       if (depth > 0) overlapping++
@@ -76,10 +83,12 @@ describe('penetration among a set of fixed bodies', () => {
   it('a plate in the ground: the ground overlaps it, and only the query without a set meets it', async () => {
     const full = await build(true)
     full.world.setPose(full.plate, [2, -0.25, 2], [0, 0, 0, 1], false)
+    const watch = watchOutside(full.world, full.among)
     full.world.penetration!(full.plate, new Float64Array(3))
-    expect(hitsOutside(full.world, full.among)).toBeGreaterThan(0)
+    expect(watch.count()).toBeGreaterThan(0)
+    watch.reset()
     full.world.penetration!(full.plate, new Float64Array(3), full.among)
-    expect(hitsOutside(full.world, full.among)).toBe(0)
+    expect(watch.count()).toBe(0)
     full.world.dispose()
   })
 

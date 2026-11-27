@@ -5091,3 +5091,22 @@ Peso novo do Jolt por arquivo: criar o motor wasm custa ~0,3 s por arquivo de te
 - **T8.2:** docs e skills dizem que o Jolt é o motor único (`game-physics-jolt`); o contrato (`game-physics`) não cita motor; `'own`, `PIECE_SOLVER` e `?solver=own` ficam descritos como existentes só até a T8.1 apagá-los. Alterados: `.claude/skills/kit-base/references/game-physics.md`, `.claude/skills/kit-base/references/game-physics-jolt.md`, `packages/game-physics/README.md`, `packages/game-physics-jolt/README.md`, `packages/game-kit-defaults/README.md`, `apps/desktop/README.md`, `docs/criterios-fisica-objetos.md`. `CLAUDE.md` não cita o solver próprio (o §12 da raiz é objetos quebrados), então não mudou. `REPORT-ENGINE-jolt.md` e `GATE0-REPORT-jolt.md` já estão em `decision/`.
 - **T8.3:** a spec antiga `specs/008-solver-de-contato-dos-destrocos/` não existia em `origin/main` (só no commit `5ae2a9aa8`, em branches de spike); foi restaurada desse commit como registro histórico, com o aviso "Substituída" no topo do `spec.md`. Aceite: `grep -q "Substituída" specs/008-solver-de-contato-dos-destrocos/spec.md`.
 - **tasks.md:** removidas as linhas duplicadas antigas `- [ ] TS.6` e `- [ ] TS.5`; as versões ✅ ficam.
+
+## T8.1 (PR 0, parte 3) — `Aborted(OOM)` do lançador na área de terreno (2026-11-27)
+Worktree `spec-008-own-a`, branch `spec/008-sem-own-a`, sobre `spec/008-salas-no-jolt`.
+
+**Causa real.** Não era só o pico de uma chamada: o adaptador usava `CollideShapeAllHitCollisionCollector` e `CastShapeAllHitCollisionCollector`, que guardam um `CollideShapeResult` por triângulo (com a face) e **mantêm a capacidade do vetor depois do `Reset`**. Uma esfera de 12 m e os `sphereCastAll` do broad phase sobre o campo de alturas do chão (257 x 257 células no teste novo; 2 382 a 5 043 triângulos na área de terreno) deixavam **18 368 408 bytes** retidos no mundo, e a sala já ocupa ~39 MB num heap fixo de 134 217 728: o anel de mundos estourava. Além disso, as matrizes `RMat44` de `overlapSphere` e `sphereCastAll` nunca eram destruídas (vazamento pequeno, por chamada).
+
+**Conserto** (`packages/game-physics-jolt/src/queries.ts`, `world.ts`, `world-host.ts`): os dois coletores viram `CollideShapeCollectorJS`/`CastShapeCollectorJS`, que entregam cada acerto a um sorvedouro e não guardam nenhum. `overlapSphere`, `overlapShape` e `contactBodies` somam cada corpo uma vez; `sphereCastAll` fica com um acerto por corpo (o mais próximo, ordenado por distância, como o contrato diz: "every body it meets, nearest first"); `penetration` fica só com o mais fundo. As matrizes passam a ser destruídas (`finally`). O `rayAll` não mudou (raio contra campo de alturas dá poucos acertos).
+
+**Teste novo** `game-physics-jolt/tests/query-per-body.test.ts` (campo de alturas de 257 x 257 e uma caixa):
+
+| Caso | Antes | Depois |
+|---|---|---|
+| `overlapSphere` 12 m | 2 corpos | 2 corpos |
+| `sphereCastAll` rente ao chão | **120 acertos** | 2 (chão e caixa) |
+| heap do wasm após 220 disparos (overlap + 2 casts) | **+18 368 408 B** | **+128 B** (limite do teste: 64 KiB) |
+
+`penetration-among.test.ts` contava os acertos de fora do conjunto lendo `mHits` do coletor; agora conta os que o coletor recebe (mesma asserção: zero fora do conjunto com `among`, mais de zero sem ele).
+
+**Salas.** `physics: 'own'` saiu de `game-test-room/tests/launcher-terrain.test.ts` (28 testes) e `water-blasts.test.ts` (6): **34 de 34 passam no Jolt, sem mudar asserção**.

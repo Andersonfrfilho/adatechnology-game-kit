@@ -48,7 +48,7 @@ type Area = {
 
 /** A fresh room with the ground area open and `weapon` in hand: the craters and the debris of other launchers do not count. */
 const openGroundArea = (weapon: string): Area => {
-  const room = makeRoom({ physics: 'own' })
+  const room = makeRoom()
   const explosions = explosionsOf(room)
   room.loadModule(createTerrainTestModule())
   room.openArea('terrain')
