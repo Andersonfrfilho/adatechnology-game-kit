@@ -59,7 +59,10 @@ const configureDrivetrain = (controller: JoltNS.WheeledVehicleControllerSettings
 
 const addDifferentials = (J: Jolt, controller: JoltNS.WheeledVehicleControllerSettings, desc: VehicleDesc): void => {
   controller.mDifferentials.clear()
-  for (const diff of differentialsOf(desc)) {
+  const differentials = differentialsOf(desc)
+  // Jolt gives each differential the whole engine torque unless told a share: three driven axles would pull with three engines
+  const evenShare = 1 / differentials.length
+  for (const diff of differentials) {
     const d = new J.VehicleDifferentialSettings()
     d.mLeftWheel = diff.left
     d.mRightWheel = diff.right
@@ -67,7 +70,7 @@ const addDifferentials = (J: Jolt, controller: JoltNS.WheeledVehicleControllerSe
     if (diff.right < 0) d.mLeftRightSplit = 0
     d.mDifferentialRatio = diff.ratio ?? desc.differentialRatio
     if (diff.limitedSlip !== undefined) d.mLimitedSlipRatio = diff.limitedSlip
-    if (diff.torqueShare !== undefined) d.mEngineTorqueRatio = diff.torqueShare
+    d.mEngineTorqueRatio = diff.torqueShare ?? evenShare
     controller.mDifferentials.push_back(d)
     J.destroy(d)
   }
@@ -93,6 +96,8 @@ export const trackedController = (J: Jolt, desc: VehicleDesc): JoltNS.TrackedVeh
   if (!desc.tracks) throw new Error('game-physics-jolt: a tracked vehicle needs `tracks`')
   const controller = new J.TrackedVehicleControllerSettings()
   configureDrivetrain(controller, desc)
+  // Jolt drives each track with the engine's whole torque (two tracks pull as two engines do): the engine's is shared between them
+  controller.mEngine.mMaxTorque = desc.maxTorque / desc.tracks.length
   desc.tracks.forEach((track, side) => {
     const settings = controller.get_mTracks(side)
     settings.mDrivenWheel = track.drivenWheel

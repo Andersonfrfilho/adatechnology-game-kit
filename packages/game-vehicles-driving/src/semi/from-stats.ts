@@ -33,17 +33,31 @@ export const RIDER_MASS_KG = 75
  * rating 1 the Honda PCX 160 (11.8 kW at 8 500 rpm, 132 kg: https://zigwheels.com/honda-bikes/pcx150/specifications) and rating 10 the Kawasaki Ninja 400 (33.4 kW at 10 000 rpm, 168 kg:
  * https://www.motorcyclespecs.co.za/model/kawasaki/kawasaki_ninja_400_21.html), linear in between.
  */
-/** Fitted: with the real power to weight alone the physics engine's bikes take 8.6 to 8.9 s to 100 km/h at rating 9 against the 3.9-8.1 s band; 1.3 puts all ten models inside the band (evidence T6.2c). */
-const MOTORCYCLE_POWER_FACTOR = 1.3
 const MOTORCYCLE_POWER_RATING_1 = 11800 / (132 + RIDER_MASS_KG)
 const MOTORCYCLE_POWER_RATING_10 = 33400 / (168 + RIDER_MASS_KG)
-const motorcyclePower = (rating: number): number => MOTORCYCLE_POWER_FACTOR * (MOTORCYCLE_POWER_RATING_1 + ((MOTORCYCLE_POWER_RATING_10 - MOTORCYCLE_POWER_RATING_1) * (rating - 1)) / 9)
+const motorcyclePower = (rating: number): number => MOTORCYCLE_POWER_RATING_1 + ((MOTORCYCLE_POWER_RATING_10 - MOTORCYCLE_POWER_RATING_1) * (rating - 1)) / 9
+
+/**
+ * What the physics engine's cars and motorbikes get on top of the ficha's torque. The torque per kg was set against the semi-simulation, which has no rotating inertia (an engine and its wheels
+ * turn as the vehicle speeds up), no gearshift that cuts the drive and no spinning wheel; the engine's vehicle has all three (its automatic gearbox cannot shift up while a driven wheel spins,
+ * so first gear runs to the limiter) and took 1.2 to 1.8 times the semi-simulation's 0-100 km/h (evidence T6.2b, T6.2d). No source, calibrated by measurement (T6.2e replaces both with a gearbox of the adapter's own): the car's is the smallest scale that puts every
+ * car, SUV, pickup, van and the quad inside its band; the motorbike's is the 1.3 the bikes were fitted to before (no source found for it) and keeps the ten bikes in their bands, a higher one tips them
+ * over under braking. A vehicle with a real figure behind its power (the trucks, the tractor, the tracks) keeps 1.
+ */
+export const PHYSICS_TORQUE_SCALE = { car: 1.45, motorcycle: 1.3 } as const
 
 /** The default engine's power per kg at a rating: its torque per kg times its peak speed (unchanged for a car). */
 const carPower = (rating: number): number => (0.06 + 0.015 * rating) * ((defaultSemiSpec.engine.peakRpm * 2 * Math.PI) / 60)
 
+/**
+ * A main battle tank's power per kg (W/kg): the real figure of the Western MBTs, M1 Abrams 17.74 to 20.05 kW/t (1.12 MW: https://en.wikipedia.org/wiki/M1_Abrams) and Leopard 2A6 17.8 kW/t
+ * (1.1 MW, 62.3 t: https://en.wikipedia.org/wiki/Leopard_2); the car's torque per kg gave the 41 t tank 52 kW/t. The top of the range: the physics engine's 41 t tank pivots from 20 kW/t up (not at 17.8).
+ * Their 0-32 km/h is 6 to 7 s (weak sources: wikis and blogs); the tank here takes about 10 s to 52 km/h.
+ */
+const TRACKED_POWER = 20.05
+
 const peakTorqueOf = (type: VehicleType, rating: number, mass: number, peakRpm: number): number => {
-  const power = type === 'motorcycle' ? motorcyclePower(rating) : carPower(rating)
+  const power = type === 'motorcycle' ? motorcyclePower(rating) : type === 'tracked' ? TRACKED_POWER : carPower(rating)
   return (mass * power * 60) / (2 * Math.PI * peakRpm)
 }
 
@@ -115,6 +129,7 @@ export function semiSpecFromStats(stats: DesignStats, body: BodyDimensions, base
     gears,
     drag,
     brakeForce,
+    ...(type === 'car' || type === 'motorcycle' ? { physicsTorqueScale: PHYSICS_TORQUE_SCALE[type] } : {}),
     tyre: { ...spec.tyre, friction: 0.8 + 0.03 * stats.handling },
     ...(pedal ? { pedal } : {}),
     ...(tracks ? { tracks } : {}),

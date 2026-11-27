@@ -23,6 +23,8 @@ const WHEEL_WIDTH = 0.2
 const CLUTCH_STRENGTH = 10
 const CLUTCH_SLIP = 0.03
 const BICYCLE_WHEEL_INERTIA = 0.1
+/** The slowest pedalling the cyclist's engine keeps his 250 W at: the engine's idle (`semiSpecFromStats` sets it for a bicycle). */
+const BICYCLE_IDLE_CADENCE_RPM = 40
 /** A wheel with its tyre and brake weighs about 1.5% of the vehicle: its inertia `1/2 m r^2` is this per kg of the vehicle at a 0.32 m radius (0.83 kg m^2 on a 1 t car; the engine's own 0.9 is a car's, and four of them on a 150 kg bike weigh as much as the bike). */
 const WHEEL_INERTIA_PER_MASS = 0.0008
 const REFERENCE_RADIUS = 0.32
@@ -64,6 +66,14 @@ export interface VehicleFromSemiOptions {
 const clutchFor = (peakTorque: number, maxRpm: number): number => Math.max(CLUTCH_STRENGTH, peakTorque / (CLUTCH_SLIP * ((maxRpm * 2 * Math.PI) / 60)))
 
 const clamp = (x: number, low: number, high: number): number => Math.max(low, Math.min(high, x))
+
+/** A cyclist holds his watts down to the idle cadence (the torque rises as the cadence falls, a start in a low gear pushes hard), and has none past the redline: torque by cadence over the redline cadence. */
+const pedalCurve = (pedal: SemiPedal): Curve => {
+  const redline = pedal.cadenceRpm * 1.5
+  const idle = BICYCLE_IDLE_CADENCE_RPM
+  const heldWatts = (cadence: number): number => pedal.cadenceRpm / cadence
+  return [[0, heldWatts(idle)], [idle / redline, heldWatts(idle)], [pedal.cadenceRpm / redline, 1], [1, 0]]
+}
 
 const torqueCurve = (spec: SemiSimSpec): Curve => {
   const { idleRpm, peakRpm, redlineRpm, peakTorque } = spec.engine
@@ -163,7 +173,7 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
       gears: pedal.gears.map((ratio) => 1 / ratio),
       reverseGears: [],
       differentialRatio: 1,
-      torqueCurve: [[0, 1], [0.67, 1], [1, 0]],
+      torqueCurve: pedalCurve(pedal),
       transmission: { shiftUpRpm: pedal.cadenceRpm * 0.95, shiftDownRpm: pedal.cadenceRpm * 0.5, clutchStrength: clutchFor(pedal.watts / crankSpeed, pedal.cadenceRpm * 1.5) },
     }
   }
@@ -171,7 +181,7 @@ const drivetrainOf = (spec: SemiSimSpec, options: VehicleFromSemiOptions): Pick<
   return {
     engineDamping: ENGINE_DAMPING,
     engineInertia: ENGINE_INERTIA_PER_TORQUE * spec.engine.peakTorque,
-    maxTorque: spec.engine.peakTorque * spec.efficiency * (ENGINE_FLOOR + (1 - ENGINE_FLOOR) * health),
+    maxTorque: spec.engine.peakTorque * (spec.physicsTorqueScale ?? 1) * spec.efficiency * (ENGINE_FLOOR + (1 - ENGINE_FLOOR) * health),
     minRpm: spec.engine.idleRpm,
     maxRpm: spec.engine.redlineRpm,
     gears: spec.gears,

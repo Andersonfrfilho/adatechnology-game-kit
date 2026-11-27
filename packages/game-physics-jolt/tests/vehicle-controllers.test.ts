@@ -280,7 +280,8 @@ const tank = (patch: Partial<VehicleDesc> = {}): VehicleDesc => {
     wheels, controller: 'tracked',
     // wheels 0-3 are the left track (x > 0: the vehicle's left, with forward +z and up +y), 4-7 the right
     tracks: [{ wheels: [0, 1, 2, 3], drivenWheel: 3, longitudinalFriction: 1.2, lateralFriction: 1.2, maxBrakeTorque: 3000 }, { wheels: [4, 5, 6, 7], drivenWheel: 7, longitudinalFriction: 1.2, lateralFriction: 1.2, maxBrakeTorque: 3000 }],
-    maxTorque: 2500, minRpm: 1000, maxRpm: 4000, gears: [4, 2.5, 1.5], reverseGears: [-4], differentialRatio: 6,
+    // the adapter shares the engine's torque between the two tracks: 2500 N m each
+    maxTorque: 5000, minRpm: 1000, maxRpm: 4000, gears: [4, 2.5, 1.5], reverseGears: [-4], differentialRatio: 6,
     ...patch,
   }
 }

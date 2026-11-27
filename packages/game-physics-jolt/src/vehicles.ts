@@ -1,12 +1,37 @@
 import type JoltNS from 'jolt-physics/wasm-compat'
 
 import { WHEEL_READ, WHEEL_READ_STRIDE } from '@adatechnology/game-physics'
-import type { BodyId, TrackDesc, VehicleDesc, VehicleId, VehicleInput } from '@adatechnology/game-physics'
+import type { BodyId, Curve, TrackDesc, VehicleDesc, VehicleId, VehicleInput } from '@adatechnology/game-physics'
 
 import { WHEEL_PROBE_LAYER } from './constants'
 import type { VehicleEntry } from './entries'
 import { axlesOf, trackedController, wheelSettings, wheeledController } from './vehicle-controllers'
 import type { JoltWorldHost } from './world-host'
+
+const peakOf = (curve: Curve | undefined): number | undefined => (curve ? Math.max(...curve.map(([, grip]) => grip)) : undefined)
+
+/**
+ * The grip of a tyre on what it stands on, at its peak, is the tyre's times the ground's, as the semi-simulation has it: Jolt's own mix is the geometric mean (0.9 g on a 0.75
+ * road where the product gives 0.8 g). The mix keeps the shape of Jolt's, `ground x sqrt(grip at this slip x peak grip)`: it equals the product at the peak and rises as fast with the slip,
+ * where the plain product (the grip curve itself) lets a braking front wheel lock and a motorbike fall. It is the callback of this vehicle's wheels alone: the bodies' friction
+ * elsewhere (debris, the ground against anything else) is not touched. Without the kit's JS callbacks (the threaded world) Jolt's own mix stays.
+ */
+const combineWheelFriction = (w: JoltWorldHost, constraint: JoltNS.VehicleConstraint, desc: VehicleDesc): JoltNS.VehicleConstraintCallbacksJS | null => {
+  if (!w.listener) return null
+  const J = w.J
+  const peaks = desc.wheels.map((wheel) => [peakOf(wheel.longitudinalFriction), peakOf(wheel.lateralFriction)] as const)
+  const callbacks = new J.VehicleConstraintCallbacksJS()
+  callbacks.GetCombinedFriction = (wheel: number, direction: number, tireFriction: number, ground: number) => {
+    const peak = peaks[wheel]?.[direction] ?? tireFriction
+    const groundFriction = (w.byPointer.get(ground)?.body ?? J.wrapPointer(ground, J.Body)).GetFriction()
+    return groundFriction * Math.sqrt(tireFriction * peak)
+  }
+  callbacks.OnPreStepCallback = () => undefined
+  callbacks.OnPostCollideCallback = () => undefined
+  callbacks.OnPostStepCallback = () => undefined
+  callbacks.SetVehicleConstraint(constraint)
+  return callbacks
+}
 
 /** The vehicle constraint over `body` and the step listener that runs it: what a vehicle is besides its chassis, made again by `rebuildVehicle`. */
 const attach = (w: JoltWorldHost, body: BodyId, desc: VehicleDesc): VehicleEntry => {
@@ -42,7 +67,7 @@ const attach = (w: JoltWorldHost, body: BodyId, desc: VehicleDesc): VehicleEntry
   const listener = new J.VehicleConstraintStepListener(constraint)
   w.system.AddStepListener(listener)
   J.destroy(vs)
-  return { body, constraint, controller: driven, tracked, listener, tester, wheelCount: desc.wheels.length, quietFor: 0, driven: false }
+  return { body, constraint, controller: driven, tracked, listener, callbacks: combineWheelFriction(w, constraint, desc), tester, wheelCount: desc.wheels.length, quietFor: 0, driven: false }
 }
 
 /** The radius the engine turns: the driven wheels' mean (a tracked vehicle's driven wheel of each track), the first wheel's when none is listed driven. */
@@ -85,6 +110,7 @@ export const rebuildVehicle = (w: JoltWorldHost, id: VehicleId, desc: VehicleDes
   w.system.RemoveStepListener(old.listener)
   w.system.RemoveConstraint(old.constraint)
   w.J.destroy(old.listener)
+  if (old.callbacks) w.J.destroy(old.callbacks)
   const entry = attach(w, old.body, desc)
   const rolling = forwardSpeedOf(w, old.body)
   desc.wheels.forEach((wheel, i) => entry.constraint.GetWheel(i).SetAngularVelocity(spins[i] ?? rolling / wheel.radius))
@@ -143,7 +169,8 @@ export const vehicleWheels = (w: JoltWorldHost, id: VehicleId, out: Float64Array
 /** A tracked vehicle's input: `right` turns it by slowing the second track (the right one) to nothing and then backward (a pivot at 1), `-right` the first; with no `forward` the steering alone drives it. */
 const driveTracks = (controller: JoltNS.TrackedVehicleController, input: VehicleInput): void => {
   const steer = Math.max(-1, Math.min(1, input.right))
-  const forward = input.forward === 0 ? Math.abs(steer) : input.forward
+  // turning is driving a track forward and the other back: a half throttle has not the torque to pivot a tank, so the steering asks for as much as it needs
+  const forward = input.forward >= 0 ? Math.max(input.forward, Math.abs(steer)) : input.forward
   controller.SetDriverInput(forward, steer < 0 ? 1 + 2 * steer : 1, steer > 0 ? 1 - 2 * steer : 1, Math.max(input.brake, input.handBrake))
 }
 
@@ -168,6 +195,7 @@ export const removeVehicle = (w: JoltWorldHost, id: VehicleId): void => {
   w.system.RemoveStepListener(v.listener)
   w.system.RemoveConstraint(v.constraint)
   w.J.destroy(v.listener)
+  if (v.callbacks) w.J.destroy(v.callbacks)
   w.removeBody(v.body)
   w.vehicles.delete(id)
 }

@@ -61,6 +61,8 @@ export interface VehicleEntry {
   /** A tracked vehicle reads its input as a forward and one ratio per track. */
   readonly tracked: boolean
   readonly listener: JoltNS.VehicleConstraintStepListener
+  /** The wheels' friction mix (`vehicles.ts`); null in a world without the kit's JS callbacks. */
+  readonly callbacks: JoltNS.VehicleConstraintCallbacksJS | null
   readonly tester: JoltNS.VehicleCollisionTester
   /** How many wheels it was made with: a motorbike has 2, and Jolt must not be asked for a third. */
   readonly wheelCount: number
