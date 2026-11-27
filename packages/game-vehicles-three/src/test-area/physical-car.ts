@@ -10,6 +10,7 @@ import { createCrashParts } from '../crash-parts'
 import type { CrashParts } from '../crash-parts'
 import { bodyMassOf } from '../crash-parts-math'
 import type { HullPlanCache } from '../hull-plan-cache'
+import type { RunOverLink } from './run-over-link'
 
 type Three = typeof THREE_NS
 
@@ -24,6 +25,8 @@ export interface PhysicalCarOptions {
   readonly root: THREE_NS.Object3D
   /** Made with `physicalCarColliders`. */
   readonly colliders: VehicleColliders
+  /** The crowd the car runs over, when the host has one. */
+  readonly runOver?: RunOverLink
 }
 
 export interface PhysicalCar {
@@ -48,6 +51,17 @@ const wheelChildOf = (size: Vec3, center: Vec3): { readonly shape: ShapeDesc; re
   return { shape, position: center, rotation: axis === 0 ? [0, 0, HALF_TURN, HALF_TURN] : [HALF_TURN, 0, 0, HALF_TURN] }
 }
 
+/** The box the run-over sweeps for the car: the parts' reach to each side and the height of the top (the box is centred on the chassis origin, at the ground, so it spans the car's height above it). */
+const runOverHalfOf = (parts: readonly { readonly box: { readonly center: Vec3; readonly size: Vec3 } }[]): Vec3 => {
+  const half: [number, number, number] = [0, 0, 0]
+  for (const { box } of parts) {
+    half[0] = Math.max(half[0], Math.abs(box.center[0]) + box.size[0] / 2)
+    half[1] = Math.max(half[1], box.center[1] + box.size[1] / 2)
+    half[2] = Math.max(half[2], Math.abs(box.center[2]) + box.size[2] / 2)
+  }
+  return half
+}
+
 /** The services the host lent, when it runs the pieces on a loop (the engine path); undefined on the kit's own solver. */
 export const physicsServicesOf = (host: ModuleHost | null): PhysicsServices | undefined => (host && isPhysicsServices(host.physics) ? host.physics : undefined)
 
@@ -62,7 +76,7 @@ export const physicalCarColliders = (THREE: Three, vehicle: VehicleDestructible,
   })
 
 /** The car as a dynamic body of the loop's world: made once its root is in the scene and its hulls are ready, followed by its drawing and fed its damage after every frame of the loop. */
-export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders }: PhysicalCarOptions): PhysicalCar => {
+export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders, runOver }: PhysicalCarOptions): PhysicalCar => {
   const { world } = services
   const pose = new Float64Array(7)
   const matrix = new THREE.Matrix4()
@@ -73,6 +87,7 @@ export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders }:
   const wheelHandles = new Map<string, number>()
   let crash: CrashParts | undefined
   let chassis: BodyId | undefined
+  let stopRunOver: (() => void) | undefined
 
   // the tyres are drawn but have no hull: a child each, after the hulls (their handles are the hulls' own numbers), so the car rests at the height it is drawn
   const withWheels = (hulls: ShapeDesc): ShapeDesc => {
@@ -114,6 +129,7 @@ export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders }:
       position: [position.x, position.y, position.z], rotation: [rotation.x, rotation.y, rotation.z, rotation.w],
     })
     crash.bind(chassis)
+    stopRunOver = runOver?.track({ body: chassis, half: runOverHalfOf(vehicle.model.parts) })
   }
 
   const follow = (): void => {
@@ -140,6 +156,8 @@ export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders }:
     parts: () => crash,
     dispose: () => {
       stopPhase()
+      stopRunOver?.()
+      stopRunOver = undefined
       crash?.dispose()
       if (chassis !== undefined && world.has(chassis)) world.removeBody(chassis)
       crash = undefined
