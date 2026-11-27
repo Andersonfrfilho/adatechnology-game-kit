@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { buildItem, createItemsTestModule, ITEM_PREFIX, itemOpening, openItem, OPENING_NAME, setOpeningContents, turnItem } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const boxOf = (root: THREE.Object3D, only?: (o: THREE.Object3D) => boolean): THREE.Box3 => {
   root.updateMatrixWorld(true)
@@ -117,7 +118,7 @@ describe('opening and eating a can in the room', () => {
   const room = (): TestRoom => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const r = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
+    const r = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
     expect(r.loadModule(createItemsTestModule({ catalog, locale: 'pt-BR', translate: goodsText })).problems).toEqual([])
     return r
   }

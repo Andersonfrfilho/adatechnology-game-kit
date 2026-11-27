@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { createItemsTestModule, ITEM_PREFIX, makeupSpec } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const stubRenderer = (): THREE.WebGLRenderer =>
   ({ domElement: document.createElement('canvas'), shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined }) as unknown as THREE.WebGLRenderer
@@ -14,7 +15,7 @@ describe('a hand grenade beside the shovel of the goods catalog, lying on the fl
   it('0.8 m away, throws it at single-digit speed without spinning it like a propeller, and it comes down and rests', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), locale: 'en', translate: goodsText }))
     const { root, objectId } = room.spawn(`${ITEM_PREFIX}shovel`, [0, 0.03, -2.2], Math.PI / 2)
     for (let i = 0; i < 30; i++) room.update(1 / 60)
@@ -43,7 +44,7 @@ describe('a hand grenade beside the shovel of the goods catalog, lying on the fl
   it('0.5 m away, its fragments snap the handle, and the room shows it broken: the handle meshes are hidden and its splinters are drawn, the blade stays', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), locale: 'en', translate: goodsText }))
     const { root, objectId } = room.spawn(`${ITEM_PREFIX}shovel`, [0, 0.03, -2.2], Math.PI / 2)
     for (let i = 0; i < 30; i++) room.update(1 / 60)
@@ -74,7 +75,7 @@ describe('a hand grenade 0.5 m beside the broad side of the shovel, on the floor
   it('throws it under 10 m/s, it comes to rest within the slide that speed allows, and what is left of its broken handle stays drawn where it slid to', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     room.loadModule(createItemsTestModule({ catalog: createGoodsItems(), locale: 'en', translate: goodsText }))
     const start: [number, number, number] = [0, 0.03, -2.2]
     const { root, objectId } = room.spawn(`${ITEM_PREFIX}shovel`, start, 0)

@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import { kitOriginOf } from '@adatechnology/game-contracts'
 import { createItemModels, createItemsTestModule, FINDS_TABLE_ID, HUMAN_ID, ITEM_PREFIX, listItemModels, RULER_ID, SHELF_HEIGHT, shelvesLayout, SHIPPED_MODELS, SHOWCASE_PREFIX, SHOWCASE_STAND_ID } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const catalog = createGoodsItems()
 const translate = (key: string, locale: string): string | undefined => goodsText(key, locale)
@@ -26,7 +27,7 @@ const person = (T: unknown): THREE.Object3D => {
 function roomWithItems(locale = 'pt-BR', withPerson = true): { room: TestRoom; module: ReturnType<typeof createItemsTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
   const module = createItemsTestModule({ catalog, locale, translate, ...(withPerson ? { person } : {}) })
   const report = room.loadModule(module)
   expect(report.problems).toEqual([])
@@ -249,7 +250,7 @@ describe('items test area by instance', () => {
   it('shows the models of the set it is given, not the global registry', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
     const removed = SHIPPED_MODELS[0]!.entry.id
     const module = createItemsTestModule({ catalog, translate, models: createItemModels({ remove: [removed] }) })
     expect(room.loadModule(module).problems).toEqual([])
