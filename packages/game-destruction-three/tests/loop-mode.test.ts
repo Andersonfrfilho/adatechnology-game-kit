@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { PieceSystem } from '../src/pieces'
 import { PhysicsOptionError } from '../src/physics-option'
-import { IS_JOLT, physicsLoop, physicsOption, tick } from './setup-physics'
+import { physicsLoop, physicsOption, tick } from './setup-physics'
 
 const DT = 1 / 60
 
@@ -31,7 +31,7 @@ const run = (mode: 'one system' | 'loop'): { landings: number; knocks: number; r
   return { landings, knocks, restY: lower.position.y, asleep: falling.sleeping }
 }
 
-describe.skipIf(!IS_JOLT)('the pieces step the same under a host loop and in one system', () => {
+describe('the pieces step the same under a host loop and in one system', () => {
   it('both land the dropped piece, sound the landing and the knock, and bring it to rest', () => {
     const one = run('one system')
     const loop = run('loop')

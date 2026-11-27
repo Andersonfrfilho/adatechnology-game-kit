@@ -6,7 +6,7 @@ import { createTerrain } from '@adatechnology/game-terrain'
 import { buildGroundTile } from '../src/engine-ground'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const BOUNDS = [-20, -20, 20, 20] as const
 const GRENADE = 3_200_000
@@ -107,8 +107,6 @@ describe('ground that settles tells the engine', () => {
     for (let t = 0; t < 4; t += FRAME) renderer.update(FRAME)
 
     expect(woken).toBe(true)
-    // the own solver rests on the ground its own way (and sinks the same with or without the fix): the engine is what has tiles to be told
-    if (!IS_JOLT) return
     const { stale, worst } = staleTiles(renderer, groundAt)
     expect(worst).toBeLessThan(TILE_TOLERANCE)
     expect(stale).toBe(0)

@@ -17,7 +17,7 @@ import type { GroundWorkerPort } from '../src/engine-ground-port'
 import type { GroundSchedule } from '../src/engine-ground-schedule'
 import { buildSolidVolume } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * The engine's ground tiles made off the main thread (owner decision 2026-11-17): a tile is a pure function of the samples and the band read at the frame it is asked for, so the
@@ -218,7 +218,7 @@ const runCrater = (port: GroundWorkerPort, updates: number, between?: (update: n
   return { hashes, engine, system, roots, terrain }
 }
 
-describe.skipIf(!IS_JOLT)('engine ground on a fixed schedule: the physics does not depend on the worker', () => {
+describe('engine ground on a fixed schedule: the physics does not depend on the worker', () => {
   it('main thread, inline, a cloned worker answering every update, a slow one answering late or never: every update bit-identical (poses and the world\'s saved bytes)', { timeout: 120000 }, () => {
     const reference = runCrater(createMainThreadGroundPort(), 120)
     expect(reference.engine.fellThrough).toBe(0)
@@ -307,13 +307,13 @@ describe.skipIf(!IS_JOLT)('engine ground on a fixed schedule: the physics does n
     expect(run.engine.schedule.outstanding).toBe(0)
   })
 
-  it('a port serves one engine: a second onTile throws; the own solver (no engine) still disposes the port it was handed', () => {
+  it('a port serves one engine: a second onTile throws; a system disposes the port it was handed', () => {
     const port = createInlineGroundPort()
     port.onTile(() => undefined)
     expect(() => port.onTile(() => undefined)).toThrow(/onTile set twice/)
     const worker = clonedWorker()
-    const own = new PieceSystem(THREE, { physics: 'own', groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), groundWorker: createWorkerGroundPort(worker) })
-    own.dispose()
+    const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), groundWorker: createWorkerGroundPort(worker) })
+    system.dispose()
     expect(worker.terminated).toBe(true)
   })
 

@@ -5,10 +5,10 @@ import type { SeamWorld } from '@adatechnology/game-physics'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 // every drawn fixed thing is a body of the engine: a mode of the engine only (the kit's own solver lands pieces on what it measures itself)
-const engineOnly = IS_JOLT ? describe : describe.skip
+const engineOnly = describe
 
 type Statics = { bodies: Map<string, { held: Map<string, { solid: { mesh?: unknown; half: number[]; center: number[] } }> }> }
 

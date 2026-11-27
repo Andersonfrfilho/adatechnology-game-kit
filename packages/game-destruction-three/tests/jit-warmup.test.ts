@@ -4,11 +4,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { resetWarnOnce } from '@adatechnology/game-contracts'
 
 import { createDestruction } from '@adatechnology/game-destruction'
+import type { SeamWorld } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 
 import { warmUpDestructionJit } from '../src/jit-warmup'
 import { createDestructionRenderer } from '../src/renderer'
 import type { RendererOptions } from '../src/types'
+import { physicsOption } from './setup-physics'
 
 const make = (options: RendererOptions) => createDestructionRenderer(THREE, options)
 
@@ -44,12 +46,12 @@ describe('the JIT warm-up', () => {
     const engine = await createJoltEngine()
     let made = 0
     const fresh = () => ({ name: 'fresh', createWorld: (desc?: Parameters<typeof engine.createWorld>[0]) => (made++, engine.createWorld(desc)) })
-    const base = { physics: 'own' as const, scene: new THREE.Scene(), world: createDestruction() }
+    const base = (): { physics: SeamWorld; scene: THREE.Scene; world: ReturnType<typeof createDestruction> } => ({ physics: physicsOption(), scene: new THREE.Scene(), world: createDestruction() })
     const skipped = fresh()
-    createDestructionRenderer(THREE, { ...base, jitWarmUp: false }).dispose()
-    createDestructionRenderer(THREE, { ...base, jitWarmUp: { engine: skipped } }).dispose()
+    createDestructionRenderer(THREE, { ...base(), jitWarmUp: false }).dispose()
+    createDestructionRenderer(THREE, { ...base(), jitWarmUp: { engine: skipped } }).dispose()
     expect(made).toBe(1)
-    createDestructionRenderer(THREE, { ...base, jitWarmUp: { engine: skipped } }).dispose()
+    createDestructionRenderer(THREE, { ...base(), jitWarmUp: { engine: skipped } }).dispose()
     expect(made).toBe(1)
   })
 
@@ -66,7 +68,7 @@ describe('the JIT warm-up', () => {
     resetWarnOnce()
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const broken = { name: 'broken', createWorld: (): never => { throw new Error('no compounds here') } }
-    const renderer = createDestructionRenderer(THREE, { physics: 'own', scene: new THREE.Scene(), world: createDestruction(), jitWarmUp: { engine: broken } })
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene: new THREE.Scene(), world: createDestruction(), jitWarmUp: { engine: broken } })
     expect(renderer).toBeDefined()
     expect(warn.mock.calls.some(([message]) => String(message).includes('skipped the JIT warm-up'))).toBe(true)
     renderer.dispose()

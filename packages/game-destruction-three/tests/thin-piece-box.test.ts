@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const boxOf = (size: [number, number, number]): [number, number, number] => {
   const scene = new THREE.Scene()
@@ -20,7 +20,7 @@ const boxOf = (size: [number, number, number]): [number, number, number] => {
   return [...renderer.makePiece('blade').halfExtents]
 }
 
-describe.skipIf(!IS_JOLT)('the box of a loose piece is the drawing, even a thin one', () => {
+describe('the box of a loose piece is the drawing, even a thin one', () => {
   it('a 2 cm laptop is a 2 cm box and a 9 mm phone a 9 mm one, not 4 cm slabs that sink into what they lie on', () => {
     expect(boxOf([0.33, 0.02, 0.23])).toEqual([expect.closeTo(0.165, 4), expect.closeTo(0.01, 4), expect.closeTo(0.115, 4)])
     expect(boxOf([0.075, 0.009, 0.15])[1]).toBeCloseTo(0.0045, 4)

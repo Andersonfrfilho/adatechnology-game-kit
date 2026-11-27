@@ -6,7 +6,7 @@ import { createTerrain } from '@adatechnology/game-terrain'
 import { createDestructionRenderer } from '../src/renderer'
 import { PieceSystem } from '../src/pieces'
 import { FakeWorld } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * T3.8ad: the ground a blast reaches is laid at the blast, before the pieces it makes need it (nearest tiles first, up to a count), and the notices of one frame lay a tile once.
@@ -38,7 +38,7 @@ const lab = (options: { blastGroundTiles?: number } = { blastGroundTiles: 48 }) 
   return { terrain, system, engine: (system as unknown as { engine: Engine }).engine }
 }
 
-describe.skipIf(!IS_JOLT)('the ground a blast reaches is laid at the blast (T3.8ad)', () => {
+describe('the ground a blast reaches is laid at the blast (T3.8ad)', () => {
   it('lays the tiles within the radius at the next update, and none beyond it', () => {
     const l = lab()
     l.system.layGroundAt(0.5, 0.5, 3)
@@ -119,7 +119,7 @@ describe.skipIf(!IS_JOLT)('the ground a blast reaches is laid at the blast (T3.8
   })
 })
 
-describe.skipIf(!IS_JOLT)('the notices of one frame lay a tile once (T3.8ad)', () => {
+describe('the notices of one frame lay a tile once (T3.8ad)', () => {
   it('twenty notices over the same nine tiles, then one update with a piece over them: each tile is laid at most once, and only the ones within reach of the piece', () => {
     const l = lab({ blastGroundTiles: 0 })
     for (let ix = -1; ix <= 1; ix++) for (let iz = -1; iz <= 1; iz++) l.engine.layTile(keyOf(ix, iz), ix, iz, undefined)

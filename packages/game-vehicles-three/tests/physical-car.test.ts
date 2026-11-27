@@ -30,14 +30,14 @@ interface Scene {
   readonly fixedBodies: number
 }
 
-const sceneOf = async (physics: 'jolt' | 'own', extra: Partial<TestRoomOptions> = {}): Promise<Scene> => {
+const sceneOf = async (physics: 'jolt' | 'seam', extra: Partial<TestRoomOptions> = {}): Promise<Scene> => {
   const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD }) as JoltWorld
   const loop = createPhysicsLoop(world)
   world.createBody({ shape: { kind: 'box', half: [60, 0.5, 60] }, motion: 'static', position: [0, -0.5, 0], user: -1 })
   world.createBody({ shape: { kind: 'box', half: [12, 3, 0.5] }, motion: 'static', position: [0, 3, WALL_Z], user: -1 })
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physics === 'jolt' ? loop : 'own', ...extra })
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physics === 'jolt' ? loop : world, ...extra })
   const module = createVehiclesTestModule({ fleet: defaultVehicleFleet(), locale: 'en', document: fakeDocument as never, three: THREE, vehicles: [MODEL], wrecks: [] })
   expect(room.loadModule(module as never).problems).toEqual([])
   room.openArea(VEHICLES_AREA_ID)
@@ -131,14 +131,12 @@ describe('TS.4: the room car on the engine loop', () => {
     scene.world.dispose()
   }, 240000)
 
-  it('on the own solver nothing changes: no body of the car in the loop world and the drawn pieces fill in as before', async () => {
-    const scene = await sceneOf('own')
+  it('on a seam the host steps itself the module is lent no engine: no body of the car and the drawn pieces fill in as before', async () => {
+    const scene = await sceneOf('seam')
     expect(carOf(scene)).toBeUndefined()
     const impl = rootOf(scene).userData.destructible as { colliders(): readonly unknown[]; collidersPending(): boolean }
     for (let call = 0; call < 200 && impl.collidersPending(); call++) impl.colliders()
     expect(impl.collidersPending()).toBe(false)
-    scene.loop.stepFixed(120)
-    expect(scene.world.bodyCount).toBe(scene.fixedBodies)
     scene.room.dispose()
     scene.world.dispose()
   }, 240000)

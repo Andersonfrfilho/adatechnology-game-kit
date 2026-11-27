@@ -5,7 +5,7 @@ import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * T3.8q: a height field tile whose ground changed is written in place (`updateHeights`) instead of made again. The ground must be the one a freshly laid tile has, the
@@ -80,7 +80,7 @@ const spies = (l: Lab) => ({
   set: vi.spyOn(l.engine.world, 'setShape'),
 })
 
-describe.skipIf(!IS_JOLT)('a tile whose ground changed is written in place (T3.8q)', () => {
+describe('a tile whose ground changed is written in place (T3.8q)', () => {
   it('gives the ground a freshly laid tile has: the heights the second crater made, within the quantisation, on the same body and with no new shape for it', () => {
     const changed = lab(0)
     layFirst(changed)

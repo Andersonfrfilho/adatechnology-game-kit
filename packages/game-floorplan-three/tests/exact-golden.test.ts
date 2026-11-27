@@ -81,7 +81,6 @@ const postApocalyptic = (state: string): Root => {
 }
 for (const state of ['abandoned', 'fortified']) cases.push([`house/casaA:3:${state}`, () => postApocalyptic(state)])
 
-const OWN_FIXTURE = join(process.cwd(), 'tests/fixtures/exact-floorplan-own.json')
 const readFixture = (path: string): Record<string, { hash: string; objects: number }> => {
   try {
     return JSON.parse(readFileSync(path, 'utf8'))
@@ -89,8 +88,7 @@ const readFixture = (path: string): Record<string, { hash: string; objects: numb
     return {}
   }
 }
-// The debris falls differently under the old solver; its three recordings stay until the `own` key goes (T8.1).
-const recorded = { ...readFixture(FIXTURE), ...(process.env.PIECE_SOLVER === 'own' ? readFixture(OWN_FIXTURE) : {}) }
+const recorded = readFixture(FIXTURE)
 
 describe('the houses, bit for bit', () => {
   if (process.env.UPDATE_EXACT) {

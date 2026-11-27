@@ -15,7 +15,7 @@ const runChunk = (index) =>
     const count = Math.min(per, SEEDS - index * per)
     if (count <= 0) return resolve(0)
     const child = spawn('npx', ['vitest', 'run', 'tests/sweep-c6.test.ts'], {
-      env: { ...process.env, SWEEP: '1', PIECE_SOLVER: 'jolt', SWEEP_FROM: String(1 + index * per), SWEEP_COUNT: String(count), SWEEP_OUT: join(dir, `${index}.jsonl`) },
+      env: { ...process.env, SWEEP: '1', SWEEP_FROM: String(1 + index * per), SWEEP_COUNT: String(count), SWEEP_OUT: join(dir, `${index}.jsonl`) },
       stdio: 'ignore',
     })
     child.on('exit', resolve)

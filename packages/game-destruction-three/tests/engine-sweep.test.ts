@@ -38,7 +38,7 @@ const drop = (solids: ReadonlyMap<string, readonly StaticSolid[]>, sweep?: typeo
 
 const furthest = (a: number[][], b: number[][]): number => Math.max(...a.map((p, i) => Math.hypot(p[0]! - b[i]![0]!, p[1]! - b[i]![1]!, p[2]! - b[i]![2]!)))
 
-describe.skipIf(process.env.PIECE_SOLVER === 'own')('the kit sweep and what the engine has', () => {
+describe('the kit sweep and what the engine has', () => {
   it('a hit on a fixed thing the engine has moves nothing: the piece falls as if there were no sweep, lands and sleeps', () => {
     const solids = new Map([['table', TABLE]])
     const swept = drop(solids, edgeBeside)
@@ -79,7 +79,7 @@ const slideInto = (speed: number): { back: number; slept: boolean } => {
   return { back, slept: box.sleeping }
 }
 
-describe.skipIf(process.env.PIECE_SOLVER === 'own')('a wall the engine does not have', () => {
+describe('a wall the engine does not have', () => {
   it('met slower than the engine bounces anything (1 m/s), it only stops the piece, which then sleeps', () => {
     const { back, slept } = slideInto(0.5)
     expect(back).toBeLessThan(0.01)
@@ -91,7 +91,7 @@ describe.skipIf(process.env.PIECE_SOLVER === 'own')('a wall the engine does not 
   })
 })
 
-describe.skipIf(process.env.PIECE_SOLVER === 'own')('sliding along a wall the engine does not have', () => {
+describe('sliding along a wall the engine does not have', () => {
   it('a piece pressed into the wall as it falls slides down it and lands: only the part of its way into the wall is taken out', () => {
     const wallBeside = (_piece: unknown, from: Vec3, to: Vec3): PieceSweepHit | null =>
       to[0] > from[0] ? { object: 'wall', part: 'body', distance: 0, point: [from[0] + 0.1, from[1], from[2]], normal: [-1, 0, 0] } : null

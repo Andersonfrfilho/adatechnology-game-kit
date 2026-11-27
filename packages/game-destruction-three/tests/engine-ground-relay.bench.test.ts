@@ -2,11 +2,11 @@ import * as THREE from 'three'
 import { describe, it } from 'vitest'
 
 import { PieceSystem } from '../src/pieces'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * T3.8q: what laying the ground again costs after the host dug it, tile by tile, in the engine's own path (`groundChanged` marks, `layTile` lays). Off unless
- * GROUND_BENCH=1 (it prints and times: no gate): `GROUND_BENCH=1 PIECE_SOLVER=jolt vitest run tests/engine-ground-relay.bench.test.ts`.
+ * GROUND_BENCH=1 (it prints and times: no gate): `GROUND_BENCH=1 vitest run tests/engine-ground-relay.bench.test.ts`.
  */
 interface Engine {
   layTile(key: number, ix: number, iz: number, tile: unknown): void
@@ -40,7 +40,7 @@ const makeGround = (level: boolean) => {
   return { state, at }
 }
 
-describe.skipIf(!IS_JOLT || process.env.GROUND_BENCH !== '1')('laying the ground again after the host dug it (bench)', () => {
+describe.skipIf(process.env.GROUND_BENCH !== '1')('laying the ground again after the host dug it (bench)', () => {
   for (const level of [false, true]) {
     it(`${level ? 'level (slab)' : 'height field + solid'} tiles, ${TILES} of them`, () => {
       const ground = makeGround(level)

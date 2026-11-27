@@ -7,7 +7,7 @@ import type { BodyId, SeamWorld } from '@adatechnology/game-physics'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * TS.8 cost: the TS.1b scene (300 awake pieces thrown up every 20 frames over a fixed slab, 10 bodies of the world that are not the pieces' crossing at 30 m/s) with the
@@ -67,7 +67,7 @@ const runOnce = (contactHits: boolean): { readonly median: number; readonly p99:
   return { median: median(times), p99: p99Of(times), hits }
 }
 
-describe.runIf(IS_JOLT && process.env.PHYSICS_COST === '1')('contact hits cost (TS.8)', () => {
+describe.runIf(process.env.PHYSICS_COST === '1')('contact hits cost (TS.8)', () => {
   it('300 awake pieces over a fixed part and 10 outside bodies: the hits on and off', { timeout: 600000 }, () => {
     runOnce(true)
     const rounds = Array.from({ length: ROUNDS }, () => {

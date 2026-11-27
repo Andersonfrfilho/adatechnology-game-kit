@@ -5,7 +5,7 @@ import type { BodyId, SeamWorld } from '@adatechnology/game-physics'
 
 import { IDLE_UPDATES } from '../src/engine-ground-follow'
 import { PieceSystem } from '../src/pieces'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /** Spec 008, TS.1b: the ground a body of the world that is not a piece asked for goes when nobody asked for it for long and nothing that moves is on it. Jolt only. */
 interface Engine {
@@ -24,7 +24,7 @@ const labOf = () => {
   return { world, engine, step }
 }
 
-describe.skipIf(!IS_JOLT)('the ground follows the bodies that are not the pieces (spec 008, TS.1b)', () => {
+describe('the ground follows the bodies that are not the pieces (spec 008, TS.1b)', () => {
   it('lays ground under a body made where there is none, and under a character', () => {
     const { world, engine, step } = labOf()
     expect(engine.tiles.size).toBe(0)

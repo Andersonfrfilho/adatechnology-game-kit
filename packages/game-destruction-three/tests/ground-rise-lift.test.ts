@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { PieceSystem } from '../src/pieces'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const BEAM: [number, number, number] = [6, 0.1, 0.1]
 const FRAME = 1 / 60
@@ -19,7 +19,7 @@ const beamOnGround = () => {
 }
 
 // the ground that settles under a far tip of a long piece used to lift the whole piece by that rise, with no speed: a kit gift of mass x g x rise (spec 008, T3.8r)
-describe.skipIf(!IS_JOLT)('ground that rises under a piece that rests on it', () => {
+describe('ground that rises under a piece that rests on it', () => {
   it('a rise the engine clears by itself does not move the piece in the kit: its tip is pushed by the contact, not the whole piece teleported', () => {
     const b = beamOnGround()
     expect(b.piece.sleeping).toBe(true)
@@ -62,7 +62,7 @@ describe.skipIf(!IS_JOLT)('ground that rises under a piece that rests on it', ()
 
 // the net under the ground (`readBack`): a piece the engine leaves wholly under the ground is put back on it, its body as well as its mesh. With a `sweep` the sweep's answer
 // (it met nothing) overwrote the lift, so only the mesh rose: the body stayed under the ground and was caught again every update (CLAUDE.md §12).
-describe.skipIf(!IS_JOLT)('a piece the engine left under the ground, with a sweep', () => {
+describe('a piece the engine left under the ground, with a sweep', () => {
   it('is lifted body and all: caught once, then it stands where it was put, not under the ground again each update', () => {
     const ground = { level: 0 }
     const system = new PieceSystem(THREE, { physics: physicsOption(), groundAt: () => ground.level, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), sweep: () => null })

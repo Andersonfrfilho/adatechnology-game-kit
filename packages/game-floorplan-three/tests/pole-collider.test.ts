@@ -4,7 +4,7 @@ import type { Piece } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const DT = 1 / 60
 const C4 = { energy: 345600, radius: 18 }
@@ -57,7 +57,7 @@ describe('a concrete pole of the lot, loose', () => {
     }
   })
 
-  it.runIf(IS_JOLT)(`lying on the ground it sleeps within ${SLEEP_WITHIN} s, read from the engine`, () => {
+  it(`lying on the ground it sleeps within ${SLEEP_WITHIN} s, read from the engine`, () => {
     const { world, renderer, physics } = blastedLot()
     const lyingSince = new Map<string, number>()
     const asleepAfter = new Map<string, number>()
@@ -77,6 +77,6 @@ describe('a concrete pole of the lot, loose', () => {
     expect(lyingSince.size).toBeGreaterThanOrEqual(POLES_DOWN)
     for (const pole of poles) expect(pole.sleeping, `piece ${pole.objectId} asleep at the end`).toBe(true)
     for (const id of lyingSince.keys()) expect(asleepAfter.get(id) ?? Infinity, `piece ${id}`).toBeLessThanOrEqual(SLEEP_WITHIN)
-    expect(physics !== 'own' && 'activeCount' in physics ? physics.activeCount : -1).toBe(0)
+    expect('activeCount' in physics ? physics.activeCount : -1).toBe(0)
   })
 })

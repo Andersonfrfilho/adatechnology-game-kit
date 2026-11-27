@@ -25,7 +25,7 @@ describe.runIf(process.env.PHYSICS_COST === '1')('100 dead in a pile in the room
     const result = { seed, how, asleepAtS: run.asleepAtS, median: quantile(window, 0.5), p99: quantile(window, 0.99), max: Math.max(...window), load: loadavg()[0] }
     console.info(`[TS.7] cost ${JSON.stringify(result)}`)
     pile.room.dispose()
-    pile.world!.dispose()
+    pile.world.dispose()
     expect(run.asleepAtS).toBeGreaterThan(0)
     expect(run.asleepAtS).toBeLessThanOrEqual(LIMITS.sleepSeconds)
     expect(result.median).toBeLessThanOrEqual(LIMITS.medianMs)

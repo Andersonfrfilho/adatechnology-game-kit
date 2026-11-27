@@ -35,11 +35,17 @@ describe('the physics services of the world', () => {
     }
   })
 
-  it('are left out with the kit own solver, and the host says so', () => {
-    const world = createKitWorldSync(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-8, -8, 8, 8], physics: 'own', workers: 0, audio: false })
-    worlds.push(world)
-    expect(world.physics.services).toBeUndefined()
-    expect(physicsHostOf(world)).toEqual({})
+  it('are left out on a world the game steps itself (a seam), and the host says so', async () => {
+    const seamWorld = (await createJoltEngine()).createWorld(KIT_WORLD)
+    try {
+      const world = createKitWorldSync(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-8, -8, 8, 8], physics: seamWorld, workers: 0, audio: false })
+      worlds.push(world)
+      expect(world.physics.services).toBeUndefined()
+      expect(physicsHostOf(world)).toEqual({})
+    } finally {
+      for (const world of worlds.splice(0)) world.dispose()
+      seamWorld.dispose()
+    }
   })
 
   it('are released before the world they were made in', async () => {
@@ -47,7 +53,8 @@ describe('the physics services of the world', () => {
     const joltWorld = engine.createWorld(KIT_WORLD)
     try {
       const order: string[] = []
-      const physics = servicesOf<Omit<KitWorldPhysics, 'services'>>({ loop: createPhysicsLoop(joltWorld), pieces: 'own', engine: null, info: { kind: 'loop' }, dispose: () => void order.push('world') })
+      const loop = createPhysicsLoop(joltWorld)
+      const physics = servicesOf<Omit<KitWorldPhysics, 'services'>>({ loop, pieces: loop, engine: null, info: { kind: 'loop' }, dispose: () => void order.push('world') })
       const { services } = physics
       expect(services).toBeDefined()
       const corpses = services!.corpses()
@@ -61,10 +68,16 @@ describe('the physics services of the world', () => {
     }
   })
 
-  it('hand the workers of the game to the module beside the physics', () => {
+  it('hand the workers of the game to the module beside the physics', async () => {
     const workers = { stats: () => ({ workers: 0 }) } as never
-    const world = createKitWorldSync(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-8, -8, 8, 8], physics: 'own', workers: 0, audio: false })
-    worlds.push(world)
-    expect(physicsHostOf(world, workers)).toEqual({ workers })
+    const seamWorld = (await createJoltEngine()).createWorld(KIT_WORLD)
+    try {
+      const world = createKitWorldSync(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-8, -8, 8, 8], physics: seamWorld, workers: 0, audio: false })
+      worlds.push(world)
+      expect(physicsHostOf(world, workers)).toEqual({ workers })
+    } finally {
+      for (const world of worlds.splice(0)) world.dispose()
+      seamWorld.dispose()
+    }
   })
 })

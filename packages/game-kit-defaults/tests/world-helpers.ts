@@ -22,7 +22,7 @@ afterEach(() => {
   for (const world of made.splice(0)) world.dispose()
 })
 
-/** A world with no GPU: the kit's own solver, no workers and no recorded sounds (nothing to fetch). */
+/** A world with no GPU: Jolt, no workers and no recorded sounds (nothing to fetch). */
 export async function makeWorld(extra: Partial<KitWorldOptions> = {}): Promise<KitWorld> {
   const container = document.createElement('div')
   document.body.appendChild(container)
@@ -30,7 +30,6 @@ export async function makeWorld(extra: Partial<KitWorldOptions> = {}): Promise<K
     container,
     renderer: stubRenderer(),
     bounds: [-8, -8, 8, 8],
-    physics: 'own',
     workers: 0,
     audio: { samplesBaseUrl: null, userSamplesBaseUrl: null },
     ...extra,

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { PieceSystem } from '../src/pieces'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 type Ground = (x: number, z: number) => number
 type Landing = { readonly fellThrough: number; readonly under: number }
@@ -51,7 +51,7 @@ function throwChip(groundAt: Ground, step: number, speedMax: number, next: () =>
   return { fellThrough: engine.fellThrough, under: Math.max(0, resting - root.position.y) }
 }
 
-describe.skipIf(!IS_JOLT)('a fast chip lands on ground that is there', () => {
+describe('a fast chip lands on ground that is there', () => {
   for (const [name, groundAt] of [['flat', flatGround], ['crater', craterGround]] as const) {
     for (const step of [1 / 60, 0.05]) {
       for (const speedMax of SPEEDS) {

@@ -13,7 +13,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import { projectileModel } from '../src/projectile-model'
 import { createWeaponsTestModule } from '../src'
 
-/** Spec 008, TS.5: the casings of the weapons module and the grenade are bodies of the room's world only when the room was given one; with its own solver no body is born. */
+/** Spec 008, TS.5: the casings of the weapons module and the grenade are bodies of the room's world only when the room was given a loop; on a world the host steps itself (a seam) no body is born. */
 
 const STEP = 1 / 60
 /** Without `agent`: the player's body (a shadow in that layer) is in the world now and is not a loose piece; the test counts what the room let go of. */
@@ -31,11 +31,11 @@ const movingIds = (world: PhysicsWorld): BodyId[] => {
 
 type Probe = { physics: unknown; attached: boolean }
 
-const roomOf = (options: { physics?: ReturnType<typeof createPhysicsLoop> | 'own' } = {}) => {
+const roomOf = (options: { physics: ReturnType<typeof createPhysicsLoop> | PhysicsWorld }) => {
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal, projectileModel: (query) => projectileModel(THREE, query), ...(options.physics ? { physics: options.physics } : {}) })
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal, projectileModel: (query) => projectileModel(THREE, query), physics: options.physics })
   const weapons = createWeaponsTestModule({ locale: 'en', sound: false, arsenal })
   expect(room.loadModule(weapons).problems).toEqual([])
   const probe: Probe = { physics: undefined, attached: false }
@@ -93,28 +93,28 @@ describe('the casings of the room in the engine (spec 008, TS.5)', () => {
   })
 })
 
-describe('a room without an engine makes no body (spec 008, TS.5)', () => {
-  for (const physics of ['own', undefined] as const) {
-    it(`${physics === undefined ? 'no physics option' : "physics 'own'"}: the module is lent no world, and the casings and the grenade still fly`, () => {
-      const { room, weapons, probe } = roomOf(physics ? { physics } : {})
-      expect(probe.attached).toBe(true)
-      expect(probe.physics).toBeUndefined()
-      fire(room)
-      expect(weapons.fx?.casings).toBeGreaterThan(0)
-      room.setTool('frag_grenade')
-      step(room, 40)
-      room.use()
-      let grenade: THREE.Object3D | undefined
-      for (let frame = 0; frame < 120 && !grenade; frame++) {
-        room.update(STEP)
-        room.scene.traverse((object) => {
-          if (!grenade && kitOriginOf(object)?.kind === 'explosive') grenade = object
-        })
-      }
-      expect(grenade).toBeDefined()
-      room.clear()
-      expect(weapons.fx?.casings).toBe(0)
-      room.dispose()
-    })
-  }
+describe('a room on a world it steps itself makes no body (spec 008, TS.5)', () => {
+  it('the module is lent no world, and the casings and the grenade still fly', async () => {
+    const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    const { room, weapons, probe } = roomOf({ physics: world })
+    expect(probe.attached).toBe(true)
+    expect(probe.physics).toBeUndefined()
+    fire(room)
+    expect(weapons.fx?.casings).toBeGreaterThan(0)
+    room.setTool('frag_grenade')
+    step(room, 40)
+    room.use()
+    let grenade: THREE.Object3D | undefined
+    for (let frame = 0; frame < 120 && !grenade; frame++) {
+      room.update(STEP)
+      room.scene.traverse((object) => {
+        if (!grenade && kitOriginOf(object)?.kind === 'explosive') grenade = object
+      })
+    }
+    expect(grenade).toBeDefined()
+    room.clear()
+    expect(weapons.fx?.casings).toBe(0)
+    room.dispose()
+    world.dispose()
+  })
 })
