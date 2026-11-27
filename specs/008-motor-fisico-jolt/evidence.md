@@ -4794,3 +4794,40 @@ O limite de 1 ms na mediana da passagem só é afirmado nessa faixa; nunca no `p
 **Gates.** `typecheck` limpo em game-physics, game-physics-jolt, game-destruction-three, game-test-room e game-vehicles-three; `eslint` sem erro (o aviso `max-lines` de `engine-pieces.ts` já existia: 1691 → 1720 linhas); testes: game-physics 32, game-physics-jolt 237 (+2), game-destruction-three 861 (+4 sem o custo), game-test-room 575 (+8) verdes; nenhum golden mudou.
 
 **Um teste existente falha e eu não o toquei.** `game-vehicles-three/tests/physical-car.test.ts` ("on the loop the car has its bodies…", linha 90) espera `world.bodyCount === fixedBodies + 1 + peças`. Com o seguidor o carro lança ladrilhos de chão (80 corpos em vez de 66: 14 ladrilhos ao longo dos 12+ m da batida), e a última asserção (`bodyCount === fixedBodies` depois do `room.clear()`) esperaria os ladrilhos fora. A intenção do teste é "nenhum corpo do carro sobra"; a forma de contar precisa excluir corpos de ladrilho. Fica para decisão do dono (proposta: contar só os corpos que não são da camada `static`, ou ler os ladrilhos do `EnginePieces`).
+## T3.5 — fechamento (2026-11-27): teto de giro por tamanho; `rolling` sem afrouxar
+Máquina: Intel Core Ultra 9 275HX, 24 cores, Arch Linux, Node 20, worktree `spec-008-t35` sobre `1328766c6`. Feito por `executor` (sonnet). Sem GPU nem navegador. Decisão do dono de 2026-11-27: "subir teto e corrigir".
+**Estado de partida.** Na main atual os 3 testes de `rolling` já passavam no Jolt, mas só porque a T3.6d (D3) trocara a entrada do teste "a rolling can knocks a still one on" (2 m/s, 0,5 s, x −0,4 → 1,5 m/s, 0,8 s, x −0,2), e a T3.10 e a restituição pela média corrigiram os outros dois (latas no ar, cinquenta latas). `PIECE_SOLVER=jolt`, pacote inteiro: 859 passam, 0 falham.
+**(a) Teto de giro por tamanho** (`game-physics-jolt/src/world.ts`, `turnCapOf`; constantes em `constants.ts`). O corpo dinâmico leva `mMaxAngularVelocity = clamp(MAX_EDGE_SPEED / raio, 47,12 rad/s, MAX_TURN_PER_STEP / passo fixo)`: raio = alcance da caixa local da forma; `MAX_EDGE_SPEED` = **6 m/s** (velocidade máxima do ponto mais distante); piso = o teto do próprio motor (π/4 · 60 = 47,12 rad/s), então nada fica mais lento do que era; teto = **um quarto de volta por passo fixo** (π/4 rad), o que o motor já permite a 60 Hz (um mundo de 60 Hz fica com 47,12; o do kit, 120 Hz, vai a 94,2). Nada no contrato cita Jolt (a regra é do adaptador; sem opção nova). A lata (raio de alcance 0,075 m) fica com 80 rad/s e rola a 2 m/s (60,6 rad/s) sem derrapar.
+- Por que 6 m/s e o teto por passo: a lata pede ≥ 61 rad/s; a granada do `extras.test.ts` (mundo de 60 Hz, "em repouso em 5 s") só passa com o teto de 47 (com 54, 72 e 120 rad/s repousa em 6,1 a 7,4 s: a granada rola 18 m em vez de 8: a regra da B2 dependia do teto). O teto por passo mantém os mundos de 60 Hz como eram. 8 m/s com teto de 1 rad/passo (primeira tentativa) quebrava a granada (7,42 s).
+- Teste do adaptador: `game-physics-jolt/tests/turn-cap.test.ts` (corpo pequeno gira até o teto por tamanho, abaixo dele passa intacto; corpo grande mantém 47,12).
+- **Teste de `rolling` na entrada original.** "on the floor, a rolling can knocks a still one on and nearly stops" volta a 2 m/s, 0,5 s, mesmas asserções (`> 2R − 6 mm`, `b.v > a.v`); com o teto de 47 rad/s e `MAX_EDGE_SPEED = 1` ele falha (b.x 1,14 contra > 1,2), com a regra nova passa. **Uma mudança de lugar, não de critério:** a pista passa de x −0,4/0,2 para 0,4/1,0 e o limite de 0,4 para 1,2 (mesmo deslocamento de +0,8 m), porque a pista antiga cruza a emenda entre dois ladrilhos do chão em x = 0.
+**Achado, fora desta task: emenda entre ladrilhos do chão.** Uma lata rolando a 2 m/s sobre a emenda de duas lajes (`engine-pieces.ts` `replaceGround`, caixas de 2 m com `convexRadius: 0`) perde de 30 % a 85 % da velocidade (medido: 1,98 → 1,40 m/s no renderer; 2,00 → 0,26 m/s com o adaptador sozinho, duas lajes e uma lata, contra 1,92 numa laje só). Com as lajes sobrepostas 5 cm o corte cai para 11 % a 35 %, com o raio de convexidade do cilindro a 0,01 mm para 11 %: depende do raio de convexidade do cilindro (6,6 mm) e da quina da laje vizinha (colisão fantasma), não do teto de giro. Não corrigido; fica para o dono (opções: ladrilhos que se sobrepõem com topo mais baixo 1 mm, ou uma só laje para vários ladrilhos planos contíguos).
+**(b) Contato cilindro–cilindro pela forma nativa.** `shapeOf` (`engine-pieces.ts`) já entrega ao motor `cylinder` (`CylinderShape` do Jolt) num composto de um filho; o Jolt reduz um composto de um filho à forma girada. Sonda do adaptador, duas latas paralelas a 3 m/s, restituição 0,6, atrito 0, sem gravidade, 24 passos: filho num composto → a 0,89 / b 2,08 m/s; corpo cilíndrico nativo com a rotação do corpo → a 0,89 / b 2,08 (espelhado); iguais. A diferença do 0,6 / 2,4 esperado (giro de ±3,7 a ±17,6 rad/s em torno de y) é do contato cilindro–cilindro do próprio motor, não da forma aproximada: o casco de 16 lados já fora descartado na T3.5 (giro e rolamento). Nenhuma mudança de código; os testes "duas latas no ar, restituição" e "cinquenta latas" passam.
+### Gates (2026-11-27, árvore final)
+| Gate | Resultado |
+|---|---|
+| `game-destruction-three`, Jolt | 860 passam, 0 falham (89 pulados) |
+| `game-destruction-three`, `PIECE_SOLVER=own` | 743 passam, 0 falham (201 pulados) |
+| `game-physics-jolt` | 237 passam, 0 falham (3 pulados) |
+| `game-physics` | 32 passam |
+| `game-destruction` | 701 passam |
+| `game-floorplan-three` (goldens incluídos) | 1634 passam, 0 falham; nenhum golden mudou |
+| `eslint` e `tsc --noEmit` em `game-physics-jolt` e `eslint` do `rolling.test.ts` | 0 problemas |
+## T3.3 — fechamento (2026-11-27): piso documentado
+Decisão do dono: "piso documentado". O bug 4 (C1 com 8 e 10 iterações) **não se corrige abaixo do piso**; o limite está escrito em `game-physics/README.md` (linha do `KIT_WORLD`), `contract.ts` (`WorldDesc.velocityIterations`), `spec.md` (§5 condição 1, §7 item 4, C6) e `plan.md` (ajustes do mundo): abaixo de 20 iterações o kit não garante C1; a produção (120 Hz, 32 iterações) tem 0 falhas.
+Bacia, 64 sementes × dt {0,05; 1/60} (128 casos), `PIECE_SOLVER=jolt`, um processo, medida em 2026-11-27 sob `flock`:
+| Iterações | Passam | Pior C1 (kg·m) | Pior C2 | Pior C3 (m) |
+|---|---|---|---|---|
+| 8 | 123/128 | +1,110 | 0,0126 | 0,0138 |
+| 10 | 124/128 | +1,990 | 0,0213 | 0,0123 |
+| 20 | 128/128 | −0,0047 | 0 | 0,0076 |
+| 32 (produção) | **128/128** | −0,0080 | 0 | 0,0119 |
+## T3.6e — fechamento (2026-11-27): produção 0 falhas e o piso como teto
+Decisão do dono: "piso documentado". Varredura completa uma vez (`node tests/sweep-c6.mjs`, iterações {20, 32}, 4608 corridas, 8 processos, 684 s, sob `flock`), mesma máquina.
+| Escopo | Resultado |
+|---|---|
+| Célula de produção (dt 1/60, push-out ×1, 32 it.; mundo a 120 Hz) | bacia 64/64, pilha 20:1 64/64, pilha de 5 64/64: **0 falhas** |
+| Piso (32 it.), todas as células | **18 falhas de 2304**: pilha 20:1 a dt 1/144, 6 sementes × 3 push-outs (C1 até +0,068 kg·m); eram 19 na T3.6d (o caso da bacia a push-out ×1,5, C3 0,0407, passou nesta medida) |
+| 20 it. (comparação) | 223 falhas (pilha 20:1 a 1/60 e a 1/144, bacia a 1/144 e a push-out ×1,5) |
+| "Mais trabalho piorou um caso que passava" | 0 |
+**Travas** (`tests/sweep-c6.mjs`): sai com erro se a célula de produção falhar em alguma corrida, se as falhas do piso passarem de `FLOOR_FAILURE_CEILING` (**18**, o teto que só pode cair; a varredura avisa quando a contagem baixa) ou se mais iterações piorarem um caso. Uma corrida curta (`SWEEP_SEEDS=8`, 141 s) confirmou o formato da saída: 3 falhas no piso, 0 na produção, teto 18.
