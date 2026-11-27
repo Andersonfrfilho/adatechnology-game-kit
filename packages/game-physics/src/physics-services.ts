@@ -34,6 +34,10 @@ export interface PhysicsServicesOptions {
 /** The channel the crowd lends its agents on: a value is `{ crowd, agents }` as `createRunOver` takes them (the crowd and the capsules of its agents). */
 export const CROWD_AGENTS_CHANNEL = 'crowd.agents'
 
+/** The channel a host's car module lends the velocity a body that dies in the call it is read in carries (`RunOver.dyingVelocity`): a value is a function, `undefined` outside a hit. */
+export const CROWD_DYING_VELOCITY_CHANNEL = 'crowd.dying-velocity'
+export type DyingVelocity = () => Vec3 | undefined
+
 const NO_INTEREST: () => readonly Vec3[] = () => []
 
 export const createPhysicsServices = ({ loop, budget }: PhysicsServicesOptions): PhysicsServices => {

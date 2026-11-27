@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { corpseBodyKit, createRig, GUIDE } from '@adatechnology/game-characters'
-import type { CorpseBodiesState, Layer, PhysicsWorld } from '@adatechnology/game-physics'
+import { CROWD_DYING_VELOCITY_CHANNEL } from '@adatechnology/game-physics'
+import type { CorpseBodiesState, DyingVelocity, Layer, PhysicsWorld } from '@adatechnology/game-physics'
 
 import { crowdHash, crowdRoom, dropPile, drawing, killAt, step, torsoOf } from './room-corpses-support'
 
@@ -33,6 +34,21 @@ describe('the dead of the crowd in the engine of the room (spec 008, TS.7)', () 
     expect(lies[1]).toBeLessThan(0.5)
     expect(lowest).toBeGreaterThan(-0.02)
     expect(module.crowd.corpses.count).toBe(1)
+    room.dispose()
+    world!.dispose()
+  })
+
+  it('a body a car kills starts at the speed the car lends, and the crowd is not told it was pushed', { timeout: 120000 }, async () => {
+    const { room, module, world, services } = await crowdRoom('engine')
+    const velocity = [0, 0, 6] as const
+    const stopLending = services()!.channel<DyingVelocity>(CROWD_DYING_VELOCITY_CHANNEL).publish(() => velocity)
+    const id = killAt(module, 0, 0)
+    stopLending()
+    step(room, 6 * 60)
+    const lies = torsoOf(services()!, id)
+    const told = module.crowd.corpses.entries.find((entry) => entry.id === id)!.data
+    expect(lies[2]).toBeGreaterThan(1.5)
+    expect(told.z).toBeCloseTo(0, 5)
     room.dispose()
     world!.dispose()
   })

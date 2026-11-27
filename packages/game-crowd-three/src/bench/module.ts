@@ -3,7 +3,7 @@ import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, C
 import type { BakeBuilders, BakeSpec, Three } from '@adatechnology/game-characters-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { isPhysicsServices } from '@adatechnology/game-physics'
-import type { PhysicsServices } from '@adatechnology/game-physics'
+import type { PhysicsServices, Vec3 } from '@adatechnology/game-physics'
 import { createPlayer } from '@adatechnology/game-player'
 import type { Player, PlayerAction } from '@adatechnology/game-player'
 import type * as THREE_NS from 'three'

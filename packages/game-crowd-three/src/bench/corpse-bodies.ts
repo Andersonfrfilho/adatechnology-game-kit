@@ -1,7 +1,8 @@
 import { GUIDE, corpseBodyKit, createRig } from '@adatechnology/game-characters'
 import { relocateCorpse } from '@adatechnology/game-crowd'
 import type { Corpse, Crowd } from '@adatechnology/game-crowd'
-import type { CorpseBodies, CorpseBodyKit, PhysicsServices, Vec3 } from '@adatechnology/game-physics'
+import { CROWD_DYING_VELOCITY_CHANNEL } from '@adatechnology/game-physics'
+import type { CorpseBodies, CorpseBodyKit, DyingVelocity, PhysicsServices, Vec3 } from '@adatechnology/game-physics'
 
 import type { LyingBodies } from '../instances'
 
@@ -44,8 +45,13 @@ export const bindCorpseBodies = (services: PhysicsServices, crowd: Crowd): Corps
     const hit = services.world.rayFirst([x, DROP_FROM_M, z], DOWN, DROP_FROM_M, { layers: SURFACE_LAYERS })
     return hit ? DROP_FROM_M - hit.distance : 0
   }
+  const dying = services.channel<DyingVelocity>(CROWD_DYING_VELOCITY_CHANNEL)
   const stopFollowing = crowd.corpses.subscribe({
-    added: (entry) => void bodies.add({ id: entry.id, kit: kitOf(entry.data), position: [entry.data.x, surfaceAt(entry.data.x, entry.data.z), entry.data.z], yaw: entry.data.yaw }),
+    added: (entry) => {
+      // a body a car kills in this very step starts at the car's speed
+      const velocity = dying.values[0]?.()
+      bodies.add({ id: entry.id, kit: kitOf(entry.data), position: [entry.data.x, surfaceAt(entry.data.x, entry.data.z), entry.data.z], yaw: entry.data.yaw, ...(velocity ? { velocity } : {}) })
+    },
     removed: (entry) => bodies.follower.removed(entry),
   })
   const stopSettled = services.onCorpseSettled((move) => void relocateCorpse(crowd, move))
