@@ -727,7 +727,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     floorAt: terrain.footAt,
     speedAt: terrain.walkFactorAt,
     start: arena.playerStart,
-    crouchKeys: options.crouch?.keys,
+    crouchKeys: options.crouch?.keys, ...(kit.physics.services ? { engine: { services: kit.physics.services, scheduler, stepHeight: STEP_UP } } : {}),
     onSlam: (event) => slamPlayer(event),
     onFeet: (event) => {
       const at = player.position
@@ -3997,7 +3997,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     push.step(isPaused ? 0 : dt)
     shoves.step(isPaused ? 0 : dt)
     doors.step(isPaused ? 0 : dt)
-    if (!isPaused) kickLight(dt)
+    if (!isPaused && !player.engine) kickLight(dt)
     if (!isPaused) pushByPlayer(dt)
     else player.takeWish()
     stepAvatar(isPaused ? 0 : dt)
@@ -4399,7 +4399,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     setViewCamera: (view) => moduleViews.setMain((view as THREE_NS.Camera | null) ?? null),
     holdPlayer: (held) => {
       moduleHeld = held
-      player.setWalkHeld(held)
+      player.hold(held)
     },
     playerHeld: () => moduleHeld,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),

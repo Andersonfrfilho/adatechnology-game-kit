@@ -93,14 +93,17 @@ export const createOwnLocomotion = (o: LocomotionContext, start: Vec3): Locomoti
     get z() {
       return px.z
     },
+    get drawnX() {
+      return px.x
+    },
+    get drawnZ() {
+      return px.z
+    },
     get feet() {
       return flying ? flyY : floorLevel + y
     },
     get drawnFeet() {
       return flying ? flyY : floorLevel + y - stepLag
-    },
-    get floorLevel() {
-      return floorLevel
     },
     get speed() {
       return walked
@@ -128,6 +131,7 @@ export const createOwnLocomotion = (o: LocomotionContext, start: Vec3): Locomoti
       y = 0
       vy = 0
     },
+    hold: () => undefined,
     canStand: (x, z) => !blocked(x, z),
     moveBy: move,
     takeWish() {

@@ -48,12 +48,13 @@ export interface LocomotionInput {
 export interface Locomotion {
   readonly x: number
   readonly z: number
+  /** Where the view stands: x and z of the feet as drawn (the same as `x`, `z` when nothing is interpolated). */
+  readonly drawnX: number
+  readonly drawnZ: number
   /** The feet's height: a jump lifts it. */
   readonly feet: number
   /** The feet as the body is drawn: after a step up they climb it over a few frames. */
   readonly drawnFeet: number
-  /** The floor under the player's last known place. */
-  readonly floorLevel: number
   readonly speed: number
   readonly running: boolean
   readonly grounded: boolean
@@ -70,8 +71,10 @@ export interface Locomotion {
   takeWish(): [number, number]
   /** Puts the feet at `position` (x, z; the floor is under them) with no speed; returns the floor level there. */
   place(position: Vec3): number
-  /** The blast's throw, `airborne` or not, joins the body. */
-  knocked(knock: Knock): void
+  /** A module (a vehicle, an aircraft) holds the player and places it itself: the body leaves the world while it lasts. */
+  hold(held: boolean): void
+  /** The blast's throw joins the body: `knock` is the whole of the knock now, `added` the velocity this blast gave. */
+  knocked(knock: Knock, added: readonly [number, number, number]): void
   /** One step of a knock: moves the body, tells the slam or the landing. True when the knock can be dropped. */
   stepKnock(knock: Knock, dt: number): boolean
   /** One step on foot or flying. */

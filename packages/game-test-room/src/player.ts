@@ -1,10 +1,13 @@
 import type * as THREE_NS from 'three'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
+import type { Scheduler } from '@adatechnology/game-runtime'
 
 import { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED } from './locomotion'
 import type { Locomotion } from './locomotion'
 import { createOwnLocomotion } from './own-locomotion'
+import { createEngineLocomotion } from './player-body'
+import type { EngineBody } from './player-body'
 
 export { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED }
 
@@ -31,6 +34,11 @@ export interface PlayerOptions {
    * heap of debris; 0 is the floor), `blocked` that something taller is in the way. Without it the floor is flat and only the colliders stop.
    */
   footing?: (x: number, z: number, radius: number, feet: number) => { floor: number; blocked: boolean }
+  /**
+   * The physics world of the room's loop: the body is then a walker in it (`player-body.ts`) and the view stands where the feet are drawn between the last two
+   * steps, set in the scheduler's `present` phase. Without it the room walks the player itself.
+   */
+  engine?: EngineBody & { readonly scheduler: Pick<Scheduler, 'add'> }
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -84,6 +92,8 @@ export interface Player {
   readonly grounded: boolean
   /** Whether the player is in free flight / noclip mode (bypasses gravity and colliders). */
   readonly flying: boolean
+  /** The body is a walker in the physics world (`PlayerOptions.engine`). */
+  readonly engine: boolean
   toggleFly(): boolean
   setFly(enabled: boolean): void
   /** Whether the player is crouched (a crouch key tapped or held): the eye sinks and the walk slows. */
@@ -104,6 +114,8 @@ export interface Player {
   canStand(x: number, z: number): boolean
   /** While held the keys do not walk or jump: whoever holds it moves the player with `moveBy` (pushing a piece of furniture). */
   setWalkHeld(held: boolean): void
+  /** A module places the player itself (a vehicle, an aircraft): like `setWalkHeld`, and on the engine path the body also leaves the world while it lasts. */
+  hold(held: boolean): void
   /** Seated, the body stays at the height its pose set: what it sits on is not a step to climb and it does not fall. */
   setSeated(seated: boolean): void
   /** Lowers the eye by this many metres, eased (bending over something low); 0 stands up. */
@@ -191,7 +203,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     crouchPress = null
   }
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
-  const locomotion: Locomotion = createOwnLocomotion(o, o.start)
+  const locomotion: Locomotion = o.engine ? createEngineLocomotion(o, o.start, o.engine) : createOwnLocomotion(o, o.start)
 
   /** The knock of a blast on the body, while it lasts. */
   let knocked: Knock | null = null
@@ -213,10 +225,19 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     cam.quaternion.setFromEuler(euler)
     const standing = eye - CROUCH_DROP * crouch - bend
     const posY = locomotion.flying ? locomotion.drawnFeet + standing : locomotion.drawnFeet + standing + (LYING_EYE - standing) * fallen
-    cam.position.set(locomotion.x, posY, locomotion.z)
+    cam.position.set(locomotion.drawnX, posY, locomotion.drawnZ)
     cam.updateMatrixWorld(true)
   }
   apply()
+  // the view follows the feet as they are drawn between two fixed steps: the scheduler's alpha, which `present` has and the loop's frame does not
+  const stopPresent = o.engine?.scheduler.add(
+    (context) => {
+      if (!context.simulated || context.scripted) return
+      locomotion.present?.(context.alpha)
+      apply()
+    },
+    { phase: 'present', order: -100, id: 'player.present' },
+  )
 
   const walkKeys = (): readonly [number, number] => {
     const f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0)
@@ -390,6 +411,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     setWalkHeld(held) {
       walkHeld = held
     },
+    hold(held) {
+      walkHeld = held
+      locomotion.hold(held)
+    },
+    engine: o.engine !== undefined,
     setSeated(value) {
       locomotion.setSeated(value)
     },
@@ -461,7 +487,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         knockedForward = -Math.sin(yaw) * away[0] - Math.cos(yaw) * away[2] > 0
         crouchLatched = false
       }
-      locomotion.knocked(knocked)
+      locomotion.knocked(knocked, next.velocity)
     },
     get knocked() {
       return knocked
@@ -493,14 +519,14 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         let rise = 0
         if (keys.has('Space')) rise += 1
         if (keys.has('KeyC') || keys.has('ControlLeft') || keys.has('ControlRight')) rise -= 1
-        locomotion.update(dt, { walkX, walkZ, speed: run ? 14 : 5, running: run, jump: false, walkHeld, crouched, rise })
+        locomotion.update(dt, { walkX, walkZ, speed: run ? 14 : 5, running: run, jump: false, walkHeld, crouched: isCrouched(), rise })
         apply()
         return
       }
       const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
       const jump = keys.has('Space')
       if ((walkX || walkZ || jump) && eye !== EYE) eye = EYE
-      locomotion.update(dt, { walkX, walkZ, speed: crouched ? CROUCH_WALK : run ? RUN : WALK, running: run, jump, walkHeld, crouched, rise: 0 })
+      locomotion.update(dt, { walkX, walkZ, speed: crouched ? CROUCH_WALK : run ? RUN : WALK, running: run, jump, walkHeld, crouched: isCrouched(), rise: 0 })
       apply()
     },
     setPose(position, yw, pt) {
@@ -544,6 +570,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       apply()
     },
     dispose() {
+      stopPresent?.()
       locomotion.dispose()
       if (holdTimer) clearTimeout(holdTimer)
       o.dom.removeEventListener('mousedown', onMouseDown)
