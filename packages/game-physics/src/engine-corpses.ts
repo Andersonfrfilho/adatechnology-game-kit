@@ -6,6 +6,7 @@ import { yawQuat } from './corpse-pose'
 import type { CorpseBodyKit, Rigid } from './corpse-pose'
 import { bornInFullPile, distanceTo, enforceIslands, enforceQuotas, evaluateCorpses, rankPiles } from './engine-corpses-eval'
 import { freezeCorpses, releaseResting } from './engine-corpses-pile'
+import { restoreFresh } from './engine-corpses-restore'
 import { bornAt, removeRungBodies, storeTorso, switchRung, torsoOf, wakeRecord, writeTorso } from './engine-corpses-swap'
 import type { AddCorpseParams, AddLyingCorpseParams, CorpseBodiesOptions, CorpseContext, CorpseRecord } from './engine-corpses-types'
 import { isPhysicsLoop } from './loop'
@@ -100,6 +101,12 @@ export interface CorpseBodies {
   saveState(): CorpseBodiesState
   /** Puts a `saveState` back; the world must hold the same bodies (it was restored from its own save first). False when a body is missing. */
   restoreState(state: CorpseBodiesState): boolean
+  /**
+   * Puts a `saveState` in a world that does not hold its bodies (a new world after a load, where the world's own `restoreState` cannot be used): every corpse is laid, oldest first,
+   * where its torso lay, `kitOf(id)` giving its kit; one that was falling comes back at rest and a ragdoll (R0, made only by a death) comes back as its chain (R1). The world's bodies and the interest are the host's.
+   * False when the corpses already hold a body or `kitOf` knows no kit for a saved id.
+   */
+  restoreFresh(state: CorpseBodiesState, kitOf: (id: number) => CorpseBodyKit | undefined): boolean
   /** Takes every body the corpses hold (the rungs' and the piles' compounds) out of the world and stops following the loop; the world stays. */
   dispose(): void
 }
@@ -204,7 +211,10 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     return switchRung(ctx, record, rung, false)
   }
 
-  const saveState = (): CorpseBodiesState => ({
+  const saveState = (): CorpseBodiesState => {
+    // a body with a rung still moves: where its torso lies now is what a new world is laid from
+    for (const record of ctx.records.values()) if (record.rung !== 'r2f' && record.rung !== 'r3') storeTorso(record, torsoOf(ctx, record))
+    return {
     tick: ctx.tick,
     born: ctx.born,
     nextPile: ctx.nextPile,
@@ -215,7 +225,8 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
       sinceChangeSeconds: record.sinceChangeSeconds, woken: record.woken, asleep: record.asleep, stale: record.stale, touching: [...record.touching], born: record.born, originX: record.originX, originZ: record.originZ, lastLookedAt: record.lastLookedAt, distance: record.distance, dormant: record.dormant, dormantKey: record.dormantKey === Infinity ? -1 : record.dormantKey,
     })),
     piles: [...ctx.piles.values()].map((pile) => ({ id: pile.id, body: pile.body, members: [...pile.members] })),
-  })
+    }
+  }
 
   const restoreState = (state: CorpseBodiesState): boolean => {
     const kits = new Map([...ctx.records.values()].map((record) => [record.id, record.kit]))
@@ -283,6 +294,7 @@ export const createCorpseBodies = (host: SeamWorld | PhysicsLoop, options: Corps
     },
     saveState,
     restoreState,
+    restoreFresh: (state, kitOf) => restoreFresh(ctx, state, kitOf, addLying),
     dispose() {
       stop()
       for (const record of ctx.records.values()) if (record.rung !== 'r2f' && record.rung !== 'r3') removeRungBodies(ctx, record)
