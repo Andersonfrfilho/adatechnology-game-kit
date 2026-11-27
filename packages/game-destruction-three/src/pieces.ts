@@ -450,6 +450,7 @@ export class PieceSystem {
       ? new EnginePieces(THREE, resolved.loop.world, {
           groundAt: o.terrainAt ?? o.groundAt,
           ...(o.terrainRollingAt ? { groundRollingAt: o.terrainRollingAt } : {}),
+          ...(o.terrainRollingDampingAt ? { groundRollingDampingAt: o.terrainRollingDampingAt } : {}),
           ...(o.terrainRangeAt ? { groundRange: o.terrainRangeAt } : {}),
           // the grid stands for `terrainAt` alone: without it the tiles read `groundAt`, which the grid may not be (a lot flattened, a slab)
           ...(o.terrainGridAt && o.terrainAt ? { groundGrid: o.terrainGridAt } : {}),

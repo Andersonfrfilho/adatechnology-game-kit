@@ -70,8 +70,7 @@ const rollOut = (id: RollerId, groundId: string, speed = 1.5): { seconds: number
   return { seconds: 60, distance: root.position.x }
 }
 
-// The pieces' own solver (the room's default). Under Jolt the pieces do not carry their damping to the engine yet (`engine-pieces.ts` passes only C_rr).
-describe.skipIf(IS_JOLT)('round pieces stop by the rolling resistance and damping of their material and of the ground (SDK materials)', () => {
+describe('round pieces stop by the rolling resistance and damping of their material and of the ground (SDK materials)', () => {
   // limits a few times what the materials give, so a change that sends them rolling for ever fails, and a smaller one does not
   const LIMITS: Record<string, Record<RollerId, { readonly metres: number; readonly seconds: number }>> = {
     // measured with the SDK's values: glass and steel 12.5 m in 18.7 s on glazed tile, 5.7 m in 8.9 s on concrete, 0.8 m in 1.1 s on grass; wood 5.3 m, 3.7 m, 0.7 m
@@ -100,7 +99,7 @@ describe.skipIf(IS_JOLT)('round pieces stop by the rolling resistance and dampin
   })
 })
 
-describe.skipIf(IS_JOLT)('a rolling piece goes on down a slope and rolls again when kicked', () => {
+describe('a rolling piece goes on down a slope and rolls again when kicked', () => {
   /** A wooden board 4 m long tilted by `degrees`, asleep: a ramp. */
   const addRamp = (s: Scene, degrees: number): number => {
     const angle = (degrees * Math.PI) / 180
@@ -114,7 +113,8 @@ describe.skipIf(IS_JOLT)('a rolling piece goes on down a slope and rolls again w
     s.scene.add(root)
     root.updateMatrixWorld(true)
     s.renderer.bind('ramp', root, { parts: { body: mesh } })
-    s.renderer.makePiece('ramp').sleeping = true
+    // under Jolt a drawn fixed thing is a static body already; a sleeping piece is a dynamic board that the roller wakes and drops flat
+    if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
     return root.position.y
   }
 
