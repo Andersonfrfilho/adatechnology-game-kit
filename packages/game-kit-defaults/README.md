@@ -53,7 +53,7 @@ world.frame.beforeWorld((dt) => player.update(dt)) // inside the one `room.simul
 const stop = world.start() // draws when the host made the renderer; `world.render({ ... })` draws one frame by hand
 ```
 
-On by default: Jolt (`physics: 'jolt'`; `'own'` or a `PhysicsLoop` of the game instead), the blast pacing (`blastPacing: false` turns it off), the D4 debris policy (`debris: { blast: false }`) and the ground tiles in workers, only with a coordinator that has real workers (`debris: { groundWorker: false }`); `world.info` says what is on. The host releases only what it made: a renderer, audio engine, coordinator or physics loop of the game is left alone. The order of the step is `design-host.md` §4.1: `world.frame.systems()` lists what is registered; the rules of the world that read the game's own object lists plug in with `world.rules.use({ fire, beforePhysics })`.
+On by default: Jolt (`physics: 'jolt'`, the kit's single engine; or a `PhysicsLoop` of the game instead), the blast pacing (`blastPacing: false` turns it off), the D4 debris policy (`debris: { blast: false }`) and the ground tiles in workers, only with a coordinator that has real workers (`debris: { groundWorker: false }`); `world.info` says what is on. The host releases only what it made: a renderer, audio engine, coordinator or physics loop of the game is left alone. The order of the step is `design-host.md` §4.1: `world.frame.systems()` lists what is registered; the rules of the world that read the game's own object lists plug in with `world.rules.use({ fire, beforePhysics })`.
 
 ### Loading indicator
 

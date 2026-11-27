@@ -4,6 +4,8 @@ Todo objeto do kit (móvel, item, veículo, parede, estrutura, planta) só é da
 testes com print. Qualidade acima de velocidade: pode demorar num objeto, mas ele sai atendendo a todos. O comportamento vem do material, como no mundo real
 (regra de física realista do projeto); só se pergunta ao dono o que for ambíguo.
 
+O motor de simulação é o Jolt, o único do kit desde a spec 008 (`packages/game-physics-jolt`); os critérios não dependem do motor e valem para ele.
+
 A referência de qualidade é a **latinha** (`item_canned_*` de `game-items-goods`): o tiro fura no ponto atingido, o conteúdo vaza pelo furo e se espalha, o corpo amassa.
 
 | # | Critério | O que tem que acontecer |

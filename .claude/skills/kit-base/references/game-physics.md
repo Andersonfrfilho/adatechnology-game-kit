@@ -23,7 +23,7 @@ API, uso e exemplos: `packages/game-physics/README.md`; campos e unidades em `pa
 | Camadas: `LAYERS`, `LAYER_PAIRS`, `Layer` | este pacote |
 | `createPhysicsLoop`, `isPhysicsLoop`, `PhysicsLoop`, `PhysicsPhase`, `PhysicsFrame`, `PhaseOrder` | este pacote |
 | Massa e forma de cada peça do jogo | o pacote de domínio (`game-destruction`, `game-vehicles`, ...) |
-| Motor (Jolt), memória do motor, passo real | `game-physics-jolt` |
+| Motor único do kit (Jolt), memória do motor, passo real | `game-physics-jolt` |
 
 Regra: os pacotes de domínio dependem só deste pacote e recebem um `SeamWorld`. Nenhum deles importa o adaptador.
 
@@ -37,12 +37,14 @@ Regra: os pacotes de domínio dependem só deste pacote e recebem um `SeamWorld`
 
 ## Como uma costura recebe a física
 
-Toda costura que simula ou consulta corpos recebe `physics: PhysicsLoop | SeamWorld | 'own'`, escolhido uma vez, na criação. Ausente
-lança erro (não cai calado no solver próprio). O resolvedor fica em `game-destruction-three/src/physics-option.ts`:
+Toda costura que simula ou consulta corpos recebe `physics: PhysicsLoop | SeamWorld`, escolhido uma vez, na criação. Ausente lança
+erro. O resolvedor fica em `game-destruction-three/src/physics-option.ts`:
 
 - `PhysicsLoop`: o hospedeiro passa o laço e dá o passo; a costura só registra fases.
 - Mundo (com `stepFixed`): a costura faz o próprio laço e o passa dentro do seu `update`. Passar um mundo sem `stepFixed` lança erro.
-- `'own'`: o solver próprio do kit, até ele sair.
+
+Motor único: o Jolt, pelo adaptador. O solver próprio dos destroços foi substituído (spec 008). A opção `'own'` e a chave
+`PIECE_SOLVER`/`?solver=own` ainda existem no código só até a T8.1 apagá-las; não usar em código novo.
 
 Desenho: `specs/008-motor-fisico-jolt/design/arquitetura.md` (seções 3 e 5).
 
