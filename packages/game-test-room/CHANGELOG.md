@@ -1,5 +1,29 @@
 # @adatechnology/game-test-room
 
+## 1.0.0
+
+### Major Changes
+
+- af3e3a2: `createTestRoom` exige a opção `physics`: sem ela lança `RoomPhysicsRequiredError` (código `ROOM_PHYSICS_REQUIRED`), em vez de cair no solver antigo. Migração: `physics: await createRoomPhysics()` (novo; carrega o Jolt e devolve o `PhysicsLoop` que a sala passa a dar o passo).
+
+### Minor Changes
+
+- 7849522: Sentar e o menu de ações da peça na mira. L senta no assento mirado (ou levanta); segurar L deita quando a peça tem assento `lie` (`seat: { keys, holdSeconds }`, padrão `['KeyL']`). U abre o menu de ações da peça na mira (sentar, deitar, abrir/fechar, pegar, empurrar, guardar na bolsa, equipar a arma), cada uma com a sua tecla; escolha por número ou clique, Esc ou U fecha (`actionMenu: false | { keys }`, padrão `['KeyU']`). `Seating.sit` aceita a pose preferida. A ajuda de teclas da sala traz as duas.
+
+### Patch Changes
+
+- 1eb0e09: Uma peça de várias partes repousa reta no Jolt (T8.1). `game-physics`: `BodyDesc.keepPartContacts` (o corpo mantém os pontos de contato de cada parte, em vez de o motor juntar os das partes num remendo dos quatro melhores: uma lâmina a 11 mm do chão escondia os pontos do cabo e a pá afundava 7 mm). `game-physics-jolt`: a opção liga-se por corpo. `game-destruction-three`: o corpo de uma peça de mais de uma parte a pede. `game-test-room`: o chute das peças leves (`kickLight`) também vale com o motor. Sem motor (`own`) nada muda.
+- 183ef45: Quatro defeitos do caminho do motor, achados ao tirar o `own` dos testes de sala. `game-destruction-three`: uma peça fixa que passa de caixa a malha (a chapa que entorta) ia para o lugar da caixa mais o centro dela, longe do que está desenhado (`EngineStatics.reshape` põe a malha na origem); o broad phase dos raios também encontra a caixa em volta das malhas de um objeto (uma copa de folhas fica até 1,2 m abaixo da caixa que o mundo testa, e o raio que só toca a caixa não achava o objeto); `heldIgnores` novo (opção do renderer e das peças): o corpo que a peça na mão atravessa. `game-kit-defaults`: `debris.heldIgnores` repassa a opção. `game-test-room`: o que o jogador carrega atravessa o corpo dele (uma peça mais larga que o alcance do braço o empurrava para fora), e as coisas que nascem sem posição se espalham em fileiras de cinco (a sexta em diante nascia em cima da primeira). Sem motor (`own`) nada muda.
+- 8240780: `@adatechnology/game-physics-jolt` passa a ser dependência de execução: `createRoomPhysics()` o importa em `src/`.
+- Updated dependencies [59118b5]
+- Updated dependencies [1eb0e09]
+- Updated dependencies [183ef45]
+  - @adatechnology/game-physics@0.10.0
+  - @adatechnology/game-physics-jolt@0.7.4
+  - @adatechnology/game-destruction-three@0.29.3
+  - @adatechnology/game-kit-defaults@0.6.2
+  - @adatechnology/game-player@0.12.2
+
 ## 0.42.1
 
 ### Patch Changes

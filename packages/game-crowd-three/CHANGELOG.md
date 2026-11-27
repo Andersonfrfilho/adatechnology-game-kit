@@ -1,5 +1,16 @@
 # @adatechnology/game-crowd-three
 
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies [59118b5]
+- Updated dependencies [1eb0e09]
+  - @adatechnology/game-physics@0.10.0
+  - @adatechnology/game-characters@0.2.34
+  - @adatechnology/game-crowd@0.8.6
+  - @adatechnology/game-player@0.12.2
+
 ## 0.9.0
 
 ### Minor Changes

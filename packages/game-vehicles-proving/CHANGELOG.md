@@ -1,5 +1,14 @@
 # @adatechnology/game-vehicles-proving
 
+## 0.4.4
+
+### Patch Changes
+
+- Updated dependencies [59118b5]
+- Updated dependencies [1eb0e09]
+  - @adatechnology/game-physics@0.10.0
+  - @adatechnology/game-vehicles-driving@0.3.4
+
 ## 0.4.3
 
 ### Patch Changes

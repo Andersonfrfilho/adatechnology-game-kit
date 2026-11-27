@@ -1,5 +1,15 @@
 # @adatechnology/game-physics
 
+## 0.10.0
+
+### Minor Changes
+
+- 59118b5: `createBody` e `createBodies` lançam `BodyLimitError` (código `BODY_LIMIT_REACHED`) quando o mundo está no teto de corpos, em vez de seguir com um corpo nulo. O contrato ganha `bodyCapacity` e `memoryTotal()` para o host ler a ocupação (corpos vivos contra o teto, bytes livres do heap) sem custo por quadro.
+
+### Patch Changes
+
+- 1eb0e09: Uma peça de várias partes repousa reta no Jolt (T8.1). `game-physics`: `BodyDesc.keepPartContacts` (o corpo mantém os pontos de contato de cada parte, em vez de o motor juntar os das partes num remendo dos quatro melhores: uma lâmina a 11 mm do chão escondia os pontos do cabo e a pá afundava 7 mm). `game-physics-jolt`: a opção liga-se por corpo. `game-destruction-three`: o corpo de uma peça de mais de uma parte a pede. `game-test-room`: o chute das peças leves (`kickLight`) também vale com o motor. Sem motor (`own`) nada muda.
+
 ## 0.9.0
 
 ### Minor Changes

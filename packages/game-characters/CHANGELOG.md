@@ -1,5 +1,13 @@
 # @adatechnology/game-characters
 
+## 0.2.34
+
+### Patch Changes
+
+- Updated dependencies [59118b5]
+- Updated dependencies [1eb0e09]
+  - @adatechnology/game-physics@0.10.0
+
 ## 0.2.33
 
 ### Patch Changes
