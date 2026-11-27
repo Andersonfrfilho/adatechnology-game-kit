@@ -110,8 +110,13 @@ export function serviceEntrance(c: Ctx): void {
   const mx = 0.19
   const my = 1.45
   const mz = 0.14
-  c.b('metal', -mx, my, mz - 0.06, mx, my + 0.5, mz + 0.06, 0x8a8e92)
-  c.b('plain', -mx + 0.02, my + 0.02, mz + 0.0, mx - 0.02, my + 0.48, mz + 0.06, 0xd4d6d6) // inner liner
+  // the box is a shell (back plate and four walls, CLAUDE.md §13), the light liner 3 mm proud of the back plate
+  c.b('metal', -mx, my, mz - 0.06, mx, my + 0.5, mz, 0x8a8e92)
+  c.b('metal', -mx, my, mz, mx, my + 0.02, mz + 0.06, 0x8a8e92)
+  c.b('metal', -mx, my + 0.48, mz, mx, my + 0.5, mz + 0.06, 0x8a8e92)
+  c.b('metal', -mx, my + 0.02, mz, -mx + 0.02, my + 0.48, mz + 0.06, 0x8a8e92)
+  c.b('metal', mx - 0.02, my + 0.02, mz, mx, my + 0.48, mz + 0.06, 0x8a8e92)
+  c.b('plain', -mx + 0.02, my + 0.02, mz, mx - 0.02, my + 0.48, mz + 0.003, 0xd4d6d6) // inner liner
   c.cyl('plain', 0, my + 0.28, mz + 0.03, 0.09, 0.02, 0xf2f2f0, 'cyl') // the meter
   c.rod('plain', 'z', 0, my + 0.28, mz + 0.045, 0.07, 0.004, 0xe8e8e0)
   for (let i = 0; i < 4; i++) c.b('plain', -0.06 + i * 0.03, my + 0.34, mz + 0.047, -0.04 + i * 0.03, my + 0.37, mz + 0.05, 0x2a2a2a)
@@ -229,11 +234,12 @@ export function microwave(c: Ctx): void {
   const sh = shell(c, { x0: -hw, x1: hw, y0: y0 + 0.012, y1, z0: -hd, z1: zb, color: body, inner: 0xe8eaec, t: 0.014, tBack: 0.012, material: 'plain' })
   for (const sx of [-1, 1]) c.b('plain', sx * (hw - 0.04) - 0.02, y0, -hd + 0.04, sx * (hw - 0.04) + 0.02, y0 + 0.012, zb - 0.04, 0x2a2a2c) // feet
   const px = hw * 0.55 // start of the control panel
-  c.b('plain', px, y0 + 0.012, zb - 0.002, hw - 0.014, y1 - 0.014, zf, shade(body, 0.7)) // panel
-  c.cyl('metal', (sh.ix0 + px) / 2, y0 + 0.026, (sh.iz0 + zb) / 2, 0.14, 0.012, 0xcfe0e6, 'cyl') // turntable plate
-  c.cyl('plain', (sh.ix0 + px) / 2, y0 + 0.014, (sh.iz0 + zb) / 2, 0.03, 0.012, 0x888a8c, 'cyl6')
+  // the panel starts at the shell's front edge and the plate stands 2 mm over the floor liner on its hub (CLAUDE.md §13)
+  c.b('plain', px, y0 + 0.014, zb, hw - 0.014, y1 - 0.016, zf, shade(body, 0.7)) // panel
+  c.cyl('metal', (sh.ix0 + px) / 2, sh.iy0 + 0.002, (sh.iz0 + zb) / 2, 0.14, 0.012, 0xcfe0e6, 'cyl') // turntable plate
+  c.cyl('plain', (sh.ix0 + px) / 2, sh.iy0 - 0.006, (sh.iz0 + zb) / 2, 0.03, 0.008, 0x888a8c, 'cyl6')
   for (let i = 0; i < 6; i++) c.b('plain', px + 0.02, y1 - 0.06 - i * 0.034, zf, hw - 0.04, y1 - 0.04 - i * 0.034, zf + 0.004, i === 5 ? 0x4a8a4a : 0x4a4c50) // buttons
-  c.b('plain', px + 0.02, y1 - 0.045, zf, hw - 0.04, y1 - 0.024, zf + 0.002, 0x0c1a10) // display
+  c.b('plain', px + 0.02, y1 - 0.038, zf, hw - 0.04, y1 - 0.024, zf + 0.002, 0x0c1a10) // display, above the first button
   hingedDoor(c, {
     id: 'door', x0: sh.ix0 - 0.014 + 0.003, x1: px - 0.003, y0: y0 + 0.014, y1: y1 - 0.014, zf, t: dt, side: 'left', color: shade(body, 0.9), inner: 0xd0d4d6, style: 'flat', handle: 'bar_v', handleLen: 0.16, angle: 1.7, label: 'prompt.microwave_door',
     extra: () => {
@@ -282,10 +288,11 @@ export function washingMachine(c: Ctx): void {
   c.part(
     'door', [-R - 0.03, cy, dz], { kind: 'hinge', axis: [0, 1, 0], angle: -1.7 },
     () => {
-      c.rod('plain', 'z', 0, cy, dz + 0.02, R + 0.03, 0.04, 0xe2e5e6)
-      c.rod('plain', 'z', 0, cy, dz + 0.0405, R - 0.02, 0.001, 0x8a8e92)
+      // door 36 mm, ring 3 mm proud of it, glass 1.5 mm in front of the ring, latch 3 mm proud; nothing past the old glass front (CLAUDE.md §13)
+      c.rod('plain', 'z', 0, cy, dz + 0.018, R + 0.03, 0.036, 0xe2e5e6)
+      c.rod('plain', 'z', 0, cy, dz + 0.0375, R - 0.02, 0.003, 0x8a8e92)
       c.rod('glass', 'z', 0, cy, dz + 0.042, R - 0.035, 0.003, 0x7e98a4)
-      c.b('plain', R - 0.0, cy - 0.04, dz + 0.02, R + 0.045, cy + 0.04, dz + 0.04, 0xcdd0d2) // latch
+      c.b('plain', R - 0.0, cy - 0.04, dz + 0.02, R + 0.045, cy + 0.04, dz + 0.039, 0xcdd0d2) // latch
     },
     { label: 'prompt.washing_door', at: [0, cy, dz + 0.06], radius: 1.3 },
   )

@@ -490,7 +490,7 @@
   ]
  },
  "household/fridge_compact:high": {
-  "hash": "2b5d0ec2",
+  "hash": "48c2ec92",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 77cd5578",
@@ -499,7 +499,7 @@
    "0/2/0 Mesh f6e7e3f8",
    "0/2/1 Mesh 55695029",
    "0/3 Group 38e0153",
-   "0/3/0 Mesh a0a0a8f1",
+   "0/3/0 Mesh b1512efd",
    "0/3/1 Mesh 14a3d5b5"
   ]
  },
@@ -643,15 +643,15 @@
   ]
  },
  "household/stove:high": {
-  "hash": "b765caf7",
+  "hash": "ea8abd9",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ad3c0d74",
-   "0/1 Mesh 5eae9bd5",
+   "0/0 Mesh 37b7a81b",
+   "0/1 Mesh 5443bacd",
    "0/2 Group d250e6a1",
    "0/2/0 Mesh 87339ab8",
    "0/2/1 Mesh a7b16238",
-   "0/2/2 Mesh b1a98cac",
+   "0/2/2 Mesh a14bdd21",
    "0/3 Group 2f8575bd",
    "0/3/0 Mesh b8a3b89b",
    "0/4 Group 3717cae9",
@@ -665,10 +665,10 @@
   ]
  },
  "household/gas_bottle:high": {
-  "hash": "137f4921",
+  "hash": "854ae29f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh de6537c9",
+   "0/0 Mesh 9aa96cdf",
    "0/1 Group 61e12b0",
    "0/1/0 Mesh 5a976fb8"
   ]
@@ -707,26 +707,26 @@
   ]
  },
  "household/shower:high": {
-  "hash": "33405066",
+  "hash": "81b512aa",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 37f805e8",
-   "0/1 Mesh 8566a951",
+   "0/0 Mesh e3e15edf",
+   "0/1 Mesh a7ed54ee",
    "0/2 Mesh 7f089c67",
    "0/3 Group 820fbf8",
    "0/3/0 Mesh e6cb13d0",
    "0/4 Group 63a74f34",
-   "0/4/0 Mesh 7822005b",
+   "0/4/0 Mesh e89324db",
    "0/4/1 Mesh 86c6fe7c"
   ]
  },
  "household/toilet:high": {
-  "hash": "a8e59aee",
+  "hash": "58429456",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh fd363b4b",
+   "0/0 Mesh ca62862e",
    "0/1 Group 8e7aa3a6",
-   "0/1/0 Mesh a6649073",
+   "0/1/0 Mesh 233f41ac",
    "0/2 Group c1bc931f",
    "0/2/0 Mesh 54faeccf"
   ]
@@ -759,12 +759,12 @@
   ]
  },
  "household/service_entrance:high": {
-  "hash": "6655d968",
+  "hash": "66f6a0ee",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f768d6c6",
+   "0/0 Mesh a4518d7a",
    "0/1 Mesh c0cf6f2a",
-   "0/2 Mesh 17d7bb10",
+   "0/2 Mesh 204f07ea",
    "0/3 Group 2f4ffa5",
    "0/3/0 Mesh cd1d42d0",
    "0/3/1 Mesh 6d98f14e"
@@ -818,11 +818,11 @@
   ]
  },
  "household/microwave:high": {
-  "hash": "9a43fd99",
+  "hash": "9a8f3c5",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh d1c1cbcd",
-   "0/1 Mesh fe969d00",
+   "0/0 Mesh cf96663c",
+   "0/1 Mesh 34563623",
    "0/2 Group 10d1e10a",
    "0/2/0 Mesh 83c3b8e6",
    "0/2/1 Mesh f41e7383",
@@ -832,7 +832,7 @@
   ]
  },
  "household/washing_machine:high": {
-  "hash": "5328d49e",
+  "hash": "6a25e328",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 446d63a9",
@@ -840,7 +840,7 @@
    "0/2 Group a538f23c",
    "0/2/0 Mesh 3735ac41",
    "0/3 Group 9d3a4569",
-   "0/3/0 Mesh 6ff6bbdd",
+   "0/3/0 Mesh 8066c3f",
    "0/3/1 Mesh 7f87ae0c"
   ]
  },
@@ -987,42 +987,42 @@
   ]
  },
  "household/trash_bin:high": {
-  "hash": "a11faf79",
+  "hash": "17beb810",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ac0b6d04",
+   "0/0 Mesh 8a640b5",
    "0/1 Group 63f3d296",
    "0/1/0 Mesh 3748bf9f"
   ]
  },
  "household/wheelie_bin:high": {
-  "hash": "1e8a95d0",
+  "hash": "7b13ea75",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh d50ce8bd",
+   "0/0 Mesh 85a08543",
    "0/1 Mesh 919a6a9f",
    "0/2 Group 98932717",
-   "0/2/0 Mesh d3275452"
+   "0/2/0 Mesh 3490081"
   ]
  },
  "household/mailbox:high": {
-  "hash": "e5422289",
+  "hash": "b953a73f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 11ab928c",
-   "0/1 Mesh de3339bf",
+   "0/0 Mesh 63d062d0",
+   "0/1 Mesh 778fa979",
    "0/2 Group 67992860",
    "0/2/0 Mesh 391811be",
    "0/2/1 Mesh ec2d5100"
   ]
  },
  "household/dog_house:high": {
-  "hash": "eae28f01",
+  "hash": "32db413d",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 308f723a",
-   "0/1 Mesh a5906bf7",
-   "0/2 Mesh e97b9b96",
+   "0/0 Mesh d0bb8ece",
+   "0/1 Mesh 7bec7e61",
+   "0/2 Mesh 9ff29ad8",
    "0/3 Mesh 9fc6bbe7"
   ]
  },
@@ -1143,12 +1143,12 @@
   ]
  },
  "household/cooler:high": {
-  "hash": "527e6f3c",
+  "hash": "15e23bc8",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh aa9bb594",
+   "0/0 Mesh ae9952cc",
    "0/1 Group ba16c688",
-   "0/1/0 Mesh 588412d4"
+   "0/1/0 Mesh 2e5c48ac"
   ]
  },
  "household/campfire:high": {
@@ -1160,10 +1160,10 @@
   ]
  },
  "household/camp_stove:high": {
-  "hash": "e2561728",
+  "hash": "c4a11f46",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ffa85940",
+   "0/0 Mesh d86e125a",
    "0/1 Group a0d32377",
    "0/1/0 Mesh a7fdcbb9"
   ]
@@ -1641,7 +1641,7 @@
   ]
  },
  "household/fridge_compact:game": {
-  "hash": "98c55e52",
+  "hash": "65391dc6",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh e50e3afe",
@@ -1649,7 +1649,7 @@
    "0/2 Group c5b13e7c",
    "0/2/0 Mesh c4cc4183",
    "0/3 Group 38e0153",
-   "0/3/0 Mesh 9373b08a"
+   "0/3/0 Mesh 6b41559e"
   ]
  },
  "household/kitchen_cabinet_base:game": {
@@ -1745,13 +1745,13 @@
   ]
  },
  "household/stove:game": {
-  "hash": "65dd2768",
+  "hash": "e8ee8058",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 9db30cc",
+   "0/0 Mesh 978a0a8d",
    "0/1 Group 477bdb08",
    "0/1/0 Mesh c46986ab",
-   "0/1/1 Mesh c924f797",
+   "0/1/1 Mesh d8b65f30",
    "0/2 Group b5b6f672",
    "0/2/0 Mesh 21eac8e3",
    "0/3 Group dc4001c",
@@ -1765,10 +1765,10 @@
   ]
  },
  "household/gas_bottle:game": {
-  "hash": "d917fc59",
+  "hash": "57efeba6",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 7913165e",
+   "0/0 Mesh 3693fa39",
    "0/1 Group 61e12b0",
    "0/1/0 Mesh 453387d5"
   ]
@@ -1798,25 +1798,25 @@
   ]
  },
  "household/shower:game": {
-  "hash": "be67e2ad",
+  "hash": "50a681e2",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 124eebed",
+   "0/0 Mesh 948ed40c",
    "0/1 Mesh 18be2bf9",
    "0/2 Group e7a6518b",
    "0/2/0 Mesh b85cfa8d",
    "0/3 Group 304c8261",
-   "0/3/0 Mesh f5eb7459",
+   "0/3/0 Mesh 8d110bf1",
    "0/3/1 Mesh dbb55ef1"
   ]
  },
  "household/toilet:game": {
-  "hash": "972d0a4e",
+  "hash": "bfe9ec94",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 61350a30",
+   "0/0 Mesh 80aa02a3",
    "0/1 Group 8e7aa3a6",
-   "0/1/0 Mesh 161c82f5",
+   "0/1/0 Mesh e35a7070",
    "0/2 Group c1bc931f",
    "0/2/0 Mesh c29eac62"
   ]
@@ -1847,10 +1847,10 @@
   ]
  },
  "household/service_entrance:game": {
-  "hash": "1a9f341f",
+  "hash": "c719c30",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 933b86a0",
+   "0/0 Mesh 181d54f",
    "0/1 Group 5050a01f",
    "0/1/0 Mesh 72cc9519",
    "0/1/1 Mesh cd6a7752"
@@ -1901,10 +1901,10 @@
   ]
  },
  "household/microwave:game": {
-  "hash": "e29266c6",
+  "hash": "15557ee3",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 713c5546",
+   "0/0 Mesh 1268b19d",
    "0/1 Group 1276d299",
    "0/1/0 Mesh e2c3afca",
    "0/1/1 Mesh 6f320b14",
@@ -1913,14 +1913,14 @@
   ]
  },
  "household/washing_machine:game": {
-  "hash": "19faf44e",
+  "hash": "5903684",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh a083300f",
    "0/1 Group 4b3be789",
    "0/1/0 Mesh 3b4a3e5a",
    "0/2 Group c51a1352",
-   "0/2/0 Mesh 75a16528",
+   "0/2/0 Mesh ed192576",
    "0/2/1 Mesh b8aaf449"
   ]
  },
@@ -1987,37 +1987,37 @@
   ]
  },
  "household/trash_bin:game": {
-  "hash": "b54d34af",
+  "hash": "b7f84166",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 59749262",
+   "0/0 Mesh b5e3096d",
    "0/1 Group 63f3d296",
    "0/1/0 Mesh e86ae5a7"
   ]
  },
  "household/wheelie_bin:game": {
-  "hash": "1b2c975",
+  "hash": "23af9c81",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 85617dbc",
+   "0/0 Mesh 135df733",
    "0/1 Group fc1b62d0",
-   "0/1/0 Mesh a4fced21"
+   "0/1/0 Mesh 8c97652c"
   ]
  },
  "household/mailbox:game": {
-  "hash": "83c9dd97",
+  "hash": "656d967d",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 54098928",
+   "0/0 Mesh 65d9673a",
    "0/1 Group b98e4ed3",
    "0/1/0 Mesh bfdd25aa"
   ]
  },
  "household/dog_house:game": {
-  "hash": "94218257",
+  "hash": "cde9123f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f84919e1"
+   "0/0 Mesh fac8b389"
   ]
  },
  "household/bbq:game": {
@@ -2089,12 +2089,12 @@
   ]
  },
  "household/cooler:game": {
-  "hash": "9578d8c",
+  "hash": "48408934",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 33aeb172",
+   "0/0 Mesh fab144aa",
    "0/1 Group ba16c688",
-   "0/1/0 Mesh 32a3b2b2"
+   "0/1/0 Mesh adfd88a"
   ]
  },
  "household/campfire:game": {
@@ -2105,10 +2105,10 @@
   ]
  },
  "household/camp_stove:game": {
-  "hash": "6fbbb6e0",
+  "hash": "2b7a2aa2",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 8d6049bc",
+   "0/0 Mesh 9e76179e",
    "0/1 Group a0d32377",
    "0/1/0 Mesh 2a4cef5d"
   ]
@@ -2190,15 +2190,15 @@
   ]
  },
  "options/stove:materialFor": {
-  "hash": "9f3cf755",
+  "hash": "d672aed3",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ad3c0d74",
-   "0/1 Mesh 5eae9bd5",
+   "0/0 Mesh 37b7a81b",
+   "0/1 Mesh 5443bacd",
    "0/2 Group d250e6a1",
    "0/2/0 Mesh 87339ab8",
    "0/2/1 Mesh e666cd33",
-   "0/2/2 Mesh cf851f47",
+   "0/2/2 Mesh 945ff876",
    "0/3 Group 2f8575bd",
    "0/3/0 Mesh b8a3b89b",
    "0/4 Group 3717cae9",

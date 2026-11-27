@@ -40,7 +40,7 @@ export function cooler(c: Ctx): void {
   c.b('plain', -hw + 0.02, 0, hd - 0.07, -hw + 0.07, 0.015, hd - 0.02, DARK)
   c.b('plain', hw - 0.07, 0, hd - 0.07, hw - 0.02, 0.015, hd - 0.02, DARK)
   for (const s of [-1, 1]) c.b('plain', s * hw, top - 0.1, -0.1, s * hw + s * 0.015, top - 0.07, 0.1, DARK) // molded side handles
-  c.b('plain', hw - 0.003, 0.05, hd - 0.14, hw, 0.09, hd - 0.1, DARK) // drain plug
+  c.b('plain', hw - 0.002, 0.05, hd - 0.14, hw + 0.004, 0.09, hd - 0.1, DARK) // drain plug, proud of the wall
   // lid: hinged at the back, a rim that drops into the box
   c.part(
     'lid',
@@ -48,10 +48,12 @@ export function cooler(c: Ctx): void {
     { kind: 'hinge', axis: [1, 0, 0], angle: -1.5 },
     () => {
       c.b('plain', -hw, top, -hd, hw, h, hd, white)
-      c.b('plain', -hw + 0.02, top - 0.012, -hd + 0.02, hw - 0.02, top, hd - 0.02, shade(white, 0.92)) // rim under the lid
-      c.b('plain', -0.09, h - 0.012, hd - 0.05, 0.09, h, hd, shade(body, 0.8)) // front latch
-      c.b('plain', -hw + 0.04, h - 0.006, -hd + 0.04, -hw + 0.07, h, hd - 0.04, shade(white, 0.9)) // molded ribs
-      c.b('plain', hw - 0.07, h - 0.006, -hd + 0.04, hw - 0.04, h, hd - 0.04, shade(white, 0.9))
+      // rim under the lid: drops into the opening 2 mm clear of the liner; latch and ribs stand proud of the lid (CLAUDE.md §13)
+      const rim = t + 0.004 + 0.002
+      c.b('plain', -hw + rim, top - 0.012, -hd + rim, hw - rim, top, hd - rim, shade(white, 0.92))
+      c.b('plain', -0.09, h - 0.012, hd - 0.05, 0.09, h + 0.003, hd + 0.004, shade(body, 0.8)) // front latch
+      c.b('plain', -hw + 0.04, h - 0.002, -hd + 0.04, -hw + 0.07, h + 0.004, hd - 0.04, shade(white, 0.9)) // molded ribs
+      c.b('plain', hw - 0.07, h - 0.002, -hd + 0.04, hw - 0.04, h + 0.004, hd - 0.04, shade(white, 0.9))
     },
     { label: 'prompt.cooler_lid', at: [0, h, hd - 0.03], radius: 1.6 },
   )
@@ -144,7 +146,7 @@ export function campStove(c: Ctx): void {
   for (const a of [0, 2.094, 4.189]) {
     const px = Math.sin(a) * 0.085
     const pz = Math.cos(a) * 0.085
-    c.b('metal', px - 0.008, burnerY + 0.02, pz - 0.008, px + 0.008, Y + h - 0.005, pz + 0.008, DARK) // pot supports
+    c.b('metal', px - 0.008, burnerY + 0.02, pz - 0.008, px + 0.008, Y + h - 0.002, pz + 0.008, DARK) // pot supports, 2 mm over the ring
   }
   c.cyl('metal', 0, Y + h - 0.012, 0, 0.1, 0.008, DARK, 'cyl6') // support ring
   c.b('metal', -hw + 0.005, burnerY, -hd + 0.005, -hw + 0.012, Y + h - 0.01, zf - 0.04, shade(steel, 0.9)) // wind guard: left, right, back

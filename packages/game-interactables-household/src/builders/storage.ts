@@ -110,7 +110,8 @@ export function fridgeCompact(c: Ctx): void {
     handle: 'bar_v', handleLen: 0.3, angle: 1.7, label: 'prompt.fridge_door',
     extra: () => doorLedge(c, dx0 + 0.04, dx1 - 0.04, trayY, zdi, 0.08, 0xe4eef0),
   })
-  dropDoor(c, { id: 'door_freezer', x0: dx0, x1: dx1, y0: yd + 0.015 + 0.002, y1: h - 0.004, zf, t: dt, color: shade(body, 0.97), inner: lining, angle: 1.45, handle: 'bar_h', handleLen: 0.16, label: 'prompt.freezer_door' })
+  // the freezer door, open, lies over the fridge door's top edge: 2 mm narrower each side so their side faces never share a plane (CLAUDE.md §13)
+  dropDoor(c, { id: 'door_freezer', x0: dx0 + 0.002, x1: dx1 - 0.002, y0: yd + 0.015 + 0.002, y1: h - 0.004, zf, t: dt, color: shade(body, 0.97), inner: lining, angle: 1.45, handle: 'bar_h', handleLen: 0.16, label: 'prompt.freezer_door' })
   const slots = [
     ...c.row(sh.ix0 + 0.02, sh.ix1 - 0.02, fy0, zc, 1, [0.4, 0.2, 0.3]),
     ...c.row(sh.ix0 + 0.02, sh.ix1 - 0.02, mid, zc, 1, [0.4, yd - mid - 0.02, 0.3]),

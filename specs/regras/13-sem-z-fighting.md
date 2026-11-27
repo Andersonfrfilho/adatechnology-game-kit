@@ -27,6 +27,10 @@ pixel e não consegue decidir qual está na frente, então alterna entre as duas
 - **Peça nova: zero faces coincidentes.** As peças que já tinham quando a guarda entrou estão em `tests/fixtures/z-fighting-ledger.json`, uma
   dívida que **só diminui** (como a tipagem do §10): piorar falha, melhorar falha até baixar a conta com `UPDATE_ZFIGHT=1`, e esse comando
   nunca acrescenta peça nem sobe número.
+- **Peças móveis nas paradas do curso** (2026-11-27, depois do botão da descarga que piscava só apertado): a pose de repouso não mostra
+  a peça que desce até o plano de outra (botão, tampa fechando num aro, porta que, aberta, deita sobre a de baixo). O
+  `tests/z-fighting-poses.test.ts` do `game-interactables-three` abre cada peça de cada tipo até a metade e até o fim e conta as faces
+  coincidentes entre a peça e o resto: tem de dar zero, sem dívida. Pacote novo com peças móveis faz o mesmo.
 - `node tools/z-fighting/coverage.mjs` roda no CI e falha num pacote `*-three` (ou com golden de peças) sem a guarda. Pacote que não desenha
   peças (sombra, efeito transparente, terreno) fica em `tools/z-fighting/exempt.json` com o motivo; ao ligar a guarda, sai de lá.
 - Revisor: o agente `revisor-z-fighting` (`.claude/agents/`) olha peça nova ou alterada antes do PR.
