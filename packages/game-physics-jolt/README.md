@@ -84,7 +84,7 @@ step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-mu
 - The character controller is Jolt's `CharacterVirtual` behind `createCharacter`: no internal body, so debris passes through it; `pushCharacter` adds `impulse / mass` to the wanted
   velocity and decays it with a 0.25 s constant. `world.dispose()` frees the characters left.
 - `setContinuous(id, true)` is Jolt's `LinearCast` motion quality (swept); `grabBody` of `game-physics` turns it on at release.
-- Rolling resistance alone (C_rr 0.015, no extra damping) is what makes a thrown grenade (a compound of body, fuze and spoon) rest within 6.5 s and 8 m, and 200 casings sleep, on the kit's floor; the numbers and
+- Rolling resistance alone (C_rr 0.015, no extra damping) is what makes a thrown grenade (a compound of body, fuze and spoon) rest within 7 s and 8 m (95% of 100 seeded throws, none past 8 s or 10.5 m; no turn cap), and 200 casings sleep, on the kit's floor; the numbers and
   the margins are in `specs/008-motor-fisico-jolt/evidence.md`, T4.3.
 ## Português
 

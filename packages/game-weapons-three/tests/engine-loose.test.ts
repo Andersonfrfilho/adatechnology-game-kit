@@ -13,15 +13,15 @@ import { buildExplosiveModel } from '../src/models/explosives'
 /** `scene` makes the floor and nothing else: the bodies a world holds when no loose piece is left. */
 const FLOOR_BODIES = 1
 
-/** The owner's limit for a drawn grenade (2026-11-26): it rolls and rocks on its fuze, so a smooth ball's 5 s does not apply. No artificial damping. */
-const GRENADE_REST_LIMIT_S = 6.5
+/** The owner's limit for a drawn grenade (2026-11-27, honest physics): the engine has no turn cap, so a rolling grenade runs up to 3 m/s and a smooth ball's 5 s does not apply. No artificial damping. */
+const GRENADE_REST_LIMIT_S = 7
 const GRENADE_REACH_LIMIT_M = 8
-/** Distribution rule (owner, 2026-11-26): 95% of 100 seeded throws within both limits, and a hard ceiling for the grenade that never stops. */
+/** Distribution rule (owner, 2026-11-27): 95% of 100 seeded throws within both limits, and a hard ceiling for the grenade that never stops. */
 const GRENADE_QUANTILE = 0.95
 const GRENADE_THROWS = 100
 const GRENADE_FIRST_SEED = 400
 const GRENADE_REST_CEILING_S = 8
-const GRENADE_REACH_CEILING_M = 10
+const GRENADE_REACH_CEILING_M = 10.5
 
 const H = KIT_WORLD.fixedStep ?? 1 / 120
 const STEPS_PER_SECOND = Math.round(1 / H)
@@ -138,7 +138,7 @@ describe('the M67 as drawn, in the engine (spec 008 T4.3, gate 0 B2)', () => {
     return { restAtS: Math.round(restAt * 100) / 100, fromThrowM: Math.round(fromThrow * 100) / 100, fromLandingM: Math.round(fromLanding * 100) / 100, lowest }
   }
 
-  it('thrown onto the open floor comes to rest within 6.5 s and 8 m of where it lands', { timeout: 120000 }, async () => {
+  it('thrown onto the open floor comes to rest within 7 s and 8 m of where it lands', { timeout: 120000 }, async () => {
     const open = await throwGrenade(false)
     report('grenade open floor', open)
     expect(open.restAtS).toBeGreaterThan(0)
@@ -147,7 +147,7 @@ describe('the M67 as drawn, in the engine (spec 008 T4.3, gate 0 B2)', () => {
     expect(open.lowest).toBeGreaterThan(0)
   })
 
-  it('18 throws (10 / 11 / 12 m/s, rising 3 / 4 / 5 m/s, spin 0 / 6 rad/s) all rest within 6.5 s and 8 m: the one of the gate is not luck', { timeout: 120000 }, async () => {
+  it('18 throws (10 / 11 / 12 m/s, rising 3 / 4 / 5 m/s, spin 0 / 6 rad/s) all rest within 7 s and 8 m: the one of the gate is not luck', { timeout: 120000 }, async () => {
     const rests: number[] = []
     const reaches: number[] = []
     for (const speed of [10, 11, 12]) for (const rise of [3, 4, 5]) for (const spin of [0, 6]) {
@@ -163,7 +163,7 @@ describe('the M67 as drawn, in the engine (spec 008 T4.3, gate 0 B2)', () => {
     expect(Math.max(...reaches)).toBeLessThanOrEqual(GRENADE_REACH_LIMIT_M)
   })
 
-  it('100 seeded throws (seeds 400 to 499, random pose and spin): 95% rest within 6.5 s and 8 m, none past 8 s or 10 m, with no damping', { timeout: 600000 }, async () => {
+  it('100 seeded throws (seeds 400 to 499, random pose and spin): 95% rest within 7 s and 8 m, none past 8 s or 10.5 m, with no turn cap and no damping', { timeout: 600000 }, async () => {
     const rows: { seed: number; restAtS: number; fromLandingM: number }[] = []
     for (let seed = GRENADE_FIRST_SEED; seed < GRENADE_FIRST_SEED + GRENADE_THROWS; seed++) {
       const result = await throwGrenade(false, 11, 4, 0, seed)
@@ -187,7 +187,7 @@ describe('the M67 as drawn, in the engine (spec 008 T4.3, gate 0 B2)', () => {
     expect(reaches[reaches.length - 1]).toBeLessThanOrEqual(GRENADE_REACH_CEILING_M)
   })
 
-  it('thrown against a wall 8 m off comes to rest within 6.5 s and 8 m of the throw', { timeout: 120000 }, async () => {
+  it('thrown against a wall 8 m off comes to rest within 7 s and 8 m of the throw', { timeout: 120000 }, async () => {
     const wall = await throwGrenade(true)
     report('grenade wall', wall)
     expect(wall.restAtS).toBeGreaterThan(0)
