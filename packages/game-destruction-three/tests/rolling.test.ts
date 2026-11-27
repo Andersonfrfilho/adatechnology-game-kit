@@ -224,13 +224,12 @@ describe('cans knock each other', () => {
 
   it('on the floor, a rolling can knocks a still one on and nearly stops; they never overlap', () => {
     const s = scene3()
-    // laid at x 0.4 / 1.0, inside one ground tile: a can rolling at 2 m/s over the seam between two tiles at x = 0 loses 30 to 85 % of its speed to the slab edge (T3.5 finding)
-    const a = addCan(s, 'a', [0.4, CAN_RADIUS + 0.001, 0], { velocity: [2, 0, 0] })
-    const b = addCan(s, 'b', [1.0, CAN_RADIUS + 0.001, 0])
+    const a = addCan(s, 'a', [-0.4, CAN_RADIUS + 0.001, 0], { velocity: [2, 0, 0] })
+    const b = addCan(s, 'b', [0.2, CAN_RADIUS + 0.001, 0])
     // rolling from the start: v = w r
     a.piece.angularVelocity[2] = -2 / CAN_RADIUS
     run(s.renderer, 0.5, () => expect(b.root.position.x - a.root.position.x).toBeGreaterThan(2 * CAN_RADIUS - 0.006))
-    expect(b.root.position.x).toBeGreaterThan(1.2)
+    expect(b.root.position.x).toBeGreaterThan(0.4)
     expect(b.piece.velocity[0]).toBeGreaterThan(a.piece.velocity[0])
   })
 
