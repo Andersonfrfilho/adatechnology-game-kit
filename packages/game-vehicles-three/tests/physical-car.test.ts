@@ -87,11 +87,17 @@ describe('TS.4: the room car on the engine loop', () => {
     const stats = car.parts()!.stats()
     expect(stats.events).toBeGreaterThan(0)
     expect(stats.released).toBeGreaterThan(0)
-    expect(world.bodyCount).toBe(scene.fixedBodies + 1 + car.parts()!.partBodies().size)
+    // the ground follows the moving car (tiles join the world), so the car's own bodies are counted by id, not by the world's total
+    const chassis = car.chassis()!
+    const partBodies = [...car.parts()!.partBodies().values()]
+    expect(world.has(chassis)).toBe(true)
+    expect(partBodies.length).toBe(stats.released)
+    for (const id of partBodies) expect(world.has(id)).toBe(true)
     console.log(JSON.stringify({ name: 'ts4-crash', blows: stats.blows, events: stats.events, released: stats.released, hitParts: [...stats.hitParts] }))
     scene.room.clear()
     loop.stepFixed(1)
-    expect(world.bodyCount).toBe(scene.fixedBodies)
+    expect(world.has(chassis)).toBe(false)
+    for (const id of partBodies) expect(world.has(id)).toBe(false)
     scene.room.dispose()
     world.dispose()
   }, 240000)
