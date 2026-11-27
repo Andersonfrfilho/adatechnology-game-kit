@@ -178,12 +178,13 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
     return [at[0] as number, hit ? (at[1] as number) + ROOF_REACH - hit.distance + ROOF_CLEARANCE : (at[1] as number) + 2.2, at[2] as number]
   }
 
-  /** Where the body may come back: here, the far side of where it went out, the floor under it, and the roof over where it went out. */
+  /** Where the body may come back, in this order: where it was put, where it went out, the far side of that, the floor under the first, the roof over where it went out, the roof over the first. */
   const exitsOf = (): readonly Vec3[] => {
     const here: Vec3 = [manual[0] as number, manual[1] as number, manual[2] as number]
-    const far: Vec3 = [2 * (anchor[0] as number) - here[0], here[1], 2 * (anchor[2] as number) - here[2]]
+    const out: Vec3 = [anchor[0] as number, anchor[1] as number, anchor[2] as number]
+    const far: Vec3 = [2 * out[0] - here[0], here[1], 2 * out[2] - here[2]]
     const floor: Vec3 = [here[0], floorAt(here[0], here[2]), here[2]]
-    return [here, far, floor, roofOver(anchor)]
+    return [here, out, far, floor, roofOver(anchor), roofOver(manual)]
   }
 
   const tryUnpark = (): boolean => {
