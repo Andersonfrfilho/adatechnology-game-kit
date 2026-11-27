@@ -5231,3 +5231,58 @@ Worktree `spec-008-nb` sobre `origin/main`. **Antes:** a lista do `player-blocki
 - **`test-room`:** o tipo de `physics` perde o `'own'` por herança. `own-locomotion.ts` fica: não é o solver, é a caminhada do jogador numa sala sem serviços de física (um `seam`), caminho que o dono mandou manter e que `physics-channel` e `player-blocking-parity` cobrem.
 - **Teste apagado:** `sheet-on-clutter.test.ts` chamava `separatePair`, método interno do solver próprio (separação de pares por memória de empurrão); no motor o par é do Jolt e o `apartDeep` do kit já tem seus testes.
 - **Changesets major:** `destruction-three`, `kit-defaults` (o de `test-room` entrou no PR anterior).
+
+## Rodada de medição quieta (2026-11-27, 18:47–18:54) — última own×Jolt, TS.7, TS.8, T6.21, T5.4
+
+Máquina: Intel Core Ultra 9 275HX (24 núcleos), RTX 5070 Laptop (driver 620.73.04), Linux, Jolt `wasm-compat` em uma thread, `KIT_WORLD`. Cada rodada só começou com carga de 1 min **e** de 5 min abaixo de 4 (a de 15 min ainda era ~7: a máquina vinha de horas carregada) e rodou sob `perf-measure.lock`; um amostrador anotou a carga de 1 min a cada 2 s e a rodada seria descartada se passasse de 4. Pico de carga de 1 min nas rodadas: **1,8 a 3,7**; carga de 5 min na largada: 2,8 a 3,75. Nenhuma régua foi mudada. Uma primeira passada do B5 falhou por erro de harness (caminho relativo do `SPIKE_OUT`) e foi refeita.
+
+### Última comparação own×Jolt (B5), antes de apagar o solver próprio
+- Commit medido do `own`: **`54593ef88`** (último antes do #551), tag **`spec-008-ultima-medida-own`** (empurrada). O lado Jolt é o mesmo código (`PIECE_SOLVER=jolt` nesse commit).
+- Comando (worktree em `54593ef88`, `pnpm install --frozen-lockfile` e build): `flock ~/.cache/adatechnology-game-kit/perf-measure.lock env BENCH=1 PIECE_SOLVER={own,jolt} SPIKE_OUT=<arquivo> npx vitest run tests/bench-pieces.test.ts` em `game-destruction-three`, 3 pares alternados (own, jolt, own, jolt...).
+
+| B5 `renderer.update` (160 em repouso + 40 em movimento) | own (3 rodadas) | Jolt (3 rodadas) | razão Jolt/own | limite |
+|---|---|---|---|---|
+| mediana (ms) | 0,760 / 0,757 / 0,687 → **0,757** | 0,622 / 0,650 / 0,599 → **0,622** | **0,82** | ≤ 1,25 ✓ |
+| p99 (ms) | 1,533 / 2,435 / 1,178 → 1,533 | 1,588 / 3,110 / 2,505 → 2,505 | 1,63 (p99 de 200 quadros oscila de 1,2 a 3,1 entre rodadas do mesmo lado) | só relato |
+| dormindo de 160 | 160 | 159 | — | — |
+
+Cargas de 1 min na largada: 2,08 / 2,08 / 2,47 / 2,47 / 2,83 / 3,73 (pico 3,73 na última). Arquivos brutos na sessão (`SPIKE_OUT`), números acima copiados deles.
+
+### TS.7: pilha de 100 mortos na sala (`pnpm --filter @adatechnology/game-crowd-three test:cost`, 3 rodadas, carga de 1 min 1,9 a 2,5)
+Limites do dono: dorme em 14 s, mediana 6 ms, p99 10 ms.
+
+| Corpos | Semente | Dorme (s) | Mediana (ms) | p99 (ms) | Veredito |
+|---|---|---|---|---|---|
+| motor | 3 | 10,2 | 5,81 / 5,83 / 5,63 | 12,19 / 11,21 / 11,58 | mediana ✓, p99 ✗ |
+| motor | 5 | 10,2 | 5,20 / 5,07 / 5,14 | 10,84 / 10,96 / 10,98 | mediana ✓, p99 ✗ |
+| motor | 8 | 10,2 | 5,98 / 5,02 / 5,20 | 11,50 / 11,34 / 11,61 | mediana ✓, p99 ✗ |
+| multidão | 3 | 9,2 | 6,13 / 6,18 / 6,28 | 17,85 / 15,06 / 14,60 | ✗ |
+| multidão | 5 | 12,2 | 6,68 / 6,66 / 6,79 | 14,61 / 15,91 / 14,55 | ✗ |
+| multidão | 8 | 8,8 | 6,18 / 6,19 / 6,23 | 14,26 / 14,08 / 14,38 | ✗ |
+
+Os 6 testes falham nas 3 rodadas (só pelo p99, e pela mediana da multidão). **TS.7 mantém o ✅ do que ele fecha (T5.4b/c/d) e a régua de custo da pilha de 100 segue sem fechar**: o bloqueio devolvido ao dono continua valendo, agora com a máquina quieta.
+
+### TS.8: `contactHits` ligado (`pnpm --filter @adatechnology/game-destruction-three test:cost`, 3 rodadas, carga de 1 min 2,5 a 3,3)
+300 destroços acordados sobre uma parte fixa + 10 corpos de fora, 400 quadros, 72 hits com o leitor ligado; 3 rodadas internas por execução (9 pares): mediana sem 4,18–4,85 ms, com 4,15–4,84 ms; p99 sem 8,4–10,6, com 8,1–10,8. Com e sem não se distinguem, dentro do orçamento C7; os 2 arquivos passam nas 3 execuções. **TS.8 ✅ confirmado.** Seguimento do solo (`ground-follow-300-10`): mediana 4,17–4,34 ms sem os de fora e 4,89–5,08 com, p99 13,5–16,7 com os de fora; passa.
+
+### T6.21: heap dos 200 estacionados e B6 com 20 carros
+- Heap (`heap.test.ts -t T6.21`, 3 testes passam): 200 carros, 3 160 cascos reais da frota (12 modelos), formas compartilhadas 6,94 MB, corpos 0,06 MB, cópias do dano 0,30 MB, **pico 7,3 MB** (limite 64) ✓.
+- B6 com 20 carros de 24 cascos (`cascade.test.ts -t T6.21`, 3 rodadas, o hash é `8173a889fe7ab6a7` nas três): acordam 323 corpos num quadro (318 sem os carros); mediana do passo depois do sopro **2,54 / 2,57 / 2,55 ms** (0,42 sem os carros) ✓ ≤ 4; **p99 6,54 / 6,56 / 7,13 ms** (3,9–4,0 sem os carros) e máximo 16,5–19,5 ms ✗ contra o "nenhuma rodada acima de 5 ms". Com a máquina quieta o p99 continua acima de 5: **o aceite de tempo do B6 não passa**; o ✅ da T6.21 fica como estava (aceite escrito do heap, com a ressalva do tempo), e o tempo do B6 com carros fica pendente com estes números.
+
+### T5.4: regra da pilha e LOD (`PHYSICS_COST=1 vitest run tests/body-lod.test.ts` em `game-physics-jolt`, 2 rodadas, carga de 1 min 1,9 a 2,6)
+- **T1, 100 corpos empilhados (13 sementes por rodada): falha em 6 de 13 na rodada 1 e em 9 de 13 na rodada 2**, só pelo p99 da janela de custo (limite 10 ms): rodada 1 de 8,15 a 12,71 ms (medianas 4,3–4,8 ms ≤ 4? **não: o aceite é "≤ 4 ms"**, a mediana da janela está em 4,3–4,8); rodada 2 de 10,15 a 13,49 ms. Dorme em 9,2 a 12,0 s (≤ 14 ✓; o aceite de T5.4 pede ≤ 10 s: 8 de 13 sementes dormem em ≤ 10 s na rodada 1).
+- T2 a T12 e as três cotas passam nas duas rodadas (12 de 13 testes do §7 com o T1 contado por semente).
+- **T5 (troca de LOD de 100 corpos, aceite ≤ 5 ms): passa**, `toChainMs` mediana 4,09 ms (p99 5,82, máx. 5,82; `toCapsuleMs` 1,85) com 0 recusados e 0 sobreposições; na rodada de 2026-11-26 estava no limite (4,8–5,5 ms).
+- **T5.4 segue sem ✅** (aceite "dormem em ≤ 10 s a ≤ 4 ms" não cumprido pelo T1); o item do T5 passa e fica registrado.
+
+### Resultado da rodada
+
+| Item | Régua | Medido (carga 1 min ≤ 3,7) | Marca |
+|---|---|---|---|
+| own×Jolt B5 (`54593ef88`) | razão da mediana ≤ 1,25 | 0,82 (Jolt 0,622 ms, own 0,757 ms) | ✅ (já era) |
+| TS.7 pilha de 100 na sala | dorme ≤ 14 s, mediana ≤ 6, p99 ≤ 10 ms | dorme 8,8–12,2 s; mediana 5,0–6,8; p99 10,8–17,9 | custo ✗ (pendente), resto ✅ |
+| TS.8 `contactHits` | dentro do C7 | com = sem, 4,15–4,84 ms | ✅ confirmado |
+| T6.21 heap | ≤ 64 MB | 7,3 MB | ✅ |
+| T6.21 B6 com 20 carros (tempo) | mediana ≤ 4, p99 ≤ 5 ms | mediana 2,54–2,57; p99 6,54–7,13 | tempo ✗ (pendente) |
+| T5.4 T1 pilha de 100 | dorme ≤ 10 s, p99 ≤ 10 ms | p99 8,2–13,5; falha em 6 e 9 de 13 sementes | ✗ sem ✅ |
+| T5.4 T5 troca de LOD | ≤ 5 ms | 4,09 ms | ✅ (este item) |
