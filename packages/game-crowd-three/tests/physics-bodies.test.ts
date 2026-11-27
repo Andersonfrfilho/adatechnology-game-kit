@@ -37,12 +37,14 @@ const sceneOf = async (physics: 'jolt' | 'own', extra: Partial<CrowdTestModuleOp
   const container = document.createElement('div')
   document.body.appendChild(container)
   const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physics === 'jolt' ? loop : 'own' })
+  const countOn = (layer: 'agent' | 'prop'): number => world.overlapShape({ kind: 'box', half: WIDE }, [0, 0, 0], NO_TURN, [] as BodyId[], { layers: [layer] })
+  // the player is a body of the room's world (a capsule shadow in `agent`): the crowd's counts add it explicitly instead of hiding it
+  const playerBodies = physics === 'jolt' ? countOn('agent') : 0
   const module = createCrowdTestModule(moduleOptions(extra))
   expect(room.loadModule(module as never).problems).toEqual([])
   room.openArea(CROWD_AREA_ID)
   loop.stepFixed(1)
-  const countOn = (layer: 'agent' | 'prop'): number => world.overlapShape({ kind: 'box', half: WIDE }, [0, 0, 0], NO_TURN, [] as BodyId[], { layers: [layer] })
-  return { world, loop, room, module, countOn }
+  return { world, loop, room, module, countOn, playerBodies }
 }
 
 /** The state-hash of the crowd: every per-agent array of the store (the first `n` agents) and the physics counters, FNV-1a. */
@@ -66,9 +68,9 @@ const hashCrowd = (crowd: Crowd): string => {
 describe('TS.6: the crowd module in the engine loop', () => {
   it('the agents are capsules of the world, follow the store, and agents pressing a door off its hinge break it for the crowd, with the leaf landing on ground', { timeout: 240000 }, async () => {
     const scene = await sceneOf('jolt')
-    const { world, loop, module, countOn } = scene
+    const { world, loop, module, countOn, playerBodies } = scene
     const { crowd } = module
-    expect(countOn('agent')).toBe(0)
+    expect(countOn('agent')).toBe(playerBodies)
     expect(countOn('prop')).toBe(0)
     const door = crowd.doors.add(0, 0, 'x', 1.2)
     const columns = 40
@@ -78,7 +80,7 @@ describe('TS.6: the crowd module in the engine loop', () => {
       crowd.store.height[i] = 1.7
     }
     loop.stepFixed(2)
-    expect(countOn('agent')).toBe(agents)
+    expect(countOn('agent')).toBe(playerBodies + agents)
     expect(countOn('prop')).toBe(1)
     // game-crowd's walk, simplified: toward the doorway, held at the wall line unless in the doorway, where they press on into the leaf
     const { store } = crowd
@@ -107,7 +109,7 @@ describe('TS.6: the crowd module in the engine loop', () => {
         if (Math.abs(rows[at + 2]!) < 1.5 && Math.abs(rows[at + 4]!) < 1.5) lowest = Math.min(lowest, rows[at + 3]!)
       }
     }
-    console.log(JSON.stringify({ name: 'ts6-door', brokeAtS: Math.round(brokeAt * 1000) / 1000, leafLowestY: Math.round(lowest * 1000) / 1000, agents: countOn('agent') }))
+    console.log(JSON.stringify({ name: 'ts6-door', brokeAtS: Math.round(brokeAt * 1000) / 1000, leafLowestY: Math.round(lowest * 1000) / 1000, agents: countOn('agent') - playerBodies }))
     expect(lowest).toBeGreaterThanOrEqual(-0.05)
     scene.room.dispose()
     world.dispose()
@@ -115,10 +117,10 @@ describe('TS.6: the crowd module in the engine loop', () => {
 
   it('detach leaves the world without a body of the crowd', async () => {
     const scene = await sceneOf('jolt', { startCount: 80 })
-    const { world, loop, module, countOn } = scene
+    const { world, loop, module, countOn, playerBodies } = scene
     module.crowd.doors.add(6, 0, 'z', 1)
     loop.stepFixed(3)
-    expect(countOn('agent')).toBe(80)
+    expect(countOn('agent')).toBe(playerBodies + 80)
     expect(countOn('prop')).toBe(1)
     scene.room.dispose()
     loop.stepFixed(1)
@@ -129,12 +131,12 @@ describe('TS.6: the crowd module in the engine loop', () => {
 
   it('a cleared room makes the bodies again, none left over', async () => {
     const scene = await sceneOf('jolt', { startCount: 30 })
-    const { world, loop, module, countOn } = scene
+    const { world, loop, module, countOn, playerBodies } = scene
     loop.stepFixed(2)
-    expect(countOn('agent')).toBe(30)
+    expect(countOn('agent')).toBe(playerBodies + 30)
     scene.room.clear()
     loop.stepFixed(2)
-    expect(countOn('agent')).toBe(30)
+    expect(countOn('agent')).toBe(playerBodies + 30)
     expect(module.crowd.store.n).toBe(30)
     scene.room.dispose()
     world.dispose()
@@ -152,7 +154,7 @@ describe('TS.6: the crowd module in the engine loop', () => {
   it('with the horde in a thread the page keeps no capsules', async () => {
     const scene = await sceneOf('jolt', { startCount: 40, hordeThread: () => null })
     scene.loop.stepFixed(5)
-    expect(scene.countOn('agent')).toBe(0)
+    expect(scene.countOn('agent')).toBe(scene.playerBodies)
     scene.room.dispose()
     scene.world.dispose()
   })
@@ -165,7 +167,7 @@ describe('TS.6: the crowd module in the engine loop', () => {
         if (physics === 'jolt') scene.loop.stepFixed(1)
         crowd.update(STEP, { bandCentre: [0, 0], flowTarget: [0, 0] })
       }
-      const result = { hash: hashCrowd(crowd), agents: physics === 'jolt' ? scene.countOn('agent') : 0 }
+      const result = { hash: hashCrowd(crowd), agents: physics === 'jolt' ? scene.countOn('agent') - scene.playerBodies : 0 }
       scene.room.dispose()
       scene.world.dispose()
       return result

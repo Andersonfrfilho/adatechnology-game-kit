@@ -1,6 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
+import type { BodyId } from '@adatechnology/game-physics'
 import type { Scheduler } from '@adatechnology/game-runtime'
 
 import { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED } from './locomotion'
@@ -96,6 +97,8 @@ export interface Player {
   readonly grounded: boolean
   /** Whether the player is in free flight / noclip mode (bypasses gravity and colliders). */
   readonly flying: boolean
+  /** The body the world sees of the player, when the room's physics is an engine. */
+  shadowBody(): BodyId | undefined
   /** The body is a walker in the physics world (`PlayerOptions.engine`). */
   readonly engine: boolean
   toggleFly(): boolean
@@ -471,6 +474,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     get flying() {
       return locomotion.flying
     },
+    shadowBody: () => locomotion.shadowBody?.(),
     toggleFly: () => locomotion.toggleFly(),
     setFly: (enabled) => locomotion.setFly(enabled),
     get crouching() {

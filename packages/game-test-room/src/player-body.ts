@@ -395,6 +395,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
       alpha = next
       refreshDrawn()
     },
+    shadowBody: () => engine.services.world.characterBody(walker.id),
     dispose() {
       stopPhase()
       walker.dispose()

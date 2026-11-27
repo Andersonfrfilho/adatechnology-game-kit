@@ -16,7 +16,8 @@ import { createWeaponsTestModule } from '../src'
 /** Spec 008, TS.5: the casings of the weapons module and the grenade are bodies of the room's world only when the room was given one; with its own solver no body is born. */
 
 const STEP = 1 / 60
-const MOVING_LAYERS: readonly Layer[] = ['debris', 'prop', 'character', 'agent', 'vehicle', 'corpse']
+/** Without `agent`: the player's body (a shadow in that layer) is in the world now and is not a loose piece; the test counts what the room let go of. */
+const MOVING_LAYERS: readonly Layer[] = ['debris', 'prop', 'character', 'vehicle', 'corpse']
 const SHOTS = 8
 
 const stubRenderer = (): THREE.WebGLRenderer =>
