@@ -53,6 +53,17 @@ const throwRod = (o: RodThrow) => {
     terrainRollingDampingAt: () => o.damping ?? 0,
     ...(o.top === undefined ? {} : { groundAt: () => top, terrainAt: () => 0 }),
   })
+  // under Jolt a top is a drawn fixed body of its own (a slab with no surface of its material says: the default one); the kit's solver has it in `groundAt`
+  if (IS_JOLT && o.top !== undefined) {
+    world.addObject('slab', [partState('body', 'slab', { mass: 500 })])
+    const slabMesh = new THREE.Mesh(new THREE.BoxGeometry(60, 0.1, 4))
+    const slab = new THREE.Group()
+    slab.add(slabMesh)
+    slab.position.set(25, top - 0.05, 0)
+    scene.add(slab)
+    slab.updateMatrixWorld(true)
+    renderer.bind('slab', slab, { parts: { body: slabMesh } })
+  }
   const length = o.length ?? 1
   world.addObject('rod', [partState('body', 'aluminium', { mass: Math.PI * o.radius * o.radius * length * 2700 })])
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(o.radius, o.radius, length, 24))
@@ -103,9 +114,9 @@ const DAMPING = surfaceOf('aluminium', mat('aluminium', { tags: ['metal'] }))?.r
  * How far a solid rod rolling at `speed` goes on a surface of rolling resistance `c`: it slows at (C_rr g + k d v) / (1 + k), constant `b` plus `a v`, so it goes
  * (v - (b / a) ln(1 + a v / b)) / a (v^2 (1 + k) / (2 C_rr g) without damping).
  */
-const rollOut = (speed: number, c: number): number => {
+const rollOut = (speed: number, c: number, damping = DAMPING): number => {
   const b = (c * G) / (1 + K)
-  const a = (K * DAMPING) / (1 + K)
+  const a = (K * damping) / (1 + K)
   return (speed - (b / a) * Math.log(1 + (a * speed) / b)) / a
 }
 
@@ -127,7 +138,7 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
   // the case from the room: a thin rod thrown at 15 m/s. It slides and hops for 18 m, rolls from about 7 m/s and rolls out over 36 m on soil (`rollOut`, with its
   // rolling damping; 47 m by C_rr alone), less in sand, and 309 m on asphalt (the old 0.015, which every ground had). Kit solver only: Jolt caps a body's spin at
   // 47 rad/s (its default `mMaxAngularVelocity`, 0.25 pi per step at 60 Hz), so a 1.5 cm rod cannot roll faster than 0.7 m/s there and slides instead (the case above stays under it).
-  it('a 3 cm rod thrown at 15 m/s rolls out on soil within 10 % of its rolling resistance, in sand in a quarter of that, and on asphalt is still rolling', () => {
+  it.skipIf(IS_JOLT)('a 3 cm rod thrown at 15 m/s rolls out on soil within 10 % of its rolling resistance, in sand in a quarter of that, and on asphalt is still rolling', () => {
     const soil = throwRod({ ground: 'soil', radius: 0.015, speed: 15, seconds: 25 })
     expect(soil.stopAt).not.toBeNull()
     const run = soil.stopAt! - soil.rollFrom!.x
@@ -154,7 +165,18 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
 
   // the engine draws every top (a table, a counter) as a body of its own with its own surface; the kit's solver has it in `groundAt`, over the terrain (`terrainAt`)
   it('a pipe rolling on a top over sand keeps the default surface (0.015), not the sand under the top', () => {
-    const onTop = slowingOf(throwRod({ ground: 'sand', radius: 0.05, speed: 3, seconds: 30, top: 0.5 }))
+    const top = throwRod({ ground: 'sand', radius: 0.05, speed: 3, seconds: 30, top: 0.5 })
+    if (IS_JOLT) {
+      // the engine's top is a box with none of the ground tiles' extra contact loss (8.5 m of roll-out against the 8.5 m of the closed form, the tiles' 7.8 m), so it is measured
+      // against the closed form of the default surface; sand's C_rr (a few times higher) would stop it much sooner
+      expect(top.stopAt).not.toBeNull()
+      const run = top.stopAt! - top.rollFrom!.x
+      const expectedRun = rollOut(top.rollFrom!.speed, rollingOf('asphalt'), DAMPING + GROUND_ROLLING_DAMPING)
+      expect(run).toBeGreaterThan(expectedRun * 0.95)
+      expect(run).toBeLessThan(expectedRun * 1.05)
+      return
+    }
+    const onTop = slowingOf(top)
     // the default surface: C_rr 0.015, as asphalt's, and the default rolling damping
     const onAsphalt = slowingOf(throwRod({ ground: 'asphalt', radius: 0.05, speed: 3, seconds: 30, damping: GROUND_ROLLING_DAMPING }))
     expect(Math.abs(onTop - onAsphalt)).toBeLessThan(onAsphalt * 0.05)

@@ -5,7 +5,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '../src/renderer'
 import { levelBoxesApart, type ContactShape } from '../src/piece-contacts'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const IDENTITY = new THREE.Matrix4().elements
 
