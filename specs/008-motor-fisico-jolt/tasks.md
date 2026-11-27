@@ -270,6 +270,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - [ ] TS.9l Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
   - [ ] TS.9m Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
   - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. 
+- [x] TS.8 ✅ `contactHits` ligado por padrão (custo medido: dentro do orçamento) e `blastQuery` na explosão (`evidence.md` `## TS.8`).
+- [ ] TS.9 🧠 Jogador no motor (desenho antes).
 - [ ] TS.10 (opcional) Juntas na vitrine.
 
 ## Fase 8 — Corte e validação
