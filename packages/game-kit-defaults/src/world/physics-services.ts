@@ -16,7 +16,7 @@ export function servicesOf<TPhysics extends { readonly loop: PhysicsLoop | null;
   }
 }
 
-/** What the host hands a module of its physics and workers (`ModuleHost.physics`, `ModuleHost.workers`); no `physics` when the pieces run on the kit's own solver. */
+/** What the host hands a module of its physics and workers (`ModuleHost.physics`, `ModuleHost.workers`); no `physics` when the pieces run on a seam the game steps. */
 export function physicsHostOf(kit: { readonly physics: { readonly services?: PhysicsServices } }, workers?: WorkerCoordinator): Pick<ModuleHost, 'physics' | 'workers'> {
   const { services } = kit.physics
   return { ...(services ? { physics: services } : {}), ...(workers ? { workers } : {}) }

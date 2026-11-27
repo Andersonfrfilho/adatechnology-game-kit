@@ -131,13 +131,11 @@ const ROLLING_RESISTANCE = 0.015
 const MU_DYNAMIC = 0.6
 const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE }
 
-/** The key of the ground tile (x, z) falls in, the engine's own (`tiles`). */
-export const groundTileKey = (x: number, z: number): number => (Math.floor(x / TILE) + TILE_KEY_ORIGIN) * TILE_KEY + (Math.floor(z / TILE) + TILE_KEY_ORIGIN)
 /**
- * The rolling resistance of the ground at (x, z) as both solvers read it: the surface at the middle of the tile it falls in (the engine's ground is one body a tile), so
- * a tile across a road's edge is all road or all verge, the same in the kit's solver and the engine's. Undefined: the default.
+ * The rolling resistance of the ground at (x, z) as the engine reads it: the surface at the middle of the tile it falls in (the engine's ground is one body a tile), so
+ * a tile across a road's edge is all road or all verge, Undefined: the default.
  */
-export const tileRollingAt = (rollingAt: (x: number, z: number) => number | undefined, x: number, z: number): number | undefined =>
+const tileRollingAt = (rollingAt: (x: number, z: number) => number | undefined, x: number, z: number): number | undefined =>
   rollingAt((Math.floor(x / TILE) + 0.5) * TILE, (Math.floor(z / TILE) + 0.5) * TILE)
 const STILL_SPEED = 0.12
 const STILL_SPIN = 0.45

@@ -3,9 +3,9 @@ import type { PhysicsLoop, PhysicsWorld, SeamWorld } from '@adatechnology/game-p
 
 /**
  * The physics a seam is handed, always by its host and always spelled out: a `PhysicsLoop` (the host steps it; the seam registers phases), a world (the seam makes its own loop
- * and steps it in its `update`), or `'own'` (the kit's own solver, until it goes).
+ * and steps it in its `update`).
  */
-export type PiecePhysics = PhysicsLoop | SeamWorld | 'own'
+export type PiecePhysics = PhysicsLoop | SeamWorld
 
 export class PhysicsOptionError extends Error {
   readonly code = 'PHYSICS_OPTION'
@@ -21,11 +21,10 @@ export interface ResolvedPhysics {
   readonly stepsItself: boolean
 }
 
-/** `null` for `'own'`; the option left out (a plain-JS host) or not a world nor a loop throws. */
-export const resolvePhysics = (option: PiecePhysics | undefined): ResolvedPhysics | null => {
-  if (option === 'own') return null
+/** The option left out (a plain-JS host) or not a world nor a loop throws. */
+export const resolvePhysics = (option: PiecePhysics | undefined): ResolvedPhysics => {
   if (option === undefined || typeof option !== 'object') {
-    throw new PhysicsOptionError("the `physics` option is required: pass a PhysicsLoop, a world from the host, or 'own' for the kit's own solver")
+    throw new PhysicsOptionError("the `physics` option is required: pass a PhysicsLoop or a world from the host")
   }
   if (isPhysicsLoop(option)) return { loop: option, stepsItself: false }
   // the type says a seam world (no `step`); one given here to be stepped is the host's full world

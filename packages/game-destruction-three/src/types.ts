@@ -127,7 +127,7 @@ export interface RendererOptions {
    * Run one explosion on a small throwaway wall once, when the first renderer is made, so the code the first real explosion needs (fracture, split, oriented boxes, engine bodies,
    * the ground under the pieces) is not cold: the first one costs about twice the later ones without it. Off screen, in a world and a renderer of its own, all freed; the game's
    * state and random streams are not touched. Default on, once per process and engine; `false` turns it off. Give `{ engine }` (the `PhysicsEngine` the host made its world from)
-   * to heat the engine's own paths too; without it the kit's own solver and the code the engines share are what runs.
+   * to heat the engine's own paths too; without it there is no warm-up.
    */
   jitWarmUp?: boolean | JitWarmUpOptions
   /** Upper bound of live particles (default 2500). */
@@ -140,13 +140,13 @@ export interface RendererOptions {
   /** Ground height at (x, z) for fragments, pieces and drips (default 0). */
   groundAt?: (x: number, z: number) => number
   /**
-   * The terrain alone at (x, z): soil, lot, street, crater; never the top of a table or the floor of a house. With an engine (`physics` other than `'own'`) the ground it stands the pieces
-   * on is this, because every drawn fixed thing is a body of its own there (`staticSolids`) and a top in both would be ground twice. Default `groundAt`; the kit's own solver ignores it.
+   * The terrain alone at (x, z): soil, lot, street, crater; never the top of a table or the floor of a house. The ground the engine stands the pieces
+   * on is this, because every drawn fixed thing is a body of its own there (`staticSolids`) and a top in both would be ground twice. Default `groundAt`.
    */
   terrainAt?: (x: number, z: number) => number
   /**
    * The rolling resistance (C_rr) of the terrain's surface at (x, z), from its material (`TerrainMaterial.rolling`: grass, soil and sand hold a rolling can or rod back far
-   * more than asphalt), or undefined for the default (0.015, a hard floor). Read at the middle of the 2 m tile the point is in, the same in both solvers; only where a round
+   * more than asphalt), or undefined for the default (0.015, a hard floor). Read at the middle of the 2 m tile the point is in; only where a round
    * piece stands on the terrain itself (not on a top, a fixed thing or another piece). A round piece rolls by the larger of its own and this one.
    */
   terrainRollingAt?: (x: number, z: number) => number | undefined

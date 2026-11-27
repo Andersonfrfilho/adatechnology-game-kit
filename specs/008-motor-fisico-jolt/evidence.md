@@ -5225,3 +5225,9 @@ Worktree `spec-008-nb` sobre `origin/main`. **Antes:** a lista do `player-blocki
 
 **Limites do que foi medido:** a casa tem as caixas dos colliders mais os corpos desenhados quando o módulo recebe `world` e `renderer` (corpos sobrepostos no mesmo lugar, sem efeito no jogador); o veto de `follower.blocks` (muro com brecha) e o de `inTheWay` (cenário desenhado) seguem como estavam: têm o corpo desenhado no motor e não entram na lista do teste (cenário da sala de teste sem muro).
 
+## T8.1 (PR de remoção, parte 2): o solver próprio sai do código
+- **`destruction-three`:** `PiecePhysics` passa a `PhysicsLoop | SeamWorld` (`resolvePhysics` não devolve mais `null`); `PieceSystem` sempre tem motor e laço. Saíram o integrador, a colisão pareada, o tombo, o sono por calma, a dobradiça e o piso de arrasto do solver antigo, guiados por `tsc --noUnusedLocals` (`pieces.ts` 2285 → 1330 linhas, `minPieceHalf`/`OWN_*` viraram `MIN_PIECE_HALF`). `groundTileKey` e o export de `tileRollingAt` saem. `jitWarmUp` sem `engine` não aquece nada (antes aquecia o solver próprio).
+- **`kit-defaults`:** `'own'` sai de `PhysicsChoice`, `GivenPhysicsChoice`, `KitWorldPhysics.pieces` e `info.kind`.
+- **`test-room`:** o tipo de `physics` perde o `'own'` por herança. `own-locomotion.ts` fica: não é o solver, é a caminhada do jogador numa sala sem serviços de física (um `seam`), caminho que o dono mandou manter e que `physics-channel` e `player-blocking-parity` cobrem.
+- **Teste apagado:** `sheet-on-clutter.test.ts` chamava `separatePair`, método interno do solver próprio (separação de pares por memória de empurrão); no motor o par é do Jolt e o `apartDeep` do kit já tem seus testes.
+- **Changesets major:** `destruction-three`, `kit-defaults` (o de `test-room` entrou no PR anterior).

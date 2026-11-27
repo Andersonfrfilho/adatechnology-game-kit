@@ -5,11 +5,11 @@ import type { JoltEngine, JoltEngineOptions, JoltThreading, JoltWorld } from '@a
 
 import { servicesOf } from './physics-services'
 
-/** How the loose pieces are stepped: the kit's Jolt (the default), the kit's own solver, a loop the game made and steps no one else, or a world the game steps itself (a seam). */
-export type PhysicsChoice = 'jolt' | 'own' | PhysicsLoop | SeamWorld | KitWorldJoltOptions
+/** How the loose pieces are stepped: the kit's Jolt (the default), a loop the game made and steps no one else, or a world the game steps itself (a seam). */
+export type PhysicsChoice = 'jolt' | PhysicsLoop | SeamWorld | KitWorldJoltOptions
 
 /** A choice that needs no engine loaded: what `createKitWorldSync` takes. */
-export type GivenPhysicsChoice = 'own' | PhysicsLoop | SeamWorld
+export type GivenPhysicsChoice = PhysicsLoop | SeamWorld
 
 /** Jolt with its threading and world numbers by hand: what the page of the test room reads from its address. */
 export type KitWorldJoltOptions = JoltEngineOptions & {
@@ -19,11 +19,11 @@ export type KitWorldJoltOptions = JoltEngineOptions & {
 }
 
 export type KitWorldPhysics = {
-  /** What steps the pieces, or null for the kit's own solver (and for a seam the game steps). */
+  /** What steps the pieces, or null for a seam the game steps. */
   readonly loop: PhysicsLoop | null
-  /** What the destruction renderer hands its pieces to: the loop, the game's seam, or the kit's own solver. */
-  readonly pieces: PhysicsLoop | SeamWorld | 'own'
-  /** The engine the host loaded (what the destruction renderer's JIT warm-up heats); null when the loop is the game's or the solver is the kit's own. */
+  /** What the destruction renderer hands its pieces to: the loop or the game's seam. */
+  readonly pieces: PhysicsLoop | SeamWorld
+  /** The engine the host loaded (what the destruction renderer's JIT warm-up heats); null when the loop or the seam is the game's. */
   readonly engine: JoltEngine | null
   readonly info: KitWorldPhysicsInfo
   /** What a module makes bodies with (`ModuleHost.physics`); only when a loop steps the pieces. The `dispose` of the host takes them out before it releases the world. */
@@ -33,7 +33,7 @@ export type KitWorldPhysics = {
 }
 
 export type KitWorldPhysicsInfo = {
-  readonly kind: 'jolt' | 'own' | 'loop' | 'seam'
+  readonly kind: 'jolt' | 'loop' | 'seam'
   readonly threading?: JoltThreading
   /** Why the multithreaded build gave way to the single one, when it did. */
   readonly fallback?: string
@@ -41,7 +41,7 @@ export type KitWorldPhysicsInfo = {
 
 // a seam keeps the world's body calls (`createBody`); a Jolt world as a seam also says `engine: 'jolt'`, so the seam is asked first
 const isSeam = (choice: PhysicsChoice): choice is SeamWorld => typeof choice === 'object' && typeof (choice as Partial<SeamWorld>).createBody === 'function'
-const isGiven = (choice: Exclude<PhysicsChoice, 'jolt' | 'own'>): choice is PhysicsLoop | SeamWorld => isSeam(choice) || ('frame' in choice && 'add' in choice)
+const isGiven = (choice: Exclude<PhysicsChoice, 'jolt'>): choice is PhysicsLoop | SeamWorld => isSeam(choice) || ('frame' in choice && 'add' in choice)
 
 async function loadEngine(options: JoltEngineOptions): Promise<{ readonly engine: JoltEngine; readonly fallback?: string }> {
   try {
@@ -54,15 +54,13 @@ async function loadEngine(options: JoltEngineOptions): Promise<{ readonly engine
   }
 }
 
-/** The physics the game handed in (none of it released here), or the kit's own solver: no engine to load. */
+/** The physics the game handed in (none of it released here), no engine to load. */
 export function givenPhysics(choice: GivenPhysicsChoice): KitWorldPhysics {
-  if (choice === 'own') return { loop: null, pieces: 'own', engine: null, info: { kind: 'own' }, dispose: () => undefined }
   if (isPhysicsLoop(choice)) return servicesOf<Omit<KitWorldPhysics, 'services'>>({ loop: choice, pieces: choice, engine: null, info: { kind: 'loop' }, dispose: () => undefined })
   return { loop: null, pieces: choice, engine: null, info: { kind: 'seam' }, dispose: () => undefined }
 }
 
 export async function createPhysics(choice: PhysicsChoice): Promise<KitWorldPhysics> {
-  if (choice === 'own') return givenPhysics(choice)
   if (choice !== 'jolt' && isGiven(choice)) return givenPhysics(choice)
   const asked: Partial<KitWorldJoltOptions> = choice === 'jolt' ? {} : choice
   const { engine, fallback } = await loadEngine({ ...(asked.build !== undefined ? { build: asked.build } : {}), ...(asked.workerThreads !== undefined ? { workerThreads: asked.workerThreads } : {}), ...(asked.contactCallbacks !== undefined ? { contactCallbacks: asked.contactCallbacks } : {}), ...(asked.moduleUrl !== undefined ? { moduleUrl: asked.moduleUrl } : {}) })

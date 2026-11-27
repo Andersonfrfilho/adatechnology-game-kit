@@ -42,7 +42,7 @@ export async function createKitWorld<TRecord = unknown>(THREE: ThreeNamespace, o
 
 /**
  * The same world at once, for a host that cannot wait (the test room's `createTestRoom` returns its room synchronously): the physics is one that needs no engine
- * loaded, the kit's own solver or what the game made (a loop the page loaded Jolt into, a seam).
+ * loaded: what the game made (a loop the page loaded Jolt into, a seam).
  */
 export function createKitWorldSync<TRecord = unknown>(THREE: ThreeNamespace, options: KitWorldSyncOptions): KitWorld<TRecord> {
   return assembleKitWorld<TRecord>({ THREE, options, physics: givenPhysics(options.physics) })

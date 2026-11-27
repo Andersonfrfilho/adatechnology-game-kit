@@ -45,7 +45,7 @@ By hand, with the same options as `createWorkerCoordinator`: `createKitWorkers({
 
 ## The world host (`@adatechnology/game-kit-defaults/world`, spec 011)
 
-`createKitWorld(THREE, options)` wires what every game wires the same way: renderer, scene and camera (the game's own when handed in), the sun and the ambient fill, the terrain and its ground, the destruction world and its renderer, liquids and film, water, sound with the occlusion of the world, effects, the light budget and the program warm-up, physics, workers, the scheduler with its phases, and the loop. It is async because of Jolt's wasm; `createKitWorldSync(THREE, options)` makes the same world at once when the physics needs no engine loaded (`'own'`, a `PhysicsLoop` or a `SeamWorld` of the game), as the test room does.
+`createKitWorld(THREE, options)` wires what every game wires the same way: renderer, scene and camera (the game's own when handed in), the sun and the ambient fill, the terrain and its ground, the destruction world and its renderer, liquids and film, water, sound with the occlusion of the world, effects, the light budget and the program warm-up, physics, workers, the scheduler with its phases, and the loop. It is async because of Jolt's wasm; `createKitWorldSync(THREE, options)` makes the same world at once when the physics needs no engine loaded (a `PhysicsLoop` or a `SeamWorld` of the game), as the test room does.
 
 ```ts
 const world = await createKitWorld(THREE, { container, bounds: [-40, -40, 40, 40], workers: createKitWorkers() })

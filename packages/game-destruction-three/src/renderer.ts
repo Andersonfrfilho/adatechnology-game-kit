@@ -25,7 +25,7 @@ import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
 import type { HostSolid } from '@adatechnology/game-contracts'
 import { sameSolids } from './engine-statics'
-import { PieceSystem, minPieceHalf } from './pieces'
+import { MIN_PIECE_HALF, PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
@@ -383,7 +383,7 @@ class Renderer implements DestructionRenderer {
   private readonly blastDebris: ResolvedBlastDebris | null
   private readonly blastWakes: BlastWakes | null
   private readonly costMeter: PhysicsCostMeter
-  /** The step cost the debris policy reads this frame (`debrisCost`), null when there is none (the kit's own solver, or `fixed`). */
+  /** The step cost the debris policy reads this frame (`debrisCost`), null when there is none (`fixed`). */
   private cost: DebrisCostSample | null = null
   private costFrame = 0
   /** The pieces faded away (`faded`): their root shrinks, then leaves the scene. */
@@ -810,8 +810,7 @@ class Renderer implements DestructionRenderer {
     }
     if (total.isEmpty()) return { half: [0.25, 0.25, 0.25], center: new this.THREE.Vector3() }
     const size = total.getSize(new this.THREE.Vector3())
-    const least = minPieceHalf(this.o.physics)
-    return { half: [Math.max(least, size.x / 2), Math.max(least, size.y / 2), Math.max(least, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
+    return { half: [Math.max(MIN_PIECE_HALF, size.x / 2), Math.max(MIN_PIECE_HALF, size.y / 2), Math.max(MIN_PIECE_HALF, size.z / 2)], center: total.getCenter(new this.THREE.Vector3()) }
   }
 
   /**
