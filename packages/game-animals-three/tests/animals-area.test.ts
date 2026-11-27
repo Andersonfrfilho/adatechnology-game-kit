@@ -10,6 +10,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { ANIMALS_AREA_ID, ANIMAL_ITEM_PREFIX, createAnimalsTestModule } from '../src'
 import { stubDocument } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 // Building 13 species and 40 skins takes seconds on a busy machine.
 vi.setConfig({ testTimeout: 60_000 })
@@ -22,7 +23,7 @@ const stubRenderer = (): THREE.WebGLRenderer => {
 const roomWithAnimals = (audio?: ReturnType<typeof createAudioEngine>): { room: TestRoom; module: ReturnType<typeof createAnimalsTestModule> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
   const module = createAnimalsTestModule({
     locale: 'pt-BR',
     species: SPECIES,
