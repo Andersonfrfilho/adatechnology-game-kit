@@ -3,7 +3,6 @@ import type { DrawnCollider, ModuleHost, WorkerCoordinator } from '@adatechnolog
 import { isPhysicsServices } from '@adatechnology/game-physics'
 import type { BodyId, PhysicsServices, Quat, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 import type { VehicleDestructible } from '@adatechnology/game-vehicles'
-import { fleetGroupOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehicleColliders } from '../colliders'
 import type { VehicleColliders } from '../colliders'
@@ -14,8 +13,7 @@ import type { HullPlanCache } from '../hull-plan-cache'
 
 type Three = typeof THREE_NS
 
-/** Hulls a car of each class may have (design 10.3, K7); a model of no class of the fleet takes the largest. */
-const HULL_CEILING: Readonly<Record<string, number>> = { motorcycles: 64, cars: 256, suvs: 256, pickups: 256, vans: 300, heavy: 550, agricultural: 150, military: 500, air: 500, water: 450 }
+/** The ceiling of a model the fleet content gives none for: the largest of design 10.3 (K7). */
 const DEFAULT_HULL_CEILING = 550
 
 export interface PhysicalCarOptions {
@@ -54,11 +52,11 @@ const wheelChildOf = (size: Vec3, center: Vec3): { readonly shape: ShapeDesc; re
 export const physicsServicesOf = (host: ModuleHost | null): PhysicsServices | undefined => (host && isPhysicsServices(host.physics) ? host.physics : undefined)
 
 /** How the car's colliders are made for the engine: hulls (method B), the plan in the host's workers when it has them, shared by the cars of a model. */
-export const physicalCarColliders = (THREE: Three, vehicle: VehicleDestructible, root: THREE_NS.Object3D, options: { readonly budget: number; readonly fleetKey: string; readonly planCache: HullPlanCache; readonly workers: WorkerCoordinator | undefined }): VehicleColliders =>
+export const physicalCarColliders = (THREE: Three, vehicle: VehicleDestructible, root: THREE_NS.Object3D, options: { readonly budget: number; readonly fleetKey: string; readonly hullCeilingOf?: ((id: string) => number | undefined) | undefined; readonly planCache: HullPlanCache; readonly workers: WorkerCoordinator | undefined }): VehicleColliders =>
   createVehicleColliders(THREE, vehicle, root, {
     budget: options.budget,
     hulls: true,
-    maxHulls: HULL_CEILING[fleetGroupOf(options.fleetKey) ?? ''] ?? DEFAULT_HULL_CEILING,
+    maxHulls: options.hullCeilingOf?.(options.fleetKey) ?? DEFAULT_HULL_CEILING,
     planCache: options.planCache,
     ...(options.workers ? { workers: options.workers } : {}),
   })

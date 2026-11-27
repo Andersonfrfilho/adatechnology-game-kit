@@ -7,7 +7,7 @@ import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from 
 import { isRenderPools } from '@adatechnology/game-render-three'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
 
-import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
+import { colorFromSeed, fleetDims, fleetHullCeilingOf, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createVehicleColliders } from '../colliders'
@@ -84,7 +84,7 @@ type Placed = {
  * exhaust) are requested by id through `host.effects` when the host has it; this module draws none.
  */
 export function createVehiclesTestModule(options: VehiclesTestOptions = {}): TestableModule<VehiclesContext> & { readonly placed: ReadonlyMap<string, unknown> } {
-  const fleet: VehiclesTestFleet = options.fleet ?? { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf }
+  const fleet: VehiclesTestFleet = options.fleet ?? { colorFromSeed, fleetDims, hullCeilingOf: fleetHullCeilingOf, installFleet, paintPalettes, paletteOf }
   const locale = options.locale ?? 'pt-BR'
   const text = TEXT[locale] ?? (TEXT['pt-BR'] as (typeof TEXT)[string])
   const keys = options.vehicles ?? DEFAULT_TEST_VEHICLES
@@ -189,7 +189,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const services = physicsServicesOf(host)
       if (services) {
         // on the engine's loop the car is a body of its own (hulls, parts that come off): the fixed world keeps no copy of the drawing
-        const colliders = physicalCarColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET, fleetKey: key, planCache, workers: host?.workers })
+        const colliders = physicalCarColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET, fleetKey: key, hullCeilingOf: fleet.hullCeilingOf, planCache, workers: host?.workers })
         const car = createPhysicalCar({ THREE: kit.THREE as Three, services, vehicle: d, root: root as THREE_NS.Object3D, colliders })
         const disposeVehicle = d.dispose?.bind(d)
         d.dispose = () => {
