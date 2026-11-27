@@ -13,6 +13,7 @@ export const DIST_SUBPATHS = /** @type {Record<string, string[]>} */ ({
   'game-audio': ['fitted'],
   'game-destruction-three': ['worker-kinds'],
   'game-shapes': ['worker-kinds'],
+  'game-vehicles': ['worker-kinds'],
   'game-kit-defaults': ['world'],
 })
 
