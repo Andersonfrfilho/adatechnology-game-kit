@@ -248,6 +248,8 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.4 ✅ Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`; `evidence.md` `## TS.4`).
 - [x] TS.5 ✅ Armas: cápsulas e granada no motor (`ProjectileModel.body`, `thrown-body.ts`, `WeaponFx.clearLoose`; régua do dono 100/100 no chão da sala de produção; `evidence.md` `## TS.5`).
 - [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
+- [ ] TS.5 Armas: cápsulas e granada no motor.
+- [x] TS.6 ✅ Multidão e atropelamento (desligado com `hordeThread`; `PhysicsServices.channel`, `crowd-bodies.ts`, `run-over-link.ts`; `evidence.md` `## TS.6`).
 - [ ] TS.7 Cadáveres na sala (T5.4b/c/d).
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
 - [ ] TS.9 🧠 Jogador no motor (desenho antes).
