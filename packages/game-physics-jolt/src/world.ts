@@ -29,6 +29,7 @@ import type {
   WorldDesc,
 } from '@adatechnology/game-physics'
 
+import { readAwakeBounds } from './awake-bounds'
 import { createCharacter } from './character'
 import { updateHeights } from './heights'
 import { BP_AGENT, DEFAULT_SLEEP_AFTER, DEFAULT_SLEEP_SPEED, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
@@ -825,6 +826,10 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
 
   contactBodies(id: BodyId, out: BodyId[]): number {
     return contactBodies(this, id, out)
+  }
+
+  readAwakeBounds(out: Float64Array, skip?: ReadonlySet<BodyId>): number {
+    return readAwakeBounds(this, out, skip)
   }
 
   penetration(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number {

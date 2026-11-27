@@ -438,6 +438,11 @@ export const KIT_WORLD: WorldDesc = {
 /** Solver passes of a ragdoll's own bodies and joints (condition 2): more than the world's, so its joints hold their limits through a hard landing. */
 export const KIT_RAGDOLL_SOLVER: { readonly velocity: number; readonly position: number } = { velocity: 20, position: 8 }
 
+/** Numbers in a row of `PhysicsWorld.readAwakeBounds`, and what its first number says the row is. */
+export const AWAKE_BOUNDS_STRIDE = 10
+export const AWAKE_KIND_BODY = 0
+export const AWAKE_KIND_CHARACTER = 1
+
 export interface PhysicsWorld {
   readonly engine: string
   /** The fixed step (s) the world runs at: `PhysicsLoop` steps by it. */
@@ -577,6 +582,13 @@ export interface PhysicsWorld {
   penetration(id: BodyId, out: Float64Array, among?: ReadonlySet<BodyId>): number
   /** A sphere swept along the ray: every body it meets, nearest first. */
   sphereCastAll(from: Vec3, direction: Vec3, length: number, radius: number, out: RayHit[], filter?: QueryFilter): number
+  /**
+   * The bounds and the horizontal speed of what moves in the world, for a host that keeps ground under it: one row of `AWAKE_BOUNDS_STRIDE` numbers per awake dynamic body
+   * and per character (`AWAKE_KIND_BODY` or `AWAKE_KIND_CHARACTER`, its id, min x y z, max x y z, vx, vz). A kinematic body is not listed, nor a body in `skip`.
+   * Returns how many rows there are and writes only the ones that fit `out`: a caller that gets more than `out` holds grows it and reads again. A solver with
+   * no such view returns 0.
+   */
+  readAwakeBounds(out: Float64Array, skip?: ReadonlySet<BodyId>): number
   readonly contacts: ContactBuffer
   readonly sensorEvents: readonly SensorEvent[]
   /**
