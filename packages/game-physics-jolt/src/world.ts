@@ -801,7 +801,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   pushCharacter(id: CharacterId, impulse: Vec3): void {
-    this.characters.get(id)?.push(impulse[0], impulse[2])
+    this.characters.get(id)?.push(impulse[0], impulse[1], impulse[2])
   }
 
   readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void {

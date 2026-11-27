@@ -355,6 +355,8 @@ export interface CharacterDesc {
   readonly stepHeight?: number
   /** Default 45 degrees: steeper ground it slides down. */
   readonly maxSlopeDegrees?: number
+  /** Gravity it falls with (m/s^2), default 9.81. */
+  readonly gravity?: number
 }
 
 export interface RayHit {
@@ -543,7 +545,10 @@ export interface PhysicsWorld {
    * calls it before `stepFixed` (a `beforeStep` of the loop), never with the frame's `dt`.
    */
   moveCharacter(id: CharacterId, velocityX: number, velocityZ: number, dt: number): void
-  /** Shoves it: `impulse` (N s, horizontal part) is a change of velocity of impulse / mass that fades in about a quarter of a second and cannot go through a wall. */
+  /**
+   * Shoves it: `impulse` (N s) is a change of velocity of impulse / mass. The horizontal part fades in about a quarter of a second and cannot go through a wall;
+   * the vertical part is a launch that gravity takes back (a jump is an upward impulse while the feet stand on something: `mass * 3.99` N s rises 0.81 m).
+   */
   pushCharacter(id: CharacterId, impulse: Vec3): void
   /** Feet position into `out` at `offset` (x, y, z). */
   readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void

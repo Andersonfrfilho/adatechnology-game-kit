@@ -4894,3 +4894,7 @@ O #533 (T3.5) foi desfeito pelo #536 porque a granada saiu da régua de 6,5 s (6
 **Medido agora** (`engine-loose.test.ts`, teto de giro por tamanho do #533): 98/100 dentro dos dois limites; quantil 95 do repouso 6,85 s e da distância 7,4 m; máximo 7,01 s e 10,05 m; 18 fixos até 6,83 s e 7,42 m; chão aberto 5,78 s e 6,24 m; parede 3,52 s e 1,53 m; 200 cápsulas, 197 dormindo a 5 s, nenhuma abaixo do chão.
 ## T3.5 — o #533 volta com a régua nova (2026-11-27)
 Revert do #536: voltam o teto de giro por tamanho em `game-physics-jolt`, a correção da emenda entre ladrilhos (`src/seam.ts`), o golden `destruction/fracture` `2837a904`, `rolling` na pista original e `loop-mode`. A régua da granada da T4.3 passa a ser a da seção acima.
+
+## TS.9a
+
+`pushCharacter` soma `impulso_y / massa` à velocidade vertical (a gravidade a consome) e `CharacterDesc.gravity?` (padrão 9,81) vale para a queda e para o pulo. A velocidade do passo é a média das duas pontas (a subida é a parábola, não um passo a menos). Teste `character.test.ts` (Jolt real, 120 Hz): impulso de 3,99 m/s sob 9,81 sobe **0,81 m** (±2 cm) e pousa; com gravidade 3 e 2 m/s sobe v²/2g do mesmo jeito. Nenhum golden mudou.

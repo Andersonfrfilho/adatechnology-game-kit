@@ -78,7 +78,7 @@ export interface VehicleEntry {
 
 export interface JoltCharacter {
   move(vx: number, vz: number, dt: number): void
-  push(impulseX: number, impulseZ: number): void
+  push(impulseX: number, impulseY: number, impulseZ: number): void
   read(out: Float32Array | Float64Array, offset: number): void
   /** Its box (min x y z, max x y z) and horizontal velocity (x z): eight numbers from `offset`. */
   bounds(out: Float64Array, offset: number): void

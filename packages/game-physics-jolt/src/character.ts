@@ -3,7 +3,7 @@ import type { CharacterDesc, CharacterId } from '@adatechnology/game-physics'
 import type { JoltCharacter } from './entries'
 import type { JoltWorldHost } from './world-host'
 
-const GRAVITY = 9.81
+const DEFAULT_GRAVITY = 9.81
 const DEFAULT_STEP_HEIGHT = 0.4
 const DEFAULT_MAX_SLOPE_DEGREES = 45
 const STICK_TO_FLOOR_DISTANCE = 0.5
@@ -12,7 +12,7 @@ const PUSH_DECAY_PER_SECOND = 4
 
 /**
  * A walking capsule (Jolt's `CharacterVirtual`): not a body, it moves by sweeps against the world, steps up stairs and sticks to the floor going down
- * (`ExtendedUpdate`), and pushes dynamic bodies with up to `strength` N. Gravity is its own; a shove (`push`) adds a velocity that fades.
+ * (`ExtendedUpdate`), and pushes dynamic bodies with up to `strength` N. Gravity is its own (`desc.gravity`); a shove (`push`) adds a horizontal velocity that fades and a vertical one that gravity takes back.
  */
 export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): CharacterId => {
   const J = w.J
@@ -33,7 +33,8 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
   update.mWalkStairsStepUp.Set(0, desc.stepHeight ?? DEFAULT_STEP_HEIGHT, 0)
   update.mStickToFloorStepDown.Set(0, -STICK_TO_FLOOR_DISTANCE, 0)
   const velocity = new J.Vec3(0, 0, 0)
-  const gravity = new J.Vec3(0, -GRAVITY, 0)
+  const pull = desc.gravity ?? DEFAULT_GRAVITY
+  const gravity = new J.Vec3(0, -pull, 0)
   const zero = new J.Vec3(0, 0, 0)
   let fall = 0
   let pushX = 0
@@ -41,15 +42,19 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
   const id = w.nextCharacter++ as CharacterId
   const made: JoltCharacter = {
     move: (vx: number, vz: number, dt: number) => {
-      fall = character.IsSupported() ? 0 : fall - GRAVITY * dt
-      velocity.Set(vx + pushX, fall, vz + pushZ)
+      const resting = character.IsSupported() && fall <= 0
+      const before = resting ? 0 : fall
+      fall = resting ? 0 : before - pull * dt
+      // the mean of the step's two speeds, so the arc of a jump is the parabola and not one step short
+      velocity.Set(vx + pushX, resting ? 0 : (before + fall) / 2, vz + pushZ)
       const fade = Math.exp(-PUSH_DECAY_PER_SECOND * dt)
       pushX *= fade
       pushZ *= fade
       character.SetLinearVelocity(velocity)
       character.ExtendedUpdate(dt, gravity, update, w.bpFilter, w.objFilter, w.bodyFilter, w.shapeFilter, w.iface.GetTempAllocator())
     },
-    push: (impulseX: number, impulseZ: number) => {
+    push: (impulseX: number, impulseY: number, impulseZ: number) => {
+      fall += impulseY / desc.mass
       pushX += impulseX / desc.mass
       pushZ += impulseZ / desc.mass
     },

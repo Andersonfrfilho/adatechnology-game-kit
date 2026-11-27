@@ -256,7 +256,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [ ] TS.7 Cadáveres na sala (T5.4b/c/d).
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
 - [ ] TS.9 Jogador no motor (desenho aprovado em `design/integracao-sala.md` §7; decisões do dono de 2026-11-27: gravidade real 9,81 com impulso de pulo 3,99 m/s, mesma altura de 0,81 m; sombra do jogador na camada `agent`). Grupo das tasks abaixo.
-  - [ ] TS.9a `pushCharacter` respeita o eixo y; `CharacterDesc.gravity?` (9,81). Aceite: pulo sobe v²/2g ± 2 cm. `haiku`.
+  - [x] TS.9a ✅ `pushCharacter` respeita o eixo y; `CharacterDesc.gravity?` (9,81). Aceite: pulo sobe v²/2g ± 2 cm. `haiku`.
   - [ ] TS.9b `setCharacterShape(id,{radius,halfHeight}): boolean`, posturas 1,80 / 1,20 / 0,60 em cache. Aceite: agacha sob barra de 1,3 m; false ao levantar ali. `sonnet`.
   - [ ] TS.9c `CharacterDesc.shadow?` + `characterBody(id)`: cápsula-sombra cinemática. Aceite: tábua quica na sombra; carro não colide com `agent`; `overlapShape` acha. `sonnet`.
   - [ ] TS.9d `readCharacterGround(id,out)`. Aceite: plataforma móvel, velocidade bate. `sonnet`.

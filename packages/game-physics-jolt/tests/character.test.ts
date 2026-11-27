@@ -125,6 +125,30 @@ describe('character controller behind the contract (spec 008 T4.1)', () => {
     world.dispose()
   })
 
+  it('a vertical push is a jump: it rises v^2 / 2g (3.99 m/s under 9.81 is 0.81 m) and lands', async () => {
+    const world = await makeWorld()
+    const jump = async (gravity: number, speed: number): Promise<{ peak: number; landed: boolean }> => {
+      const jumper = spawn(world, [gravity, 0, 0], { gravity })
+      walk(world, jumper, { x: 0, z: 0 }, 0.5)
+      world.pushCharacter(jumper, [0, 75 * speed, 0])
+      const feet = new Float64Array(3)
+      let peak = 0
+      for (let i = 0; i < Math.round(2.5 / H); i++) {
+        world.moveCharacter(jumper, 0, 0, H)
+        world.stepFixed(H)
+        world.readCharacter(jumper, feet, 0)
+        peak = Math.max(peak, feet[1])
+      }
+      return { peak, landed: world.characterSupported(jumper) && feet[1] < 0.01 }
+    }
+    const real = await jump(9.81, 3.99)
+    expect(Math.abs(real.peak - (3.99 * 3.99) / (2 * 9.81))).toBeLessThan(0.02)
+    expect(real.landed).toBe(true)
+    const moon = await jump(3, 2)
+    expect(Math.abs(moon.peak - (2 * 2) / (2 * 3))).toBeLessThan(0.02)
+    world.dispose()
+  })
+
   it('50 controllers cost at most 0.5 ms a fixed step (median)', { timeout: 120000 }, async () => {
     const world = await makeWorld()
     world.createBody({ shape: { kind: 'box', half: [1, 0.09, 1] }, motion: 'static', position: [0, 0.09, 4], user: -1 })
