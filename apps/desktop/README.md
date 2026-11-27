@@ -40,11 +40,11 @@ deste pacote (`tests/`, sem Electron).
   sala (`room.modules()`, as que têm área; na primeira abertura o app monta a sala uma vez escondida para lê-las e guarda em `room-areas.json` na pasta
   de dados do app) e as páginas vêm de `tools/check-area/plan.mjs` (a lista do `pnpm check:<área>`), gravadas pelo `stage` em `desktop-areas.json`.
 - **Menu da janela:** *Salas* (início, sala inteira, páginas de área), *Áreas da sala* (cada `?area=`), *Física* (Jolt multithread, Jolt single, só
-  medição com workers, solver próprio) e *Ver*.
+  medição com workers) e *Ver*. O solver próprio saiu do menu com a spec 008; a opção some junto com o código na T8.1.
 - **`--area=<id>`:** `menu` abre a tela inicial; `room` a sala inteira; o id de uma página de área construída (`vehicles`, `floorplan`...) abre a página;
   qualquer outro id vira `test-room.html?area=<id>` (`floorplan_area`, `weather_area`...).
 
-Outras opções: `--solver=jolt|own`, `--jolt-build=multithread|single`, `--jolt-threads=N|auto`, `--jolt-contacts=js|off`, `--lang=pt|en` (cada uma também
+Outras opções: `--solver=jolt` (`own` só até a T8.1 apagar o solver próprio), `--jolt-build=multithread|single`, `--jolt-threads=N|auto`, `--jolt-contacts=js|off`, `--lang=pt|en` (cada uma também
 como `KIT_DESKTOP_<NOME>`).
 
 ## Segurança

@@ -5085,3 +5085,9 @@ Worktree `spec-008-pr0b`, branch `spec/008-salas-no-jolt` sobre `origin/main` (c
 Peso novo do Jolt por arquivo: criar o motor wasm custa ~0,3 s por arquivo de teste (visível em `animals` e `vegetation`, de poucos testes longos em arquivos pequenos).
 
 **Gates.** `tsc` (`pnpm typecheck`) limpo nos 10 pacotes tocados; `eslint` nos arquivos tocados sem erros (os avisos de `max-lines` de `room.ts` e `engine-pieces.ts` já existiam); `pnpm check:layers` sem violação nova.
+
+## T8.2 e T8.3 — docs e marcação da spec antiga (2026-11-27)
+
+- **T8.2:** docs e skills dizem que o Jolt é o motor único (`game-physics-jolt`); o contrato (`game-physics`) não cita motor; `'own`, `PIECE_SOLVER` e `?solver=own` ficam descritos como existentes só até a T8.1 apagá-los. Alterados: `.claude/skills/kit-base/references/game-physics.md`, `.claude/skills/kit-base/references/game-physics-jolt.md`, `packages/game-physics/README.md`, `packages/game-physics-jolt/README.md`, `packages/game-kit-defaults/README.md`, `apps/desktop/README.md`, `docs/criterios-fisica-objetos.md`. `CLAUDE.md` não cita o solver próprio (o §12 da raiz é objetos quebrados), então não mudou. `REPORT-ENGINE-jolt.md` e `GATE0-REPORT-jolt.md` já estão em `decision/`.
+- **T8.3:** a spec antiga `specs/008-solver-de-contato-dos-destrocos/` não existia em `origin/main` (só no commit `5ae2a9aa8`, em branches de spike); foi restaurada desse commit como registro histórico, com o aviso "Substituída" no topo do `spec.md`. Aceite: `grep -q "Substituída" specs/008-solver-de-contato-dos-destrocos/spec.md`.
+- **tasks.md:** removidas as linhas duplicadas antigas `- [ ] TS.6` e `- [ ] TS.5`; as versões ✅ ficam.

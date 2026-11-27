@@ -5,6 +5,7 @@ The adapter of [`@adatechnology/game-physics`](../game-physics) over [Jolt Physi
 page load it with no loader configuration and no `SharedArrayBuffer`.
 
 - **The only package that depends on `jolt-physics`.** Everything else in the kit talks to the contract.
+- **The kit's only physics engine** (spec 008). It replaces the kit's former own debris solver; the `own` option and `PIECE_SOLVER` / `?solver=own` go away with T8.1.
 - **One world per game.** `engine.createWorld` makes a `PhysicsWorld`; the game keeps one and gives it to one loop.
 - **Every Jolt object is destroyed by the package**: bodies (`RemoveBody`, `DestroyBody`), joints, ragdolls, vehicles, shapes
   (`Release`) and the world's own allocations (`Jolt.destroy`). `world.dispose()` frees what remains; `memoryInUse()` reports the heap.

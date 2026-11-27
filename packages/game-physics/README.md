@@ -1,8 +1,8 @@
 # @adatechnology/game-physics
 
 The rigid-body contract of the kit: bodies, shapes, joints, ragdolls, vehicles, materials, contacts, sleep, raycasts and the fixed-step
-loop, as types and tiny helpers. It does not simulate anything and knows no engine. An adapter implements it (today:
-[`@adatechnology/game-physics-jolt`](../game-physics-jolt)), and the kit's own layers (materials and mass, damage, fracture, load path,
+loop, as types and tiny helpers. It does not simulate anything and knows no engine. The kit's single engine implements it, as the
+adapter [`@adatechnology/game-physics-jolt`](../game-physics-jolt) (spec 008), and the kit's own layers (materials and mass, damage, fracture, load path,
 ballistics, blast) sit on top of it.
 
 - **Contract, not adapter.** Only adapters depend on an engine. The domain packages (`game-destruction`, `game-destruction-three`, ...)

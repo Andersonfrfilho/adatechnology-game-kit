@@ -18,6 +18,7 @@ API, uso e exemplos: `packages/game-physics-jolt/README.md`; testes em `packages
 - **Destrói todo objeto Jolt que cria**: corpos (`RemoveBody`, `DestroyBody`), juntas, ragdolls, veículos, formas (`Release`), e as
   alocações do mundo (`Jolt.destroy`). `world.dispose()` libera o que sobrar; `world.memoryInUse()` mostra o heap (`CLAUDE.md` §8).
 - Implementa `PhysicsEngine` e `PhysicsWorld` do contrato; `JoltWorld` é a classe concreta.
+- Motor único do kit desde a spec 008: substituiu o solver próprio dos destroços. A opção `own`, `PIECE_SOLVER` e `?solver=own` saem com a T8.1; código novo não usa.
 
 ## Boot: um mundo e um laço por jogo
 

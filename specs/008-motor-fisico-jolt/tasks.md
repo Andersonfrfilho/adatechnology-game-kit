@@ -250,8 +250,6 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.1b ✅ Chão do motor segue todo corpo dinâmico acordado e todo personagem do mundo (`SeamWorld.readAwakeBounds`, `engine-ground-follow.ts`, despejo de ladrilho, mundo estático dos módulos). Desenho: `design/integracao-sala.md` §6. Aceite: `ground-follows-bodies.test.ts` verde; custo na faixa `test:cost` (`evidence.md` `## TS.1b`). `sonnet`.
 - [x] TS.4 ✅ Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`; `evidence.md` `## TS.4`).
 - [x] TS.5 ✅ Armas: cápsulas e granada no motor (`ProjectileModel.body`, `thrown-body.ts`, `WeaponFx.clearLoose`; régua do dono 100/100 no chão da sala de produção; `evidence.md` `## TS.5`).
-- [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
-- [ ] TS.5 Armas: cápsulas e granada no motor.
 - [x] TS.6 ✅ Multidão e atropelamento (desligado com `hordeThread`; `PhysicsServices.channel`, `crowd-bodies.ts`, `run-over-link.ts`; `evidence.md` `## TS.6`).
 - [x] TS.7 ✅ Cadáveres na sala (T5.4b/c/d): os mortos da multidão são corpos do motor da sala (`game-crowd-three`), desenhados onde o motor os tem, restauráveis num mundo novo. Aceite: `room-corpses.test.ts` verde; pilha de 100 na faixa `test:cost` (`evidence.md` `## TS.7`).
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
@@ -281,10 +279,10 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 
 - **T8.1 Apagar o solver próprio** dos destroços, a chave `PIECE_SOLVER`/`?solver=own`, a rede e o código só do spike. Commit próprio.
   Mecânica? sim · Aceite por comando? sim: `grep -rn "PIECE_SOLVER\|solver=own" packages examples` vazio; `pnpm -r typecheck`; `pnpm -r test` · `haiku`.
-- **T8.2 Docs:** `docs/criterios-fisica-objetos.md`, `CLAUDE.md` §12 (a regra continua; o executor agora é o motor), skills de cada pacote
+- ✅ **T8.2 Docs:** `docs/criterios-fisica-objetos.md`, `CLAUDE.md` §12 (a regra continua; o executor agora é o motor), skills de cada pacote
   migrado, e `REPORT-ENGINE-*` e `GATE0-REPORT-jolt.md` copiados para `specs/008-motor-fisico-jolt/decision/`.
   Mecânica? sim · Aceite por comando? sim: `node tools/kit-audit/audit.mjs --check` · `haiku`.
-- **T8.3 Marcar a spec antiga** `specs/008-solver-de-contato-dos-destrocos/` como substituída (sem apagar).
+- ✅ **T8.3 Marcar a spec antiga** `specs/008-solver-de-contato-dos-destrocos/` como substituída (sem apagar).
   Mecânica? sim · Aceite por comando? sim: `grep -q "Substituída" specs/008-solver-de-contato-dos-destrocos/spec.md` · `haiku`.
 - **T8.4 Sala em GPU real** (à mão): blast, martelo, carro, ragdoll, horda; 5 rodadas; print por câmera (`CLAUDE.md` §5). Aceite: C2 e C4 da sala.
   Mecânica? não · Aceite por comando? não · `sonnet`.
