@@ -236,5 +236,6 @@ describe.skipIf(!IS_JOLT)('a tile whose ground changed is written in place (T3.8
       if (!Number.isNaN(h)) worst = Math.max(worst, Math.abs(h - want[i]!))
     })
     expect(worst).toBeLessThanOrEqual(tolerance)
-  })
+  // the criterion is leaked bodies and heap, not time: 200 ground changes pass 5 s on a loaded runner
+  }, 30_000)
 })
