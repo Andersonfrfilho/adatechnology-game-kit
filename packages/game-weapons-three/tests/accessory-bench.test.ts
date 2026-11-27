@@ -324,6 +324,28 @@ describe('accessory bench: player held', () => {
   })
 })
 
+describe('accessory bench: keys the weapon has nothing for', () => {
+  it('lets U, K and L reach the room when the AK-47 in hand has no launcher, laser or light (U opens the aimed piece\'s actions)', () => {
+    const logs: string[] = []
+    const commands: unknown[] = []
+    const host = {
+      camera: new THREE.PerspectiveCamera(),
+      bench: undefined,
+      tool: () => ({ weapon: 'ak47', category: 'rif', ammo: 0, capacity: 0, reserve: 0, reloading: false, attachments: [] }),
+      command: (request: unknown) => (commands.push(request), { ok: true }),
+      playerHeld: () => false,
+      onFrame: () => () => undefined,
+      on: () => () => undefined,
+      log: (line: string) => void logs.push(line),
+    }
+    const standalone = createAccessoryBench({ arsenal: createArsenal({ rules: { faults: false } }), host: host as unknown as ModuleHost, text: ACCESSORY_TEXT.en! })
+    for (const code of ['KeyU', 'KeyK', 'KeyL']) expect(key(code).defaultPrevented).toBe(false)
+    expect(logs).toEqual([])
+    expect(commands).toEqual([])
+    standalone.dispose()
+  })
+})
+
 describe('accessory bench: words', () => {
   it('names the accessories in the language of the room', () => {
     const { room } = areaRoom('pt-BR')

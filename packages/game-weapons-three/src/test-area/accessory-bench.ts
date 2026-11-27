@@ -118,6 +118,9 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
     }
   }
 
+  const hasKind = (kind: 'light' | 'laser'): boolean => (host.tool().attachments ?? []).some((candidate) => arsenal.attachments.get(candidate.id)?.kind === kind)
+  const hasLauncher = (): boolean => (host.tool().attachments ?? []).some((part) => arsenal.attachments.get(part.id)?.launcher !== undefined)
+
   const toggleKind = (kind: 'light' | 'laser'): void => {
     const part = (host.tool().attachments ?? []).find((candidate) => arsenal.attachments.get(candidate.id)?.kind === kind)
     if (!part) host.log(kind === 'light' ? text.noLight : text.noLaser)
@@ -134,8 +137,7 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
 
   const switchUnderbarrel = (): void => {
     const tool = host.tool()
-    const hasLauncher = (tool.attachments ?? []).some((part) => arsenal.attachments.get(part.id)?.launcher !== undefined)
-    if (!hasLauncher) host.log(text.noLauncher)
+    if (!hasLauncher()) host.log(text.noLauncher)
     else host.command?.({ type: 'underbarrel', on: tool.underbarrelActive !== true })
   }
 
@@ -181,7 +183,12 @@ export function createAccessoryBench(options: AccessoryBenchOptions): AccessoryB
     // someone else holds the player (at the wheel of a vehicle): L, K, U and V are theirs
     if (host.playerHeld?.()) return
     if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || TEXT_FIELDS.has((event.target as HTMLElement | null)?.tagName ?? '')) return
-    const handled = event.code === ACCESSORY_KEYS.light ? act(ACTION_IDS.light) : event.code === ACCESSORY_KEYS.laser ? act(ACTION_IDS.laser) : event.code === ACCESSORY_KEYS.underbarrel ? act(ACTION_IDS.underbarrel) : event.code === ACCESSORY_KEYS.stock && toggleStock()
+    // a key the weapon has nothing for goes on to the room (U: the aimed piece's actions, L: sit, K: kick), not to a "no launcher" note
+    const handled =
+      event.code === ACCESSORY_KEYS.light ? hasKind('light') && act(ACTION_IDS.light)
+      : event.code === ACCESSORY_KEYS.laser ? hasKind('laser') && act(ACTION_IDS.laser)
+      : event.code === ACCESSORY_KEYS.underbarrel ? hasLauncher() && act(ACTION_IDS.underbarrel)
+      : event.code === ACCESSORY_KEYS.stock && toggleStock()
     if (!handled) return
     event.preventDefault()
     event.stopImmediatePropagation()
