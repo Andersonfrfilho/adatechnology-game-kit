@@ -7,12 +7,14 @@ import type { SegmentClipUniforms } from './segment-clips'
 const ATTRIBUTES: readonly (readonly [string, number])[] = [['iA', 4], ['iB', 4], ['iC', 4], ['iCol', 3], ['iEye', 3]]
 const IDENTITY_ATTRIBUTES: readonly (readonly [string, number])[] = [['iD', 4]]
 const ACCESSORY_ATTRIBUTES: readonly (readonly [string, number])[] = [['iAcc', 4]]
+const ORIENTED_ATTRIBUTES: readonly (readonly [string, number])[] = [['iQ', 4]]
 const MIN_HEIGHT = -2
 const MAX_HEIGHT = 8
 const HEIGHT_STEPS = 1000
 const POSE_SLOTS = 16
 const NO_IDENTITY = [0, 0, 0, 0] as const
 const NO_ACCESSORY = [0, 0, 0, 1] as const
+const NO_ROTATION = [0, 0, 0, 0] as const
 
 export type BodyBatchOptions = {
   /** Instances the batch can hold. */
@@ -27,6 +29,8 @@ export type BodyBatchOptions = {
   readonly segmentClips?: SegmentClipUniforms
   /** Also makes a depth-only mesh over the same geometry, drawn first (`batch.prepass`), so the lit pass shades the nearest body of each pixel only (the room's lights make a fragment dear). */
   readonly depthPrepass?: boolean
+  /** Adds the `iQ` attribute: an instance with a `rotation` is turned by it about its origin (a body a physics engine laid down), one without is drawn by its yaw. */
+  readonly oriented?: boolean
 }
 
 /** One instance: the 12 numbers of the shader's `iA`, `iB` and `iC`, the shirt colour and the eye colour (G 65509 `push`). */
@@ -42,6 +46,8 @@ export type BodyInstance = {
   readonly d?: readonly [number, number, number, number]
   /** The `iAcc` pivot offset and scale (with `accessory`). */
   readonly acc?: readonly [number, number, number, number]
+  /** A unit quaternion (x y z w), with `oriented`: turns the standing body about its origin, over `a`'s yaw (which it then ignores); `a` and `y` are where the origin goes. */
+  readonly rotation?: readonly [number, number, number, number]
 }
 
 /** A plain `Mesh` over an `InstancedBufferGeometry` (no `instanceMatrix`: 4 vertex attribute slots less); `count` mirrors the geometry's `instanceCount`. */
@@ -61,7 +67,7 @@ export type BodyBatch = {
 const PREPASS_RENDER_ORDER = -1
 
 /** The mesh that writes the depth of a batch's bodies and no colour, drawn before the lit meshes. */
-const createPrepass = (three: Three, geometry: THREE_NS.BufferGeometry, params: Pick<BodyMaterialParams, 'time' | 'identity' | 'accessory' | 'segmentClips'>): THREE_NS.Mesh => {
+const createPrepass = (three: Three, geometry: THREE_NS.BufferGeometry, params: Pick<BodyMaterialParams, 'time' | 'identity' | 'accessory' | 'segmentClips' | 'oriented'>): THREE_NS.Mesh => {
   const material = createBodyMaterial(three, { depth: true, ...params })
   material.colorWrite = false
   const mesh = new three.Mesh(geometry, material)
@@ -74,9 +80,9 @@ const createPrepass = (three: Three, geometry: THREE_NS.BufferGeometry, params: 
 
 /** A batch of bodies drawn in one call (zombies, survivors, corpses). `begin`, `push` per body each frame, then `end` (G 65509 `BodyBatch`). */
 export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry, options: BodyBatchOptions): BodyBatch => {
-  const { max, castShadow = true, time, accessory = false, segmentClips } = options
+  const { max, castShadow = true, time, accessory = false, segmentClips, oriented = false } = options
   const identity = options.identity === true || accessory
-  const layout = [...ATTRIBUTES, ...(identity ? IDENTITY_ATTRIBUTES : []), ...(accessory ? ACCESSORY_ATTRIBUTES : [])]
+  const layout = [...ATTRIBUTES, ...(identity ? IDENTITY_ATTRIBUTES : []), ...(accessory ? ACCESSORY_ATTRIBUTES : []), ...(oriented ? ORIENTED_ATTRIBUTES : [])]
   const copy = new three.InstancedBufferGeometry().copy(geometry as THREE_NS.InstancedBufferGeometry)
   copy.instanceCount = 0
   const attributes: Record<string, THREE_NS.InstancedBufferAttribute> = {}
@@ -86,22 +92,22 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
     copy.setAttribute(name, attribute)
     attributes[name] = attribute
   }
-  const mesh = new three.Mesh(copy, createBodyMaterial(three, { time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) })) as unknown as BodyBatchMesh
+  const mesh = new three.Mesh(copy, createBodyMaterial(three, { time, identity, accessory, oriented, ...(segmentClips ? { segmentClips } : {}) })) as unknown as BodyBatchMesh
   Object.defineProperty(mesh, 'count', {
     get: () => copy.instanceCount,
     set: (value: number) => {
       copy.instanceCount = value
     },
   })
-  mesh.customDepthMaterial = createBodyMaterial(three, { depth: true, time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDepthMaterial
-  if (identity) mesh.customDistanceMaterial = createBodyMaterial(three, { distance: true, time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDistanceMaterial
+  mesh.customDepthMaterial = createBodyMaterial(three, { depth: true, time, identity, accessory, oriented, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDepthMaterial
+  if (identity) mesh.customDistanceMaterial = createBodyMaterial(three, { distance: true, time, identity, accessory, oriented, ...(segmentClips ? { segmentClips } : {}) }) as THREE_NS.MeshDistanceMaterial
   mesh.frustumCulled = false
   // the bodies are placed per instance on the GPU: the template geometry a ray would test sits at the origin, where none is drawn
   mesh.raycast = () => undefined
   mesh.castShadow = castShadow
   mesh.receiveShadow = true
   mesh.count = 0
-  const prepass = options.depthPrepass ? createPrepass(three, copy, { time, identity, accessory, ...(segmentClips ? { segmentClips } : {}) }) : undefined
+  const prepass = options.depthPrepass ? createPrepass(three, copy, { time, identity, accessory, oriented, ...(segmentClips ? { segmentClips } : {}) }) : undefined
   let count = 0
   return {
     mesh,
@@ -113,7 +119,7 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
     begin() {
       count = 0
     },
-    push({ a, b, c, color, eye, y = 0, d, acc }) {
+    push({ a, b, c, color, eye, y = 0, d, acc, rotation }) {
       if (count >= max) return
       const index = count++
       const fourOffset = index * 4
@@ -125,6 +131,7 @@ export const createBodyBatch = (three: Three, geometry: THREE_NS.BufferGeometry,
       attributes.iEye!.array.set(eye ? [eye.r, eye.g, eye.b] : [0, 0, 0], threeOffset)
       if (identity) attributes.iD!.array.set(d ?? NO_IDENTITY, fourOffset)
       if (accessory) attributes.iAcc!.array.set(acc ?? NO_ACCESSORY, fourOffset)
+      if (oriented) attributes.iQ!.array.set(rotation ?? NO_ROTATION, fourOffset)
     },
     end() {
       mesh.count = count
