@@ -1,5 +1,11 @@
 # @adatechnology/game-weapons-three
 
+## 0.27.6
+
+### Patch Changes
+
+- f92666d: Bancada de acessórios: U, K e L só ficam com a arma quando ela tem lança-granada, laser ou lanterna; sem a peça, a tecla segue para a sala (U abre as ações da peça na mira) em vez de avisar "sem lança-granada".
+
 ## 0.27.5
 
 ### Patch Changes
