@@ -167,11 +167,11 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
   it('a pipe rolling on a top over sand keeps the default surface (0.015), not the sand under the top', () => {
     const top = throwRod({ ground: 'sand', radius: 0.05, speed: 3, seconds: 30, top: 0.5 })
     if (IS_JOLT) {
-      // the engine's top is a box with none of the ground tiles' extra contact loss (8.5 m of roll-out against the 8.5 m of the closed form, the tiles' 7.8 m), so it is measured
+      // the engine's top is a box with none of the ground tiles' extra contact loss (a box top: the engine's default ground has no rolling damping of its own, the rod's 0.02 alone), so it is measured
       // against the closed form of the default surface; sand's C_rr (a few times higher) would stop it much sooner
       expect(top.stopAt).not.toBeNull()
       const run = top.stopAt! - top.rollFrom!.x
-      const expectedRun = rollOut(top.rollFrom!.speed, rollingOf('asphalt'), DAMPING + GROUND_ROLLING_DAMPING)
+      const expectedRun = rollOut(top.rollFrom!.speed, rollingOf('asphalt'))
       expect(run).toBeGreaterThan(expectedRun * 0.95)
       expect(run).toBeLessThan(expectedRun * 1.05)
       return

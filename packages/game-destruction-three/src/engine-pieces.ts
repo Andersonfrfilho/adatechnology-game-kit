@@ -23,7 +23,7 @@ import type { StaticSolid } from './engine-statics'
 import { HINGE_RELEASE } from './internal'
 import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
 import { mergeFlushBoxes } from './merge-flush-boxes'
-import { GROUND_ROLLING_DAMPING, PIECE_ROLLING_DAMPING } from './friction'
+import { PIECE_ROLLING_DAMPING } from './friction'
 
 export type { StaticSolid } from './engine-statics'
 
@@ -127,7 +127,7 @@ const TILE_KEY_ORIGIN = 32768
 const MU_STATIC = 0.7
 const ROLLING_RESISTANCE = 0.015
 const MU_DYNAMIC = 0.6
-const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE, rollingDamping: GROUND_ROLLING_DAMPING }
+const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE }
 
 /** The key of the ground tile (x, z) falls in, the engine's own (`tiles`). */
 export const groundTileKey = (x: number, z: number): number => (Math.floor(x / TILE) + TILE_KEY_ORIGIN) * TILE_KEY + (Math.floor(z / TILE) + TILE_KEY_ORIGIN)
@@ -1456,11 +1456,11 @@ export class EnginePieces {
   private groundMaterial(ix: number, iz: number): Material {
     const rolling = this.o.groundRollingAt ? tileRollingAt(this.o.groundRollingAt, ix * TILE, iz * TILE) : undefined
     const damping = this.o.groundRollingDampingAt ? tileRollingAt(this.o.groundRollingDampingAt, ix * TILE, iz * TILE) : undefined
-    if ((rolling === undefined || rolling === ROLLING_RESISTANCE) && (damping === undefined || damping === GROUND_ROLLING_DAMPING)) return GROUND
-    const key = `${rolling ?? ROLLING_RESISTANCE}|${damping ?? GROUND_ROLLING_DAMPING}`
+    if ((rolling === undefined || rolling === ROLLING_RESISTANCE) && damping === undefined) return GROUND
+    const key = `${rolling ?? ROLLING_RESISTANCE}|${damping ?? ''}`
     let material = this.groundMaterials.get(key)
     if (!material) {
-      material = { ...GROUND, rolling: rolling ?? ROLLING_RESISTANCE, rollingDamping: damping ?? GROUND_ROLLING_DAMPING }
+      material = { ...GROUND, rolling: rolling ?? ROLLING_RESISTANCE, ...(damping === undefined ? {} : { rollingDamping: damping }) }
       this.groundMaterials.set(key, material)
     }
     return material
