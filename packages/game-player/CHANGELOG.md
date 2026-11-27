@@ -1,5 +1,11 @@
 # @adatechnology/game-player
 
+## 0.12.0
+
+### Minor Changes
+
+- 7fcd9d8: O jogador da sala ganha o ponto `Locomotion` (TS.9g a TS.9m): o caminho `own` é o código de sempre, movido sem mudar comportamento; com `host.physics` (laço do motor) o corpo é um `createWalker` no mundo (`player-body.ts`), com o veto dos blockers, `kickLight` desligado, câmera na fase `present`, nocaute e batida, sentar/voar/veículo por `park`/`unpark` e o avatar lendo os pés desenhados. `Walker.teleport(feet)` novo no `game-player`; `Player.hold`, `Player.engine`, `drawnX`/`drawnZ` e o `bodiless` do `footing` na sala. Com `physics: 'own'` nada muda.
+
 ## 0.11.0
 
 ### Minor Changes

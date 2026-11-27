@@ -1,5 +1,11 @@
 # @adatechnology/game-physics-jolt
 
+## 0.7.1
+
+### Patch Changes
+
+- ac65e03: O andador com sombra não varre nem empurra o corpo que o mundo ignora com a sombra (`ignorePair`), e a sala ignora a sombra do jogador para a granada e as cápsulas que nascem da mão: a granada deixa de ser lançada de volta pela cápsula em que nasce.
+
 ## 0.7.0
 
 ### Minor Changes

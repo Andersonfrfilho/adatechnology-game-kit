@@ -1,5 +1,19 @@
 # @adatechnology/game-test-room
 
+## 0.42.0
+
+### Minor Changes
+
+- 7fcd9d8: O jogador da sala ganha o ponto `Locomotion` (TS.9g a TS.9m): o caminho `own` é o código de sempre, movido sem mudar comportamento; com `host.physics` (laço do motor) o corpo é um `createWalker` no mundo (`player-body.ts`), com o veto dos blockers, `kickLight` desligado, câmera na fase `present`, nocaute e batida, sentar/voar/veículo por `park`/`unpark` e o avatar lendo os pés desenhados. `Walker.teleport(feet)` novo no `game-player`; `Player.hold`, `Player.engine`, `drawnX`/`drawnZ` e o `bodiless` do `footing` na sala. Com `physics: 'own'` nada muda.
+
+### Patch Changes
+
+- ac65e03: O andador com sombra não varre nem empurra o corpo que o mundo ignora com a sombra (`ignorePair`), e a sala ignora a sombra do jogador para a granada e as cápsulas que nascem da mão: a granada deixa de ser lançada de volta pela cápsula em que nasce.
+- Updated dependencies [7fcd9d8]
+- Updated dependencies [3276e5d]
+  - @adatechnology/game-player@0.12.0
+  - @adatechnology/game-destruction-three@0.29.1
+
 ## 0.41.3
 
 ### Patch Changes
