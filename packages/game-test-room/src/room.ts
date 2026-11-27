@@ -2745,7 +2745,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     emitHost,
     startFire,
     say,
-    projectileModel: options.projectileModel,
+    projectileModel: options.projectileModel, physics: kit.physics.services?.world,
     audio,
     water: blastWater,
     waterLevelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null,

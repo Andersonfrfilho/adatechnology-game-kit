@@ -35,6 +35,8 @@ export interface WeaponFx {
   /** Casings and magazines currently on the floor or in the air. */
   readonly casings: number
   readonly magazines: number
+  /** The room was cleared: the casings and magazines on the floor or in the air go, with their bodies in the physics world. */
+  clearLoose(): void
   dispose(): void
 }
 
@@ -191,6 +193,12 @@ export function createWeaponFx(options: WeaponFxOptions): WeaponFx {
     },
     get magazines() {
       return box.magazines + model.magazines + (left ? left.box.magazines + left.model.magazines : 0)
+    },
+    clearLoose() {
+      box.clearLoose()
+      model.clearLoose()
+      left?.box.clearLoose()
+      left?.model.clearLoose()
     },
     dispose() {
       box.dispose()

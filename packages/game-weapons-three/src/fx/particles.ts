@@ -60,6 +60,8 @@ export interface Particles {
   spawn(object: THREE_NS.Object3D, velocity: THREE_NS.Vector3, options?: ParticleOptions): void
   update(dt: number): void
   count(kind: ParticleKind): number
+  /** Takes every particle out of the scene and its body out of the world; the set stays usable. */
+  clear(): void
   /** Called when something bounces: `casing` or `magazine` (for the sound), with what hit, how fast (m/s, vertical) and which bounce (0 = first). */
   onBounce?: (kind: ParticleKind, hit?: { readonly object: THREE_NS.Object3D; readonly speed: number; readonly bounce: number }) => void
   dispose(): void
@@ -205,8 +207,11 @@ export function createParticles(THREE: Three, scene: THREE_NS.Object3D, groundAt
       }
     },
     count: (kind) => list.filter((particle) => particle.kind === kind).length,
-    dispose() {
+    clear() {
       for (const particle of [...list]) remove(particle)
+    },
+    dispose() {
+      api.clear()
     },
   }
   return api

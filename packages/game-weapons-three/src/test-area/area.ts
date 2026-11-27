@@ -5,6 +5,7 @@ import { markKitOrigin } from '@adatechnology/game-contracts'
 import { createArsenal, genericWeapons, roundsToWarningOf } from '@adatechnology/game-weapons'
 import type { Arsenal, WeaponDef } from '@adatechnology/game-weapons'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
+import { isPhysicsServices } from '@adatechnology/game-physics'
 import { isLightBudget, isRenderPools } from '@adatechnology/game-render-three'
 import { createAccessoryBench, accessoryControls, accessoryLayers, accessoryMetrics } from './accessory-bench'
 import { accessoryTextOf } from './accessory-text'
@@ -467,6 +468,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         motion: () => ({ speed: lent.player().speed, running: lent.player().running }),
         ...(lent.effects ? { effects: lent.effects } : {}),
         ...(lent.particleLimit ? { particleLimit: lent.particleLimit } : {}),
+        ...(isPhysicsServices(lent.physics) ? { physics: lent.physics.world } : {}),
         ...(isLightBudget(lent.lights) ? { lights: lent.lights } : {}),
         ...(isRenderPools(lent.pools) ? { pools: lent.pools } : {}),
         ...(options.attachmentModels ? { attachmentModels: options.attachmentModels } : {}),
@@ -531,6 +533,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
       // a weapon on its way between the hand and the body takes the right hand with it
       const offHands = lent.setHandTargets?.(() => holstered?.handTargets() ?? created.handTargets())
       const offMuzzle = lent.setMuzzleSource?.((hand) => created.muzzle(hand))
+      const offClear = lent.onClear?.(() => created.clearLoose())
       created.handle({ type: 'tool', weapon: lent.tool().weapon }, lent.tool())
       return () => {
         accessories.dispose()
@@ -541,6 +544,7 @@ export function createWeaponsTestModule(options: WeaponsTestModuleOptions = {}):
         offClock()
         offHands?.()
         offMuzzle?.()
+        offClear?.()
         created.dispose()
         holstered?.dispose()
         audio?.dispose()

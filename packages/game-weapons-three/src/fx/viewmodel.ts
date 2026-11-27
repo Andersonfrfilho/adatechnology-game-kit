@@ -130,6 +130,8 @@ export interface Viewmodel {
   readonly clips: ReadonlyArray<{ name: string; seconds: number }>
   readonly casings: number
   readonly magazines: number
+  /** Takes every casing, magazine and puff of smoke out of the scene and its body out of the world. */
+  clearLoose(): void
   dispose(): void
 }
 
@@ -699,6 +701,9 @@ export function createViewmodel(options: ViewmodelOptions): Viewmodel {
     },
     get magazines() {
       return particles.count('magazine')
+    },
+    clearLoose() {
+      particles.clear()
     },
     dispose() {
       release()

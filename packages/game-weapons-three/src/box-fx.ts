@@ -103,6 +103,8 @@ export interface BoxFx {
   /** Casings and magazines currently on the floor or in the air. */
   readonly casings: number
   readonly magazines: number
+  /** Takes every casing and magazine off the floor and out of the world. */
+  clearLoose(): void
   dispose(): void
 }
 
@@ -416,6 +418,9 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
     },
     get magazines() {
       return bodies.filter((b) => b.kind === 'magazine').length
+    },
+    clearLoose() {
+      for (const body of [...bodies]) removeBody(body)
     },
     dispose() {
       for (const body of [...bodies]) removeBody(body)

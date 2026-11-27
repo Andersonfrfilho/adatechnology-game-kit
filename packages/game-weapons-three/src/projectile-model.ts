@@ -1,6 +1,8 @@
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
 
+import { explosiveCollider } from './engine-loose'
+import type { LooseCollider } from './engine-loose'
 import { buildWeaponModelById } from './models'
 import { buildExplosiveModel } from './models/explosives'
 import { modelKit } from './models/kit'
@@ -13,10 +15,11 @@ export interface ProjectileQuery {
   readonly kind: string
 }
 
-/** The model of a projectile and the axis along its length. */
+/** The model of a projectile, the axis along its length and, for a hand grenade the engine can fly, its collider (the model's own parts, centred on it). */
 export interface ProjectileModel {
   readonly model: THREE_NS.Object3D
   readonly axis: [number, number, number]
+  readonly body?: LooseCollider
 }
 
 /**
@@ -41,5 +44,6 @@ function explosiveProjectile(THREE: typeof THREE_NS, query: ProjectileQuery): Pr
   holder.name = model.name
   model.position.sub(centre)
   holder.add(model)
-  return { model: holder, axis: [0, 1, 0] }
+  const body = query.kind === 'grenade' && query.explosive !== undefined ? explosiveCollider(THREE, query.explosive) : undefined
+  return { model: holder, axis: [0, 1, 0], ...(body ? { body } : {}) }
 }
