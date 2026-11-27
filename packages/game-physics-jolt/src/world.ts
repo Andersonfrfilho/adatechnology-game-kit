@@ -32,7 +32,7 @@ import type {
 import { readAwakeBounds } from './awake-bounds'
 import { createCharacter } from './character'
 import { updateHeights } from './heights'
-import { BP_AGENT, DEFAULT_SLEEP_AFTER, DEFAULT_SLEEP_SPEED, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
+import { BP_AGENT, DEFAULT_MAX_TURN_RATE, DEFAULT_SLEEP_AFTER, DEFAULT_SLEEP_SPEED, MAX_EDGE_SPEED, MAX_TURN_PER_STEP, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
 import type { Jolt } from './constants'
 import { Contacts } from './contact-rows'
 import { makeListener } from './contacts'
@@ -252,6 +252,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     s.mUserData = desc.user
     if (desc.linearDamping !== undefined) s.mLinearDamping = desc.linearDamping
     if (desc.angularDamping !== undefined) s.mAngularDamping = desc.angularDamping
+    if (desc.motion === 'dynamic') s.mMaxAngularVelocity = this.turnCapOf(shape)
     if (desc.continuous) s.mMotionQuality = J.EMotionQuality_LinearCast
     if (desc.allowSleep === false) s.mAllowSleeping = false
     if (desc.motion !== 'static') s.mAllowDynamicOrKinematic = true
@@ -282,6 +283,14 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     if (desc.linearVelocity) s.mLinearVelocity.Set(desc.linearVelocity[0], desc.linearVelocity[1], desc.linearVelocity[2])
     if (desc.angularVelocity) s.mAngularVelocity.Set(desc.angularVelocity[0], desc.angularVelocity[1], desc.angularVelocity[2])
     return s
+  }
+
+  /** The fastest (rad/s) a body of this shape may turn: `MAX_EDGE_SPEED` over its radius (the reach of its bounds), never under Jolt's own cap nor over `MAX_TURN_PER_STEP` a fixed step. */
+  private turnCapOf(shape: JoltNS.Shape): number {
+    const extent = shape.GetLocalBounds().GetExtent()
+    const radius = Math.hypot(extent.GetX(), extent.GetY(), extent.GetZ())
+    const ceiling = Math.max(DEFAULT_MAX_TURN_RATE, MAX_TURN_PER_STEP / this.fixedStep)
+    return Math.min(ceiling, Math.max(DEFAULT_MAX_TURN_RATE, MAX_EDGE_SPEED / Math.max(radius, 1e-6)))
   }
 
   /** Puts back the mass and inertia `settingsFor` gave `INERTIA_SCALE` times too large: same principal axes, the true moments. */

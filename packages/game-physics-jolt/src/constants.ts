@@ -26,6 +26,12 @@ export const NO_COLLISION = 3.4028234663852886e38
 /** How much larger the inertia a dynamic body is made with is than its own (see `settingsFor`). */
 export const INERTIA_SCALE = 1e6
 export const POINTS_PER_BODY = 16
+/** Fastest (m/s) the farthest point of a body may move about its centre: a body's turn cap is this over its radius, so a small piece spins faster than a large one. */
+export const MAX_EDGE_SPEED = 6
+/** Most a body may turn (rad) in one fixed step, whatever its size: a quarter turn, what Jolt's own cap allows at 60 Hz (so a 60 Hz world keeps that cap, a 120 Hz one may go twice as fast). */
+export const MAX_TURN_PER_STEP = Math.PI / 4
+/** Jolt's own turn cap (rad/s, a quarter turn per step at 60 Hz): a body's cap is never lower than this, so a large piece turns as before. */
+export const DEFAULT_MAX_TURN_RATE = 0.25 * Math.PI * 60
 /** A sub-shape's user data when it has no tag: all 32 bits set, read back signed as -1. */
 export const NO_TAG = 0xffffffff
 
