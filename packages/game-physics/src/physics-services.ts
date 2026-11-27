@@ -4,6 +4,8 @@ import type { SeamWorld, Vec3 } from './contract'
 import { createCorpseBodies } from './engine-corpses'
 import type { CorpseBodies } from './engine-corpses'
 import type { PhysicsLoop } from './loop'
+import { createServiceChannel } from './service-channel'
+import type { ServiceChannel } from './service-channel'
 import type { WorkBudget } from './work-budget'
 
 /** What a module needs of the host's physics to make bodies of its own: one loop and its world, a blast query, and the one set of corpse bodies of the world. */
@@ -15,6 +17,8 @@ export interface PhysicsServices {
   corpses(): CorpseBodies
   /** The points the corpses' distance is taken from (the player's); read once in each fixed step. */
   setInterest(interest: () => readonly Vec3[]): void
+  /** The channel `name` of this host's physics, made on the first call and the same after it: how a module hands another what it made (`CROWD_AGENTS_CHANNEL`). */
+  channel<TValue>(name: string): ServiceChannel<TValue>
   /** Takes the corpse bodies out of the world and stops following the loop; the loop and the world stay the host's. */
   dispose(): void
 }
@@ -25,17 +29,25 @@ export interface PhysicsServicesOptions {
   readonly budget?: WorkBudget
 }
 
+/** The channel the crowd lends its agents on: a value is `{ crowd, agents }` as `createRunOver` takes them (the crowd and the capsules of its agents). */
+export const CROWD_AGENTS_CHANNEL = 'crowd.agents'
+
 const NO_INTEREST: () => readonly Vec3[] = () => []
 
 export const createPhysicsServices = ({ loop, budget }: PhysicsServicesOptions): PhysicsServices => {
   let interest: () => readonly Vec3[] = NO_INTEREST
   let corpses: CorpseBodies | null = null
+  const channels = new Map<string, ServiceChannel<unknown>>()
   return {
     loop,
     world: loop.world,
     blast: createBlastQuery(loop.world),
     corpses: () => (corpses ??= createCorpseBodies(loop, { interest: () => interest(), ...(budget ? { budget } : {}) })),
     setInterest: (next) => void (interest = next),
+    channel: <TValue>(name: string): ServiceChannel<TValue> => {
+      if (!channels.has(name)) channels.set(name, createServiceChannel<unknown>())
+      return channels.get(name) as ServiceChannel<TValue>
+    },
     dispose: () => {
       corpses?.dispose()
       corpses = null
