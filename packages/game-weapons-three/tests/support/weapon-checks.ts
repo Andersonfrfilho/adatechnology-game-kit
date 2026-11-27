@@ -5,6 +5,7 @@ import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
 
 type HandState = ReturnType<TestRoom['handState']>
 import { createArsenal } from '@adatechnology/game-weapons'
+import { roomPhysics } from './room-physics'
 import { createWeaponsTestModule, VIEW_HOLD } from '../../src'
 import { TRIGGER_FINGER } from '../../src/fx/viewmodel'
 import { buildWeaponModelById } from '../../src/models'
@@ -129,7 +130,7 @@ export const checkWeapons = async (): Promise<WeaponChecks[]> => {
   const audit = auditWeapons(arsenal)
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   const module = createWeaponsTestModule({ locale: 'en', sound: false, arsenal })
   if (room.loadModule(module).problems.length > 0) throw new Error('the weapons module did not load')
   const current = (): HandState | null => room.handState()
