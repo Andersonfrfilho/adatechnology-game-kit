@@ -1,5 +1,17 @@
 # @adatechnology/game-destruction-three
 
+## 1.0.0
+
+### Major Changes
+
+- 63518cd: O solver próprio das peças soltas saiu: `physics: 'own'` não existe mais e `PiecePhysics` é `PhysicsLoop | SeamWorld`. Migração: passe um `PhysicsLoop` (`createPhysicsLoop(world)` sobre um mundo do `game-physics-jolt`) em `physics`; sem `physics` o renderer lança `PhysicsOptionError`. `jitWarmUp` sem `engine` não aquece nada. `PieceSystem.contactHits` nunca devolve `null`; `stepCost()` nunca devolve `null`.
+
+### Patch Changes
+
+- 568ed1a: Os obstáculos que um módulo põe na sala ganham corpo no motor (T8.1). `game-contracts`: `ModuleHost.addBlocker(blocked, solids?)` aceita as caixas do mesmo obstáculo (`HostSolid`, `footprintSolid`). `game-destruction-three`: `DestructionRenderer.setHostSolids` põe caixas fixas de um módulo no motor. `game-test-room`: com motor, o corpo segura o jogador no lugar do veto, e o corpo de um veículo também o barra (o veto do motor pergunta à camada `vehicle`) (tiro, destroço, carro e explosão passam a encontrá-lo); o poste da torneira também é corpo. `game-floorplan-three`: paredes, portas fechadas, muros do lote e móveis da casa. `game-weather-three` e `game-vehicles-three`: o carro do banco de luzes e o da pista. Sem motor (`own`) o veto continua.
+- Updated dependencies [568ed1a]
+  - @adatechnology/game-contracts@0.43.1
+
 ## 0.29.3
 
 ### Patch Changes

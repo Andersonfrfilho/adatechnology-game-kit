@@ -1,5 +1,18 @@
 # @adatechnology/game-kit-defaults
 
+## 1.0.0
+
+### Major Changes
+
+- 63518cd: `physics: 'own'` saiu de `createKitWorld`/`createKitWorldSync` (`PhysicsChoice`, `GivenPhysicsChoice`, `KitWorldPhysics.pieces` e `info.kind`). Migração: o padrão segue `'jolt'`; para um motor do jogo passe um `PhysicsLoop` (ou um `SeamWorld` que o jogo passa o passo). `createKitWorldSync` sempre exige um `PhysicsLoop` ou `SeamWorld`.
+
+### Patch Changes
+
+- Updated dependencies [568ed1a]
+- Updated dependencies [63518cd]
+  - @adatechnology/game-contracts@0.43.1
+  - @adatechnology/game-destruction-three@1.0.0
+
 ## 0.6.2
 
 ### Patch Changes
