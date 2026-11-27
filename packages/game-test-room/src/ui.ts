@@ -2,6 +2,7 @@ import type { ControlValue } from '@adatechnology/game-contracts'
 import { createBenchPanel } from './bench-panel'
 import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
+import { createKeyLegend, KEY_LEGEND_CSS } from './key-legend'
 import { createTestTablePanel, TEST_TABLE_CSS } from './test-table-panel'
 import { createToolMenu, TOOL_MENU_CSS } from './tool-menu'
 import type { ToolMenuGroup, ToolMenuPick } from './tool-menu'
@@ -183,12 +184,11 @@ const CSS = `
 .tr-bar.hp i{background:#66bb6a}.tr-bar.warn i{background:#ffb300}.tr-bar.bad i{background:#ef5350}
 .tr-bottom{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);text-align:center;max-width:56vw}
 .tr-held{margin-bottom:6px;background:rgba(10,12,16,.72);padding:4px 10px;border-radius:6px;display:none}
-.tr-held kbd,.tr-help kbd{background:#2a2e36;border:1px solid #4a505c;border-radius:3px;padding:0 4px;font:inherit;font-weight:700}
+.tr-held kbd{background:#2a2e36;border:1px solid #4a505c;border-radius:3px;padding:0 4px;font:inherit;font-weight:700}
 .tr-hotbar{display:inline-flex;gap:3px;flex-wrap:wrap;justify-content:center}
 .tr-slot{pointer-events:auto;min-width:64px;max-width:92px;padding:3px 5px;background:rgba(10,12,16,.68);border:1px solid #3a404c;border-radius:5px;color:#cfd3da;cursor:pointer;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tr-slot b{color:#ffd23f;margin-right:3px}
 .tr-slot.on{border-color:#ffd23f;color:#fff;background:rgba(60,50,10,.8)}
-.tr-help{position:absolute;left:8px;bottom:8px;max-width:360px;opacity:.75;font-size:11px;background:rgba(10,12,16,.55);padding:4px 8px;border-radius:6px}
 .tr-left{position:absolute;top:8px;left:8px;bottom:70px;width:min(400px,36vw);display:flex;flex-direction:column;gap:8px}
 .tr-right{position:absolute;top:8px;right:8px;bottom:8px;width:min(310px,34vw);display:flex;flex-direction:column;gap:8px}
 .tr-panel{background:rgba(12,14,19,.82);border:1px solid #2c313b;border-radius:8px;padding:8px;pointer-events:auto;overflow:auto}
@@ -223,7 +223,7 @@ const CSS = `
 .tr-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;align-items:center}
 .tr-toggle{position:absolute;top:8px;right:8px;display:none}
 .tr-summary{margin-top:6px;color:#9aa3b2}
-@media (max-width:980px){.tr-left,.tr-right{display:none}.tr-root.open .tr-left,.tr-root.open .tr-right{display:flex}.tr-toggle{display:block;pointer-events:auto}.tr-root.open .tr-toggle{right:min(310px,34vw)}.tr-left{width:min(400px,46vw)}.tr-help{display:none}}
+@media (max-width:980px){.tr-left,.tr-right{display:none}.tr-root.open .tr-left,.tr-root.open .tr-right{display:flex}.tr-toggle{display:block;pointer-events:auto}.tr-root.open .tr-toggle{right:min(310px,34vw)}.tr-left{width:min(400px,46vw)}}
 `
 
 // accents are dropped on both sides of a search, so "gas" finds "gás"
@@ -269,7 +269,7 @@ async function toggleFullscreen(): Promise<void> {
 export function createUi(o: UiOptions): RoomUi {
   const { t } = o
   const style = mk('style')
-  style.textContent = CSS + (o.testTable ? TEST_TABLE_CSS : '') + (o.toolMenu ? TOOL_MENU_CSS : '')
+  style.textContent = CSS + KEY_LEGEND_CSS + (o.testTable ? TEST_TABLE_CSS : '') + (o.toolMenu ? TOOL_MENU_CSS : '')
   const root = mk('div', 'tr-root')
   const pos = getComputedStyle?.(o.container)?.position
   if (!pos || pos === 'static') o.container.style.position = 'relative'
@@ -324,8 +324,9 @@ export function createUi(o: UiOptions): RoomUi {
     menuButton.onclick = () => toolMenu.toggle()
     bottom.appendChild(menuButton)
   }
-  const help = mk('div', 'tr-help')
-  help.textContent = t('ui.help')
+  // every key and what it does, open at the start and on F1 or ?, a badge in the corner says so
+  const help = createKeyLegend({ t })
+  help.setText(t('ui.help'))
 
   // left: inspector + log
   const left = mk('div', 'tr-left')
@@ -659,7 +660,7 @@ export function createUi(o: UiOptions): RoomUi {
   }
   toggle.onclick = togglePanels
 
-  root.append(cross, ring, top, bottom, help, left, right, toggle, ...(toolMenu ? [toolMenu.element] : []))
+  root.append(cross, ring, top, bottom, help.badge, help.element, left, right, toggle, ...(toolMenu ? [toolMenu.element] : []))
 
   // inspector
   const bar = (value: number, max: number, cls: string): HTMLElement => {
@@ -766,7 +767,7 @@ export function createUi(o: UiOptions): RoomUi {
       if (s.ammo) toolBox.append(mk('small', undefined, s.ammo))
       if (s.camera) toolBox.append(mk('small', undefined, t(`camera.${s.camera}`)))
       const helpText = s.camera ? `${t('ui.help')} · ${t('ui.help.camera')}` : t('ui.help')
-      if (help.textContent !== helpText) help.textContent = helpText
+      help.setText(helpText)
       if (s.status) status.textContent = s.status
       else if (!toastTimer) status.textContent = ''
       if (s.progress) {
@@ -853,6 +854,7 @@ export function createUi(o: UiOptions): RoomUi {
     dispose() {
       offLog()
       tablePanel?.dispose()
+      help.dispose()
       if (toastTimer) clearTimeout(toastTimer)
       root.remove()
     },
