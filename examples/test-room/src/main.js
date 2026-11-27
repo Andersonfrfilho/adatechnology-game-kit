@@ -137,7 +137,7 @@ const room = createTestRoom({
   ...(params.get('blastPacing') !== '0' ? { blastPacing: {} } : {}),
   strikeCombo: PUNCH_COMBO,
   // the first-person view draws arms of its own with the tool in the hands (the viewmodel), over the world with the lens of the tool; the body keeps its arms in third person
-  firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true }),
+  firstPersonArms: createFirstPersonArms(THREE, { rig: { elbowView: [null, null] }, hideWhenIdle: true, clips: defaultCharacterClips().firstPersonClips }),
   strikeComboOn: params.get('combo') === '1',
   ...(params.has('bodySlots') ? { bodySlots: (params.get('bodySlots') ?? '').split(',').filter(Boolean) } : {}),
   // the default page has every ground to try, in lots before the wall; a page that asked for something in particular has the plain floor its tests expect

@@ -76,9 +76,9 @@ const KNIFE_SLASH: ToolMotion = {
 const KNIFE_STAB: ToolMotion = {
   keys: [
     { at: 0, ...HOLD },
-    { at: 0.28, offset: [0.02, 0.16, 0.1], turn: [0.25, 0, 0] },
-    { at: 0.43, offset: [-0.06, 0.22, -0.28], turn: [-1.3, 0, 0] },
-    { at: 0.6, offset: [-0.06, 0.21, -0.25], turn: [-1.25, 0, 0] },
+    { at: 0.28, offset: [0.02, 0.06, 0.08], turn: [0.15, 0, 0] },
+    { at: 0.43, offset: [-0.04, 0.12, -0.22], turn: [-0.5, 0, 0] },
+    { at: 0.6, offset: [-0.04, 0.11, -0.2], turn: [-0.45, 0, 0] },
     { at: 1, ...HOLD },
   ],
 }

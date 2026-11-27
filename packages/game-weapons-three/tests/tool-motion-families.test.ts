@@ -19,6 +19,6 @@ describe('tool motions of the melee families', () => {
       expect(sampleToolMotion(motion, 0).offset).toEqual([0, 0, 0])
       expect(sampleToolMotion(motion, 1).offset).toEqual([0, 0, 0])
     }
-    expect(sampleToolMotion(TOOL_MOTIONS.get('knife')!.get('stab')!, 0.43).offset[2]).toBeLessThan(-0.2)
+    expect(sampleToolMotion(TOOL_MOTIONS.get('knife')!.get('stab')!, 0.43).offset[2]).toBeLessThan(-0.15)
   })
 })

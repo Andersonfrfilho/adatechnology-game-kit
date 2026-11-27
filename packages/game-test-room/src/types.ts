@@ -211,6 +211,8 @@ export interface SceneryTap {
 export interface RoomFirstPersonArms {
   readonly root: THREE_NS.Object3D
   update(dt: number, state: { camera: THREE_NS.Object3D; targets?: HandTargets | null; stance?: string; speed?: number; running?: boolean; crouch?: boolean }): void
+  /** Plays a strike of the arms in the view (a punch, a shove, a kick's foot: `createFirstPersonArms` with `clips`), the same id the body plays; false when it has none of that id. */
+  play?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): boolean
   dispose(): void
 }
 

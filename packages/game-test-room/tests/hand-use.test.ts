@@ -97,6 +97,21 @@ describe('melee families in the room', () => {
     return struck
   }
 
+  it('plays the same punch, shove and kick on the first-person arms as on the body', () => {
+    const played: string[] = []
+    const room = makeRoom({ firstPersonArms: { root: new THREE.Group(), update: () => undefined, dispose: () => undefined, play: (clip) => played.push(clip) > 0 } })
+    room.setAvatar({ root: new THREE.Group(), update: () => undefined, hand: () => new THREE.Object3D(), strike: () => 0.2 })
+    for (const tool of ['fists', 'shove']) {
+      room.setTool(tool)
+      run(room, 0.6)
+      room.use()
+      run(room, 0.8)
+    }
+    room.kick()
+    run(room, 0.8)
+    expect(played).toEqual(['punch_right', 'shove_two_hands', 'front_kick'])
+  })
+
   it('cuts then thrusts with a knife, swings a bat as the shovel and chops with a machete', () => {
     expect(struckBy('knife', 3)).toEqual(['knife_slash', 'knife_stab', 'knife_slash'])
     expect(struckBy('baseball_bat', 1)).toEqual(['shovel_swing'])

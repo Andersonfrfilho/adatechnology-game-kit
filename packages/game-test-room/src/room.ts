@@ -11,7 +11,7 @@ import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS, PLAYER_WALK_PUSH_NEWTONS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, createMeleeBlowCycle, DEFAULT_LOADOUT, realLoadout } from '@adatechnology/game-weapons'
 import { HAND_USES } from '@adatechnology/game-items'
-import { createHandItemUse, handUseEffectText, usedItemTargets } from './hand-item-use'
+import { createHandItemUse, handUseEffectText, handUsesOf, usedItemTargets } from './hand-item-use'
 import { openingProgress } from './opening-progress'
 import { waterEntryAlong } from './water-entry'
 import type { WaterEntry } from './water-entry'
@@ -1073,9 +1073,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       rendererPieces.set(objectId, e.piece)
     }
     const f = item?.fluid
-    // a use in the hand without the liquid (a pill, an apple, soap) comes first, unless the liquid is what is eaten or drunk
-    const byHand = item?.use && handUseDefs.some((def) => def.id === item.use?.clip) ? item.use.clip : undefined
-    if (byHand && !f?.uses?.some((use) => use === 'eat' || use === 'drink')) e.uses = [byHand]
+    e.uses = handUsesOf(item, handUseDefs)
     if (f) {
       e.fluidPart = f.part
       e.fluidOffset = f.offset ?? [0, 0, 0]
@@ -2504,6 +2502,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const hand = side ? side.hand : step ? step.hand : punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
     const limb = leg ? { leg } : hand ? { hand } : undefined
     const seconds = clip === undefined ? null : (avatar?.strike?.(clip, limb) ?? null)
+    // the first-person arms play the same blow (their clip of that id, same length and impact), so the fist, the push and the foot are seen in the view too
+    if (seconds !== null && clip !== undefined) firstPersonArms?.play?.(clip, limb)
     if (leg && seconds !== null && kickLeg === 'alternate') nextLeg = leg === 'right' ? 'left' : 'right'
     if (!step && !side && hand && seconds !== null && punchHand === 'alternate') nextHand = hand === 'right' ? 'left' : 'right'
     if (step && stepIndex !== null) {

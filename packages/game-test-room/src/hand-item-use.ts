@@ -9,6 +9,8 @@ import type { ItemUsePlayer } from '@adatechnology/game-fluids'
 import { createHandUse } from '@adatechnology/game-items'
 import type { HandUseBody, HandUseDef } from '@adatechnology/game-items'
 
+import type { TestRoomItem } from './types'
+
 /** The share of its size food keeps after the last bite, just before it is gone. */
 const EATEN_SCALE = 0.35
 
@@ -66,4 +68,11 @@ export const usedItemTargets = (root: THREE_NS.Object3D, grip: THREE_NS.Quaterni
   if (body !== 'two_hands') return { R: right, grip: 1 }
   const side = root.position.clone().set(OTHER_HAND[0], OTHER_HAND[1], OTHER_HAND[2]).applyQuaternion(grip).add(at)
   return { R: right, L: { position: [side.x, side.y, side.z], quaternion }, grip: 1, gripL: 0.6 }
+}
+
+/** The hand use an item offers first (a pill, an apple, soap), unless its liquid is what is eaten or drunk: then the liquid's uses alone. */
+export const handUsesOf = (item: TestRoomItem | undefined, defs: readonly HandUseDef[]): string[] => {
+  const clip = item?.use?.clip
+  if (clip === undefined || !defs.some((def) => def.id === clip)) return []
+  return item?.fluid?.uses?.some((use) => use === 'eat' || use === 'drink') ? [] : [clip]
 }
