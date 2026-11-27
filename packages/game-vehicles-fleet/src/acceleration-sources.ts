@@ -29,3 +29,17 @@ export const FLEET_ACCELERATION_SOURCES: Readonly<Record<string, AccelerationSou
   midsize_suv: { seconds: null, source: 'no source: Jeep Compass Longitude, only figures for other engines and markets (10.3 s at 130 hp, 9.2 s at 150 hp, 10.7 s at altitude)' },
   large_suv: { seconds: null, source: 'no source: the current Toyota SW4 2.8 has no published 0-100 (the only figure found is the old SW4, 25.5 s)' },
 }
+
+/**
+ * Where the figures of the models outside the rating review come from (the physics engine's proving run, T6.2d): not a rating placed on a class band, a band or a ficha figure of their own.
+ * The numbers live where they are used (`ranges.ts` of `game-vehicles-proving`, `from-stats.ts` of `game-vehicles-driving`); this is the record that goes with the content.
+ */
+export const FLEET_PHYSICS_SOURCES: Readonly<Record<string, readonly AccelerationSource[]>> = {
+  bicycle: [
+    { seconds: 24, source: 'to 20 km/h at the mean acceleration of observed riders, 0.231 m/s^2 over about 26 s at about 120 W: Parkin and Rotheram 2010, Transport Policy 17(5) 335-341 (https://uwe-repository.worktribe.com/output/987466): the slowest edge of the band' },
+    { seconds: 7.2, source: 'to 20 km/h from "9 to 14 s to 25 km/h" of an everyday rider, 0.5 to 0.8 m/s^2 (https://myvelo.net/blogs/ebike-blog/wie-schnell-beschleunigt-ein-e-bike-motor-gewicht-realitaet; a shop article, the power not stated): the fastest edge' },
+  ],
+  battle_tank: [
+    { seconds: null, source: 'power 20.05 kW/t: M1 Abrams 17.74 to 20.05 kW/t, 1.12 MW (https://en.wikipedia.org/wiki/M1_Abrams); Leopard 2A6 17.8 kW/t (https://en.wikipedia.org/wiki/Leopard_2). Turn: a tracked vehicle pivots on the spot, "neutral steering" (https://en.wikipedia.org/wiki/Tank_steering_systems): the turn band starts at 0' },
+  ],
+}

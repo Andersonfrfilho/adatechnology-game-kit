@@ -19,6 +19,8 @@ export interface RangeTable {
   accelerationSeconds: ReadonlyArray<readonly [number, number]>
   /** 0-100 km/h seconds by the card's acceleration rating, per class (`cars`, `suvs`, `motorcycles`): the rating places the model between the class's slowest and fastest real figure. */
   accelerationByClass: Readonly<Record<string, ReadonlyArray<readonly [number, number]>>>
+  /** 0-100 km/h seconds, as a [fastest, slowest] pair, by the card's body type (`bicycle`): what the real riders of the type do, for a type the class band does not describe. A band here ignores the rating and the spread. */
+  accelerationSpanByType?: Readonly<Record<string, readonly [number, number]>>
   /** Accepted spread around the expected 0-100 time (0.35 = ±35 %). */
   accelerationSpread: number
   /** Accepted spread around the card's top speed. */
@@ -40,6 +42,10 @@ export interface RangeTable {
  * suvs: slowest 12.7 s, Toyota Land Cruiser Prado 2.8 D-4D 177 hp automatic (https://www.auto-data.net/en/toyota-land-cruiser-prado-j150-facelift-2017-5-door-2.8-d-4d-177hp-4wd-automatic-32878, a database, not the maker);
  *   fastest 6.7 s, Toyota Land Cruiser 300 (Toyota's figure, via https://www.motor1.com/news/515260/2022-toyota-land-cruiser-acceleration-test/).
  * motorcycles: slowest 19.5 s, Honda PCX 160 (measured, https://www.autofun.co.id/berita-motor/mana-paling-gesit-akselerasinya-honda-pcx-160-2022-atau-yamaha-nmax-155-2022-48474); fastest 4.35 s, Kawasaki Ninja 400 (https://motostatz.com/?p=369).
+ * bicycle (body type, not a class: it sits in `motorcycles`, whose band is of engines): an everyday rider, not an engine. Slowest 120 s per 100 km/h (24 s to 20 km/h), the mean acceleration of observed riders on
+ *   the flat, 0.231 m/s^2 over an acceleration phase of about 26 s at about 120 W (Parkin and Rotheram 2010, Transport Policy 17(5) 335-341, https://doi.org/10.1016/j.tranpol.2010.03.001, abstract at
+ *   https://uwe-repository.worktribe.com/output/987466); fastest 36 s per 100 km/h (7.2 s to 20 km/h), "an everyday rider needs 9 to 14 s to 25 km/h", 0.5 to 0.8 m/s^2 (https://myvelo.net/blogs/ebike-blog/wie-schnell-beschleunigt-ein-e-bike-motor-gewicht-realitaet:
+ *   a shop's article, the rider's power not stated: a weak source, taken at its fastest edge).
  * pickups, vans, heavy, agricultural, military: no verified pair of figures (a Hilux 2.8 is 10.0 s, Toyota Europe, one point only), so they keep `accelerationSeconds`.
  */
 export const defaultRangeTable: RangeTable = {
@@ -56,11 +62,13 @@ export const defaultRangeTable: RangeTable = {
     [9, 6],
     [10, 4.2],
   ],
+  accelerationSpanByType: { bicycle: [36, 120] },
   accelerationSpread: 0.35,
   topSpeedSpread: 0.1,
   dryBrake: { default: [6.5, 11], heavy: [4.5, 8.5], agricultural: [3.5, 7.5], military: [4.5, 9] },
   wetBrake: { default: [3.5, 8.5], heavy: [2.5, 7], agricultural: [2, 6], military: [2.5, 7] },
-  turnCircle: { default: [7, 13.5], motorcycles: [3, 9], suvs: [9, 15], pickups: [9, 16], vans: [9, 15], heavy: [10, 26], military: [9, 24], agricultural: [6, 16] },
+  // a tracked vehicle pivots on the spot (one track forward, the other back: "neutral steering", https://en.wikipedia.org/wiki/Tank_steering_systems), so its circle can be a point: the band starts at 0
+  turnCircle: { default: [7, 13.5], motorcycles: [3, 9], suvs: [9, 15], pickups: [9, 16], vans: [9, 15], heavy: [10, 26], military: [9, 24], agricultural: [6, 16], tracked: [0, 24] },
   mudFourWheelDrive: 10,
 }
 
@@ -73,6 +81,8 @@ export const expectedAcceleration = (table: RangeTable, subject: ProvingSubject,
 }
 
 export const accelerationRange = (table: RangeTable, subject: ProvingSubject, target: number): ProvingRange => {
+  const span = subject.body.type ? table.accelerationSpanByType?.[subject.body.type] : undefined
+  if (span) return { min: round((span[0] * target) / 100), max: round((span[1] * target) / 100) }
   const t = expectedAcceleration(table, subject, target)
   return { min: round(t * (1 - table.accelerationSpread)), max: round(t * (1 + table.accelerationSpread)) }
 }
@@ -91,7 +101,7 @@ export const brakeRange = (decel: readonly [number, number], kmh: number): Provi
 export const dryBrakeRange = (table: RangeTable, subject: ProvingSubject, kmh: number): ProvingRange => brakeRange(byClass(table.dryBrake, subject.category), kmh)
 export const wetBrakeRange = (table: RangeTable, subject: ProvingSubject, kmh: number): ProvingRange => brakeRange(byClass(table.wetBrake, subject.category), kmh)
 export const turnCircleRange = (table: RangeTable, subject: ProvingSubject): ProvingRange => {
-  const [min, max] = byClass(table.turnCircle, subject.category)
+  const [min, max] = byClass(table.turnCircle, subject.body.type === 'tracked' ? 'tracked' : subject.category)
   return { min, max }
 }
 
