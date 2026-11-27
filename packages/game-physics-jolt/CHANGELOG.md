@@ -1,5 +1,17 @@
 # @adatechnology/game-physics-jolt
 
+## 0.6.0
+
+### Minor Changes
+
+- 717951a: O adaptador descarta o contato fantasma na borda de uma laje plana estática (caixa de arestas vivas) quando o eixo de penetração inclina: um corpo rolando sobre a emenda de dois ladrilhos do chão mantém a velocidade.
+- 717951a: O teto de giro do corpo dinâmico vai por tamanho: a velocidade de borda máxima (6 m/s) sobre o raio, nunca abaixo de 47 rad/s nem acima de um quarto de volta por passo fixo. Uma lata rolando a 2 m/s mantém o giro.
+
+### Patch Changes
+
+- Updated dependencies [717951a]
+  - @adatechnology/game-physics@0.7.1
+
 ## 0.5.1
 
 ### Patch Changes

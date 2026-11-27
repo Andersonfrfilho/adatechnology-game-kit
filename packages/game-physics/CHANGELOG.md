@@ -1,5 +1,11 @@
 # @adatechnology/game-physics
 
+## 0.7.1
+
+### Patch Changes
+
+- 717951a: `velocityIterations` documenta o piso: abaixo de 20 iterações o kit não garante os critérios de energia; o `KIT_WORLD` usa 32.
+
 ## 0.7.0
 
 ### Minor Changes

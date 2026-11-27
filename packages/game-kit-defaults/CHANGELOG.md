@@ -1,5 +1,15 @@
 # @adatechnology/game-kit-defaults
 
+## 0.5.3
+
+### Patch Changes
+
+- Updated dependencies [717951a]
+- Updated dependencies [717951a]
+- Updated dependencies [717951a]
+  - @adatechnology/game-physics-jolt@0.6.0
+  - @adatechnology/game-physics@0.7.1
+
 ## 0.5.2
 
 ### Patch Changes

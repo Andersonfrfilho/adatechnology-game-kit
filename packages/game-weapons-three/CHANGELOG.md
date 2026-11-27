@@ -1,5 +1,13 @@
 # @adatechnology/game-weapons-three
 
+## 0.27.2
+
+### Patch Changes
+
+- 2b28af5: A régua da granada desenhada passa a ser a do motor sem teto de giro nem amortecimento: 95% de 100 arremessos semeados em até 7 s e 8 m, nenhum acima de 8 s nem de 10,5 m.
+- Updated dependencies [717951a]
+  - @adatechnology/game-physics@0.7.1
+
 ## 0.27.1
 
 ### Patch Changes
