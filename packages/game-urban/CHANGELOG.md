@@ -1,5 +1,14 @@
 # @adatechnology/game-urban
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [4afbea0]
+  - @adatechnology/game-contracts@0.43.0
+  - @adatechnology/game-floorplan@0.5.6
+  - @adatechnology/game-vehicles-fleet@10.0.0
+
 ## 0.7.1
 
 ### Patch Changes

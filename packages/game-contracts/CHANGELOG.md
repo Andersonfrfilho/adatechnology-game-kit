@@ -1,5 +1,11 @@
 # @adatechnology/game-contracts
 
+## 0.43.0
+
+### Minor Changes
+
+- 4afbea0: feat(host): `ModuleHost.physics` e `ModuleHost.workers`; `createPhysicsServices`/`isPhysicsServices` no game-physics; `KitWorldPhysics.services` e `physicsHostOf` no preset; opção `workers` em `createTestRoom`.
+
 ## 0.42.0
 
 ### Minor Changes

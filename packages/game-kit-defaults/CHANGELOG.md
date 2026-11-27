@@ -1,5 +1,38 @@
 # @adatechnology/game-kit-defaults
 
+## 0.4.0
+
+### Minor Changes
+
+- 4afbea0: feat(host): `ModuleHost.physics` e `ModuleHost.workers`; `createPhysicsServices`/`isPhysicsServices` no game-physics; `KitWorldPhysics.services` e `physicsHostOf` no preset; opção `workers` em `createTestRoom`.
+- a0b02c4: feat(kit-defaults): `hullPlanKind` entra em `KIT_WORKER_KINDS` (o plano dos cascos roda nos workers do kit).
+- 81add5e: feat(kit-defaults): o preset liga `rayBroadPhase` do renderizador quando um `PhysicsLoop` move as peças (`debris.rayBroadPhase: false` desliga); `debris.contactHits` passa adiante, desligado por padrão.
+
+### Patch Changes
+
+- 155b35a: refactor(vehicles): o kernel do plano de cascos (`hullPlanKind`, `planHulls`, `hullOf`, `convexFaces`...) mora em `game-vehicles` (subcaminho `./worker-kinds`); `game-vehicles-three` reexporta, e o preset deixa de depender de `game-vehicles-three`, sem ciclo de pacotes.
+- Updated dependencies [4afbea0]
+- Updated dependencies [155b35a]
+  - @adatechnology/game-contracts@0.43.0
+  - @adatechnology/game-physics@0.5.0
+  - @adatechnology/game-vehicles@0.8.0
+  - @adatechnology/game-audio@0.15.7
+  - @adatechnology/game-crowd@0.8.1
+  - @adatechnology/game-destruction@0.30.1
+  - @adatechnology/game-destruction-three@0.27.1
+  - @adatechnology/game-fluids@0.6.12
+  - @adatechnology/game-fluids-three@0.6.7
+  - @adatechnology/game-render-three@0.4.7
+  - @adatechnology/game-runtime@0.3.7
+  - @adatechnology/game-shapes@0.4.7
+  - @adatechnology/game-terrain@0.9.7
+  - @adatechnology/game-terrain-three@0.6.9
+  - @adatechnology/game-urban@0.7.2
+  - @adatechnology/game-vehicles-fleet@10.0.0
+  - @adatechnology/game-vfx-three@0.10.11
+  - @adatechnology/game-workers@0.1.7
+  - @adatechnology/game-physics-jolt@0.3.2
+
 ## 0.3.9
 
 ### Patch Changes

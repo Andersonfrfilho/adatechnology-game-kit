@@ -1,5 +1,22 @@
 # @adatechnology/game-vehicles-three
 
+## 0.11.1
+
+### Patch Changes
+
+- 155b35a: refactor(vehicles): o kernel do plano de cascos (`hullPlanKind`, `planHulls`, `hullOf`, `convexFaces`...) mora em `game-vehicles` (subcaminho `./worker-kinds`); `game-vehicles-three` reexporta, e o preset deixa de depender de `game-vehicles-three`, sem ciclo de pacotes.
+- Updated dependencies [4afbea0]
+- Updated dependencies [155b35a]
+  - @adatechnology/game-contracts@0.43.0
+  - @adatechnology/game-physics@0.5.0
+  - @adatechnology/game-vehicles@0.8.0
+  - @adatechnology/game-audio@0.15.7
+  - @adatechnology/game-render-three@0.4.7
+  - @adatechnology/game-shapes@0.4.7
+  - @adatechnology/game-vehicles-driving@0.2.30
+  - @adatechnology/game-vehicles-fleet@10.0.0
+  - @adatechnology/game-vehicles-proving@0.3.1
+
 ## 0.11.0
 
 ### Minor Changes

@@ -1,5 +1,32 @@
 # @adatechnology/game-test-room
 
+## 0.40.0
+
+### Minor Changes
+
+- 4afbea0: feat(host): `ModuleHost.physics` e `ModuleHost.workers`; `createPhysicsServices`/`isPhysicsServices` no game-physics; `KitWorldPhysics.services` e `physicsHostOf` no preset; opção `workers` em `createTestRoom`.
+
+### Patch Changes
+
+- Updated dependencies [4afbea0]
+- Updated dependencies [a0b02c4]
+- Updated dependencies [155b35a]
+- Updated dependencies [81add5e]
+  - @adatechnology/game-contracts@0.43.0
+  - @adatechnology/game-kit-defaults@0.4.0
+  - @adatechnology/game-audio@0.15.7
+  - @adatechnology/game-destruction@0.30.1
+  - @adatechnology/game-destruction-three@0.27.1
+  - @adatechnology/game-fluids@0.6.12
+  - @adatechnology/game-fluids-three@0.6.7
+  - @adatechnology/game-items@0.2.25
+  - @adatechnology/game-player@0.10.3
+  - @adatechnology/game-render-three@0.4.7
+  - @adatechnology/game-runtime@0.3.7
+  - @adatechnology/game-terrain@0.9.7
+  - @adatechnology/game-terrain-three@0.6.9
+  - @adatechnology/game-weapons@0.13.6
+
 ## 0.39.1
 
 ### Patch Changes

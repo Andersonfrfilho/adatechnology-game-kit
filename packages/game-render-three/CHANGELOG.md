@@ -1,5 +1,12 @@
 # @adatechnology/game-render-three
 
+## 0.4.7
+
+### Patch Changes
+
+- Updated dependencies [4afbea0]
+  - @adatechnology/game-contracts@0.43.0
+
 ## 0.4.6
 
 ### Patch Changes
