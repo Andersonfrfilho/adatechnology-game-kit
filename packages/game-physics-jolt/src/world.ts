@@ -271,6 +271,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     if (desc.motion === 'dynamic') s.mMaxAngularVelocity = this.turnCapOf(shape)
     if (desc.continuous) s.mMotionQuality = J.EMotionQuality_LinearCast
     if (desc.allowSleep === false) s.mAllowSleeping = false
+    if (desc.keepPartContacts) s.mUseManifoldReduction = false
     if (desc.motion !== 'static') s.mAllowDynamicOrKinematic = true
     if (layer === 'sensor') {
       s.mIsSensor = true

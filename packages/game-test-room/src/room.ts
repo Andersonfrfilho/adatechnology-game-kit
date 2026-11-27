@@ -3997,7 +3997,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     push.step(isPaused ? 0 : dt)
     shoves.step(isPaused ? 0 : dt)
     doors.step(isPaused ? 0 : dt)
-    if (!isPaused && !player.engine) kickLight(dt)
+    if (!isPaused) kickLight(dt)
     if (!isPaused) pushByPlayer(dt)
     else player.takeWish()
     stepAvatar(isPaused ? 0 : dt)

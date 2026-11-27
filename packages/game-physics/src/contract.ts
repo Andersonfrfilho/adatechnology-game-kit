@@ -110,6 +110,8 @@ export interface BodyDesc {
   readonly continuous?: boolean
   readonly sleeping?: boolean
   readonly allowSleep?: boolean
+  /** A body of several parts keeps each part's own contact points with what it touches, instead of the engine's default of merging them into one patch of the four best: a part hung just above the floor (a plate over a handle) would hide the points of the part that lies on it, and the body would sink on that side. */
+  readonly keepPartContacts?: boolean
   /** Ours: an index into the host's own table (a piece, a part, an agent). Comes back on queries and contacts. */
   readonly user: number
   readonly linearVelocity?: Vec3

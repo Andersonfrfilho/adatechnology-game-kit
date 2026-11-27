@@ -9,7 +9,7 @@ import { makeRoom } from './helpers'
 type Played = { id: string; frame: number }
 
 /** A room whose engine records what is played (no AudioContext in Node, so nothing sounds), on frame numbers. */
-const setup = (avatar: RoomAvatar | null = null, physics?: 'own') => {
+const setup = (avatar: RoomAvatar | null = null) => {
   const audio = createAudioEngine({ createContext: () => null })
   const played: Played[] = []
   let frame = 0
@@ -18,7 +18,7 @@ const setup = (avatar: RoomAvatar | null = null, physics?: 'own') => {
     played.push({ id, frame })
     return play(id, options)
   }
-  const room = makeRoom({ audio, ...(physics ? { physics } : {}) })
+  const room = makeRoom({ audio })
   if (avatar) room.setAvatar(avatar)
   const events: HostEvent[] = []
   const listener: TestableModule = {
@@ -110,14 +110,14 @@ describe('blows', () => {
   it('a punch with a clip: the swing starts just before the contact (in the room’s time) and the knuckles sound with the contact', () => {
     const impact = 0.3
     const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => impact }
-    const { room, played, step, frameNow } = setup(avatar, 'own')
+    const { room, played, step, frameNow } = setup(avatar)
     room.spawn('chair', [0, 0, -4], 0)
     step(0.4)
-    room.look([-0.6, 0.5, -4.18], [0.22, 0.5, -4.18])
+    room.look([-0.6, 0.5, -4.19], [0.22, 0.5, -4.19])
     room.setTool('hand')
     const start = frameNow()
     room.use()
-    step(0.6, () => room.look([-0.6, 0.5, -4.18], [0.22, 0.5, -4.18]))
+    step(0.6, () => room.look([-0.6, 0.5, -4.19], [0.22, 0.5, -4.19]))
     const swing = played.find((p) => p.id === 'punch_swing')
     const hit = played.find((p) => p.id === 'punch_hit_object')
     expect(swing, 'swing').toBeDefined()

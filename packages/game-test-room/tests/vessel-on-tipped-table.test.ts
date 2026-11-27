@@ -80,7 +80,7 @@ describe('what lies on a top that tips over slides as its friction says', () => 
     for (const thing of things) expect(bottom(thing.root as THREE.Object3D)).toBeLessThan(0.1)
   })
   it('a long table on its broken end (~10 degrees, under the 22-26 degrees the friction holds): an upright can stays, a can lying on its side rolls down', () => {
-    const room = laid(4.4, 'own')
+    const room = laid(4.4)
     const upright = room.spawn('can', [0.6, TOP, AT[2] - 0.15], 0)
     const lying = room.spawn('can', [0.9, TOP, AT[2] + 0.15], 0)
     // on its side, its axis across the slope: it rolls down the top
