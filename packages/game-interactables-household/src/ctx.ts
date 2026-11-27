@@ -137,7 +137,7 @@ export class Ctx {
     return s[key] as NonNullable<ObjectSpec[K]>
   }
 
-  add<K extends 'sockets' | 'switches' | 'devices' | 'fuels' | 'burners' | 'tanks' | 'fixtures' | 'seats' | 'soft' | 'emitters' | 'mirrors' | 'colliders' | 'damage' | 'interactions' | 'wires'>(
+  add<K extends 'sockets' | 'switches' | 'devices' | 'fuels' | 'burners' | 'tanks' | 'fixtures' | 'seats' | 'soft' | 'emitters' | 'basins' | 'mirrors' | 'colliders' | 'damage' | 'interactions' | 'wires'>(
     key: K,
     value: NonNullable<ObjectSpec[K]>[number],
   ): void {

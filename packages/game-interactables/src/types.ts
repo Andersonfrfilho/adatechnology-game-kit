@@ -334,6 +334,27 @@ export interface EmitterSpec {
   size?: number
   /** How far (m) a water stream falls before it hits something (a basin, a bowl). Default: until the floor. */
   reach?: number
+  /**
+   * The bowl the stream lands in (a sink's basin, a toilet bowl): its walls rise `depth` metres above where the stream lands and stand `radius` metres from it. What
+   * splashes stays in it, as the walls catch it. Default: open floor.
+   */
+  bowl?: EmitterBowl
+}
+
+/** The walls round where a water stream lands (`EmitterSpec.bowl`). */
+export interface EmitterBowl {
+  radius: number
+  depth: number
+}
+
+/**
+ * The inside of a bowl that holds water (a sink's basin, a laundry tub, a toilet bowl), object-local: the box from the middle of its floor's corner (`from`, the
+ * lowest corner) to the rim (`to`). The host lays the liquid of the piece in it and lets the streams of its taps land on its floor.
+ */
+export interface BasinSpec {
+  id: string
+  from: Vec3
+  to: Vec3
 }
 
 export interface MirrorSpec {
@@ -427,6 +448,8 @@ export interface ObjectSpec {
   seats?: SeatSpec[]
   soft?: SoftSpec[]
   emitters?: EmitterSpec[]
+  /** What holds water in it (a sink's basin, a toilet bowl). */
+  basins?: BasinSpec[]
   mirrors?: MirrorSpec[]
   colliders?: ColliderSpec[]
   /** @deprecated Use the destruction SDK; see `DamageSpec`. */
@@ -585,6 +608,8 @@ export interface ActiveEmitter {
   size: number
   /** Meters a water stream falls before it hits something; omitted = until the floor. */
   reach?: number
+  /** The bowl it lands in (`EmitterSpec.bowl`); omitted = open floor. */
+  bowl?: EmitterBowl
   /** 0..1. */
   intensity: number
 }
