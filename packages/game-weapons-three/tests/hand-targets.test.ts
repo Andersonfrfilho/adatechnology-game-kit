@@ -8,6 +8,7 @@ import type { HandTargets } from '@adatechnology/game-contracts'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
 import { VIEWMODEL_NODE_NAME } from '../src/laser-raycast'
+import { roomPhysics } from './support/room-physics'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -19,7 +20,7 @@ function roomWithRecorder(): { room: TestRoom; last: () => HandState | null } {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal })).problems).toEqual([])
   const avatar: RoomAvatar = {
     root: new THREE.Group(),

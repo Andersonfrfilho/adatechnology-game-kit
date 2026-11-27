@@ -8,6 +8,7 @@ import { createArsenal } from '@adatechnology/game-weapons'
 
 import { createWeaponsTestModule } from '../src'
 import { IN_HAND_NODE_NAME, VIEWMODEL_NODE_NAME } from '../src/laser-raycast'
+import { roomPhysics } from './support/room-physics'
 
 vi.setConfig({ testTimeout: 60_000 })
 
@@ -27,7 +28,7 @@ function makeRoom(): TestRoom {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer, ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer, ui: false, arsenal })
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal, items: itemModels })).problems).toEqual([])
   const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => null }
   room.setAvatar(avatar)

@@ -5,6 +5,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 
 import { toWorldLens, VIEW_HOLD } from '../src'
 import { createWeaponsTestModule } from '../src/testing'
+import { roomPhysics } from './support/room-physics'
 
 vi.setConfig({ testTimeout: 30_000 })
 
@@ -49,7 +50,7 @@ describe('the shot leaves the muzzle of the model in the hands', () => {
   it('lends the room the muzzle mark of the gallery model: the tracer starts there and the room draws no second flash, in both views', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
     expect(room.loadModule(createWeaponsTestModule({ locale: 'pt-BR', sound: false, items: itemModels })).problems).toEqual([])
     const emit = vi.spyOn(room.renderer, 'emit')
     for (const view of ['first', 'third'] as const) {

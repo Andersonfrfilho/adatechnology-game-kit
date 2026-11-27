@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
 import { createWeaponsTestModule } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -18,7 +19,7 @@ describe('weapons module on the host audio', () => {
     const engine = createAudioEngine({ seed: 2, mix: 'game', createContext: () => recorder.context })
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, audio: engine })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, audio: engine })
     const module = createWeaponsTestModule({ locale: 'en' })
     expect(room.loadModule(module).problems).toEqual([])
     module.audio?.play('glass', 1, 0)

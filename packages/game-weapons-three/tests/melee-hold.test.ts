@@ -4,6 +4,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const stubRenderer = (): THREE.WebGLRenderer => {
   const dom = document.createElement('canvas')
@@ -14,7 +15,7 @@ const roomWith = (tool: string): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal }))
   const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => null }
   room.setAvatar(avatar)

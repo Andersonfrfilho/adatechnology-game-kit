@@ -6,6 +6,7 @@ import type { EffectSink, ModuleHost } from '@adatechnology/game-contracts'
 import { WEAPONS, createArsenal } from '@adatechnology/game-weapons'
 import { createWeaponsTestModule, hasWeaponModel } from '../src'
 import { VIEWMODEL_EFFECT_IDS } from '../src/fx/effects'
+import { roomPhysics } from './support/room-physics'
 
 // what the player sees: the tip of the barrel as it is drawn, and where the tracer starts and the flash burns, in pixels of a 1280 x 720 view
 const VIEW = { width: 1280, height: 720 }
@@ -35,7 +36,7 @@ function measuredRoom(): { room: TestRoom; canvas: HTMLCanvasElement; flashes: T
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
   const renderer = stubRenderer()
   container.appendChild(renderer.domElement)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer, ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer, ui: false, arsenal })
   rooms.push(room)
   room.camera.aspect = VIEW.width / VIEW.height
   room.camera.updateProjectionMatrix()

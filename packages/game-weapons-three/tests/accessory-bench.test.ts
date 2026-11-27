@@ -7,6 +7,7 @@ import type { ModuleHost } from '@adatechnology/game-contracts'
 import { createWeaponsTestModule } from '../src'
 import { createAccessoryBench } from '../src/test-area/accessory-bench'
 import { ACCESSORY_TEXT } from '../src/test-area/accessory-text'
+import { roomPhysics } from './support/room-physics'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -23,7 +24,7 @@ function areaRoom(locale = 'en'): { room: TestRoom; module: ReturnType<typeof cr
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
-  const room = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   const module = createWeaponsTestModule({ locale, arsenal })
   rooms.push(room)
   expect(room.loadModule(module).problems).toEqual([])

@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 import { ARCHETYPE_MODELS, COUNTER_ITEM_ID, createWeaponsTestModule, MOUNTED_M134_ITEM_ID, weaponsLayout, WEAPON_ITEM_PREFIX } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 // Building every weapon model takes seconds on a busy machine; the default 5 s limit made this file flaky under load.
 vi.setConfig({ testTimeout: 30_000 })
@@ -17,7 +18,7 @@ function stubRenderer(): THREE.WebGLRenderer {
 function roomWithWeapons(): { room: TestRoom; module: ReturnType<typeof createWeaponsTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false })
   const module = createWeaponsTestModule({ locale: 'pt-BR', sound: false, items: itemModels })
   const report = room.loadModule(module)
   expect(report.problems).toEqual([])

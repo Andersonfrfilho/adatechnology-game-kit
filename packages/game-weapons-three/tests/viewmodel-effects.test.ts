@@ -7,6 +7,7 @@ import type { ArsenalOptions } from '@adatechnology/game-weapons'
 import { VIEWMODEL_EFFECTS } from '@adatechnology/game-vfx'
 import { VIEWMODEL_EFFECT_IDS, createEffects } from '../src/fx/effects'
 import { createWeaponFx, createWeaponsTestModule } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -17,7 +18,7 @@ function roomWith(options: ArsenalOptions = {}): TestRoom {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const arsenal = createArsenal({ seed: 1, rules: { faults: false }, ...options })
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal })).problems).toEqual([])
   room.look([0, 1.7, 5], [0, 1.2, -11])
   return room
