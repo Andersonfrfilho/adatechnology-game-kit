@@ -40,6 +40,17 @@ export interface ModuleItemSeal extends SealSpec {
   turn?: (root: unknown, state: { readonly turned: number; readonly lift: number }) => void
 }
 
+/**
+ * What the item does in the hand when used and it holds no liquid (a pill taken, an apple eaten, a bandage put on, soap rubbed in): the hand use played (a `HandUseDef` id
+ * of game-items, such as `eat_food`), whether it is spent at the end, and what it gives, already worked out by the catalogue (game-items `resolveUse`).
+ */
+export interface ModuleItemUse {
+  readonly clip: string
+  readonly consumes: boolean
+  /** The effect the host applies at the end (`consume_nutrition`, `heal`, `stop_bleeding`, `clean_wound`, `wash`...), with its numbers. */
+  readonly effect?: { readonly id: string; readonly params?: Readonly<Record<string, unknown>>; readonly satiety?: number; readonly hydration?: number }
+}
+
 /** A place on an item where a body sits or lies (a chair, a sofa cushion, a bed), in the item's own frame, the same shape as a `game-interactables` seat. */
 export interface ItemSeat {
   id: string
@@ -93,6 +104,8 @@ export interface TestableItem {
   fluid?: ModuleItemFluid
   /** The item is a sealed container: it is opened first (with a tool or by hand), and a breach may spoil it (`SealSpec`). */
   seal?: ModuleItemSeal
+  /** The item is used up in the hand without a liquid (eaten, taken, applied): the hand use and what it gives. */
+  use?: ModuleItemUse
   /** The item is also a weapon the player can equip: an id of the arsenal in use. */
   weapon?: string
   /** What the item is in the catalog (weight, size, volume), for a bag to weigh and fit it; without it the host measures the built object. */

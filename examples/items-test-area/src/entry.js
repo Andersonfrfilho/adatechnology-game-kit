@@ -2,7 +2,7 @@
 // `ItemsArea.loadInto(room)` loads it and opens its area.
 // Bench: category (shows one shelf), wear, age and storage of the food (with power or without), the place, container, state and outbreak day of the finds with a seed and a
 // "roll finds" button (the stacks go on the finds table), the recipe and a "craft" button. Layers: labels, size boxes, highlight of the items that are still simple shapes.
-import { createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
+import { createGoodsItems, goodsItemUse, goodsText } from '@adatechnology/game-items-goods'
 import { createItemsTestModule } from '@adatechnology/game-items-three/testing'
 
 export { createItemsTestModule, createGoodsItems }
@@ -15,7 +15,7 @@ export { createItemsTestModule, createGoodsItems }
 export function loadInto(room, options = {}) {
   const locale = options.locale ?? (new URLSearchParams(globalThis.location?.search ?? '').get('lang') === 'en' ? 'en' : 'pt-BR')
   const catalog = options.catalog ?? createGoodsItems()
-  const report = room.loadModule(createItemsTestModule({ translate: goodsText, ...options, catalog, locale }))
+  const report = room.loadModule(createItemsTestModule({ translate: goodsText, itemUse: goodsItemUse, ...options, catalog, locale }))
   // the area is heavy (hundreds of items, or a whole fleet): the room's loading indicator shows while it is laid, one frame after this returns
   if (room.openAreaAsync) void room.openAreaAsync('items_area')
   else room.openArea('items_area')

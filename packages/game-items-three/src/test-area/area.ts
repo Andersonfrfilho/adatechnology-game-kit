@@ -1,7 +1,7 @@
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type * as THREE_NS from 'three'
-import type { AreaPlacement, BenchChange, DestructibleSpec, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
+import type { AreaPlacement, BenchChange, DestructibleSpec, ModuleArea, ModuleControl, ModuleHost, ModuleItemUse, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { furnitureSpec } from '@adatechnology/game-floorplan-three'
 import { rng } from '@adatechnology/game-interactables'
 import { canCraft, craft, createFindsProvider, freshness, ITEM_CATEGORIES } from '@adatechnology/game-items'
@@ -44,6 +44,8 @@ export interface ItemsTestModuleOptions {
   person?: (THREE: unknown) => THREE_NS.Object3D
   /** The models to show and draw with (`createItemModels(...)`); default the shared set behind `registerItemModel`. */
   models?: ItemModelRegistry
+  /** What an item does in the hand (eaten, taken, applied: `goodsItemUse` of game-items-goods); without it the items have only the uses of their liquid. */
+  itemUse?: (item: ItemDef) => ModuleItemUse | undefined
 }
 
 export const SHOWCASE_STAND_ID = 'stand_models'
@@ -374,12 +376,21 @@ export function createItemsTestModule(options: ItemsTestModuleOptions): ItemsTes
     return spec ? { spec: () => structuredClone(spec) } : {}
   }
 
+  /** The hand use of an item and its liquid: what is not food or drink (alcohol on a wound) is poured, never drunk. */
+  const usesOf = (def: ItemDef): Pick<TestableItem, 'fluid' | 'seal' | 'use'> => {
+    const use = options.itemUse?.(def)
+    const liquid = sealOf(def, fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight }))
+    if (!use) return liquid
+    const edible = def.category === 'food' || def.category === 'drink'
+    return { ...liquid, ...(liquid.fluid && !edible ? { fluid: { ...liquid.fluid, uses: ['pour', 'pour_out'] } } : {}), use }
+  }
+
   const itemOf = (def: ItemDef): TestableItem => ({
     id: `${ITEM_PREFIX}${def.id}`,
     name: nameOf(def),
     movable: true,
     thumbnail: itemThumbnailSvg(drawable(def)),
-    ...sealOf(def, fluidOf({ ...(def.model === undefined ? {} : { model: def.model }), size: def.size, weight: def.weight })),
+    ...usesOf(def),
     // an item with a make-up (a shovel: ash handle riveted to a steel blade) is that spec, not the parts guessed from its meshes
     ...makeupSpecOf(def.model),
     // an item that is also a tool of the arsenal (a shovel) is picked up as that tool

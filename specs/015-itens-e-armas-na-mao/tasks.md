@@ -25,12 +25,16 @@ Leia `spec.md` e `plan.md`. Arma na mão e animação só fecham com print nas d
 - T2.3 `game-weapons-three`: `tool-motion` por família; dano e som no quadro de impacto. Testes (critério 3).
 - T2.4 `melee-families.json`: cada arma branca do arsenal apontada para uma família (dados).
 
+> Parcial em 2026-11-27 (pedido do dono na sala 4280): 3 famílias ligadas na sala (`short_blade` corte + estocada, `one_hand_swing`, `two_hand_swing` com o giro da pá), clipes `knife_slash`/`knife_stab` e movimentos em `FAMILY_MOTIONS`. Faltam as outras famílias de R3 (golpe de cima de duas mãos, lança, motosserra) e a T2.1 com `opus`.
+
 ## Fase 3 — Mão ↔ mundo
 > 🤖 Modelo: `sonnet`
 
 - T3.1 Pegar: alcançar por IK do chão, de mesa e de prateleira; o objeto muda de pai, sem reconstruir.
 - T3.2 Guardar e sacar por local (cintura, costas, mochila); largar e arremessar com o braço, com a velocidade da mão.
 - T3.3 Uso por categoria (R5), com o contrato de animação de item.
+
+> Parcial em 2026-11-27: comer com a mão, beber sem líquido, remédio, curativo e higiene (`HAND_USES` de game-items, `ModuleItemUse` no contrato, `goodsItemUse`), na tecla F da sala. Faltam lanterna, isqueiro/fósforo, rádio e chave.
 
 ## Fase 4 — Armas de fogo
 > 🤖 Modelo: `sonnet`

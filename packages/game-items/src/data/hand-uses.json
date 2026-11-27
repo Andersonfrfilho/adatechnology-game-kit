@@ -1,0 +1,533 @@
+[
+  {
+    "id": "eat_food",
+    "body": "mouth",
+    "duration": 3.4,
+    "note": "three bites: the food to the mouth, a bite, down a little to chew, and again",
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.45,
+        "position": [
+          0.01,
+          0.0,
+          -0.17
+        ],
+        "rotation": [
+          -0.3,
+          0,
+          0
+        ],
+        "action": "bite"
+      },
+      {
+        "t": 0.8,
+        "position": [
+          0.05,
+          -0.08,
+          -0.26
+        ],
+        "rotation": [
+          -0.15,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 1.25,
+        "position": [
+          0.01,
+          0.0,
+          -0.17
+        ],
+        "rotation": [
+          -0.3,
+          0,
+          0
+        ],
+        "action": "bite"
+      },
+      {
+        "t": 1.6,
+        "position": [
+          0.05,
+          -0.08,
+          -0.26
+        ],
+        "rotation": [
+          -0.15,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 2.05,
+        "position": [
+          0.01,
+          0.0,
+          -0.17
+        ],
+        "rotation": [
+          -0.3,
+          0,
+          0
+        ],
+        "action": "bite"
+      },
+      {
+        "t": 2.8,
+        "position": [
+          0.05,
+          -0.08,
+          -0.26
+        ],
+        "rotation": [
+          -0.15,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 3.4,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "drink",
+    "body": "mouth",
+    "duration": 2.5,
+    "note": "a drink without a liquid of its own (a juice box): to the mouth and tipped up, as the fluid drink",
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.5,
+        "position": [
+          0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.8,
+        "position": [
+          0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -1.22,
+          0,
+          0
+        ],
+        "action": "swallow"
+      },
+      {
+        "t": 2.0,
+        "position": [
+          0,
+          0.02,
+          -0.2
+        ],
+        "rotation": [
+          -1.22,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 2.5,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "take_medicine",
+    "body": "mouth",
+    "duration": 2.6,
+    "note": "the box before the chest, shaken for a pill, the pill to the mouth and swallowed",
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.4,
+        "position": [
+          0.06,
+          -0.16,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.65,
+        "position": [
+          0.06,
+          -0.16,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0.5
+        ]
+      },
+      {
+        "t": 0.85,
+        "position": [
+          0.06,
+          -0.16,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          -0.5
+        ]
+      },
+      {
+        "t": 1.05,
+        "position": [
+          0.06,
+          -0.16,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 1.6,
+        "position": [
+          0,
+          0.02,
+          -0.18
+        ],
+        "rotation": [
+          -0.6,
+          0,
+          0
+        ],
+        "action": "swallow"
+      },
+      {
+        "t": 2.0,
+        "position": [
+          0,
+          0.02,
+          -0.18
+        ],
+        "rotation": [
+          -0.6,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 2.6,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "apply_dressing",
+    "body": "two_hands",
+    "duration": 3.2,
+    "note": "the dressing laid on the other forearm and wound round it twice",
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.5,
+        "position": [
+          -0.06,
+          -0.24,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          1.2
+        ]
+      },
+      {
+        "t": 1.0,
+        "position": [
+          -0.1,
+          -0.27,
+          -0.28
+        ],
+        "rotation": [
+          0.4,
+          0,
+          1.4
+        ],
+        "action": "apply"
+      },
+      {
+        "t": 1.5,
+        "position": [
+          -0.02,
+          -0.22,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.2
+        ]
+      },
+      {
+        "t": 2.0,
+        "position": [
+          -0.1,
+          -0.27,
+          -0.28
+        ],
+        "rotation": [
+          0.4,
+          0,
+          1.4
+        ],
+        "action": "apply"
+      },
+      {
+        "t": 2.6,
+        "position": [
+          -0.06,
+          -0.24,
+          -0.3
+        ],
+        "rotation": [
+          0,
+          0,
+          1.2
+        ]
+      },
+      {
+        "t": 3.2,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  {
+    "id": "use_hygiene",
+    "body": "two_hands",
+    "duration": 3.0,
+    "note": "soap (or what is rubbed in) between both hands in front of the body, rubbed side to side",
+    "keys": [
+      {
+        "t": 0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "t": 0.4,
+        "position": [
+          0.02,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ]
+      },
+      {
+        "t": 0.7,
+        "position": [
+          -0.04,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ],
+        "action": "scrub"
+      },
+      {
+        "t": 1.0,
+        "position": [
+          0.06,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ]
+      },
+      {
+        "t": 1.3,
+        "position": [
+          -0.04,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ],
+        "action": "scrub"
+      },
+      {
+        "t": 1.6,
+        "position": [
+          0.06,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ]
+      },
+      {
+        "t": 1.9,
+        "position": [
+          -0.04,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ],
+        "action": "scrub"
+      },
+      {
+        "t": 2.3,
+        "position": [
+          0.02,
+          -0.3,
+          -0.32
+        ],
+        "rotation": [
+          0,
+          0,
+          1.5
+        ]
+      },
+      {
+        "t": 3.0,
+        "position": [
+          0.22,
+          -0.2,
+          -0.4
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  }
+]

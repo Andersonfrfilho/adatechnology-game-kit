@@ -1,0 +1,69 @@
+{
+  "families": [
+    {
+      "id": "short_blade",
+      "note": "a knife held in one hand, edge forward: a diagonal cut from the right shoulder and a straight thrust, one after the other (spec 015 R3, 'golpe curto (faca)')",
+      "weapons": [
+        "knife",
+        "tactical_knife",
+        "kabar",
+        "meat_cleaver"
+      ],
+      "blows": [
+        {
+          "clip": "knife_slash",
+          "motion": "slash",
+          "seconds": 0.46
+        },
+        {
+          "clip": "knife_stab",
+          "motion": "stab",
+          "seconds": 0.42
+        }
+      ],
+      "reset": 1.2
+    },
+    {
+      "id": "one_hand_swing",
+      "note": "a short heavy tool or blade in one hand (machete, hatchet, hammer, baton, skillet): chopped down from over the right shoulder, the body turning into it as in the knife's cut",
+      "weapons": [
+        "machete",
+        "hatchet",
+        "sickle",
+        "hammer",
+        "police_baton",
+        "cast_iron_skillet"
+      ],
+      "blows": [
+        {
+          "clip": "knife_slash",
+          "motion": "chop",
+          "seconds": 0.46
+        }
+      ],
+      "reset": 1.2
+    },
+    {
+      "id": "two_hand_swing",
+      "note": "a long weapon in both hands (bat, pipe, crowbar, axe, sledgehammer, katana): swung flat from the right shoulder across the body, the hips leading, as the shovel's swing",
+      "weapons": [
+        "baseball_bat",
+        "nail_bat",
+        "iron_pipe",
+        "crowbar",
+        "axe",
+        "sledgehammer",
+        "pickaxe",
+        "katana"
+      ],
+      "blows": [
+        {
+          "clip": "shovel_swing",
+          "motion": "swing",
+          "seconds": 0.6
+        }
+      ],
+      "reset": 1.2
+    }
+  ]
+}

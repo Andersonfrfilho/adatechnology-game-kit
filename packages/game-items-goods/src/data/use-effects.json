@@ -47,6 +47,22 @@
     "items": [
       "alcohol_70",
       "povidone_iodine"
+    ],
+    "params": {
+      "clip": "apply_dressing"
+    }
+  },
+  {
+    "id": "wash",
+    "effect": "wash",
+    "consumes": false,
+    "items": [
+      "soap",
+      "shampoo",
+      "toothpaste",
+      "toothbrush",
+      "deodorant",
+      "towel"
     ]
   },
   {

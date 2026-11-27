@@ -66,8 +66,8 @@ describe('with the effects read from the team game', () => {
   const goods = JSON.parse(readFileSync(new URL('../../game-items-goods/src/data/use-effects.json', import.meta.url), 'utf8')) as UseEffectDef[]
   const catalog = makeCatalog([item('bandage', { category: 'medical' }), item('ibuprofen', { category: 'medical' }), item('machete', { category: 'melee' })], { useEffects: goods })
 
-  it('loads the nine effects in order', () => {
-    expect(catalog.useEffects.map((entry) => entry.id)).toEqual(['eat_and_drink', 'dress_wound', 'painkiller', 'calm_down', 'clean_wound', 'assemble_molotov', 'toggle_light', 'swap_bag', 'equip_melee'])
+  it('loads the nine effects of the team game in order, and the wash of the kit', () => {
+    expect(catalog.useEffects.map((entry) => entry.id)).toEqual(['eat_and_drink', 'dress_wound', 'painkiller', 'calm_down', 'clean_wound', 'wash', 'assemble_molotov', 'toggle_light', 'swap_bag', 'equip_melee'])
   })
 
   it('uses a bandage, an analgesic (+15) and a melee weapon as the game does', () => {

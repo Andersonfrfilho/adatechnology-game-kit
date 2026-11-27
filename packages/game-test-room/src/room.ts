@@ -9,16 +9,22 @@ import type { ClipSample, GaitId, SurfaceId } from '@adatechnology/game-contract
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS, PLAYER_WALK_PUSH_NEWTONS } from '@adatechnology/game-player'
-import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout } from '@adatechnology/game-weapons'
+import { canDualWield, createArsenal, createMeleeBlowCycle, DEFAULT_LOADOUT, realLoadout } from '@adatechnology/game-weapons'
+import { HAND_USES } from '@adatechnology/game-items'
+import { createHandItemUse, handUseEffectText, usedItemTargets } from './hand-item-use'
+import { openingProgress } from './opening-progress'
+import { waterEntryAlong } from './water-entry'
+import type { WaterEntry } from './water-entry'
+import type { RoomUsePlayer } from './hand-item-use'
 import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createItemUse, ITEM_USES, LIQUIDS, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
-import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
+import type { FluidEvent, StainState } from '@adatechnology/game-fluids'
 import { WATER_SHOT_BY_CALIBER, waterShotClassOf } from '@adatechnology/game-vfx'
 import { createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, sampleClip, checkDestructible, checkSpec, createEnvironmentBus, createRainCover, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
-import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, sampleClip, checkDestructible, checkSpec, createEnvironmentBus, createRainCover, sealBlock, sealOpener, shotExtras, useToHit } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ModuleItemUse, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
 import { requireRoomPhysics } from './room-physics'
@@ -181,8 +187,6 @@ const WAVE_GRIP = 3
 const WAVE_WAKE = 0.03
 /** Metres a round is followed for the water it meets, and where its tracer ends when it hits nothing. */
 const SHOT_REACH = 40
-/** Metres between the points of a round's path read for water. */
-const WATER_TRACE_STEP = 0.25
 /** Seconds between two looks at what stands still on the ground. */
 const LOAD_EVERY = 0.2
 /** Metres over the ground a body can be and still stand on it. */
@@ -357,6 +361,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const partLeaks = createPartLeaks({ THREE, world, fluids, rootOf })
   const topStains = createTopStains({ THREE, world, fluids, tops: arena.tops, objects: arena.objects, rootOf })
   const itemUseDefs = [...ITEM_USES, ...(options.itemUses ?? [])]
+  const handUseDefs = [...HAND_USES, ...(options.handUses ?? [])]
 
   const rendererPieces = new Map<string, Piece>()
   const entries = kit.objects
@@ -1068,10 +1073,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       rendererPieces.set(objectId, e.piece)
     }
     const f = item?.fluid
+    // a use in the hand without the liquid (a pill, an apple, soap) comes first, unless the liquid is what is eaten or drunk
+    const byHand = item?.use && handUseDefs.some((def) => def.id === item.use?.clip) ? item.use.clip : undefined
+    if (byHand && !f?.uses?.some((use) => use === 'eat' || use === 'drink')) e.uses = [byHand]
     if (f) {
       e.fluidPart = f.part
       e.fluidOffset = f.offset ?? [0, 0, 0]
-      e.uses = f.uses ?? ['drink', 'sip', 'pour']
+      e.uses = [...e.uses, ...(f.uses ?? ['drink', 'sip', 'pour'])]
       root.updateMatrixWorld(true)
       const q = root.getWorldQuaternion(tmpQ)
       const p = tmpV.set(e.fluidOffset[0], e.fluidOffset[1], e.fluidOffset[2]).applyMatrix4(root.matrixWorld)
@@ -1713,7 +1721,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     avatarState.seat = seat ? { pose: seat.pose, hip: seat.hips[1] - player.feet } : null
     avatarState.door = doors.avatarState
     avatarState.itemUse = useItemPlayer
-      ? { id: useItemName, ...useItemPlayer.pose(), ...(twistHand?.gripL !== undefined ? { gripL: twistHand.gripL } : {}) }
+      ? { id: useItemName, ...useItemPlayer.pose(), ...(twistHand?.gripL !== undefined ? { gripL: twistHand.gripL } : {}), ...(useItemPlayer.body ? { body: useItemPlayer.body } : {}) }
       : heldPiece && heldTilt > 0.01
         ? { id: 'tilt', position: [0.2, -0.1, -0.38], rotation: [-heldTilt, 0, 0] }
         : null
@@ -1831,7 +1839,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const reachAvatar = (): void => {
     const doorHand = doors.handTargets()
     // a thing used in the weapon hand (a drink) moves the arm by its own pose
-    const carry = useItemPlayer && heldHands.hand === 'R' ? null : heldHands.targets
+    const carry = useItemPlayer && heldHands.hand === 'R' ? (useInView() && heldPiece ? usedItemTargets(heldPiece.root, gripQuat, useItemPlayer.body) : null) : heldHands.targets
     const targets = push.active ? null : (doorHand ?? (heldPiece ? (twistHand ?? carry) : (carry ?? handSource?.() ?? null)))
     lastHand = {
       stance: push.active || doorHand ? 'hold' : (handStances[toolId] ?? (targets ? 'hold' : 'relaxed')),
@@ -2227,30 +2235,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
   }
 
-  /** Where a round from `origin` along `direction` goes down through standing water within `reach` metres, or null (it starts under water, or never meets any). */
-  const waterEntryOf = (origin: Vec3, direction: Vec3, reach: number): { readonly point: Vec3; readonly distance: number } | null => {
-    if (direction[1] >= 0) return null
-    const under = (distance: number): boolean => {
-      const y = origin[1] + direction[1] * distance
-      const here = terrain.waterAt(origin[0] + direction[0] * distance, origin[2] + direction[2] * distance)
-      return here !== null && y < here.level
-    }
-    if (under(0)) return null
-    for (let distance = WATER_TRACE_STEP; distance <= reach; distance += WATER_TRACE_STEP) {
-      if (!under(distance)) continue
-      let dry = distance - WATER_TRACE_STEP
-      let wet = distance
-      for (let halving = 0; halving < 8; halving++) {
-        const middle = (dry + wet) / 2
-        if (under(middle)) wet = middle
-        else dry = middle
-      }
-      const x = origin[0] + direction[0] * wet
-      const z = origin[2] + direction[2] * wet
-      return { point: [x, terrain.waterAt(x, z)?.level ?? origin[1] + direction[1] * wet, z], distance: wet }
-    }
-    return null
-  }
+  const waterEntryOf = (origin: Vec3, direction: Vec3, reach: number): WaterEntry | null => waterEntryAlong(terrain, { origin, direction, reach })
 
   /**
    * A round that meets water on its way: the splash of its calibre at the surface, at its angle and speed. Below the angle a round skips off, it leaves
@@ -2488,6 +2473,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** `side` is a blow of the left hand's tool (a tool in each hand): that hand strikes, and the blow waits on a key of its own. */
   /** What damage did to the tools in hand, by arsenal id (`setToolCondition`): a snapped handle cannot swing or dig, a bent blade takes a smaller bite. */
   const toolConditions = new Map<string, ToolCondition>()
+  const meleeBlows = createMeleeBlowCycle()
   const strikeUse = (u: Extract<Use, { kind: 'melee' }>, id = toolId, side?: { readonly hand: 'left'; readonly key: string }): void => {
     if (toolConditions.get(id)?.handleBroken) {
       action('tool_broken', t('act.tool.handle_broken', { weapon: toolName(id) }), { data: { weapon: id } })
@@ -2505,11 +2491,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         return
       }
     }
+    // a weapon of a melee family (a knife, a bat) strikes with the family's blows in turn: the body plays the blow's clip and the weapon moves through its motion
+    const familyBlow = side || options.strikeClips?.[id] ? undefined : meleeBlows.next(id, simTime)
     // a tool with motions of its own (a shovel's swing) moves through it while the body swings
     if (!side && digsWith(arsenal.weapons.get(id))) emitHost({ type: 'motion', weapon: id, motion: 'swing', duration: SHOVEL.swingSeconds })
+    else if (familyBlow) emitHost({ type: 'motion', weapon: id, motion: familyBlow.motion, duration: familyBlow.seconds })
     const stepIndex = comboOn && combo?.tools.includes(id) && combo.steps.length > 0 ? (simTime - comboAt > combo.reset ? 0 : comboNext) : null
     const step = stepIndex === null ? undefined : combo!.steps[stepIndex]
-    const clip = step ? step.clip : strikeClips[id]
+    const clip = step ? step.clip : (familyBlow?.clip ?? strikeClips[id])
     // a kick uses the leg the option says (alternating from the right), a punch the hand (the same way) or the one of its combo step, whatever the avatar does with them
     const leg = id === 'kick' ? (kickLeg === 'alternate' ? nextLeg : kickLeg) : undefined
     const hand = side ? side.hand : step ? step.hand : punchTools.has(id) ? (punchHand === 'alternate' ? nextHand : punchHand) : undefined
@@ -2916,7 +2905,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const heldLocal = new THREE.Vector3()
   const heldSize = new THREE.Vector3(0.2, 0.2, 0.2)
   const heldVel: Vec3 = [0, 0, 0]
-  let useItemPlayer: ItemUsePlayer | null = null
+  let useItemPlayer: RoomUsePlayer | null = null
+  /** What ends a hand use (`useByHand`): the effect told, the item spent. */
+  let handUseEnd: (() => void) | null = null
   let useItemName = ''
   /** The use asked for while the seal's opening use (`ModuleItemSeal.openUse`) plays: it starts once the item is open. */
   let afterOpening: string | null = null
@@ -2933,6 +2924,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     }
     useItemPlayer?.cancel()
     useItemPlayer = null
+    handUseEnd = null
     afterOpening = null
     twisting = twistHand = null
     heldHands.end()
@@ -3179,6 +3171,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
 
   const gripQuat = new THREE.Quaternion()
+  /** In first person a thing being used goes by its use's pose before the eye (to the mouth, between the hands) and the hand follows it, instead of the hand carrying it. */
+  const useInView = (): boolean => cameraMode === 'first' && useItemPlayer !== null && heldHands.hand === 'R'
   const followHeld = (dt: number): void => {
     const piece = heldPiece
     twistHand = null
@@ -3197,7 +3191,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       targetQ.set(placed.quaternion[0], placed.quaternion[1], placed.quaternion[2], placed.quaternion[3])
       gripQuat.copy(targetQ)
       tmpV.set(placed.position[0], placed.position[1], placed.position[2])
-    } else followHeldTarget({ THREE, hand: hand ?? null, carried: heldHands.hand === 'R' ? null : (heldHands.item?.position ?? null), use: useItemPlayer?.pose() ?? null, isDrink, yaw: player.yaw, turn: { yaw: heldYaw, tilt: heldTilt }, camera }, { position: tmpV, target: targetQ, grip: gripQuat })
+    } else followHeldTarget({ THREE, hand: useInView() ? null : (hand ?? null), carried: heldHands.hand === 'R' ? null : (heldHands.item?.position ?? null), use: useItemPlayer?.pose() ?? null, isDrink, yaw: player.yaw, turn: { yaw: heldYaw, tilt: heldTilt }, camera }, { position: tmpV, target: targetQ, grip: gripQuat })
     const pos = tmpV
     const k = placed ? 1 : Math.min(1, (useItemPlayer ? 30 : 16) * dt)
     const px = root.position.x
@@ -3269,8 +3263,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** C crouches unless the page moved the crouch to other keys; while it does, an item's second use is on Shift+F instead of C. */
   const crouchOnC = (options.crouch?.keys ?? ['KeyC']).includes('KeyC')
 
+  /** A use in the hand without a liquid (`TestRoomItem.use`): the hand use plays, and at its end the effect is told and a spent item is gone. */
+  const useByHand = (e: Entry, use: ModuleItemUse): boolean => {
+    const def = handUseDefs.find((d) => d.id === use.clip)
+    if (!def || (useItemPlayer && !useItemPlayer.done)) return false
+    useItemPlayer = createHandItemUse(def, e.so.root)
+    useItemName = def.id
+    action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
+    handUseEnd = () => {
+      const told = t(use.consumes ? 'act.used_up' : 'act.used', { name: e.name, effect: handUseEffectText(use, t) })
+      say(told)
+      action('used_item', told, { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id, consumes: use.consumes, ...(use.effect ? { effect: use.effect.id, ...use.effect } : {}) } })
+      if (use.consumes) removeEntry(e.so.objectId)
+    }
+    return true
+  }
+
   const useItem = (useId: string): boolean => {
     const e = entries.held
+    if (e?.item?.use?.clip === useId && (!e.containerId || !itemUseDefs.some((u) => u.id === useId))) return useByHand(e, e.item.use)
     if (!e?.containerId) return false
     const def = itemUseDefs.find((u) => u.id === useId)
     if (!def) return false
@@ -3363,27 +3374,15 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       useLiters = null
       useItemPlayer = null
       useItemName = ''
+      const ended = handUseEnd
+      handUseEnd = null
+      ended?.()
       const next = afterOpening
       afterOpening = null
       if (next && e?.opened) useItem(next)
     }
   }
 
-  /**
-   * Where the opening use (`ModuleItemSeal.openUse`) is at `time`: the hand's stroke over its `turn` keys (`twistStroke`), then the part rising off until its
-   * `open` key (or its end).
-   */
-  const openingProgress = (def: ItemUseDef, time: number): { stroke: TwistStroke; lift: number } => {
-    const keys = [...def.keys].sort((a, b) => a.t - b.t)
-    const turning = keys.findIndex((k) => k.action === 'turn')
-    const lastTurn = keys.map((k) => k.action).lastIndexOf('turn')
-    const start = turning >= 0 ? keys[turning]!.t : 0
-    const end = lastTurn >= 0 ? (keys[lastTurn + 1]?.t ?? def.duration) : start
-    const openAt = keys.find((k) => k.action === 'open')?.t ?? def.duration
-    const share = end > start ? (time - start) / (end - start) : 1
-    const lift = time <= end ? 0 : openAt > end ? Math.min(1, (time - end) / (openAt - end)) : 1
-    return { stroke: twistStroke(share), lift }
-  }
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Tap
@@ -4514,6 +4513,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         slow: ti.slow,
         fluid: ti.fluid,
         seal: ti.seal,
+        use: ti.use,
         weapon: ti.weapon,
         physical: ti.physical as TestRoomItem['physical'],
         impl: ti.impl as TestRoomItem['impl'],
