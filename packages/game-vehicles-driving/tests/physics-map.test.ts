@@ -127,14 +127,16 @@ describe('vehicleDescFromSemi: the semi-simulation car as an engine vehicle', ()
     expect(car().controller).toBeUndefined()
   })
 
-  it('a bicycle: the cyclist is the engine, flat torque from a standing start, no idle, the gears as turns of the engine per wheel turn', () => {
+  it('a bicycle: the cyclist is the engine, his 250 W held down to the idle cadence (twice the torque at the start), no idle, the gears as turns of the engine per wheel turn', () => {
     const bicycle: SemiSimSpec = { ...defaultSemiSpec, mass: 90, wheelRadius: 0.34, wheels: [{ x: 0.55, z: 0, steer: true }, { x: -0.55, z: 0, drive: true }], fourWheelDrive: false, efficiency: 0.95 }
     const desc = vehicleDescFromSemi(bicycle, { chassis, pedal: { watts: 250, cadenceRpm: 80, gears: [1.5, 2.5, 3.5] } })
     expect(desc.minRpm).toBe(0)
     expect(desc.maxTorque).toBeCloseTo((250 / ((80 * 2 * Math.PI) / 60)) * 0.95, 9)
     expect(desc.gears).toEqual([1 / 1.5, 1 / 2.5, 1 / 3.5])
     expect(desc.differentialRatio).toBe(1)
-    expect(desc.torqueCurve![0]).toEqual([0, 1])
+    // the torque rises as the cadence falls to the idle cadence (40 rpm, half of 80): constant power, twice the torque
+    expect(desc.torqueCurve![0]).toEqual([0, 2])
+    expect(desc.torqueCurve![2]).toEqual([80 / 120, 1])
   })
 
   it('the mass the driver uses is the mass the engine gets, so the two models weigh the same car', () => {

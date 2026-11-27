@@ -60,6 +60,8 @@ export interface SemiSimSpec {
   finalDrive: number
   /** Share of the engine torque that reaches the ground. */
   efficiency: number
+  /** What the physics engine's vehicle multiplies the engine torque by (the semi-simulation ignores it; 1 when omitted): see `PHYSICS_TORQUE_SCALE`. */
+  physicsTorqueScale?: number
   /** Upshift above this fraction of the redline; downshift under `downshiftRpm` fraction. */
   upshiftFraction: number
   downshiftFraction: number
