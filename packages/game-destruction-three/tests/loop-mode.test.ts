@@ -48,6 +48,6 @@ describe('the physics option is required', () => {
     const options = { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() }
     // a plain-JS host can leave the option out: the type forbids it, the runtime still refuses
     expect(() => new PieceSystem(THREE, options as unknown as ConstructorParameters<typeof PieceSystem>[1])).toThrow(PhysicsOptionError)
-    expect(() => new PieceSystem(THREE, options as unknown as ConstructorParameters<typeof PieceSystem>[1])).toThrow(/'own'/)
+    expect(() => new PieceSystem(THREE, options as unknown as ConstructorParameters<typeof PieceSystem>[1])).toThrow(/PhysicsLoop/)
   })
 })

@@ -25,7 +25,7 @@ export const HINGE_SECONDS = 1.5
 export const isTurned = (box: PartBox): boolean => box.rotation !== undefined && rows(box.rotation).some((v) => Math.abs(v) > 1e-6 && Math.abs(Math.abs(v) - 1) > 1e-6)
 
 /**
- * The square box around a part box (its frame): what the kit's own solver, which knows only boxes square to the piece, meets in its place. A part not turned is itself.
+ * The square box around a part box (its frame): what the engine meets in place of a part box turned off the piece's axes. A part not turned is itself.
  */
 export const squareBoxOf = (box: PartBox): { readonly center: Vec3; readonly half: Vec3 } => {
   const r = box.rotation

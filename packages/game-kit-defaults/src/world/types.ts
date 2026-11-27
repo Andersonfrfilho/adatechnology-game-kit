@@ -49,7 +49,7 @@ export type KitWorldOptions = {
   /** The name the ground has in the destruction world (default `Ground`). */
   readonly groundName?: string
   readonly terrainBudget?: Partial<TerrainBudget>
-  /** Default `'jolt'`; `'own'` is the kit's own solver, a `PhysicsLoop` is the game's (not released here). */
+  /** Default `'jolt'`; a `PhysicsLoop` is the game's (not released here), a seam world is stepped by the game. */
   readonly physics?: PhysicsChoice
   /** The game's coordinator (not released here), `0` for none, or omitted for the kit's own by the cores. */
   readonly workers?: WorkerCoordinator | 0

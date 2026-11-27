@@ -40,7 +40,7 @@ const run = (room: TestRoom, seconds: number): void => {
   for (let t = 0; t < seconds; t += 1 / 60) room.update(1 / 60)
 }
 const bottom = (root: THREE.Object3D): number => new THREE.Box3().setFromObject(root).min.y
-const laid = (length: number, physics?: 'own'): TestRoom => makeRoom({ ...(physics ? { physics } : {}), ...EVERY_EVENT_IN_ITS_FRAME, catalog: CATALOG, scenery: { shelf: null, table: { spec: tableSpec(length), position: AT, free: true, top: { part: 'top', y: TOP } } } })
+const laid = (length: number): TestRoom => makeRoom({ ...EVERY_EVENT_IN_ITS_FRAME, catalog: CATALOG, scenery: { shelf: null, table: { spec: tableSpec(length), position: AT, free: true, top: { part: 'top', y: TOP } } } })
 /** The legs of the left end knocked out: the top goes down on that end. */
 const tip = (room: TestRoom, length: number): void => {
   for (const leg of ['leg_00', 'leg_01']) {

@@ -9,7 +9,7 @@ import { createVfx } from '@adatechnology/game-vfx'
 
 import type { DestructionRenderer, RendererOptions, ThreeNamespace } from './types'
 
-/** What the warm-up runs on: the engine whose body creation, compounds and ground it heats (without one, the kit's own solver), and the numbers of the throwaway world. */
+/** What the warm-up runs on: the engine whose body creation, compounds and ground it heats (without one there is nothing to warm), and the numbers of the throwaway world. */
 export interface JitWarmUpOptions {
   readonly engine?: PhysicsEngine
   /** The world the engine makes for the warm-up (default `KIT_WORLD`: the same code runs as in the game's world). */
@@ -37,13 +37,12 @@ const ORIGIN: Vec3 = [4000, 0, 4000]
 
 interface BlastAndRunParams {
   readonly world: ReturnType<typeof createDestruction>
-  readonly loop: PhysicsLoop | undefined
+  readonly loop: PhysicsLoop
   readonly renderer: DestructionRenderer
   readonly onCrater: () => void
 }
 
 const warmed = new WeakSet<object>()
-const OWN_SOLVER = {}
 
 /** A wall of bricks, each a part drawn by a range of one merged mesh (as the house is), and the ranges. */
 const brickWall = (THREE: ThreeNamespace): { readonly parts: PartSpec[]; readonly joints: JointSpec[]; readonly mesh: THREE_NS.Mesh; readonly ranges: Array<[number, number]> } => {
@@ -81,7 +80,7 @@ const brickWall = (THREE: ThreeNamespace): { readonly parts: PartSpec[]; readonl
  * fracture and the split of the loosened groups, the oriented boxes fitted to the parts, the engine's bodies and compounds, the ground laid under the pieces and written in place
  * where a crater was dug. Nothing of it touches a game world (own world, own renderer, own random stream) and nothing of it stays.
  */
-const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions) => DestructionRenderer, options: JitWarmUpOptions): JitWarmUpReport => {
+const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions) => DestructionRenderer, engine: PhysicsEngine, worldDesc: WorldDesc | undefined): JitWarmUpReport => {
   const scene = new THREE.Scene()
   const world = createDestruction()
   // an effects world of its own: without one the renderer makes its own and warns the host, who did lend one
@@ -92,13 +91,13 @@ const runScene = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions
   let renderer: DestructionRenderer | undefined
   let bound: string | undefined
   try {
-    engineWorld = options.engine?.createWorld(options.world ?? KIT_WORLD)
-    const loop: PhysicsLoop | undefined = engineWorld ? createPhysicsLoop(engineWorld) : undefined
+    engineWorld = engine.createWorld(worldDesc ?? KIT_WORLD)
+    const loop = createPhysicsLoop(engineWorld)
     // a grid reader as a host's terrain gives one, so the tiles read their samples down the path the host's do
     const terrainGridAt = (xs: ArrayLike<number>, zs: ArrayLike<number>, out: Float64Array): void => {
       for (let j = 0; j < zs.length; j++) for (let i = 0; i < xs.length; i++) out[j * xs.length + i] = terrainAt(xs[i]!, zs[j]!)
     }
-    renderer = makeRenderer({ physics: loop ?? 'own', scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, terrainGridAt, jitWarmUp: false })
+    renderer = makeRenderer({ physics: loop, scene, world, vfx, eventBudgetMs: Infinity, groundAt: terrainAt, terrainAt, terrainGridAt, jitWarmUp: false })
     const wall = brickWall(THREE)
     const root = new THREE.Group()
     root.position.set(...ORIGIN)
@@ -127,7 +126,7 @@ const blastAndRun = ({ world, loop, renderer, onCrater }: BlastAndRunParams): Ji
   renderer.wakeRegion(point[0], point[2], CRATER_RADIUS)
   for (let frame = 0; frame < FRAMES; frame++) {
     world.update(FRAME_SECONDS)
-    loop?.step(FRAME_SECONDS)
+    loop.step(FRAME_SECONDS)
     renderer.update(FRAME_SECONDS)
     const stats = renderer.stats()
     seen.pieces = Math.max(seen.pieces, stats.pieces)
@@ -137,12 +136,12 @@ const blastAndRun = ({ world, loop, renderer, onCrater }: BlastAndRunParams): Ji
 }
 
 /**
- * Runs the first explosion once, off screen, so the code it needs is warm when the real one comes. Once per engine (and once for the kit's own solver): a second call is a
+ * Runs the first explosion once, off screen, so the code it needs is warm when the real one comes. Once per engine: a second call, or a call with no engine, is a
  * no-op (`undefined`). `makeRenderer` is the renderer factory of the package, so the throwaway renderer is the real one.
  */
 export const warmUpDestructionJit = (THREE: ThreeNamespace, makeRenderer: (options: RendererOptions) => DestructionRenderer, options: JitWarmUpOptions = {}): JitWarmUpReport | undefined => {
-  const key = options.engine ?? OWN_SOLVER
-  if (warmed.has(key)) return undefined
-  warmed.add(key)
-  return runScene(THREE, makeRenderer, options)
+  const { engine } = options
+  if (!engine || warmed.has(engine)) return undefined
+  warmed.add(engine)
+  return runScene(THREE, makeRenderer, engine, options.world)
 }

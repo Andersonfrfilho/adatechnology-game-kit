@@ -15,10 +15,7 @@ import { physicsOption } from './setup-physics'
 const make = (options: RendererOptions) => createDestructionRenderer(THREE, options)
 
 describe('the JIT warm-up', () => {
-  it('runs one blast on the kit solver, once, and leaves the scene it was given alone', () => {
-    const report = warmUpDestructionJit(THREE, make)
-    expect(report).toBeDefined()
-    expect(report!.fragments + report!.pieces).toBeGreaterThan(0)
+  it('does nothing without an engine', () => {
     expect(warmUpDestructionJit(THREE, make)).toBeUndefined()
   })
 
@@ -40,6 +37,7 @@ describe('the JIT warm-up', () => {
     expect(report!.pieces).toBeGreaterThan(0)
     expect(made).toBe(1)
     expect(disposed).toBe(1)
+    expect(warmUpDestructionJit(THREE, make, { engine: counted })).toBeUndefined()
   })
 
   it('is off with jitWarmUp: false and on, by default, through the renderer', async () => {
