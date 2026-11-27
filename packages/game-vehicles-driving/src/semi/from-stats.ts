@@ -40,7 +40,7 @@ const motorcyclePower = (rating: number): number => MOTORCYCLE_POWER_RATING_1 + 
 /**
  * What the physics engine's cars and motorbikes get on top of the ficha's torque. The torque per kg was set against the semi-simulation, which has no rotating inertia (an engine and its wheels
  * turn as the vehicle speeds up), no gearshift that cuts the drive and no spinning wheel; the engine's vehicle has all three (its automatic gearbox cannot shift up while a driven wheel spins,
- * so first gear runs to the limiter) and took 1.2 to 1.8 times the semi-simulation's 0-100 km/h (evidence T6.2b, T6.2d). Fitted, not cited: the car's is the smallest scale that puts every
+ * so first gear runs to the limiter) and took 1.2 to 1.8 times the semi-simulation's 0-100 km/h (evidence T6.2b, T6.2d). No source, calibrated by measurement (T6.2e replaces both with a gearbox of the adapter's own): the car's is the smallest scale that puts every
  * car, SUV, pickup, van and the quad inside its band; the motorbike's is the 1.3 the bikes were fitted to before (no source found for it) and keeps the ten bikes in their bands, a higher one tips them
  * over under braking. A vehicle with a real figure behind its power (the trucks, the tractor, the tracks) keeps 1.
  */
