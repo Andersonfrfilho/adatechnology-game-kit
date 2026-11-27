@@ -84,6 +84,9 @@ export interface Player {
   readonly feet: number
   /** The feet as the body is drawn: after a step up (a sill, a heap) they climb it over a few frames while `feet` is on it at once. */
   readonly drawnFeet: number
+  /** Where the body is drawn on the floor plane: `x` and `z`, or, on the engine path, the feet between the last two fixed steps. */
+  readonly drawnX: number
+  readonly drawnZ: number
   /** Feet position. */
   readonly position: Vec3
   /** Horizontal metres per second walked in the last update. */
@@ -446,6 +449,12 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     },
     get drawnFeet() {
       return locomotion.drawnFeet
+    },
+    get drawnX() {
+      return locomotion.drawnX
+    },
+    get drawnZ() {
+      return locomotion.drawnZ
     },
     get position() {
       return [locomotion.x, locomotion.feet, locomotion.z] as Vec3

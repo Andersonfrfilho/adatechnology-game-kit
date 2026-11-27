@@ -4,11 +4,12 @@ import { KIT_WORLD, createPhysicsLoop, createPhysicsServices } from '@adatechnol
 import type { BodyId, PhysicsWorld } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 
+import * as THREE from 'three'
 import type * as THREE_NS from 'three'
 
 import type { ItemSeat } from '@adatechnology/game-contracts'
 
-import type { TestRoomItem } from '../src'
+import type { RoomAvatar, TestRoomItem } from '../src'
 import { createEngineLocomotion } from '../src/player-body'
 import type { Locomotion } from '../src/locomotion'
 import { demoItems } from './fixtures/demo-items'
@@ -134,6 +135,33 @@ describe('sitting on the engine (spec 008, TS.9j)', () => {
       expect(room.playerPosition[0]).toBeCloseTo(-0.4, 1)
       expect(room.playerPosition[2]).toBeCloseTo(-1.2, 1)
       expect(room.playerPosition[1]).toBeLessThan(0.05)
+    } finally {
+      room.dispose()
+      world.dispose()
+    }
+  })
+})
+
+describe('the avatar on the engine (spec 008, TS.9k)', () => {
+  it('stands where the feet are drawn: at most two frames of walking behind the body in the world', { timeout: 60000 }, async () => {
+    const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    const room = makeRoom({ physics: createPhysicsLoop(world) })
+    const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, hand: () => new THREE.Object3D() }
+    room.setAvatar(avatar)
+    room.setCameraMode('third')
+    try {
+      room.look([0, 1.7, 4], [0, 1.7, -10])
+      for (let frame = 0; frame < 30; frame++) room.update(1 / 60, { live: true })
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }))
+      let farthest = 0
+      for (let frame = 0; frame < 60; frame++) {
+        room.update(1 / 60, { live: true })
+        farthest = Math.max(farthest, Math.hypot(avatar.root.position.x - room.playerPosition[0], avatar.root.position.z - room.playerPosition[2]))
+      }
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }))
+      expect(avatar.root.position.z).toBeLessThan(4 - 2.5)
+      expect(farthest).toBeLessThan((2 * 3.4) / 60)
+      expect(avatar.root.position.y).toBeCloseTo(0, 2)
     } finally {
       room.dispose()
       world.dispose()

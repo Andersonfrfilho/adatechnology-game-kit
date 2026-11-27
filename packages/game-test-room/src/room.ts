@@ -1675,7 +1675,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let camDistance = Infinity
 
   const thirdPose = (dt: number): ThirdPersonPose => {
-    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
+    const pose = thirdPersonPose({ x: player.drawnX, z: player.drawnZ, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
       withoutHeld(() => world.raycast(o, d, max))?.distance ?? null,
     )
     // a wall pulls the camera in at once, the way back is slow (`view.cd`, line 76559 of the team game)
@@ -1729,8 +1729,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const stepAvatar = (dt: number): void => {
     if (!avatar) return
-    const x = player.x
-    const z = player.z
+    const x = player.drawnX
+    const z = player.drawnZ
     if (dt > 0 && feetPrev) {
       // a jump of position faster than the player can run is a teleport (`look`, an area opening), not a stride
       const raw = Math.hypot(x - feetPrev[0], z - feetPrev[1]) / dt

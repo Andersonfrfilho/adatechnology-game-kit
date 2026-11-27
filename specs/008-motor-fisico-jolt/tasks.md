@@ -266,7 +266,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - [x] TS.9h ✅ `player-body` engine. Aceite: `physics-channel` (own nada muda; Jolt cria e libera). `sonnet`.
   - [x] TS.9i ✅ Nocaute/batida (`onSlam` obstacle/ground). `sonnet`.
   - [x] TS.9j ✅ `park`/`unpark` (saída bloqueada vai ao teto, sem penetrar). `sonnet`.
-  - [ ] TS.9k Avatar lê `drawn`. `haiku`.
+  - [x] TS.9k ✅ Avatar lê `drawn`. `haiku`.
   - [ ] TS.9l Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
   - [ ] TS.9m Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
   - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. 
