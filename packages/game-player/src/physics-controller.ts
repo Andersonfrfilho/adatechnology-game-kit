@@ -27,6 +27,8 @@ export type PhysicsPlayerController = PlayerController & {
 
 export const PLAYER_MASS_KG = 75
 export const PLAYER_PUSH_STRENGTH_NEWTONS = 400
+/** The most a person puts into what is in the way just by walking into it, without leaning on it on purpose: about the sustained push force of ISO 11228-2 for a man (100 N), the order of what a walk can keep up. A thing whose floor grip is above it (a 28 kg sofa on wood: 115 N) stops the walk; a lighter one is shoved along. */
+export const PLAYER_WALK_PUSH_NEWTONS = 100
 
 /**
  * The player's controller in a physics world: a capsule as tall as the standing body (a crouch does not shrink it) that steps up, climbs, pushes props and is
