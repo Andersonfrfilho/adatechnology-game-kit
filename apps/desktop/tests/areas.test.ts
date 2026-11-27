@@ -22,10 +22,10 @@ describe('desktop launch options', () => {
   })
 
   it('asks the room for Jolt multithreaded with the JS contacts by default, and passes the other choices through', () => {
-    expect(physicsQuery(DEFAULT_LAUNCH)).toBe('solver=jolt&joltBuild=multithread')
-    expect(physicsQuery(parseLaunch(['--jolt-build=single']))).toBe('solver=jolt')
-    expect(physicsQuery(parseLaunch(['--jolt-threads=4', '--jolt-contacts=off']))).toBe('solver=jolt&joltBuild=multithread&joltThreads=4&joltContacts=off')
-    expect(physicsQuery(parseLaunch(['--solver=own', '--lang=en']))).toBe('lang=en')
+    expect(physicsQuery(DEFAULT_LAUNCH)).toBe('joltBuild=multithread')
+    expect(physicsQuery(parseLaunch(['--jolt-build=single']))).toBe('')
+    expect(physicsQuery(parseLaunch(['--jolt-threads=4', '--jolt-contacts=off']))).toBe('joltBuild=multithread&joltThreads=4&joltContacts=off')
+    expect(physicsQuery(parseLaunch(['--lang=en']))).toBe('lang=en')
     expect(parseLaunch(['--jolt-threads=lots']).joltThreads).toBeUndefined()
   })
 })
@@ -42,7 +42,7 @@ describe('desktop areas', () => {
 
   it('builds the paths the server answers', () => {
     expect(pathOf({ kind: 'menu' }, DEFAULT_LAUNCH)).toBe(MENU_PATH)
-    expect(pathOf({ kind: 'room', area: 'floorplan_area' }, DEFAULT_LAUNCH)).toBe('/test-room.html?area=floorplan_area&solver=jolt&joltBuild=multithread')
+    expect(pathOf({ kind: 'room', area: 'floorplan_area' }, DEFAULT_LAUNCH)).toBe('/test-room.html?area=floorplan_area&joltBuild=multithread')
     expect(pathOf(resolveArea('vehicles', manifest), DEFAULT_LAUNCH)).toBe('/vehicles-test-area/vehicles.html')
   })
 
@@ -56,7 +56,7 @@ describe('desktop areas', () => {
 
   it('renders the start menu from the same lists, escaping what it shows', () => {
     const html = renderMenuPage({ manifest, roomAreas: [{ id: 'floorplan_area', name: 'Casas <&>' }], options: DEFAULT_LAUNCH, isIsolated: true })
-    expect(html).toContain('href="/test-room.html?area=floorplan_area&amp;solver=jolt&amp;joltBuild=multithread"')
+    expect(html).toContain('href="/test-room.html?area=floorplan_area&amp;joltBuild=multithread"')
     expect(html).toContain('Casas &lt;&amp;&gt;')
     expect(html).toContain('href="/vehicles-test-area/vehicles.html"')
     expect(html).not.toContain('href="/test-room/test-room.html"')

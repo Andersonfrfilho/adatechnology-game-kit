@@ -100,8 +100,8 @@ const scenery = isFloorplan
 
 const room = createTestRoom({
   THREE,
-  // the page's boot made the world and its loop (build.mjs); with ?solver=own it did not, and the old solver steps
-  physics: /** @type {any} */ (window).__roomPhysics ?? 'own',
+  // the page's boot made the world and its loop (build.mjs)
+  physics: /** @type {any} */ (window).__roomPhysics,
   container: /** @type {HTMLElement} */ (document.getElementById('app')),
   locale,
   catalog: [],
@@ -118,7 +118,7 @@ const room = createTestRoom({
   ...(params.get('framesInFlight') ? { framesInFlight: Number(params.get('framesInFlight')) } : {}),
   // ?blastDebris=1: the blast debris policy of the owner's D4 (wake queue by step cost); off by default
   // ?tilesUnderParts=1: the engine's ground under each part of a loose piece, not under the box of the whole piece (T3.8v); off by default
-  // ?warmup=0: the JIT warm-up of the destruction renderer off (default on, heating the engine of ?solver=jolt)
+  // ?warmup=0: the JIT warm-up of the destruction renderer off (default on, heating the engine)
   // ?workBudget=4: the explosion's deferred work in a frame budget of 4 ms of work units, nearest the camera first (T3.8aa); off by default
   // the engine's ground tiles through the page's coordinator (`destruction.ground-tiles`), applied 2 updates after they are asked for (owner, 2026-11-17), the same tile
   // whether a worker answered or not; on with the coordinator (owner, 2026-11-18), ?groundWorker=0 makes every tile on the main thread as before

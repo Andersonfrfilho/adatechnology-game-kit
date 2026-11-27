@@ -89,8 +89,8 @@ const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-
 //    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
 const fullHtml = page(await bundleMain(true), true)
 const at = fullHtml.lastIndexOf('</body>')
-// the room's pieces step on Jolt unless ?solver=own: one world from KIT_WORLD and one loop, handed to the room (`window.__roomPhysics`; the room steps it each frame). The wasm
-// loads before the room's bundle runs; with ?solver=own the room is handed 'own' (the old solver)
+// the room's pieces step on Jolt: one world from KIT_WORLD and one loop, handed to the room (`window.__roomPhysics`; the room steps it each frame). The wasm
+// loads before the room's bundle runs
 const joltBoot = (
   await esbuild.build({
     stdin: {
@@ -108,7 +108,7 @@ const threadingOf = (q) => {
   const build = asked === 'multithread' || workerThreads > 0 || (asked !== 'single' && self.crossOriginIsolated === true) ? 'multithread' : 'single'
   return { build, workerThreads, contactCallbacks: q.get('joltContacts') === 'off' ? 'none' : 'js', moduleUrl: new URL('jolt-physics.multithread.wasm-compat.js', location.href).href }
 }
-window.__joltBoot = () => /[?&]solver=own(&|$)/.test(location.search) ? Promise.resolve() : (() => {
+window.__joltBoot = () => (() => {
   const asked = threadingOf(new URLSearchParams(location.search))
   return createJoltEngine(asked).then((engine) => ({ engine, fallback: null })).catch((error) => {
     console.warn('jolt: ' + (error && error.message) + ' -> single-threaded build')

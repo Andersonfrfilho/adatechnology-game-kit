@@ -8,7 +8,6 @@ export type PageChoice = {
   /** `?lang=en` writes the HUD in English; the default is `pt-BR`. */
   readonly locale: 'pt-BR' | 'en'
   readonly camera: CameraChoice
-  readonly physics: 'jolt' | 'own'
   /** `?roteiro=1`: the page starts with an empty street and the script releases the horde (the determinism run). */
   readonly isScripted: boolean
   /** `?estado=clear` and `?hora=21.5`: hold another weather state and hour than the scenario's (the prints of the sky). */
@@ -43,7 +42,6 @@ export function parsePageChoice(search: string): PageChoice {
     scenario: isScenario(scenario) ? scenario : DEFAULT_SCENARIO,
     locale: query.get('lang') === 'en' ? 'en' : 'pt-BR',
     camera: query.get('camera') === 'first' ? 'first' : 'shoulder',
-    physics: query.get('solver') === 'own' ? 'own' : 'jolt',
     isScripted: query.get('roteiro') === '1',
     weather: query.get('estado') ?? undefined,
     hour: hourOf(query.get('hora')),
@@ -83,7 +81,6 @@ export function districtOptionsOf({ scripts, choice, container }: { readonly scr
     ...(settings.fog === undefined ? {} : { fog: settings.fog }),
     camera: choice.camera,
     start: { x: first.x, z: first.z, yaw: yawToward(first, second) },
-    physics: choice.physics,
     locale: choice.locale,
     title: scenarioTitleOf(choice.scenario, choice.locale),
   }

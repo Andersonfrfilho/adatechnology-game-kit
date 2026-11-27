@@ -100,7 +100,7 @@ if (chosen.has('cost')) steps.push({ label: 'what every piece costs to draw', ar
 if (chosen.has('leak')) {
   steps.push({ label: 'nothing stays in memory across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: '' } })
   // the room on Jolt: the phases that make and remove the most bodies, counting the Jolt bodies and the wasm heap in use too
-  steps.push({ label: 'nothing stays in Jolt across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: 'explosions,shots,craters,floorplan', LEAK_SOLVER: 'jolt' } })
+  steps.push({ label: 'nothing stays in Jolt across cycles', args: ['examples/test-room/leak.mjs'], env: { LEAK_PHASE: 'explosions,shots,craters,floorplan' } })
 }
 const { outcomes, failed, exitCode } = runSteps({ steps, exec, failFast: Boolean(process.env.BROWSER_CHECKS_FAIL_FAST) })
 console.log('browser-checks: summary')

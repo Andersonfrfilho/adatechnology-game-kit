@@ -115,10 +115,9 @@ function buildMenu(): void {
     {
       label: 'Física',
       submenu: [
-        physicsItem('Jolt multithread (contatos JS, 0 workers)', { solver: 'jolt', joltBuild: 'multithread', joltThreads: undefined, joltContacts: 'js' }, launch.solver === 'jolt' && launch.joltBuild === 'multithread' && launch.joltContacts === 'js'),
-        physicsItem('Jolt single-thread (como no site)', { solver: 'jolt', joltBuild: 'single', joltThreads: undefined, joltContacts: 'js' }, launch.solver === 'jolt' && launch.joltBuild === 'single'),
-        physicsItem('Jolt com todos os workers, sem contatos (só medição)', { solver: 'jolt', joltBuild: 'multithread', joltThreads: 'auto', joltContacts: 'off' }, launch.joltContacts === 'off'),
-        physicsItem('Solver próprio do kit', { solver: 'own' }, launch.solver === 'own'),
+        physicsItem('Jolt multithread (contatos JS, 0 workers)', { joltBuild: 'multithread', joltThreads: undefined, joltContacts: 'js' }, launch.joltBuild === 'multithread' && launch.joltContacts === 'js'),
+        physicsItem('Jolt single-thread (como no site)', { joltBuild: 'single', joltThreads: undefined, joltContacts: 'js' }, launch.joltBuild === 'single'),
+        physicsItem('Jolt com todos os workers, sem contatos (só medição)', { joltBuild: 'multithread', joltThreads: 'auto', joltContacts: 'off' }, launch.joltContacts === 'off'),
       ],
     },
     { label: 'Ver', submenu: [{ role: 'reload', label: 'Recarregar' }, { role: 'toggleDevTools', label: 'Ferramentas do desenvolvedor' }, { role: 'togglefullscreen', label: 'Tela cheia' }] },
