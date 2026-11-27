@@ -64,6 +64,8 @@ const sameBox = (a: StaticSolid, b: StaticSolid): boolean => a === b || (sameSha
 export const sameSolids = (a: readonly StaticSolid[], b: readonly StaticSolid[]): boolean => a.length === b.length && a.every((s, i) => sameBox(s, b[i]))
 
 const NONE: ReadonlySet<string> = new Set()
+const MESH_ORIGIN: Vec3 = [0, 0, 0]
+const MESH_ROTATION: Quat = [0, 0, 0, 1]
 
 /** `top:0` is mesh 0 of the part `top`. */
 const partOfKey = (key: string): string => {
@@ -73,6 +75,17 @@ const partOfKey = (key: string): string => {
 }
 
 const hasSize = (s: StaticSolid): boolean => s.half[0] > 0 && s.half[1] > 0 && s.half[2] > 0
+
+/** How far the turned box reaches from its centre along each world axis. */
+const orientedReach = (s: StaticSolid): Vec3 => {
+  const [x, y, z, w] = s.rotation
+  const row = (a: number, b: number, c: number): number => Math.abs(a) * s.half[0] + Math.abs(b) * s.half[1] + Math.abs(c) * s.half[2]
+  return [
+    row(1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)),
+    row(2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)),
+    row(2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)),
+  ]
+}
 
 const shapeOf = (s: StaticSolid): ShapeDesc => (s.mesh ? { kind: 'trimesh', vertices: s.mesh.vertices, indices: s.mesh.indices } : { kind: 'box', half: s.half })
 
@@ -93,6 +106,8 @@ export class EngineStatics {
   readonly ownerOf = new Map<BodyId, string>()
   /** The part of the object each held body draws (the key without its mesh number): what a blow on the body hits. */
   readonly partOf = new Map<BodyId, string>()
+  /** The box around the meshes of each object that has any (min x, y, z then max x, y, z): the triangles are what the engine meets, but the world tests the volume the part is drawn in. */
+  readonly meshBounds = new Map<string, Float64Array>()
   /** Changes whenever an answer of `covers` may have (an object came, went, or was fitted again). */
   coverageRevision = 0
   private unsure: ReadonlySet<string> = NONE
@@ -128,6 +143,7 @@ export class EngineStatics {
       if (now.has(id)) continue
       for (const h of f.held.values()) this.release(h, f.settled)
       this.bodies.delete(id)
+      this.meshBounds.delete(id)
       this.coverageRevision++
     }
     const budget = { triangles: TRIANGLES_PER_UPDATE }
@@ -145,6 +161,7 @@ export class EngineStatics {
   clear(): void {
     for (const f of this.bodies.values()) for (const h of f.held.values()) this.drop(h.id)
     this.bodies.clear()
+    this.meshBounds.clear()
     this.coverageRevision++
     this.changed.clear()
   }
@@ -204,6 +221,23 @@ export class EngineStatics {
     }
     f.waiting = waiting
     if (waiting === 0) f.settled = true
+    this.boundMeshes(f)
+  }
+
+  private boundMeshes(f: Fixed): void {
+    let bounds: Float64Array | undefined
+    for (const h of f.held.values()) {
+      const s = h.solid
+      if (!s.mesh) continue
+      bounds ??= new Float64Array([Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity])
+      const reach = orientedReach(s)
+      for (let axis = 0; axis < 3; axis++) {
+        bounds[axis] = Math.min(bounds[axis] as number, (s.center[axis] as number) - (reach[axis] as number))
+        bounds[axis + 3] = Math.max(bounds[axis + 3] as number, (s.center[axis] as number) + (reach[axis] as number))
+      }
+    }
+    if (bounds) this.meshBounds.set(f.objectId, bounds)
+    else this.meshBounds.delete(f.objectId)
   }
 
   /** The held part takes the new solid: its shape where that changed, its surface where that did (only the friction: the same shape, no new one). */
@@ -213,7 +247,9 @@ export class EngineStatics {
     if (!sameFriction(was.friction, solid.friction)) this.world.setMaterial(h.id, this.materialOf(solid))
     this.changed.add(h.id)
     if (sameShape(was, solid)) return
-    if (!solid.mesh) this.world.setPose(h.id, solid.center, solid.rotation, false)
+    // a mesh is in world coordinates: the body sits at the origin, whatever box it was before
+    if (solid.mesh) this.world.setPose(h.id, MESH_ORIGIN, MESH_ROTATION, false)
+    else this.world.setPose(h.id, solid.center, solid.rotation, false)
     this.world.setShape(h.id, shapeOf(solid))
   }
 

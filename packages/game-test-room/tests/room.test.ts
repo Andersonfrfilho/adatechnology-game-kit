@@ -255,7 +255,7 @@ describe('log quality', () => {
   })
 
   it('spawned things rest on the floor or the table and never log a landing', () => {
-    const room = makeRoom({ physics: 'own' })
+    const room = makeRoom()
     for (const item of demoItems('en')) room.spawn(item.id)
     room.spawn('coffee_cup', [3.5, 0, 0])
     for (let i = 0; i < 240; i++) room.update(1 / 60)

@@ -222,7 +222,7 @@ describe('room avatar', () => {
   })
 
   it('a carried item follows the avatar hand in both views', () => {
-    const r = room({ catalog: [wideCrate], physics: 'own' })
+    const r = room({ catalog: [wideCrate] })
     const a = fakeAvatar()
     r.setAvatar(a)
     r.look([0, 1.7, 0], [0, 0.2, -1.5])

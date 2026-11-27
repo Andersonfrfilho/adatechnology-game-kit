@@ -86,6 +86,30 @@ describe("a fixed object's boxes changing in the engine", () => {
     expect(root.position.y).toBeCloseTo(0.55, 1)
     world.dispose()
   })
+  it('a box part that becomes a mesh (a plate that bent) stays where it is drawn, not where the box was', async () => {
+    const engine = await createJoltEngine()
+    const world = engine.createWorld({ fixedStep: 1 / 120 })
+    const key = 'sheet'
+    const plate: StaticSolid = { ...solid([0, 1.1, -3.3], [0.5, 0.5, 0.0135]), key }
+    // the same plate drawn as triangles in world coordinates (a flat sheet of two triangles in the plane z = -3.3)
+    const mesh: StaticSolid = {
+      ...plate,
+      mesh: { vertices: new Float32Array([-0.5, 0.6, -3.3, 0.5, 0.6, -3.3, 0.5, 1.6, -3.3, -0.5, 1.6, -3.3]), indices: new Uint32Array([0, 1, 2, 0, 2, 3]) },
+    }
+    let boxes: StaticSolid[] = [plate]
+    const system = new PieceSystem(THREE, { groundAt: () => 0, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene(), physics: world, staticSolids: () => new Map([['wall', boxes]]) })
+    system.update(0.05)
+    const hitAt = (): number | null => world.rayFirst([0, 1.1, -2], [0, 0, -1], 3, { layers: ['static'] })?.distance ?? null
+    expect(hitAt()).toBeCloseTo(1.3 - 0.0135, 2)
+    boxes = [mesh]
+    system.update(0.05)
+    expect(hitAt()).toBeCloseTo(1.3, 2)
+    boxes = [plate]
+    system.update(0.05)
+    expect(hitAt()).toBeCloseTo(1.3 - 0.0135, 2)
+    world.dispose()
+  })
+
   it('an object the host calls unsure (measured in part, or with a part left out) is not covered until it is whole, and the revision moves with it', async () => {
     const engine = await createJoltEngine()
     const world = engine.createWorld({ fixedStep: 1 / 120 })

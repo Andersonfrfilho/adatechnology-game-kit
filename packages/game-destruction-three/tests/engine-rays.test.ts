@@ -139,6 +139,31 @@ engineOnly('the engine as the broad phase of the destruction world rays', () => 
     expect(same(world.raycast(from, direction, 10), without)).toBe(true)
     renderer.dispose()
   })
+  it('a part drawn as a mesh well inside its box (a crown of leaves) is still found by a ray that only meets the box: the box around the meshes is met too', () => {
+    const world = createDestruction()
+    const scene = new THREE.Scene()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world, eventBudgetMs: Infinity, rayBroadPhase: true })
+    world.add({ name: 'crown', parts: [{ id: 'crown', material: 'foliage', shape: { kind: 'box', size: [2, 2, 2] }, position: [0, 1, 0], anchored: true }], joints: [] }, { id: 'tree', position: [0, 0, 0] })
+    // a cone: its tip reaches the top of the box at one point, the rest of the drawing lies a metre below it
+    const mesh = new THREE.Mesh(new THREE.ConeGeometry(1, 2, 8))
+    mesh.position.set(0, 1, 0)
+    const root = new THREE.Group()
+    root.add(mesh)
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('tree', root, { parts: { crown: mesh } })
+    for (let k = 1; k < 4; k++) addWall(world, scene, renderer, `wall_${k}`, k * 8, 0)
+    settle(renderer)
+    const pieces = (renderer as unknown as { pieceSys: { rayBroadPhase(): RayBroadPhaseLike } }).pieceSys
+    const from: Vec3 = [0.8, 2.1, 0]
+    const direction: Vec3 = [0, -1, 0]
+    world.setRayBroadPhase(null)
+    const without = world.raycast(from, direction, 0.5)
+    expect(without?.object).toBe('tree')
+    world.setRayBroadPhase(pieces.rayBroadPhase())
+    expect(same(world.raycast(from, direction, 0.5), without)).toBe(true)
+    renderer.dispose()
+  })
   it('a tie between two objects goes to the one the world holds first, with or without the broad phase, also after one is added again', () => {
     const { world, renderer, scene } = streetOfWalls()
     // two walls on the very same place: every ray meets both at the same distance
