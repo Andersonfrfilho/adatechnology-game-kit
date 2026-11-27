@@ -416,6 +416,17 @@ export interface SensorEvent {
   readonly entered: boolean
 }
 
+/** The engine did not make a body because the world is at its body limit (`bodyCapacity`). */
+export class BodyLimitError extends Error {
+  readonly code = 'BODY_LIMIT_REACHED'
+  readonly capacity: number
+  constructor(capacity: number) {
+    super(`game-physics: the world is at its body limit (${capacity}); the body was not created`)
+    this.name = 'BodyLimitError'
+    this.capacity = capacity
+  }
+}
+
 export interface WorldDesc {
   readonly gravity?: Vec3
   /** Fixed step (s); `step(dt)` runs as many as fit and keeps the rest. */
@@ -643,9 +654,13 @@ export interface PhysicsWorld {
   /** Puts a `saveState` back (same bodies, same order, see there); false when the bytes do not fit. */
   restoreState(data: Uint8Array): boolean
   readonly bodyCount: number
+  /** The most bodies the world holds (`WorldDesc.maxBodies`): `createBody` past it throws `BodyLimitError`. */
+  readonly bodyCapacity: number
   readonly activeCount: number
   /** Bytes the engine holds (its heap), for leak checks. */
   memoryInUse(): number
+  /** The whole heap the engine can use (bytes): `memoryTotal() - memoryInUse()` is what is left, for the host to react before it runs out. */
+  memoryTotal(): number
   dispose(): void
 }
 
