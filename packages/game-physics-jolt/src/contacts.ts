@@ -5,7 +5,6 @@ import type { BodyId } from '@adatechnology/game-physics'
 import { POINTS_PER_BODY } from './constants'
 import type { Jolt } from './constants'
 import type { BodyEntry } from './entries'
-import { isSeamContact } from './seam'
 import { vec3At } from './vec3'
 import { recordWatched } from './watched-contacts'
 import type { JoltWorldHost } from './world-host'
@@ -109,12 +108,11 @@ export const makeListener = (w: JoltWorldHost): JoltNS.ContactListenerJS => {
   // the bodies come as heap addresses: entries are found by them, so a contact asks Jolt only for what it must (one call across the wasm boundary costs as
   // much as the rest of the rule; a wall waking at once makes thousands of contacts in one step)
   const pair = { e1: null as unknown as BodyEntry, e2: null as unknown as BodyEntry }
-  listener.OnContactValidate = (body1: number, body2: number, baseOffset: number, collision: number) => {
-    if (w.ignored.size === 0 && w.slabs.size === 0) return J.ValidateResult_AcceptAllContactsForThisBodyPair
+  listener.OnContactValidate = (body1: number, body2: number) => {
+    if (w.ignored.size === 0) return J.ValidateResult_AcceptAllContactsForThisBodyPair
     const e1 = w.byPointer.get(body1)
     const e2 = w.byPointer.get(body2)
     if (!e1 || !e2) return J.ValidateResult_AcceptAllContactsForThisBodyPair
-    if (w.slabs.size > 0 && (e1.slab ? isSeamContact(J, w.slabs, e1, true, baseOffset, collision) : e2.slab !== undefined && isSeamContact(J, w.slabs, e2, false, baseOffset, collision))) return J.ValidateResult_RejectContact
     return w.ignored.has(w.pairKey(e1.key, e2.key)) ? J.ValidateResult_RejectAllContactsForThisBodyPair : J.ValidateResult_AcceptAllContactsForThisBodyPair
   }
   listener.OnContactAdded = (body1: number, body2: number, manifold: number, settings: number) => {

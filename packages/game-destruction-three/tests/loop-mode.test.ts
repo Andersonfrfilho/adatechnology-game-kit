@@ -21,8 +21,7 @@ const run = (mode: 'one system' | 'loop'): { landings: number; knocks: number; r
     scene: new THREE.Scene(),
   })
   const lower = new THREE.Object3D()
-  // on the thrown box's path, past the seam of the ground tiles at x = 0 (a box no longer stops dead on it)
-  lower.position.set(0.5, 0.5, 0)
+  lower.position.set(0, 0.5, 0)
   const falling = system.create('lower', lower, [0.1, 0.1, 0.1], new THREE.Vector3(), 2)
   const thrown = new THREE.Object3D()
   thrown.position.set(-0.6, 0.12, 0)
