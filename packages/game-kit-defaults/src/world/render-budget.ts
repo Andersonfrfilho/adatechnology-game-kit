@@ -10,7 +10,7 @@ import {
   shadowCasterProbes,
   spriteProbes,
 } from '@adatechnology/game-render-three'
-import type { EffectWarmup, LightBudget, ProgramWarmup, RenderPools, StaticBatchQueue, WarmupProbe } from '@adatechnology/game-render-three'
+import type { EffectWarmup, LightBudget, ProgramWarmup, RenderPools, StaticBatchQueue, WarmupOptions, WarmupProbe } from '@adatechnology/game-render-three'
 import { explosionEffectIds } from '@adatechnology/game-vfx'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 
@@ -33,6 +33,8 @@ export type KitWorldRenderBudget = {
   /** The warm-up has run at least once: the lights check re-runs it when the sealed state breaks. */
   readonly isWarmedUp: () => boolean
   warmUp(): void
+  /** The warm-up spread over tasks (`ProgramWarmup.warmUpAsync`): the page keeps answering while the driver links; nothing else is drawn meanwhile. */
+  warmUpAsync(): Promise<void>
   dispose(): void
 }
 
@@ -70,6 +72,7 @@ export function createRenderBudget(options: {
   const pools: RenderPools = { geometries: createGeometryPool(), materials: createMaterialPool({ anchors: warmup.anchors, renderer: gl }) }
   const staticBatchQueue = createStaticBatchQueue({ id: DEFERRED_QUEUE_ID.STATIC_BATCH })
   let warmedUp = false
+  const warmupOptions = (): WarmupOptions => ({ lights, fogStates: WARMED_FOG_STATES, materials: pools.materials.registeredMaterials?.() ?? [] })
   return {
     lights,
     warmup,
@@ -77,7 +80,11 @@ export function createRenderBudget(options: {
     staticBatchQueue,
     isWarmedUp: () => warmedUp,
     warmUp() {
-      warmup.warmUp(gl, scene, camera, { lights, fogStates: WARMED_FOG_STATES, materials: pools.materials.registeredMaterials?.() ?? [] })
+      warmup.warmUp(gl, scene, camera, warmupOptions())
+      warmedUp = true
+    },
+    async warmUpAsync() {
+      await warmup.warmUpAsync(gl, scene, camera, warmupOptions())
       warmedUp = true
     },
     dispose() {

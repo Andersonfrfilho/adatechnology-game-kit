@@ -9,6 +9,18 @@ import type { EffectWarmup, ProgramWarmup, WarmupContext, WarmupOptions, WarmupP
 
 const EFFECT_STEP_SECONDS = 1 / 50
 const DEFAULT_EFFECT_FRAMES = 3
+/** Programs finished per task by `warmUpAsync`: each first read of a program waits for its link. */
+const FINISH_CHUNK = 16
+
+type WarmStep = 'compile' | 'yield'
+
+const nextTask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
+
+function chunksOf<TItem>(items: readonly TItem[], size: number): TItem[][] {
+  const chunks: TItem[][] = []
+  for (let at = 0; at < items.length; at += size) chunks.push(items.slice(at, at + size))
+  return chunks
+}
 const WARM_FOG_DENSITY = 0.01
 const WARM_FOG_FAR = 100
 
@@ -36,11 +48,23 @@ function countLinks(context: WarmupContext, counters: WeakMap<WarmupContext, Lin
 }
 
 function failedProgram(renderer: WarmupRenderer): string | undefined {
+  const context = renderer.getContext()
   for (const program of renderer.info.programs ?? []) {
-    const diagnostics = (program as { diagnostics?: { runnable?: boolean; programLog?: string } }).diagnostics
-    if (diagnostics?.runnable === false) return diagnostics.programLog ?? 'program failed to link'
+    const linked = program as { diagnostics?: { runnable?: boolean; programLog?: string }; program?: WebGLProgram }
+    if (linked.diagnostics?.runnable === false) return linked.diagnostics.programLog ?? 'program failed to link'
+    if (linked.program === undefined || context.LINK_STATUS === undefined || context.getProgramParameter === undefined) continue
+    if (context.getProgramParameter(linked.program, context.LINK_STATUS) === false) return context.getProgramInfoLog?.(linked.program) || 'program failed to link'
   }
   return undefined
+}
+
+/**
+ * Turns off three's per-program check: with it on, the first draw of each program reads the program's and both shaders' info logs, three calls that
+ * each wait on the GPU process (753 calls, 19 s of one task at the test room's load, 2026-11-27). The warm-up reads each program's link status
+ * instead (a cheap call) and only the log of one that failed.
+ */
+function quietLinkChecks(renderer: WarmupRenderer): void {
+  if (renderer.debug !== undefined) renderer.debug.checkShaderErrors = false
 }
 
 /**
@@ -49,9 +73,9 @@ function failedProgram(renderer: WarmupRenderer): string | undefined {
  * RTX 5070 laptop, 43 ms for the six shadow-receiving programs the horde chain's first blast drew for the first time (perf.mjs, 2026-11-03).
  * A program linked here and drawn only in play (a hidden part of a vehicle, an effect of another area) pays that at load instead.
  */
-function finishPrograms(renderer: WarmupRenderer): number {
+function finishPrograms(programs: ReadonlyArray<object>): number {
   let finished = 0
-  for (const program of renderer.info.programs ?? []) {
+  for (const program of programs) {
     const linked = program as { getUniforms?: () => unknown; getAttributes?: () => unknown }
     if (typeof linked.getUniforms !== 'function') continue
     linked.getUniforms()
@@ -181,17 +205,14 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
     }
   }
 
-  function drawStates(renderer: WarmupRenderer, scene: Scene, camera: Camera, states: readonly FogState[], options: WarmupOptions): void {
-    states.forEach((state, index) => {
-      setFog(scene, state)
-      // the depth and distance programs carry no fog: every caster once, in the first state, is enough
-      const restoreCasters = index === 0 && options.shadowCasters !== 'visible' ? drawEveryCaster(scene) : (): void => undefined
-      try {
-        draw(renderer, scene, camera, options.target)
-      } finally {
-        restoreCasters()
-      }
-    })
+  function drawState(renderer: WarmupRenderer, scene: Scene, camera: Camera, at: { readonly index: number; readonly options: WarmupOptions }): void {
+    // the depth and distance programs carry no fog: every caster once, in the first state, is enough
+    const restoreCasters = at.index === 0 && at.options.shadowCasters !== 'visible' ? drawEveryCaster(scene) : (): void => undefined
+    try {
+      draw(renderer, scene, camera, at.options.target)
+    } finally {
+      restoreCasters()
+    }
   }
 
   /**
@@ -228,55 +249,90 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
     return () => undo.forEach((restore) => restore())
   }
 
+  /**
+   * The warm-up as steps: `compile` (the programs of what is about to be drawn, linked in parallel by `warmUpAsync`) and `yield` (the end of a
+   * piece of work). `warmUp` runs them in one go; `warmUpAsync` gives each piece its own task, so the page keeps answering while the driver links.
+   */
+  function* warmSteps(renderer: WarmupRenderer, scene: Scene, camera: Camera, options: WarmupOptions): Generator<WarmStep, WarmupReport> {
+    const started = performance.now()
+    const { lights, target } = options
+    quietLinkChecks(renderer)
+    anchors.bind(renderer)
+    const originalFog = scene.fog
+    const states = options.fogStates ?? [fogStateOf(scene)]
+    lights?.seal(renderer, scene, { fogStates: options.fogStates, cameras: [camera], target })
+    scene.traverse((object) => {
+      const light = object as { castShadow?: boolean; shadow?: { needsUpdate: boolean } }
+      if (light.castShadow === true && light.shadow !== undefined) light.shadow.needsUpdate = true
+    })
+    const built = buildProbes(options.materials)
+    let restoreDraws = (): void => undefined
+    try {
+      addProbes(scene, built)
+      restoreDraws = forceDraws(scene)
+      for (const [index, state] of states.entries()) {
+        setFog(scene, state)
+        renderer.setRenderTarget(target ?? null)
+        yield 'compile'
+        drawState(renderer, scene, camera, { index, options })
+        yield 'yield'
+      }
+      scene.fog = originalFog
+      for (const effect of effects) {
+        playEffect(renderer, scene, camera, effect, target)
+        yield 'yield'
+      }
+      for (const texture of textures) renderer.initTexture(texture)
+    } finally {
+      restoreDraws()
+      scene.fog = originalFog
+      removeProbes(scene, built)
+    }
+    // also what lets failedProgram see a broken link: three only fills `diagnostics` on the first use
+    for (const programs of chunksOf(renderer.info.programs ?? [], FINISH_CHUNK)) {
+      finishPrograms(programs)
+      yield 'yield'
+    }
+    return finishWarmUp(renderer, scene, started)
+  }
+
+  function finishWarmUp(renderer: WarmupRenderer, scene: Scene, started: number): WarmupReport {
+    const context = renderer.getContext()
+    const uniformVectors = Number(context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS))
+    const failure = failedProgram(renderer)
+    if (failure !== undefined) {
+      throw new Error(`a shader program failed to link (MAX_FRAGMENT_UNIFORM_VECTORS ${uniformVectors}, lights: ${lightSignature(scene)}): ${failure}`)
+    }
+    countLinks(context, linkCounters)
+    // the GPU process is still working through all of the above: wait here, at load, or the first upload of play stalls on it
+    if (context.RGBA !== undefined && context.UNSIGNED_BYTE !== undefined) context.readPixels?.(0, 0, 1, 1, context.RGBA, context.UNSIGNED_BYTE, new Uint8Array(4))
+    return {
+      programs: renderer.info.programs?.length ?? 0,
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+      milliseconds: performance.now() - started,
+      lightSignature: lightSignature(scene),
+      uniformVectors,
+      anchors: anchors.size,
+    }
+  }
+
   return {
     anchors,
     register: (probe) => register(probes, probe),
     registerEffect: (effect) => register(effects, effect),
     registerTexture: (texture) => register(textures, texture),
     warmUp(renderer, scene, camera, options = {}): WarmupReport {
-      const started = performance.now()
-      const { lights, target } = options
-      anchors.bind(renderer)
-      const originalFog = scene.fog
-      const states = options.fogStates ?? [fogStateOf(scene)]
-      lights?.seal(renderer, scene, { fogStates: options.fogStates, cameras: [camera], target })
-      scene.traverse((object) => {
-        const light = object as { castShadow?: boolean; shadow?: { needsUpdate: boolean } }
-        if (light.castShadow === true && light.shadow !== undefined) light.shadow.needsUpdate = true
-      })
-      const built = buildProbes(options.materials)
-      let restoreDraws = (): void => undefined
-      try {
-        addProbes(scene, built)
-        restoreDraws = forceDraws(scene)
-        drawStates(renderer, scene, camera, states, options)
-        scene.fog = originalFog
-        for (const effect of effects) playEffect(renderer, scene, camera, effect, target)
-        for (const texture of textures) renderer.initTexture(texture)
-      } finally {
-        restoreDraws()
-        scene.fog = originalFog
-        removeProbes(scene, built)
-      }
-      // also what lets failedProgram see a broken link: three only fills `diagnostics` on the first use
-      finishPrograms(renderer)
-      const context = renderer.getContext()
-      const uniformVectors = Number(context.getParameter(context.MAX_FRAGMENT_UNIFORM_VECTORS))
-      const failure = failedProgram(renderer)
-      if (failure !== undefined) {
-        throw new Error(`a shader program failed to link (MAX_FRAGMENT_UNIFORM_VECTORS ${uniformVectors}, lights: ${lightSignature(scene)}): ${failure}`)
-      }
-      countLinks(context, linkCounters)
-      // the GPU process is still working through all of the above: wait here, at load, or the first upload of play stalls on it
-      if (context.RGBA !== undefined && context.UNSIGNED_BYTE !== undefined) context.readPixels?.(0, 0, 1, 1, context.RGBA, context.UNSIGNED_BYTE, new Uint8Array(4))
-      return {
-        programs: renderer.info.programs?.length ?? 0,
-        geometries: renderer.info.memory.geometries,
-        textures: renderer.info.memory.textures,
-        milliseconds: performance.now() - started,
-        lightSignature: lightSignature(scene),
-        uniformVectors,
-        anchors: anchors.size,
+      const steps = warmSteps(renderer, scene, camera, options)
+      for (let step = steps.next(); ; step = steps.next()) if (step.done === true) return step.value
+    },
+    async warmUpAsync(renderer, scene, camera, options = {}): Promise<WarmupReport> {
+      const compileAsync = renderer.compileAsync?.bind(renderer)
+      const steps = warmSteps(renderer, scene, camera, options)
+      for (let step = steps.next(); ; step = steps.next()) {
+        if (step.done === true) return step.value
+        if (step.value === 'compile' && compileAsync !== undefined) await compileAsync(scene, camera)
+        else await nextTask()
       }
     },
     linkedSince(renderer) {
