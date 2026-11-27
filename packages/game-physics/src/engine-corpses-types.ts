@@ -132,3 +132,37 @@ export interface PendingChange {
   readonly to: BodyRung
   readonly forced: boolean
 }
+
+/** What a save of the corpses holds: numbers only, so it goes in the game's save. The bodies are the world's own (`saveState`), made in the same order. */
+export interface CorpseBodiesState {
+  readonly tick: number
+  readonly born: number
+  readonly nextPile: number
+  /** How far (m) the interest has travelled in all, and where it was (x, z per point): what the dormant corpses' keys are measured against. */
+  readonly travel: number
+  readonly interest: readonly number[]
+  readonly records: ReadonlyArray<{
+    readonly id: number
+    readonly rung: BodyRung
+    readonly ragdoll: number
+    readonly bodies: readonly number[]
+    readonly pile: number
+    readonly pileRank: number
+    readonly torso: readonly number[]
+    readonly asleepSeconds: number
+    readonly sinceChangeSeconds: number
+    readonly woken: boolean
+    readonly asleep: boolean
+    readonly stale: boolean
+    readonly touching: readonly number[]
+    readonly born: number
+    readonly originX: number
+    readonly originZ: number
+    readonly lastLookedAt: number
+    readonly distance: number
+    readonly dormant: boolean
+    /** The travel of the interest it waits for; -1 for a corpse that waits for nothing (frozen into a pile). */
+    readonly dormantKey: number
+  }>
+  readonly piles: ReadonlyArray<{ readonly id: number; readonly body: number; readonly members: readonly number[] }>
+}

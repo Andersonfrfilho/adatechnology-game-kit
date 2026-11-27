@@ -1,6 +1,5 @@
 import { freezeCorpses } from './engine-corpses-pile'
-import type { CorpseBodiesState } from './engine-corpses'
-import type { AddLyingCorpseParams, CorpseContext } from './engine-corpses-types'
+import type { AddLyingCorpseParams, CorpseBodiesState, CorpseContext } from './engine-corpses-types'
 import type { CorpseBodyKit } from './corpse-pose'
 import type { BodyRung } from './body-lod'
 import type { Quat, Vec3 } from './contract'
