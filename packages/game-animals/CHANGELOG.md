@@ -1,5 +1,12 @@
 # @adatechnology/game-animals
 
+## 0.1.3
+
+### Patch Changes
+
+- Updated dependencies [e4a9d0e]
+  - @adatechnology/game-physics@0.6.0
+
 ## 0.1.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @adatechnology/game-vehicles-fleet
 
+## 10.1.0
+
+### Minor Changes
+
+- 1328766: O teto de cascos por grupo da frota (`fleetHullCeilingOf`) mora no conteúdo; o adaptador o recebe por `fleet.hullCeilingOf`.
+
 ## 10.0.0
 
 ### Patch Changes

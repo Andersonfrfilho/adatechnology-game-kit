@@ -1,5 +1,21 @@
 # @adatechnology/game-vehicles-three
 
+## 0.12.0
+
+### Minor Changes
+
+- 1328766: O teto de cascos por grupo da frota (`fleetHullCeilingOf`) mora no conteúdo; o adaptador o recebe por `fleet.hullCeilingOf`.
+- 8652b78: feat(vehicles-three): com `host.physics` (laço do motor) o carro da sala é um corpo do mundo do laço: cascos método B pelo plano do `host.workers`, peças de batida por `createCrashParts`, tudo liberado no detach e na remoção; `CrashPartsOptions.world` passa a `SeamWorld`; no `own` nada muda.
+
+### Patch Changes
+
+- Updated dependencies [e4a9d0e]
+- Updated dependencies [1328766]
+  - @adatechnology/game-physics@0.6.0
+  - @adatechnology/game-vehicles-fleet@10.1.0
+  - @adatechnology/game-vehicles-driving@0.2.31
+  - @adatechnology/game-vehicles-proving@0.3.2
+
 ## 0.11.1
 
 ### Patch Changes

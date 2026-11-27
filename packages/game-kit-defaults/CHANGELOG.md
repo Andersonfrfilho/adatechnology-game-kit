@@ -1,5 +1,21 @@
 # @adatechnology/game-kit-defaults
 
+## 0.5.0
+
+### Minor Changes
+
+- 1328766: O teto de cascos por grupo da frota (`fleetHullCeilingOf`) mora no conteúdo; o adaptador o recebe por `fleet.hullCeilingOf`.
+
+### Patch Changes
+
+- Updated dependencies [e4a9d0e]
+- Updated dependencies [1328766]
+  - @adatechnology/game-physics@0.6.0
+  - @adatechnology/game-physics-jolt@0.4.0
+  - @adatechnology/game-destruction-three@0.28.0
+  - @adatechnology/game-vehicles-fleet@10.1.0
+  - @adatechnology/game-crowd@0.8.2
+
 ## 0.4.0
 
 ### Minor Changes
