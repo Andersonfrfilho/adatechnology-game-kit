@@ -18,38 +18,17 @@ import { FLEET_ACCELERATION_SOURCES, fleetProvingSubject, fleetVehicleIds } from
 const AIRCRAFT = ['transport_helicopter', 'light_attack_turboprop', 'attack_helicopter']
 
 /**
- * What is still out, and why (T6.2c: the ficha follows the vehicle's type, so the bikes have two wheels, the trucks their axles, the bicycle a cyclist, the tractor its low top speed and the tank tracks):
- * - cars and SUVs, `accel_0_100` (entry_hatch, beetle, hybrid_suv, rideshare_hatch, v8_coupe): the car ficha is unchanged; the engine's tyre-limited launch and gearbox take 1.4 to 1.8 times what the semi-simulation does, on a band that is sourced.
- * - heavy and military, `accel_0_100` (monster_truck, tanker_truck, troop_truck, apc_6x6, armored_car_6x6, battle_tank): TOO FAST, not too slow. The torque per kg of the ficha is the car's (about 59 kW/t at rating 5, a 25 t armoured car in 4.4 s) and the band is a table by rating
- *   with no source, so neither is a figure to calibrate to ("sem fonte"): they wait for a real power to weight and a real 0-100 for the class.
- * - bicycle `accel_0_100`: the band (0.6-1.2 s to 22 km/h) asks 5 m/s^2 of a cyclist, 250 W cannot give it; it stays out unless the owner re-rates the bicycle or the band.
- * - battle_tank `turn_circle`: on its tracks it pivots on the spot (a 0.1 m circle) and the class band starts at 9 m.
- * - tractor `wet_brake_80_0`: on wet asphalt it never reaches the 22 km/h target (18.7 km/h): a slipping driven wheel stops the engine's gearbox from upshifting.
- * - scooter, trail_bike, step_through_scooter, delivery_bike `wet_brake_80_0`: stop 0.2 to 1.2 m inside the band; the engine combines tyre and ground grip by the geometric mean (0.9 g on a 0.75 road), the semi-simulation by the product (0.8 g).
+ * What is still out: nothing (T6.2d). The 17 models that were out after T6.2c were fixed at the cause, not by loosening a band that has a source:
+ * - the engine gave every differential the whole engine torque and a tracked controller the whole torque to each track, so the 4x4s, the 6x6s and the tank pulled with two or three engines (adapter, `vehicle-controllers.ts`);
+ * - the engine's cars and bikes took 1.2 to 1.8 times the semi-simulation's 0-100 km/h (a wheel spins, a spinning wheel blocks the gearbox's upshift, the shift cuts the drive, the rotating parts have inertia): `PHYSICS_TORQUE_SCALE`;
+ * - the engine mixed the tyre's grip and the ground's by the geometric mean (0.9 g on a 0.75 road), the semi-simulation by the product (0.8 g): the wheels' own callback now mixes by the product at the peak (`vehicles.ts`);
+ * - the tank has the real power of a main battle tank (20 kW/t, not 52), pivots on the spot (the turn band starts at 0) and the cyclist holds his 250 W down to a low cadence, against a band that is the span of real riders.
+ * Every number and source is in `specs/008-motor-fisico-jolt/evidence.md` (`## T6.2d`). The test still fails when a model's out-of-range set CHANGES, in either direction.
  */
-const OUT_OF_RANGE: Readonly<Record<string, readonly string[]>> = {
-  entry_hatch: ['accel_0_100'],
-  beetle: ['accel_0_100'],
-  hybrid_suv: ['accel_0_100'],
-  rideshare_hatch: ['accel_0_100'],
-  v8_coupe: ['accel_0_100'],
-  bicycle: ['accel_0_100'],
-  scooter: ['wet_brake_80_0'],
-  trail_bike: ['wet_brake_80_0'],
-  step_through_scooter: ['wet_brake_80_0'],
-  delivery_bike: ['wet_brake_80_0'],
-  monster_truck: ['accel_0_100'],
-  tanker_truck: ['accel_0_100'],
-  troop_truck: ['accel_0_100'],
-  apc_6x6: ['accel_0_100'],
-  armored_car_6x6: ['accel_0_100'],
-  battle_tank: ['accel_0_100', 'turn_circle'],
-  tractor: ['wet_brake_80_0'],
-}
+const OUT_OF_RANGE: Readonly<Record<string, readonly string[]>> = {}
 
-/** The same for the semi-simulation (the bikes' two wheels brake in a shorter distance than the band's, the semi has no weight transfer to a stoppie; the tractor has the car's launch). */
+/** The same for the semi-simulation (the bikes' two wheels brake in a shorter distance than the band's, the semi has no weight transfer to a stoppie; the tractor has the car's launch; the naked bike no longer has the 1.3 on its power that was never sourced). */
 const SEMI_OUT_OF_RANGE: Readonly<Record<string, readonly string[]>> = {
-  bicycle: ['accel_0_100'],
   scooter: ['brake_100_0', 'wet_brake_80_0'],
   commuter_motorcycle: ['brake_100_0', 'wet_brake_80_0'],
   trail_bike: ['brake_100_0', 'wet_brake_80_0'],
@@ -59,9 +38,8 @@ const SEMI_OUT_OF_RANGE: Readonly<Record<string, readonly string[]>> = {
   tractor: ['accel_0_100', 'brake_100_0', 'wet_brake_80_0'],
   light_4x4: ['turn_circle', 'wet_brake_80_0'],
   troop_truck: ['accel_0_100'],
-  battle_tank: ['accel_0_100'],
   step_through_scooter: ['brake_100_0', 'wet_brake_80_0'],
-  naked_bike: ['brake_100_0', 'wet_brake_80_0'],
+  naked_bike: ['accel_0_100', 'brake_100_0'],
   delivery_bike: ['brake_100_0', 'wet_brake_80_0'],
   v8_coupe: ['accel_0_100'],
 }
@@ -88,9 +66,9 @@ describe('the land fleet on the physics engine (spec 008, T6.2b)', () => {
     expect(outside).toEqual(OUT_OF_RANGE[id] ?? [])
   })
 
-  it('the table lists only models of the land fleet, and 17 of 48 have something out of range', () => {
+  it('the table lists only models of the land fleet, and none of the 48 has anything out of range', () => {
     for (const id of Object.keys(OUT_OF_RANGE)) expect(landFleet).toContain(id)
-    expect(Object.keys(OUT_OF_RANGE)).toHaveLength(17)
+    expect(Object.keys(OUT_OF_RANGE)).toHaveLength(0)
   })
 
   it.each(landFleet)('%s on the semi-simulation: what is out of its ranges is what the table says', (id) => {
@@ -99,8 +77,8 @@ describe('the land fleet on the physics engine (spec 008, T6.2b)', () => {
     expect(outside).toEqual(SEMI_OUT_OF_RANGE[id] ?? [])
   })
 
-  it('15 of 48 have something out of range on the semi-simulation', () => {
-    expect(Object.keys(SEMI_OUT_OF_RANGE)).toHaveLength(15)
+  it('13 of 48 have something out of range on the semi-simulation', () => {
+    expect(Object.keys(SEMI_OUT_OF_RANGE)).toHaveLength(13)
   })
 })
 
