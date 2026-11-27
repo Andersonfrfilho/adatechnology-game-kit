@@ -48,7 +48,7 @@ const wheelChildOf = (size: Vec3, center: Vec3): { readonly shape: ShapeDesc; re
   return { shape, position: center, rotation: axis === 0 ? [0, 0, HALF_TURN, HALF_TURN] : [HALF_TURN, 0, 0, HALF_TURN] }
 }
 
-/** The services the host lent, when it runs the pieces on a loop (the Jolt path); undefined on the kit's own solver. */
+/** The services the host lent, when it runs the pieces on a loop (the engine path); undefined on the kit's own solver. */
 export const physicsServicesOf = (host: ModuleHost | null): PhysicsServices | undefined => (host && isPhysicsServices(host.physics) ? host.physics : undefined)
 
 /** How the car's colliders are made for the engine: hulls (method B), the plan in the host's workers when it has them, shared by the cars of a model. */
