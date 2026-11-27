@@ -52,7 +52,7 @@ const wallModule = (kind: 'bodied' | 'bodiless' | 'none' = 'bodied'): TestableMo
   },
 })
 
-const arenaOf = (physics: ReturnType<typeof createPhysicsLoop> | PhysicsWorld, kind: 'bodied' | 'bodiless' = 'bodied'): TestRoom => {
+const arenaOf = (physics: ReturnType<typeof createPhysicsLoop> | PhysicsWorld, kind: 'bodied' | 'bodiless' | 'none' = 'bodied'): TestRoom => {
   const room = makeRoom({ catalog: demoItems('en'), physics })
   room.loadModule(wallModule(kind))
   for (const [id, at] of SCENE) room.spawn(id, [at[0], at[1], at[2]], 0)
@@ -137,6 +137,25 @@ describe('what stops the player: the room on its own against the bodies of the w
       const hits: RayHit[] = []
       expect(world.sphereCastAll([4.65, 1, 1.5], [0, 0, -1], 3, 0.01, hits, { layers: ['static'] })).toBeGreaterThan(0)
       expect(hits[0]?.distance).toBeCloseTo(1.46, 1)
+    } finally {
+      engine.dispose()
+      world.dispose()
+    }
+  })
+
+  it('a vehicle body stops the engine player (the walker sweeps ignore a car, its capsule does not): the player stops at its side and walks on once it is gone', { timeout: 120000 }, async () => {
+    const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    const engine = arenaOf(createPhysicsLoop(world), 'none')
+    try {
+      const car = world.createBody({ shape: { kind: 'box', half: [0.5, 0.8, 1] }, motion: 'dynamic', mass: 1500, position: [7.5, 0.8, 0], layer: 'vehicle', user: 900_002 })
+      for (let frame = 0; frame < 10; frame++) engine.update(1 / 60, { live: true })
+      expect(walkEastInto(engine)).toBeLessThanOrEqual(7 - 0.3 + 0.05)
+      world.removeBody(car)
+      engine.look([5, 1.7, 0], [10, 1.7, 0])
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyW' }))
+      for (let frame = 0; frame < 120; frame++) engine.update(1 / 60, { live: true })
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyW' }))
+      expect(engine.playerPosition[0]).toBeGreaterThan(8)
     } finally {
       engine.dispose()
       world.dispose()
