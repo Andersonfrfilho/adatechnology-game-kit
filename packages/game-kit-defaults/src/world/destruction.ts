@@ -6,6 +6,7 @@ import type { DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import type {
   BlastDebrisOptions,
+  RendererOptions,
   ExplosionWorkOptions,
   FragmentLifeRule,
   GroundWorkerPort,
@@ -45,6 +46,10 @@ export type KitWorldDebrisOptions = {
   /** The renderer's JIT warm-up (default on, heating the engine the host loaded): `false` turns it off. */
   readonly jitWarmUp?: boolean | JitWarmUpOptions
   readonly workBudget?: ExplosionWorkOptions
+  /** The engine's fixed bodies as the broad phase of the world's rays (shots, sweeps, blast sight lines). On by default when a loop steps the pieces; `false` turns it off. */
+  readonly rayBroadPhase?: boolean
+  /** A blow of the engine on a fixed part of the drawn world becomes a hit of the world (`RendererOptions.contactHits`). Off by default: it costs by contact. */
+  readonly contactHits?: RendererOptions['contactHits']
 }
 
 /** What the renderer tells about its pieces, for the host's own lists. */
@@ -92,6 +97,8 @@ export type DestructionDeps = {
   readonly pieces: KitWorldPieces
   readonly effects: VfxRenderer
   readonly debris: KitWorldDebrisOptions | undefined
+  /** A `PhysicsLoop` steps the pieces: the rays' broad phase is on unless the debris options say otherwise. */
+  readonly hasLoop: boolean
   readonly groundWorker: GroundWorkerPort | null
   readonly blastShove?: BlastShoveOptions
   readonly frameBudgetMs: number
@@ -130,6 +137,8 @@ export function createDestructionHost(deps: DestructionDeps): KitWorldDestructio
     ...(debris?.tilesUnderParts ? { tilesUnderParts: true } : {}),
     ...(groundWorker ? { groundWorker } : {}),
     ...(debris?.workers ? { workers: debris.workers } : {}),
+    ...((debris?.rayBroadPhase ?? deps.hasLoop) ? { rayBroadPhase: true } : {}),
+    ...(debris?.contactHits ? { contactHits: debris.contactHits } : {}),
     ...(debris?.jitWarmUp !== undefined ? { jitWarmUp: debris.jitWarmUp } : {}),
     ...(debris?.workBudget ? { workBudget: workBudgetOf({ workBudget: debris.workBudget, ceilingMs: deps.frameBudgetMs }) } : {}),
     ...(debris?.settledBatches === false ? {} : { settledBatches: debris?.settledBatches ?? {} }),

@@ -1,11 +1,10 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
+import { FLOATING_AREA, leavesOf, newHullPlan, planDivision, protrusionsOf, unitsOf } from '@adatechnology/game-vehicles'
+import type { HullSoup } from '@adatechnology/game-vehicles'
+
 import { createVehicleColliders } from '../src'
-import { FLOATING_AREA } from '../src/hull-excess'
-import { newHullPlan, planDivision } from '../src/hull-plan'
-import { leavesOf, protrusionsOf, unitsOf } from '../src/hull-split'
-import type { HullSoup } from '../src/vehicle-hulls'
 import { build } from './vehicle-colliders-support'
 
 /** A quad (two triangles) from four corners, appended to the soup. */

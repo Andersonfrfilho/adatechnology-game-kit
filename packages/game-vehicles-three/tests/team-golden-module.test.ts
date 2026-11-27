@@ -1,4 +1,4 @@
-import { defaultVehicleFleet } from '@adatechnology/game-kit-defaults'
+import { defaultVehicleFleet } from './default-fleet'
 // @vitest-environment happy-dom
 import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'

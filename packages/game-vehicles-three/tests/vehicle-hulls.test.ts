@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 
+import { hullOf } from '@adatechnology/game-vehicles'
+
 import { FLAT_PAD, MAX_HULL_POINTS, convexFaces, createVehicleColliders, hullVolume, reducePoints, vehicleHulls } from '../src'
-import { hullOf } from '../src/vehicle-hulls'
 import { build } from './vehicle-colliders-support'
 
 const CUBE = [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1]

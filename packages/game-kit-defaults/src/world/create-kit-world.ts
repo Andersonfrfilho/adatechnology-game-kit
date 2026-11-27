@@ -70,7 +70,7 @@ function assembleKitWorld<TRecord>({ THREE, options, physics }: { readonly THREE
   const effects = createEffects({ THREE, scene, lights: budget.lights, camera, container: view.container, quality, pointScale: view.pointScale, terrain: ground.terrain, groundAt: ground.at, particles: options.debris?.particles })
   const water = createWater({ THREE, scene, terrain: ground.terrain })
   const debris = withEngineWarmUp(options.debris, physics.engine)
-  const destruction = createDestructionHost({ THREE, scene, camera, world, isWorldOwned, pristine, physics: physics.pieces, quality, pointScale: view.pointScale, ground, pieces, effects, debris, groundWorker: workers.groundPort, blastShove: options.blastShove, frameBudgetMs: options.frame?.budgetMs ?? 8, playSound: sound.play })
+  const destruction = createDestructionHost({ THREE, scene, camera, world, isWorldOwned, pristine, physics: physics.pieces, quality, pointScale: view.pointScale, ground, pieces, effects, debris, hasLoop: physics.loop !== null, groundWorker: workers.groundPort, blastShove: options.blastShove, frameBudgetMs: options.frame?.budgetMs ?? 8, playSound: sound.play })
   const renderer = destruction.renderer
   lazy.renderer = renderer
   ground.attach(renderer)

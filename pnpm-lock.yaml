@@ -1441,6 +1441,9 @@ importers:
       '@adatechnology/game-vegetation-species':
         specifier: workspace:^
         version: link:../game-vegetation-species
+      '@adatechnology/game-vehicles':
+        specifier: workspace:^
+        version: link:../game-vehicles
       '@adatechnology/game-vehicles-fleet':
         specifier: workspace:^
         version: link:../game-vehicles-fleet
@@ -2217,9 +2220,6 @@ importers:
         specifier: workspace:^
         version: link:../game-vehicles-proving
     devDependencies:
-      '@adatechnology/game-kit-defaults':
-        specifier: workspace:^
-        version: link:../game-kit-defaults
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt

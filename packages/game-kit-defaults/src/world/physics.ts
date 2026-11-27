@@ -1,7 +1,9 @@
 import { KIT_WORLD, createPhysicsLoop, isPhysicsLoop } from '@adatechnology/game-physics'
-import type { PhysicsLoop, SeamWorld, WorldDesc } from '@adatechnology/game-physics'
+import type { PhysicsLoop, PhysicsServices, SeamWorld, WorldDesc } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 import type { JoltEngine, JoltEngineOptions, JoltThreading, JoltWorld } from '@adatechnology/game-physics-jolt'
+
+import { servicesOf } from './physics-services'
 
 /** How the loose pieces are stepped: the kit's Jolt (the default), the kit's own solver, a loop the game made and steps no one else, or a world the game steps itself (a seam). */
 export type PhysicsChoice = 'jolt' | 'own' | PhysicsLoop | SeamWorld | KitWorldJoltOptions
@@ -24,6 +26,8 @@ export type KitWorldPhysics = {
   /** The engine the host loaded (what the destruction renderer's JIT warm-up heats); null when the loop is the game's or the solver is the kit's own. */
   readonly engine: JoltEngine | null
   readonly info: KitWorldPhysicsInfo
+  /** What a module makes bodies with (`ModuleHost.physics`); only when a loop steps the pieces. The `dispose` of the host takes them out before it releases the world. */
+  readonly services?: PhysicsServices
   /** Releases the world the host made; a loop the game handed in is not touched. */
   dispose(): void
 }
@@ -53,7 +57,7 @@ async function loadEngine(options: JoltEngineOptions): Promise<{ readonly engine
 /** The physics the game handed in (none of it released here), or the kit's own solver: no engine to load. */
 export function givenPhysics(choice: GivenPhysicsChoice): KitWorldPhysics {
   if (choice === 'own') return { loop: null, pieces: 'own', engine: null, info: { kind: 'own' }, dispose: () => undefined }
-  if (isPhysicsLoop(choice)) return { loop: choice, pieces: choice, engine: null, info: { kind: 'loop' }, dispose: () => undefined }
+  if (isPhysicsLoop(choice)) return servicesOf<Omit<KitWorldPhysics, 'services'>>({ loop: choice, pieces: choice, engine: null, info: { kind: 'loop' }, dispose: () => undefined })
   return { loop: null, pieces: choice, engine: null, info: { kind: 'seam' }, dispose: () => undefined }
 }
 
@@ -64,11 +68,11 @@ export async function createPhysics(choice: PhysicsChoice): Promise<KitWorldPhys
   const { engine, fallback } = await loadEngine({ ...(asked.build !== undefined ? { build: asked.build } : {}), ...(asked.workerThreads !== undefined ? { workerThreads: asked.workerThreads } : {}), ...(asked.contactCallbacks !== undefined ? { contactCallbacks: asked.contactCallbacks } : {}), ...(asked.moduleUrl !== undefined ? { moduleUrl: asked.moduleUrl } : {}) })
   const world = engine.createWorld({ ...KIT_WORLD, ...asked.world }) as JoltWorld
   const loop = createPhysicsLoop(world)
-  return {
+  return servicesOf<Omit<KitWorldPhysics, 'services'>>({
     loop,
     pieces: loop,
     engine,
     info: { kind: 'jolt', threading: world.threading, ...(fallback === undefined ? {} : { fallback }) },
     dispose: () => world.dispose(),
-  }
+  })
 }

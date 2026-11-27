@@ -1,4 +1,4 @@
-import { convexFaces } from './hull-geometry'
+import { convexFaces } from '@adatechnology/game-vehicles'
 
 /** Passes over the faces of the old hull: each pass brings a point past a face back to it, and the next may undo a little of that at a corner. */
 const PASSES = 8

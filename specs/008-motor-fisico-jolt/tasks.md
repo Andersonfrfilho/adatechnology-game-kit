@@ -235,6 +235,20 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   dentro da condição 10. Aceite: caso 5 e 5b dentro do orçamento; heap de JS estável.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-physics-jolt exec vitest run tests/cascade.test.ts` · `sonnet`.
 
+## Fase S — Integração das costuras na sala
+> 🤖 Modelo: `sonnet` (TS.9 é 🧠 — desenho com `opus` antes). Desenho: `design/integracao-sala.md`.
+
+- [x] TS.1 ✅ Canal `ModuleHost.physics`/`workers`, `PhysicsServices` no `game-physics`, `servicesOf` no preset, `physicsHostOf` na sala (0 linhas líquidas no `room.ts`). Aceite: `physics-channel.test.ts` e `world-physics-services.test.ts` verdes.
+- [x] TS.2 ✅ `hullPlanKind` em `KIT_WORKER_KINDS`. Aceite: `workers.test.ts` com `VEHICLE_HULL_PLAN`.
+- [x] TS.3a ✅ `rayBroadPhase` ligado quando há laço. Aceite: testes do `game-kit-defaults` verdes, goldens iguais.
+- [ ] TS.4 Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`).
+- [ ] TS.5 Armas: cápsulas e granada no motor.
+- [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
+- [ ] TS.7 Cadáveres na sala (T5.4b/c/d).
+- [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
+- [ ] TS.9 🧠 Jogador no motor (desenho antes).
+- [ ] TS.10 (opcional) Juntas na vitrine.
+
 ## Fase 8 — Corte e validação
 > 🤖 Modelo: `haiku` para o mecânico (T8.1, T8.2, T8.3); `sonnet` para a validação (T8.4, T8.5, T8.6)
 

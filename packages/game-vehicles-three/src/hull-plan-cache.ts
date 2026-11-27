@@ -1,6 +1,6 @@
+import type { HullPlan, HullPlanResult } from '@adatechnology/game-vehicles'
+
 import type { VehicleHull } from './colliders'
-import type { HullPlan } from './hull-plan'
-import type { HullPlanResult } from './hull-plan-kind'
 
 /** A hull and the drawn vertices (x y z triples) it was made from. */
 export interface SharedHull {
