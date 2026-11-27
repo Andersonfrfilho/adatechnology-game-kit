@@ -1,5 +1,12 @@
 # @adatechnology/game-urban
 
+## 0.7.3
+
+### Patch Changes
+
+- Updated dependencies [5aa401f]
+  - @adatechnology/game-vehicles-fleet@11.0.0
+
 ## 0.7.2
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @adatechnology/game-kit-defaults
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [5aa401f]
+  - @adatechnology/game-physics-jolt@0.5.0
+  - @adatechnology/game-vehicles-fleet@11.0.0
+  - @adatechnology/game-urban@0.7.3
+
 ## 0.5.0
 
 ### Minor Changes
