@@ -1,7 +1,12 @@
 import type * as THREE_NS from 'three'
-import { stepKnock } from '@adatechnology/game-contracts'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
+
+import { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED } from './locomotion'
+import type { Locomotion } from './locomotion'
+import { createOwnLocomotion } from './own-locomotion'
+
+export { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED }
 
 export interface PlayerHooks {
   /** Primary button pressed / released (use the tool). `click` is a press without a drag, for the no-pointer-lock fallback. */
@@ -59,12 +64,6 @@ export interface PlayerSlam {
   readonly speed: number
   readonly direction: Vec3
 }
-
-/** Slower than this (m/s) a thrown body meeting something only stops: no slam. */
-export const SLAM_MIN_SPEED = 1.5
-
-/** Below this fall speed (m/s) a touch of the floor is a step down, not a landing. */
-export const LANDING_MIN_SPEED = 1
 
 export interface Player {
   readonly yaw: number
@@ -130,27 +129,15 @@ export interface Player {
 }
 
 const EYE = 1.7
-/** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
-export const PLAYER_RADIUS = 0.3
-/** Share of the radius the feet stand on: at the edge of a heap the player steps down instead of hovering on its corner. */
-const FOOT = 0.5
 const WALK = 3.4
 /** How far (m) the eye sinks when crouched, the speed of a crouched walk, and how fast the eye goes down and up (per second). */
 export const CROUCH_DROP = 0.55
 const CROUCH_WALK = 1.7
 const CROUCH_RATE = 9
 const BEND_RATE = 7
-/** The widths of the body, against its full width, that say how deep something has come into it. */
-const CLEAR_SHARES = [1, 0.75, 0.5, 0.25]
 /** A crouch key released within this many seconds was a tap, which stays crouched; a longer press was a hold. */
 const CROUCH_TAP = 0.25
 const RUN = 6.2
-const JUMP = 4.6
-const GRAVITY = 13
-const FLOOR_CLIMB_SPEED = 3
-const FLOOR_FALL_SPEED = 6
-/** Per second, how fast the eye settles after the feet stepped up onto a sill or a heap (about a tenth of a second to take most of it). */
-const STEP_EASE_RATE = 20
 const LOOK = 0.0022
 /** Height of the eye (m above the floor) of a body lying on its back, where the view turns up to (radians above the level), and how far it rolls to one side. */
 const LYING_EYE = 0.3
@@ -184,17 +171,10 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     yaw -= back.yaw
     apply()
   }
-  let y = 0
   let eye = EYE
   let crouch = 0
   let bend = 0
   let bendTarget = 0
-  let vy = 0
-  /** The floor under the feet at the last update (0 before the first). */
-  let floorUnder = 0
-  let walked = 0
-  let running = false
-  const px = { x: o.start[0], z: o.start[2] }
   let locked = false
   const keys = new Set<string>()
   const crouchKeys = o.crouchKeys ?? ['KeyC']
@@ -211,20 +191,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     crouchPress = null
   }
   const euler = new THREE.Euler(0, 0, 0, 'YXZ')
-  const floorHere = (): number => o.floorAt?.(px.x, px.z) ?? 0
-  let floorLevel = 0
-  // metres the eye still lags below the feet after a step up: the feet are on the sill at once, the view climbs it over a few frames instead of popping
-  let stepLag = 0
-  // the eye eases over a rim and falls into a hole instead of jumping with every cell of the ground
-  const followFloor = (dt: number): void => {
-    stepLag *= Math.exp(-STEP_EASE_RATE * dt)
-    if (stepLag < 1e-4) stepLag = 0
-    const gap = floorHere() - floorLevel
-    const reach = (gap > 0 ? FLOOR_CLIMB_SPEED : FLOOR_FALL_SPEED) * dt
-    const move = Math.max(-reach, Math.min(reach, gap))
-    floorLevel += move
-    if (move > 0) stepLag += move
-  }
+  const locomotion: Locomotion = createOwnLocomotion(o, o.start)
 
   /** The knock of a blast on the body, while it lasts. */
   let knocked: Knock | null = null
@@ -234,28 +201,6 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let stunPhase = 0
   /** Which way the view rolls when the body falls: toward the side the shove came from. */
   let rollSide = 1
-  let flying = false
-  let flyY = 0
-  const toggleFly = (): boolean => {
-    flying = !flying
-    if (flying) {
-      flyY = floorLevel + y
-      vy = 0
-    } else {
-      floorLevel = floorHere()
-      y = Math.max(0, flyY - floorLevel)
-      const foot = o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, flyY)
-      if (foot && Number.isFinite(foot.floor) && foot.floor > floorLevel) {
-        y = Math.max(y, foot.floor - floorLevel)
-      }
-      vy = 0
-    }
-    return flying
-  }
-  const setFly = (enabled: boolean): void => {
-    if (flying === enabled) return
-    toggleFly()
-  }
   const apply = (): void => {
     const lying = knocked?.lying ?? 0
     // a fall eases in: the eye goes down to the floor and the view turns up to the sky, a little onto one side (on its back, thrown away from the blast)
@@ -267,46 +212,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     euler.set(pitch + ((knockedForward ? LYING_PITCH_FACE_DOWN : LYING_PITCH) - pitch) * fallen + swayPitch, yaw, LYING_ROLL * rollSide * fallen + swayRoll, 'YXZ')
     cam.quaternion.setFromEuler(euler)
     const standing = eye - CROUCH_DROP * crouch - bend
-    const posY = flying ? flyY + standing : floorLevel + y + standing + (LYING_EYE - standing) * fallen - stepLag
-    cam.position.set(px.x, posY, px.z)
+    const posY = locomotion.flying ? locomotion.drawnFeet + standing : locomotion.drawnFeet + standing + (LYING_EYE - standing) * fallen
+    cam.position.set(locomotion.x, posY, locomotion.z)
     cam.updateMatrixWorld(true)
   }
   apply()
-
-  const outside = (x: number, z: number): boolean => Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS
-  const blocked = (x: number, z: number, radius = PLAYER_RADIUS): boolean => {
-    if (outside(x, z)) return true
-    for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
-    if (o.blockers) for (const isBlocked of o.blockers) if (isBlocked(x, z, radius)) return true
-    return o.footing ? o.footing(x, z, radius, floorLevel + y).blocked : false
-  }
-  /** The widest body that fits where the player is, or null when not even the narrowest does: how deep something has come into the player. */
-  const clearRadius = (): number | null => {
-    for (const share of CLEAR_SHARES) if (!blocked(px.x, px.z, PLAYER_RADIUS * share)) return PLAYER_RADIUS * share
-    return null
-  }
-  // what the player tried to walk since the last `takeWish` (blocked or not): the room pushes what stands in the way by it
-  const wish = { x: 0, z: 0 }
-  const move = (dx: number, dz: number): void => {
-    wish.x += dx
-    wish.z += dz
-    if (flying) {
-      px.x += dx
-      px.z += dz
-      return
-    }
-    // caught in something (a piece fell on the spot, a piece settling touches the body) the player walks out of it, and never deeper; right inside, every way is out
-    const radius = clearRadius()
-    const free = (x: number, z: number): boolean => (radius === null ? !outside(x, z) : !blocked(x, z, radius))
-    // in steps no longer than a third of the body's width, so a long move (a slow frame, the end of a scripted walk) cannot jump over a thin obstacle
-    const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
-    const sx = dx / steps
-    const sz = dz / steps
-    for (let i = 0; i < steps; i++) {
-      if (free(px.x + sx, px.z)) px.x += sx
-      if (free(px.x, px.z + sz)) px.z += sz
-    }
-  }
 
   const walkKeys = (): readonly [number, number] => {
     const f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0)
@@ -323,7 +233,6 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   let holdTimer: ReturnType<typeof setTimeout> | null = null
 
   let walkHeld = false
-  let seated = false
   let lookLimit: { readonly yaw: number; readonly range: number } | null = null
   const look = (dx: number, dy: number): void => {
     yaw -= dx * LOOK
@@ -463,41 +372,11 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
   window.addEventListener('blur', onBlur)
   window.addEventListener('beforeunload', onBeforeUnload)
 
-  /** One step of a knock: the body flies and slides, stopped by the colliders like a walk, falls, lies and gets up; the keys wait. */
+  /** One step of a knock: the body is moved where it is, the rest of the knock (stun view, getting up) stays here. */
   const stepKnocked = (dt: number): void => {
     const k = knocked
     if (!k) return
-    const floor = Math.max(floorHere(), o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, y).floor ?? -Infinity)
-    floorUnder = floor
-    const at = { x: px.x, y, z: px.z }
-    const fromY = y
-    const fallSpeed = Math.max(0, -k.velocity[1])
-    const done = stepKnock(k, at, dt, () => floor, true)
-    const wantX = at.x - px.x
-    const wantZ = at.z - px.z
-    const fromX = px.x
-    const fromZ = px.z
-    const vx = k.velocity[0]
-    const vz = k.velocity[2]
-    move(wantX, wantZ)
-    // what stopped the body takes the speed that went into it, and the body slams into it
-    const stoppedX = Math.abs(wantX) > 1e-6 && Math.abs(px.x - fromX) < Math.abs(wantX) * 0.5
-    const stoppedZ = Math.abs(wantZ) > 1e-6 && Math.abs(px.z - fromZ) < Math.abs(wantZ) * 0.5
-    if (stoppedX) k.velocity[0] = 0
-    if (stoppedZ) k.velocity[2] = 0
-    const into = Math.hypot(stoppedX ? vx : 0, stoppedZ ? vz : 0)
-    if (into >= SLAM_MIN_SPEED) o.onSlam?.({ against: 'obstacle', speed: into, direction: [stoppedX ? vx / into : 0, 0, stoppedZ ? vz / into : 0] })
-    y = at.y
-    if (fromY > floor && y <= floor) {
-      const speed = Math.max(fallSpeed, (fromY - y) / Math.max(dt, 1e-6))
-      if (k.down && speed >= SLAM_MIN_SPEED * 0.5) o.onSlam?.({ against: 'ground', speed: Math.hypot(speed, Math.hypot(vx, vz) * 0.5), direction: [0, -1, 0] })
-      else if (speed >= LANDING_MIN_SPEED) o.onFeet?.({ type: 'land', speed })
-    }
-    vy = 0
-    walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
-    running = false
-    if (done) knocked = null
-    followFloor(dt)
+    if (locomotion.stepKnock(k, dt)) knocked = null
     apply()
   }
 
@@ -506,15 +385,13 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return walkKeys()
     },
     canStand(x, z) {
-      return !blocked(x, z)
+      return locomotion.canStand(x, z)
     },
     setWalkHeld(held) {
       walkHeld = held
     },
     setSeated(value) {
-      seated = value
-      y = 0
-      vy = 0
+      locomotion.setSeated(value)
     },
     setBend(metres) {
       bendTarget = metres
@@ -532,40 +409,40 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       return locked
     },
     get x() {
-      return px.x
+      return locomotion.x
     },
     get z() {
-      return px.z
+      return locomotion.z
     },
     get feet() {
-      return flying ? flyY : floorLevel + y
+      return locomotion.feet
     },
     get drawnFeet() {
-      return flying ? flyY : floorLevel + y - stepLag
+      return locomotion.drawnFeet
     },
     get position() {
-      return [px.x, flying ? flyY : floorLevel + y, px.z] as Vec3
+      return [locomotion.x, locomotion.feet, locomotion.z] as Vec3
     },
     get speed() {
-      return walked
+      return locomotion.speed
     },
     get running() {
-      return running
+      return locomotion.running
     },
     get grounded() {
-      return !flying && y <= floorUnder + 1e-3 && vy <= 0
+      return locomotion.grounded
     },
     get flying() {
-      return flying
+      return locomotion.flying
     },
-    toggleFly,
-    setFly,
+    toggleFly: () => locomotion.toggleFly(),
+    setFly: (enabled) => locomotion.setFly(enabled),
     get crouching() {
       return isCrouched()
     },
     keys,
     knock(next) {
-      if (seated) return
+      if (locomotion.seated) return
       if (knocked) {
         knocked.velocity = [knocked.velocity[0] + next.velocity[0], knocked.velocity[1] + next.velocity[1], knocked.velocity[2] + next.velocity[2]]
         knocked.airborne ||= next.airborne
@@ -584,7 +461,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         knockedForward = -Math.sin(yaw) * away[0] - Math.cos(yaw) * away[2] > 0
         crouchLatched = false
       }
-      if (knocked.airborne) vy = Math.max(vy, knocked.velocity[1])
+      locomotion.knocked(knocked)
     },
     get knocked() {
       return knocked
@@ -606,63 +483,24 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
         return
       }
       if (crouchPress) crouchPress.held += dt
-      const crouched = isCrouched()
+      const crouched = isCrouched() || locomotion.mustCrouch
       crouch += ((crouched ? 1 : 0) - crouch) * Math.min(1, dt * CROUCH_RATE)
       if (!crouched && crouch < 1e-3) crouch = 0
       bend += (bendTarget - bend) * Math.min(1, dt * BEND_RATE)
-      const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
-      const fromX = px.x
-      const fromZ = px.z
-      if (flying) {
-        const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
-        const speed = run ? 14 : 5
-        const [walkX, walkZ] = walkKeys()
-        let vert = 0
-        if (keys.has('Space')) vert += 1
-        if (keys.has('KeyC') || keys.has('ControlLeft') || keys.has('ControlRight')) vert -= 1
-        if (walkX || walkZ) move(walkX * speed * dt, walkZ * speed * dt)
-        if (vert !== 0) flyY += vert * speed * dt
-        walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
-        running = run && (walked > 0 || vert !== 0)
-        vy = 0
-        apply()
-        return
-      }
-      const speed = (crouched ? CROUCH_WALK : run ? RUN : WALK) * (o.speedAt?.(px.x, px.z) ?? 1)
       const [walkX, walkZ] = walkKeys()
-      if ((walkX || walkZ || keys.has('Space')) && eye !== EYE) eye = EYE
-      if ((walkX || walkZ) && !walkHeld) move(walkX * speed * dt, walkZ * speed * dt)
-      walked = dt > 0 ? Math.hypot(px.x - fromX, px.z - fromZ) / dt : 0
-      running = run && walked > 0
-      if (seated) {
-        followFloor(dt)
+      if (locomotion.flying) {
+        const run = keys.has('ShiftLeft') || keys.has('ShiftRight')
+        let rise = 0
+        if (keys.has('Space')) rise += 1
+        if (keys.has('KeyC') || keys.has('ControlLeft') || keys.has('ControlRight')) rise -= 1
+        locomotion.update(dt, { walkX, walkZ, speed: run ? 14 : 5, running: run, jump: false, walkHeld, crouched, rise })
         apply()
         return
       }
-      // the floor under the feet: a step up is taken at once, a drop is a fall
-      const currentFeet = floorLevel + y
-      const solidFoot = o.footing?.(px.x, px.z, PLAYER_RADIUS * FOOT, currentFeet)
-      const solidFloor = solidFoot && Number.isFinite(solidFoot.floor) ? solidFoot.floor - floorLevel : -Infinity
-      const floor = Math.max(0, solidFloor)
-      floorUnder = floor
-      if (y < floor && vy <= 0) {
-        stepLag += floor - y
-        y = floor
-      }
-      if (y <= floor && keys.has('Space') && !walkHeld) {
-        vy = JUMP
-        o.onFeet?.({ type: 'jump' })
-      }
-      if (y > floor || vy > 0) {
-        vy -= GRAVITY * dt
-        y += vy * dt
-        if (y <= floor) {
-          y = floor
-          if (-vy >= LANDING_MIN_SPEED) o.onFeet?.({ type: 'land', speed: -vy })
-          vy = 0
-        }
-      }
-      followFloor(dt)
+      const run = !crouched && !walkHeld && (keys.has('ShiftLeft') || keys.has('ShiftRight'))
+      const jump = keys.has('Space')
+      if ((walkX || walkZ || jump) && eye !== EYE) eye = EYE
+      locomotion.update(dt, { walkX, walkZ, speed: crouched ? CROUCH_WALK : run ? RUN : WALK, running: run, jump, walkHeld, crouched, rise: 0 })
       apply()
     },
     setPose(position, yw, pt) {
@@ -670,14 +508,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       // a view set on purpose is where the kicks come back to
       recoilDebt.pitch = 0
       recoilDebt.yaw = 0
-      px.x = position[0]
-      px.z = position[2]
-      floorLevel = floorHere()
-      eye = position[1] - floorLevel
-      stepLag = 0
-      y = 0
-      flyY = position[1]
-      vy = 0
+      eye = position[1] - locomotion.place(position)
       yaw = yw
       pitch = pt
       apply()
@@ -687,14 +518,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       // a view set on purpose is where the kicks come back to
       recoilDebt.pitch = 0
       recoilDebt.yaw = 0
-      px.x = position[0]
-      px.z = position[2]
-      floorLevel = floorHere()
-      eye = position[1] - floorLevel
-      stepLag = 0
-      y = 0
-      flyY = position[1]
-      vy = 0
+      eye = position[1] - locomotion.place(position)
       const dx = target[0] - position[0]
       const dy = target[1] - position[1]
       const dz = target[2] - position[2]
@@ -711,20 +535,16 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       apply()
     },
     moveBy(dx, dz) {
-      move(dx, dz)
+      locomotion.moveBy(dx, dz)
       apply()
     },
-    takeWish() {
-      const out: [number, number] = [wish.x, wish.z]
-      wish.x = 0
-      wish.z = 0
-      return out
-    },
+    takeWish: () => locomotion.takeWish(),
     walk(forward, right) {
-      move(-Math.sin(yaw) * forward + Math.cos(yaw) * right, -Math.cos(yaw) * forward - Math.sin(yaw) * right)
+      locomotion.moveBy(-Math.sin(yaw) * forward + Math.cos(yaw) * right, -Math.cos(yaw) * forward - Math.sin(yaw) * right)
       apply()
     },
     dispose() {
+      locomotion.dispose()
       if (holdTimer) clearTimeout(holdTimer)
       o.dom.removeEventListener('mousedown', onMouseDown)
       window.removeEventListener('mouseup', onMouseUp)

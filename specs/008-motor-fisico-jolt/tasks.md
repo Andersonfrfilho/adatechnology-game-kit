@@ -262,7 +262,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - [x] TS.9d ✅ `readCharacterGround(id,out)`. Aceite: plataforma móvel, velocidade bate. `sonnet`.
   - [x] TS.9e ✅ Personagens no `saveState`/`restoreState`. Aceite: salvar, 2 s, restaurar, 2 s dá bytes iguais. `sonnet`.
   - [x] TS.9f ✅ `createWalker` no `game-player`. Aceite: testes de walker. `sonnet`.
-  - [ ] TS.9g `Locomotion` na sala (só mover). Aceite: teste da sala sem diff; `room.ts` ≤ 5259 linhas. `sonnet`.
+  - [x] TS.9g ✅ `Locomotion` na sala (só mover). Aceite: teste da sala sem diff; `room.ts` ≤ 5259 linhas. `sonnet`.
   - [ ] TS.9h `player-body` engine. Aceite: `physics-channel` (own nada muda; Jolt cria e libera). `sonnet`.
   - [ ] TS.9i Nocaute/batida (`onSlam` obstacle/ground). `sonnet`.
   - [ ] TS.9j `park`/`unpark` (saída bloqueada vai ao teto, sem penetrar). `sonnet`.
