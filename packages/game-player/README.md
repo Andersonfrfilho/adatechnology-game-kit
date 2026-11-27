@@ -100,6 +100,14 @@ the hip for a pistol, a sling on the back for a rifle) and, with none, drops it 
 away or drops it. `drawBackOf(plan)` says what comes back to the hands when the interaction ends: what was put away, never what fell. `interactionHandsFor({ massKg, size })` says
 whether a thing goes in one hand (up to 4 kg and 0.7 m, `HANDS_DEFAULTS`). The hands and slot of each weapon come from `weaponHandsOf` of `@adatechnology/game-weapons`.
 
+A second one-handed weapon (a pistol in each hand, owner 2026-11-27) is not thrown away when the holster is taken: it is tucked in the belt (`BELT_SLOT`, `SLOT_FALLBACKS`:
+hip, then belt) and comes back after. Only a body with no place for it at all drops it.
+
+Whether the hands lift a thing at all is `liftCheckFor({ massKg, size }, { maxKg })` (`LIFT_DEFAULTS`): the strength is the most lifted held against the body, and a bulky thing is
+held away from it, so the back takes its weight times the lever (the horizontal multiplier of the NIOSH lifting equation, `closeReach / H`, H the spine to the middle of the
+thing held its thinnest side out). `too_heavy` is over the strength; `too_bulky` is too wide for the arms (`maxSpan`) or too heavy that far out. A 45 kg sofa is `too_bulky`
+(pushed or dragged, not picked up); a 16 kg gas bottle goes up.
+
 A long gun on its sling (owner, 2026-11-25) is not dropped: its slot is `sling` (`move: 'sling'`), it hangs on the body and stays there after the interaction until the player
 brings it back; with no sling worn it goes to the next slot that takes it (`SLOT_FALLBACKS`: the back). Every move is seen: `planTakeSequence(plan)` lays the steps (each weapon
 `stow`, `sling` or `drop`, the off hand first, then `reach`, `close`, `lift`; `HANDS_TIMING` in seconds), `planDrawSequence(moves)` the way back (`draw`), and

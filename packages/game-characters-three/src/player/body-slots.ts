@@ -1,13 +1,13 @@
 /**
  * The places on the player's body that take a weapon put away (`hip`: a holster on the weapon side of the belt; `back`: a sling across the back): sockets fixed to the body, read
  * from the body's own surface at rest, so a weapon drawn there sits on the trousers or the shirt and never in them. `sling`: the point on the front of the chest a long
- * gun hangs from on its sling (owner, 2026-11-25), a little to the weapon side. Each socket's frame is the body's: +z its front, -x the weapon side.
+ * gun hangs from on its sling (owner, 2026-11-25), a little to the weapon side. `belt`: a second handgun or knife tucked in the belt on the other side (owner, 2026-11-27). Each socket's frame is the body's: +z its front, -x the weapon side.
  */
 import type * as THREE_NS from 'three'
 
 import type { RichRig } from '../rich/animator'
 
-export type BodySlotName = 'hip' | 'back' | 'sling'
+export type BodySlotName = 'hip' | 'belt' | 'back' | 'sling'
 
 /** How far off the surface (m) a socket sits, so what is drawn there never shares a plane with the cloth. */
 export const BODY_SLOT_CLEARANCE = 0.006
@@ -62,6 +62,7 @@ export const createBodySlots = (THREE: typeof THREE_NS, rig: RichRig, root: THRE
   }
   return {
     hip: place('hip', rig.fig as unknown as THREE_NS.Object3D, new THREE.Vector3(-(belt.maxX + BODY_SLOT_CLEARANCE), HIP.y * scale, HIP.z * scale)),
+    belt: place('belt', rig.fig as unknown as THREE_NS.Object3D, new THREE.Vector3(belt.maxX + BODY_SLOT_CLEARANCE, HIP.y * scale, HIP.z * scale)),
     back: place('back', rig.upper as unknown as THREE_NS.Object3D, new THREE.Vector3(0, BACK_Y * scale, chest.minZ - BODY_SLOT_CLEARANCE)),
     sling: place('sling', rig.upper as unknown as THREE_NS.Object3D, new THREE.Vector3(-SLING.x * scale, SLING.y * scale, chest.maxZ + BODY_SLOT_CLEARANCE)),
   }

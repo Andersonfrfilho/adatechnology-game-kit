@@ -335,7 +335,7 @@ export interface TestRoomOptions {
   /**
    * The places on the body that take a weapon when an interaction wants its hands (`rules.hands.slots` of game-weapons: `hip` a holster, `back` across the back, `sling` a long
    * gun's own sling): a weapon with none that fits drops to the floor (`planHands` of game-player). Every list but the empty one gets the sling (the gun brings it): a rifle hangs on
-   * it until H brings it back. Default `['hip', 'sling']`.
+   * it until H brings it back. Default `['hip', 'belt', 'sling']`.
    */
   bodySlots?: readonly string[]
   /** Which hand throws the one-handed strikes (`punchTools`): `alternate` (default) swaps at each punch starting with the right, or always `left` or `right`. */

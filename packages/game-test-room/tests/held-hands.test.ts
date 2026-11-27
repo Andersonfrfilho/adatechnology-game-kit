@@ -138,7 +138,7 @@ describe('the long gun brings its own sling', () => {
     expect(withSling(['hip', 'back'])).toEqual(['hip', 'back', 'sling'])
     expect(withSling(['sling'])).toEqual(['sling'])
     expect(withSling([])).toEqual([])
-    expect(DEFAULT_BODY_SLOTS).toEqual(['hip', 'sling'])
+    expect(DEFAULT_BODY_SLOTS).toEqual(['hip', 'belt', 'sling'])
   })
 
   it('with ?bodySlots=hip,back a rifle still swings onto its sling, not across the back', () => {
