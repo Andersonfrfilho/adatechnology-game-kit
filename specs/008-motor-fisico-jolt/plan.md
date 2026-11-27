@@ -24,7 +24,7 @@ jogo / sala de teste
   `setup-physics.ts`, que descarta os mundos no `afterEach`.
 - **Ordem do passo** (decidida na fase 1): multidão → controladores e cinemáticos → `world.step` → eventos de contato para o dano → regras do
   §12 → desenho.
-- **Ajustes do mundo** (condições 1–3): passo fixo 1/120, 20 iterações de velocidade, 2 de posição, sono após 0,5 s abaixo de 0,08 m/s, slop
+- **Ajustes do mundo** (condições 1–3): passo fixo 1/120, 32 iterações de velocidade (piso documentado, decisão do dono 2026-11-27: abaixo de 20, e na pilha 20:1 a dt 1/144, o kit não garante C1/C6; a produção, 120 Hz e 32 it., tem 0 falhas), 2 de posição, sono após 0,5 s abaixo de 0,08 m/s, slop
   2 mm, push-out 2 mm por iteração. Ragdoll sobrepõe 20/8.
 
 ### D1.1 — Atrito por corpo (decisão B6)
