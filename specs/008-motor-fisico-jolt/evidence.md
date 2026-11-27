@@ -4967,3 +4967,15 @@ Custo do passo do jogador no motor (`tests/player-body-cost.test.ts`, só com `P
 ## TS.9n
 
 **Pendente, à mão do dono (§9).** `pnpm check:room` (e `check:player`) com `?physics=jolt` e prints em primeira e terceira pessoa, e o que olhar: (1) andar, correr, agachar sob algo baixo e levantar (o agachar fica quando não cabe em pé); (2) pular sobre uma caixa e subir degrau/rampa (olho sobe suave pelo `stepLag`); (3) empurrar caixa leve a pé (sem chute duplo: o `kickLight` está desligado) e uma estante pesada; (4) estouro perto de uma parede (batida) e no vazio (queda); (5) sentar num banco e levantar; (6) voar e descer em cima de móvel; (7) 3ª pessoa: tremor entre avatar e câmera (o avatar usa os pés desenhados do quadro anterior; se tremer, mover o `stepAvatar` para a fase `present`). Horda em cima do jogador: a sensação de travar é a decisão de design em aberto do §7.8.
+
+### Controles do golden `jolt` da TS.9h (maior diferença de posição/velocidade das peças contra a execução sem jogador no motor)
+
+| Execução (Jolt, 180 quadros, estouro de 4 MJ no quadro 30) | Quadro 29 | Quadro 30 | Quadro 179 |
+|---|---|---|---|
+| Repetir a execução sem jogador | 0 | 0 | 0 |
+| Jogador no motor, com sombra `agent` | 1,2e-10 | 3,9e-2 m | 1,3e-1 m |
+| Jogador no motor, sem sombra (só o personagem, sem corpo) | 1,2e-10 | 3,9e-2 m | 1,4e-1 m |
+| Sem jogador, um personagem sem sombra a 80 m | 1,2e-10 | 3,6e-2 m | 1,4e-1 m |
+| Sem jogador, uma caixa estática a 80 m | 1,2e-10 | 1,8e-2 m | 1,1e-1 m |
+
+Conclusão registrada (decisão do coordenador, mantida): um corpo ou personagem a mais no mundo, mesmo sem chance de contato, muda a pilha caótica do estouro; o cenário é reproduzível bit a bit; o cenário agora tem o jogador no motor, então o golden `jolt` foi regravado por essa causa. A sombra não é a causa.
