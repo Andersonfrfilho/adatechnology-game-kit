@@ -4874,3 +4874,14 @@ Máquina: Intel Core Ultra 9 275HX, Linux, Node 20; carga 7 a 25 de outras sess�
 **Limites conhecidos.** O cadáver ainda não tem corpo (TS.7): `RunOver.dyingVelocity` não é lido por ninguém. O atropelamento só enxerga a multidão que o módulo emprestou: uma multidão de outro módulo precisa publicar no mesmo canal.
 
 **Gates TS.6.** `game-physics` 5 arquivos, 33 testes; `game-crowd-three` 10 arquivos, 54; `game-vehicles-three` 42 arquivos (1 pulado), 754 testes (70 pulados: faixa de custo); `tsc --noEmit` dos três e `eslint` dos arquivos tocados limpos; `kit-audit --check` sem novos.
+## T3.9 — goldens dos destroços (2026-11-27)
+Worktree `spec-008-t39` sobre `origin/main` `62428b20c`, `pnpm install --frozen-lockfile` e `pnpm build`. **Nenhum golden regravado**: com o Jolt padrão (#520) todos os goldens da D4 desta fase já passam na main.
+| Golden (D4) | Pacote | Resultado na main | Antes / depois |
+|---|---|---|---|
+| `exact-golden` (44 casos, entre eles `destruction/breach` `7850f705`/832, `spall` `9b140db6`/824, `fracture` `1379e488`/908) | `game-floorplan-three` | passa, Jolt padrão | já regravados na T3.10 (`e74444d20`, rodada 6) e depois pelas rodadas das casas; nada mudou agora |
+| `golden-scene`, `team-golden-house-area`, `blast-presentation` | `game-floorplan-three` | passam | iguais (suíte inteira: 94 arquivos, **1634 testes passam**, 0 falham; 880 s, carga 14 a 19) |
+| sons de batida (`audio.test.ts`) | `game-destruction-three` | 63/63 passam | iguais |
+| `exact-golden` de armas | `game-weapons-three` | 428/428 passam | iguais (fora da D4, conferido) |
+- Goldens do solver antigo: `tests/fixtures/exact-floorplan-own.json` (breach `4a2638b7`/842, spall `e112e96c`/851, fracture `66c76666`/935) só é lido com `PIECE_SOLVER=own`; fica até a T8.1 (`6ee7d184d`). Nenhum golden de destroço depende de nota "até a T3.9".
+- `destruction/fracture` **não tocado** (valor da main, `1379e488`/908): o PR da T3.5 (teto de giro e emenda do chão, `2837a904`) volta depois e regrava esse golden por conta própria.
+- Fases 6 e 7 da D4 (`game-vehicles-driving`, `game-crowd`, `game-vehicles-fleet`) não são desta task.
