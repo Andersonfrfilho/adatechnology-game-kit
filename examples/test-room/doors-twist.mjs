@@ -1,0 +1,74 @@
+// Opens every leaf of the door items in the real room (E as the hand does it) and checks that each leaf turns about one fixed axis all the way, never tipping out of its
+// plane (a door past 90 degrees mixed as Euler angles did), and that opening a car door never puts the player inside the car. Saves shots/doors-twist-<item>-meio|aberta.png.
+// Run: node build.mjs && node doors-twist.mjs [url]   (default dist/test-room.html)
+import { createRequire } from 'node:module'
+import { mkdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const here = dirname(fileURLToPath(import.meta.url))
+const { chromium } = /** @type {typeof import('playwright')} */ (createRequire(import.meta.url)('playwright')) // NODE_PATH points at it, as in test.mjs
+const url = process.argv[2] && process.argv[2] !== '-' ? process.argv[2] : pathToFileURL(join(here, 'dist/test-room.html')).href
+const out = join(here, 'shots')
+mkdirSync(out, { recursive: true })
+const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+const errors = []
+page.on('pageerror', (e) => errors.push(e.message))
+await page.goto(`${url}?scene=doors&table=0&ui=0&items=sink_kitchen,washer,kitchen_cabinet_base,sink_bathroom,kitchen_cabinet_wall`, { timeout: 180000 })
+await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((s) => s.itemId === 'sedan'), null, { timeout: 2400000, polling: 5000 })
+await page.waitForTimeout(3000)
+const objs = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z], ry: s.root.rotation.y, leaves: window.__testRoom.leaves(s.objectId) })).filter((s) => s.leaves.length))
+console.log(JSON.stringify(objs.map((o) => [o.item, o.leaves])))
+const quatOf = (o, p) => page.evaluate(([o, p]) => { const r = window.__testRoom; const s = r.spawned().find((x) => x.objectId === o); const g = s.root.getObjectByName(p); return g ? g.quaternion.toArray() : null }, [o, p])
+const mul = (a, b) => [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
+const inv = (q) => [-q[0], -q[1], -q[2], q[3]]
+const axisAngle = (q) => { const s = Math.hypot(q[0], q[1], q[2]); return { axis: s < 1e-9 ? [0, 0, 0] : [q[0] / s, q[1] / s, q[2] / s], angle: 2 * Math.atan2(s, q[3]) } }
+let worst = 0
+const failures = []
+for (const o of objs) {
+  for (const [li, leaf] of o.leaves.entries()) {
+    if (li > 1 && o.item !== 'sedan') break
+    const rest = await quatOf(o.id, leaf)
+    if (!rest) { console.log('no group', o.item, leaf); continue }
+    const fwd = [Math.sin(o.ry), Math.cos(o.ry)]
+    const eye = [o.at[0] + fwd[0] * 2.2 + fwd[1] * 1.2, 1.9, o.at[2] + fwd[1] * 2.2 - fwd[0] * 1.2]
+    await page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, [o.at[0], o.at[1] + 0.7, o.at[2]]])
+    await page.evaluate(([o, p]) => window.__testRoom.useLeaf(o, p), [o.id, leaf])
+    const box = await page.evaluate((id) => { const s = window.__testRoom.spawned().find((x) => x.objectId === id); const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.x, b.min.z, b.max.x, b.max.z] }, o.id)
+    const samples = []
+    let intoCar = 0
+    let shotTaken = false
+    const t0 = Date.now()
+    while (Date.now() - t0 < 60000) {
+      const v = await page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [o.id, leaf])
+      const q = await quatOf(o.id, leaf)
+      samples.push({ v, d: axisAngle(mul(inv(rest), q)) })
+      if (o.item === 'sedan') {
+        // the car's own box at rest, shrunk by its doors and mirrors: the player's feet never get in there
+        const [x, , z] = await page.evaluate(() => window.__testRoom.playerPosition)
+        if (x > box[0] + 0.25 && x < box[2] - 0.25 && z > box[1] + 0.25 && z < box[3] - 0.25) intoCar++
+      }
+      if (!shotTaken && v > 0.3 && v < 0.7 && li === 0) { await page.screenshot({ path: join(out, `doors-twist-${o.item}-meio.png`) }); shotTaken = true }
+      if (v > 0.98 || (Date.now() - t0 > 4000 && (await page.evaluate(() => window.__testRoom.door)) === null)) break
+      await page.waitForTimeout(40)
+    }
+    await page.waitForTimeout(500)
+    const end = axisAngle(mul(inv(rest), await quatOf(o.id, leaf)))
+    if (li === 0) await page.screenshot({ path: join(out, `doors-twist-${o.item}-aberta.png`) })
+    let dev = 0
+    for (const s of samples) if (s.d.angle > 0.05) dev = Math.max(dev, Math.acos(Math.min(1, Math.abs(s.d.axis[0] * end.axis[0] + s.d.axis[1] * end.axis[1] + s.d.axis[2] * end.axis[2]))))
+    worst = Math.max(worst, dev)
+    const ok = dev < 0.01 && intoCar === 0
+    if (!ok) failures.push(`${o.item}:${leaf}`)
+    if (intoCar) console.log(`FAIL ${o.item} ${leaf}: the player was inside the car in ${intoCar} samples`)
+    console.log(`${ok ? 'OK  ' : 'FAIL'} ${o.item} ${leaf}: opened ${(samples.at(-1)?.v ?? 0).toFixed(2)}, final turn ${(end.angle * 180 / Math.PI).toFixed(0)} deg about [${end.axis.map((x) => x.toFixed(2))}], ${samples.length} samples, worst axis drift ${(dev * 180 / Math.PI).toFixed(2)} deg`)
+    await page.evaluate(([o, p]) => window.__testRoom.useLeaf(o, p), [o.id, leaf])
+    await page.waitForFunction(() => window.__testRoom.door === null, null, { timeout: 60000 }).catch(() => {})
+    await page.waitForTimeout(300)
+  }
+}
+console.log(`worst drift ${(worst * 180 / Math.PI).toFixed(2)} deg; ${failures.length} failures ${failures.join(', ')}`)
+console.log(errors.length ? `page errors: ${errors.join(' | ')}` : 'no page errors')
+await browser.close()
+if (failures.length || errors.length) process.exit(1)
