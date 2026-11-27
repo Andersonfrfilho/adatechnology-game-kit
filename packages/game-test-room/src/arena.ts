@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import type { DestructibleSpec, JointSpec, PartSpec, Vec3 } from '@adatechnology/game-destruction'
 import type { SurfaceSpec } from '@adatechnology/game-fluids'
 import { markKitOrigin } from '@adatechnology/game-contracts'
+import type { HostSolid } from '@adatechnology/game-contracts'
 import { brickWallSpec } from './items'
 import type { SceneryObject, SceneryTap } from './types'
 
@@ -49,6 +50,8 @@ export interface Arena {
   wallZ: number
   /** Tops of the scenery (pieces rest on them while their part stands). */
   tops: ArenaTop[]
+  /** The post of the default tap as a fixed box (the box around its drawn cylinder) and the collider that stands for it: the engine's world holds the box, so the player is stopped by the body. */
+  tapPost: { readonly solid: HostSolid; readonly collider: [number, number, number, number] } | null
   /** Where the tap pours: over the top of the `table` object; null when the room has no table with a top. */
   tapSpout: Vec3 | null
 }
@@ -238,6 +241,7 @@ export function createArena(THREE: typeof THREE_NS, size: number, scenery?: Reco
 
   // the tap: the host's model standing on the table top, or (by default) a post with an arm and a spout beside the table
   let tapSpout: Vec3 | null = null
+  let tapPost: Arena['tapPost'] = null
   const tableTop = tops.find((t) => t.id === TABLE_ID)
   const spouting = sceneryObjects.find((o) => o.spout)
   if (spouting?.spout && tapOption !== null) {
@@ -275,8 +279,10 @@ export function createArena(THREE: typeof THREE_NS, size: number, scenery?: Reco
         group.add(m)
       }
       tapSpout = [cx + 0.3, y + 0.5, cz]
-      colliders.push([postX - 0.05, cz - 0.1, postX + 0.05, cz + 0.1])
+      const collider: [number, number, number, number] = [postX - 0.05, cz - 0.1, postX + 0.05, cz + 0.1]
+      colliders.push(collider)
       colliderIds.push(null)
+      tapPost = { solid: { center: [postX, 0.7, cz], half: [0.04, 0.7, 0.04], key: 'tap-post' }, collider }
     }
   }
 
@@ -290,5 +296,6 @@ export function createArena(THREE: typeof THREE_NS, size: number, scenery?: Reco
     wallZ,
     tops,
     tapSpout,
+    tapPost,
   }
 }

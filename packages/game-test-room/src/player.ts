@@ -31,6 +31,8 @@ export interface PlayerOptions {
   colliders: Array<[number, number, number, number]>
   /** Extra places to stay out of, asked on every step (a module's walls): `(x, z, radius) => blocked`. The set may change while the player walks. */
   blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
+  /** The blockers that have a body in the physics world: the body stops the player, so the veto skips them. */
+  bodiedBlockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
   /**
    * What stands where the body would be, asked on every step with the feet height: `floor` is the highest top it can step onto there (a low
    * heap of debris; 0 is the floor), `blocked` that something taller is in the way. Without it the floor is flat and only the colliders stop. `bodiless`: only what the

@@ -9,7 +9,7 @@ export function installInteractionCollision(K: Kernel, shared: Shared): void {
     const h = m.h || 0, y = M.y || 0;
     if (NO_COLLIDE.test(m.type) || m.category === 'ground_cover' || h < 0.3 || y >= 0.9 || !(m.w > 0.05) || !(m.d > 0.05)) return;
     let w = m.w, d = m.d; if (/tree|palm_tree/.test(m.type)) { w = Math.min(w, 0.5); d = Math.min(d, 0.5); }
-    inter().objs.push({ f: M.floor as number, cx: m.x, cz: m.z, c: Math.cos(M.ry), s: Math.sin(M.ry), hw: w / 2, hd: d / 2, type: m.type });
+    inter().objs.push({ f: M.floor as number, cx: m.x, cz: m.z, c: Math.cos(M.ry), s: Math.sin(M.ry), hw: w / 2, hd: d / 2, h, type: m.type });
   }
   function objectDistance(o: CollisionObject, x: number, z: number): number { // signed distance to the rectangle (negative inside)
     const dx = x - o.cx, dz = z - o.cz, lx = dx * o.c - dz * o.s, lz = dx * o.s + dz * o.c, ex = Math.abs(lx) - o.hw, ez = Math.abs(lz) - o.hd;

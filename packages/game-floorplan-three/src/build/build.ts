@@ -179,7 +179,7 @@ export function installBuildBuild(K: Kernel, shared: Shared): void {
 
         // ---- public colliders: walls/doors/walls of the lot/gates (aabb) and furniture (obb) ----
         for (const c of shared.ctx.colliders) { c.aabb = [c.x0, c.z0, c.x1, c.z1]; if (c.type === 'wall') c.damageable = tagDamage('masonry'); }
-        const colliders: (BoxCollider | FurnitureCollider)[] = (shared.ctx.colliders as (BoxCollider | FurnitureCollider)[]).concat(shared.inter.objs.map((o): FurnitureCollider => ({ type: 'furniture', f: o.f, obb: { cx: o.cx, cz: o.cz, hw: o.hw, hd: o.hd, c: o.c, s: o.s }, item: o.type, off: false })));
+        const colliders: (BoxCollider | FurnitureCollider)[] = (shared.ctx.colliders as (BoxCollider | FurnitureCollider)[]).concat(shared.inter.objs.map((o): FurnitureCollider => ({ type: 'furniture', f: o.f, obb: { cx: o.cx, cz: o.cz, hw: o.hw, hd: o.hd, c: o.c, s: o.s }, item: o.type, off: false, ...(o.h !== undefined ? { h: o.h } : {}) })));
 
         // ---- parts (id -> {group, type, opens(t), damageable}) ----
         const parts: Record<string, HousePart> = {}, setOpen = (def: InteractivePiece, t: number): void => { def.target = t; def.t = t; shared.partState.set(def.name, t); if (def.col) { def.col.off = t > 0.5; colliderChanged(def.col); } applyPiece(def); shared.inter.anim.delete(def); invalidateShadow(); };

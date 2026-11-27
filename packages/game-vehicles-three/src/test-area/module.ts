@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker } from '@adatechnology/game-contracts'
+import { DEFERRED_PRIORITY, DEFERRED_QUEUE_ID, footprintBlocker, footprintSolid } from '@adatechnology/game-contracts'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
 import type { AnimationClipSpec, Footprint, BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableItem, TestableModule, Vec3 } from '@adatechnology/game-contracts'
 import { buildVehicleItem, crackedGlassMaterial, createCreaseQueue, createVehicleDestructible, createVehicleKit } from '@adatechnology/game-vehicles'
@@ -363,10 +363,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
 
   // ---- the walking player ------------------------------------------------------------------------------------------------------------------
   // every vehicle on the floor (and the car on the lane) is solid: the point is taken into the vehicle's own space, so a turned vehicle blocks by its turned footprint
-  const laneBlocked = footprintBlocker(
-    () => lane?.group,
-    () => (lane ? { minX: -lane.car.width / 2, maxX: lane.car.width / 2, minZ: -lane.car.length / 2, maxZ: lane.car.length / 2 } : null),
-  )
+  const laneFootprint = (): Footprint | null => (lane ? { minX: -lane.car.width / 2, maxX: lane.car.width / 2, minZ: -lane.car.length / 2, maxZ: lane.car.length / 2 } : null)
+  const laneBlocked = footprintBlocker(() => lane?.group, laneFootprint)
   const blocked = (x: number, z: number, radius: number): boolean => {
     for (const entry of placed.values()) if (entry.footprint && footprintBlocker(entry.root, entry.footprint)(x, z, radius)) return true
     return laneBlocked(x, z, radius)
@@ -656,7 +654,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       three = lent.THREE as Three
       const stopChange = lent.bench?.onChange(onChange)
       const stopFrame = lent.onFrame(frame)
-      const stopBlocker = lent.addBlocker?.(blocked)
+      // the vehicles on the floor have their drawn colliders in the engine's world already: only the car on the lane, which no object holds, needs a body of its own
+      const stopBlocker = lent.addBlocker?.(blocked, () => (lane ? footprintSolid(lane.group, laneFootprint, lane.car.height) : []))
       const stopCrease = lent.defer?.(creaseQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_CREASE])
       const stopLodBatch = lent.defer?.(lodQueue.deferredQueue(), DEFERRED_PRIORITY[DEFERRED_QUEUE_ID.VEHICLE_LOD_BATCH])
       if (isRenderPools(lent.pools)) lent.pools.materials.register('vehicles.cracked-glass', () => crackedGlassMaterial(three!, new three!.DataTexture(new Uint8Array(4), 1, 1)))

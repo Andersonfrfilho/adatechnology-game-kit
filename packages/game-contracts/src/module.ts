@@ -6,6 +6,7 @@ import type { ModuleBench, ModuleControl, ModuleLayer, ModuleMetric } from './be
 import type { CarryHands, DestructibleSpec, GroundLoss, Vec3 } from './destruction'
 import type { DestructibleImpl } from './impact'
 import type { EnvironmentBus } from './environment'
+import type { HostSolid } from './footprint'
 import type { RainCover } from './rain-cover'
 import type { EffectSink } from './effects'
 import type { HandPose, HandTargetSource, MuzzleSource, ToolHand } from './hands'
@@ -486,8 +487,10 @@ export interface ModuleHost {
   /**
    * Adds a place the walking player cannot enter: `blocked(x, z, radius)` answers for a disc of the player's `radius` centred on the world point (x, z). A module with walls of its own (a house) uses it so the
    * player stops at them; the function is asked on every step, so it may follow a door that opens. Returns the function that takes it away. A host without a walking player leaves it out.
+   * `solids` is the same obstacle as fixed boxes (asked every step, so it follows a door too): a host whose physics world holds bodies makes them bodies, so shots, debris, rays, vehicles and blasts meet
+   * the obstacle as the player does, and the player is then stopped by the body, not by `blocked`; a host without such a world stops the player by `blocked`.
    */
-  addBlocker?(blocked: (x: number, z: number, radius: number) => boolean): () => void
+  addBlocker?(blocked: (x: number, z: number, radius: number) => boolean, solids?: () => readonly HostSolid[]): () => void
   /**
    * Puts an item of the host's catalogue (from any loaded module, by its id) in the world as part of the scenery: it stays through the clears and the openings of areas, and shots, blows, blasts
    * and fire hit it like any item (a module's lamp rig standing on a real car of the fleet). Scenarios that start from a seeded world run without it, and it comes back after them. `rotationY` turns it about the vertical axis. Returns null while no loaded module has the item; `remove`

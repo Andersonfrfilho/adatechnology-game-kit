@@ -1,7 +1,7 @@
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { engine } from '@adatechnology/game-floorplan'
-import type { BenchChange, BenchSheet, ControlPatch, ControlValue, DestructibleSpec, ModuleHost } from '@adatechnology/game-contracts'
+import type { BenchChange, BenchSheet, ControlPatch, ControlValue, DestructibleSpec, HostSolid, ModuleHost } from '@adatechnology/game-contracts'
 import { register as registerPostApocalyptic } from '@adatechnology/game-floorplan-post-apocalyptic'
 import { register as registerRural } from '@adatechnology/game-floorplan-rural'
 
@@ -31,6 +31,8 @@ export function fakeRoom(options: FloorplanTestOptions = {}) {
   camera.position.set(0, 1.7, 14)
   const frames = new Set<(dt: number) => void>()
   const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
+  /** The bodies the module gives with its blocker (`addBlocker`'s second argument). */
+  const bodies = new Set<() => readonly HostSolid[]>()
   const clears = new Set<() => void>()
   const looks: Array<{ eye: number[]; target: number[] }> = []
   const bench = { values: new Map<string, unknown>(), layers: new Map<string, boolean>(), listeners: new Set<(c: BenchChange) => void>(), sheets: [] as (BenchSheet | null)[], patches: [] as [string, ControlPatch][] }
@@ -47,7 +49,11 @@ export function fakeRoom(options: FloorplanTestOptions = {}) {
     on: () => () => undefined,
     onFrame: (fn: (dt: number) => void) => (frames.add(fn), () => frames.delete(fn)),
     onClear: (fn: () => void) => (clears.add(fn), () => clears.delete(fn)),
-    addBlocker: (fn: (x: number, z: number, radius: number) => boolean) => (blockers.add(fn), () => blockers.delete(fn)),
+    addBlocker: (fn: (x: number, z: number, radius: number) => boolean, solids?: () => readonly HostSolid[]) => {
+      blockers.add(fn)
+      if (solids) bodies.add(solids)
+      return () => (blockers.delete(fn), solids && bodies.delete(solids))
+    },
     log: () => undefined,
     bench: {
       value: (id: string) => bench.values.get(id),
@@ -98,5 +104,5 @@ export function fakeRoom(options: FloorplanTestOptions = {}) {
     },
   }
   const step = (seconds: number): void => { for (let t = 0; t < seconds; t += 1 / 30) { world.update(1 / 30); renderer.update(1 / 30) } }
-  return { module, host, world, renderer, scene, camera, room, step, frame, act, set, layer, bench, blockers, clears, looks, detach, items }
+  return { module, host, world, renderer, scene, camera, room, step, frame, act, set, layer, bench, blockers, bodies, clears, looks, detach, items }
 }

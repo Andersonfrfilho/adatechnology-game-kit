@@ -34,3 +34,32 @@ export function footprintBlocker(object: FootprintObject | (() => FootprintObjec
     return lx > fp.minX - radius && lx < fp.maxX + radius && lz > fp.minZ - radius && lz < fp.maxZ + radius
   }
 }
+
+/** A fixed box a module gives the host as the body of an obstacle (`ModuleHost.addBlocker`): centre and half sizes in the world, the turn as a quaternion (default none). */
+export interface HostSolid {
+  readonly center: readonly [number, number, number]
+  readonly half: readonly [number, number, number]
+  readonly rotation?: readonly [number, number, number, number]
+  /** Names the box across calls (a box measured again is the same box): without it, the place in the list. */
+  readonly key?: string
+}
+
+/**
+ * The fixed box of `footprint` on `object`, `height` metres tall from the floor: the body of what `footprintBlocker` stops the player at. An object out of the scene (no parent) has no box.
+ * The turn is read from the object's x and z columns (a turn about the vertical axis, as the blocker reads it).
+ */
+export function footprintSolid(object: FootprintObject | (() => FootprintObject | null | undefined), footprint: Footprint | (() => Footprint | null | undefined), height: number): HostSolid[] {
+  const o = typeof object === 'function' ? object() : object
+  const fp = typeof footprint === 'function' ? footprint() : footprint
+  if (!o || !fp || !o.parent) return []
+  o.updateWorldMatrix?.(true, false)
+  const e = o.matrixWorld.elements
+  const sx = Math.hypot(e[0] as number, e[2] as number) || 1
+  const sz = Math.hypot(e[8] as number, e[10] as number) || 1
+  const angle = Math.atan2(-(e[2] as number), e[0] as number)
+  const cx = (fp.minX + fp.maxX) / 2
+  const cz = (fp.minZ + fp.maxZ) / 2
+  const centreX = (e[12] as number) + cx * (e[0] as number) + cz * (e[8] as number)
+  const centreZ = (e[14] as number) + cx * (e[2] as number) + cz * (e[10] as number)
+  return [{ center: [centreX, height / 2, centreZ], half: [((fp.maxX - fp.minX) / 2) * sx, height / 2, ((fp.maxZ - fp.minZ) / 2) * sz], rotation: [0, Math.sin(angle / 2), 0, Math.cos(angle / 2)] }]
+}

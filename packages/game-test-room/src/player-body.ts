@@ -1,7 +1,7 @@
 import { stepKnock } from '@adatechnology/game-contracts'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
-import type { Layer, PhysicsServices } from '@adatechnology/game-physics'
+import type { BodyId, Layer, PhysicsServices, Quat } from '@adatechnology/game-physics'
 import { PLAYER_MASS_KG, PLAYER_WALK_PUSH_NEWTONS, createWalker, footRestHeight } from '@adatechnology/game-player'
 import type { Walker, WalkerStance } from '@adatechnology/game-player'
 
@@ -22,6 +22,10 @@ export interface EngineBody {
 }
 
 const STANDING_HEIGHT = 1.8
+const PROBE_LIFT = 0.03
+const NO_ROTATION: Quat = [0, 0, 0, 1]
+const VEHICLE_LAYER: readonly Layer[] = ['vehicle']
+const STANDING_CAPSULE = { kind: 'capsule', halfHeight: (STANDING_HEIGHT - 2 * PLAYER_RADIUS) / 2, radius: PLAYER_RADIUS } as const
 const STEP_HEIGHT = 0.4
 /** Per second, how fast the eye settles after the feet stepped up. */
 const STEP_EASE_RATE = 20
@@ -42,7 +46,11 @@ type Slam = { readonly speed: number; readonly x: number; readonly z: number }
  */
 export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine: EngineBody): Locomotion => {
   const { loop, world } = engine.services
-  const { blocked: blockedAt } = createBlockedTest(o)
+  const { blocked: blockedTest } = createBlockedTest(o)
+  const inVehicle: BodyId[] = []
+  /** A car's bodies stop the walker's own capsule here, not the walker's sweeps (a car does not stop on its `agent` shadow, so the sweeps ignore it): the capsule at the wanted place meets one. */
+  const meetsVehicle = (x: number, z: number, feet: number): boolean => world.overlapShape(STANDING_CAPSULE, [x, feet + PROBE_LIFT + STANDING_CAPSULE.halfHeight + STANDING_CAPSULE.radius, z], NO_ROTATION, inVehicle, { layers: VEHICLE_LAYER }) > 0
+  const blockedAt: typeof blockedTest = (x, z, radius, feet, footing) => blockedTest(x, z, radius, feet, footing) || (footing !== 'none' && meetsVehicle(x, z, feet))
   const floorAt = (x: number, z: number): number => o.floorAt?.(x, z) ?? 0
   const stepHeight = engine.stepHeight ?? STEP_HEIGHT
   const mass = engine.mass ?? PLAYER_MASS_KG

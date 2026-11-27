@@ -254,7 +254,7 @@ export interface HousePoint { x: number; y: number; z: number }
 export type HouseBoxCollider = BoxCollider
 
 /** A furniture collider of `house.colliders`: the oriented box of a piece on its floor. */
-export interface HouseFurnitureCollider { type: 'furniture'; f: number; obb: { cx: number; cz: number; hw: number; hd: number; c: number; s: number }; item: string; off: boolean }
+export interface HouseFurnitureCollider { type: 'furniture'; f: number; obb: { cx: number; cz: number; hw: number; hd: number; c: number; s: number }; item: string; off: boolean; /** Height of the piece (m). */ h?: number }
 
 /** Options of `house.target` and `house.interact`: the ray test the game uses for the meshes, and the options of the interactables kit's targeting. */
 export interface HouseTargetOptions { strike?: (meshes: THREE.Mesh[]) => THREE.Intersection | null | undefined; interactives?: KitTargetOptions }

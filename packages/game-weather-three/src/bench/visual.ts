@@ -1,5 +1,5 @@
 import { isLightBudget } from '@adatechnology/game-render-three'
-import { footprintBlocker } from '@adatechnology/game-contracts'
+import { footprintBlocker, footprintSolid } from '@adatechnology/game-contracts'
 import type { Footprint, ModuleHost, ModuleLayer } from '@adatechnology/game-contracts'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { WeatherVisual, WeatherVisualContext, WeatherVisualFactory } from '@adatechnology/game-weather/testing'
@@ -36,18 +36,20 @@ export type WeatherVisualOptions = Pick<WeatherRendererOptions, 'profile' | 'ran
 
 /** What the rig needs of the vehicles SDK (`VehiclesThree` of game-vehicles-three): a car in the game frame (front on +z, wheels on y = 0) and its length. */
 export interface RigVehicles {
-  build(key: string, options?: { quality?: 'high' | 'lite' }): { readonly group: THREE_NS.Object3D; readonly length: number; readonly width?: number; dispose(): void }
+  build(key: string, options?: { quality?: 'high' | 'lite' }): { readonly group: THREE_NS.Object3D; readonly length: number; readonly width?: number; readonly height?: number; dispose(): void }
 }
 
 const RIG_VEHICLE = 'midsize_sedan'
 const LAYER_ORDER: readonly Exclude<WeatherLayerId, 'fog'>[] = ['far_rain', 'near_rain', 'mist', 'sky', 'lightning', 'headlights', 'haze']
+/** Height of the rig's car (m) when the vehicles SDK does not say it: a family car. */
+const RIG_CAR_HEIGHT = 1.5
 const RIG_DEFAULT = [1.6, -2.5, 0] as const
 
 /**
  * The lamps of the Workshop's car and, when the vehicles SDK is lent, a car of the fleet under them, its nose just ahead of the lamps: what the headlights are attached to when the viewer has no
  * car in the room.
  */
-function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: string): { readonly group: THREE_NS.Group; readonly footprint?: Footprint; dispose(): void } {
+function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: string): { readonly group: THREE_NS.Group; readonly footprint?: Footprint; readonly height: number; dispose(): void } {
   const group = new THREE.Group()
   group.name = 'weather-lamp-rig'
   const car = vehicles?.build(key, { quality: 'lite' })
@@ -60,6 +62,7 @@ function buildRig(THREE: ThreeLib, vehicles: RigVehicles | undefined, key: strin
   return {
     group,
     ...(footprint ? { footprint } : {}),
+    height: car?.height ?? RIG_CAR_HEIGHT,
     dispose() {
       car?.dispose()
     },
@@ -153,7 +156,8 @@ function attachRig(
     rig.group.rotation.y = place[2]
     scene.add(rig.group)
     detach = renderer.headlights.attach(rig.group)
-    if (rig.footprint) unblock = host.addBlocker?.(footprintBlocker(rig.group, rig.footprint))
+    const { footprint, height } = rig
+    if (footprint) unblock = host.addBlocker?.(footprintBlocker(rig.group, footprint), () => footprintSolid(rig.group, footprint, height))
   }
   // the car as a real object of the host: placed as soon as a loaded module has the item (the vehicles module may load after this one), centred on the rig's place, and the lamps then
   // move to its nose (the car's centre is where the rig's car stood, the lamps just behind its front)
