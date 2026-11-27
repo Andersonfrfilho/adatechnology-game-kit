@@ -41,7 +41,8 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cost": "mkdir -p ~/.cache/adatechnology-game-kit && PHYSICS_COST=1 flock ~/.cache/adatechnology-game-kit/perf-measure.lock vitest run tests/player-body-cost.test.ts"
   },
   "dependencies": {
     "@adatechnology/game-audio": "workspace:^",

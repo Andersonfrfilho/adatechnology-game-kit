@@ -119,6 +119,24 @@ describe('createWalker: the player body in the loop (spec 008 TS.9f)', () => {
     world.dispose()
   })
 
+  it('teleports the feet and the drawn feet at once, and does nothing while parked', { timeout: 60000 }, async () => {
+    const { world, walker, run, feet } = await scene()
+    walker.setIntent(0, -1.5)
+    run(0.5)
+    walker.teleport([4, 0, 6])
+    walker.read(feet)
+    expect(feet[0]).toBeCloseTo(4, 3)
+    expect(feet[2]).toBeCloseTo(6, 3)
+    const drawn = new Float64Array(3)
+    walker.drawn(0, drawn)
+    expect(drawn[2]).toBeCloseTo(6, 3)
+    walker.park()
+    walker.teleport([9, 0, 9])
+    walker.read(feet)
+    expect(feet[0]).toBeCloseTo(4, 3)
+    world.dispose()
+  })
+
   it('leaves the loop and the world on dispose', { timeout: 60000 }, async () => {
     const { world, walker, run } = await scene({ shadow: 'agent' })
     const before = world.bodyCount

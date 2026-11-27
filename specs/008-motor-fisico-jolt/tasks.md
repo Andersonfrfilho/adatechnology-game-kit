@@ -262,16 +262,18 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - [x] TS.9d ✅ `readCharacterGround(id,out)`. Aceite: plataforma móvel, velocidade bate. `sonnet`.
   - [x] TS.9e ✅ Personagens no `saveState`/`restoreState`. Aceite: salvar, 2 s, restaurar, 2 s dá bytes iguais. `sonnet`.
   - [x] TS.9f ✅ `createWalker` no `game-player`. Aceite: testes de walker. `sonnet`.
-  - [ ] TS.9g `Locomotion` na sala (só mover). Aceite: teste da sala sem diff; `room.ts` ≤ 5259 linhas. `sonnet`.
-  - [ ] TS.9h `player-body` engine. Aceite: `physics-channel` (own nada muda; Jolt cria e libera). `sonnet`.
-  - [ ] TS.9i Nocaute/batida (`onSlam` obstacle/ground). `sonnet`.
-  - [ ] TS.9j `park`/`unpark` (saída bloqueada vai ao teto, sem penetrar). `sonnet`.
-  - [ ] TS.9k Avatar lê `drawn`. `haiku`.
-  - [ ] TS.9l Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
+  - [x] TS.9g ✅ `Locomotion` na sala (só mover). Aceite: teste da sala sem diff; `room.ts` ≤ 5259 linhas. `sonnet`.
+  - [x] TS.9h ✅ `player-body` engine. Aceite: `physics-channel` (own nada muda; Jolt cria e libera). `sonnet`.
+  - [x] TS.9i ✅ Nocaute/batida (`onSlam` obstacle/ground). `sonnet`.
+  - [x] TS.9j ✅ `park`/`unpark` (saída bloqueada vai ao teto, sem penetrar). `sonnet`.
+  - [x] TS.9k ✅ Avatar lê `drawn`. `haiku`.
+  - [x] TS.9l ✅ Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
   - [ ] TS.9m Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
   - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. 
 - [x] TS.8 ✅ `contactHits` ligado por padrão (custo medido: dentro do orçamento) e `blastQuery` na explosão (`evidence.md` `## TS.8`).
 - [ ] TS.9 🧠 Jogador no motor (desenho antes).
+  - [x] TS.9m ✅ Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
+  - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. **Pendente, do dono** (não roda em CI nem aqui): ver `evidence.md` § TS.9n para o que olhar. 
 - [ ] TS.10 (opcional) Juntas na vitrine.
 
 ## Fase 8 — Corte e validação

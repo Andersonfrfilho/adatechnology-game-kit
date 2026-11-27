@@ -648,13 +648,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   /**
    * The footing of the player at (x, z) with the feet at `feet`: what is drawn there and not lighter than `KICK_MASS` (that is kicked, see
-   * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body.
+   * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body. `bodiless`: only what the physics world has no body for.
    */
-  const footing = (x: number, z: number, radius: number, feet: number): { floor: number; blocked: boolean } => {
+  const footing = (x: number, z: number, radius: number, feet: number, bodiless = false): { floor: number; blocked: boolean } => {
     let floor = -Infinity
     let blocked = false
     for (const s of renderer.solidsNear(x, z, radius)) {
-      if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS) continue
+      if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS || (bodiless && (s.piece || s.loose))) continue
       // a wall whose follower says where it stops a body (its breach, the piece of it that came loose and stands) is not measured by its whole box
       if (followerOwns(s.objectId)) continue
       const dx = Math.max(s.min[0] - x, 0, x - s.max[0])
@@ -721,13 +721,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     dom,
     colliders: standingColliders,
-    footing: (x, z, radius, feet) => footing(x, z, radius, feet),
+    footing,
     blockers,
     limit: arenaSize,
     floorAt: terrain.footAt,
     speedAt: terrain.walkFactorAt,
     start: arena.playerStart,
-    crouchKeys: options.crouch?.keys,
+    crouchKeys: options.crouch?.keys, ...(kit.physics.services ? { engine: { services: kit.physics.services, scheduler, stepHeight: STEP_UP } } : {}),
     onSlam: (event) => slamPlayer(event),
     onFeet: (event) => {
       const at = player.position
@@ -1675,7 +1675,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let camDistance = Infinity
 
   const thirdPose = (dt: number): ThirdPersonPose => {
-    const pose = thirdPersonPose({ x: player.x, z: player.z, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
+    const pose = thirdPersonPose({ x: player.drawnX, z: player.drawnZ, feet: player.drawnFeet, yaw: player.yaw, pitch: player.pitch, crouch: avatarState.crouch }, third, (o, d, max) =>
       withoutHeld(() => world.raycast(o, d, max))?.distance ?? null,
     )
     // a wall pulls the camera in at once, the way back is slow (`view.cd`, line 76559 of the team game)
@@ -1729,8 +1729,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const stepAvatar = (dt: number): void => {
     if (!avatar) return
-    const x = player.x
-    const z = player.z
+    const x = player.drawnX
+    const z = player.drawnZ
     if (dt > 0 && feetPrev) {
       // a jump of position faster than the player can run is a teleport (`look`, an area opening), not a stride
       const raw = Math.hypot(x - feetPrev[0], z - feetPrev[1]) / dt
@@ -3997,7 +3997,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     push.step(isPaused ? 0 : dt)
     shoves.step(isPaused ? 0 : dt)
     doors.step(isPaused ? 0 : dt)
-    if (!isPaused) kickLight(dt)
+    if (!isPaused && !player.engine) kickLight(dt)
     if (!isPaused) pushByPlayer(dt)
     else player.takeWish()
     stepAvatar(isPaused ? 0 : dt)
@@ -4399,7 +4399,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     setViewCamera: (view) => moduleViews.setMain((view as THREE_NS.Camera | null) ?? null),
     holdPlayer: (held) => {
       moduleHeld = held
-      player.setWalkHeld(held)
+      player.hold(held)
     },
     playerHeld: () => moduleHeld,
     ...(options.blastShove ? { blastShove: options.blastShove } : {}),

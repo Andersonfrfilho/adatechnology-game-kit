@@ -55,6 +55,8 @@ export type Walker = {
   read(out: Float32Array | Float64Array): void
   /** The feet between the last two fixed steps, `alpha` (0 to 1) of the way: the scheduler's alpha, not the loop's (`stepFixed` zeroes that one). */
   drawn(alpha: number, out: Float32Array | Float64Array): void
+  /** Puts the feet here at once, with no sweep and no speed carried over, and the drawn feet with them (a respawn, a scripted step). Nothing happens while parked. */
+  teleport(feet: Vec3): void
   /** Takes the body out of the world (a seat, an aircraft, a vehicle): it no longer moves or blocks. */
   park(): void
   /** Puts the body back at the first of `candidates` (feet) where the capsule overlaps nothing solid, in this order (the door, the far side, the roof); false, still parked, when none fits. */
@@ -159,6 +161,12 @@ export const createWalker = (services: WalkerServices, options: WalkerOptions): 
     drawn: (alpha, out) => {
       const t = alpha < 0 ? 0 : alpha > 1 ? 1 : alpha
       for (let axis = 0; axis < 3; axis++) out[axis] = (previous[axis] as number) + ((current[axis] as number) - (previous[axis] as number)) * t
+    },
+    teleport: (feet) => {
+      if (parked) return
+      world.teleportCharacter(id, feet)
+      world.readCharacter(id, current, 0)
+      previous.set(current)
     },
     park: () => {
       if (parked) return
