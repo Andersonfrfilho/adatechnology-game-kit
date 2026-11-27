@@ -9,6 +9,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { CHARACTERS_AREA_ID, PERSON_ITEM_PREFIX, ZOMBIE_ITEM_PREFIX, createCharactersTestModule, registerBodyMaterial } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 // Building the rich bodies of 25 items takes seconds on a busy machine.
 vi.setConfig({ testTimeout: 60_000 })
@@ -21,7 +22,7 @@ const stubRenderer = (): THREE.WebGLRenderer => {
 const roomWithCharacters = (audio?: ReturnType<typeof createAudioEngine>): { room: TestRoom; module: ReturnType<typeof createCharactersTestModule> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: false, ...(audio ? { audio } : {}) })
   registerBodyMaterial(room.world as never)
   const module = createCharactersTestModule({
     locale: 'pt-BR',
@@ -85,7 +86,7 @@ describe('characters test area', () => {
   it('works without packs: no types, no professions, nothing breaks', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, renderer: stubRenderer(), ui: false, catalog: [] })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, renderer: stubRenderer(), ui: false, catalog: [] })
   registerBodyMaterial(room.world as never)
     const module = createCharactersTestModule({ locale: 'en', createKit: () => createCharacters() })
     expect(module.items('en')).toEqual([])

@@ -9,6 +9,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import { createPlayerAvatar, toRoomAvatar } from '../src'
 import { AVATAR_AREA_ID, createAvatarTestModule } from '../src/testing'
 import type { AvatarTestOptions } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const stubRenderer = (): THREE.WebGLRenderer => {
   const dom = document.createElement('canvas')
@@ -19,7 +20,7 @@ const setup = (locale = 'pt-BR') => setupWith({}, locale)
 const setupWith = (extra: Partial<AvatarTestOptions>, locale = 'pt-BR') => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room: TestRoom = createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
+  const room: TestRoom = createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
   const avatar = createPlayerAvatar(THREE)
   room.setAvatar(toRoomAvatar(avatar, defaultCharacterClips()))
   const module = createAvatarTestModule({ ...extra, avatar, locale, camera: { mode: () => room.cameraMode, set: (mode) => room.setCameraMode(mode) }, state: { set: (state) => room.setAvatarState(state) } })
