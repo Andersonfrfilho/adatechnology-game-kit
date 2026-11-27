@@ -3,11 +3,12 @@ import * as THREE from 'three'
 import { createTestRoom } from '../src'
 import type { RoomAvatar, TestRoom } from '../src'
 import { stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const room = (): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const created = createTestRoom({ THREE, container, catalog: [], renderer: stubRenderer(), ui: false })
+  const created = createTestRoom({ physics: roomPhysics(), THREE, container, catalog: [], renderer: stubRenderer(), ui: false })
   const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, hand: () => new THREE.Object3D() }
   created.setAvatar(avatar)
   created.look([0, 1.7, 5], [0, 1.7, -10])

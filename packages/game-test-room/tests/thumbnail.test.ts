@@ -5,6 +5,7 @@ import { createTestRoom } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import type { TestRoomItem } from '../src'
 import { stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" fill="currentColor"><path d="M0 0H10V10Z"/></svg>'
 const URL_THUMB = 'assets/weapon-svg/generated/glock_17.svg'
@@ -15,7 +16,7 @@ const withThumbnails = (): TestRoomItem[] =>
 const open = (catalog: TestRoomItem[]) => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog, renderer: stubRenderer(), ui: true })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog, renderer: stubRenderer(), ui: true })
   return { container, room }
 }
 const buttonOf = (container: HTMLElement, name: string): HTMLElement => [...container.querySelectorAll<HTMLElement>('.tr-item button')].find((b) => b.textContent === name) as HTMLElement

@@ -5,6 +5,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoom, TestRoomItem, TestRoomOptions } from '@adatechnology/game-test-room'
 
 import { createPlayerAvatar, toRoomAvatar } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const stubRenderer = (): THREE.WebGLRenderer => {
   const dom = document.createElement('canvas')
@@ -40,7 +41,7 @@ const cup: TestRoomItem = {
 const setup = (scenery: TestRoomOptions['scenery'] = { table: null, shelf: null }): { room: TestRoom; avatar: ReturnType<typeof createPlayerAvatar> } => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [bench, cup], renderer: stubRenderer(), ui: false, scenery })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [bench, cup], renderer: stubRenderer(), ui: false, scenery })
   const avatar = createPlayerAvatar(THREE)
   room.setAvatar(toRoomAvatar(avatar, defaultCharacterClips()))
   return { room, avatar }

@@ -7,6 +7,7 @@ import { fleetProvingSubject, installFleet } from '@adatechnology/game-vehicles-
 
 import { createProvingModule, PROVING_AREA_ID } from '../src'
 import { fakeDocument } from './fake-dom'
+import { roomPhysics } from './support/room-physics'
 
 vi.setConfig({ testTimeout: 600_000 })
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
@@ -23,7 +24,7 @@ const createKit = (three: unknown) => {
 const setUp = () => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
   const module = createProvingModule({ locale: 'en', createKit, vehicles: ['compact_hatch', 'city_bus'], subject: (id, mass) => fleetProvingSubject(id, mass ? { mass } : {}) })
   const report = room.loadModule(module as never)
   expect(report.problems).toEqual([])
@@ -92,7 +93,7 @@ describe('proving ground area', () => {
   it('keeps the room its own view until its area opens: loading the module and picking a camera on the bench take nothing over', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     const module = createProvingModule({ locale: 'en', createKit, vehicles: ['compact_hatch'], subject: (id, mass) => fleetProvingSubject(id, mass ? { mass } : {}) })
     const views: Array<unknown | null> = []
     const attach = module.attach!.bind(module)
@@ -178,7 +179,7 @@ describe('proving ground area', () => {
   it('hotwires the car without the key, misting the glass in the cold rain until the demister clears it, and keeps items in the glovebox and the trunk', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false })
     const module = createProvingModule({
       locale: 'en',
       createKit,

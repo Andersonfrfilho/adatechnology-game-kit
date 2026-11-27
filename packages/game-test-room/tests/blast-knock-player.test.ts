@@ -107,7 +107,7 @@ describe('a blast on the player', () => {
   })
 
   it('a body thrown into a wall slams into it: the wall takes the blow, the player hits it and stops', () => {
-    const room = makeRoom()
+    const room = makeRoom({ physics: 'own' })
     room.look([0, 1.7, -2], [0, 1.7, -6])
     // a steel sheet right behind the player, where the blast throws it
     const sheet = room.spawn('steel_sheet', [0, 0, -3.3], 0).objectId
@@ -126,7 +126,7 @@ describe('a blast on the player', () => {
 
   // with every destruction event applied in the frame it happens the blast has taken the sheet's posts when the body arrives: the panel floats above the hip
   it.each([-3.3, -3.4, -3.48])('the slam finds the sheet at %d m whatever the blast has done to its stand by then', (sheetZ) => {
-    const room = makeRoom({ frameBudgetMs: Infinity, debris: { eventBudgetMs: Infinity } })
+    const room = makeRoom({ physics: 'own', frameBudgetMs: Infinity, debris: { eventBudgetMs: Infinity } })
     room.look([0, 1.7, -2], [0, 1.7, -6])
     const sheet = room.spawn('steel_sheet', [0, 0, sheetZ], 0).objectId
     run(room, 0.5)

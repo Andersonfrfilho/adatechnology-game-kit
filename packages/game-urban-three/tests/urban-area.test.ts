@@ -7,6 +7,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 import { createUrbanTestModule, loadUrbanTestModule, URBAN_AREA_ID } from '../src'
 import { defaultPlantSpec, defaultUrbanProviders } from '@adatechnology/game-kit-defaults'
 import { fakeDocument } from './fake-dom'
+import { roomPhysics } from './support/room-physics'
 
 vi.setConfig({ testTimeout: 600_000 })
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
@@ -18,7 +19,7 @@ const stubRenderer = (): never => {
 const makeRoom = (locale = 'pt-BR'): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
+  return createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
 }
 const options = (locale = 'pt-BR') => ({ locale, document: fakeDocument, providers: defaultUrbanProviders(), plantSpec: defaultPlantSpec })
 

@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createWeaponAudio, createWeaponFx, createWeaponsTestModule } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 const warnings = (spy: ReturnType<typeof vi.spyOn>): string[] => spy.mock.calls.map((call) => String(call[0])).filter((text) => text.startsWith('[game-kit]'))
 const arsenal = createArsenal({ seed: 1, rules: { faults: false } })
@@ -45,7 +46,7 @@ describe('the own effects world and audio engine of the weapons say so', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const renderer = { domElement: document.createElement('canvas'), shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer, ui: false, arsenal })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer, ui: false, arsenal })
     expect(room.loadModule(createWeaponsTestModule({ locale: 'en', arsenal })).problems).toEqual([])
     for (let elapsed = 0; elapsed < 0.2; elapsed += 0.02) room.update(0.02)
     expect(warnings(warn)).toEqual([])

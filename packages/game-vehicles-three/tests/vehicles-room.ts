@@ -6,6 +6,7 @@ import type { TestRoom } from '@adatechnology/game-test-room'
 
 import { createVehiclesTestModule } from '../src'
 import { fakeDocument } from './fake-dom'
+import { roomPhysics } from './support/room-physics'
 
 export type VehiclesModule = ReturnType<typeof createVehiclesTestModule>
 
@@ -20,7 +21,7 @@ export const stubRenderer = (): never => {
 export const roomOf = (locale: string): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
+  return createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
 }
 
 /**

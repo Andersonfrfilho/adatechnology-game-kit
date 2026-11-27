@@ -7,6 +7,7 @@ import { createWeaponsTestModule } from '../src'
 import { hasWeaponModel } from '../src/models'
 import { SHOWCASE, SHOWCASE_IDS, showcaseControls, showcasePhoto } from '../src/test-area/showcase'
 import { showcaseTextOf } from '../src/test-area/showcase-text'
+import { roomPhysics } from './support/room-physics'
 
 function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -24,7 +25,7 @@ const text = showcaseTextOf('en')
 function areaRoom(options: { readonly referencePhotos?: boolean; readonly ui?: boolean } = {}): TestRoom {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: options.ui ?? false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: options.ui ?? false, arsenal })
   rooms.push(room)
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', arsenal, ...(options.referencePhotos === undefined ? {} : { referencePhotos: options.referencePhotos }) })).problems).toEqual([])
   return room

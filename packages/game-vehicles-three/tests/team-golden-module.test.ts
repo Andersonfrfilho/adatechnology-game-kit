@@ -13,6 +13,7 @@ import * as GameVehiclesFleet from '@adatechnology/game-vehicles-fleet'
 
 import { PAGE_SCENARIO_ALIASES, createVehiclesTestModule } from '../src'
 import { fakeDocument } from './fake-dom'
+import { suiteRoomPhysics } from './support/room-physics'
 
 /**
  * G-veh-module: the Frota test page's own module (`MODULO_VEICULOS`, sala-veiculos.js 43114-43407) runs against the SDK in a test room, and so does the TypeScript port;
@@ -34,7 +35,7 @@ const stubRenderer = (): never => {
 const makeRoom = (): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, debris: { eventBudgetMs: Infinity } })
+  return createTestRoom({ physics: suiteRoomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, debris: { eventBudgetMs: Infinity } })
 }
 
 /** The page's module, evaluated as the page does: a classic script that finds the three globals on `window` (the kit gets the fake document the Node run needs). */

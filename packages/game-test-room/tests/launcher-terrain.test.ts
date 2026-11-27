@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { createArsenal } from '@adatechnology/game-weapons'
 import { TERRAIN_AREA_GROUND, TERRAIN_STRIPS, createTerrainTestModule } from '@adatechnology/game-terrain-three'
 import type { HostEvent } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
@@ -35,7 +36,7 @@ const lotTargets = (): { surface: string; target: Vec3 }[] =>
     return { surface: zone.surface, target: [(x0 + x1) / 2, 0, z1 - 0.8] }
   })
 
-const LAUNCHERS = [...makeRoom().arsenal.weapons.values()].filter((def) => def.action.kind === 'launcher' && def.action.projectile).map((def) => def.id)
+const LAUNCHERS = [...createArsenal({ locale: 'en', seed: 1 }).weapons.values()].filter((def) => def.action.kind === 'launcher' && def.action.projectile).map((def) => def.id)
 
 type Area = {
   readonly room: TestRoom
@@ -47,7 +48,7 @@ type Area = {
 
 /** A fresh room with the ground area open and `weapon` in hand: the craters and the debris of other launchers do not count. */
 const openGroundArea = (weapon: string): Area => {
-  const room = makeRoom()
+  const room = makeRoom({ physics: 'own' })
   const explosions = explosionsOf(room)
   room.loadModule(createTerrainTestModule())
   room.openArea('terrain')

@@ -6,6 +6,7 @@ import { EXPLOSIVES_AREA_ID, EXPLOSIVES_TEXT, createExplosivesTestModule, create
 import { itemModels } from '@adatechnology/game-items-three'
 import { createArsenal } from '@adatechnology/game-weapons'
 import { discardObject3D } from '@adatechnology/game-shapes-three'
+import { roomPhysics } from './support/room-physics'
 
 vi.setConfig({ testTimeout: 60_000 })
 
@@ -40,7 +41,7 @@ const LOOSE_THINGS = [
 function roomWithExplosives(locale = 'pt-BR', catalog: typeof LOOSE_THINGS = []): { room: TestRoom; module: ReturnType<typeof createExplosivesTestModule> } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale, catalog: catalog as never, renderer: stubRenderer(), ui: false })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: catalog as never, renderer: stubRenderer(), ui: false })
   room.loadModule(createWeaponsTestModule({ locale, sound: false, items: itemModels }))
   const module = createExplosivesTestModule({ locale, room: room as never, items: itemModels })
   const report = room.loadModule(module)

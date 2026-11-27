@@ -9,7 +9,7 @@ import { makeRoom } from './helpers'
 type Played = { id: string; frame: number }
 
 /** A room whose engine records what is played (no AudioContext in Node, so nothing sounds), on frame numbers. */
-const setup = (avatar: RoomAvatar | null = null) => {
+const setup = (avatar: RoomAvatar | null = null, physics?: 'own') => {
   const audio = createAudioEngine({ createContext: () => null })
   const played: Played[] = []
   let frame = 0
@@ -18,7 +18,7 @@ const setup = (avatar: RoomAvatar | null = null) => {
     played.push({ id, frame })
     return play(id, options)
   }
-  const room = makeRoom({ audio })
+  const room = makeRoom({ audio, ...(physics ? { physics } : {}) })
   if (avatar) room.setAvatar(avatar)
   const events: HostEvent[] = []
   const listener: TestableModule = {
@@ -110,7 +110,7 @@ describe('blows', () => {
   it('a punch with a clip: the swing starts just before the contact (in the room’s time) and the knuckles sound with the contact', () => {
     const impact = 0.3
     const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => impact }
-    const { room, played, step, frameNow } = setup(avatar)
+    const { room, played, step, frameNow } = setup(avatar, 'own')
     room.spawn('chair', [0, 0, -4], 0)
     step(0.4)
     room.look([-0.6, 0.5, -4.18], [0.22, 0.5, -4.18])

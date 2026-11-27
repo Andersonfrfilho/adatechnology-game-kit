@@ -258,6 +258,12 @@ importers:
       '@adatechnology/game-characters-undead':
         specifier: workspace:^
         version: link:../game-characters-undead
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
@@ -1360,6 +1366,12 @@ importers:
       '@adatechnology/game-items-goods':
         specifier: workspace:^
         version: link:../game-items-goods
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
@@ -1944,6 +1956,12 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room
@@ -2027,6 +2045,12 @@ importers:
         specifier: workspace:^
         version: link:../game-vegetation-species
     devDependencies:
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
       '@adatechnology/game-test-room':
         specifier: workspace:^
         version: link:../game-test-room

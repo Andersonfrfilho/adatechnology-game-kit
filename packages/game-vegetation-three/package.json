@@ -53,6 +53,8 @@
     "@adatechnology/game-vegetation-species": "workspace:^"
   },
   "devDependencies": {
+    "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",

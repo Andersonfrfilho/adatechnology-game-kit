@@ -80,7 +80,7 @@ const stateOf = (room: TestRoom, loop: PhysicsLoop | null): unknown => {
 
 /** The hash of every tick `0..TICKS-1`, with the frame time `frameTimes` gives: the actions are by tick index, the hash is the state when the tick ends. */
 const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly hasWorkBudget?: boolean; readonly strike?: CasedStrike }, frameTimes: FrameTimes): string[] => {
-  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, ...(variant.loop ? { physics: variant.loop } : {}), ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
+  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, physics: variant.loop ?? 'own', ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
   const { scheduler } = (room as unknown as SchedulerHolder).frameParts
   const sobrado = room.spawn('sobrado', [0, 0, -9]).objectId
   const hashes: string[] = []

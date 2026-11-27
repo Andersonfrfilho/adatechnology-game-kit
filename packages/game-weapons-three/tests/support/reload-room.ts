@@ -5,6 +5,7 @@ import type { RoomAvatar, TestRoom } from '@adatechnology/game-test-room'
 
 type HandState = ReturnType<TestRoom['handState']>
 import { createArsenal } from '@adatechnology/game-weapons'
+import { roomPhysics } from './room-physics'
 import { createWeaponsTestModule } from '../../src'
 export function stubRenderer(): THREE.WebGLRenderer {
   const dom = document.createElement('canvas')
@@ -24,7 +25,7 @@ export function disposeRooms(): void {
 export function setup(): { room: TestRoom; last: () => HandState } {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, arsenal })
   rooms.push(room)
   expect(room.loadModule(createWeaponsTestModule({ locale: 'en', sound: false, arsenal })).problems).toEqual([])
   const avatar: RoomAvatar = { root: new THREE.Group(), update: () => undefined, strike: () => null }

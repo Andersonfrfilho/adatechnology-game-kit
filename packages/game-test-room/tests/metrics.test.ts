@@ -3,6 +3,7 @@ import { createTestRoom } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import * as THREE from 'three'
 import { makeRoom, stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const withRenderInfo = (calls: number, triangles: number): THREE.WebGLRenderer => {
   const gl = stubRenderer() as unknown as Record<string, unknown>
@@ -64,7 +65,7 @@ describe('room metrics', () => {
       } as unknown as typeof THREE.WebGLRenderer
       const container = document.createElement('div')
       document.body.appendChild(container)
-      const room = createTestRoom({ THREE: { ...THREE, WebGLRenderer: FakeRenderer }, container, locale: 'en', catalog: demoItems('en'), ui: false })
+      const room = createTestRoom({ physics: roomPhysics(), THREE: { ...THREE, WebGLRenderer: FakeRenderer }, container, locale: 'en', catalog: demoItems('en'), ui: false })
       return { room, frame: (now) => callback?.(now) }
     }
 

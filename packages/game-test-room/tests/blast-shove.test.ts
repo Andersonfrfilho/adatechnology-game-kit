@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { createTestRoom } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import { stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const scaledCan = {
   id: 'scaled_can',
@@ -26,7 +27,7 @@ const scaledCan = {
 function roomWith(extra = {}) {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale: 'en', catalog: [...demoItems('en'), scaledCan], renderer: stubRenderer(), ui: false, ...extra })
+  return createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [...demoItems('en'), scaledCan], renderer: stubRenderer(), ui: false, ...extra })
 }
 
 describe('an item whose builder scales the root', () => {
@@ -46,7 +47,7 @@ describe('the holder of an item whose builder scales the root', () => {
     const tracked = { ...scaledCan, id: 'tracked_can', build: () => (built = scaledCan.build()) }
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: [...demoItems('en'), tracked], renderer: stubRenderer(), ui: false })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: [...demoItems('en'), tracked], renderer: stubRenderer(), ui: false })
     const can = room.spawn('tracked_can', [0, 0, -4], 0)
     expect(built?.parent).toBe(can.root)
     built!.visible = false

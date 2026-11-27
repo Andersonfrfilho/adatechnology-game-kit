@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import * as THREE from 'three'
 import { createTestRoom } from '../src'
 import type { DestructibleSpec } from '@adatechnology/game-destruction'
-import type { RoomAvatar, RoomAvatarState, TestRoom } from '../src'
+import type { RoomAvatar, RoomAvatarState, TestRoom, TestRoomOptions } from '../src'
 import { thirdPersonPose, THIRD_PERSON_DEFAULTS } from '../src/avatar'
 import { stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const crate: DestructibleSpec = { name: 'crate', parts: [{ id: 'body', material: 'wood_soft', shape: { kind: 'box', size: [0.4, 0.4, 0.4] }, position: [0, 0.2, 0] }], joints: [] }
 const crateItem = {
@@ -34,10 +35,10 @@ const fakeAvatar = (): Fake => {
   return { root, calls, handSocket, update: (dt, state) => void calls.push({ dt, state: { ...state } }), hand: () => handSocket }
 }
 
-const room = (extra = {}): TestRoom => {
+const room = (extra: Partial<TestRoomOptions> = {}): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, catalog: [], renderer: stubRenderer(), ui: false, ...extra })
+  return createTestRoom({ physics: extra.physics ?? roomPhysics(), THREE, container, catalog: [], renderer: stubRenderer(), ui: false, ...extra })
 }
 const key = (code: string, init: KeyboardEventInit = {}) => window.dispatchEvent(new KeyboardEvent('keydown', { code, ...init }))
 
@@ -221,7 +222,7 @@ describe('room avatar', () => {
   })
 
   it('a carried item follows the avatar hand in both views', () => {
-    const r = room({ catalog: [wideCrate] })
+    const r = room({ catalog: [wideCrate], physics: 'own' })
     const a = fakeAvatar()
     r.setAvatar(a)
     r.look([0, 1.7, 0], [0, 0.2, -1.5])
