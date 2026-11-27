@@ -1,5 +1,6 @@
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
+import type { BodyId } from '@adatechnology/game-physics'
 
 /** Horizontal radius of the player, metres: what the colliders and a trip wire see. */
 export const PLAYER_RADIUS = 0.3
@@ -81,6 +82,8 @@ export interface Locomotion {
   update(dt: number, input: LocomotionInput): void
   /** The feet at the display moment, `alpha` of the way between two fixed steps (engine only). */
   present?(alpha: number): void
+  /** The body the world sees of the player (engine only): what a thrown piece or a casing must not hit on leaving the hand. */
+  shadowBody?(): BodyId | undefined
   dispose(): void
 }
 

@@ -2745,7 +2745,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     emitHost,
     startFire,
     say,
-    projectileModel: options.projectileModel, physics: kit.physics.services?.world,
+    projectileModel: options.projectileModel, physics: kit.physics.services && player.ignoringOwnBody(kit.physics.services).world,
     audio,
     water: blastWater,
     waterLevelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null,
@@ -4389,7 +4389,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
-    setGround: (layout) => terrain.setLayout(layout), ...groundHostOf(kit.ground, fluids), ...physicsHostOf(kit, options.workers),
+    setGround: (layout) => terrain.setLayout(layout), ...groundHostOf(kit.ground, fluids), ...physicsHostOf({ physics: { services: kit.physics.services && player.ignoringOwnBody(kit.physics.services) } }, options.workers),
     effects: vfx,
     particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,
