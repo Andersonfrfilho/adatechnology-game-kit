@@ -22,6 +22,7 @@ import type { FloorplanResult } from '@adatechnology/game-floorplan'
 import type { DoorLeaf, Eye, RoomLighting, Three } from '../kernel-types.js'
 import type { House, HouseRenderer } from '../types.js'
 import { addHouseRainCover } from '../rain-cover.js'
+import { houseSolids } from './blocker-solids.js'
 import { createBuriedLeaks } from './buried-leaks.js'
 import type { BuriedLeaks } from './buried-leaks.js'
 
@@ -701,7 +702,7 @@ export function createFloorplanTestModule(options: FloorplanTestOptions = {}): T
     attach(lent) {
       host = lent
       THREE = lent.THREE as Three
-      removers.push(lent.addBlocker?.(blocked) ?? (() => undefined))
+      removers.push(lent.addBlocker?.(blocked, () => placed.flatMap((p) => houseSolids(lent.THREE as Three, p.house, lent.bench?.layer('lot') ?? false))) ?? (() => undefined))
       removers.push(lent.onClear?.(clearHouses) ?? (() => undefined))
       buried = createBuriedLeaks(lent, THREE)
       removers.push(lent.onReset?.(() => buried?.reset()) ?? (() => undefined))

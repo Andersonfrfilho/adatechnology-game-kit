@@ -12,7 +12,7 @@ import type { BodyId } from '@adatechnology/game-physics'
 import type * as THREE_NS from 'three'
 import type { DeferredQueue, DeferredQueueOptions, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, MaterialId, Quat, Vec3 } from '@adatechnology/game-destruction'
-import type { WarmUpProbes } from '@adatechnology/game-contracts'
+import type { WarmUpProbes, HostSolid } from '@adatechnology/game-contracts'
 import type { BlastDebrisOptions, DebrisCostOptions, ExplosionWorkOptions } from './blast-debris'
 import type { PiecePhysics } from './physics-option'
 import type { BlastQuery } from '@adatechnology/game-physics'
@@ -382,6 +382,11 @@ export interface DestructionRenderer {
    * taller and kick what is light.
    */
   solidsNear(x: number, z: number, radius: number): SolidBox[]
+  /**
+   * Gives the physics engine fixed bodies of a module that has no bound object (a house's walls): the boxes as `source` says them, asked every update, under the name `id`. Null takes
+   * them away. A world with no engine ignores them.
+   */
+  setHostSolids(id: string, source: (() => readonly HostSolid[]) | null): void
   /** Push a piece (throws, blasts). */
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */

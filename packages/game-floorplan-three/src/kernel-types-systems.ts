@@ -226,6 +226,8 @@ export interface CollisionObject {
   s: number
   hw: number
   hd: number
+  /** Height of the piece (m). */
+  h?: number
   type: string
 }
 

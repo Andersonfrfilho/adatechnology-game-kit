@@ -23,6 +23,7 @@ import type { MeasureBudget } from './drawn-solids'
 import { fitOrientedBoxes } from '@adatechnology/game-shapes'
 import { clamp, createRng, hashNumbers, hashString } from './math'
 import type { StaticSolid } from './engine-pieces'
+import type { HostSolid } from '@adatechnology/game-contracts'
 import { sameSolids } from './engine-statics'
 import { PieceSystem, minPieceHalf } from './pieces'
 import type { PieceSweepHit } from './pieces'
@@ -393,6 +394,9 @@ class Renderer implements DestructionRenderer {
   private readonly staticBoxes = new Map<string, number[]>()
   /** `staticSolids` per object, kept until `staticNow` measures the object again for a reason. */
   private readonly solidCache = new Map<string, { solids: StaticSolid[]; leftOut: boolean }>()
+  /** The fixed bodies a host module gives that are no bound object (`setHostSolids`), and the list last made of each: the same numbers keep the same list. */
+  private readonly hostSolids = new Map<string, () => readonly HostSolid[]>()
+  private readonly hostSolidLists = new Map<string, { readonly given: readonly HostSolid[]; readonly solids: StaticSolid[] }>()
   /** The objects whose last `staticSolids` list is not all of what a ray can hit: measured in part, or with a loose or hidden part left out. */
   private readonly unsureSolids = new Set<string>()
   /** The objects `staticNow` measured again for a reason (an event, a moved root, boxes that changed): their `staticSolids` are measured again too. */
@@ -1584,7 +1588,30 @@ class Renderer implements DestructionRenderer {
       // holds no mesh past the call (a mesh that leaves the scene is not kept here)
       this.measuredMeshes.clear()
     }
+    for (const [id, source] of this.hostSolids) out.set(id, this.hostSolidsOf(id, source()))
     return out
+  }
+
+  setHostSolids(id: string, source: (() => readonly HostSolid[]) | null): void {
+    if (source) this.hostSolids.set(id, source)
+    else {
+      this.hostSolids.delete(id)
+      this.hostSolidLists.delete(id)
+    }
+  }
+
+  /** The module's boxes as static solids: measured again to the same numbers, the list is the one held (an engine finds it unchanged by identity). */
+  private hostSolidsOf(id: string, given: readonly HostSolid[]): StaticSolid[] {
+    const kept = this.hostSolidLists.get(id)
+    // the very boxes given again (a module keeps what it measured): nothing is made
+    if (kept && kept.given.length === given.length && given.every((s, i) => s === kept.given[i])) return kept.solids
+    const next = given.map((s, i): StaticSolid => ({ center: [s.center[0], s.center[1], s.center[2]], half: [s.half[0], s.half[1], s.half[2]], rotation: s.rotation ? [s.rotation[0], s.rotation[1], s.rotation[2], s.rotation[3]] : [0, 0, 0, 1], key: s.key ?? String(i) }))
+    if (kept && sameSolids(kept.solids, next)) {
+      this.hostSolidLists.set(id, { given, solids: kept.solids })
+      return kept.solids
+    }
+    this.hostSolidLists.set(id, { given, solids: next })
+    return next
   }
 
   /** `staticSolids` for each fixed object of `now`, into `out`. */

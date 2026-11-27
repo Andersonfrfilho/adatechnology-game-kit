@@ -1,5 +1,5 @@
 import { checkBench, checkSpec } from '@adatechnology/game-contracts'
-import type { DestructibleSpec } from '@adatechnology/game-contracts'
+import type { DestructibleSpec, HostSolid } from '@adatechnology/game-contracts'
 import { describe, expect, it } from 'vitest'
 
 import { floorplanAreaParams } from '../src/testing'
@@ -161,6 +161,57 @@ describe('houses in the room', () => {
     r.frame(1)
     expect(house.doors.some((d) => d.open)).toBe(true)
     expect(blockedAt(through)).toBe(false)
+  })
+
+  it('the walls, the closed door and the furniture are fixed boxes of the world too: each box is held by the blocker, every point the blocker holds is at a box, and an open door leaves its box', () => {
+    const r = fakeRoom()
+    r.set('template', 'single_storey_a')
+    r.act('build')
+    r.frame(0.1)
+    expect(r.bodies.size).toBe(1)
+    const solids = (): readonly HostSolid[] => [...r.bodies][0]!()
+    // what the lot draws (its walls, gates and garden pieces) has boxes only while the lot is drawn
+    const withoutLot = solids().length
+    r.layer('lot', true)
+    r.frame(1)
+    expect(solids().length).toBeGreaterThan(withoutLot)
+    // distance (m) from the point to the turned box in the floor plane, 0 inside: the turn about y undone (local x is (cos, -sin) in the world)
+    const gap = (box: HostSolid, x: number, z: number): number => {
+      const angle = 2 * Math.atan2((box.rotation ?? [0, 0, 0, 1])[1], (box.rotation ?? [0, 0, 0, 1])[3])
+      const dx = x - box.center[0]
+      const dz = z - box.center[2]
+      const lx = Math.abs(dx * Math.cos(angle) - dz * Math.sin(angle)) - box.half[0]
+      const lz = Math.abs(dx * Math.sin(angle) + dz * Math.cos(angle)) - box.half[2]
+      return Math.hypot(Math.max(lx, 0), Math.max(lz, 0))
+    }
+    const blocker = [...r.blockers][0]!
+    // the blocker looks at a house up to 1.5 m beyond its plan: an outbuilding farther out has its box and no blocker (the box is the body that holds the player there)
+    const { house: built } = r.module.houses[0]!
+    const near = (box: HostSolid): boolean => {
+      const local = built.group.worldToLocal(new THREE.Vector3(box.center[0], 0, box.center[2]))
+      return local.x > built.limits.x0 && local.x < built.limits.x1 && local.z > built.limits.z0 && local.z < built.limits.z1
+    }
+    const ground = solids().filter((box) => box.center[1] < 2 && near(box))
+    expect(ground.length).toBeGreaterThan(10)
+    // what is drawn as a body is held: no box of the world where the player may walk (nothing invisible collides)
+    for (const box of ground) expect(blocker(box.center[0], box.center[2], 0.01), `box ${box.key} not held by the blocker`).toBe(true)
+    let held = 0
+    for (let x = -10; x <= 14; x += 0.1) {
+      for (let z = -10; z <= 14; z += 0.1) {
+        if (!blocker(x, z, 0)) continue
+        held++
+        // the furniture is held 0.2 m beyond its box (the blocker's own margin), the walls by their box
+        expect(Math.min(...solids().map((box) => gap(box, x, z))), `held at ${x.toFixed(1)}, ${z.toFixed(1)} with no box near`).toBeLessThanOrEqual(0.21)
+      }
+    }
+    expect(held).toBeGreaterThan(50)
+    const { house } = r.module.houses[0]!
+    const before = solids().length
+    const door = house.doors.find((d) => d.col)!
+    house.toggleDoor(door)
+    r.frame(1)
+    expect(door.open).toBe(true)
+    expect(solids().length).toBe(before - 1)
   })
 
   it('goes up and down the floors of a townhouse', () => {

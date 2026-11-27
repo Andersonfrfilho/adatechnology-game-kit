@@ -41,6 +41,8 @@ import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { createPlayer, PLAYER_RADIUS, type PlayerSlam } from './player'
+import { createModuleBlockers } from './module-blockers'
+import { createSceneryBlocking } from './scenery-blocking'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import { bodySlotPose, clampCarriedReach, itemPoseOf } from './carry-poses'
 import { followHeldTarget } from './held-follow'
@@ -154,8 +156,6 @@ const OFF_HAND_SEED = 11
 const TOOL_MENU_KEY_LABELS: Readonly<Record<string, string>> = { Backquote: "'" }
 /** The most loose bodies (casings, magazines) the room lets its modules keep alive at once: the cap the weapons viewmodel had on its own. */
 const DEFAULT_PARTICLE_LIMIT = 900
-/** Widest scenery footprint (m) the renderer's drawn boxes stand for (as its own limit for fixed meshes); a wider one keeps its collider. */
-const SOLID_SPAN = 3
 /** Meshes an object needs before the room draws its still ones in batches (a bookcase, a shelf of books): fewer cost less than the batch check. */
 const BATCH_MIN_MESHES = 8
 /** Owners that draw their own batches or move every frame (a vehicle batches itself; people and animals are posed each frame). */
@@ -164,11 +164,6 @@ const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
 const STEP_UP = 0.45
 /** Height of the walking body (m): what starts above it is walked under. */
 const BODY_HEIGHT = 1.75
-/**
- * The body going through a hole, by heights over the feet (m) and the share of the player's radius each takes: a leg lifted over a sill of half a metre,
- * hips and shoulders, the head stooped to 1.6 m (a man climbs through a breach 0.8 m wide and 1.3 m tall, not only a doorway).
- */
-const BODY_SLICES: ReadonlyArray<readonly [number, number, number]> = [[0.5, 1.0, 0.5], [1.0, 1.5, 0.75], [1.5, 1.6, 0.45]]
 /** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
 const KICK_MASS = 6
 const KICK_HEIGHT = 0.6
@@ -598,30 +593,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** What modules ask the walking player to stay out of (`ModuleHost.addBlocker`). */
   const blockers = new Set<(x: number, z: number, radius: number) => boolean>()
   const moduleBlockers = new Set<(x: number, z: number, radius: number) => boolean>() // the modules' ones (a house's walls): a carried thing stays out of them too
-  // the scenery the renderer draws stops the player by what is drawn now (a fallen bookcase is walked onto, not its old footprint); what is
-  // too wide for the renderer's boxes (the wall closing the arena) and the tap's post keep their footprint
-  const drawnScenery = (i: number): boolean => {
-    const c = arena.colliders[i]
-    return arena.colliderIds[i] !== null && c[2] - c[0] <= SOLID_SPAN && c[3] - c[1] <= SOLID_SPAN
-  }
-  /** Scenery whose follower says where its drawing stops a body (a wall with a breach): the player walks by that, not by its footprint. */
-  const followedBody = (id: string | null): SceneryFollower | null => {
-    const follower = id === null ? null : entries.get(id)?.follower
-    return follower?.blocks ? follower : null
-  }
-  const followerOwns = (objectId: string): boolean => {
-    for (const e of entries.values()) if (e.follower?.owns?.(objectId)) return true
-    return false
-  }
-  blockers.add((x, z, radius) => {
-    // a body is not a cylinder: it goes through a hole by its legs, its shoulders and its head, each as wide as it is
-    for (const e of entries.values()) {
-      const blocks = e.follower?.blocks
-      if (!blocks) continue
-      for (const [from, to, share] of BODY_SLICES) if (blocks(x, z, radius * share, player.feet + from, player.feet + to)) return true
-    }
-    return false
-  })
+  const moduleBlocking = createModuleBlockers({ all: blockers, modules: moduleBlockers }, renderer, !!kit.physics.services)
+  const { drawnScenery, followedBody, followerOwns, followedBodyBlocks } = createSceneryBlocking(arena, entries, () => player.feet)
+  blockers.add(followedBodyBlocks)
   // the footprints that still hold: the player and the push read this same list
   const standingColliders: Array<[number, number, number, number]> = []
   const standingIds: Array<string | null> = []
@@ -633,12 +607,14 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     standingIds.length = 0
     footprintsWithBody.clear()
     arena.colliders.forEach((collider, i) => {
-      if (drawnScenery(i) || followedBody(arena.colliderIds[i] ?? null)) return
+      if (drawnScenery(i) || followedBody(arena.colliderIds[i] ?? null) || (kit.physics.services && arena.tapPost?.collider === collider)) return
       standingColliders.push(collider)
       standingIds.push(arena.colliderIds[i] ?? null)
     })
   }
   standFootprints()
+  const tapSolids = kit.physics.services && arena.tapPost ? [arena.tapPost.solid] : null
+  if (tapSolids) renderer.setHostSolids('arena:tap', () => tapSolids)
   /** The object is a body now: the footprint it had where it stood no longer means anything. */
   const leaveFootprint = (objectId: string): void => {
     const i = standingIds.indexOf(objectId)
@@ -724,6 +700,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     colliders: standingColliders,
     footing,
     blockers,
+    bodiedBlockers: moduleBlocking.bodied,
     limit: arenaSize,
     floorAt: terrain.footAt,
     speedAt: terrain.walkFactorAt,
@@ -4478,10 +4455,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     log(text, data, type) {
       action(type ?? 'module_note', text, { data })
     },
-    addBlocker(blocked) {
-      for (const set of [blockers, moduleBlockers]) set.add(blocked)
-      return () => { blockers.delete(blocked); moduleBlockers.delete(blocked) }
-    },
+    addBlocker: moduleBlocking.add,
     cornerImage(image) {
       cornerImage?.show(image)
     },

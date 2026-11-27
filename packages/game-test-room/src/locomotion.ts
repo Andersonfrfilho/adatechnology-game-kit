@@ -17,6 +17,7 @@ export const LANDING_MIN_SPEED = 1
 export interface LocomotionContext {
   readonly colliders: Array<[number, number, number, number]>
   readonly blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
+  readonly bodiedBlockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
   readonly footing?: (x: number, z: number, radius: number, feet: number, bodiless?: boolean) => { floor: number; blocked: boolean }
   readonly limit: number
   readonly floorAt?: (x: number, z: number) => number
@@ -103,7 +104,7 @@ export const createBlockedTest = (o: LocomotionContext): BlockedTest => {
   const blocked = (x: number, z: number, radius: number, feet: number, footing: FootingKind): boolean => {
     if (outside(x, z)) return true
     for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
-    if (o.blockers) for (const isBlocked of o.blockers) if (isBlocked(x, z, radius)) return true
+    if (o.blockers) for (const isBlocked of o.blockers) if (!o.bodiedBlockers?.has(isBlocked) && isBlocked(x, z, radius)) return true
     if (footing === 'none' || !o.footing) return false
     return footing === 'bodiless' ? o.footing(x, z, radius, feet, true).blocked : o.footing(x, z, radius, feet).blocked
   }
