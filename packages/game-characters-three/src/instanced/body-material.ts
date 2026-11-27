@@ -23,8 +23,13 @@ export type BodyMaterialParams = {
   readonly accessory?: boolean
   /** The clip texture (`createSegmentClipUniforms`), shared by every material that reads it: a body flagged `clips` in its `iD` walks from the clips (T4b.7, step 3). */
   readonly segmentClips?: SegmentClipUniforms
+  /** The `iQ` attribute (a quaternion) turns the body about its origin, over the yaw: a body whose `iQ` is all zero is drawn as before. For the bodies on the ground a physics engine lays down. */
+  readonly oriented?: boolean
 }
 
+const ORIENTED_DECLARATION = 'attribute vec4 iQ; vec3 quatTurn(vec4 q, vec3 v){ return v + 2.*cross(q.xyz, cross(q.xyz, v) + q.w*v); }'
+const YAW_PLACEMENT = 'transformed = rY(iA.z)*transformed + vec3(iA.x, floor(iB.w/16.)/1000. - 2., iA.y);'
+const YAW_NORMAL = 'objectNormal = rY(iA.z)*_nn;'
 const PIVOT_DECLARATION = 'attribute vec3 pivot;'
 const PANTS_LINE = 'vec3 pants = iCol*0.45 + vec3(0.08,0.09,0.12);'
 const EYE_LINE = 'if (mat==3. && vGlow < 0.5) vTint = vec3(0.08);'
@@ -34,7 +39,7 @@ const VERTEX_INSTANCE_POSITION = 'bodyAnim(position, _n)'
  * The instanced body's material: the pose chunk in the vertex shader and the per-instance tints (skin by tone and infection, shirt, pants, hair,
  * glowing eyes) in the fragment shader (G 65473 `bodyMaterial`).
  */
-export const createBodyMaterial = (three: Three, { depth = false, distance = false, time, chunk, identity = false, accessory = false, segmentClips }: BodyMaterialParams): THREE_NS.Material => {
+export const createBodyMaterial = (three: Three, { depth = false, distance = false, time, chunk, identity = false, accessory = false, segmentClips, oriented = false }: BodyMaterialParams): THREE_NS.Material => {
   const extended = identity || accessory
   const baseChunk = createBodyChunk(chunk)
   const bodyChunk = (accessory ? baseChunk.replace(PIVOT_DECLARATION, ACCESSORY_PIVOT_DECLARATION) : baseChunk) + (extended ? createBodyChunkExt({ ...chunk, segmentClips: segmentClips !== undefined }) : '')
@@ -71,13 +76,22 @@ export const createBodyMaterial = (three: Three, { depth = false, distance = fal
       shader.vertexShader = shader.vertexShader.replace('varying vec3 vTint;', 'varying vec3 vTint; varying vec3 vEyeC;').replace('vGlow = mat==3.', 'vEyeC = iEye; vGlow = mat==3.')
       shader.fragmentShader = shader.fragmentShader.replace('varying vec3 vTint;', 'varying vec3 vTint; varying vec3 vEyeC;').replace('EYE', 'vEyeC')
     }
+    if (oriented) orientShader(shader)
     if (extended) extendShader(shader, { shadowPass, accessory })
   }
-  if (extended) material.customProgramCacheKey = () => `|body-ext:${accessory ? 'a' : 'i'}${segmentClips ? 's' : ''}`
+  if (extended || oriented) material.customProgramCacheKey = () => `|body-ext:${extended ? (accessory ? 'a' : 'i') : ''}${segmentClips ? 's' : ''}${oriented ? 'q' : ''}`
   return material
 }
 
 type ShaderSource = { vertexShader: string; fragmentShader: string }
+
+/** The placement and the normal of a body with an `iQ`: the quaternion turns it about its origin, and `iA.x`, the height and `iA.y` are where that origin goes. */
+const orientShader = (shader: ShaderSource): void => {
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', `#include <common>\n${ORIENTED_DECLARATION}`)
+    .replace(YAW_PLACEMENT, 'transformed = (dot(iQ, iQ) > 0.5 ? quatTurn(iQ, transformed) : rY(iA.z)*transformed) + vec3(iA.x, floor(iB.w/16.)/1000. - 2., iA.y);')
+    .replace(YAW_NORMAL, 'objectNormal = dot(iQ, iQ) > 0.5 ? quatTurn(iQ, _nn) : rY(iA.z)*_nn;')
+}
 
 /** The replacements of the extension, after the game's: `bodyAnimX` for `bodyAnim`, the palette trousers, the wound varyings and, for an accessory, the variant's pivot and scale. */
 const extendShader = (shader: ShaderSource, { shadowPass, accessory }: { readonly shadowPass: boolean; readonly accessory: boolean }): void => {

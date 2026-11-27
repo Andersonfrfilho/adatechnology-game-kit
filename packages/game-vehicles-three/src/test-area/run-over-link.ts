@@ -1,5 +1,5 @@
-import { CROWD_AGENTS_CHANNEL } from '@adatechnology/game-physics'
-import type { PhysicsServices } from '@adatechnology/game-physics'
+import { CROWD_AGENTS_CHANNEL, CROWD_DYING_VELOCITY_CHANNEL } from '@adatechnology/game-physics'
+import type { DyingVelocity, PhysicsServices } from '@adatechnology/game-physics'
 import { createRunOver } from '@adatechnology/game-vehicles-driving'
 import type { RunOver, RunOverAgents, RunOverCrowd, RunOverVehicle } from '@adatechnology/game-vehicles-driving'
 
@@ -30,6 +30,8 @@ export const createRunOverLink = (services: PhysicsServices): RunOverLink => {
   }
 
   const stopListening = channel.onChange(follow)
+  // the crowd's corpses made in the very step a car kills read the velocity it carries (`RunOver.dyingVelocity`) to start from
+  const stopLending = services.channel<DyingVelocity>(CROWD_DYING_VELOCITY_CHANNEL).publish(() => runOver?.dyingVelocity)
   follow()
   return {
     track: (vehicle) => {
@@ -43,6 +45,7 @@ export const createRunOverLink = (services: PhysicsServices): RunOverLink => {
     },
     dispose: () => {
       stopListening()
+      stopLending()
       runOver?.dispose()
       runOver = undefined
       vehicles.clear()

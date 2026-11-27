@@ -37,6 +37,16 @@ export type CrowdInstance = {
   readonly accessories?: number
   /** The crowd type index of the agent (with `variety`). */
   readonly type?: number
+  /** A unit quaternion (x y z w) that turns the standing body about its feet, for a body the engine laid down: `a` and `y` are then where its feet go, and its yaw is not used. */
+  readonly rotation?: readonly [number, number, number, number]
+}
+
+/** Where the engine has the bodies on the ground (`CrowdFrame.lying`): the instance of a corpse it holds follows the body instead of lying by its pose. */
+export type LyingBodies = {
+  /** Writes the torso of the corpse `id` (x y z, then the quaternion) at the start of `out`; false for a corpse the engine does not hold. */
+  readonly torso: (id: number, out: Float64Array) => boolean
+  /** Where that torso is in the standing body of `corpse`: metres from its feet, along the body's own axes. */
+  readonly anchor: (corpse: Corpse) => readonly [number, number, number]
 }
 
 /** A baked variant as the drawing reads it: its own height and build (the instance scales the agent's against them). */
@@ -51,6 +61,8 @@ export type CrowdFrame = {
   readonly hidden?: (i: number) => boolean
   /** How much of the level budget to use this frame, 0..1 (default 1); the renderer lowers it when the frames run long. */
   readonly detailScale?: number
+  /** The bodies on the ground the engine holds: each one is drawn where its torso is, turned as it is (the channel of the instance's `rotation`). */
+  readonly lying?: LyingBodies
 }
 
 /** Takes one instance for the batch of `variant` at level `level` (0 near, 1 middle, 2 far). */
@@ -72,6 +84,18 @@ const EDGE_SHRINK = 0.3
 const EDGE_GROW = 0.15
 
 const poseIndex = (pose: InstancePose): number => INSTANCE_POSES.indexOf(pose)
+
+const TORSO_POSE = new Float64Array(7)
+
+/** Where the feet of a standing body go so that its torso, `anchor` metres up from them, lies at `TORSO_POSE` turned as it is: the torso's place less the turned anchor. */
+const feetOfTorso = (anchor: readonly [number, number, number]): { readonly position: readonly [number, number, number]; readonly rotation: readonly [number, number, number, number] } => {
+  const [x, y, z, w] = [TORSO_POSE[3]!, TORSO_POSE[4]!, TORSO_POSE[5]!, TORSO_POSE[6]!]
+  const tx = 2 * (y * anchor[2] - z * anchor[1])
+  const ty = 2 * (z * anchor[0] - x * anchor[2])
+  const tz = 2 * (x * anchor[1] - y * anchor[0])
+  const turned = [anchor[0] + w * tx + y * tz - z * ty, anchor[1] + w * ty + z * tx - x * tz, anchor[2] + w * tz + x * ty - y * tx] as const
+  return { position: [TORSO_POSE[0]! - turned[0], TORSO_POSE[1]! - turned[1], TORSO_POSE[2]! - turned[2]], rotation: [x, y, z, w] }
+}
 
 /** The clip family of a gait style (the order of `SEGMENT_CLIPS`: walk, limp left, limp right, drag, lurch, shamble) and the stagger after them. */
 const STAGGER_FAMILY = 6
@@ -101,7 +125,7 @@ export type CrowdInstances = {
   /** Writes the agents seen this frame, keeps each one's level of detail and attack pose in the store (`lod`, `attackPose`) and returns how many went out. */
   agents(store: CrowdStore, variants: readonly VariantSize[], frame: CrowdFrame, sink: CrowdInstanceSink): number
   /** Writes the bodies on the ground: an agent's on its variant, the others on the plain batch. `life` is the seconds a body lasts (the crowd's `corpseSeconds`). */
-  corpses(entries: readonly { readonly age: number; readonly data: Corpse }[], variants: readonly VariantSize[], frame: CrowdFrame, life: number, sink: CrowdInstanceSink, plain: PlainCorpseSink): void
+  corpses(entries: readonly { readonly id?: number; readonly age: number; readonly data: Corpse }[], variants: readonly VariantSize[], frame: CrowdFrame, life: number, sink: CrowdInstanceSink, plain: PlainCorpseSink): void
   /** Writes the civilians that are still people (not dead, turned or gone); `colorOf` gives each one's shirt. */
   civilians(list: readonly Civilian[], colorOf: (civilian: Civilian) => number, sink: (civilian: Civilian, instance: CrowdInstance) => void): void
 }
@@ -277,11 +301,21 @@ export function createCrowdInstances(options: CrowdInstancesOptions): CrowdInsta
       const cx = frame.camera.x
       const cz = frame.camera.z
       const [nearEdge, middleEdge] = fitCorpseEdges(entries, cx, cz, frame.detailScale ?? 1)
-      for (const { age: t, data: C } of entries) {
+      for (const { id, age: t, data: C } of entries) {
         const dark = Math.min(1, t / life)
         const shade = 1 - dark * N.corpseDarken
         const fade = t > life - N.corpseFade ? (life - t) / N.corpseFade : 1
         const c: CrowdInstance['c'] = [C.missing, N.corpseAgeBase + dark * N.corpseAgeDark, 1, C.skin]
+        if (id !== undefined && frame.lying?.torso(id, TORSO_POSE)) {
+          // the engine holds this body: the standing body, turned about its torso as the engine has it, with the feet where that puts them
+          const feet = feetOfTorso(frame.lying.anchor(C))
+          const V = C.variant >= 0 ? variants[C.variant]! : { s: 1, bulk: 1 }
+          const distance = Math.hypot(C.x - cx, C.z - cz)
+          const instance: CrowdInstance = { a: [feet.position[0], feet.position[2], 0, C.seed], b: [(C.height / V.s) * fade, C.build / V.bulk, 0, pose.walk], c, color: C.color, shade, eye: null, y: feet.position[1], rotation: feet.rotation }
+          if (C.variant < 0) plain(instance)
+          else sink(C.variant, distance < nearEdge ? 0 : distance < middleEdge ? 1 : 2, instance)
+          continue
+        }
         if (C.variant >= 0) {
           // an agent's body: the same mesh as its variant, lying down
           const V = variants[C.variant]!

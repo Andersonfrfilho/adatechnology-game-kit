@@ -173,9 +173,9 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Pendências nomeadas desta task (nada disso está feito):
   - **T5.4f** achar por que a pilha de R2 (cápsulas) não dorme em 14 s com `pileChainsMax` de 10 a 40 (`evidence.md`, "Nascer como cápsula"): sem isso o teto de correntes não fecha o T1.
   - **T5.4a** desenho de R0/R1 perto por esqueleto (`game-characters-three`, §5.3 do desenho): o `game-crowd-three` segue desenhando cadáver como instância de pose fixa e `y: 0` (`instances.ts`); troca nos mesmos 18 m. Exige §5 do CLAUDE.md (1ª e 3ª pessoa, print por câmera).
-  - **T5.4b** canal novo de instância (y + quaternion) em `game-crowd-three` para R2, R2f e R3.
-  - **T5.4c** ligar `createCorpseBodies` ao jogo/sala: `interest` do jogador, `follower` no registro de cadáveres, `onSettled` → `relocateCorpse`, `budget` do host (`beginFrame`); hoje só os testes usam.
-  - **T5.4d** restaurar num mundo novo depois de trocas (C8): as chaves dos corpos levam o número de sequência, então `restoreState` só vale no mesmo mundo; recriar na ordem de criação exige o número de sequência no estado salvo.
+  - ✅ **T5.4b** canal novo de instância (y + quaternion) em `game-crowd-three` para R2, R2f e R3 (TS.7: `CrowdInstance.rotation`, `CrowdFrame.lying`, lotes `oriented` do `game-characters-three`; vale para todos os degraus, R0 e R1 inclusive, até a T5.4a trocar o desenho de perto por esqueleto; `evidence.md` `## TS.7`).
+  - ✅ **T5.4c** (TS.7: módulo da multidão da sala; `evidence.md` `## TS.7`) ligar `createCorpseBodies` ao jogo/sala: `interest` do jogador, `follower` no registro de cadáveres, `onSettled` → `relocateCorpse`, `budget` do host (`beginFrame`); hoje só os testes usam.
+  - ✅ **T5.4d** (TS.7: `CorpseBodies.restoreFresh`; `evidence.md` `## TS.7`) restaurar num mundo novo depois de trocas (C8): as chaves dos corpos levam o número de sequência, então `restoreState` só vale no mesmo mundo; recriar na ordem de criação exige o número de sequência no estado salvo.
   - **T5.4e** o orçamento somado do §2.3 (20 R0 + pilha + 1 000 agentes + destroços) na sala de teste.
 - ✅ **T5.5 Ragdoll de quadrúpede** (2026-11-26: `ragdollOfAnimal`/`chainOfAnimal`/`corpseBodyKitOfAnimal` puros em `game-animals`; B3 em cão, gato, vaca e cavalo, dorme em 2,1 a 2,7 s e excesso máximo 0,024 rad; R0 de 0,5 a 0,8 ms; `evidence.md` `## T5.5`). Aceite: mesmo critério de T5.1.
   Mecânica? sim · Aceite por comando? sim: `pnpm --filter @adatechnology/game-animals-three test` · `sonnet`.
@@ -253,7 +253,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
 - [ ] TS.5 Armas: cápsulas e granada no motor.
 - [x] TS.6 ✅ Multidão e atropelamento (desligado com `hordeThread`; `PhysicsServices.channel`, `crowd-bodies.ts`, `run-over-link.ts`; `evidence.md` `## TS.6`).
-- [ ] TS.7 Cadáveres na sala (T5.4b/c/d).
+- [x] TS.7 ✅ Cadáveres na sala (T5.4b/c/d): os mortos da multidão são corpos do motor da sala (`game-crowd-three`), desenhados onde o motor os tem, restauráveis num mundo novo. Aceite: `room-corpses.test.ts` verde; pilha de 100 na faixa `test:cost` (`evidence.md` `## TS.7`).
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
 - [ ] TS.9 Jogador no motor (desenho aprovado em `design/integracao-sala.md` §7; decisões do dono de 2026-11-27: gravidade real 9,81 com impulso de pulo 3,99 m/s, mesma altura de 0,81 m; sombra do jogador na camada `agent`). Grupo das tasks abaixo.
   - [x] TS.9a ✅ `pushCharacter` respeita o eixo y; `CharacterDesc.gravity?` (9,81). Aceite: pulo sobe v²/2g ± 2 cm. `haiku`.

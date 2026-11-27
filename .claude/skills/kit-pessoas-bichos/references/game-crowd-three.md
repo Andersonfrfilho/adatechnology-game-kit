@@ -42,3 +42,4 @@ abre a área com 300 agentes; a `interactables-test-area` carrega a área vazia.
 - A pose de ataque é escrita no `store.attackPose` e a simulação a lê (quem golpeia não vira para a velocidade): desenhe todo quadro, como o jogo.
 - Os andares do jogo (`ANDARES`) não foram portados: `frame.hidden(i)` deixa um agente de fora.
 - O retrato dos sobreviventes nomeados é conteúdo do jogo: o renderizador recebe o corpo de cada civil por `civilians.body`.
+- Com o motor do host (`ModuleHost.physics`) o módulo de teste da multidão faz cada agente morto virar corpo do mundo (`bindCorpseBodies`: `services.corpses()`, a morte cai sobre o chão ou a pilha que já existe, `relocateCorpse` quando um empurrado dorme longe) e o desenho segue o corpo: `CrowdFrame.lying` dá à instância o `rotation` (quaternion) e o renderizador a manda a lotes `oriented`. Sem motor (`own`) o cadáver só é desenhado, como antes. Restaurar num mundo novo: `services.corpses().restoreFresh(state, kitOf)`.

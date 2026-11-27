@@ -13,7 +13,9 @@ It is a literal port of the team game's drawing (`jogo.js` G 67079-67136 `ZVAR`,
 - **The pose by state** (dormant fallen, airborne leap, eating, pile step and grab as attack, swing and calling as scream, crawl), the bloater's
   swelling, the eyes out without the skull or on a dormant body.
 - **Bodies on the ground** on their own variant (near within 18 m), darkening 70% over their life and shrinking in the last 60 s; a body that was not an
-  agent goes on the plain body batch.
+  agent goes on the plain body batch. With the engine of the host (`ModuleHost.physics`) the crowd test module makes each dead agent a body of the world
+  (`services.corpses()`, every rung of the body LOD) and draws it where the engine has it: `CrowdFrame.lying` gives the instance a `rotation` (a quaternion, the
+  standing body turned about its torso) and the renderer sends it to batches made with `oriented: true`.
 - **Civilians** one baked body each, a child 0.66 high and 0.75 wide, the bite showing.
 
 Every number is in `src/data/render.json` with its source line, and the poses by state are options. The golden `game-crowd-render.json` (the game's
