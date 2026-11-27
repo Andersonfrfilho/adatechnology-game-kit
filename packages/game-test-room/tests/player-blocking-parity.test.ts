@@ -36,7 +36,7 @@ const wallModule: TestableModule<ScenarioContext> = {
   items: () => [],
   area: () => ({ placements: [], view: { eye: [0, 2, 4], target: [0, 0, 0] } }),
   attach(host) {
-    return host.addBlocker((x, z, radius) => x > 7 - radius && x < 8 + radius && z > -1 - radius && z < 1 + radius)
+    return host.addBlocker?.((x, z, radius) => x > 7 - radius && x < 8 + radius && z > -1 - radius && z < 1 + radius) ?? (() => undefined)
   },
 }
 
