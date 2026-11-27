@@ -4,7 +4,7 @@
  * animals' own rigs, the crowd's sound bank and the crowd test area. three.js is passed in by the host.
  */
 export { CROWD_RENDER_DEFAULTS, createCrowdInstances } from './instances'
-export type { CrowdFrame, CrowdInstance, CrowdInstanceSink, CrowdInstances, CrowdInstancesOptions, CrowdPoseMap, CrowdRenderNumbers, PlainCorpseSink, VariantSize } from './instances'
+export type { CrowdFrame, CrowdInstance, CrowdInstanceSink, CrowdInstances, CrowdInstancesOptions, CrowdPoseMap, CrowdRenderNumbers, LyingBodies, PlainCorpseSink, VariantSize } from './instances'
 export { createCrowdRenderer } from './renderer'
 export type { CrowdRenderer, CrowdRendererOptions, CrowdRendererVariety } from './renderer'
 export { VARIETY_DEFAULTS, lookOfAgent } from './variety/look'

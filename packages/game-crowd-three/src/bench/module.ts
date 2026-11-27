@@ -3,6 +3,7 @@ import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, C
 import type { BakeBuilders, BakeSpec, Three } from '@adatechnology/game-characters-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
 import { isPhysicsServices } from '@adatechnology/game-physics'
+import type { PhysicsServices } from '@adatechnology/game-physics'
 import { createPlayer } from '@adatechnology/game-player'
 import type { Player, PlayerAction } from '@adatechnology/game-player'
 import type * as THREE_NS from 'three'
@@ -14,6 +15,8 @@ import { createCrowdInstances } from '../instances'
 import type { CrowdInstance } from '../instances'
 import { createCrowdRenderer } from '../renderer'
 import type { CrowdRenderer, CrowdRendererVariety } from '../renderer'
+import { bindCorpseBodies } from './corpse-bodies'
+import type { CorpseBinding } from './corpse-bodies'
 import { createCrowdBodies } from './crowd-bodies'
 import type { CrowdBodies } from './crowd-bodies'
 import { crowdBenchTextOf } from './locale'
@@ -171,6 +174,11 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
   let pending: Partial<Record<PlayerAction, boolean>> = {}
   let last: { x: number; z: number } | null = null
   const offs: (() => void)[] = []
+  // the host's engine, when it lends one: the dead of the crowd are bodies of its world (spec 008, TS.7); without it the bodies on the ground are only drawn, as before
+  let services: PhysicsServices | undefined
+  let corpseBodies: CorpseBinding | null = null
+  const interestPoint: [number, number, number] = [0, 0, 0]
+  const interestPoints: readonly Vec3[] = [interestPoint]
 
   const typeOfSetting = (crowd: Crowd): number => (settings.type === 'mix' ? -1 : crowd.typeIndex(settings.type))
   type World = { crowd: Crowd; player: Player; civilians: Civilians; herd: Herd; flock: Flock; vultures: number; binding: InfectionBinding | null; model: InfectionModelLike | null; place: () => number; physics: boolean; sceneUnit: () => number }
@@ -264,6 +272,14 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     if (isDirty) reset()
   }
 
+  const bindCorpses = (): void => {
+    if (services) corpseBodies = bindCorpseBodies(services, world.crowd)
+  }
+  const releaseCorpses = (): void => {
+    corpseBodies?.release()
+    corpseBodies = null
+  }
+
   const reset = (): void => {
     isDirty = false
     stepTimes.length = 0
@@ -278,7 +294,9 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     herdView?.clear()
     if (herdView) (host?.scene as THREE_NS.Object3D | undefined)?.remove(herdView.group)
     herdView = null
+    releaseCorpses()
     world = build(settings.seed)
+    bindCorpses()
     wire()
     bindBodies()
     if (host) removeProps = sceneOf()?.props?.(host, { cx, cz }, options.props ?? {}) ?? null
@@ -426,7 +444,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     if (options.eager) prepareDrawing()
     else ensureDrawing()
     if (renderer && (crowd.store.n || crowd.corpses.count || civilians.list.length)) {
-      renderer.update(dt, { camera: { x: player.state.x, z: player.state.z }, viewYaw: here?.yaw ?? 0, target: { x: player.state.x, z: player.state.z, alive: player.state.alive } })
+      renderer.update(dt, { camera: { x: player.state.x, z: player.state.z }, viewYaw: here?.yaw ?? 0, target: { x: player.state.x, z: player.state.z, alive: player.state.alive }, ...(corpseBodies ? { lying: corpseBodies.lying } : {}) })
       // what the horde draws now, for the settings screen (under auto it is the adaptive share; fixed, the share chosen)
       const detail = host?.graphics?.hordeDetail() ?? 'auto'
       host?.graphics?.report('hordeDetail', detail === 'auto' ? renderer.detailScale : detail)
@@ -737,6 +755,14 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
       host = lent
       three = lent.THREE as Three
       last = null
+      services = isPhysicsServices(lent.physics) ? lent.physics : undefined
+      services?.setInterest(() => {
+        interestPoint[0] = world.player.state.x
+        interestPoint[2] = world.player.state.z
+        return interestPoints
+      })
+      bindCorpses()
+      const offCorpsesClear = lent.onClear?.(() => (services ? world.crowd.corpses.clear() : undefined))
       lent.audio?.register?.(CROWD_SOUND_BANK)
       const off = lent.bench?.onChange(onChange)
       const offFrame = lent.onFrame(frame)
@@ -778,7 +804,11 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
         offFixed()
         offBlast()
         offClear?.()
+        offCorpsesClear?.()
         unbindBodies()
+        releaseCorpses()
+        services?.setInterest(() => [])
+        services = undefined
         stopThread()
         removeProps?.()
         removeProps = null

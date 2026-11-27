@@ -130,6 +130,8 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   const batches: (readonly BodyBatch[])[] = []
   let plain: BodyBatch | null = null
   const people = new Map<string, BodyBatch>()
+  /** The batches of the bodies the engine laid down, by variant and level: the same bodies as the agents' batches, with the `iQ` attribute that turns them. */
+  const lying = new Map<string, BodyBatch>()
   const accessoryBatches = new Map<string, BodyBatch>()
   const accessoryGeometry = new Map<string, THREE_NS.BufferGeometry>()
   const placements = new Map<string, readonly [number, number, number, number]>()
@@ -150,7 +152,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   const push = (batch: BodyBatch | undefined, instance: CrowdInstance): void => {
     if (!batch) return
     shirt.setHex(instance.color).multiplyScalar(instance.shade)
-    batch.push({ a: instance.a, b: instance.b, c: instance.c, color: shirt, ...(instance.eye !== null ? { eye: eyeOf(instance.eye) } : {}), y: instance.y, ...(instance.d ? { d: instance.d } : {}) })
+    batch.push({ a: instance.a, b: instance.b, c: instance.c, color: shirt, ...(instance.eye !== null ? { eye: eyeOf(instance.eye) } : {}), y: instance.y, ...(instance.d ? { d: instance.d } : {}), ...(instance.rotation ? { rotation: instance.rotation } : {}) })
   }
   const pushAccessories = (variant: number, level: number, instance: CrowdInstance): void => {
     const bits = instance.accessories ?? 0
@@ -209,9 +211,20 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
   const typeOfVariant: number[] = []
   crowd.variantsOf.forEach((list, c) => list.forEach((g) => (typeOfVariant[g] = c)))
   const baked = new Set<number>()
+  const lyingBatch = (variant: number, level: number): BodyBatch | undefined => {
+    const key = `${variant}|${level}`
+    const made = lying.get(key)
+    if (made) return made
+    const geometry = variants[variant]?.geometries[level]
+    if (!geometry) return undefined
+    const batch = createBodyBatch(three, geometry, { max: crowd.numbers.corpsesMax, castShadow: false, time, oriented: true, ...(variety ? { identity: true, ...(clipUniforms ? { segmentClips: clipUniforms } : {}) } : {}) })
+    lying.set(key, batch)
+    group.add(batch.mesh)
+    return batch
+  }
   const ensurePlain = (): BodyBatch => {
     if (!plain) {
-      plain = createBodyBatch(three, options.plainBody ?? buildInstancedBody(three, { segments: LOD_SEGMENTS[1] }), { max: crowd.numbers.corpsesMax, castShadow: false, time })
+      plain = createBodyBatch(three, options.plainBody ?? buildInstancedBody(three, { segments: LOD_SEGMENTS[1] }), { max: crowd.numbers.corpsesMax, castShadow: false, time, oriented: true })
       group.add(plain.mesh)
     }
     return plain
@@ -252,7 +265,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
     return batch
   }
 
-  const all = (): BodyBatch[] => [...batches.flatMap((set) => set ?? []), ...(plain ? [plain] : []), ...people.values(), ...accessoryBatches.values()]
+  const all = (): BodyBatch[] => [...batches.flatMap((set) => set ?? []), ...(plain ? [plain] : []), ...people.values(), ...accessoryBatches.values(), ...lying.values()]
 
   return {
     group,
@@ -290,7 +303,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
         pushAccessories(v, l, instance)
         if (drawBlobs && l > 0) ensureBlobs().push(instance.a[0], instance.y, instance.a[1], instance.b[0] * (variants[v]?.s ?? 1))
       })
-      if (options.drawCorpses?.() !== false) instances.corpses(crowd.corpses.entries, variants, frame, crowd.numbers.corpseSeconds, (v, l, instance) => push(batches[v]?.[l], instance), (instance) => push(ensurePlain(), instance))
+      if (options.drawCorpses?.() !== false) instances.corpses(crowd.corpses.entries, variants, frame, crowd.numbers.corpseSeconds, (v, l, instance) => push(instance.rotation ? lyingBatch(v, l) : batches[v]?.[l], instance), (instance) => push(ensurePlain(), instance))
       // as the game counts them: the variant batches after the bodies on the ground went in
       for (let l = 0; l < 3; l++) lodCounts[l] = batches.reduce((sum, set) => sum + (set?.[l]?.count ?? 0), 0)
       const list = options.civilians?.list()
@@ -339,6 +352,7 @@ export function createCrowdRenderer(three: Three, options: CrowdRendererOptions)
       baked.clear()
       plain = null
       people.clear()
+      lying.clear()
       accessoryBatches.clear()
       accessoryGeometry.clear()
       placements.clear()
