@@ -7,10 +7,10 @@ import { createDestruction } from '@adatechnology/game-destruction'
 import type { DestructibleSpec, RayHit, Vec3 } from '@adatechnology/game-destruction'
 
 import { createDestructionRenderer } from '../src/renderer'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 // the engine's broad phase is a mode of the engine only
-const engineOnly = IS_JOLT ? describe : describe.skip
+const engineOnly = describe
 
 const WALLS = 500
 const RAYS = 1000

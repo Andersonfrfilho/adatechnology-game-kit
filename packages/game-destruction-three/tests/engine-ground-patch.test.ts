@@ -16,7 +16,7 @@ import type { GroundWorkerPort } from '../src/engine-ground-port'
 import type { GroundSchedule } from '../src/engine-ground-schedule'
 import { buildSolidVolume } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * Ground tiles asked for with the terrain's vertices (`Terrain.heightPatch`, about 26 x 26 numbers) instead of their samples and band (about 60 000): the worker, or the main
@@ -241,7 +241,7 @@ const runCrater = (port: GroundWorkerPort, updates: number, patches: boolean, be
   return { hashes, engine, system }
 }
 
-describe.skipIf(!IS_JOLT)('engine ground asked with patches: the physics is today\'s, with or without the worker', () => {
+describe('engine ground asked with patches: the physics is today\'s, with or without the worker', () => {
   it('the engine warms the worker with a patch job built for its real tile and ring: the inline port runs it in the constructor without a throw, the worker answers it', () => {
     const terrain = createTerrain({ bounds: [-6, -6, 6, 6], cellSize: 0.1, layout: { surface: 'dirt' } })
     const options = { physics: physicsOption(), groundAt: (x: number, z: number) => terrain.heightAt(x, z), terrainAt: (x: number, z: number) => terrain.heightAt(x, z), terrainGridAt: terrain.heightGrid, terrainPatchAt: terrain.heightPatch, gravity: 9.81, onHardLanding: () => undefined, scene: new THREE.Scene() }

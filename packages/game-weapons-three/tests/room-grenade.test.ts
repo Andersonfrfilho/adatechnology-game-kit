@@ -40,7 +40,7 @@ const seeded = (seed: number): (() => number) => {
   }
 }
 
-const roomOf = async (physics: 'engine' | 'own') => {
+const roomOf = async () => {
   const engine = await createJoltEngine()
   const world: PhysicsWorld = engine.createWorld({ ...KIT_WORLD })
   const arsenal = createArsenal({ patch: { explosives: { m67: { fuse: LONG_FUSE } }, weapons: { frag_grenade: { action: { throwSpeed: THROW_SPEED } } } }, rules: { explosives: { placeFuseFrom: LONG_FUSE * 2 } }, seed: 1 })
@@ -54,7 +54,7 @@ const roomOf = async (physics: 'engine' | 'own') => {
     renderer: stubRenderer(),
     ui: false,
     arsenal,
-    physics: physics === 'engine' ? createPhysicsLoop(world) : 'own',
+    physics: createPhysicsLoop(world),
     projectileModel: (query) => projectileModel(THREE, query),
   })
   return { room, world }
@@ -104,7 +104,7 @@ const flyToRest = (room: TestRoom, grenade: THREE.Object3D): { restS: number; re
 
 describe('the grenade of the room in the engine (spec 008, TS.5)', () => {
   it('100 seeded throws of the room: 95% rest within 6.5 s and 8 m, none past 8 s or 10 m, with no damping', { timeout: 900000 }, async () => {
-    const { room, world } = await roomOf('engine')
+    const { room, world } = await roomOf()
     room.setTool('frag_grenade')
     for (let frame = 0; frame < 30; frame++) room.update(STEP)
     const baseline = movingBodies(world)

@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest'
 
 import type { DebrisCostSample } from '../src/blast-debris'
 import { Scene, runScene } from './determinism-scene'
-import { IS_JOLT } from './setup-physics'
 
 const FRAMES = 150
 const SEED = 5
@@ -25,12 +24,12 @@ const inAnotherProcess = (source: 'fixed' | 'measured' | 'replay', msPerBody: nu
     const file = join(dir, 'out.json')
     const replayFile = join(dir, 'replay.json')
     if (replay) writeFileSync(replayFile, JSON.stringify(replay))
-    const env = { ...process.env, PIECE_SOLVER: 'jolt', DETERMINISM_OUT: file, DETERMINISM_SOURCE: source, DETERMINISM_COST: String(msPerBody), ...(replay ? { DETERMINISM_REPLAY: replayFile } : {}) }
+    const env = { ...process.env, DETERMINISM_OUT: file, DETERMINISM_SOURCE: source, DETERMINISM_COST: String(msPerBody), ...(replay ? { DETERMINISM_REPLAY: replayFile } : {}) }
     const child = spawn('npx', ['vitest', 'run', 'tests/determinism.test.ts'], { env, stdio: 'ignore' })
     child.on('exit', (code) => (code === 0 ? resolve(JSON.parse(readFileSync(file, 'utf8')) as Worker) : reject(new Error(`worker exited ${code}`))))
   })
 
-describe.skipIf(OUT === undefined || !IS_JOLT)('determinism worker (run by the tests below, one per process)', () => {
+describe.skipIf(OUT === undefined)('determinism worker (run by the tests below, one per process)', () => {
   it('writes the hash of every frame and the cost samples it read', { timeout: 120000 }, () => {
     const source = process.env.DETERMINISM_SOURCE as 'fixed' | 'measured' | 'replay'
     const msPerBody = Number(process.env.DETERMINISM_COST)
@@ -41,7 +40,7 @@ describe.skipIf(OUT === undefined || !IS_JOLT)('determinism worker (run by the t
   })
 })
 
-describe.skipIf(OUT !== undefined || !IS_JOLT)('C8: determinism of the debris policy (spec 008)', () => {
+describe.skipIf(OUT !== undefined)('C8: determinism of the debris policy (spec 008)', () => {
   it('two processes, fixed cost, machines of very different step cost: every frame bit-identical', { timeout: 240000 }, async () => {
     const [a, b] = await Promise.all([inAnotherProcess('fixed', 0.002), inAnotherProcess('fixed', 0.09)])
     expect(a.hashes).toHaveLength(FRAMES)

@@ -79,8 +79,8 @@ const stateOf = (room: TestRoom, loop: PhysicsLoop | null): unknown => {
 }
 
 /** The hash of every tick `0..TICKS-1`, with the frame time `frameTimes` gives: the actions are by tick index, the hash is the state when the tick ends. */
-const hashesPerTick = (variant: { readonly loop: PhysicsLoop | null; readonly hasWorkBudget?: boolean; readonly strike?: CasedStrike }, frameTimes: FrameTimes): string[] => {
-  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, physics: variant.loop ?? 'own', ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
+const hashesPerTick = (variant: { readonly loop: PhysicsLoop; readonly hasWorkBudget?: boolean; readonly strike?: CasedStrike }, frameTimes: FrameTimes): string[] => {
+  const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, physics: variant.loop, ...(variant.hasWorkBudget ? { debris: { workBudget: { tier: 1 } } } : {}) })
   const { scheduler } = (room as unknown as SchedulerHolder).frameParts
   const sobrado = room.spawn('sobrado', [0, 0, -9]).objectId
   const hashes: string[] = []
@@ -137,60 +137,40 @@ const expectSameAsReference = (reference: readonly string[], run: (frameTimes: F
   }
 }
 
-const runOwn = (frameTimes: FrameTimes): string[] => hashesPerTick({ loop: null }, frameTimes)
+/** One run on a world of its own, on the engine `engine` makes; `extra` is what the variant adds (a cased strike, a work budget). */
+const jolt = (engine: Awaited<ReturnType<typeof createJoltEngine>>, extra: { readonly hasWorkBudget?: boolean; readonly strike?: CasedStrike } = {}) => (frameTimes: FrameTimes): string[] => {
+  const world = engine.createWorld({ ...KIT_WORLD })
+  try {
+    return hashesPerTick({ loop: createPhysicsLoop(world), ...extra }, frameTimes)
+  } finally {
+    world.dispose()
+  }
+}
 
 describe('the same scene gives the same bytes per tick at any frame rate (spec 017 C4)', () => {
-  // Measured on `fa36c042e`: with the strike at tick 30 the hash is the same at every rate up to and including tick 30 (spawn, fuel and water, fire, the strike itself), and it differs from tick 31 on.
-  it('up to the tick of the strike: 30, 120 and 144 Hz and seeded random frame times match the 60 Hz run (kit own solver)', () => {
-    const reference = runOwn(steadyAt(60))
-    expect(new Set(reference).size).toBeGreaterThan(60)
-    expectSameAsReference(reference, runOwn, STRIKE_TICK + 1)
-  }, 120_000)
-
-  // The structural events of a strike apply at the end of the tick that emitted them, on the step pose (spec 017 T2.2), so the hash per tick does not depend on where the frame ends.
-  it('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (kit own solver)', () => {
-    expectSameAsReference(runOwn(steadyAt(60)), runOwn, TICKS)
-  }, 120_000)
-
   it('the whole run, past the strike: every rate matches the 60 Hz run tick by tick (Jolt loop of 1/120 s steps)', async () => {
-    const engine = await createJoltEngine()
-    const run = (frameTimes: FrameTimes): string[] => {
-      const world = engine.createWorld({ ...KIT_WORLD })
-      try {
-        return hashesPerTick({ loop: createPhysicsLoop(world) }, frameTimes)
-      } finally {
-        world.dispose()
-      }
-    }
+    const run = jolt(await createJoltEngine())
     expectSameAsReference(run(steadyAt(60)), run, TICKS)
   }, 120_000)
 
   // A charge with a case (an M67, a pipe bomb) casts its fragments in the strike's tick: the same bytes per tick at every rate, past the strike
   for (const id of ['m67', 'pipe_bomb']) {
-    it(`the whole run with a cased charge (${id}): every rate matches the 60 Hz run tick by tick (kit own solver)`, () => {
-      const strike = casedStrike(id)
-      const run = (frameTimes: FrameTimes): string[] => hashesPerTick({ loop: null, strike }, frameTimes)
+    it(`the whole run with a cased charge (${id}): every rate matches the 60 Hz run tick by tick`, async () => {
+      const run = jolt(await createJoltEngine(), { strike: casedStrike(id) })
       expectSameAsReference(run(steadyAt(60)), run, TICKS)
     }, 240_000)
   }
 
   // Pending (spec 017 T2.2, evidence-120hz): under `workBudget` the structural events stay in the frame's drain (the work is paced by frame), so they still read the drawn pose.
-  it.fails('with workBudget on, 120 Hz matches the 60 Hz run tick by tick (fails: the workBudget path still applies its events in present, on the drawn pose)', () => {
-    const run = (frameTimes: FrameTimes): string[] => hashesPerTick({ loop: null, hasWorkBudget: true }, frameTimes)
+  it.fails('with workBudget on, 120 Hz matches the 60 Hz run tick by tick (fails: the workBudget path still applies its events in present, on the drawn pose)', async () => {
+    const run = jolt(await createJoltEngine(), { hasWorkBudget: true })
     const reference = run(steadyAt(60))
     expect(firstDifferentTick(run(steadyAt(120)), reference)).toBe(-1)
   }, 120_000)
 
-  it('up to the tick of the strike on the Jolt loop: the same runs match', async () => {
-    const engine = await createJoltEngine()
-    const run = (frameTimes: FrameTimes): string[] => {
-      const world = engine.createWorld({ ...KIT_WORLD })
-      try {
-        return hashesPerTick({ loop: createPhysicsLoop(world) }, frameTimes)
-      } finally {
-        world.dispose()
-      }
-    }
+  // Measured on `fa36c042e`: with the strike at tick 30 the hash is the same at every rate up to and including tick 30 (spawn, fuel and water, fire, the strike itself), and it differs from tick 31 on.
+  it('up to the tick of the strike: the same runs match', async () => {
+    const run = jolt(await createJoltEngine())
     expectSameAsReference(run(steadyAt(60)), run, STRIKE_TICK + 1)
   }, 120_000)
 })

@@ -91,15 +91,6 @@ const verify = (variant: string, hashes: FrameHash[]): void => {
 }
 
 describe('the room simulates the same scene to the same bytes at 1/60 s per frame (spec 010 T3.2)', () => {
-  it('on the kit own solver: a 4 MJ blast on the sobrado, a fire, spilled fuel and water, fast forward on for 20 frames', () => {
-    const room = makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, physics: 'own' })
-    const hashes = record(room, null)
-    expect(new Set(hashes.map((pair) => pair[1])).size).toBeGreaterThan(60)
-    expect(room.log.entries({ type: 'ignite' }).length).toBeGreaterThan(0)
-    expect(room.fluids.stains().length).toBeGreaterThan(0)
-    verify('own', hashes)
-  })
-
   it('on a Jolt physics loop of 1/120 s steps: the same scene', async () => {
     const engine = await createJoltEngine()
     const world = engine.createWorld({ ...KIT_WORLD })

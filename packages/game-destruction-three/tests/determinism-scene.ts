@@ -43,7 +43,6 @@ export class Scene {
 
   constructor(private readonly options: SceneOptions) {
     const loop = physicsLoop()
-    if (loop === 'own') throw new Error('determinism-scene: needs a Jolt world (not PIECE_SOLVER=own)')
     this.loop = loop
     const scene = new THREE.Scene()
     const world = new FakeWorld()

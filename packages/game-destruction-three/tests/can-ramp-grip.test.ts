@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const CAN_RADIUS = 0.033
 const CAN_LENGTH = 0.115
@@ -32,7 +32,6 @@ const slideOnRamp = (degrees: number, seconds: number): { slide: number; rampDro
   ramp.updateMatrixWorld(true)
   s.renderer.bind('ramp', ramp, { parts: { body: rampMesh } })
   // under Jolt a drawn fixed thing is a static body already; a sleeping piece is a dynamic board that the can wakes and drops flat
-  if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
 
   s.world.addObject('can', [partState('body', 'steel', { mass: CAN_FULL })])
   const canMesh = new THREE.Mesh(new THREE.CylinderGeometry(CAN_RADIUS, CAN_RADIUS, CAN_LENGTH, 24))

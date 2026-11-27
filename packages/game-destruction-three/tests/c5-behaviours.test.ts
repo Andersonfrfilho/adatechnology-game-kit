@@ -7,9 +7,9 @@ import { createDestructionRenderer } from '../src/renderer'
 import { PieceSystem } from '../src/pieces'
 import type { PieceSweepHit } from '../src/pieces'
 import { FakeWorld, mat, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
-// C5 of spec 008: the behaviours of CLAUDE.md §12 named in spec.md 6.1, one test each, on whichever solver the run is (Jolt by default, the old solver with PIECE_SOLVER=own)
+// C5 of spec 008: the behaviours of CLAUDE.md §12 named in spec.md 6.1, one test each, on Jolt
 
 const STEP = 1 / 60
 
@@ -73,7 +73,6 @@ const ramp = (s: ReturnType<typeof stage>, degrees: number): number => {
   root.rotation.z = -angle
   root.position.set(0, Math.sin(angle) * 1.5 + 0.03, 0)
   root.updateMatrixWorld(true)
-  if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
   return root.position.y
 }
 
@@ -266,7 +265,6 @@ describe('C5: the behaviours of section 12', () => {
     rampRoot.rotation.z = -angle
     rampRoot.position.set(0, Math.sin(angle) * 1.5 + 0.03, 0)
     rampRoot.updateMatrixWorld(true)
-    if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
     s.world.addObject('can', [partState('body', 'steel', { mass: 0.41 })])
     const canMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.033, 0.033, 0.115, 24))
     canMesh.userData.hollow = true

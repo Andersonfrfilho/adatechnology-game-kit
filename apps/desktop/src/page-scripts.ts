@@ -20,7 +20,7 @@ export const BADGE_SCRIPT = `(() => {
     const info = window.__joltInfo
     const jolt = info
       ? 'Jolt: ' + info.build + ', ' + info.workerThreads + ' worker thread(s), contatos ' + info.contactCallbacks + (info.fallback ? ' (fallback: ' + info.fallback + ')' : '')
-      : (/[?&]solver=jolt(&|$)/.test(location.search) ? 'Jolt: carregando…' : 'Jolt: desligado (solver próprio)')
+      : 'Jolt: carregando…'
     return 'App desktop · crossOriginIsolated: ' + String(self.crossOriginIsolated === true) + ' · núcleos: ' + navigator.hardwareConcurrency + '\\n' + jolt
   }
   badge.textContent = text()

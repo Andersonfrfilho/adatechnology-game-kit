@@ -73,7 +73,6 @@ async function assembleDistrict(THREE: typeof THREE_NS, options: DistrictOptions
     bounds: terrainBoundsOf(plan),
     ground: groundLayoutOf(plan),
     workers,
-    physics: options.physics ?? 'jolt',
     audio: options.sounds === false ? false : { samplesBaseUrl: options.sounds === undefined ? './sfx/' : options.sounds, userSamplesBaseUrl: null },
   })
   const scene = world.view.scene

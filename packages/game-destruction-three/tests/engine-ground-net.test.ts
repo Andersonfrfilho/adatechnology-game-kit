@@ -5,7 +5,7 @@ import type { BodyId, PhysicsWorld, RayHit } from '@adatechnology/game-physics'
 
 import { PieceSystem } from '../src/pieces'
 import { SOLID_STRIDE } from '../src/engine-ground-solid'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * T3.8ag: the solid under a crater tile is boxes, no hull: made again when its heights change, the same solid as one made from nothing; nothing leaks. Jolt only.
@@ -53,7 +53,7 @@ const solidSurface = (l: Lab): number[] => {
   return out
 }
 
-describe.skipIf(!IS_JOLT)('the solid under a crater tile is boxes (T3.8ag)', () => {
+describe('the solid under a crater tile is boxes (T3.8ag)', () => {
   it('a crater tile and a second crater on its rim make no convex hull, and the solid made again is the one a fresh tile has, to the bit', () => {
     const probe = lab(0)
     const made = vi.spyOn(probe.engine.world.J.ConvexHullShapeSettings.prototype, 'Create')

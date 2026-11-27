@@ -10,7 +10,7 @@ import { collisionFieldOf } from '../src/engine-ground-collision'
 import { NO_SOLID, SOLID_DEPTH, SOLID_MARGIN, SOLID_STRIDE } from '../src/engine-ground-solid'
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /** The step boxes as min x, max x, min z, max z, top. */
 const boxesOf = (t: GroundTile): Array<[number, number, number, number, number]> => {
@@ -478,7 +478,7 @@ const run = (p: Probe, frames: number): number => {
   return lowest
 }
 
-describe.skipIf(!IS_JOLT)('solid ground in the engine', () => {
+describe('solid ground in the engine', () => {
   it('ground that rises 5 cm under a sleeping plate leaves it on top, never inside or under, and fellThrough stays 0', () => {
     const p = plateOnRolling(0.1)
     run(p, 240)

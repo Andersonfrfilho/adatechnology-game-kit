@@ -4,7 +4,7 @@ import type { Piece } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const DT = 1 / 60
 const C4 = { energy: 345600, radius: 18 }
@@ -96,7 +96,7 @@ describe('the wires of a pole, when the pole is knocked down', () => {
     expect(wireMass).toBeGreaterThan(0.5 * wiringMassBefore)
   })
 
-  it.runIf(IS_JOLT)(`the wires that came down lie on the ground or on what fell there after ${SETTLED} s: none floats, none sinks`, () => {
+  it(`the wires that came down lie on the ground or on what fell there after ${SETTLED} s: none floats, none sinks`, () => {
     const { world, renderer } = blastedLot(SETTLED)
     const wires = renderer.pieces().filter((piece) => partsOf(world, piece.objectId).length > 0 && partsOf(world, piece.objectId).every((part) => part.startsWith('wiring:')))
     expect(wires.length).toBeGreaterThanOrEqual(STRETCHES_DOWN)

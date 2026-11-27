@@ -3,7 +3,7 @@
 // Same seed, same script, same step: the hashes must be identical, no hash may be missing, and a blast must change the world (the destruction hash of `grenade` differs from `shoot`, `caos_blast` from `caos_fire`).
 // The Hz part of R10 (60, 120 and 144 Hz give the same world) is not run here: the runner never renders, it steps `scheduler.frame(tick, { exact: true })`, so there is no display rate to vary; the scheduler's own
 // tests in packages/game-runtime cover that the display rate does not change the fixed steps. Needs a browser; never on CI (CLAUDE.md section 9). Run it under the machine's measure lock:
-//   flock ~/.cache/adatechnology-game-kit/perf-measure.lock nice node determinism.mjs      (DISTRICT_ONLY=caos runs one scenario; DISTRICT_RUNS=3 more rounds; DISTRICT_QUERY='&solver=own')
+//   flock ~/.cache/adatechnology-game-kit/perf-measure.lock nice node determinism.mjs      (DISTRICT_ONLY=caos runs one scenario; DISTRICT_RUNS=3 more rounds)
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { createRequire } from 'node:module'

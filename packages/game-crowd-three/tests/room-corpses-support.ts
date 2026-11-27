@@ -27,19 +27,19 @@ const stubRenderer = (): THREE.WebGLRenderer =>
 export type CrowdRoom = {
   readonly room: TestRoom
   readonly module: CrowdTestModule
-  readonly world: PhysicsWorld | null
+  readonly world: PhysicsWorld
   readonly loop: PhysicsLoop | null
   readonly services: () => PhysicsServices | undefined
 }
 
-/** The room the game runs: the crowd module in a `createTestRoom`, on the real Jolt engine (or `own`), with no ground laid by hand. */
-export const crowdRoom = async (physics: 'engine' | 'own', extra: Partial<CrowdTestModuleOptions> = {}, wall = false): Promise<CrowdRoom> => {
-  const world = physics === 'engine' ? (await createJoltEngine()).createWorld({ ...KIT_WORLD }) : null
-  if (world && wall) world.createBody({ shape: { kind: 'box', half: [6, 1.5, 0.2] }, motion: 'static', position: [0, 1.5, -0.2], user: -1 })
-  const loop = world ? createPhysicsLoop(world) : null
+/** The room the game runs: the crowd module in a `createTestRoom`, on the real Jolt engine (or as a seam the room steps itself, which lends the module no engine), with no ground laid by hand. */
+export const crowdRoom = async (physics: 'engine' | 'seam', extra: Partial<CrowdTestModuleOptions> = {}, wall = false): Promise<CrowdRoom> => {
+  const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+  if (wall) world.createBody({ shape: { kind: 'box', half: [6, 1.5, 0.2] }, motion: 'static', position: [0, 1.5, -0.2], user: -1 })
+  const loop = physics === 'engine' ? createPhysicsLoop(world) : null
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: loop ?? 'own' })
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: loop ?? world })
   const module = createCrowdTestModule({ pack, locale: 'en', seed: 3, center: [0, 0], ...extra })
   expectNoProblems(room.loadModule(module).problems)
   let lent: unknown

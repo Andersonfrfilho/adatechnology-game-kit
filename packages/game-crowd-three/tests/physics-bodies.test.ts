@@ -31,12 +31,15 @@ const stubRenderer = (): never => {
 
 const moduleOptions = (extra: Partial<CrowdTestModuleOptions> = {}): CrowdTestModuleOptions => ({ pack, locale: 'en', typeName: (type) => UNDEAD_TYPES.find((card) => card.id === type.id)?.id ?? type.id, ...extra })
 
-const sceneOf = async (physics: 'jolt' | 'own', extra: Partial<CrowdTestModuleOptions> = {}) => {
-  const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD }) as JoltWorld
+const sceneOf = async (physics: 'jolt' | 'seam', extra: Partial<CrowdTestModuleOptions> = {}) => {
+  const engine = await createJoltEngine()
+  const world = engine.createWorld({ ...KIT_WORLD }) as JoltWorld
   const loop = createPhysicsLoop(world)
+  // a seam is a world of its own: this one has the loop above, which the room then never steps
+  const seamWorld = physics === 'seam' ? engine.createWorld({ ...KIT_WORLD }) : undefined
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: physics === 'jolt' ? loop : 'own' })
+  const room = createTestRoom({ THREE, container, locale: 'en', catalog: [], renderer: stubRenderer(), ui: false, physics: seamWorld ?? loop })
   const countOn = (layer: 'agent' | 'prop'): number => world.overlapShape({ kind: 'box', half: WIDE }, [0, 0, 0], NO_TURN, [] as BodyId[], { layers: [layer] })
   // the player is a body of the room's world (a capsule shadow in `agent`): the crowd's counts add it explicitly instead of hiding it
   const playerBodies = physics === 'jolt' ? countOn('agent') : 0
@@ -44,7 +47,7 @@ const sceneOf = async (physics: 'jolt' | 'own', extra: Partial<CrowdTestModuleOp
   expect(room.loadModule(module as never).problems).toEqual([])
   room.openArea(CROWD_AREA_ID)
   loop.stepFixed(1)
-  return { world, loop, room, module, countOn, playerBodies }
+  return { world, seamWorld, loop, room, module, countOn, playerBodies }
 }
 
 /** The state-hash of the crowd: every per-agent array of the store (the first `n` agents) and the physics counters, FNV-1a. */
@@ -142,13 +145,14 @@ describe('TS.6: the crowd module in the engine loop', () => {
     world.dispose()
   })
 
-  it('on the own solver the module makes no body of its own', async () => {
-    const scene = await sceneOf('own', { startCount: 40 })
+  it('on a seam the host steps itself the module is lent no engine and makes no body of its own', async () => {
+    const scene = await sceneOf('seam', { startCount: 40 })
     scene.module.crowd.doors.add(0, 0, 'x', 1.2)
     scene.loop.stepFixed(5)
     expect(scene.world.bodyCount).toBe(0)
     scene.room.dispose()
     scene.world.dispose()
+    scene.seamWorld?.dispose()
   })
 
   it('with the horde in a thread the page keeps no capsules', async () => {
@@ -159,8 +163,8 @@ describe('TS.6: the crowd module in the engine loop', () => {
     scene.world.dispose()
   })
 
-  it('the state-hash of the horde is the same as on the own solver when nothing pushes a body', { timeout: 240000 }, async () => {
-    const run = async (physics: 'jolt' | 'own'): Promise<{ hash: string; agents: number }> => {
+  it('the state-hash of the horde is the same on a seam, with no body, as on the loop when nothing pushes a body', { timeout: 240000 }, async () => {
+    const run = async (physics: 'jolt' | 'seam'): Promise<{ hash: string; agents: number }> => {
       const scene = await sceneOf(physics, { startCount: 120, seed: 4 })
       const { crowd } = scene.module
       for (let step = 0; step < 300; step++) {
@@ -170,12 +174,13 @@ describe('TS.6: the crowd module in the engine loop', () => {
       const result = { hash: hashCrowd(crowd), agents: physics === 'jolt' ? scene.countOn('agent') - scene.playerBodies : 0 }
       scene.room.dispose()
       scene.world.dispose()
+      scene.seamWorld?.dispose()
       return result
     }
     const engine = await run('jolt')
-    const own = await run('own')
+    const seam = await run('seam')
     expect(engine.agents).toBe(120)
-    expect(engine.hash).toBe(own.hash)
+    expect(engine.hash).toBe(seam.hash)
     console.log(JSON.stringify({ name: 'ts6-state-hash', hash: engine.hash, agents: 120, steps: 300 }))
   })
 })

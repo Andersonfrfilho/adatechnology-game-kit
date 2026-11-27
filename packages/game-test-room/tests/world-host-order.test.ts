@@ -43,7 +43,7 @@ describe('the host and the room schedule the same systems', () => {
   it('gives every system the host owns the phase and order the room gives it', async () => {
     room = makeRoom({ blastPacing: {}, audio: false })
     const roomList = registrations[0] ?? []
-    world = await createKitWorld(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-14, -14, 14, 14], physics: 'own', workers: 0, audio: false })
+    world = await createKitWorld(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-14, -14, 14, 14], workers: 0, audio: false })
     const hostList = registrations[1] ?? []
     expect(roomList.length).toBeGreaterThan(0)
     expect(hostList.map((system) => system.id)).toEqual(world.frame.systems().map((system) => system.id))

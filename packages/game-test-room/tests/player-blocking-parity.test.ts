@@ -40,7 +40,7 @@ const wallModule: TestableModule<ScenarioContext> = {
   },
 }
 
-const arenaOf = (physics: 'own' | ReturnType<typeof createPhysicsLoop>): TestRoom => {
+const arenaOf = (physics: ReturnType<typeof createPhysicsLoop> | PhysicsWorld): TestRoom => {
   const room = makeRoom({ catalog: demoItems('en'), physics })
   room.loadModule(wallModule)
   for (const [id, at] of SCENE) room.spawn(id, [at[0], at[1], at[2]], 0)
@@ -49,7 +49,7 @@ const arenaOf = (physics: 'own' | ReturnType<typeof createPhysicsLoop>): TestRoo
 }
 
 /** Whether the room's own walk stops a body that comes to (x, z) from 0.4 m to the west of it. */
-const stopsOwn = (room: TestRoom, x: number, z: number): boolean => {
+const stopsByItself = (room: TestRoom, x: number, z: number): boolean => {
   room.look([x - 0.4, 1.7, z], [x, 1.7, z])
   const start = room.playerPosition
   room.walk([x, 0, z], 0)
@@ -69,13 +69,16 @@ describe('what stops the player: the room on its own against the bodies of the w
   it('lists the points only the veto holds and fails when the list grows', { timeout: 120000 }, async () => {
     const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
     const engine = arenaOf(createPhysicsLoop(world))
-    const own = arenaOf('own')
+    // a room on a world it steps itself has no walker: its walk is the room's own colliders, the walk the engine player is compared against
+    const seamWorld = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    const byItself = arenaOf(seamWorld)
     try {
-      const bodiless = probes().filter(([x, z]) => stopsOwn(own, x, z) && !hasBody(world, x, z))
+      const bodiless = probes().filter(([x, z]) => stopsByItself(byItself, x, z) && !hasBody(world, x, z))
       expect(bodiless.length, `points held only by the veto: ${bodiless.map(([x, z]) => `${x},${z}`).join(' ')}`).toBeLessThanOrEqual(BODILESS_PROBES_MAX)
     } finally {
       engine.dispose()
-      own.dispose()
+      byItself.dispose()
+      seamWorld.dispose()
       world.dispose()
     }
   })

@@ -6,7 +6,7 @@ import type { Vec3 } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const FRAME = 1 / 60
 
@@ -114,7 +114,6 @@ describe('a rolling piece goes on down a slope and rolls again when kicked', () 
     root.updateMatrixWorld(true)
     s.renderer.bind('ramp', root, { parts: { body: mesh } })
     // under Jolt a drawn fixed thing is a static body already; a sleeping piece is a dynamic board that the roller wakes and drops flat
-    if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
     return root.position.y
   }
 

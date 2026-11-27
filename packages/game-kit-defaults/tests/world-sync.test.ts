@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { createAudioEngine } from '@adatechnology/game-audio'
 import { KIT_WORLD, createPhysicsLoop } from '@adatechnology/game-physics'
+import type { PhysicsWorld } from '@adatechnology/game-physics'
 import { createJoltEngine } from '@adatechnology/game-physics-jolt'
 import type { TerrainBlowResult } from '@adatechnology/game-terrain'
 
@@ -12,13 +13,23 @@ import type { KitWorld, KitWorldSyncOptions } from '../src/world'
 import { makeWorld, stubRenderer } from './world-helpers'
 
 const worlds: KitWorld[] = []
+const joltEngine = await createJoltEngine()
+const seamWorlds: PhysicsWorld[] = []
 afterEach(() => {
   vi.restoreAllMocks()
   for (const world of worlds.splice(0)) world.dispose()
+  for (const world of seamWorlds.splice(0)) world.dispose()
 })
 
+/** A world the host steps itself: the cheapest physics a synchronous host takes. */
+const newSeamWorld = (): PhysicsWorld => {
+  const world = joltEngine.createWorld(KIT_WORLD)
+  seamWorlds.push(world)
+  return world
+}
+
 const makeSyncWorld = (extra: Partial<KitWorldSyncOptions> = {}): KitWorld => {
-  const world = createKitWorldSync(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-8, -8, 8, 8], physics: 'own', workers: 0, audio: false, ...extra })
+  const world = createKitWorldSync(THREE, { container: document.createElement('div'), renderer: stubRenderer(), bounds: [-8, -8, 8, 8], physics: extra.physics ?? newSeamWorld(), workers: 0, audio: false, ...extra })
   worlds.push(world)
   return world
 }
@@ -28,7 +39,7 @@ describe('the world made at once', () => {
     const world = makeSyncWorld()
     const waited = await makeWorld({ audio: false })
     expect(world.frame.systems()).toEqual(waited.frame.systems())
-    expect(world.info.physics.kind).toBe('own')
+    expect(world.info.physics.kind).toBe('seam')
     expect(world.frame.tick).toBeCloseTo(1 / 60, 12)
   })
 

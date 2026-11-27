@@ -216,8 +216,8 @@ export type RoomGraphicsOptions = KitWorldGraphicsOptions
 
 export interface TestRoomOptions {
   THREE: ThreeNamespace
-  /** What steps the loose pieces (`RendererOptions.physics`): a `PhysicsLoop` the room steps once per frame before drawing, a world, or `'own'` (the kit's own solver). Default `'own'`. */
-  physics?: PiecePhysics
+  /** What steps the loose pieces (`RendererOptions.physics`): a `PhysicsLoop` the room steps once per frame before drawing, a world the host steps itself. Required (`createRoomPhysics()` makes a loop); left out, the room throws `RoomPhysicsRequiredError`. */
+  physics: PiecePhysics
   /** The coordinator modules hand heavy work to (`ModuleHost.workers`); the room's own world still runs with none. Default none. */
   workers?: WorkerCoordinator
   /** Element the bench fills (canvas + HUD). */

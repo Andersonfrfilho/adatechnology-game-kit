@@ -19,7 +19,7 @@ afterEach(() => {
 })
 
 /** A coordinator that says it has real workers, which the ground tiles need before they go to workers. */
-const coordinatorWith = (workers: number): WorkerCoordinator => ({ stats: () => ({ workers }), dispose: () => undefined }) as unknown as WorkerCoordinator
+const coordinatorWith = (workers: number): WorkerCoordinator => ({ stats: () => ({ workers }), run: () => new Promise(() => undefined), dispose: () => undefined }) as unknown as WorkerCoordinator
 
 describe('what the host turns on by default (design-host 3, "Padrão")', () => {
   it('turns blast pacing and the D4 debris policy on, and the ground in workers off without workers', async () => {
@@ -29,7 +29,7 @@ describe('what the host turns on by default (design-host 3, "Padrão")', () => {
     expect(world.info.blastDebris).toBe(true)
     expect(world.info.groundWorker).toBe(false)
     expect(world.info.groundWorkerOff).toBe('no workers')
-    expect(world.info.physics.kind).toBe('own')
+    expect(world.info.physics.kind).toBe('jolt')
   })
 
   it('turns the ground in workers on only with a coordinator that has real workers', async () => {

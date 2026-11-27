@@ -58,7 +58,7 @@ describe.runIf(process.env.BENCH === '1')('debris cost', () => {
     await new Promise((resolve) => setTimeout(resolve, 20))
     gc.disconnect()
     const sleeping = ids.slice(0, 160).filter((id) => renderer.piece(id)?.sleeping).length
-    const line = JSON.stringify({ name: 'debris-160-40', solver: process.env.PIECE_SOLVER ?? 'jolt', sleepingOf160: sleeping, update: stats(times), gc: { pauses: pauses.length, over1ms: pauses.filter((d) => d > 1).length, max: Math.round(Math.max(0, ...pauses) * 1000) / 1000 } })
+    const line = JSON.stringify({ name: 'debris-160-40', sleepingOf160: sleeping, update: stats(times), gc: { pauses: pauses.length, over1ms: pauses.filter((d) => d > 1).length, max: Math.round(Math.max(0, ...pauses) * 1000) / 1000 } })
     console.log(line)
     if (process.env.SPIKE_OUT) appendFileSync(process.env.SPIKE_OUT, `${line}\n`)
     expect(times.length).toBe(200)

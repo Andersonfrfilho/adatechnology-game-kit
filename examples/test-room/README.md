@@ -26,7 +26,7 @@ objects). The phase runs 3 cars a cycle, 2 warm-up cycles and 3 measured ones, a
 - the probe car loses fewer than 10 parts (the crash did not happen);
 - the wasm heap in use (`wasmMB`) grows more than 0.25 MB a cycle, the JS heap (`heapMB`) more than 2 MB, or `joltBodies`/`joltSystemBodies` grow at all.
 
-It only runs when asked for, because it needs Jolt (do not set `LEAK_SOLVER=own`) and builds a bundle of its own:
+It only runs when asked for, because it needs Jolt and builds a bundle of its own:
 
 ```bash
 cd examples/test-room && node build.mjs && LEAK_PHASE=vehicle node leak.mjs

@@ -5,7 +5,7 @@ import { surfaceOf } from '../src/friction'
 import { createDestructionRenderer, MIN_PIECE_MASS_KG } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import { FakeWorld, mat, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const G = 9.81
 /** A 350 ml can: 6.6 cm across, 11.5 cm long, a steel wall of a quarter millimetre (7850 kg/m3), 60 g empty and 410 g full. */
@@ -68,7 +68,6 @@ const addRamp = (s: Setup, degrees: number): number => {
   root.updateMatrixWorld(true)
   s.renderer.bind('ramp', root, { parts: { body: mesh } })
   // under Jolt a drawn fixed thing is a static body already; a sleeping piece is a dynamic board that the first can to touch it wakes and drops flat
-  if (!IS_JOLT) s.renderer.makePiece('ramp').sleeping = true
   return root.position.y
 }
 
@@ -187,26 +186,18 @@ describe('cans knock each other', () => {
     const a = addCan(s, 'a', [-0.3, 2, 0], { velocity: [3, 0, 0] })
     const b = addCan(s, 'b', [0, 2, 0])
     let before = 0
-    let after: { va: number; vb: number } | null = null
+    let hasLeft = false
     run(s.renderer, 0.3, () => {
-      if (after) return
-      if (Math.abs(b.piece.velocity[0]) > 0.05) after = { va: a.piece.velocity[0], vb: b.piece.velocity[0] }
+      if (hasLeft) return
+      if (Math.abs(b.piece.velocity[0]) > 0.05) hasLeft = true
       else before = a.piece.velocity[0]
     })
     expect(before).toBeCloseTo(3, 3)
-    if (IS_JOLT) {
-      // Jolt's contact between two round faces gives back less than the material: a steel can on a steel can leaves at e = 0.458, not 0.6 (a sphere or a box give 0.6 exactly, a
-      // cylinder 0.46: a limit of the engine, measured alone in the T3.10 evidence). The velocities are read when the exchange is over, not at the first frame the still one moves
-      expect(a.piece.velocity[0]).toBeCloseTo(before * 0.2708, 2)
-      expect(b.piece.velocity[0]).toBeCloseTo(before * 0.7292, 2)
-      expect(a.piece.velocity[0] + b.piece.velocity[0]).toBeCloseTo(before, 4)
-      return
-    }
-    const { va, vb } = after ?? { va: 0, vb: 0 }
-    // equal masses: the still one goes on at (1 + e) / 2 of the speed, the other keeps (1 - e) / 2
-    expect(vb).toBeCloseTo(before * 0.8, 2)
-    expect(va).toBeCloseTo(before * 0.2, 2)
-    expect(va + vb).toBeCloseTo(before, 4)
+    // Jolt's contact between two round faces gives back less than the material: a steel can on a steel can leaves at e = 0.458, not 0.6 (a sphere or a box give 0.6 exactly, a
+    // cylinder 0.46: a limit of the engine, measured alone in the T3.10 evidence). The velocities are read when the exchange is over, not at the first frame the still one moves
+    expect(a.piece.velocity[0]).toBeCloseTo(before * 0.2708, 2)
+    expect(b.piece.velocity[0]).toBeCloseTo(before * 0.7292, 2)
+    expect(a.piece.velocity[0] + b.piece.velocity[0]).toBeCloseTo(before, 4)
   })
 
   it('a heavy can into a light one: the light one leaves faster than the heavy one came, momentum kept', () => {

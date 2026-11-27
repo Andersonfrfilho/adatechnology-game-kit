@@ -118,8 +118,7 @@ describe('missing boxes', () => {
 describe('scenario', () => {
   it('reads the address and falls back to the typical scenario in third person', () => {
     expect(parsePageChoice('?cena=caos&camera=first')).toMatchObject({ scenario: 'caos', camera: 'first' })
-    expect(parsePageChoice('?cena=nada&camera=top')).toMatchObject({ scenario: 'tipico', camera: 'shoulder', physics: 'jolt' })
-    expect(parsePageChoice('?solver=own').physics).toBe('own')
+    expect(parsePageChoice('?cena=nada&camera=top')).toMatchObject({ scenario: 'tipico', camera: 'shoulder' })
   })
 
   it('runs the street for tipico and pior, the crossing for caos', () => {

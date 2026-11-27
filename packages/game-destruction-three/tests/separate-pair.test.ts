@@ -5,7 +5,7 @@ import { createDestructionRenderer } from '../src/renderer'
 import { boxesAlongGround, shapeContact, type ContactShape } from '../src/piece-contacts'
 import type { Piece } from '../src/types'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const IDENTITY = new THREE.Matrix4().elements
 
@@ -263,10 +263,8 @@ describe('overlapping boxes are not launched', () => {
     // a block born a few centimetres into the one under it is lifted out of that overlap, and the one under it out of its own: a few centimetres, never a metre
     for (const r of rise) expect(r).toBeLessThan(0.1)
     for (const p of first.pieces) {
-      // on Jolt "held up" is what the engine's contacts say: a block at rest (v ~ 0) that touches the ground or another block. The corner-over-a-top rule misses a block
-      // leaning at 45 degrees on the edges of others, which stands, and is the heuristic of the own solver, which has no contacts to ask
-      if (IS_JOLT) expect(first.touchesSomething(p)).toBe(true)
-      else expect(standsOnSomething(p, first.pieces, 0.04)).toBe(true)
+      // "held up" is what the engine's contacts say: a block at rest (v ~ 0) that touches the ground or another block
+      expect(first.touchesSomething(p)).toBe(true)
       expect(Math.hypot(...p.velocity)).toBeLessThan(0.1)
     }
     const again = collapse()

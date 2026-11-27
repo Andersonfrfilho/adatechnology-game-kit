@@ -23,13 +23,11 @@ export const MENU_PATH = '/__desktop/menu'
 export const MENU_IDS: readonly string[] = ['menu', 'home', 'inicio']
 export const ROOM_IDS: readonly string[] = ['room', 'test-room', 'sala']
 
-export type Solver = 'jolt' | 'own'
 export type JoltBuildChoice = 'multithread' | 'single'
 
 /** How the app was asked to start and what the room page gets. */
 export type LaunchOptions = {
   readonly area: string | undefined
-  readonly solver: Solver
   readonly joltBuild: JoltBuildChoice
   /** Job threads besides the main one; above 0 only runs with `joltContacts: 'off'` (the kit's contact rules off: a measurement mode). */
   readonly joltThreads: number | 'auto' | undefined
@@ -37,7 +35,7 @@ export type LaunchOptions = {
   readonly lang: 'pt' | 'en' | undefined
 }
 
-export const DEFAULT_LAUNCH: LaunchOptions = { area: undefined, solver: 'jolt', joltBuild: 'multithread', joltThreads: undefined, joltContacts: 'js', lang: undefined }
+export const DEFAULT_LAUNCH: LaunchOptions = { area: undefined, joltBuild: 'multithread', joltThreads: undefined, joltContacts: 'js', lang: undefined }
 
 const flagOf = (argv: readonly string[], name: string): string | undefined => {
   const inline = argv.find((arg) => arg.startsWith(`--${name}=`))
@@ -49,11 +47,10 @@ const flagOf = (argv: readonly string[], name: string): string | undefined => {
 
 type LaunchEnv = Readonly<Record<string, string | undefined>>
 
-/** `--area=<id>` (or `KIT_DESKTOP_AREA`), `--solver=jolt|own`, `--jolt-build=multithread|single`, `--jolt-threads=N|auto`, `--jolt-contacts=js|off`, `--lang=pt|en`. */
+/** `--area=<id>` (or `KIT_DESKTOP_AREA`), `--jolt-build=multithread|single`, `--jolt-threads=N|auto`, `--jolt-contacts=js|off`, `--lang=pt|en`. */
 export const parseLaunch = (argv: readonly string[], env: LaunchEnv = {}): LaunchOptions => {
   const pick = (flag: string, variable: string): string | undefined => flagOf(argv, flag) ?? env[variable]
   const area = pick('area', 'KIT_DESKTOP_AREA')
-  const solver = pick('solver', 'KIT_DESKTOP_SOLVER')
   const build = pick('jolt-build', 'KIT_DESKTOP_JOLT_BUILD')
   const threads = pick('jolt-threads', 'KIT_DESKTOP_JOLT_THREADS')
   const contacts = pick('jolt-contacts', 'KIT_DESKTOP_JOLT_CONTACTS')
@@ -61,7 +58,6 @@ export const parseLaunch = (argv: readonly string[], env: LaunchEnv = {}): Launc
   const threadCount = threads === 'auto' ? 'auto' : threads !== undefined && /^\d+$/.test(threads) ? Number(threads) : undefined
   return {
     area: area && area.length > 0 ? area : undefined,
-    solver: solver === 'own' ? 'own' : DEFAULT_LAUNCH.solver,
     joltBuild: build === 'single' ? 'single' : DEFAULT_LAUNCH.joltBuild,
     joltThreads: threadCount,
     joltContacts: contacts === 'off' ? 'off' : 'js',
@@ -73,8 +69,6 @@ export const parseLaunch = (argv: readonly string[], env: LaunchEnv = {}): Launc
 export const physicsQuery = (options: LaunchOptions): string => {
   const parts: string[] = []
   if (options.lang) parts.push(`lang=${options.lang}`)
-  if (options.solver === 'own') return parts.join('&')
-  parts.push('solver=jolt')
   if (options.joltBuild === 'multithread') parts.push('joltBuild=multithread')
   if (options.joltThreads !== undefined) parts.push(`joltThreads=${options.joltThreads}`)
   if (options.joltContacts === 'off') parts.push('joltContacts=off')

@@ -2,12 +2,12 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { TERRAIN_MATERIALS } from '@adatechnology/game-terrain'
 
-import { GROUND_ROLLING_DAMPING, surfaceOf } from '../src/friction'
+import { surfaceOf } from '../src/friction'
 import { createDestructionRenderer } from '../src/renderer'
 import type { PieceBody } from '../src/internal'
 import type { DestructionRenderer } from '../src/types'
 import { FakeWorld, mat, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const G = 9.81
 /** Solid aluminium rods lying across their way: they roll with k = 1/2 (I = m r^2 / 2), and their own rolling resistance (metal, 0.002) is under every ground's. */
@@ -53,8 +53,8 @@ const throwRod = (o: RodThrow) => {
     terrainRollingDampingAt: () => o.damping ?? 0,
     ...(o.top === undefined ? {} : { groundAt: () => top, terrainAt: () => 0 }),
   })
-  // under Jolt a top is a drawn fixed body of its own (a slab with no surface of its material says: the default one); the kit's solver has it in `groundAt`
-  if (IS_JOLT && o.top !== undefined) {
+  // a top is a drawn fixed body of its own (a slab with no surface of its material says: the default one)
+  if (o.top !== undefined) {
     world.addObject('slab', [partState('body', 'slab', { mass: 500 })])
     const slabMesh = new THREE.Mesh(new THREE.BoxGeometry(60, 0.1, 4))
     const slab = new THREE.Group()
@@ -122,7 +122,7 @@ const rollOut = (speed: number, c: number, damping = DAMPING): number => {
 
 describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)', () => {
   // a 10 cm pipe thrown at 3 m/s slides until its spin catches up (2 m/s, 3 / (1 + k)), then rolls out slowing at C_rr g / (1 + k): 0.52 m/s2 on soil (3.8 m), 0.10 on
-  // asphalt (20 m). Under Jolt it slows by about 0.11 m/s2 more on both grounds alike (measured: 0.64 and 0.20), a loss of the engine's contact, not of the ground.
+  // asphalt (20 m). It slows by about 0.11 m/s2 more on both grounds alike (measured: 0.64 and 0.20), a loss of the engine's contact, not of the ground.
   it("a pipe rolling at 2 m/s slows on soil and on asphalt by each one's rolling resistance; the difference is the grounds' alone", () => {
     const slowing = (ground: string): number => slowingOf(throwRod({ ground, radius: 0.05, speed: 3, seconds: 30 }))
     const expected = (ground: string): number => (rollingOf(ground) * G) / (1 + K)
@@ -130,15 +130,16 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
     const asphalt = slowing('asphalt')
     expect(rollingOf('asphalt')).toBe(0.015)
     expect(soil).toBeGreaterThan(expected('soil') * 0.85)
-    expect(soil).toBeLessThan(expected('soil') * (IS_JOLT ? 1.3 : 1.15))
+    expect(soil).toBeLessThan(expected('soil') * 1.3)
     expect(soil - asphalt).toBeGreaterThan((expected('soil') - expected('asphalt')) * 0.9)
     expect(soil - asphalt).toBeLessThan((expected('soil') - expected('asphalt')) * 1.1)
   })
 
   // the case from the room: a thin rod thrown at 15 m/s. It slides and hops for 18 m, rolls from about 7 m/s and rolls out over 36 m on soil (`rollOut`, with its
-  // rolling damping; 47 m by C_rr alone), less in sand, and 309 m on asphalt (the old 0.015, which every ground had). Kit solver only: Jolt caps a body's spin at
-  // 47 rad/s (its default `mMaxAngularVelocity`, 0.25 pi per step at 60 Hz), so a 1.5 cm rod cannot roll faster than 0.7 m/s there and slides instead (the case above stays under it).
-  it.skipIf(IS_JOLT)('a 3 cm rod thrown at 15 m/s rolls out on soil within 10 % of its rolling resistance, in sand in a quarter of that, and on asphalt is still rolling', () => {
+  // rolling damping; 47 m by C_rr alone), less in sand, and 309 m on asphalt (the old 0.015, which every ground had).
+  // Registered skip, blocked: Jolt caps a body's spin at 47 rad/s (its default `mMaxAngularVelocity`, 0.25 pi per step at 60 Hz), so a 1.5 cm rod cannot roll faster than 0.7 m/s
+  // and slides instead (the case above stays under it). Unblocking needs a per-axis spin ceiling on the world and the residual loss at the tile seam measured away (T8.1 evidence).
+  it.skip('a 3 cm rod thrown at 15 m/s rolls out on soil within 10 % of its rolling resistance, in sand in a quarter of that, and on asphalt is still rolling', () => {
     const soil = throwRod({ ground: 'soil', radius: 0.015, speed: 15, seconds: 25 })
     expect(soil.stopAt).not.toBeNull()
     const run = soil.stopAt! - soil.rollFrom!.x
@@ -155,7 +156,7 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
   })
 
   // sand for x under 1 m, asphalt past it: the tile from 0 to 2 m has its middle at 1 m, so it is all asphalt, though the rod's points (x 0.2 to 0.8) are over the sand
-  it('a tile across two grounds is the one at its middle, in both solvers: a pipe rolling along the sand side of such a tile slows as on asphalt', () => {
+  it('a tile across two grounds is the one at its middle, a pipe rolling along the sand side of such a tile slows as on asphalt', () => {
     const split = (x: number): number => (x < 1 ? rollingOf('sand') : rollingOf('asphalt'))
     const onSplit = slowingOf(throwRod({ ground: split, radius: 0.05, speed: 3, seconds: 30, alongZ: true, centreX: 0.5, length: 0.6 }))
     const onAsphalt = slowingOf(throwRod({ ground: 'asphalt', radius: 0.05, speed: 3, seconds: 30, alongZ: true, centreX: 0.5, length: 0.6 }))
@@ -163,29 +164,22 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
     expect(onSplit).toBeLessThan((rollingOf('sand') * G) / (1 + K) / 3)
   })
 
-  // the engine draws every top (a table, a counter) as a body of its own with its own surface; the kit's solver has it in `groundAt`, over the terrain (`terrainAt`)
+  // the engine draws every top (a table, a counter) as a body of its own with its own surface
   it('a pipe rolling on a top over sand keeps the default surface (0.015), not the sand under the top', () => {
     const top = throwRod({ ground: 'sand', radius: 0.05, speed: 3, seconds: 30, top: 0.5 })
-    if (IS_JOLT) {
-      // the engine's top is a box with none of the ground tiles' extra contact loss (a box top: the engine's default ground has no rolling damping of its own, the rod's 0.02 alone), so it is measured
-      // against the closed form of the default surface; sand's C_rr (a few times higher) would stop it much sooner
-      expect(top.stopAt).not.toBeNull()
-      const run = top.stopAt! - top.rollFrom!.x
-      const expectedRun = rollOut(top.rollFrom!.speed, rollingOf('asphalt'))
-      expect(run).toBeGreaterThan(expectedRun * 0.95)
-      expect(run).toBeLessThan(expectedRun * 1.05)
-      return
-    }
-    const onTop = slowingOf(top)
-    // the default surface: C_rr 0.015, as asphalt's, and the default rolling damping
-    const onAsphalt = slowingOf(throwRod({ ground: 'asphalt', radius: 0.05, speed: 3, seconds: 30, damping: GROUND_ROLLING_DAMPING }))
-    expect(Math.abs(onTop - onAsphalt)).toBeLessThan(onAsphalt * 0.05)
+    // the engine's top is a box with none of the ground tiles' extra contact loss (a box top: the engine's default ground has no rolling damping of its own, the rod's 0.02 alone), so it is measured
+    // against the closed form of the default surface; sand's C_rr (a few times higher) would stop it much sooner
+    expect(top.stopAt).not.toBeNull()
+    const run = top.stopAt! - top.rollFrom!.x
+    const expectedRun = rollOut(top.rollFrom!.speed, rollingOf('asphalt'))
+    expect(run).toBeGreaterThan(expectedRun * 0.95)
+    expect(run).toBeLessThan(expectedRun * 1.05)
   })
 
   // the host marks the ground changed (`wakeRegion`) where only its surface changed: the heights are the same, the tile is not laid again, but its bodies take the new surface
-  it('a surface that turns from asphalt to sand under a rolling pipe, marked by the host, slows it as sand from then on, in both solvers', () => {
+  it('a surface that turns from asphalt to sand under a rolling pipe, marked by the host, slows it as sand from then on', () => {
     const surface = { rolling: rollingOf('asphalt') }
-    // under Jolt, what the tiles laid again carry an update after it (read off the engine: the rod soon rolls onto tiles laid after it, which would hide a miss)
+    // what the tiles laid again carry an update after it (read off the engine: the rod soon rolls onto tiles laid after it, which would hide a miss)
     let laid: number[] = []
     const rod = throwRod({
       ground: () => surface.rolling,
@@ -193,7 +187,7 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
       speed: 3,
       seconds: 6,
       each: (t, renderer) => {
-        if (IS_JOLT && Math.abs(t - 1 - FRAME) < FRAME / 2) laid = [...tilesOf(renderer).values()].filter((tile) => tile.dirty === null).map((tile) => tile.material.rolling ?? Number.NaN)
+        if (Math.abs(t - 1 - FRAME) < FRAME / 2) laid = [...tilesOf(renderer).values()].filter((tile) => tile.dirty === null).map((tile) => tile.material.rolling ?? Number.NaN)
         if (Math.abs(t - 1) > FRAME / 2) return
         surface.rolling = rollingOf('sand')
         renderer.wakeRegion(0, 0, 50)
@@ -202,10 +196,8 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
     // on asphalt the roll from about 2 m/s goes 16 to 20 m and takes 20 s; on sand from 1 s on it stops within a metre or two of where it was
     expect(rod.stopAt).not.toBeNull()
     expect(rod.stopAt!).toBeLessThan(5)
-    if (IS_JOLT) {
-      expect(laid.length).toBeGreaterThan(0)
-      for (const rolling of laid) expect(rolling).toBe(rollingOf('sand'))
-    }
+    expect(laid.length).toBeGreaterThan(0)
+    for (const rolling of laid) expect(rolling).toBe(rollingOf('sand'))
   })
 })
 

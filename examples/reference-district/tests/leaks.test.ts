@@ -33,7 +33,6 @@ async function makeDistrictWorld(): Promise<KitWorld> {
     renderer: { domElement: document.createElement('canvas'), shadowMap: { enabled: false, type: 0 }, setSize: () => undefined, setPixelRatio: () => undefined, render: () => undefined, dispose: () => undefined } as unknown as THREE.WebGLRenderer,
     bounds: terrainBoundsOf(plan),
     ground: groundLayoutOf(plan),
-    physics: 'own',
     workers: 0,
     audio: { samplesBaseUrl: null, userSamplesBaseUrl: null },
   })

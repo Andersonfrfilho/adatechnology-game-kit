@@ -7,7 +7,7 @@ import type { BodyId, SeamWorld } from '@adatechnology/game-physics'
 
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * TS.1b cost: 300 awake pieces and 10 bodies of the world that are not the pieces' crossing 200 m at 30 m/s. PHYSICS_COST=1 (`pnpm test:cost`, under the measure lock):
@@ -73,7 +73,7 @@ const runOnce = (outside: number): { readonly passMedian: number; readonly passP
   return { passMedian: median(runPasses), passP99: [...runPasses].sort((a, b) => a - b)[Math.floor(runPasses.length * 0.99)] ?? 0, passMax: Math.max(...runPasses), median: median(times), p99: [...times].sort((a, b) => a - b)[Math.floor(times.length * 0.99)] ?? 0, tilesAfterRun, tilesAfterIdle: probe.tiles.size, watched: probe.follow.watched }
 }
 
-describe.runIf(IS_JOLT && process.env.PHYSICS_COST === '1')('ground follow cost (TS.1b)', () => {
+describe.runIf(process.env.PHYSICS_COST === '1')('ground follow cost (TS.1b)', () => {
   it('300 awake pieces and 10 outside bodies crossing 200 m: the pass costs little and the idle tiles go', { timeout: 300000 }, () => {
     runOnce(0)
     const without = runOnce(0)

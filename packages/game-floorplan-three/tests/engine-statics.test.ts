@@ -4,10 +4,10 @@ import type { SeamWorld } from '@adatechnology/game-physics'
 import { describe, expect, it } from 'vitest'
 
 import { THREE, houseOf, planOf } from './helpers/houses'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 // every drawn fixed thing of a house is a body of the engine: a mode of the engine only (the kit's own solver lands pieces on what it measures itself)
-const engineOnly = IS_JOLT ? describe : describe.skip
+const engineOnly = describe
 
 type Solid = { center: number[]; half: number[]; rotation: number[]; mesh?: { vertices: Float32Array } }
 type Statics = { bodies: Map<string, { held: Map<string, { solid: Solid }>; waiting: number }> }

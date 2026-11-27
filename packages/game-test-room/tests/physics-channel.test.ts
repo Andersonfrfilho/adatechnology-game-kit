@@ -38,12 +38,14 @@ describe('the physics channel of the host (spec 008, TS.1)', () => {
     }
   })
 
-  it('leaves physics undefined on the kit own solver', () => {
-    const room = makeRoom({ physics: 'own' })
+  it('leaves physics undefined on a world the page steps itself (a seam)', async () => {
+    const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    const room = makeRoom({ physics: world })
     let lent: ModuleHost | undefined
     room.loadModule(probeModule((host) => (lent = host)))
     expect(lent?.physics).toBeUndefined()
     room.dispose()
+    world.dispose()
   })
 
   it('hands the workers of the page to the module', () => {
@@ -85,13 +87,15 @@ describe('the player of the room on the physics loop (spec 008, TS.9h)', () => {
     }
   })
 
-  it('walks by itself on the kit own solver: no walker, the position is the colliders and the keys', () => {
-    const room = makeRoom({ physics: 'own' })
+  it('walks by itself on a seam: no walker, the position is the colliders and the keys', async () => {
+    const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    const room = makeRoom({ physics: world })
     room.look([0, 1.7, 4], [0, 1.7, -10])
     holdKey('KeyW', true)
     for (let frame = 0; frame < 60; frame++) room.update(1 / 60, { live: true })
     holdKey('KeyW', false)
     expect(room.playerPosition[2]).toBeCloseTo(4 - 3.4, 1)
     room.dispose()
+    world.dispose()
   })
 })

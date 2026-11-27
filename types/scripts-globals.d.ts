@@ -468,7 +468,7 @@ declare global {
     __memoryWarnings?: number
     /** What `leak.mjs` counts in the page: live GL objects, canvases, listeners and intervals. */
     __leakCount: () => Record<string, number>
-    /** The room's Jolt world, made by the page's boot with `?solver=jolt` (`examples/test-room/build.mjs`). */
+    /** The room's Jolt world, made by the page's boot (`examples/test-room/build.mjs`). */
     __joltWorld?: import('@adatechnology/game-physics-jolt').JoltWorld
     /** One cycle of the `vehicle` phase of `leak.mjs` (`examples/test-room/leak-vehicle.mjs`, bundled into the page): says how many parts came off. */
     __vehicleLeakCycle: () => number

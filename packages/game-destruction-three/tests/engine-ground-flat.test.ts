@@ -6,7 +6,7 @@ import { createTerrain } from '@adatechnology/game-terrain'
 
 import { PieceSystem } from '../src/pieces'
 import type { PieceBody } from '../src/internal'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 /**
  * T3.8ad: a tile the terrain's own bounds prove level is laid as a slab without reading its 25921 samples. The proof is exact, so the ground the engine gets is the one the full
@@ -72,7 +72,7 @@ const same = (a: number[], b: number[]): void => {
   a.forEach((h, i) => expect(h === b[i] || (Number.isNaN(h) && Number.isNaN(b[i]!)) || Math.abs(h - b[i]!) < 1e-9).toBe(true))
 }
 
-describe.skipIf(!IS_JOLT)('a tile proved level from the terrain is laid without reading it (T3.8ad)', () => {
+describe('a tile proved level from the terrain is laid without reading it (T3.8ad)', () => {
   it('level ground: a slab, and one sample read where the full read took 25921, with the ground the full read gives', () => {
     const fast = lab(true)
     const full = lab(false)

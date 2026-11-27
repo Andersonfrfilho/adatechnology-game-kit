@@ -21,13 +21,13 @@ import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnviron
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
+import { requireRoomPhysics } from './room-physics'
 import { createTopStains } from './top-stains'
 import { createVessels } from './vessels'
 import { createPartLeaks } from './part-leaks'
 import { HAND_RECORDED_IDS, leafFoleyOf, openSoundOf, pickupSoundOf, USE_SOUND_EVERY, useSoundOf } from './hand-sounds'
 import type { Arena, ArenaTop } from './arena'
-import { createBenchStore } from './bench'
-import type { BenchStore } from './bench'
+import { createBenchStore, type BenchStore } from './bench'
 import type { BenchView, MetricRow } from './bench-panel'
 import { buildFromSpec } from './build-from-spec'
 import { displacedVolume } from './displaced-volume'
@@ -40,8 +40,7 @@ import { createLog } from './log'
 import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
-import { createPlayer, PLAYER_RADIUS } from './player'
-import type { PlayerSlam } from './player'
+import { createPlayer, PLAYER_RADIUS, type PlayerSlam } from './player'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import { bodySlotPose, clampCarriedReach, itemPoseOf } from './carry-poses'
 import { followHeldTarget } from './held-follow'
@@ -269,7 +268,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     ground: options.ground,
     groundName: t('ground.name'),
     terrainBudget: options.terrainBudget,
-    physics: options.physics ?? 'own',
+    physics: requireRoomPhysics(options.physics),
     workers: 0,
     quality,
     // the player's graphics settings (game-graphics): only on a renderer the room owns, and only when the page asks (the example page does; tests keep the fixed look)

@@ -7,10 +7,10 @@ import type { PhysicsWorld } from '@adatechnology/game-physics'
 import { createEngineImpacts } from '../src/engine-impacts'
 import { EngineStatics } from '../src/engine-statics'
 import type { StaticSolid } from '../src/engine-statics'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 // the engine's contact rows are a mode of the engine only
-const engineOnly = IS_JOLT ? describe : describe.skip
+const engineOnly = describe
 
 const MATERIAL = { frictionStatic: 0.6, frictionDynamic: 0.5, restitution: 0, rolling: 0, rollingDamping: 0 }
 

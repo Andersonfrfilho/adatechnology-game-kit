@@ -11,7 +11,7 @@ import { createDestructionRenderer } from '../src/renderer'
 import { SettledBatches } from '../src/settled-batches'
 import type { SettledBatchOptions } from '../src/settled-batches'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 import type { StaticSolid } from '../src/engine-pieces'
 
 const DT = 1 / 60
@@ -31,11 +31,10 @@ const dropBoxes = (system: PieceSystem, count: number, lift: number): THREE.Obje
   })
 
 /**
- * A fixed top for the pieces on it, as a thing the engine collides with: under Jolt a function that answers "what is the top here" is no body, so the top is a drawn box (its
- * upper face at `top`, from `fromX` on). Under the kit's own solver the function is what the pieces read (`staticTopAt`), as before.
+ * A fixed top for the pieces on it, as a thing the engine collides with: a function that answers "what is the top here" is no body, so the top is a drawn box (its
+ * upper face at `top`, from `fromX` on).
  */
 const fixedTop = (top: () => number, fromX: number): Partial<PieceSystemOptions> => {
-  if (!IS_JOLT) return { staticTopAt: (x, _z, y, step) => (x > fromX && top() <= y + step ? top() : -Infinity) }
   const solids = (): Map<string, readonly StaticSolid[]> => {
     const height = top()
     if (height === -Infinity) return new Map()

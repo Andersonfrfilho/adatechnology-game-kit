@@ -36,8 +36,6 @@ export type DistrictOptions = {
   readonly camera: CameraChoice
   /** Where the player stands and which way the view looks (yaw 0 looks toward -z). Default: the main street, looking east. */
   readonly start?: { readonly x: number; readonly z: number; readonly yaw: number }
-  /** Physics of the pieces: Jolt by default, the kit's own solver with `'own'` (the browser tests without wasm). */
-  readonly physics?: 'jolt' | 'own'
   /** Where the kit's recorded sounds are served (default `./sfx/`); `null` plays the recipes only; `false` makes a silent world. */
   readonly sounds?: string | null | false
   /** The threads of the page's coordinator (default the automatic count; `0` runs every job on the main thread). */

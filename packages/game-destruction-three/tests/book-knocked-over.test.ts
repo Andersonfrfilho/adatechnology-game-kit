@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import { createDestructionRenderer } from '../src/renderer'
 import { FakeWorld, partState } from './fake-world'
-import { IS_JOLT, physicsOption } from './setup-physics'
+import { physicsOption } from './setup-physics'
 
 const BOOK: [number, number, number] = [0.05, 0.28, 0.26]
 
@@ -40,9 +40,8 @@ const hitStandingBook = ({ offsetX, dropHeight, settleSeconds, sidewaysSpeed }: 
   return { height: new THREE.Box3().setFromObject(standing).getSize(new THREE.Vector3()).y, sleptBefore }
 }
 
-// a book that lands flat on the 5 cm top edge presses straight down: on Jolt it goes over only when its weight acts past the rim (x 0.15); the own solver's `tip` rule
-// takes the landing near the middle (x 0.03). The sideways throw (a real horizontal blow at the top) goes over in both from x 0.2.
-const LANDING_X = IS_JOLT ? 0.15 : 0.03
+// a book that lands flat on the 5 cm top edge presses straight down: it goes over only when its weight acts past the rim (x 0.15)
+const LANDING_X = 0.15
 
 describe('a standing book hit by a falling one', () => {
   for (const settleSeconds of [0.2, 2]) {
