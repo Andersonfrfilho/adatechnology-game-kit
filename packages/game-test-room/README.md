@@ -190,6 +190,8 @@ when a body (the player, an object of the room) crosses it; whatever was already
 | E | grab / drop |
 | R | rotate the held item |
 | Right button or G | throw |
+| L | sit on the seat aimed at (`seat.keys`, default `['KeyL']`) or get up when seated; hold it (`seat.holdSeconds`, 0.45 s) to lie down where the thing has a `lie` seat |
+| U | the action menu (`actionMenu.keys`, default `['KeyU']`; `actionMenu: false` leaves it out): everything that can be done with the aimed piece (sit, lie down, open or close, pick up, push, put in the bag, equip the weapon), each with its own key; a number or a click does it, Esc or U closes it |
 | K | kick with the `kick` tool whatever is in hand (`kick.keys`, default `['KeyK']`; also the Kick button and `room.kick()`); a 250 J blunt blow, ten times the punch, that lands from the leg (`kickHeights`, every 10 cm from 0.25 to 0.85 m above the feet, level) on what stands low in front, else where the eye aims |
 | F | use a fluid item (drink); Z tilt; C fill from the tap; V pour (holding a fluid item); otherwise V toggles 1st/3rd person when a body is set (`setAvatar`), and kicks when there is none (Shift+V kicks with a body too; the `kick` tool whatever is selected) |
 | Tab | show / hide the panels |

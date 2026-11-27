@@ -9,7 +9,7 @@ import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
-import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout, weaponMenu } from '@adatechnology/game-weapons'
+import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout } from '@adatechnology/game-weapons'
 import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createItemUse, ITEM_USES, LIQUIDS, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
 import type { FluidEvent, ItemUsePlayer, StainState } from '@adatechnology/game-fluids'
@@ -50,6 +50,8 @@ import type { RoomPushRider, RoomPushTarget } from './furniture-push'
 import type { CarryDrag } from './furniture-carry'
 import { createRoomShove } from './furniture-shove'
 import { stepWalkPlan } from './walk-plan'
+import { createActionMenu, listActions } from './action-menu'
+import { createSeatKey } from './seat-key'
 import { createSeating } from './seating'
 import type { SeatHolder } from './seating'
 import { createRoomDoors, DOOR_REACH } from './door-open'
@@ -71,7 +73,7 @@ import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import { runSteps, runStepsAsync } from './steps'
 import { vehicleLeafKey } from './vehicle-leaf-key'
-import type { ToolMenuGroup } from './tool-menu'
+import { weaponMenuGroups } from './tool-menu-groups'
 import type {
   AnimationInfo,
   ItemSize,
@@ -2881,23 +2883,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   const kickKeys = options.kick?.keys ?? ['KeyK']
   const toolMenuKeys = options.toolMenu === false ? [] : (options.toolMenu?.keys ?? ['Backquote'])
-  // every weapon of the arsenal by group and section, with the silhouette of the catalogue item that equips it when a module brought one
-  const toolMenuGroups = (): ToolMenuGroup[] => {
-    const thumbnails = new Map<string, TestRoomItem>()
-    for (const item of catalog) if (item.weapon && item.thumbnail && !thumbnails.has(item.weapon)) thumbnails.set(item.weapon, item)
-    return weaponMenu(arsenal, { locale }).map((group) => ({
-      id: group.id,
-      name: group.name,
-      sections: group.sections.map((section) => ({
-        id: section.id,
-        name: section.name,
-        tools: section.weapons.map((weapon) => {
-          const item = thumbnails.get(weapon.id)
-          return { id: weapon.id, name: weapon.name, ...(weapon.maker || weapon.tags ? { keywords: [weapon.maker, ...(weapon.tags ?? [])].filter(Boolean).join(' ') } : {}), ...(item?.thumbnail ? { thumbnail: item.thumbnail } : {}), ...(item?.thumbnailCredit ? { thumbnailCredit: item.thumbnailCredit } : {}) }
-        }),
-      })),
-    }))
-  }
   const toggleToolMenu = (open?: boolean): boolean => ui?.toolMenu(open) ?? false
   /** Lets the left hand go: back to one tool, in the right hand, held and aimed as usual. */
   const dropOffTool = (): void => {
@@ -3102,6 +3087,25 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const takeInHand = createTakenInHand({ catalog: catalogMap, spawn: (itemId, position) => spawn(itemId, position), pieceOf: (objectId) => rendererPieces.get(objectId), grab: (objectId, piece, point, hands) => grabPiece(objectId, piece, point, hands) })
   const bag = createRoomBag(bagHost, { maxKg: maxCarry, ...(typeof options.inventory === 'object' ? options.inventory : {}) })
   if (bagEnabled) container.appendChild(bag.element)
+  const seatKeys = options.seat?.keys ?? ['KeyL']
+  const seatKey = createSeatKey({ keys: seatKeys, seating, ...(options.seat?.holdSeconds !== undefined ? { holdSeconds: options.seat.holdSeconds } : {}), onNothing: () => say(t('act.menu.nothing')) })
+  const actionMenu = createActionMenu({
+    container,
+    t,
+    keys: options.actionMenu === false ? [] : (options.actionMenu?.keys ?? ['KeyU']),
+    onOpen: bagHost.onOpen,
+    onNothing: () => say(t('act.menu.nothing')),
+    entries: () => {
+      aim()
+      const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+      if (!r) return null
+      const piece = rendererPieces.get(r.object)
+      const weapon = entryOf(r.object)?.item?.weapon
+      const target = { seats: seatHolder(r.object)?.seats ?? [], canGrab: !!piece && piece.mass <= maxCarry, canPush: !!piece, canOpen: leavesOf(r.object).length > 0, canStore: bagEnabled && !!piece, ...(weapon && arsenal.weapons.has(weapon) ? { weaponId: weapon } : {}) }
+      const run = { sit: (pose: 'sit' | 'lie') => void seating.sit(r.object, undefined, pose), grab: () => void grab(), push: () => say(t('act.menu.push_hint')), open: () => void doors.use(), store: () => void bag.pickToBag(), equip }
+      return { title: nameOf(r.object), entries: listActions(target, run, { sit: seatKeys[0] ?? 'KeyL', grab: 'KeyE', store: 'KeyP', equip: 'KeyH' }, t) }
+    },
+  })
   const heldHands = createHeldHands({
     arsenal,
     loadout,
@@ -3567,6 +3571,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // Keys
   // ---------------------------------------------------------------------------------------------------------------------------------------
   const onKey = (code: string, down: boolean, e: KeyboardEvent): void => {
+    if (down && actionMenu.handleKey(code, { repeat: e.repeat, ctrl: e.ctrlKey || e.metaKey })) return
+    if (!e.ctrlKey && !e.metaKey && seatKey.handleKey(code, down, e.repeat)) return
     if (!down) {
       if (code === 'KeyZ') tiltKey = 0
       if (code === 'KeyE' && pushByKey) {
@@ -3649,15 +3655,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
         setStrikeCombo(!comboOn)
         break
       case 'KeyM':
-        if (e.repeat) break
-        {
-          const on = player.toggleFly()
-          say(
-            locale === 'pt-BR'
-              ? (on ? 'Modo Livre (Voo/Noclip): ATIVO [WASD: voar · Espaço: subir · C: descer · Shift: acelerar]' : 'Modo Livre: DESATIVADO')
-              : (on ? 'Free Fly Mode (Noclip): ON [WASD: fly · Space: up · C: down · Shift: boost]' : 'Free Fly Mode: OFF')
-          )
-        }
+        if (!e.repeat) say(t(player.toggleFly() ? 'hud.fly_on' : 'hud.fly_off'))
         break
       case 'KeyH': {
         const w = (entries.held ?? entryOf(inspectTarget()?.object ?? ''))?.item?.weapon
@@ -3987,6 +3985,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (!ownsLoop) roomMetrics.frame(dt)
     frameStamp++
     seating.update()
+    seatKey.update()
     player.update(dt)
     if (pushByKey && !player.keys.has('KeyE')) {
       // the window lost the key without a key up
@@ -5188,7 +5187,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       ...(options.toolMenu !== false
         ? {
             toolMenu: {
-              groups: toolMenuGroups,
+              groups: () => weaponMenuGroups(arsenal, catalog, locale),
               onPick: pickTool,
               currentLeft: () => offToolId,
               // the list takes clicks: the mouse leaves the view while it is open

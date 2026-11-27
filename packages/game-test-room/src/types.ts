@@ -324,6 +324,10 @@ export interface TestRoomOptions {
   kickHeights?: readonly number[]
   /** Keys (`KeyboardEvent.code`) that kick with the arsenal's `kick` tool, whatever tool is in hand; default `['KeyK']` (Shift+V kicks too). */
   kick?: { keys?: string[] }
+  /** Keys (`KeyboardEvent.code`) that sit on the seat aimed at or get up (hold: lie down, where the seat allows); default `['KeyL']`; `holdSeconds` is how long a press must last to lie down (default 0.45). */
+  seat?: { keys?: string[]; holdSeconds?: number }
+  /** The menu of everything that can be done with the aimed piece (sit, lie, open, pick up, push, put in the bag, equip), a number or a click does it. `keys` open it (default `['KeyU']`); `false`: no menu. */
+  actionMenu?: false | { keys?: string[] }
   /** The weapon picker: every weapon of the arsenal by group (firearms, melee, explosives, tools) and category, a click equips it and adds it to the hotbar. `keys` open it (default `['Backquote']`, the key left of 1); `false`: no picker. */
   toolMenu?: false | { keys?: string[] }
   /** The bag (I opens its list, P puts what is aimed at into it, O stores the hand): a 30 L backpack of 20 slots by default, weight limit `maxCarryKg`. `false`: no bag keys and no list. */
