@@ -101,7 +101,7 @@ describe('the floor', () => {
   })
 
   it('is a terrain a blast digs: the ground under the point goes down and the player walks into it', () => {
-    const room = makeRoom({ physics: 'own', ground: { surface: 'dirt' } })
+    const room = makeRoom({ ground: { surface: 'dirt' } })
     expect(room.scene.getObjectByName('floor')).toBeTruthy()
     room.world.explode([0, 0.2, -3], 800_000, 8, 'test')
     run(room, 0.1)

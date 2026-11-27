@@ -2,7 +2,7 @@ import { stepKnock } from '@adatechnology/game-contracts'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { Layer, PhysicsServices } from '@adatechnology/game-physics'
-import { PLAYER_MASS_KG, PLAYER_WALK_PUSH_NEWTONS, createWalker } from '@adatechnology/game-player'
+import { PLAYER_MASS_KG, PLAYER_WALK_PUSH_NEWTONS, createWalker, footRestHeight } from '@adatechnology/game-player'
 import type { Walker, WalkerStance } from '@adatechnology/game-player'
 
 import { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED, createBlockedTest } from './locomotion'
@@ -31,6 +31,8 @@ const ROOF_CLEARANCE = 0.01
 const ROOF_LAYERS: readonly Layer[] = ['static', 'debris', 'prop', 'vehicle']
 /** Seconds a launch may wait for the feet to leave the floor before the landing counts. */
 const LAUNCH_WAIT = 0.25
+/** The skin (m) the engine keeps the character's capsule inflated by (the engine's own default, not set by the kit): the foot rests on the ground as if it were this much rounder. */
+const CHARACTER_SKIN = 0.02
 
 type Slam = { readonly speed: number; readonly x: number; readonly z: number }
 
@@ -315,7 +317,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
       return out
     },
     place(position) {
-      const floor = floorAt(position[0], position[2])
+      const floor = footRestHeight(floorAt, position[0], position[2], PLAYER_RADIUS + CHARACTER_SKIN)
       if (walker.parked) {
         manual[0] = position[0]
         manual[1] = flying ? position[1] : floor
