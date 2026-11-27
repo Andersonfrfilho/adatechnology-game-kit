@@ -1,5 +1,15 @@
 # @adatechnology/game-test-room
 
+## 0.42.1
+
+### Patch Changes
+
+- Updated dependencies [f6e97fd]
+  - @adatechnology/game-physics@0.9.0
+  - @adatechnology/game-destruction-three@0.29.2
+  - @adatechnology/game-kit-defaults@0.6.1
+  - @adatechnology/game-player@0.12.1
+
 ## 0.42.0
 
 ### Minor Changes

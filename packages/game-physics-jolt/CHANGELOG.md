@@ -1,5 +1,12 @@
 # @adatechnology/game-physics-jolt
 
+## 0.7.2
+
+### Patch Changes
+
+- Updated dependencies [f6e97fd]
+  - @adatechnology/game-physics@0.9.0
+
 ## 0.7.1
 
 ### Patch Changes

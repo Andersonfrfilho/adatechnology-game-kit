@@ -1,5 +1,12 @@
 # @adatechnology/game-player
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [f6e97fd]
+  - @adatechnology/game-physics@0.9.0
+
 ## 0.12.0
 
 ### Minor Changes
