@@ -25,6 +25,8 @@ export interface VehicleFleetContent {
   paletteOf(group: string): unknown
   colorFromSeed(seed: number | string, palette: unknown): string
   fleetDims(id: string): FleetDims | undefined
+  /** The most hulls a vehicle may have on the engine, by its id; absent or undefined takes the largest ceiling. */
+  hullCeilingOf?(id: string): number | undefined
 }
 
 export interface BuildVehicleOptions {

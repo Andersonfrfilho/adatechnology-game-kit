@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { BodyId, PhysicsWorld, Quat, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
+import type { BodyId, SeamWorld, Quat, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 
 import { boxInertia, multiplyQuat, rotateBy } from './crash-parts-math'
 import type { BodyMass } from './crash-parts-math'
@@ -50,7 +50,7 @@ export interface PartBodies {
   readonly pushedOut: () => number
 }
 
-export const createPartBodies = (THREE: Three, world: PhysicsWorld, frame: THREE_NS.Object3D): PartBodies => {
+export const createPartBodies = (THREE: Three, world: SeamWorld, frame: THREE_NS.Object3D): PartBodies => {
   const bodies = new Map<number, PartBody>()
   const pose = new Float64Array(7)
   const speed = new Float64Array(6)

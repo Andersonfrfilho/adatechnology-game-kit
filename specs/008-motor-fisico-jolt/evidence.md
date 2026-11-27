@@ -4719,3 +4719,20 @@ A carga não ficou abaixo de 4 antes de um trecho curto (3,0 a 3,2, rodadas A a 
 
 **O que entrou.** `KitWorldDebrisOptions` (o `KitWorldDebris` do desenho) ganha `rayBroadPhase?` e `contactHits?`. `createDestructionHost` recebe `hasLoop` (`physics.loop !== null`) e liga `rayBroadPhase: true` no renderizador quando há laço, salvo `debris.rayBroadPhase: false`; `contactHits` só repassa o campo quando o jogo pede (desligado por padrão; ligar por padrão é a TS.8).
 **Números.** `game-kit-defaults`: 73 testes verdes (1 novo, `world-ray-broad-phase.test.ts`: laço liga, `own` não liga, `false` desliga); `game-test-room`: 75 arquivos, 567 testes verdes com a sala no Jolt já com a broad phase ligada, **nenhum golden regravado**; `typecheck` e `eslint` limpos; `room.ts` 5 259 linhas.
+
+## TS.4 — Veículos da sala no laço do motor (2026-11-26) — ✅
+
+**O que entrou** (só `game-vehicles-three`; `room.ts` não mudou: 5 259 linhas).
+- `src/test-area/physical-car.ts`: `physicsServicesOf(host)` (`isPhysicsServices(host.physics)`), `physicalCarColliders` (cascos método B: `hulls: true`, teto por classe da frota, plano pelo `host.workers` quando há, cache `createHullPlanCache` por módulo) e `createPhysicalCar`. O carro é um corpo dinâmico (camada `vehicle`) de `services.world`, feito quando a raiz está na cena, as peças desenhadas todas feitas e o plano de cascos de volta; massa, centro e momentos vêm das partes do modelo (`bodyMassOf`, novo em `crash-parts-math.ts`). Uma fase `contacts` do laço (`services.loop.add`) põe o desenho no corpo e roda `parts.step()` (dano pelas linhas de contato, peças soltas como corpos, cascos refeitos ao assentar) a cada quadro com passos.
+- `module.ts` (`impl`): com serviços usa o caminho acima e `d.colliders` devolve vazio (o mundo fixo não guarda cópia do desenhado, senão o corpo nasceria dentro dela); `d.dispose` e o `detach` do módulo liberam o corpo do chassi e os das peças (§8). Sem serviços (`own`): `createVehicleColliders` e `d.colliders = colliders.pieces` como antes.
+- `CrashPartsOptions.world`, `createPartBodies` e `createChassisHulls`: `PhysicsWorld` passa a `SeamWorld` (sem cast; os testes seguem passando `JoltWorld`).
+
+**Números** (`tests/physical-car.test.ts`, Jolt real, `compact_hatch` na sala, parede a 12 m, 30 m/s):
+- corpos do mundo: antes do carro N, depois de pronto N + 1 (o chassi); depois da batida N + 1 + peças soltas (5 peças, 3 golpes, 114 eventos de dano, partes atingidas `underbody` e `bumper_front`); depois de `room.clear()` volta a N (nenhum corpo do carro sobra).
+- com `workers` que respondem tarde: nasce sem corpo, plano pedido 1 vez, corpo feito quando o plano volta.
+- `own`: nenhum corpo novo no mundo e `userData.physicalCar` indefinido.
+- `game-vehicles-three`: 38 arquivos verdes, 3 testes novos; `vehicle-hulls-cache.test.ts` precisa do `dist` do pacote para o worker de verdade (sem build falha, com build 8/8). `tsc --noEmit` e `eslint` limpos. Nenhum golden mudou.
+
+**Rodas (correção de 2026-11-26, antes do PR).** Sem casco de roda o carro estacionado descia o vão livre até a casca tocar o chão. Agora, só no caminho com serviços, o compound do chassi ganha um cilindro por pneu desenhado (`role === 'tyre'`), medido na geometria que o holder desenha (`objectsOf`, caixa no quadro da raiz; cai na caixa do modelo se não houver malha), com o eixo no lado mais curto. Os filhos entram depois dos cascos, então os números dos cascos não mudam; o pneu que sai (`onPartLost`) tira o seu filho do chassi, e o filho não leva `tag`, então a roda no chão não gera dano. Nenhuma regra do plano de cascos (K1–K7) foi tocada: as rodas continuam sem casco no plano. Teste novo: carro assentado dorme e o centro do chassi (`localToWorld` do centro de massa) fica a **0,00 cm** da altura desenhada (limite do teste 2 cm). Antes da correção na caixa do modelo: +3,1 cm, porque a caixa do pneu desce 3,3 cm abaixo do chão (a caixa não é a malha); a medida pela malha fecha em 0.
+
+**Limites conhecidos.** `onPartLost` ainda não refaz o veículo de rodas (`rebuildVehicle`, 7.6). Medição de quadro na sala em AMD segue na T8.6.

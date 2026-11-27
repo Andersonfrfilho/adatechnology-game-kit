@@ -7,16 +7,19 @@ import type { ParticleMaterials, VehicleContext, VehicleItem, VehicleKit } from 
 import { isRenderPools } from '@adatechnology/game-render-three'
 import { createArcadeDriver, createSemiSimDriver, createSurfaces, vehicleCorners } from '@adatechnology/game-vehicles-driving'
 
-import { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
+import { colorFromSeed, fleetDims, fleetHullCeilingOf, installFleet, paintPalettes, paletteOf } from '@adatechnology/game-vehicles-fleet'
 
 import { createVehiclesThree, primaryPaint } from '../build'
 import { createVehicleColliders } from '../colliders'
+import { createHullPlanCache } from '../hull-plan-cache'
 import { createVehicleLod, createVehicleLodQueue } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
 import { createCabinSmoke } from '../cabin-smoke'
 import { createVehicleRainCovers } from '../rain-cover'
 import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
 import type { LaneDamage } from './lane-damage'
+import { createPhysicalCar, physicalCarColliders, physicsServicesOf } from './physical-car'
+import type { PhysicalCar } from './physical-car'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
 import { LIBRARY_BANK } from '@adatechnology/game-audio'
@@ -81,7 +84,7 @@ type Placed = {
  * exhaust) are requested by id through `host.effects` when the host has it; this module draws none.
  */
 export function createVehiclesTestModule(options: VehiclesTestOptions = {}): TestableModule<VehiclesContext> & { readonly placed: ReadonlyMap<string, unknown> } {
-  const fleet: VehiclesTestFleet = options.fleet ?? { colorFromSeed, fleetDims, installFleet, paintPalettes, paletteOf }
+  const fleet: VehiclesTestFleet = options.fleet ?? { colorFromSeed, fleetDims, hullCeilingOf: fleetHullCeilingOf, installFleet, paintPalettes, paletteOf }
   const locale = options.locale ?? 'pt-BR'
   const text = TEXT[locale] ?? (TEXT['pt-BR'] as (typeof TEXT)[string])
   const keys = options.vehicles ?? DEFAULT_TEST_VEHICLES
@@ -97,6 +100,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   // and the rain keeps off what the cabins roof over: a broken roof or windshield lets it in
   const rainCovers = createVehicleRainCovers()
   let host: ModuleHost | null = null
+  const physicalCars = new Set<PhysicalCar>()
+  const planCache = createHullPlanCache()
   let three: Three | null = null
   let counter = 0
   let helpersShown = ''
@@ -181,9 +186,26 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       tapEffects(d)
       // an engine collides with what the vehicle draws, piece by piece, not with its damage-zone boxes
       // (a vehicle that just spawned fills in over several updates)
-      const colliders = createVehicleColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET })
-      d.colliders = colliders.pieces
-      d.collidersPending = colliders.isPending
+      const services = physicsServicesOf(host)
+      if (services) {
+        // on the engine's loop the car is a body of its own (hulls, parts that come off): the fixed world keeps no copy of the drawing
+        const colliders = physicalCarColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET, fleetKey: key, hullCeilingOf: fleet.hullCeilingOf, planCache, workers: host?.workers })
+        const car = createPhysicalCar({ THREE: kit.THREE as Three, services, vehicle: d, root: root as THREE_NS.Object3D, colliders })
+        const disposeVehicle = d.dispose?.bind(d)
+        d.dispose = () => {
+          physicalCars.delete(car)
+          car.dispose()
+          disposeVehicle?.()
+        }
+        physicalCars.add(car)
+        r.userData.physicalCar = car
+        d.colliders = car.colliders
+        d.collidersPending = () => false
+      } else {
+        const colliders = createVehicleColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET })
+        d.colliders = colliders.pieces
+        d.collidersPending = colliders.isPending
+      }
       // a leaf the room swings (door, hood, lid) is posed through here: away from its rest the vehicle draws in full, or the fused one shows it shut
       const setPartPose = d.setPartPose?.bind(d)
       {
@@ -646,6 +668,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         stopBlocker?.()
         stopCrease?.()
         stopLodBatch?.()
+        for (const car of physicalCars) car.dispose()
+        physicalCars.clear()
         cabins.clear(effects())
         rainCovers.clear()
         clearHelpers()

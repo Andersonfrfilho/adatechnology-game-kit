@@ -1,5 +1,5 @@
 import type * as THREE_NS from 'three'
-import type { BodyId, PhysicsWorld, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
+import type { BodyId, SeamWorld, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 import { CONTACT_READ_STRIDE } from '@adatechnology/game-physics'
 import { crashVehicle } from '@adatechnology/game-vehicles'
 import type { PartDef, VehicleDestructible } from '@adatechnology/game-vehicles'
@@ -24,7 +24,7 @@ const TOUCH_MARGIN = 0.05
 
 export interface CrashPartsOptions {
   readonly THREE: Three
-  readonly world: PhysicsWorld
+  readonly world: SeamWorld
   readonly vehicle: VehicleDestructible
   /** The frame the hulls and the drawn meshes are in (`createVehicleColliders`' frame); its pose is the body's. */
   readonly frame: THREE_NS.Object3D
