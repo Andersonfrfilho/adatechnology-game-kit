@@ -23,6 +23,7 @@ import type { StaticSolid } from './engine-statics'
 import { HINGE_RELEASE } from './internal'
 import type { PartBox, PieceBody, PieceRound, PieceSweepHit } from './internal'
 import { mergeFlushBoxes } from './merge-flush-boxes'
+import { GROUND_ROLLING_DAMPING, PIECE_ROLLING_DAMPING } from './friction'
 
 export type { StaticSolid } from './engine-statics'
 
@@ -41,6 +42,8 @@ export interface EnginePieceOptions {
    * again when the host marks its ground changed (`groundChanged`, through `wakeRegion`), as for its heights: a surface that changes is marked like a height that does.
    */
   readonly groundRollingAt?: (x: number, z: number) => number | undefined
+  /** The rolling damping (1/s) of the ground's surface at (x, z) (`TerrainMaterial.rollingDamping`), read per tile as `groundRollingAt` is; undefined for `GROUND_ROLLING_DAMPING`. */
+  readonly groundRollingDampingAt?: (x: number, z: number) => number | undefined
   /**
    * `groundAt`'s vertices under a rectangle (`GroundPatchRead`; `Terrain.heightPatch` is one), to the bit what `groundGrid` reads there. Under `groundWorker`, a tile it covers
    * (with its ring) is asked for with its patch, about 26 x 26 numbers, not its 60 000 samples and band: the samples are made where the tile is, and a change is told by
@@ -124,7 +127,7 @@ const TILE_KEY_ORIGIN = 32768
 const MU_STATIC = 0.7
 const ROLLING_RESISTANCE = 0.015
 const MU_DYNAMIC = 0.6
-const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE }
+const GROUND: Material = { frictionStatic: MU_STATIC, frictionDynamic: MU_DYNAMIC, restitution: 0, rolling: ROLLING_RESISTANCE, rollingDamping: GROUND_ROLLING_DAMPING }
 
 /** The key of the ground tile (x, z) falls in, the engine's own (`tiles`). */
 export const groundTileKey = (x: number, z: number): number => (Math.floor(x / TILE) + TILE_KEY_ORIGIN) * TILE_KEY + (Math.floor(z / TILE) + TILE_KEY_ORIGIN)
@@ -271,7 +274,7 @@ export class EnginePieces {
   fellThrough = 0
   private readonly tiles = new Map<number, Tile>()
   /** The ground's surfaces by rolling resistance (`groundMaterial`): one object each, so a tile tells a change of surface by identity. */
-  private readonly groundMaterials = new Map<number, Material>()
+  private readonly groundMaterials = new Map<string, Material>()
   /** The tiles made off the main thread on a fixed schedule (`EnginePieceOptions.groundWorker`), or null. */
   readonly schedule: GroundSchedule | null
   /** The due tiles `applyDueGround` takes (kept, so an update makes no list). */
@@ -779,7 +782,7 @@ export class EnginePieces {
 
   /** A round piece rolls to a stop by its surface's rolling resistance (the adapter's rule; the engine has none). */
   private rollingOf(b: PieceBody): Rolling | undefined {
-    return b.round ? { coefficient: b.friction?.rolling ?? ROLLING_RESISTANCE, radius: b.round.radius } : undefined
+    return b.round ? { coefficient: b.friction?.rolling ?? ROLLING_RESISTANCE, radius: b.round.radius, damping: b.friction?.rollingDamping ?? PIECE_ROLLING_DAMPING } : undefined
   }
 
   private material(b: PieceBody): Material {
@@ -1452,11 +1455,13 @@ export class EnginePieces {
   /** The surface of the tile's bodies: the ground's own rolling resistance at its middle (`tileRollingAt`), one shared object per value; `GROUND` without the host's. */
   private groundMaterial(ix: number, iz: number): Material {
     const rolling = this.o.groundRollingAt ? tileRollingAt(this.o.groundRollingAt, ix * TILE, iz * TILE) : undefined
-    if (rolling === undefined || rolling === ROLLING_RESISTANCE) return GROUND
-    let material = this.groundMaterials.get(rolling)
+    const damping = this.o.groundRollingDampingAt ? tileRollingAt(this.o.groundRollingDampingAt, ix * TILE, iz * TILE) : undefined
+    if ((rolling === undefined || rolling === ROLLING_RESISTANCE) && (damping === undefined || damping === GROUND_ROLLING_DAMPING)) return GROUND
+    const key = `${rolling ?? ROLLING_RESISTANCE}|${damping ?? GROUND_ROLLING_DAMPING}`
+    let material = this.groundMaterials.get(key)
     if (!material) {
-      material = { ...GROUND, rolling }
-      this.groundMaterials.set(rolling, material)
+      material = { ...GROUND, rolling: rolling ?? ROLLING_RESISTANCE, rollingDamping: damping ?? GROUND_ROLLING_DAMPING }
+      this.groundMaterials.set(key, material)
     }
     return material
   }

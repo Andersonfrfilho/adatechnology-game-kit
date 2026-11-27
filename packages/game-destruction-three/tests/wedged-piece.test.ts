@@ -36,7 +36,7 @@ describe('a box between two parts of another goes apart by both', () => {
   })
 })
 
-describe.skipIf(IS_JOLT)('a book wedged in a fallen case', () => {
+describe('a book wedged in a fallen case', () => {
   it('comes to rest and sleeps where it is held, instead of shaking from one board to the other', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()

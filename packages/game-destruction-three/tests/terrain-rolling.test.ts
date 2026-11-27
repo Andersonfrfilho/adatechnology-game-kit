@@ -127,7 +127,7 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
   // the case from the room: a thin rod thrown at 15 m/s. It slides and hops for 18 m, rolls from about 7 m/s and rolls out over 36 m on soil (`rollOut`, with its
   // rolling damping; 47 m by C_rr alone), less in sand, and 309 m on asphalt (the old 0.015, which every ground had). Kit solver only: Jolt caps a body's spin at
   // 47 rad/s (its default `mMaxAngularVelocity`, 0.25 pi per step at 60 Hz), so a 1.5 cm rod cannot roll faster than 0.7 m/s there and slides instead (the case above stays under it).
-  it.skipIf(IS_JOLT)('a 3 cm rod thrown at 15 m/s rolls out on soil within 10 % of its rolling resistance, in sand in a quarter of that, and on asphalt is still rolling', () => {
+  it('a 3 cm rod thrown at 15 m/s rolls out on soil within 10 % of its rolling resistance, in sand in a quarter of that, and on asphalt is still rolling', () => {
     const soil = throwRod({ ground: 'soil', radius: 0.015, speed: 15, seconds: 25 })
     expect(soil.stopAt).not.toBeNull()
     const run = soil.stopAt! - soil.rollFrom!.x
@@ -153,7 +153,7 @@ describe('a round piece rolls by the ground it is on (TerrainMaterial.rolling)',
   })
 
   // the engine draws every top (a table, a counter) as a body of its own with its own surface; the kit's solver has it in `groundAt`, over the terrain (`terrainAt`)
-  it.skipIf(IS_JOLT)('a pipe rolling on a top over sand keeps the default surface (0.015), not the sand under the top', () => {
+  it('a pipe rolling on a top over sand keeps the default surface (0.015), not the sand under the top', () => {
     const onTop = slowingOf(throwRod({ ground: 'sand', radius: 0.05, speed: 3, seconds: 30, top: 0.5 }))
     // the default surface: C_rr 0.015, as asphalt's, and the default rolling damping
     const onAsphalt = slowingOf(throwRod({ ground: 'asphalt', radius: 0.05, speed: 3, seconds: 30, damping: GROUND_ROLLING_DAMPING }))
