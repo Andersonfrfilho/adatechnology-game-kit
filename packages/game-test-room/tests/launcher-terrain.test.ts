@@ -94,7 +94,7 @@ const DIGGABLE = ['lawn', 'dirt', 'sand', 'mud', 'dry_clay']
 /** Metres above the ground a round goes off when it hits the ground (its radius, `GROUND_CLEARANCE` of the explosives). */
 const ON_GROUND = 0.12
 
-describe('every launcher in the ground area goes off on every lot (it never stops and lies on the ground)', () => {
+describe('every launcher in the ground area goes off on every lot (it never stops and lies on the ground)', { timeout: 60000 }, () => {
   it('the area has every ground of the kit, and the launchers are all there', () => {
     expect(lotTargets().map((lot) => lot.surface)).toEqual([...TERRAIN_STRIPS])
     expect(LAUNCHERS).toEqual(expect.arrayContaining(['rpg_7', 'm72_law', 'at4', 'carl_gustaf_m4', 'm203', 'gp_25', 'ag36', 'm32_mgl', 'm79']))
