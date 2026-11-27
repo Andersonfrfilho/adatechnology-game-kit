@@ -69,6 +69,9 @@ step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-mu
 - **Turn cap by size.** Jolt turns no body faster than 47 rad/s, the same for a 3 cm can and a 45 m wire. A dynamic body's cap is `MAX_EDGE_SPEED` (6 m/s,
   the speed of the farthest point of its bounds) over its radius, never under 47 rad/s and never over a quarter turn per fixed step (94 rad/s at the kit's 120 Hz;
   a 60 Hz world keeps 47). A can rolling at 2 m/s (60 rad/s) keeps its spin; a large piece turns as before.
+- **Ghost contact at the seam of two ground slabs.** A flat static slab (an upright box with `convexRadius: 0`, what the ground's level tiles are) has its lip contacts
+  dropped when the penetration axis leans (under 90% vertical) and the point is within 1 cm of the top: the neighbour slab's contact is the real one. A can rolling over
+  the seam keeps its speed. Jolt's own `EnhancedInternalEdgeRemoval` only works inside a mesh or height field, not between boxes of different bodies.
 
 ## Notes
 

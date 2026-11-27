@@ -34,6 +34,7 @@ import { createCharacter } from './character'
 import { updateHeights } from './heights'
 import { BP_AGENT, DEFAULT_MAX_TURN_RATE, DEFAULT_SLEEP_AFTER, DEFAULT_SLEEP_SPEED, MAX_EDGE_SPEED, MAX_TURN_PER_STEP, BP_MOVING, BP_SENSOR, BP_STATIC, INERTIA_SCALE, NUM_BP, NUM_OBJECT_LAYERS, POINTS_PER_BODY, QUERY_LAYER, ROW_CAPACITY, WHEEL_BLIND_LAYERS, WHEEL_PROBE_LAYER, layerOf } from './constants'
 import type { Jolt } from './constants'
+import { SlabIndex, slabOf } from './seam'
 import { Contacts } from './contact-rows'
 import { makeListener } from './contacts'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry, WatchedContacts } from './entries'
@@ -134,6 +135,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly pairLog: number[] = []
   readonly activeIds: JoltNS.BodyIDVector
   readonly ignored = new Set<number>()
+  readonly slabs = new SlabIndex()
   /** Ignored pair keys by each body's low 16 bits: a removed body takes its pairs with it (Jolt hands its index to the next body made). */
   private readonly ignoredBy = new Map<number, Set<number>>()
   /** Contact points of the last step per body: up to `POINTS_PER_BODY` x y z, and how many. Kept for the bodies asked about (`contactPoints`). */
@@ -320,7 +322,9 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       kitMass: desc.motion === 'dynamic' && desc.mass !== undefined ? { mass: desc.mass, ...(desc.inertia ? { inertia: desc.inertia } : {}) } : null,
       sliding: false,
       friction: (desc.material ?? DEFAULT_MATERIAL).frictionStatic,
+      ...slabOf(desc),
     }
+    this.slabs.add(entry)
     this.bodies.set(key, entry)
     this.byPointer.set(this.J.getPointer(body), entry)
     return key as BodyId
@@ -392,6 +396,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     if (!e) return
     if (e.ragdoll !== undefined) throw new Error(`body ${id} belongs to ragdoll ${e.ragdoll}: it leaves with removeRagdoll`)
     this.byPointer.delete(this.J.getPointer(e.body))
+    this.slabs.remove(e)
     this.bi.RemoveBody(e.id)
     this.bi.DestroyBody(e.id)
     this.J.destroy(e.id)
