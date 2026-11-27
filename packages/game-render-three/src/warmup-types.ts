@@ -70,16 +70,23 @@ export type WarmupContext = {
   getParameter(parameter: number): unknown
   readonly MAX_FRAGMENT_UNIFORM_VECTORS: number
   linkProgram(program: WebGLProgram): void
+  readonly LINK_STATUS?: number
+  getProgramParameter?(program: WebGLProgram, parameter: number): unknown
+  getProgramInfoLog?(program: WebGLProgram): string | null
 }
 
 /** What the warmup needs of a WebGLRenderer: structural, so a counting fake works in Node. */
 export type WarmupRenderer = RendererState &
   PropertiesReader & {
     compile(scene: Object3D, camera: Camera): unknown
+    /** three r158+: compiles like `compile` and resolves once every program reports done (KHR_parallel_shader_compile), without waiting on the link. */
+    compileAsync?(scene: Object3D, camera: Camera): Promise<unknown>
     render(scene: Object3D, camera: Camera): void
     setRenderTarget(target: WebGLRenderTarget | null): void
     initTexture(texture: Texture): void
     getContext(): WarmupContext
+    /** three's per-program check (`checkShaderErrors`): the warm-up turns it off and checks each program's link status itself. */
+    readonly debug?: { checkShaderErrors: boolean }
     readonly info: { readonly programs?: ReadonlyArray<object> | null; readonly memory: { readonly geometries: number; readonly textures: number } }
   }
 
@@ -89,6 +96,11 @@ export interface ProgramWarmup {
   registerTexture(texture: Texture): () => void
   /** Seals the budget and the scene state, then warms. */
   warmUp(renderer: WarmupRenderer, scene: Scene, camera: Camera, options?: WarmupOptions): WarmupReport
+  /**
+   * The same warm-up spread over tasks: the programs of each fog state are linked in parallel (`compileAsync`) before it is drawn, and each state,
+   * effect and batch of programs gets its own task, so the page keeps answering while the driver links. Draw nothing else while it runs.
+   */
+  warmUpAsync(renderer: WarmupRenderer, scene: Scene, camera: Camera, options?: WarmupOptions): Promise<WarmupReport>
   /** Calls to `gl.linkProgram` since warmUp: should stay 0. Counts the calls, not `info.programs.length`, which can hide a release and relink. */
   linkedSince(renderer: WarmupRenderer): number
   /** The anchor set: materials that are never disposed while the warmup lives. Pools and probes hand theirs here. */

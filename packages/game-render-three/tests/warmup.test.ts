@@ -277,3 +277,46 @@ describe('ProgramWarmup.warmUp with materials', () => {
     expect(pool.registeredMaterials?.()).toEqual([kept])
   })
 })
+
+describe('ProgramWarmup link checks', () => {
+  it('turns off three\'s per-program log reads and names a program whose link status is false', () => {
+    const { renderer, context, programs } = fakeRenderer()
+    const debug = { checkShaderErrors: true }
+    const handle = {} as WebGLProgram
+    Object.assign(renderer, { debug })
+    Object.assign(context, { LINK_STATUS: 35714, getProgramParameter: (program: WebGLProgram) => program !== handle, getProgramInfoLog: () => 'too many varyings' })
+    programs.push({ program: {} as WebGLProgram }, { program: handle })
+    expect(() => createProgramWarmup(THREE).warmUp(renderer, new THREE.Scene(), new THREE.PerspectiveCamera())).toThrow(/too many varyings/)
+    expect(debug.checkShaderErrors).toBe(false)
+  })
+})
+
+describe('ProgramWarmup.warmUpAsync', () => {
+  it('links each fog state with compileAsync just before drawing it, and draws what warmUp draws, giving the page a task between the steps', async () => {
+    const scene = new THREE.Scene()
+    const fog = new THREE.Fog(0x888888, 1, 100)
+    scene.fog = fog
+    const { renderer } = fakeRenderer()
+    const order: string[] = []
+    const fogName = (): string => (scene.fog === null ? 'none' : (scene.fog as { isFogExp2?: boolean }).isFogExp2 === true ? 'exp2' : 'linear')
+    Object.assign(renderer, { compileAsync: vi.fn(async () => void order.push(`compile:${fogName()}`)) })
+    renderer.render.mockImplementation(() => void order.push(`draw:${fogName()}`))
+    const { probe } = fakeProbe('decals')
+    const warmup = createProgramWarmup(THREE)
+    warmup.register(probe)
+    const childrenBefore = scene.children.length
+    const report = await warmup.warmUpAsync(renderer, scene, new THREE.PerspectiveCamera(), { fogStates: ['none', 'linear', 'exp2'] })
+    expect(order).toEqual(['compile:none', 'draw:none', 'compile:linear', 'draw:linear', 'compile:exp2', 'draw:exp2'])
+    expect(report.programs).toBe(0)
+    expect(scene.fog).toBe(fog)
+    expect(scene.children.length).toBe(childrenBefore)
+  })
+
+  it('draws the same as warmUp on a renderer without compileAsync', async () => {
+    const synchronous = fakeRenderer()
+    const asynchronous = fakeRenderer()
+    createProgramWarmup(THREE).warmUp(synchronous.renderer, new THREE.Scene(), new THREE.PerspectiveCamera(), { fogStates: ['none', 'exp2'] })
+    await createProgramWarmup(THREE).warmUpAsync(asynchronous.renderer, new THREE.Scene(), new THREE.PerspectiveCamera(), { fogStates: ['none', 'exp2'] })
+    expect(asynchronous.renderer.render).toHaveBeenCalledTimes(synchronous.renderer.render.mock.calls.length)
+  })
+})

@@ -77,17 +77,37 @@ export function createRender(deps: RenderDeps): KitWorldRender {
   const registerDrawSystems = (hooks: KitWorldRenderHooks | undefined): void => {
     let nextLightsCheck = 0
     let warnedState = ''
-    // modules that add a light of their own after the load (or change the fog, the tone mapping...) change the program key of every lit material: warm again when the sealed state breaks
+    // the warm-up runs over several tasks, drawing nothing else meanwhile: in one task it froze the page for 20 s (the browser's "wait" dialog)
+    let warming = false
+    // a failed warm-up is thrown from the next frame of this system, where the scheduler reports it like any other system error
+    let failure: { readonly error: unknown } | undefined
+    const warmUp = (): void => {
+      warming = true
+      void budget.warmUpAsync().then(
+        () => {
+          warming = false
+        },
+        (error: unknown) => {
+          warming = false
+          failure = { error }
+        },
+      )
+    }
     frame.add(
       (ctx: FrameContext) => {
         if (ctx.scripted) return
+        if (failure !== undefined) {
+          const { error } = failure
+          failure = undefined
+          throw error
+        }
         const now = performance.now()
         if (now < nextLightsCheck) return
         nextLightsCheck = now + LIGHTS_CHECK_MS
         const state = budget.lights.check(gl, scene)
-        if (budget.isWarmedUp() && (state.ok || state.actual === warnedState)) return
+        if (warming || (budget.isWarmedUp() && (state.ok || state.actual === warnedState))) return
         warnedState = state.actual
-        budget.warmUp()
+        warmUp()
         scheduler.budget.skipRenderSample()
       },
       { phase: 'render', order: -1000, id: 'room.lights-check' },
@@ -97,7 +117,7 @@ export function createRender(deps: RenderDeps): KitWorldRender {
     disposePacer = () => pacer.dispose()
     frame.add(
       (ctx: FrameContext) => {
-        if (!ctx.scripted && !pacer.ready()) return scheduler.budget.skipRenderSample()
+        if (!ctx.scripted && (warming || !pacer.ready())) return scheduler.budget.skipRenderSample()
         draw(hooks, ctx.scripted)
         pacer.submitted()
         if (!ctx.scripted) graphics?.frameEnd()
