@@ -55,6 +55,7 @@
     "@adatechnology/game-items": "workspace:^",
     "@adatechnology/game-kit-defaults": "workspace:^",
     "@adatechnology/game-physics": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
     "@adatechnology/game-player": "workspace:^",
     "@adatechnology/game-render-three": "workspace:^",
     "@adatechnology/game-runtime": "workspace:^",
@@ -68,7 +69,6 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@adatechnology/game-physics-jolt": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",
     "three": "^0.160.1",
