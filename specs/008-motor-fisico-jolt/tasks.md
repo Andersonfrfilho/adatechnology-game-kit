@@ -246,7 +246,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.3a ✅ `rayBroadPhase` ligado quando há laço. Aceite: testes do `game-kit-defaults` verdes, goldens iguais.
 - [x] TS.1b ✅ Chão do motor segue todo corpo dinâmico acordado e todo personagem do mundo (`SeamWorld.readAwakeBounds`, `engine-ground-follow.ts`, despejo de ladrilho, mundo estático dos módulos). Desenho: `design/integracao-sala.md` §6. Aceite: `ground-follows-bodies.test.ts` verde; custo na faixa `test:cost` (`evidence.md` `## TS.1b`). `sonnet`.
 - [x] TS.4 ✅ Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`; `evidence.md` `## TS.4`).
-- [ ] TS.5 Armas: cápsulas e granada no motor.
+- [x] TS.5 ✅ Armas: cápsulas e granada no motor (`ProjectileModel.body`, `thrown-body.ts`, `WeaponFx.clearLoose`; régua do dono 100/100 no chão da sala de produção; `evidence.md` `## TS.5`).
 - [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
 - [ ] TS.7 Cadáveres na sala (T5.4b/c/d).
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
