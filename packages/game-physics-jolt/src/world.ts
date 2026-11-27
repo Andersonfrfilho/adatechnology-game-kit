@@ -6,6 +6,7 @@ import type {
   BodyId,
   CharacterDesc,
   CharacterId,
+  CharacterShape,
   FluidDesc,
   HeightRegion,
   JointDesc,
@@ -117,6 +118,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
   readonly queryShapes = new Map<string, JoltNS.Shape>()
+  readonly characterShapes = new Map<string, JoltNS.Shape>()
   readonly ragdollCache = createRagdollCache()
   /** The convex hulls of the shape of each body whose compound asks to reuse them (`ShapeDesc` compound `reuseHulls`), by body key: the next shape of the body takes what it can. */
   readonly hulls = new Map<number, HullSet>()
@@ -395,6 +397,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     const e = this.bodies.get(id)
     if (!e) return
     if (e.ragdoll !== undefined) throw new Error(`body ${id} belongs to ragdoll ${e.ragdoll}: it leaves with removeRagdoll`)
+    if (e.character !== undefined) throw new Error(`body ${id} is the shadow of character ${e.character}: it leaves with removeCharacter`)
     this.byPointer.delete(this.J.getPointer(e.body))
     this.slabs.remove(e)
     this.bi.RemoveBody(e.id)
@@ -801,7 +804,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   }
 
   pushCharacter(id: CharacterId, impulse: Vec3): void {
-    this.characters.get(id)?.push(impulse[0], impulse[2])
+    this.characters.get(id)?.push(impulse[0], impulse[1], impulse[2])
   }
 
   readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void {
@@ -814,6 +817,18 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
 
   characterSupported(id: CharacterId): boolean {
     return this.characters.get(id)?.supported() ?? false
+  }
+
+  setCharacterShape(id: CharacterId, shape: CharacterShape): boolean {
+    return this.characters.get(id)?.setShape(shape.radius, shape.halfHeight) ?? false
+  }
+
+  characterBody(id: CharacterId): BodyId | undefined {
+    return this.characters.get(id)?.shadow
+  }
+
+  readCharacterGround(id: CharacterId, out: Float32Array | Float64Array): boolean {
+    return this.characters.get(id)?.ground(out) ?? false
   }
 
   removeCharacter(id: CharacterId): void {
@@ -915,6 +930,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     for (const id of [...this.bodies.keys()]) this.removeBody(id as BodyId)
     for (const s of this.sphereShapes.values()) s.Release()
     for (const s of this.queryShapes.values()) s.Release()
+    for (const s of this.characterShapes.values()) s.Release()
     releaseRagdollCache(this)
     for (const s of this.sharedShapes.values()) s.Release()
     for (const g of this.groups) g?.Release()

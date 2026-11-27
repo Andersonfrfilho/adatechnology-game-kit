@@ -4894,3 +4894,29 @@ O #533 (T3.5) foi desfeito pelo #536 porque a granada saiu da régua de 6,5 s (6
 **Medido agora** (`engine-loose.test.ts`, teto de giro por tamanho do #533): 98/100 dentro dos dois limites; quantil 95 do repouso 6,85 s e da distância 7,4 m; máximo 7,01 s e 10,05 m; 18 fixos até 6,83 s e 7,42 m; chão aberto 5,78 s e 6,24 m; parede 3,52 s e 1,53 m; 200 cápsulas, 197 dormindo a 5 s, nenhuma abaixo do chão.
 ## T3.5 — o #533 volta com a régua nova (2026-11-27)
 Revert do #536: voltam o teto de giro por tamanho em `game-physics-jolt`, a correção da emenda entre ladrilhos (`src/seam.ts`), o golden `destruction/fracture` `2837a904`, `rolling` na pista original e `loop-mode`. A régua da granada da T4.3 passa a ser a da seção acima.
+
+## TS.9a
+
+`pushCharacter` soma `impulso_y / massa` à velocidade vertical (a gravidade a consome) e `CharacterDesc.gravity?` (padrão 9,81) vale para a queda e para o pulo. A velocidade do passo é a média das duas pontas (a subida é a parábola, não um passo a menos). Teste `character.test.ts` (Jolt real, 120 Hz): impulso de 3,99 m/s sob 9,81 sobe **0,81 m** (±2 cm) e pousa; com gravidade 3 e 2 m/s sobe v²/2g do mesmo jeito. Nenhum golden mudou.
+
+## TS.9b
+
+`setCharacterShape(id, {radius, halfHeight}): boolean`: `SetShapeOffset` + `SetShape` do Jolt com tolerância de 3 cm (o capsule tem 2 cm de folga: com 0 o chão onde ele pisa já "penetrava" e agachar falhava no chão). As cápsulas ficam no mundo por raio e meia altura (até 32; passou disso nasce e se solta ao fim do uso) e saem no `dispose` (§8). Teste `character.test.ts`: em pé trava na barra de 1,3 m (z > −2,9), agachado (1,20 m) passa (z < −3,5), `false` ao levantar sob a barra, deitado (0,60 m) e agachado de novo cabem, `true` ao levantar fora; cem trocas entre três posturas deixam `memoryInUse()` igual. O sombra acompanha a postura (`character-shadow.test.ts`: agachado não há sombra a 1,6 m).
+
+## TS.9c
+
+`CharacterDesc.shadow?` (+ `user?`) e `characterBody(id)`. A binding jolt-physics 1.1.1 expõe `mInnerBodyShape`, `mInnerBodyLayer` e `GetInnerBodyID`: a sombra é o corpo interno do `CharacterVirtual` (cinemático, camada pedida), registrado no adaptador com `BodyEntry.character`: `removeBody` recusa, `removeCharacter` o leva e o `forget`. `readAwakeBounds` já listava todo personagem (TS.1b), então a sombra segue o chão sem mudança.
+Achado medido: sem filtro próprio, o personagem varria contra todas as camadas e segurava no ar, com os 400 N, qualquer tábua ou carro que caísse sobre ele (a tábua parava a 1,888 m com qualquer camada de sombra, mesmo `agent` ou `static`; sem mover o personagem ela caía até o chão). Com sombra o personagem agora varre só o mundo fixo e o que a camada da sombra encontra (`LAYER_PAIRS`; sensor nunca): o motor vê a sombra pela camada, o personagem não bloqueia o que a sombra não encontra. Sem sombra nada mudou.
+Testes `character-shadow.test.ts` (Jolt real): tábua que cai quica e repousa na cabeça (1,80 a 1,95 m); com camada `agent` o corpo de veículo cai ao chão (< 0,1 m), com `character` repousa na cabeça; o personagem anda como antes com a sombra ligada (z < −2,8 em 2 s, apoiado) e a própria sombra nunca o atrapalha; `overlapShape` acha a sombra onde o personagem está e deixa de achá-la no lugar de onde ele saiu (inclusive depois de `teleportCharacter`); `removeCharacter` tira o corpo (`bodyCount` −1).
+
+## TS.9d
+
+`readCharacterGround(id, out): boolean`: normal, velocidade do chão e `user` do corpo (−1 sem corpo ou sem apoio; no ar devolve `false` e `0 1 0 / 0 0 0 / −1`). Achado: o Jolt não carrega o personagem com o chão; o chamador soma a velocidade do chão. `move` agora soma a velocidade horizontal do chão enquanto apoiado (o pulo herda a velocidade da plataforma) e a vertical enquanto repousa. Teste `character-ground-state.test.ts`: plataforma cinemática a 1 m/s: velocidade lida 1,0 (±0,1), `user` 42, o personagem acompanha (x > 11,5 em 2 s); no chão fixo `0 0 0 −1`.
+
+## TS.9e
+
+Personagens no `saveState`/`restoreState`: depois do estado do adaptador, por personagem (chave ordenada) a capsule, a queda e o empurrão que o adaptador guarda e os bytes do `CharacterVirtual::SaveState` (`character-state.ts`); o restore coloca a capsule sem checar penetração e depois os bytes. Teste `character-ground-state.test.ts` (personagem com sombra, caixa de 30 kg para empurrar, roteiro com pulo, empurrão e troca de postura): salvar, 2 s, restaurar, os mesmos 2 s dá **os mesmos bytes** de `saveState` e os mesmos pés.
+
+## TS.9f
+
+`createWalker(services, options)` em `packages/game-player/src/walker.ts` (contrato sem citar Jolt, só `PhysicsServices`/`SeamWorld`): personagem em `services.world`, `beforeStep` na fase `actors` anda a intenção com o `h` do passo e guarda os pés anterior e atual em dois `Float64Array(3)` (nenhuma alocação por quadro); `drawn(alpha, out)` interpola com o alpha do agendador (a doc avisa que `loop.frame.alpha` é zerado pelo `stepFixed`); `jump()` empurra `massa × 3,99` N s só apoiado; `setStance` com as três posturas (1,80 / 1,20 / 0,60 m, proporção da altura em pé; o raio cai para h/3 quando a postura é baixa); `park()` remove o personagem do mundo e `unpark(candidates)` recria no primeiro lugar onde a cápsula não sobrepõe nada sólido (`overlapShape`, sonda 3 cm acima do pé para o chão onde pisa não contar), `dispose()` sai do laço e do mundo (§8). Testes `walker.test.ts` (Jolt real, 7 casos): anda a intenção, desenha entre os dois últimos passos (alpha 0, 0,5, 1 e fora da faixa), pula 0,81 m (±2 cm) e não no ar, agacha sob a barra de 1,3 m e a postura fica quando não cabe, estaciona e volta no primeiro candidato que cabe (sombra some e volta), fica estacionado quando nenhum cabe, `dispose` leva o corpo e o laço segue sem erro.

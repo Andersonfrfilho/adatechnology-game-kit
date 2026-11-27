@@ -355,6 +355,22 @@ export interface CharacterDesc {
   readonly stepHeight?: number
   /** Default 45 degrees: steeper ground it slides down. */
   readonly maxSlopeDegrees?: number
+  /** Gravity it falls with (m/s^2), default 9.81. */
+  readonly gravity?: number
+  /**
+   * Gives it a body in this layer that follows it (kinematic, the capsule's shape, `characterBody` returns it): what the world sees of a walker. Debris land on it,
+   * `overlapShape`, shots and blasts find it, and the layer decides who it meets (`agent`: a vehicle does not stop on it). The walker's own sweeps ignore it.
+   * Without it the walker is not a body and nothing but the walker's own sweeps meets it.
+   */
+  readonly shadow?: Layer
+  /** What the shadow's `user` says (default -1). */
+  readonly user?: number
+}
+
+/** The capsule a stance gives the walker: the same two numbers as `CharacterDesc`. */
+export interface CharacterShape {
+  readonly radius: number
+  readonly halfHeight: number
 }
 
 export interface RayHit {
@@ -543,7 +559,10 @@ export interface PhysicsWorld {
    * calls it before `stepFixed` (a `beforeStep` of the loop), never with the frame's `dt`.
    */
   moveCharacter(id: CharacterId, velocityX: number, velocityZ: number, dt: number): void
-  /** Shoves it: `impulse` (N s, horizontal part) is a change of velocity of impulse / mass that fades in about a quarter of a second and cannot go through a wall. */
+  /**
+   * Shoves it: `impulse` (N s) is a change of velocity of impulse / mass. The horizontal part fades in about a quarter of a second and cannot go through a wall;
+   * the vertical part is a launch that gravity takes back (a jump is an upward impulse while the feet stand on something: `mass * 3.99` N s rises 0.81 m).
+   */
   pushCharacter(id: CharacterId, impulse: Vec3): void
   /** Feet position into `out` at `offset` (x, y, z). */
   readCharacter(id: CharacterId, out: Float32Array | Float64Array, offset: number): void
@@ -551,6 +570,18 @@ export interface PhysicsWorld {
   teleportCharacter(id: CharacterId, position: Vec3): void
   /** Whether the feet stand on something. */
   characterSupported(id: CharacterId): boolean
+  /**
+   * Changes the capsule (a stance): the feet stay where they are and the head goes up or down. False, and nothing changes, when the new capsule would
+   * penetrate something (standing up under a beam). The capsules in use are kept, so a stance costs no allocation after the first time.
+   */
+  setCharacterShape(id: CharacterId, shape: CharacterShape): boolean
+  /** The shadow body (`CharacterDesc.shadow`), or `undefined` when it has none or the walker is gone. */
+  characterBody(id: CharacterId): BodyId | undefined
+  /**
+   * What the feet stand on, into `out` (at least 7 numbers): normal x y z, the ground's velocity x y z, and the `user` of its body (-1 when it has none). Returns
+   * false, with `out` left as a flat ground at rest (0 1 0, 0 0 0, -1), when the feet stand on nothing.
+   */
+  readCharacterGround(id: CharacterId, out: Float32Array | Float64Array): boolean
   removeCharacter(id: CharacterId): void
   /**
    * Floats a body in a fluid for one fixed step: call it in a `beforeStep` while it is in the water. `surface` is a point of the water plane, `normal` its up; `buoyancy`

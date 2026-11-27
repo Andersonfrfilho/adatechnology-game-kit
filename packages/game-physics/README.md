@@ -70,6 +70,8 @@ The types are the whole contract; read `src/index.ts` for each field's meaning a
 
 - `createCharacter(desc)`, `moveCharacter(id, vx, vz, dt)`, `pushCharacter`, `readCharacter`, `teleportCharacter`, `removeCharacter` are on `PhysicsWorld`: a capsule that
   steps up (`CharacterDesc.stepHeight`, 0.4 m), climbs a slope up to `maxSlopeDegrees`, pushes what it can (`strength`) and is pushed. Call `moveCharacter` in a `beforeStep` with the fixed `h`.
+- `pushCharacter` takes the vertical part too (a jump: `mass * 3.99` N s rises 0.81 m under `CharacterDesc.gravity`, default 9.81); `setCharacterShape` changes the stance (false when it would penetrate);
+  `CharacterDesc.shadow` gives it a kinematic body in that layer, `characterBody(id)` returns it; `readCharacterGround` gives the normal, velocity and `user` of what it stands on.
 - `grabBody(world, id, { radius, skin? })` returns a `Hold`: `moveTo(position, rotation, h)` carries a body (kinematic) swept against the fixed bodies so a hand never takes it
   through a wall; `release(linear, angular?)` hands it back to the engine, swept (`setContinuous`), so a fast small throw does not tunnel. Uses `SeamWorld` only.
 - `JointDesc` has the `slider` (a drawer, a rail) next to `fixed`, `hinge` and `swingTwist`; `breakImpulse` breaks any of them and `brokenJoints` reports it once.

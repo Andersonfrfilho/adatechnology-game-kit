@@ -48,6 +48,18 @@ export const saveState = (w: JoltWorldHost): Uint8Array => {
     pushFloat(rolling?.damping ?? 0)
   }
   pushFloat(w.stepCount)
+  const walkers = [...w.characters.keys()].sort(byKey)
+  own.push(walkers.length)
+  for (const key of walkers) {
+    const snapshot = w.characters.get(key)?.save()
+    if (!snapshot) continue
+    own.push(key)
+    for (const x of [snapshot.radius, snapshot.halfHeight, snapshot.fall, snapshot.pushX, snapshot.pushZ]) pushFloat(x)
+    own.push(snapshot.bytes.length)
+    for (let at = 0; at < snapshot.bytes.length; at += 4) {
+      own.push(((snapshot.bytes[at] ?? 0) | ((snapshot.bytes[at + 1] ?? 0) << 8) | ((snapshot.bytes[at + 2] ?? 0) << 16) | ((snapshot.bytes[at + 3] ?? 0) << 24)) >>> 0)
+    }
+  }
   const joltBytes = chunks.reduce((n, c) => n + c.length, 0)
   const out = new Uint8Array(joltBytes + own.length * 4 + 4)
   let at = 0
@@ -84,6 +96,25 @@ const restoreJolt = (w: JoltWorldHost, data: Uint8Array, joltBytes: number): boo
   const ok = w.system.RestoreState(rec)
   J.destroy(rec)
   return ok && !failed
+}
+
+/** The walkers of a saved state put back on the ones the world still has (a walker made or removed since keeps what it has, or its bytes are skipped). */
+const restoreCharacters = (w: JoltWorldHost, next: () => number, nextFloat: () => number): void => {
+  for (let count = next(); count > 0; count--) {
+    const key = next()
+    const radius = nextFloat()
+    const halfHeight = nextFloat()
+    const fall = nextFloat()
+    const pushX = nextFloat()
+    const pushZ = nextFloat()
+    const length = next()
+    const bytes = new Uint8Array(length)
+    for (let at = 0; at < length; at += 4) {
+      const word = next()
+      for (let k = 0; k < 4 && at + k < length; k++) bytes[at + k] = (word >>> (8 * k)) & 0xff
+    }
+    w.characters.get(key)?.restore({ radius, halfHeight, fall, pushX, pushZ, bytes })
+  }
 }
 
 export const restoreState = (w: JoltWorldHost, data: Uint8Array): boolean => {
@@ -142,5 +173,6 @@ export const restoreState = (w: JoltWorldHost, data: Uint8Array): boolean => {
     w.rollers.set(key, damping > 0 ? { coefficient, radius, damping } : { coefficient, radius })
   }
   w.stepCount = nextFloat()
+  if (p < data.length - 4) restoreCharacters(w, next, nextFloat)
   return true
 }

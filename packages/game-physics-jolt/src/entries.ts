@@ -19,6 +19,8 @@ export interface BodyEntry {
   readonly centred: boolean
   /** The engine ragdoll that owns it: it goes with that ragdoll (`removeRagdoll`), never alone. */
   readonly ragdoll?: number
+  /** The walker whose shadow it is: it leaves with `removeCharacter`, never alone. */
+  readonly character?: number
   /** Whether it slides on what it touches (`updateFriction`): its friction is then the dynamic one, else the material's static coefficient. */
   sliding: boolean
   /** The coefficient Jolt holds for it now (`updateFriction`, `SetFriction`). */
@@ -76,13 +78,32 @@ export interface VehicleEntry {
   driven: boolean
 }
 
+/** One walker as `saveState` keeps it: its capsule, the speed the adapter holds (fall, shove x z) and Jolt's bytes. */
+export interface CharacterSnapshot {
+  readonly radius: number
+  readonly halfHeight: number
+  readonly fall: number
+  readonly pushX: number
+  readonly pushZ: number
+  readonly bytes: Uint8Array
+}
+
 export interface JoltCharacter {
   move(vx: number, vz: number, dt: number): void
-  push(impulseX: number, impulseZ: number): void
+  push(impulseX: number, impulseY: number, impulseZ: number): void
   read(out: Float32Array | Float64Array, offset: number): void
   /** Its box (min x y z, max x y z) and horizontal velocity (x z): eight numbers from `offset`. */
   bounds(out: Float64Array, offset: number): void
   teleport(x: number, y: number, z: number): void
   supported(): boolean
+  /** A new capsule; false (nothing changed) when it would penetrate. */
+  setShape(radius: number, halfHeight: number): boolean
+  /** Its shadow, when it has one. */
+  readonly shadow: BodyId | undefined
+  /** Normal, ground velocity and ground user into `out`; false (a flat ground at rest) when it stands on nothing. */
+  ground(out: Float32Array | Float64Array): boolean
+  /** Everything a step does not rebuild: Jolt's own bytes and the adapter's numbers (`character-state.ts`). */
+  save(): CharacterSnapshot
+  restore(snapshot: CharacterSnapshot): void
   dispose(): void
 }

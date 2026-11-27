@@ -78,3 +78,64 @@ Desenho (opção B):
 - **Despejo**: ladrilho que nenhum corpo acordado pediu há 600 atualizações e sem corpo não estático em cima (`overlapShape` em camadas ≠ static) sai do mundo (§8 do `CLAUDE.md`).
 - **Mundo estático**: conferir (a) malha > `STATIC_SPAN` (3 m) fica fora (`renderer.ts`); (b) mundo novo enche aos poucos (`VERTICES_PER_UPDATE`); (c) veículo registrado como fixo vira caixas estáticas (`hostedSolids`) que colidem com o próprio carro físico.
 - `keepGround` não entra (sem consumidor).
+
+## 7. Jogador no motor (TS.9)
+
+### 7.1 Hoje
+- Sala: `player.update(dt)` no `input` de cada quadro (`room.ts:3991`), colisão própria (`colliders`, `blockers`, `footing` em `room.ts:653`: `solidsNear` + raio p/ baixo), pulo `GRAVITY=13`/`JUMP=4.6` (`player.ts:148-149`), agachar só baixa o olho, `kickLight` (`room.ts:686`) chuta peças leves, nocaute desliza + `onSlam`. 3ª pessoa (`avatar.ts`) lê `player.position`/`drawnFeet`.
+- Jogo: `game-player` já aceita `PlayerWorld.controller` (`player.ts:496`); `createPhysicsController` (`physics-controller.ts:35`), `beforeStep` em `actors`.
+- Adaptador: `CharacterVirtual` não é corpo (carro/destroço/raio passam); `pushCharacter` ignora y; forma fixa; gravidade 9,81 fixa; `saveState` sem personagens.
+
+### 7.2 Quem cria
+- `game-player/src/walker.ts`: `createWalker(services, {position, collider, stepHeight,…})` — personagem em `services.world`, `services.loop.add(…,'actors')`; `setIntent(vx,vz)`, `jump()`, `setStance(s)`; `afterSteps` guarda pés anterior/atual; `drawn(alpha,out)`; `park()`/`unpark(at)` com `overlapShape`; `dispose()` (§8).
+- Sala: ponto de troca `Locomotion` em `player.ts`: `own` (código atual, movido sem mudar) e `engine` (`game-test-room/src/player-body.ts`, usa `createWalker` com `host.physics`). `room.ts` não cresce.
+- Jogo usa o mesmo `createWalker` (ou `createPhysicsController`).
+
+### 7.3 Contrato (sem Jolt)
+1. `pushCharacter` respeita `impulse[1]` (queda consumida pela gravidade); pulo = push vertical apoiado.
+2. `setCharacterShape(id,{radius,halfHeight}): boolean` — false se penetra; posturas em cache: em pé 1,80 / agachado 1,20 / deitado 0,60.
+3. `CharacterDesc.shadow?: Layer` + `characterBody(id)`: cápsula-sombra cinemática que segue o personagem (destroço, tiro, blastQuery, atropelamento a veem).
+4. `CharacterDesc.gravity?` (9,81) + `readCharacterGround(id,out)` (normal, velocidade, user do chão).
+
+### 7.4 Passo fixo (§15)
+Tecla → intenção no `input`; andar no `beforeStep(h)`; câmera na fase `present`, pés = lerp(anterior, atual, alpha do agendador — não `loop.frame.alpha`, que o `stepFixed` zera); olhar imediato; `Float64Array(6)` fixo.
+
+### 7.5 Comportamentos
+- Degrau/rampa/escada: `stepHeight` = `STEP_UP`, `maxSlopeDegrees` 45; `stepLag` pela diferença de pés.
+- Empurrar: força 400 N; `kickLight` desliga no `engine`. Empurrão com E segue a regra do game-player; medir força dobrada (senão `setCharacterStrength`).
+- Ser empurrado: `knockOf` → `pushCharacter` com y.
+- Nocaute: batida se andou < metade do pedido e v ≥ `SLAM_MIN_SPEED` → `onSlam('obstacle')`; voltar a ter apoio do ar → `onSlam('ground')`.
+- Agachar/deitar: `setStance` + `setCharacterShape`; false mantém agachado.
+- Sentar/voar/veículo: `park()`; sair: `unpark` porta → lado oposto → teto, conferindo com `overlapShape`.
+- Blockers sem corpo: veto (volta aos pés anteriores) como ponte; TS.9l mede quantos.
+- 1ª = 3ª pessoa: mesmo estado interpolado.
+
+### 7.6 own / determinismo / custo
+`own`: nada muda. Ordem fixa no preset; replay grava intenção por tique; save/restore inclui personagens. Custo ~1/50 do limite (≤ 0,5 ms/50 personagens).
+
+### 7.7 Tasks
+| TS.9a | haiku | push y + gravity? | jolt test character: pulo v²/2g ±2 cm |
+| TS.9b | sonnet | setCharacterShape | agacha sob barra 1,3 m; false ao levantar |
+| TS.9c | sonnet | shadow/characterBody | tábua quica na sombra; carro atravessa (se agent); overlapShape acha |
+| TS.9d | sonnet | readCharacterGround | plataforma móvel: velocidade bate |
+| TS.9e | sonnet | personagens no saveState | salvar→2 s→restaurar→2 s bytes iguais |
+| TS.9f | sonnet | createWalker | game-player test walker |
+| TS.9g | sonnet | Locomotion na sala (só mover) | game-test-room test sem diff; room.ts ≤ 5259 |
+| TS.9h | sonnet | player-body engine | physics-channel: own nada muda; Jolt cria e libera |
+| TS.9i | sonnet | nocaute/batida | onSlam obstacle/ground |
+| TS.9j | sonnet | park/unpark | saída bloqueada → teto, sem penetrar |
+| TS.9k | haiku | avatar lê drawn | estado do avatar = drawn |
+| TS.9l | sonnet | paridade de bloqueio own×engine | lista blockers sem corpo, falha se crescer |
+| TS.9m | haiku | custo | test:cost 1 jogador + 200 corpos ≤ 0,05 ms mediana |
+| TS.9n | à mão (§9) | check:room prints 1ª/3ª | shots/ |
+
+### 7.8 Riscos
+- Binding JS pode não expor `GetInnerBodyID` → sombra como corpo cinemático do adaptador com `moveKinematic` + filtro.
+- 🧠 Gravidade do pulo (dono).
+- 🧠 Camada da sombra (dono).
+- Blockers sem corpo; empurrão duplo; latência de 1 tique; horda trava o jogador (sensação, dono vê no check:room).
+- Seção 6: `readAwakeBounds` precisa incluir o personagem/sombra.
+
+### Decisões do dono (2026-11-27)
+- Pulo: gravidade real 9,81 e impulso 3,99 m/s (mesma altura de 0,81 m).
+- Sombra do jogador na camada `agent` (carro não para nele; atropelamento igual ao dos agentes).

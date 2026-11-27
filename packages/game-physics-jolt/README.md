@@ -82,7 +82,8 @@ step. The numbers and what would remove the limit are in [`docs/medicoes/jolt-mu
 ## Character, hold, and loose pieces (spec 008, phase 4)
 
 - The character controller is Jolt's `CharacterVirtual` behind `createCharacter`: no internal body, so debris passes through it; `pushCharacter` adds `impulse / mass` to the wanted
-  velocity and decays it with a 0.25 s constant. `world.dispose()` frees the characters left.
+  velocity and decays it with a 0.25 s constant; the vertical part is a launch that gravity takes back. With `CharacterDesc.shadow` Jolt makes the inner body of the `CharacterVirtual` in that layer (it
+  is known to the adapter as a body that leaves with its walker) and the walker sweeps only against the fixed world and what that layer meets. A walker carries the velocity of what it stands on. `world.dispose()` frees the characters left.
 - `setContinuous(id, true)` is Jolt's `LinearCast` motion quality (swept); `grabBody` of `game-physics` turns it on at release.
 - Rolling resistance alone (C_rr 0.015, no extra damping) is what makes a thrown grenade (a compound of body, fuze and spoon) rest within 7 s and 8 m (95% of 100 seeded throws, none past 8 s or 10.5 m; no turn cap), and 200 casings sleep, on the kit's floor; the numbers and
   the margins are in `specs/008-motor-fisico-jolt/evidence.md`, T4.3.

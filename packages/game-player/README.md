@@ -113,3 +113,12 @@ palm). The pose algebra they use is exported too (`composePose`, `poseHolding`, 
 `createPhysicsController(world, { position, collider })` (over `PhysicsWorld.createCharacter` of `@adatechnology/game-physics`) goes in `PlayerWorld.controller`
 (`move`, `read`, `teleport`): the player's `x`, `y`, `z` are then the controller's feet, steps up to 18 cm, climbs 30 degrees, pushes a 30 kg crate and is pushed, and `blocked`
 is not asked. Call `player.update(h, input)` in the loop's `beforeStep` (the `actors` phase) with the fixed step, not the frame's `dt`. Without a controller the grid walk is unchanged.
+
+## Walker in the physics loop (spec 008, TS.9f)
+
+`createWalker(services, { position, collider, shadow?, ... })` (`services` is `PhysicsServices`, or anything with `loop` and `world`) makes the player's body a character of the world and walks it in the
+loop's `actors` phase: `setIntent(vx, vz)` when the key changes (kept until changed), `jump()` (3.99 m/s under 9.81: 0.81 m, only with the feet on something), `setStance('standing' | 'crouched' | 'prone')`
+(1.80 / 1.20 / 0.60 m for a 1.80 m person; false and the stance stays when the new capsule would penetrate), `push(impulse)`. The feet of the last two fixed steps are kept: `drawn(alpha, out)` is the point
+between them at the scheduler's `alpha` (not `loop.frame.alpha`, which `stepFixed` zeroes). `park()` takes the body out of the world (seat, aircraft, vehicle); `unpark(candidates)` puts it back at the first
+candidate (the door, the far side, the roof) where the capsule overlaps nothing solid, false and still parked when none fits. `dispose()` leaves the loop and the world. No allocation per frame.
+
