@@ -32,6 +32,10 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./worker-kinds": {
+      "types": "./dist/worker-kinds.d.ts",
+      "import": "./dist/worker-kinds.js"
+    },
     "./global": "./dist/index.global.js"
   },
   "files": [

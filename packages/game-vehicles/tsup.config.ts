@@ -4,10 +4,10 @@ import { defineConfig } from 'tsup'
 // needs only three.js.
 export default defineConfig([
   {
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/worker-kinds.ts'],
     format: ['esm'],
     dts: true,
-    splitting: false,
+    splitting: true,
     sourcemap: true,
     clean: false,
     target: 'es2020',

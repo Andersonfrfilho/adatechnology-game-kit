@@ -1,16 +1,11 @@
 import type * as THREE_NS from 'three'
 import type { DrawnCollider, WorkerCoordinator } from '@adatechnology/game-contracts'
-import type { PartDef, VehicleDestructible } from '@adatechnology/game-vehicles'
+import { hullOf, hullPlanKind, leavesOf, newHullPlan, planHulls, unitsOf } from '@adatechnology/game-vehicles'
+import type { HullPlan, HullPlanJob, HullPlanPiece, HullPlanResult, PartDef, VehicleDestructible } from '@adatechnology/game-vehicles'
 
 import { addTriangle, colliderOf, soupOf } from './collider-fit'
 import type { Soup } from './collider-fit'
 import type { HullPlanCache, SharedHull, SharedHulls } from './hull-plan-cache'
-import { hullPlanKind, planHulls } from './hull-plan-kind'
-import type { HullPlanJob, HullPlanPiece, HullPlanResult } from './hull-plan-kind'
-import { newHullPlan } from './hull-plan'
-import type { HullPlan } from './hull-plan'
-import { leavesOf, unitsOf } from './hull-split'
-import { hullOf } from './vehicle-hulls'
 
 /** The parts of the body shell: what is drawn by the vehicle's merged meshes (skin, glass, pillars, a shut door) belongs to the smallest of these whose box holds it. */
 const SHELL_ROLES: ReadonlySet<string> = new Set(['panel', 'fender', 'roof', 'frame', 'glass', 'pillar', 'door', 'lid', 'hood', 'bumper'])
