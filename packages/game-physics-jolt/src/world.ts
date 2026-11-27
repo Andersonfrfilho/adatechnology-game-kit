@@ -1,6 +1,6 @@
 import type JoltNS from 'jolt-physics/wasm-compat'
 
-import { DEFAULT_MATERIAL, LAYERS, LAYER_PAIRS } from '@adatechnology/game-physics'
+import { BodyLimitError, DEFAULT_MATERIAL, LAYERS, LAYER_PAIRS } from '@adatechnology/game-physics'
 import type {
   BodyDesc,
   BodyId,
@@ -164,7 +164,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.maxContacts = Math.min(ROW_CAPACITY, desc.maxContacts ?? ROW_CAPACITY)
     checkVec3Layout(J)
     const settings = new J.JoltSettings()
-    settings.mMaxBodies = desc.maxBodies ?? 16384
+    this.bodyCapacity = desc.maxBodies ?? 16384
+    settings.mMaxBodies = this.bodyCapacity
     // the single-threaded build has no job threads to give; the multithreaded one starts this many besides the caller's
     if (threading.build === 'multithread') settings.mMaxWorkerThreads = threading.workerThreads
     settings.mMaxBodyPairs = 32768
@@ -345,6 +346,11 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     return key as BodyId
   }
 
+  /** `CreateBody` hands back a null pointer when the engine is at its body limit. */
+  private requireBody(body: JoltNS.Body): void {
+    if (this.J.getPointer(body) === 0) throw new BodyLimitError(this.bodyCapacity)
+  }
+
   createBody(desc: BodyDesc): BodyId {
     const hulls = desc.shape.kind === 'compound' && desc.shape.reuseHulls ? new HullSet() : undefined
     const shape = this.shapeWith(desc.shape, desc.centreAtOrigin === true && desc.motion === 'dynamic' && desc.mass !== undefined, hulls)
@@ -352,6 +358,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     const body = this.bi.CreateBody(s)
     this.J.destroy(s)
     shape.Release()
+    this.requireBody(body)
     this.unscaleInertia(desc, body)
     const key = this.register(desc, body)
     if (hulls) this.hulls.set(key, hulls)
@@ -374,6 +381,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
         let body: JoltNS.Body
         try {
           body = this.bi.CreateBody(s)
+          this.requireBody(body)
           this.unscaleInertia(descs[i], body)
         } finally {
           J.destroy(s)
@@ -704,6 +712,8 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     if (!set) return
     for (const pair of [...set]) this.deleteIgnoredKey(pair)
   }
+
+  readonly bodyCapacity: number
 
   get bodyCount(): number {
     return this.bodies.size
