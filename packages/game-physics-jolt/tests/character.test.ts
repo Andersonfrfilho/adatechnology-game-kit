@@ -149,6 +149,44 @@ describe('character controller behind the contract (spec 008 T4.1)', () => {
     world.dispose()
   })
 
+  it('changes stance: crouches under a 1.3 m beam, cannot stand up there, and stands once out', async () => {
+    const world = await makeWorld()
+    const STAND = { radius: 0.3, halfHeight: 0.6 }
+    const CROUCH = { radius: 0.3, halfHeight: 0.3 }
+    const PRONE = { radius: 0.2, halfHeight: 0.1 }
+    // the beam: underside at 1.3 m, from z = -3 to z = -5
+    world.createBody({ shape: { kind: 'box', half: [2, 0.1, 1] }, motion: 'static', position: [0, 1.4, -4], user: -1 })
+    const standing = spawn(world, [1, 0, 0])
+    const blocked = walk(world, standing, { x: 0, z: -1.5 }, 3)
+    expect(blocked[2]).toBeGreaterThan(-2.9)
+    const walker = spawn(world, [0, 0, 0])
+    expect(world.setCharacterShape(walker, CROUCH)).toBe(true)
+    const under = walk(world, walker, { x: 0, z: -1.5 }, 3)
+    expect(under[2]).toBeLessThan(-3.5)
+    expect(world.setCharacterShape(walker, STAND)).toBe(false)
+    expect(world.setCharacterShape(walker, PRONE)).toBe(true)
+    expect(world.setCharacterShape(walker, CROUCH)).toBe(true)
+    const out = walk(world, walker, { x: 0, z: -1.5 }, 3)
+    expect(out[2]).toBeLessThan(-5.2)
+    expect(world.setCharacterShape(walker, STAND)).toBe(true)
+    const feet = new Float64Array(3)
+    world.readCharacter(walker, feet, 0)
+    expect(feet[1]).toBeCloseTo(0, 2)
+    expect(world.characterSupported(walker)).toBe(true)
+    world.dispose()
+  })
+
+  it('a stance already used costs no new capsule: a hundred changes leave the heap where it was', async () => {
+    const world = await makeWorld()
+    const walker = spawn(world, [0, 0, 0])
+    const stances = [{ radius: 0.3, halfHeight: 0.3 }, { radius: 0.2, halfHeight: 0.1 }, { radius: 0.3, halfHeight: 0.6 }]
+    for (const s of stances) world.setCharacterShape(walker, s)
+    const before = world.memoryInUse()
+    for (let i = 0; i < 100; i++) expect(world.setCharacterShape(walker, stances[i % 3] as (typeof stances)[number])).toBe(true)
+    expect(world.memoryInUse()).toBe(before)
+    world.dispose()
+  })
+
   it('50 controllers cost at most 0.5 ms a fixed step (median)', { timeout: 120000 }, async () => {
     const world = await makeWorld()
     world.createBody({ shape: { kind: 'box', half: [1, 0.09, 1] }, motion: 'static', position: [0, 0.09, 4], user: -1 })
