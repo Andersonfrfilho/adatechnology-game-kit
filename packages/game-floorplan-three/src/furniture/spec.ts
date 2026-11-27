@@ -53,7 +53,7 @@ export interface FurnitureSpecResult {
   spouts: Array<[number, number, number]>
   /**
    * The piece is fixed where it is laid, not a loose body: a part hangs on the wall behind it (a range hood, a shower head, a curtain rod), it is set into the ground
-   * (the legs of a swing), or it is a tree standing in the ground by its trunk.
+   * (the legs of a swing), it is a tree standing in the ground by its trunk, or it is installed (a toilet, a basin, a shower stall: plumbed and bolted in).
    */
   fixed: boolean
 }
@@ -142,6 +142,8 @@ const FLOOR_TOUCH = 0.005
 const LOOSE = new Set(['paper'])
 /** Never loose in the world: set in the ground by a post or roots (a mailbox, a clothesline, a small tree) or built in masonry on the spot (a brick barbecue). */
 const PLANTED = new Set(['mailbox', 'correio', 'clothesline', 'tree_small', 'bbq_simple'])
+/** Installed in the house: plumbed and bolted to the floor or the wall (a toilet, a basin, a shower stall, a laundry tub). Fixed until blows tear it off. */
+const INSTALLED = new Set(['toilet', 'washbasin', 'pedestal_basin', 'shower', 'shower_large', 'laundry_tub'])
 const BASE_MATERIAL: Record<string, string> = {
   wood: 'wood_hard',
   metal: 'steel',
@@ -269,7 +271,7 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
   const wallMounted = parts.some((part) => part.anchored && low(part) > FLOOR_TOUCH)
   const sunk = parts.some((part) => low(part) < -FLOOR_TOUCH)
   const rooted = parts.some((part) => part.material === 'foliage') && parts.some((part) => part.material.startsWith('wood') && low(part) <= FLOOR_TOUCH)
-  const fixed = wallMounted || sunk || rooted || PLANTED.has(name)
+  const fixed = wallMounted || sunk || rooted || PLANTED.has(name) || INSTALLED.has(name)
 
   // the top: among the boxes that cover most of the footprint, the highest upper face (not fabric: a cloth lies on the top)
   const all = drawn.reduce(

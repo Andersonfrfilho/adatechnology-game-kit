@@ -15,8 +15,8 @@ import type { Arsenal } from '@adatechnology/game-weapons'
 import { takeMotionOf } from './take-motion'
 import type { TakePhase } from './take-motion'
 
-/** The slots the body wears when the page names none: a holster at the hip and the long gun's own sling. */
-export const DEFAULT_BODY_SLOTS: readonly string[] = ['hip', 'sling']
+/** The slots the body wears when the page names none: a holster at the hip, the belt (a second handgun or knife tucked in it) and the long gun's own sling. */
+export const DEFAULT_BODY_SLOTS: readonly string[] = ['hip', 'belt', 'sling']
 
 /** What the room is told, for the player, the log and the modules that draw weapons on the body. `toss` is the start of a `drop`, seen; `drop` is the weapon on the floor. */
 export type HeldHandsReport = {

@@ -50,7 +50,8 @@
     "h": 0.7,
     "y": 1.4,
     "solid": true,
-    "massKg": 15
+    "massKg": 15,
+    "fixed": true
   },
   {
     "id": "pantry",
@@ -135,7 +136,8 @@
     "h": 1.2,
     "y": 0,
     "solid": true,
-    "massKg": 40
+    "massKg": 40,
+    "fixed": true
   },
   {
     "id": "sink_bathroom",
@@ -145,7 +147,8 @@
     "h": 1.05,
     "y": 0,
     "solid": true,
-    "massKg": 25
+    "massKg": 25,
+    "fixed": true
   },
   {
     "id": "shower",
@@ -155,7 +158,8 @@
     "h": 2.1,
     "y": 0,
     "solid": true,
-    "massKg": 90
+    "massKg": 90,
+    "fixed": true
   },
   {
     "id": "toilet",
@@ -165,7 +169,8 @@
     "h": 0.8,
     "y": 0,
     "solid": true,
-    "massKg": 30
+    "massKg": 30,
+    "fixed": true
   },
   {
     "id": "utility_sink",
@@ -175,7 +180,8 @@
     "h": 1.2,
     "y": 0,
     "solid": true,
-    "massKg": 25
+    "massKg": 25,
+    "fixed": true
   },
   {
     "id": "wall_socket",
@@ -205,7 +211,8 @@
     "h": 6.5,
     "y": 0,
     "solid": true,
-    "massKg": 60
+    "massKg": 60,
+    "fixed": true
   },
   {
     "id": "service_mast",

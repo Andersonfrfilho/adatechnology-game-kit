@@ -5,6 +5,8 @@
  * interaction puts it away or drops it. When the interaction ends, what was put away comes back to its hand; what fell stays on the ground.
  * A long gun on its sling (decision of the owner, 2026-11-25) is not put away: it swings onto the sling and hangs on the body (`sling`), and stays there after the interaction until
  * the player brings it back to the hands; with no sling worn it goes to the next slot that takes it (`SLOT_FALLBACKS`: the back).
+ * A second weapon of the belt (a pistol or a knife in the other hand, decision of the owner 2026-11-27) is not thrown away when the holster is taken: it is tucked in the
+ * belt (`SLOT_FALLBACKS`: hip, then belt) and comes back after, as the holstered one does. Picking something up never drops a weapon the body has a place for.
  * Engine-agnostic: the host says what is in each hand and which slots the body wears; this says which hand acts and what happens to each weapon.
  */
 
@@ -25,8 +27,11 @@ export interface HandsRules {
 
 export const HANDS_DEFAULTS: HandsRules = { oneHand: { maxKg: 4, maxLength: 0.7 } }
 
-/** The slot a weapon goes to when the body wears none of its own: a long gun with no sling goes across the back. */
-export const SLOT_FALLBACKS: Readonly<Record<string, readonly string[]>> = { sling: ['back'] }
+/** The slot a weapon goes to when the body wears none of its own (or it is taken): a long gun with no sling goes across the back, a second handgun or knife into the belt. */
+export const SLOT_FALLBACKS: Readonly<Record<string, readonly string[]>> = { sling: ['back'], hip: ['belt'] }
+
+/** The belt: where a one-handed weapon is tucked when its own place on the body is taken. */
+export const BELT_SLOT = 'belt'
 
 /** The slot of a long gun that hangs on its sling. */
 export const SLING_SLOT = 'sling'
@@ -76,7 +81,9 @@ export function planHands(params: PlanHandsParams): HandsPlan {
   const free = [...params.slots]
   const fallbacks = params.fallbacks ?? SLOT_FALLBACKS
   const stow = (hand: BodyHand, weapon: HandWeapon): HandsMove => {
-    const tried = weapon.slot === null ? [] : [weapon.slot, ...(fallbacks[weapon.slot] ?? [])]
+    const own = weapon.slot === null ? [] : [weapon.slot, ...(fallbacks[weapon.slot] ?? [])]
+    // a one-handed weapon (a second handgun, a compact SMG, a hatchet) is tucked in the belt when its own places are taken, never thrown away
+    const tried = weapon.hands === 1 && !own.includes(BELT_SLOT) ? [...own, BELT_SLOT] : own
     const slot = tried.find((name) => free.includes(name))
     if (slot === undefined) return { hand, weapon: weapon.id, move: 'drop' }
     free.splice(free.indexOf(slot), 1)

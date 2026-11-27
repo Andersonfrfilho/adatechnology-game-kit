@@ -58,7 +58,11 @@ export interface HouseholdTypeDef {
   solid: boolean
   /** A big piece standing free on the floor: a person leans on it and pushes it instead of picking it up. Absent for what is carried by hand or fixed to the house. */
   pushable?: boolean
-  /** Fixed where it is laid, to the house or the ground (a service mast clamped to the wall and set in the sidewalk): a host never makes it a loose body. */
+  /**
+   * Fixed where it is laid, to the house or the ground (a service mast clamped to the wall and set in the sidewalk; a shower, a toilet, a sink plumbed and bolted in;
+   * a wall cabinet screwed to the wall): a host never makes it a loose body, and the hands do not take it while it is held there. Only once its joints are broken
+   * (torn off by blows or a blast) is it a loose piece.
+   */
   fixed?: boolean
   /**
    * Real mass of the whole object, empty, in kg (a fridge 70, a camping table 4.5). The drawing is solid blocks, so a mass from its volume would be far off (a fridge of

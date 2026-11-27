@@ -46,6 +46,8 @@ import { createSceneryBlocking } from './scenery-blocking'
 import { createRoomPush, PUSH_REACH } from './furniture-push'
 import { bodySlotPose, clampCarriedReach, itemPoseOf } from './carry-poses'
 import { followHeldTarget } from './held-follow'
+import { createContentsHand, GRAB_REACH } from './contents-take'
+import { createPieceLift, heaviestMaterialOf, liveMassOf, specMassOf } from './piece-lift'
 import { createHeldHands, holsterEventOf } from './held-hands'
 import { twistTargets } from './twist-hand'
 import type { RoomPushRider, RoomPushTarget } from './furniture-push'
@@ -760,11 +762,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const MOVABLE_MAX_BASE = 0.12
   /** How far in from the side of a base its feet (or its edge) scrape the floor, metres. */
   const FOOT_INSET = 0.06
-  const heaviestMaterial = (id: string): string | undefined => {
-    let best: { mass: number; material: string } | undefined
-    for (const p of world.state(id)?.parts ?? []) if (p.status !== 'broken' && (!best || p.mass > best.mass)) best = { mass: p.mass, material: p.material }
-    return best?.material
-  }
+  const heaviestMaterial = (id: string): string | undefined => heaviestMaterialOf(world.state(id)?.parts ?? [])
   /** What the player stands against when the aim is not on it (from the shoulder the aim of something low falls on the floor beside it): the closest thing ahead within arm's reach. */
   const leanedOn = (): RoomPushTarget | null => {
     const fx = -Math.sin(player.yaw)
@@ -1033,12 +1031,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   /** What a piece weighs in the physics: its parts in the world (a body the world has no state for weighs `NO_STATE_PIECE_KG`), never under the floor. */
   const pieceMassOf = (id: string): number => Math.max(MIN_PIECE_MASS_KG, massOfObject(id) || NO_STATE_PIECE_KG)
-  const massOfObject = (id: string): number => {
-    const st = world.state(id)
-    let m = 0
-    for (const p of st?.parts ?? []) if (p.status !== 'broken' && p.status !== 'melted' && p.status !== 'ashes') m += p.mass
-    return m
-  }
+  const massOfObject = (id: string): number => liveMassOf(world.state(id)?.parts ?? [])
 
   // the still meshes of an object draw in one batch per material; a mesh that is hit, moved or swung draws on its own again (createStaticBatcher)
   const batchers = new Map<string, StaticBatcher>()
@@ -1355,15 +1348,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       log.coalesce(`bump:${e.so.objectId}`, { channel: 'action', type: 'bump', text: t('act.bump', { name: e.name, kg: num(piece.mass, 1) }), objectId: e.so.objectId, itemId: e.so.itemId, data: { massKg: Math.round(piece.mass * 10) / 10, pushN: force } }, 1)
     }
   }
-  const massGuess = (spec: DestructibleSpec): number => {
-    let m = 0
-    for (const p of spec.parts) {
-      const s = p.shape
-      const vol = s.kind === 'box' ? s.size[0] * s.size[1] * s.size[2] : s.kind === 'cylinder' ? Math.PI * s.radius * s.radius * s.height : (4 / 3) * Math.PI * s.radius ** 3
-      m += p.mass ?? vol * (world.materials.get(p.material)?.density ?? 500) * (p.fill ?? 1)
-    }
-    return m
-  }
+  const massGuess = (spec: DestructibleSpec): number => specMassOf(spec, (material) => world.materials.get(material)?.density)
 
   // A removed tree's geometries, materials and textures stay on the GPU (and in three.js's caches) until disposed: everything the room takes out of the scene
   // goes through `dropTree`, released at once or, inside `releasingTogether`, in one pass at its end (one walk of the scene for what is still drawn).
@@ -3077,7 +3062,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!r) return null
       const piece = rendererPieces.get(r.object)
       const weapon = entryOf(r.object)?.item?.weapon
-      const target = { seats: seatHolder(r.object)?.seats ?? [], canGrab: !!piece && piece.mass <= maxCarry, canPush: !!piece, canOpen: leavesOf(r.object).length > 0, canStore: bagEnabled && !!piece, ...(weapon && arsenal.weapons.has(weapon) ? { weaponId: weapon } : {}) }
+      const target = { seats: seatHolder(r.object)?.seats ?? [], canGrab: !!piece && lift.verdict(piece) === 'ok', canPush: !!piece, canOpen: leavesOf(r.object).length > 0, canStore: bagEnabled && !!piece, ...(weapon && arsenal.weapons.has(weapon) ? { weaponId: weapon } : {}) }
       const run = { sit: (pose: 'sit' | 'lie') => void seating.sit(r.object, undefined, pose), grab: () => void grab(), push: () => say(t('act.menu.push_hint')), open: () => void doors.use(), store: () => void bag.pickToBag(), equip }
       return { title: nameOf(r.object), entries: listActions(target, run, { sit: seatKeys[0] ?? 'KeyL', grab: 'KeyE', store: 'KeyP', equip: 'KeyH' }, t) }
     },
@@ -3113,8 +3098,9 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       fire('grab', { held: false })
       return true
     }
+    if (takeAimedContents()) return true
     aim()
-    const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], 3.2)
+    const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], GRAB_REACH)
     if (!r) {
       say(t('hud.nothing_to_grab'))
       return false
@@ -3125,28 +3111,35 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     say(t('hud.cannot_grab', { name: nameOf(r.object) }))
     return false
   }
+  const lift = createPieceLift(THREE, maxCarry)
+  const takeAimedContents = createContentsHand({
+    THREE,
+    aim: () => (aim(), { origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }),
+    aimed: (origin, direction, max) => {
+      const r = push.active || heldHands.busy ? null : rayWorld(origin, direction, max)
+      const root = r ? entries.get(r.object)?.so.root : undefined
+      return r && root ? { objectId: r.object, root } : null
+    },
+    entryOf: (item) => [...catalogMap.values()].find((entry) => entry.id === item || entry.id.endsWith(`_${item}`)),
+    taken: (item, from) => (action('take_contents', t('act.take_contents', { name: item.name, from: nameOf(from) }), { objectId: from, itemId: item.itemId }), takeInHand(item)),
+  })
   const grabPiece = (objectId: string, piece: Piece, point: Vec3, hands?: CarryHands): boolean => {
     const kg = piece.mass
-    if (kg > maxCarry) {
-      say(t('hud.too_heavy', { name: nameOf(objectId), kg: num(kg, 0) }))
+    const toolWeapon = entryOf(objectId)?.item?.weapon
+    const verdict = lift.verdict(piece, hands !== undefined)
+    if (verdict !== 'ok') {
+      const text = t(`hud.${verdict}`, { name: nameOf(objectId), kg: num(kg, 0) })
+      say(text)
+      action('grab_refused', text, { objectId, data: { reason: verdict, massKg: Math.round(kg * 10) / 10, size: lift.size } })
       return false
     }
-    const toolWeapon = entryOf(objectId)?.item?.weapon
     const toolEntry = entries.get(objectId)
     if (toolWeapon && toolEntry && arsenal.weapons.has(toolWeapon)) {
       const picked = pickUpTool(objectId, toolEntry, toolWeapon)
       if (picked) fire('grab', { held: true, objectId })
       return picked
     }
-    // centre and unrotated size of the object's bounding box in its own space, to hold it by its middle or cylindrical side
-    const savedQ = piece.root.quaternion.clone()
-    piece.root.quaternion.identity()
-    piece.root.updateMatrixWorld(true)
-    const box = new THREE.Box3().setFromObject(piece.root)
-    box.getCenter(heldLocal).sub(piece.root.position)
-    box.getSize(heldSize)
-    piece.root.quaternion.copy(savedQ)
-    piece.root.updateMatrixWorld(true)
+    lift.measure(piece, heldLocal, heldSize)
     // the weapons go off the hands, the hand reaches the thing and closes on it: only then is it held
     heldHands.begin(hands ?? { massKg: kg, size: [heldSize.x, heldSize.y, heldSize.z] }, { size: [heldSize.x, heldSize.y, heldSize.z], item: () => itemPoseOf(piece.root, heldLocal), taken: () => holdPiece(objectId, piece, point, hands) })
     return true
@@ -3580,6 +3573,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     switch (code) {
       case 'KeyE':
         if (e.repeat) break
+        // what the aim lands on inside an open piece (a carton on the shelf of an open fridge) is taken before the door it stands behind is worked
+        if (!heldPiece && takeAimedContents()) break
         // a tap grabs, a hold against something that stands on the floor pushes it
         pushKeyAt = performance.now()
         pushByKey = !heldPiece && push.begin()
@@ -4430,7 +4425,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       }
     },
     holdFrame: (hand) => bodyHoldFrame(hand),
-    bodySlot: (slot) => (slot === 'hip' || slot === 'back' || slot === 'sling' ? bodySlotPose(avatar?.slot?.(slot)) : null),
+    bodySlot: (slot) => (slot === 'hip' || slot === 'belt' || slot === 'back' || slot === 'sling' ? bodySlotPose(avatar?.slot?.(slot)) : null),
     reachFor: (reach) => (avatar ? doors.reachFor(reach) : reach.onGrip?.()),
     takeInHand: (item) => takeInHand(item),
     setHandTargets(source) {

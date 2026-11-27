@@ -92,3 +92,27 @@ describe('the sling (owner, 2026-11-25)', () => {
     expect(plan.moves[0]).toEqual({ hand: 'R', weapon: 'm4a1', move: 'holster', slot: 'hip' })
   })
 })
+
+describe('a second weapon is tucked in the belt, never thrown away (owner, 2026-11-27)', () => {
+  const glock: HandWeapon = { id: 'glock_17', hands: 1, slot: 'hip' }
+  const uzi: HandWeapon = { id: 'uzi', hands: 1, slot: 'sling' }
+
+  it('two pistols and a gas bottle: the first goes to the holster, the second into the belt, and both come back', () => {
+    const plan = planHands({ hands: 2, weapons: { R: glock, L: { ...glock, id: 'glock_17b' } }, slots: ['hip', 'belt', 'sling'] })
+    expect(plan.moves).toEqual([
+      { hand: 'R', weapon: 'glock_17', move: 'holster', slot: 'hip' },
+      { hand: 'L', weapon: 'glock_17b', move: 'holster', slot: 'belt' },
+    ])
+    expect(drawBackOf(plan)).toHaveLength(2)
+  })
+
+  it('two compact SMGs: one on the sling, the other in the belt', () => {
+    const plan = planHands({ hands: 2, weapons: { R: uzi, L: { ...uzi, id: 'uzi_b' } }, slots: ['hip', 'belt', 'sling'] })
+    expect(plan.moves.map((move) => move.move)).toEqual(['sling', 'holster'])
+    expect(plan.moves[1]?.slot).toBe('belt')
+  })
+
+  it('with no belt worn the second one still drops: the body has no place for it', () => {
+    expect(planHands({ hands: 2, weapons: { R: glock, L: { ...glock, id: 'glock_17b' } }, slots: ['hip'] }).moves[1]?.move).toBe('drop')
+  })
+})
