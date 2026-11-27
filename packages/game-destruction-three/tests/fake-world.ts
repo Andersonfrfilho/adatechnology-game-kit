@@ -112,6 +112,10 @@ export class FakeWorld {
     return [] as never[]
   }
 
+  hitPart(id: string, _part: string, hit: Hit): never[] {
+    return this.hit(id, hit)
+  }
+
   splitGroup(id: string, group: number): string {
     const st = this.objects.get(id) as ObjectState
     const ids = st.groups[group]

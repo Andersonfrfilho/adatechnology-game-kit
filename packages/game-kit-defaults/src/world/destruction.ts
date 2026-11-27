@@ -17,6 +17,7 @@ import type {
   SettledBatchOptions,
   SoundDetail,
 } from '@adatechnology/game-destruction-three'
+import type { BlastQuery } from '@adatechnology/game-physics'
 import type { SpriteKindDef } from '@adatechnology/game-vfx'
 import type { VfxRenderer } from '@adatechnology/game-vfx-three'
 
@@ -48,7 +49,7 @@ export type KitWorldDebrisOptions = {
   readonly workBudget?: ExplosionWorkOptions
   /** The engine's fixed bodies as the broad phase of the world's rays (shots, sweeps, blast sight lines). On by default when a loop steps the pieces; `false` turns it off. */
   readonly rayBroadPhase?: boolean
-  /** A blow of the engine on a fixed part of the drawn world becomes a hit of the world (`RendererOptions.contactHits`). Off by default: it costs by contact. */
+  /** A blow of the engine on a fixed part of the drawn world becomes a hit of the world (`RendererOptions.contactHits`). On by default when a loop steps the pieces; `false` turns it off. */
   readonly contactHits?: RendererOptions['contactHits']
 }
 
@@ -99,6 +100,8 @@ export type DestructionDeps = {
   readonly debris: KitWorldDebrisOptions | undefined
   /** A `PhysicsLoop` steps the pieces: the rays' broad phase is on unless the debris options say otherwise. */
   readonly hasLoop: boolean
+  /** The engine's blast query (`PhysicsServices.blast`), when there are services: a blast finds the pieces it reaches there. */
+  readonly blastQuery?: BlastQuery
   readonly groundWorker: GroundWorkerPort | null
   readonly blastShove?: BlastShoveOptions
   readonly frameBudgetMs: number
@@ -138,7 +141,8 @@ export function createDestructionHost(deps: DestructionDeps): KitWorldDestructio
     ...(groundWorker ? { groundWorker } : {}),
     ...(debris?.workers ? { workers: debris.workers } : {}),
     ...((debris?.rayBroadPhase ?? deps.hasLoop) ? { rayBroadPhase: true } : {}),
-    ...(debris?.contactHits ? { contactHits: debris.contactHits } : {}),
+    ...((debris?.contactHits ?? deps.hasLoop) ? { contactHits: debris?.contactHits || true } : {}),
+    ...(deps.blastQuery ? { blastQuery: deps.blastQuery } : {}),
     ...(debris?.jitWarmUp !== undefined ? { jitWarmUp: debris.jitWarmUp } : {}),
     ...(debris?.workBudget ? { workBudget: workBudgetOf({ workBudget: debris.workBudget, ceilingMs: deps.frameBudgetMs }) } : {}),
     ...(debris?.settledBatches === false ? {} : { settledBatches: debris?.settledBatches ?? {} }),

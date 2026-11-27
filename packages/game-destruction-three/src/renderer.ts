@@ -3243,7 +3243,8 @@ class Renderer implements DestructionRenderer {
       const point: Vec3 = [c.x + (this.rng() - 0.5) * spread, c.y + spread * 0.5, c.z + (this.rng() - 0.5) * spread]
       reach(distance, { objectId: pc.objectId, generation: pc.generation, impulse, point }, [c.x, c.y, c.z])
     }
-    for (const pc of [...this.pieceSys.list]) shove(pc)
+    const reached = this.o.blastQuery ? this.pieceSys.piecesInBlast(this.o.blastQuery, p, ev.radius) : [...this.pieceSys.list]
+    for (const pc of reached) shove(pc)
     if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf, policy, reach)
     this.advanceWakes(0)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))

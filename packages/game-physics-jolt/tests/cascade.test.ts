@@ -56,7 +56,8 @@ const parkedCar: ShapeDesc = {
   }),
 }
 
-const run = async (build: JoltBuild = 'single', parked = 0): Promise<Cascade> => {
+/** `reader: false` runs without the impact reader (the cylinder goes off at the frame `forceAt`, the one a run with the reader found), to price the reader alone. */
+const run = async (build: JoltBuild = 'single', parked = 0, { reader = true, forceAt = -1 }: { reader?: boolean; forceAt?: number } = {}): Promise<Cascade> => {
   const engine = await createJoltEngine({ build })
   const world = engine.createWorld({ fixedStep: 1 / 60, maxBodies: 8192, contactReportSpeed: 1 }) as JoltWorld
   ground(world, 100)
@@ -90,7 +91,7 @@ const run = async (build: JoltBuild = 'single', parked = 0): Promise<Cascade> =>
   // contacts -> damage through the engine's impact reader: the strongest blow on each body of the frame, told once, with arrays made once (no allocation per contact)
   const loop = createPhysicsLoop(world)
   let blows = 0
-  const stopReader = createImpactReader(loop, {
+  const stopReader = !reader ? () => undefined : createImpactReader(loop, {
     minImpulse: 1,
     bodiesMax: 1024,
     onImpact: (impact) => {
@@ -102,6 +103,7 @@ const run = async (build: JoltBuild = 'single', parked = 0): Promise<Cascade> =>
   let frame = 0
   for (let f = 0; f < 600; f++) {
     frame = f
+    if (!reader && f === forceAt) wentOff = f / 60
     if (f === 30) blast(world, [3, 0.5, 1.5], 3, 400, near, pose)
     if (f === 31) {
       heap0 = process.memoryUsage().heapUsed
@@ -144,6 +146,20 @@ const run = async (build: JoltBuild = 'single', parked = 0): Promise<Cascade> =>
 }
 
 describe('case 5: chain reaction', () => {
+  it('the impact reader of the contact hits costs nothing the step can feel: same run with and without it (PHYSICS_COST=1 prints the numbers)', { timeout: 600000 }, async () => {
+    const reference = await run()
+    const forceAt = Math.round(reference.cylinderWentOffAtS * 60)
+    const rounds: Array<{ with: ReturnType<typeof stats>; without: ReturnType<typeof stats> }> = []
+    for (let round = 0; round < 3; round++) {
+      const without = await run('single', 0, { reader: false, forceAt })
+      const withReader = await run()
+      expect(without.hash).toBe(withReader.hash)
+      rounds.push({ with: stats(withReader.steps.slice(30)), without: stats(without.steps.slice(30)) })
+    }
+    report('cascade-contact-hits', { forceAt, rounds })
+  })
+
+
   it('blast -> cylinder -> wall -> slab: ~500 bodies wake at once; step cost, contact rows, determinism', { timeout: 300000 }, async () => {
     const a = await run()
     const b = await run()

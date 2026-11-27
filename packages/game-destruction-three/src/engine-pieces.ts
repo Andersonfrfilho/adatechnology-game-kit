@@ -340,6 +340,16 @@ export class EnginePieces {
     this.tiles.delete(key)
   }
 
+  /** The piece a body of the engine is, or undefined (a fixed body, someone else's). */
+  pieceOfBody(body: BodyId): PieceBody | undefined {
+    return this.byBody.get(body)
+  }
+
+  /** Whether the piece has a body in the engine yet (a piece made this frame has none until the next update). */
+  hasBody(piece: PieceBody): boolean {
+    return this.links.has(piece)
+  }
+
   /** The fixed bodies as a broad phase for the destruction world's rays (`engine-rays.ts`). */
   rayBroadPhase(): RayBroadPhase {
     return createEngineRayBroadPhase(this.world, this.statics)

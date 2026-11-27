@@ -270,7 +270,7 @@ in `@adatechnology/game-vfx` (`patchSpriteKinds(SPRITE_KINDS, { dust: { life: [1
 
 ## Engine hits and ray broad phase
 
-Two options, off by default, for a renderer whose pieces are in a `PhysicsLoop`: `contactHits: true` turns the engine's strongest blow on each fixed drawn part into a `blunt` hit of the world (`hitPart`, energy about `impulse × closing speed / 2`, direction the other body was going, at most 32 parts a frame, blows under 30 N s ignored; `{ minImpulse, hitsMax, contactRadius }` to tune): a flying piece into a wall, a slab onto a crate, so a blast's cascade takes the next wall by itself. `rayBroadPhase: true` lets the engine's fixed bodies narrow the objects the world's rays read.
+Three options, off by default (the kit-defaults preset turns `contactHits` and `blastQuery` on when a loop steps the pieces), for a renderer whose pieces are in a `PhysicsLoop`: `contactHits: true` turns the engine's strongest blow on each fixed drawn part into a `blunt` hit of the world (`hitPart`, energy about `impulse × closing speed / 2`, direction the other body was going, at most 32 parts a frame, blows under 30 N s or closing slower than 1.5 m/s ignored, so a pile settling on a part does not hit; `{ minImpulse, minApproach, hitsMax, contactRadius }` to tune): a flying piece into a wall, a slab onto a crate, so a blast's cascade takes the next wall by itself. `blastQuery` (`PhysicsServices.blast`): a blast shoves the pieces the engine finds within its radius, in the order and with the push of the walk over every piece it replaces. `rayBroadPhase: true` lets the engine's fixed bodies narrow the objects the world's rays read.
 
 ## Português
 
