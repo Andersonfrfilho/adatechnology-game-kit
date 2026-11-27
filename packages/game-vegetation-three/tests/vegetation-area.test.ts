@@ -10,6 +10,7 @@ import * as GameVegetationSpecies from '@adatechnology/game-vegetation-species'
 
 import { WAY, createNursery } from '../src'
 import { VEGETATION_AREA_ID, VEGETATION_ITEM_IDS, VEGETATION_SCENARIO_IDS, createVegetationTestModule, loadVegetationTestModule } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 vi.setConfig({ testTimeout: 600_000 })
 afterEach(() => new Promise((resolve) => setImmediate(resolve)))
@@ -21,7 +22,7 @@ const stubRenderer = (): never => {
 const makeRoom = (locale = 'pt-BR'): TestRoom => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  return createTestRoom({ THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
+  return createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: [], renderer: stubRenderer(), ui: false })
 }
 
 describe('vegetation test area', () => {
