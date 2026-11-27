@@ -224,11 +224,13 @@ describe('cans knock each other', () => {
 
   it('on the floor, a rolling can knocks a still one on and nearly stops; they never overlap', () => {
     const s = scene3()
-    const a = addCan(s, 'a', [-0.4, CAN_RADIUS + 0.001, 0], { velocity: [2, 0, 0] })
+    // 1.5 m/s: the spin it rolls at (45 rad/s) is under the engine's 47 rad/s cap; nearer the stop, so it still meets the other can well inside the run
+    const a = addCan(s, 'a', [-0.2, CAN_RADIUS + 0.001, 0], { velocity: [1.5, 0, 0] })
     const b = addCan(s, 'b', [0.2, CAN_RADIUS + 0.001, 0])
     // rolling from the start: v = w r
-    a.piece.angularVelocity[2] = -2 / CAN_RADIUS
-    run(s.renderer, 0.5, () => expect(b.root.position.x - a.root.position.x).toBeGreaterThan(2 * CAN_RADIUS - 0.006))
+    a.piece.angularVelocity[2] = -1.5 / CAN_RADIUS
+    // 0.8 s, not 0.5: at 1.5 m/s the hit comes later and the two roll on at 0.4 m/s, so the other can needs the longer run to be "knocked on" past 0.4 m
+    run(s.renderer, 0.8, () => expect(b.root.position.x - a.root.position.x).toBeGreaterThan(2 * CAN_RADIUS - 0.006))
     expect(b.root.position.x).toBeGreaterThan(0.4)
     expect(b.piece.velocity[0]).toBeGreaterThan(a.piece.velocity[0])
   })

@@ -2,8 +2,6 @@ import type JoltNS from 'jolt-physics/wasm-compat'
 
 import type { BodyId, JointDesc, JointId, Layer, Material, Vec3 } from '@adatechnology/game-physics'
 
-import type { Slab } from './seam'
-
 export interface BodyEntry {
   readonly body: JoltNS.Body
   readonly id: JoltNS.BodyID
@@ -24,8 +22,6 @@ export interface BodyEntry {
   /** The coefficient Jolt holds for it now (`updateFriction`, `SetFriction`). */
   friction: number
   /** Its compound once `setChildShape` made it one whose children change, and the handle of each child by current index (handles do not move when another child goes). */
-  /** The rectangle and height of the top face of a flat slab (a static upright box with square edges): what `isSeamContact` tests a contact against. */
-  readonly slab?: Slab
   mutable?: JoltNS.MutableCompoundShape
   handles?: number[]
 }

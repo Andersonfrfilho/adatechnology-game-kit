@@ -406,7 +406,7 @@ export interface WorldDesc {
   /** Seconds still before a body sleeps and how slow is still (m/s of any point). */
   readonly sleepAfter?: number
   readonly sleepSpeed?: number
-  /** Solver iterations per step. Under 20 the kit does not guarantee the energy criteria (the sweep's floor); the kit's world uses 32. */
+  /** Solver iterations per step. */
   readonly velocityIterations?: number
   readonly positionIterations?: number
   /** How deep (m) two bodies may sink into each other before they are pushed apart: what a resting box sinks into the floor. */
