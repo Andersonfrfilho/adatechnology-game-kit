@@ -2,6 +2,7 @@ import type * as THREE_NS from 'three'
 import { JOINT_DEFAULTS, resolveStrings as resolveDestructionStrings } from '@adatechnology/game-destruction'
 import type { BlastOptions, DestructibleImpl, DestructibleSpec, DestructionEvent, DestructionWorld, JointState, Quat, RayHit, ToolKind, Vec3, CarryHands } from '@adatechnology/game-destruction'
 import { createAudioSink } from '@adatechnology/game-audio'
+import type { BodyDesc, BodyId, PhysicsServices } from '@adatechnology/game-physics'
 import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, createLoading, physicsHostOf, probeOf } from '@adatechnology/game-kit-defaults/world'
 import { MIN_PIECE_MASS_KG, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
@@ -766,6 +767,23 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
   })
   player.look(arena.playerStart, [0, 1.5, arena.wallZ])
+
+  // a swept piece born in the hand or at the port (a grenade, a casing) starts touching the capsule: it never meets the player's own body, or it would be pushed back into the throw
+  const bound = <TTarget extends object>(target: TTarget, key: string | symbol): unknown => {
+    const value: unknown = Reflect.get(target, key, target)
+    return typeof value === 'function' ? value.bind(target) : value
+  }
+  const handServices = ((services: PhysicsServices | undefined): PhysicsServices | undefined => {
+    if (!services) return undefined
+    const createBody = (desc: BodyDesc): BodyId => {
+      const id = services.world.createBody(desc)
+      const self = player.shadowBody()
+      if (self !== undefined && desc.layer === 'debris' && desc.continuous) services.world.ignorePair(id, self, true)
+      return id
+    }
+    const world = new Proxy(services.world, { get: (target, key) => (key === 'createBody' ? createBody : bound(target, key)) })
+    return new Proxy(services, { get: (target, key) => (key === 'world' ? world : bound(target, key)) })
+  })(kit.physics.services)
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Spawning
@@ -2745,7 +2763,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     emitHost,
     startFire,
     say,
-    projectileModel: options.projectileModel, physics: kit.physics.services?.world,
+    projectileModel: options.projectileModel, physics: handServices?.world,
     audio,
     water: blastWater,
     waterLevelAt: (x, z) => terrain.waterAt(x, z)?.level ?? null,
@@ -4389,7 +4407,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     groundAt,
     // the terrain's material where the floor is the top; a table or a counter answers undefined (the module's default)
     surfaceAt: (x, z) => (Math.max(sceneryTopAt(x, z), restingTopAt(x, z)) > terrain.heightAt(x, z) ? undefined : terrain.columnAt(x, z).material),
-    setGround: (layout) => terrain.setLayout(layout), ...groundHostOf(kit.ground, fluids), ...physicsHostOf(kit, options.workers),
+    setGround: (layout) => terrain.setLayout(layout), ...groundHostOf(kit.ground, fluids), ...physicsHostOf({ physics: { services: handServices } }, options.workers),
     effects: vfx,
     particleLimit: () => options.debris?.particleLimit ?? DEFAULT_PARTICLE_LIMIT,
     lights,

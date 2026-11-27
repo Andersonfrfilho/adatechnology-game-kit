@@ -101,12 +101,20 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
   const id = w.nextCharacter++ as CharacterId
   const sweeps = desc.shadow ? sweepFilterFor(w, desc.shadow) : w.objFilter
   const shadow = desc.shadow ? registerShadow(w, character, id, desc) : undefined
+  // a body ignored with the shadow (`ignorePair`) is not swept or pushed by the walker either: the pair rule of the world only reaches the shadow body
+  let bodies: JoltNS.BodyFilter = w.bodyFilter
+  if (shadow !== undefined) {
+    const filter = new J.BodyFilterJS()
+    filter.ShouldCollide = (pointer: number) => w.ignored.size === 0 || !w.ignored.has(w.pairKey(shadow, J.HEAPU32[pointer >> 2] as number))
+    filter.ShouldCollideLocked = () => true
+    bodies = filter
+  }
 
   const applyShape = (nextRadius: number, nextHalfHeight: number, deepest: number): boolean => {
     const next = capsuleFor(w, nextRadius, nextHalfHeight)
     offset.Set(0, nextHalfHeight + nextRadius, 0)
     character.SetShapeOffset(offset)
-    const fits = character.SetShape(next.shape, deepest, w.bpFilter, sweeps, w.bodyFilter, w.shapeFilter, w.iface.GetTempAllocator())
+    const fits = character.SetShape(next.shape, deepest, w.bpFilter, sweeps, bodies, w.shapeFilter, w.iface.GetTempAllocator())
     if (fits && shadow !== undefined) character.SetInnerBodyShape(next.shape)
     if (!next.held) next.shape.Release()
     if (!fits) {
@@ -136,7 +144,7 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
       pushX *= fade
       pushZ *= fade
       character.SetLinearVelocity(velocity)
-      character.ExtendedUpdate(dt, gravity, update, w.bpFilter, sweeps, w.bodyFilter, w.shapeFilter, w.iface.GetTempAllocator())
+      character.ExtendedUpdate(dt, gravity, update, w.bpFilter, sweeps, bodies, w.shapeFilter, w.iface.GetTempAllocator())
     },
     push: (impulseX: number, impulseY: number, impulseZ: number) => {
       fall += impulseY / desc.mass
@@ -208,6 +216,7 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
         w.forget(shadow)
       }
       if (sweeps !== w.objFilter) J.destroy(sweeps)
+      if (bodies !== w.bodyFilter) J.destroy(bodies)
       J.destroy(update)
       J.destroy(velocity)
       J.destroy(gravity)
