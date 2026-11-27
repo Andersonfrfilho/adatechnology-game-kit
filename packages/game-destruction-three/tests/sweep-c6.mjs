@@ -64,7 +64,12 @@ console.log(`more iterations made a passing case fail: ${worse}`)
 const worstFive = [...failedRows].sort((a, b) => b.c1Excess - a.c1Excess).slice(0, 12)
 for (const r of worstFive) console.log(`worst: ${r.scenario} seed ${r.seed} dt ${r.dt} it ${r.iterations} x${r.pushOutFactor} ${r.failed.join(',')} C1 ${f(r.c1Excess)} C2 ${f(r.c2Gain)} C2u ${f(r.c2GainUnconditioned)} C3 ${f(r.c3Lift)}`)
 console.log(`wall ${((Date.now() - started) / 1000).toFixed(0)} s, raw lines in ${dir}`)
-// the floor is the production cell (the largest iteration count run): the others are for comparison and may fail
-const floorFailures = failedRows.filter((r) => r.iterations === iterationsRun.at(-1))
-console.log(`failures at the production floor (${iterationsRun.at(-1)} iterations): ${floorFailures.length}`)
-process.exit(floorFailures.length > 0 || worse > 0 ? 1 : 0)
+// owner decision 2026-11-27 ("documented floor"): the production cell (frame dt 1/60, push-out x1, the largest iteration count; the world steps at 120 Hz) has 0 failures, and the failures
+// of all the floor's cells (below 20 iterations and the 20:1 stack at dt 1/144 the kit does not guarantee C1/C6) may only go down: this number is a ceiling, lowered when the count falls
+const FLOOR_FAILURE_CEILING = 18
+const floorIterations = iterationsRun.at(-1)
+const floorFailures = failedRows.filter((r) => r.iterations === floorIterations)
+const productionFailures = floorFailures.filter((r) => Math.abs(r.dt - 0.0167) < 1e-6 && r.pushOutFactor === 1)
+console.log(`failures at the floor (${floorIterations} iterations): ${floorFailures.length} (ceiling ${FLOOR_FAILURE_CEILING}); in the production cell: ${productionFailures.length}`)
+if (SEEDS === 64 && floorFailures.length < FLOOR_FAILURE_CEILING) console.log(`the floor improved: lower FLOOR_FAILURE_CEILING to ${floorFailures.length}`)
+process.exit(productionFailures.length > 0 || floorFailures.length > FLOOR_FAILURE_CEILING || worse > 0 ? 1 : 0)
