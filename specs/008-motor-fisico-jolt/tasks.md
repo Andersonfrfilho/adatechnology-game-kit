@@ -252,7 +252,6 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.5 ✅ Armas: cápsulas e granada no motor (`ProjectileModel.body`, `thrown-body.ts`, `WeaponFx.clearLoose`; régua do dono 100/100 no chão da sala de produção; `evidence.md` `## TS.5`).
 - [x] TS.6 ✅ Multidão e atropelamento (desligado com `hordeThread`; `PhysicsServices.channel`, `crowd-bodies.ts`, `run-over-link.ts`; `evidence.md` `## TS.6`).
 - [ ] TS.7 Cadáveres na sala (T5.4b/c/d): os mortos da multidão são corpos do motor da sala (`game-crowd-three`), desenhados onde o motor os tem, restauráveis num mundo novo. Aceite: `room-corpses.test.ts` verde; pilha de 100 na faixa `test:cost` (`evidence.md` `## TS.7`). **Pendente: remedir com carga < 4 (§15)**: p99 de 12,8 a 19,9 ms contra o limite de 10 ms.
-- [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
 - [ ] TS.9 Jogador no motor (desenho aprovado em `design/integracao-sala.md` §7; decisões do dono de 2026-11-27: gravidade real 9,81 com impulso de pulo 3,99 m/s, mesma altura de 0,81 m; sombra do jogador na camada `agent`). Grupo das tasks abaixo.
   - [x] TS.9a ✅ `pushCharacter` respeita o eixo y; `CharacterDesc.gravity?` (9,81). Aceite: pulo sobe v²/2g ± 2 cm. `haiku`.
   - [x] TS.9b ✅ `setCharacterShape(id,{radius,halfHeight}): boolean`, posturas 1,80 / 1,20 / 0,60 em cache. Aceite: agacha sob barra de 1,3 m; false ao levantar ali. `sonnet`.
@@ -266,10 +265,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - [x] TS.9j ✅ `park`/`unpark` (saída bloqueada vai ao teto, sem penetrar). `sonnet`.
   - [x] TS.9k ✅ Avatar lê `drawn`. `haiku`.
   - [x] TS.9l ✅ Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
-  - [ ] TS.9m Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
-  - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. 
-- [ ] TS.8 `contactHits` ligado por padrão (custo medido: dentro do orçamento) e `blastQuery` na explosão (`evidence.md` `## TS.8`). **Pendente: remedir com carga < 4 (§15)**: o custo foi decidido com ruído de 9 a 37 ms.
-- [ ] TS.9 🧠 Jogador no motor (desenho antes).
+- [x] TS.8 ✅ `contactHits` ligado por padrão (custo medido: dentro do orçamento) e `blastQuery` na explosão (`evidence.md` `## TS.8`). Remedido com carga < 4 em 2026-11-27 (#559): com e sem `contactHits` iguais, 4,15–4,84 ms, dentro do C7.
   - [x] TS.9m ✅ Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
   - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. **Pendente, do dono** (não roda em CI nem aqui): ver `evidence.md` § TS.9n para o que olhar. 
 - [ ] TS.10 (opcional) Juntas na vitrine.
@@ -277,7 +273,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 ## Fase 8 — Corte e validação
 > 🤖 Modelo: `haiku` para o mecânico (T8.1, T8.2, T8.3); `sonnet` para a validação (T8.4, T8.5, T8.6)
 
-- **T8.1 Apagar o solver próprio** dos destroços, a chave `PIECE_SOLVER`/`?solver=own`, a rede e o código só do spike. Commit próprio.
+- ✅ **T8.1 Apagar o solver próprio** dos destroços, a chave `PIECE_SOLVER`/`?solver=own`, a rede e o código só do spike. Feito em 2026-11-27: salas no Jolt (#546), 17 casos tirados do `own` (#548, #549, #550, #556, com goldens de causa provada em #553 e #557), remoção fora do código (#551, sala exige `physics`: `RoomPhysicsRequiredError` + `createRoomPhysics()`) e do código (#558). Grep do aceite vazio fora de CHANGELOG e do README do adaptador. Fica de pé o caminho de host sem motor (`seam`, `own-locomotion.ts`). Última medição own×Jolt: tag `spec-008-ultima-medida-own` (rodada quieta, `evidence.md`).
   Mecânica? sim · Aceite por comando? sim: `grep -rn "PIECE_SOLVER\|solver=own" packages examples` vazio; `pnpm -r typecheck`; `pnpm -r test` · `haiku`.
 - ✅ **T8.2 Docs:** `docs/criterios-fisica-objetos.md`, `CLAUDE.md` §12 (a regra continua; o executor agora é o motor), skills de cada pacote
   migrado, e `REPORT-ENGINE-*` e `GATE0-REPORT-jolt.md` copiados para `specs/008-motor-fisico-jolt/decision/`.
