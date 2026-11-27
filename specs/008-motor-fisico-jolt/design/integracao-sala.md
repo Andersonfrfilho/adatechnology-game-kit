@@ -65,3 +65,16 @@ módulos registram na ordem fixa do preset.
 - `contactHits` custa por contato: medir na faixa `test:cost` antes de ligar por padrão.
 - O pacote do worker cresce com o `hullPlanKind`.
 - `room.ts` não pode crescer (5 259 linhas na main).
+
+## 6. Chão e mundo estático para os corpos dos módulos
+
+Motivo: o carro da sala (`physical-car.ts`) virou corpo dinâmico do motor (PR #530) e, no mundo de produção, não tinha chão embaixo e caía. O chão do motor só seguia os corpos do próprio `EnginePieces`.
+
+Desenho (opção B):
+
+- **Contrato** (`game-physics/src/contract.ts`, sem citar Jolt): `SeamWorld.readAwakeBounds(out: Float64Array, skip?: ReadonlySet<BodyId>): number`. Uma linha por corpo dinâmico acordado e por personagem: `kind, id, minX, minY, minZ, maxX, maxY, maxZ, vx, vz` (10 números). Devolve o total de linhas e escreve só o que cabe (quem chama cresce o buffer e relê). Kinemático fica fora. No solver `own` devolve 0 (documentado).
+- **Adaptador** (`game-physics-jolt`): `GetActiveBodies` → tipo de movimento → `GetWorldSpaceBounds` + `GetLinearVelocity`, mais os personagens guardados; `skip` filtrado antes de chamar o Jolt; sem alocação por chamada.
+- **Dono do chão** (`game-destruction-three/src/engine-ground-follow.ts`), chamado no `prepare` do `engine-pieces.ts` logo depois de `layBlastGround`. Para cada linha de fora (skip = `byBody`): caixa xz + `TILE_MARGIN`, varrida por `v·(dt + AHEAD_S)` com `AHEAD_S = 0,15 s`, passo de 1 ladrilho até `MAX_PATH_STOPS`, como no `groundOf`. Ladrilho que falta debaixo do corpo é feito na hora (`layAt`), mesmo com worker; o à frente vai ao worker (`askAt`); ladrilho plano continua `flatAt`.
+- **Despejo**: ladrilho que nenhum corpo acordado pediu há 600 atualizações e sem corpo não estático em cima (`overlapShape` em camadas ≠ static) sai do mundo (§8 do `CLAUDE.md`).
+- **Mundo estático**: conferir (a) malha > `STATIC_SPAN` (3 m) fica fora (`renderer.ts`); (b) mundo novo enche aos poucos (`VERTICES_PER_UPDATE`); (c) veículo registrado como fixo vira caixas estáticas (`hostedSolids`) que colidem com o próprio carro físico.
+- `keepGround` não entra (sem consumidor).

@@ -59,6 +59,19 @@ export const createCharacter = (w: JoltWorldHost, desc: CharacterDesc): Characte
       out[offset + 1] = p.GetY()
       out[offset + 2] = p.GetZ()
     },
+    bounds: (out: Float64Array, offset: number) => {
+      const p = character.GetPosition()
+      const reach = desc.radius
+      out[offset] = p.GetX() - reach
+      out[offset + 1] = p.GetY()
+      out[offset + 2] = p.GetZ() - reach
+      out[offset + 3] = p.GetX() + reach
+      out[offset + 4] = p.GetY() + 2 * (desc.halfHeight + desc.radius)
+      out[offset + 5] = p.GetZ() + reach
+      const v = character.GetLinearVelocity()
+      out[offset + 6] = v.GetX()
+      out[offset + 7] = v.GetZ()
+    },
     teleport: (x: number, y: number, z: number) => {
       w.r1.Set(x, y, z)
       character.SetPosition(w.r1)

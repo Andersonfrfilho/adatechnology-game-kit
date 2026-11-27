@@ -74,6 +74,8 @@ export interface JoltCharacter {
   move(vx: number, vz: number, dt: number): void
   push(impulseX: number, impulseZ: number): void
   read(out: Float32Array | Float64Array, offset: number): void
+  /** Its box (min x y z, max x y z) and horizontal velocity (x z): eight numbers from `offset`. */
+  bounds(out: Float64Array, offset: number): void
   teleport(x: number, y: number, z: number): void
   supported(): boolean
   dispose(): void

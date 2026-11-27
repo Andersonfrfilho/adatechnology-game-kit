@@ -47,6 +47,8 @@ describe('case 4: crowd', () => {
         world.step(1 / 60)
         steps.push(performance.now() - t0)
         if (brokeAt < 0 && world.brokenJoints.includes(hinge)) brokeAt = f / 60
+        // a long synchronous run starves the vitest worker RPC ("Timeout calling onTaskUpdate"): yield once a simulated second, outside the timing
+        if (f % 60 === 59) await new Promise((resolve) => setImmediate(resolve))
       }
       report(`crowd-${n}`, { agents: n, doorBrokeAtS: brokeAt, step: stats(steps), active: world.activeCount, bodies: world.bodyCount })
       expect(brokeAt).toBeGreaterThan(0)
@@ -98,6 +100,8 @@ describe('case 4: crowd', () => {
         world.step(1 / 60)
         steps.push(performance.now() - t0)
         if (asleep < 0 && world.activeCount === 0) asleep = f / 60
+        // a long synchronous run starves the vitest worker RPC ("Timeout calling onTaskUpdate"): yield once a simulated second, outside the timing
+        if (f % 60 === 59) await new Promise((resolve) => setImmediate(resolve))
       }
       // body LOD: far away a ragdoll becomes one capsule (remove its bodies and joints, make one): how long the swap takes for all 100
       const t0 = performance.now()

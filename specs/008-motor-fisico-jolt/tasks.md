@@ -241,6 +241,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.1 ✅ Canal `ModuleHost.physics`/`workers`, `PhysicsServices` no `game-physics`, `servicesOf` no preset, `physicsHostOf` na sala (0 linhas líquidas no `room.ts`). Aceite: `physics-channel.test.ts` e `world-physics-services.test.ts` verdes.
 - [x] TS.2 ✅ `hullPlanKind` em `KIT_WORKER_KINDS`. Aceite: `workers.test.ts` com `VEHICLE_HULL_PLAN`.
 - [x] TS.3a ✅ `rayBroadPhase` ligado quando há laço. Aceite: testes do `game-kit-defaults` verdes, goldens iguais.
+- [x] TS.1b ✅ Chão do motor segue todo corpo dinâmico acordado e todo personagem do mundo (`SeamWorld.readAwakeBounds`, `engine-ground-follow.ts`, despejo de ladrilho, mundo estático dos módulos). Desenho: `design/integracao-sala.md` §6. Aceite: `ground-follows-bodies.test.ts` verde; custo na faixa `test:cost` (`evidence.md` `## TS.1b`). `sonnet`.
 - [x] TS.4 ✅ Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`; `evidence.md` `## TS.4`).
 - [ ] TS.5 Armas: cápsulas e granada no motor.
 - [ ] TS.6 Multidão e atropelamento (desligado com `hordeThread`).
