@@ -169,7 +169,8 @@ export const vehicleWheels = (w: JoltWorldHost, id: VehicleId, out: Float64Array
 /** A tracked vehicle's input: `right` turns it by slowing the second track (the right one) to nothing and then backward (a pivot at 1), `-right` the first; with no `forward` the steering alone drives it. */
 const driveTracks = (controller: JoltNS.TrackedVehicleController, input: VehicleInput): void => {
   const steer = Math.max(-1, Math.min(1, input.right))
-  const forward = input.forward === 0 ? Math.abs(steer) : input.forward
+  // turning is driving a track forward and the other back: a half throttle has not the torque to pivot a tank, so the steering asks for as much as it needs
+  const forward = input.forward >= 0 ? Math.max(input.forward, Math.abs(steer)) : input.forward
   controller.SetDriverInput(forward, steer < 0 ? 1 + 2 * steer : 1, steer > 0 ? 1 - 2 * steer : 1, Math.max(input.brake, input.handBrake))
 }
 
