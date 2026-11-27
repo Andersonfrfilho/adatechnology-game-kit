@@ -24,6 +24,7 @@ import type { SpriteKindDef, VfxWorld } from '@adatechnology/game-vfx'
 import type { Terrain, TerrainBudget } from '@adatechnology/game-terrain'
 import type { EffectSink, GroundLayout, Knock, WorkerCoordinator } from '@adatechnology/game-contracts'
 import type { SchedulerStats } from '@adatechnology/game-runtime'
+import type { Material, Rolling, ShapeDesc } from '@adatechnology/game-physics'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
 import type { RoomSeat } from './seating'
@@ -178,6 +179,17 @@ export interface ProjectileQuery {
 export interface ProjectileModel {
   model: THREE_NS.Object3D
   axis?: Vec3
+  /** What the engine makes of it when the room steps its pieces with one: the collider of the model (centred on it), its mass and how it rolls. Without it the room flies the projectile itself. */
+  body?: ProjectileBody
+}
+
+/** The body of a thrown projectile in the physics engine. */
+export interface ProjectileBody {
+  readonly shape: ShapeDesc
+  readonly mass: number
+  readonly material: Material
+  readonly rolling: Rolling
+  readonly user: number
 }
 
 /** The room's tap (a stream of water): how it is drawn and where the water leaves it. */

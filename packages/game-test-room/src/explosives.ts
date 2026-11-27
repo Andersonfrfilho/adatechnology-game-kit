@@ -6,10 +6,12 @@ import type { VfxWorld } from '@adatechnology/game-vfx'
 import { ExplosiveBody, backblastEffect, blastEffect, createExplosiveBody, sweepGround, tripwireSegment } from '@adatechnology/game-weapons'
 import type { Arsenal, Detonation, SurfaceProbe, Use } from '@adatechnology/game-weapons'
 import type { HostEvent } from '@adatechnology/game-contracts'
+import type { BodyId, SeamWorld } from '@adatechnology/game-physics'
 import type { AudioEngine, AudioLoopHandle } from '@adatechnology/game-audio'
 
 import { segmentTouchesBox } from './segment-box'
-import type { ProjectileModel, ProjectileQuery } from './types'
+import { dropThrown, readThrown, spawnThrown } from './thrown-body'
+import type { ProjectileBody, ProjectileModel, ProjectileQuery } from './types'
 
 type Vars = Record<string, string | number>
 type Fire = { temperature: number; radius: number; seconds: number }
@@ -57,6 +59,8 @@ interface Projectile {
   age: number
   /** The explosive that flies or waits (`game-weapons`): when set, it decides the flight and the blast. */
   body?: ExplosiveBody | undefined
+  /** The body that flies it in the physics engine (a hand grenade with a collider, when the room steps its pieces with an engine): the engine moves it, the explosive body only counts its fuse. */
+  engine?: BodyId
   /** Points along its velocity (a rocket). */
   aligned?: boolean
   /** A rocket whose motor burns in flight (a shaped-charge warhead: RPG-7, AT4, M72), not a 40 mm grenade that only flies point first. */
@@ -122,6 +126,8 @@ export type ExplosivesContext = {
   readonly random?: () => number
   /** The host's model for a projectile or a charge; without it, or when it answers nothing, the room draws a primitive. */
   readonly projectileModel?: ((query: ProjectileQuery) => ProjectileModel | null | undefined) | undefined
+  /** The physics world a thrown hand grenade with a collider (`ProjectileModel.body`) flies in; without it, or for any other projectile, the room flies it itself. */
+  readonly physics?: SeamWorld | undefined
   /** The room's sound engine: a burning canister hisses (`SMOKE_HISS`), a hand grenade's pin clicks when it is thrown. Without it they are silent. */
   readonly audio?: Pick<AudioEngine, 'loop' | 'play'> | null
   /** A charge that goes off in or over water: the host draws what the water does and says whether it went off under it (then there is no fireball and no fire). */
@@ -216,6 +222,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     smokeHiss = null
     rocketMotor?.stop()
     rocketMotor = null
+    for (const projectile of projectiles) if (projectile.engine !== undefined && context.physics) dropThrown(context.physics, projectile.engine)
     projectiles.length = 0
     drop(meshes)
     meshes.length = 0
@@ -231,7 +238,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
   }
 
   /** Puts the host's model of a projectile in the scene, or undefined when the host has none. */
-  const addModel = (query: ProjectileQuery, at: Vec3): { mesh: THREE_NS.Object3D; axis?: THREE_NS.Vector3 } | undefined => {
+  const addModel = (query: ProjectileQuery, at: Vec3): { mesh: THREE_NS.Object3D; axis?: THREE_NS.Vector3; body?: ProjectileBody } | undefined => {
     const custom = context.projectileModel?.(query)
     if (!custom) return undefined
     custom.model.position.set(at[0], at[1], at[2])
@@ -240,7 +247,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     })
     scene.add(custom.model)
     meshes.push(custom.model)
-    return { mesh: custom.model, ...(custom.axis ? { axis: new THREE.Vector3(custom.axis[0], custom.axis[1], custom.axis[2]).normalize() } : {}) }
+    return { mesh: custom.model, ...(custom.axis ? { axis: new THREE.Vector3(custom.axis[0], custom.axis[1], custom.axis[2]).normalize() } : {}), ...(custom.body ? { body: custom.body } : {}) }
   }
 
   const remove = (projectile: Projectile): void => {
@@ -251,6 +258,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     const meshAt = meshes.indexOf(projectile.mesh)
     if (meshAt >= 0) meshes.splice(meshAt, 1)
     drop([...(projectile.attached ?? []), projectile.mesh])
+    if (projectile.engine !== undefined && context.physics) dropThrown(context.physics, projectile.engine)
     const at = projectiles.indexOf(projectile)
     if (at >= 0) projectiles.splice(at, 1)
   }
@@ -260,9 +268,12 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     const isRocket = use.trigger === 'impact' && (use.armDistance ?? 0) > 0
     const modeled = addModel({ weapon: context.toolId(), ...(use.explosive !== undefined ? { explosive: use.explosive } : {}), kind: isRocket ? 'rocket' : isMolotov ? 'molotov' : 'grenade' }, use.origin)
     const mesh = modeled?.mesh ?? addMesh(isRocket ? new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8) : isMolotov ? new THREE.CylinderGeometry(0.035, 0.04, 0.2, 8) : new THREE.SphereGeometry(0.045, 8, 6), isMolotov ? 0x3b7a3b : isRocket ? 0x6b705c : 0x4b5320, isMolotov ? 0 : 0.4, use.origin)
+    const explosiveBody = use.explosive !== undefined ? createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives) : undefined
+    const engine = context.physics && modeled?.body && !isRocket && !isMolotov && explosiveBody?.isTriggeredBy('timer') ? spawnThrown(context.physics, modeled.body, use.origin, use.velocity) : undefined
     projectiles.push({
       mesh,
       ...(modeled?.axis ? { axis: modeled.axis } : {}),
+      ...(engine !== undefined ? { engine } : {}),
       pos: new THREE.Vector3(use.origin[0], use.origin[1], use.origin[2]),
       vel: new THREE.Vector3(use.velocity[0], use.velocity[1], use.velocity[2]),
       weapon: context.toolId(),
@@ -273,7 +284,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
       radius: use.radius,
       fire: use.fire,
       age: 0,
-      ...(use.explosive !== undefined ? { body: createExplosiveBody(use, arsenal.explosives, arsenal.rules.explosives), aligned: isRocket, motor: isRocket && arsenal.explosives.get(use.explosive)?.kind === 'shaped_charge' } : {}),
+      ...(use.explosive !== undefined ? { body: explosiveBody, aligned: isRocket, motor: isRocket && arsenal.explosives.get(use.explosive)?.kind === 'shaped_charge' } : {}),
     })
     if (!isRocket && !isMolotov && use.explosive !== undefined) context.audio?.play(GRENADE_PIN_SOUND, { position: use.origin })
     const key = isRocket ? 'act.launch' : isMolotov ? 'act.throw.molotov' : 'act.throw.grenade'
@@ -523,8 +534,15 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     return count
   }
 
+  /** The engine flies a thrown grenade: its pose is the explosive body's, which stands still for the step and so only counts the fuse and goes off where the engine put it. */
+  const followEngine = (mesh: THREE_NS.Object3D, id: BodyId, body: ExplosiveBody, world: SeamWorld): void => {
+    body.position = readThrown(world, id, mesh)
+    body.velocity = [0, 0, 0]
+  }
+
   const stepBody = (projectile: Projectile, body: ExplosiveBody, dt: number): void => {
     const from: Vec3 = [body.position[0], body.position[1], body.position[2]]
+    if (projectile.engine !== undefined && context.physics) followEngine(projectile.mesh, projectile.engine, body, context.physics)
     const isImpactFuzed = body.isTriggeredBy('impact')
     const events = body.step(dt, isImpactFuzed ? impactProbe : surfaceProbe)
     // anything else thrown in falls through the surface with a splash and sinks
@@ -534,7 +552,7 @@ export function createExplosives(context: ExplosivesContext): Explosives {
     projectile.mesh.position.copy(projectile.pos)
     if (projectile.aligned && body.velocity[0] ** 2 + body.velocity[1] ** 2 + body.velocity[2] ** 2 > 1e-6) {
       projectile.mesh.quaternion.setFromUnitVectors(projectile.axis ?? up, new THREE.Vector3(body.velocity[0], body.velocity[1], body.velocity[2]).normalize())
-    } else if (!projectile.placed) projectile.mesh.rotation.x += dt * 8
+    } else if (!projectile.placed && projectile.engine === undefined) projectile.mesh.rotation.x += dt * 8
     for (const event of events) {
       if (event.type === 'dud') {
         action('dud', translate('act.dud', { weapon: context.toolName(projectile.weapon), distance: format(body.travelled, 1), arm: format(projectile.armDistance ?? 0, 0) }), { data: { weapon: projectile.weapon, point: event.point } })

@@ -1821,6 +1821,9 @@ importers:
       '@adatechnology/game-kit-defaults':
         specifier: workspace:^
         version: link:../game-kit-defaults
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
@@ -1846,9 +1849,6 @@ importers:
         specifier: workspace:^
         version: link:../game-weapons
     devDependencies:
-      '@adatechnology/game-physics':
-        specifier: workspace:^
-        version: link:../game-physics
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt
