@@ -22,7 +22,7 @@ const run = (room: ReturnType<typeof makeRoom>, seconds: number, each?: () => vo
 
 /** A room with a can lying on its side across the player's way, 2 m ahead (its axis along x, so it rolls along z). */
 const canAhead = () => {
-  const room = makeRoom({ physics: 'own', catalog: demoItems('en', [{ id: 'soda_can', name: 'soda can', group: 'items', build: () => buildFromSpec(THREE, sodaCan()), spec: sodaCan }]) })
+  const room = makeRoom({ catalog: demoItems('en', [{ id: 'soda_can', name: 'soda can', group: 'items', build: () => buildFromSpec(THREE, sodaCan()), spec: sodaCan }]) })
   const can = room.spawn('soda_can', [0, 0, -1], 0)
   can.root.rotation.z = Math.PI / 2
   can.root.position.y = 0.034
@@ -55,13 +55,15 @@ describe('the player kicks what lies at the feet', () => {
     expect(room.camera.position.z).toBeLessThan(-1.8)
   })
 
-  it('a heavy thing is not kicked: the walk leans on it as before', () => {
-    const room = makeRoom({ physics: 'own' })
-    room.spawn('chair', [0, 0, -2], 0)
+  it('a heavy thing is not kicked: the walk leans on it, held back on this side, and it stays where it was', () => {
+    const room = makeRoom()
+    const chairId = room.spawn('chair', [0, 0, -2], 0).objectId
     room.look([0, 1.6, 1], [0, 1, -2])
     room.walk([0, 0, -2], 2)
     run(room, 2.5)
     expect(room.log.entries({ type: 'kick' })).toHaveLength(0)
-    expect(room.log.entries({ type: 'bump' }).length).toBeGreaterThan(0)
+    // the player is stopped by the chair's near side, not through it
+    expect(room.camera.position.z).toBeGreaterThan(-1.7)
+    expect(room.world.state(chairId)?.position[2]).toBeCloseTo(-2, 1)
   })
 })

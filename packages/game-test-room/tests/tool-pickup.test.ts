@@ -27,7 +27,7 @@ const digger = (): RoomAvatar => {
 
 /** The room on dirt with a shovel lying 1.2 m ahead of the player (its blade in front of the eye), damaged by `damage` before it is picked up. */
 function withShovel(damage: (room: Room, objectId: string) => void): { room: Room; objectId: string; look: (ahead: number) => void; wait: (seconds: number, ahead?: number) => void } {
-  const room = makeRoom({ physics: 'own', catalog: demoItems('en', [shovelItem]) })
+  const room = makeRoom({ catalog: demoItems('en', [shovelItem]) })
   room.setAvatar(digger())
   room.terrain.setLayout({ surface: 'dirt' })
   const objectId = room.spawn('item_shovel', [-0.5, 0, -1.2], 0).objectId

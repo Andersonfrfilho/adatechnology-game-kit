@@ -834,14 +834,16 @@ export class EnginePieces {
   private bodyDesc(b: PieceBody, user: number): BodyDesc {
     const c = this.centre(b)
     const q = b.root.quaternion
+    const shape = this.shapeOf(b)
     return {
-      shape: this.shapeOf(b),
+      shape,
       motion: b.held ? 'kinematic' : 'dynamic',
       position: [c.x, c.y, c.z],
       rotation: [q.x, q.y, q.z, q.w],
       mass: b.mass,
       inertia: this.inertiaOf(b),
       centreAtOrigin: true,
+      keepPartContacts: shape.kind === 'compound' && shape.children.length > 1,
       material: this.material(b),
       layer: 'debris',
       // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)
