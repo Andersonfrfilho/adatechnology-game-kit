@@ -1,7 +1,7 @@
 import type * as THREE_NS from 'three'
 import type { DrawnCollider, ModuleHost, WorkerCoordinator } from '@adatechnology/game-contracts'
 import { isPhysicsServices } from '@adatechnology/game-physics'
-import type { BodyId, PhysicsServices } from '@adatechnology/game-physics'
+import type { BodyId, PhysicsServices, Quat, ShapeDesc, Vec3 } from '@adatechnology/game-physics'
 import type { VehicleDestructible } from '@adatechnology/game-vehicles'
 import { fleetGroupOf } from '@adatechnology/game-vehicles-fleet'
 
@@ -39,6 +39,17 @@ export interface PhysicalCar {
   dispose(): void
 }
 
+const HALF_TURN: number = Math.SQRT1_2
+
+/** One child of the chassis compound for a drawn tyre: a cylinder as long and as wide as the box of what is drawn, its axis on the box's shortest side. */
+const wheelChildOf = (size: Vec3, center: Vec3): { readonly shape: ShapeDesc; readonly position: Vec3; readonly rotation?: Quat } => {
+  const axis = size[0] <= size[1] && size[0] <= size[2] ? 0 : size[2] <= size[1] ? 2 : 1
+  const radius = Math.max(...size.filter((_, side) => side !== axis)) / 2
+  const shape: ShapeDesc = { kind: 'cylinder', halfHeight: size[axis]! / 2, radius }
+  if (axis === 1) return { shape, position: center }
+  return { shape, position: center, rotation: axis === 0 ? [0, 0, HALF_TURN, HALF_TURN] : [HALF_TURN, 0, 0, HALF_TURN] }
+}
+
 /** The services the host lent, when it runs the pieces on a loop (the Jolt path); undefined on the kit's own solver. */
 export const physicsServicesOf = (host: ModuleHost | null): PhysicsServices | undefined => (host && isPhysicsServices(host.physics) ? host.physics : undefined)
 
@@ -61,8 +72,28 @@ export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders }:
   const position = new THREE.Vector3()
   const rotation = new THREE.Quaternion()
   const unusedScale = new THREE.Vector3()
+  const wheelHandles = new Map<string, number>()
   let crash: CrashParts | undefined
   let chassis: BodyId | undefined
+
+  // the tyres are drawn but have no hull: a child each, after the hulls (their handles are the hulls' own numbers), so the car rests at the height it is drawn
+  const withWheels = (hulls: ShapeDesc): ShapeDesc => {
+    if (hulls.kind !== 'compound') return hulls
+    const tyres = vehicle.model.parts.filter((part) => part.role === 'tyre')
+    tyres.forEach((part, index) => wheelHandles.set(part.id, hulls.children.length + index))
+    const inverse = new THREE.Matrix4().copy(root.matrixWorld).invert()
+    const drawn = new THREE.Box3()
+    const piece = new THREE.Box3()
+    const centre = new THREE.Vector3()
+    const size = new THREE.Vector3()
+    const children = tyres.map((part) => {
+      drawn.makeEmpty()
+      for (const object of vehicle.objectsOf(part.id)) drawn.union(piece.setFromObject(object).applyMatrix4(inverse))
+      if (drawn.isEmpty()) return wheelChildOf(part.box.size, part.box.center)
+      return wheelChildOf(drawn.getSize(size).toArray() as Vec3, drawn.getCenter(centre).toArray() as Vec3)
+    })
+    return { ...hulls, children: [...hulls.children, ...children] }
+  }
 
   const build = (): void => {
     if (!root.parent) return
@@ -73,9 +104,15 @@ export const createPhysicalCar = ({ THREE, services, vehicle, root, colliders }:
     root.updateWorldMatrix(true, false)
     root.matrixWorld.decompose(position, rotation, unusedScale)
     const mass = bodyMassOf(vehicle.model.parts)
-    crash = createCrashParts({ THREE, world, vehicle, frame: root, colliders, mass })
+    crash = createCrashParts({
+      THREE, world, vehicle, frame: root, colliders, mass,
+      onPartLost: (part) => {
+        const handle = wheelHandles.get(part.id)
+        if (handle !== undefined && chassis !== undefined) world.setChildShape(chassis, handle, null)
+      },
+    })
     chassis = world.createBody({
-      shape: crash.shape(), motion: 'dynamic', mass: mass.mass, inertia: mass.inertia, layer: 'vehicle', user: 0,
+      shape: withWheels(crash.shape()), motion: 'dynamic', mass: mass.mass, inertia: mass.inertia, layer: 'vehicle', user: 0,
       position: [position.x, position.y, position.z], rotation: [rotation.x, rotation.y, rotation.z, rotation.w],
     })
     crash.bind(chassis)

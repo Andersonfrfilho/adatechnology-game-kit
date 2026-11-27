@@ -10,6 +10,7 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 import type { TestRoomOptions } from '@adatechnology/game-test-room'
 
 import { VEHICLES_AREA_ID, createVehiclesTestModule } from '../src'
+import { bodyMassOf } from '../src/crash-parts-math'
 import type { PhysicalCar } from '../src/test-area/physical-car'
 import { planHulls } from '../src/worker-kinds'
 import type { HullPlanJob } from '../src/worker-kinds'
@@ -93,6 +94,19 @@ describe('TS.4: the room car on the engine loop', () => {
     expect(world.bodyCount).toBe(scene.fixedBodies)
     scene.room.dispose()
     world.dispose()
+  }, 240000)
+
+  it('a parked car settles at the height it is drawn and sleeps', async () => {
+    const scene = await sceneOf('jolt')
+    const car = stepUntilBuilt(scene)
+    const root = rootOf(scene)
+    const centre = bodyMassOf((root.userData.destructible as { model: { parts: Parameters<typeof bodyMassOf>[0] } }).model.parts).centre
+    const drawn = root.localToWorld(new THREE.Vector3(...centre)).y
+    for (let step = 0; step < 600 && !scene.world.isSleeping(car.chassis()!); step++) scene.loop.stepFixed(1)
+    expect(scene.world.isSleeping(car.chassis()!)).toBe(true)
+    expect(Math.abs(root.localToWorld(new THREE.Vector3(...centre)).y - drawn)).toBeLessThanOrEqual(0.02)
+    scene.room.dispose()
+    scene.world.dispose()
   }, 240000)
 
   it('the hull plan goes through the host workers and the car is built when it is back', async () => {
