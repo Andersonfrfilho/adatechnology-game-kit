@@ -111,6 +111,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three exec vitest run tests/rolling.test.ts` · `sonnet`.
 - **T3.3 Bug 4: C1 com 8 e 10 iterações.** Achar a causa dos 3/128 e 8/128 (excesso de 0,5–5,2 mm). Duas tentativas; se persistir, registrar  **Status 2026-11-14: levado ao dono** (8: 120/128, 10: 125/128; duas tentativas falharam; ver evidence.md `## T3.3`).
   e levar ao dono, mantendo 20 como piso de produção.
+  **Decisão do dono 2026-11-27: "piso documentado"** (abaixo de 20 iterações o kit não garante C1; produção 120 Hz, 32 it.: 0 falhas); fecha com o limite escrito.
   Mecânica? não · Aceite por comando? sim: `BOWL_SEEDS=64 JOLT_ITERATIONS=8 ...bowl-energy.test.ts` e o mesmo com 10 · `sonnet`.
 - T3.4 ✅ **Régua única de energia** (feito em 2026-11-14; `evidence.md`, seção T3.4) (C1 por ilha, C2 com a condição de C1, C3, C3b) em `tests/` de `d3`, usada pela bacia e pelas sondas da sala
   (`specs/008-motor-fisico-jolt/decision/probes/`; as de `008-solver-de-contato-dos-destrocos` só existem em `spike/engine-jolt`). Aceite: reproduz as colunas do gate 0 no Jolt e no próprio.
@@ -119,10 +120,12 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   um em `evidence.md`.
   **Status 2026-11-14: parcial** (`evidence.md`, seção T3.5): os 10 comportamentos têm teste (`tests/c5-behaviours.test.ts`, nos dois solvers) e 10 das 13 falhas do Jolt estão corrigidas;
   3 de `rolling` ficam para o dono (teto de giro de 47 rad/s e contato cilindro–cilindro).
+  **Decisão do dono 2026-11-27: "subir teto e corrigir"**: os testes de `rolling` passam sem afrouxar; (a) teto de giro por tamanho do corpo (velocidade de borda máxima sobre o raio, no adaptador `game-physics-jolt`); (b) contato cilindro–cilindro pela forma cilíndrica nativa do motor onde a peça é cilindro. Nenhum golden muda; nenhum outro teste piora.
   Mecânica? não · Aceite por comando? sim: `pnpm --filter @adatechnology/game-destruction-three test` e `pnpm --filter @adatechnology/game-destruction test` sem falha · `sonnet`.
 - **T3.6 C6: varredura de robustez** como teste: 64 sementes × dt {1/30, 0,05, 1/60, 1/144} × iterações {8, 10, 20} × push-out ±50%, pilha
   20:1 e pilha de 5. Roda por variável de ambiente, fora do `test` padrão.
   **Status 2026-11-14 (T3.6d, decisões do dono): produção 0 falhas (dt 1/60, ×1, 32 it.), piso com 19 falhas de 2304 (pilha 20:1 a 1/144: 18; bacia ×1,5 C3: 1); não ✅, ver `evidence.md` T3.6d.** Antes: parcial (`evidence.md`, seção T3.6): varredura pronta (`node tests/sweep-c6.mjs`, 678 s, 6912 corridas), mas 1742 falham: 31/64 da pilha 20:1 na produção (convergência com razão de massa 20:1; passa a ≥ 32 iterações), 8/10 iterações (conflito com a T3.3) e dt 1/144 (C2 0,3 m na semente 61). Decisão do dono pendente.
+  **Decisão do dono 2026-11-27: "piso documentado"**: abaixo de 20 iterações e na pilha 20:1 a dt 1/144 o kit não garante C1/C6; produção (120 Hz, 32 it.) 0 falhas. A varredura trava 0 falhas na produção e a contagem do piso como teto que só pode cair.
   Mecânica? sim · Aceite por comando? sim: o comando da varredura com 0 falhas · `sonnet`.
 - **T3.7 C8: determinismo** entre dois processos e salvar/carregar bit a bit, como teste de `d3` e `jolt`. Chromium e Bun à mão; Firefox à mão. ✅ **Parte Node (2026-11-14, `evidence.md` T3.7):** testes em `game-physics-jolt/tests/determinism.test.ts` e `game-destruction-three/tests/determinism.test.ts`; política D4 com `debrisCost` (`fixed`/`replay`). **Pendente à mão:** Chromium, Bun e Firefox (lista na T3.7 da evidence).
   Mecânica? sim · Aceite por comando? sim (Node) · `sonnet`.
