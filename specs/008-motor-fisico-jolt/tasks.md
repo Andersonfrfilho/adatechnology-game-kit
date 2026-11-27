@@ -255,7 +255,21 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.6 ✅ Multidão e atropelamento (desligado com `hordeThread`; `PhysicsServices.channel`, `crowd-bodies.ts`, `run-over-link.ts`; `evidence.md` `## TS.6`).
 - [ ] TS.7 Cadáveres na sala (T5.4b/c/d).
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
-- [ ] TS.9 🧠 Jogador no motor (desenho antes).
+- [ ] TS.9 Jogador no motor (desenho aprovado em `design/integracao-sala.md` §7; decisões do dono de 2026-11-27: gravidade real 9,81 com impulso de pulo 3,99 m/s, mesma altura de 0,81 m; sombra do jogador na camada `agent`). Grupo das tasks abaixo.
+  - [ ] TS.9a `pushCharacter` respeita o eixo y; `CharacterDesc.gravity?` (9,81). Aceite: pulo sobe v²/2g ± 2 cm. `haiku`.
+  - [ ] TS.9b `setCharacterShape(id,{radius,halfHeight}): boolean`, posturas 1,80 / 1,20 / 0,60 em cache. Aceite: agacha sob barra de 1,3 m; false ao levantar ali. `sonnet`.
+  - [ ] TS.9c `CharacterDesc.shadow?` + `characterBody(id)`: cápsula-sombra cinemática. Aceite: tábua quica na sombra; carro não colide com `agent`; `overlapShape` acha. `sonnet`.
+  - [ ] TS.9d `readCharacterGround(id,out)`. Aceite: plataforma móvel, velocidade bate. `sonnet`.
+  - [ ] TS.9e Personagens no `saveState`/`restoreState`. Aceite: salvar, 2 s, restaurar, 2 s dá bytes iguais. `sonnet`.
+  - [ ] TS.9f `createWalker` no `game-player`. Aceite: testes de walker. `sonnet`.
+  - [ ] TS.9g `Locomotion` na sala (só mover). Aceite: teste da sala sem diff; `room.ts` ≤ 5259 linhas. `sonnet`.
+  - [ ] TS.9h `player-body` engine. Aceite: `physics-channel` (own nada muda; Jolt cria e libera). `sonnet`.
+  - [ ] TS.9i Nocaute/batida (`onSlam` obstacle/ground). `sonnet`.
+  - [ ] TS.9j `park`/`unpark` (saída bloqueada vai ao teto, sem penetrar). `sonnet`.
+  - [ ] TS.9k Avatar lê `drawn`. `haiku`.
+  - [ ] TS.9l Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
+  - [ ] TS.9m Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
+  - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. 
 - [ ] TS.10 (opcional) Juntas na vitrine.
 
 ## Fase 8 — Corte e validação
