@@ -13,10 +13,10 @@ const GRAVITY = 9.81
 const SHOVEL_SPEC = (): DestructibleSpec => ({
   name: 'Shovel',
   parts: [
-    { id: 'handle', material: 'wood_hard', shape: { kind: 'box', size: [0.9, 0.035, 0.035] }, position: [-0.101, 0.053, 0], mass: 0.9, tags: ['handle'] },
-    { id: 'blade', material: 'steel', shape: { kind: 'box', size: [0.301, 0.012, 0.22] }, position: [0.4005, 0.006, 0], mass: 1.1, thickness: 0.002, tags: ['blade'] },
+    { id: 'handle', material: 'wood_hard', shape: { kind: 'box', size: [0.9, 0.035, 0.035] }, position: [-0.101, 0.0175, 0], mass: 0.9, tags: ['handle'] },
+    { id: 'blade', material: 'steel', shape: { kind: 'box', size: [0.301, 0.012, 0.22] }, position: [0.5, 0.006, 0], mass: 1.1, thickness: 0.002, tags: ['blade'] },
   ],
-  // the handle sits in the blade's socket, above its plate: the boxes do not touch, so the joint is spelled out (unjoined, they would be two loose things from load)
+  // the handle ends where the plate begins and both lie on the floor: the boxes only touch at an edge, so the joint is spelled out (unjoined, they would be two loose things from load)
   joints: [{ id: 'socket', a: 'handle', b: 'blade', kind: 'screw' }],
 })
 const shovel: TestRoomItem = { id: 'item_shovel', name: 'Shovel', group: 'Items', build: (T: typeof THREE_NS) => buildFromSpec(T, SHOVEL_SPEC()), spec: SHOVEL_SPEC, movable: true }
@@ -26,7 +26,7 @@ describe('a hand grenade going off 0.8 m from a 2 kg shovel lying on the floor',
     ['end on', [0.8, 0.05, 0], false],
     ['broadside', [0, 0.05, 0.8], true],
   ] as const)('%s: throws it at single-digit speed, slows its rise by gravity, and it lands and rests within a few metres', (side, offset, hops) => {
-    const room = makeRoom({ catalog: demoItems('en', [shovel]), ...(side === 'end on' ? { physics: 'own' as const } : {}) })
+    const room = makeRoom({ catalog: demoItems('en', [shovel]) })
     const { root, objectId } = room.spawn('item_shovel', [0, 0, -3], 0)
     room.update(0.5)
     const start = root.position.clone()

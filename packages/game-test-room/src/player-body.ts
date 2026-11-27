@@ -2,7 +2,7 @@ import { stepKnock } from '@adatechnology/game-contracts'
 import type { Knock } from '@adatechnology/game-contracts'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { Layer, PhysicsServices } from '@adatechnology/game-physics'
-import { PLAYER_MASS_KG, createWalker } from '@adatechnology/game-player'
+import { PLAYER_MASS_KG, PLAYER_WALK_PUSH_NEWTONS, createWalker } from '@adatechnology/game-player'
 import type { Walker, WalkerStance } from '@adatechnology/game-player'
 
 import { LANDING_MIN_SPEED, PLAYER_RADIUS, SLAM_MIN_SPEED, createBlockedTest } from './locomotion'
@@ -17,6 +17,8 @@ export interface EngineBody {
   readonly stepHeight?: number
   /** Kilograms, default `PLAYER_MASS_KG`. */
   readonly mass?: number
+  /** The most (N) the walk pushes what is in the way with, default `PLAYER_WALK_PUSH_NEWTONS`. */
+  readonly pushNewtons?: number
 }
 
 const STANDING_HEIGHT = 1.8
@@ -70,6 +72,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
   let inKnock = false
   let launchWait = 0
   let lastJumpTime = -1
+  const wish = { x: 0, z: 0 }
 
   // before the walker's own phase: what the world has no body for vetoes the step, and what the last step did is read (the landing, the stop, the step up)
   const stopPhase = loop.add(
@@ -95,6 +98,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
     collider: { heightMetres: engine.heightMetres ?? STANDING_HEIGHT, radiusMetres: PLAYER_RADIUS },
     mass,
     stepHeight,
+    strength: engine.pushNewtons ?? PLAYER_WALK_PUSH_NEWTONS,
     shadow: 'agent',
   })
   walker.read(now)
@@ -131,13 +135,13 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
     const dx = (now[0] as number) - (lastStep[0] as number)
     const dz = (now[2] as number) - (lastStep[2] as number)
     const rise = (now[1] as number) - (lastStep[1] as number)
+    if (supported && wasSupported && rise > 1e-3 && rise <= stepHeight * 1.1) stepLag += rise
     const speed = Math.hypot(dx, dz) / h
     if (inKnock && stepSpeed >= SLAM_MIN_SPEED && speed < stepSpeed * 0.5 && !slam) slam = { speed: stepSpeed, x: lastDx, z: lastDz }
     walked = speed
     stepSpeed = speed
     lastDx = dx
     lastDz = dz
-    if (supported && wasSupported && rise > 1e-3 && rise <= stepHeight * 1.1) stepLag += rise
     if (!supported) fallPeak = Math.max(fallPeak, -rise / h)
     else {
       if (!wasSupported) landed = Math.max(landed, fallPeak)
@@ -290,6 +294,8 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
         moveParked(dx, dz)
         return
       }
+      wish.x += dx
+      wish.z += dz
       walker.read(now)
       const feet = now[1] as number
       const steps = Math.max(1, Math.ceil(Math.hypot(dx, dz) / (PLAYER_RADIUS / 3)))
@@ -302,7 +308,12 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
       walker.teleport([x, feet, z])
       resync()
     },
-    takeWish: () => [0, 0],
+    takeWish() {
+      const out: [number, number] = [wish.x, wish.z]
+      wish.x = 0
+      wish.z = 0
+      return out
+    },
     place(position) {
       const floor = floorAt(position[0], position[2])
       if (walker.parked) {

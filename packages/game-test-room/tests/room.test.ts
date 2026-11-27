@@ -447,7 +447,7 @@ describe('grenade blast', () => {
 
 describe('walking over what lies on the floor', () => {
   it('steps onto a low heavy block, is stopped by a tall heavy one and kicks a light cup away', () => {
-    const room = makeRoom({ physics: 'own' })
+    const room = makeRoom()
     const block = room.spawn('concrete_block', [0, 0, 2], 0)
     run(room, 1)
     expect(block.root.position.y).toBeLessThan(0.05)
@@ -485,7 +485,7 @@ describe('walking over what lies on the floor', () => {
 
 describe('the player against the objects', () => {
   it('does not walk through a spawned object, and pushes a light one along', () => {
-    const room = makeRoom({ physics: 'own' })
+    const room = makeRoom()
     const chair = room.spawn('chair', [0, 0, -2], 0)
     const z0 = chair.root.position.z
     room.look([0, 1.6, 1], [0, 1, -2])

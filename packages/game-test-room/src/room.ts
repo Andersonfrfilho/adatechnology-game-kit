@@ -8,7 +8,7 @@ import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, s
 import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
-import { dragMarkFor, FURNITURE_PUSH_DEFAULTS } from '@adatechnology/game-player'
+import { dragMarkFor, FURNITURE_PUSH_DEFAULTS, PLAYER_WALK_PUSH_NEWTONS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, DEFAULT_LOADOUT, realLoadout } from '@adatechnology/game-weapons'
 import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
 import { createItemUse, ITEM_USES, LIQUIDS, resolveStrings as resolveFluidStrings } from '@adatechnology/game-fluids'
@@ -1355,7 +1355,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const dx = wx / len
     const dz = wz / len
     const speed = len / dt
-    const force = player.running ? PUSH_RUN_N : PUSH_WALK_N
+    const force = player.engine ? PLAYER_WALK_PUSH_NEWTONS : player.running ? PUSH_RUN_N : PUSH_WALK_N
     // where the step tried to go (and a hair more), so what the blocked step stopped against is found
     const ax = player.x + dx * (Math.min(len, 0.5) + 0.03)
     const az = player.z + dz * (Math.min(len, 0.5) + 0.03)
