@@ -119,8 +119,74 @@ const mix = (from: readonly number[], to: readonly number[], fraction: number): 
   (from[2] ?? 0) + ((to[2] ?? 0) - (from[2] ?? 0)) * fraction,
 ]
 
-/** Pose of the whole tool (`partId` undefined) or of one part at `time`, linear between keys; a key that does not name it means rest. */
-export const sampleClip = (clip: AnimationClipSpec, partId: string | undefined, time: number): { position: [number, number, number]; rotation: [number, number, number] } => {
+/** A rotation as a unit quaternion [x, y, z, w]. */
+export type ClipQuat = [number, number, number, number]
+
+/** Euler XYZ (three.js' default order, as in `AnimationPose.rotation`) to a quaternion. */
+export const quatFromEuler = (e: readonly number[]): ClipQuat => {
+  const c1 = Math.cos((e[0] ?? 0) / 2), c2 = Math.cos((e[1] ?? 0) / 2), c3 = Math.cos((e[2] ?? 0) / 2)
+  const s1 = Math.sin((e[0] ?? 0) / 2), s2 = Math.sin((e[1] ?? 0) / 2), s3 = Math.sin((e[2] ?? 0) / 2)
+  return [s1 * c2 * c3 + c1 * s2 * s3, c1 * s2 * c3 - s1 * c2 * s3, c1 * c2 * s3 + s1 * s2 * c3, c1 * c2 * c3 - s1 * s2 * s3]
+}
+
+/** A quaternion to Euler XYZ (three.js' default order). */
+export const eulerFromQuat = (q: readonly number[]): [number, number, number] => {
+  const [x = 0, y = 0, z = 0, w = 1] = q
+  const m13 = 2 * (x * z + w * y)
+  const ey = Math.asin(Math.max(-1, Math.min(1, m13)))
+  if (Math.abs(m13) < 0.9999999) return [Math.atan2(-2 * (y * z - w * x), 1 - 2 * (x * x + y * y)), ey, Math.atan2(-2 * (x * y - w * z), 1 - 2 * (y * y + z * z))]
+  return [Math.atan2(2 * (y * z + w * x), 1 - 2 * (x * x + z * z)), ey, 0]
+}
+
+/** Spherical interpolation, the short way round. */
+export const slerpQuat = (a: readonly number[], b: readonly number[], f: number): ClipQuat => {
+  const [ax = 0, ay = 0, az = 0, aw = 1] = a
+  let [bx = 0, by = 0, bz = 0, bw = 1] = b
+  let cos = ax * bx + ay * by + az * bz + aw * bw
+  if (cos < 0) {
+    cos = -cos
+    bx = -bx; by = -by; bz = -bz; bw = -bw
+  }
+  let ka = 1 - f
+  let kb = f
+  if (cos < 0.9999) {
+    const angle = Math.acos(cos)
+    const sin = Math.sin(angle)
+    ka = Math.sin((1 - f) * angle) / sin
+    kb = Math.sin(f * angle) / sin
+  }
+  const out: ClipQuat = [ax * ka + bx * kb, ay * ka + by * kb, az * ka + bz * kb, aw * ka + bw * kb]
+  const size = Math.hypot(out[0], out[1], out[2], out[3]) || 1
+  return [out[0] / size, out[1] / size, out[2] / size, out[3] / size]
+}
+
+/**
+ * The turn between two keys. Euler angles cannot be mixed one by one: a door that opens past 90 degrees about y is the key (180, 82, 180)
+ * degrees, and mixing those three numbers from (0, 0, 0) tips the door out of its plane on the way. So a turn about one axis (only one
+ * angle changes: it may be more than a full turn, a fan or a knob) is mixed as that angle, and any other turn goes the short way round.
+ */
+const mixTurn = (from: readonly number[], to: readonly number[], fraction: number): { euler: [number, number, number]; quat: ClipQuat } => {
+  let changed = 0
+  for (let i = 0; i < 3; i++) if (Math.abs((to[i] ?? 0) - (from[i] ?? 0)) > 1e-9) changed++
+  if (changed <= 1) {
+    const euler = mix(from, to, fraction)
+    return { euler, quat: quatFromEuler(euler) }
+  }
+  const quat = slerpQuat(quatFromEuler(from), quatFromEuler(to), fraction)
+  return { euler: eulerFromQuat(quat), quat }
+}
+
+/** A pose sampled from a clip: `rotation` is Euler XYZ and `quaternion` the same turn; apply the quaternion on top of the rest rotation (rest × turn). */
+export interface ClipSample {
+  readonly position: [number, number, number]
+  readonly rotation: [number, number, number]
+  readonly quaternion: ClipQuat
+}
+
+const IDENTITY: ClipQuat = [0, 0, 0, 1]
+
+/** Pose of the whole tool (`partId` undefined) or of one part at `time`, linear between keys (the turn as in `mixTurn`); a key that does not name it means rest. */
+export const sampleClip = (clip: AnimationClipSpec, partId: string | undefined, time: number): ClipSample => {
   const points = clip.keys.map((key) => {
     const pose = partId === undefined ? key : key.parts?.[partId]
     return { t: key.t, position: pose?.position ?? ZERO, rotation: pose?.rotation ?? ZERO }
@@ -128,14 +194,15 @@ export const sampleClip = (clip: AnimationClipSpec, partId: string | undefined, 
   const first = points[0]
   if (!first || first.t > 0) points.unshift({ t: 0, position: ZERO, rotation: ZERO })
   const last = points[points.length - 1]
-  if (!last) return { position: ZERO, rotation: ZERO }
-  if (time >= last.t) return { position: mix(last.position, last.position, 0), rotation: mix(last.rotation, last.rotation, 0) }
+  if (!last) return { position: [0, 0, 0], rotation: [0, 0, 0], quaternion: [...IDENTITY] }
+  if (time >= last.t) return { position: mix(last.position, last.position, 0), rotation: mix(last.rotation, last.rotation, 0), quaternion: quatFromEuler(last.rotation) }
   const index = Math.max(0, points.findIndex((point, i) => time >= point.t && time < (points[i + 1]?.t ?? Infinity)))
   const from = points[index]
   const to = points[index + 1]
-  if (!from || !to) return { position: ZERO, rotation: ZERO }
+  if (!from || !to) return { position: [0, 0, 0], rotation: [0, 0, 0], quaternion: [...IDENTITY] }
   const fraction = to.t > from.t ? (time - from.t) / (to.t - from.t) : 0
-  return { position: mix(from.position, to.position, fraction), rotation: mix(from.rotation, to.rotation, fraction) }
+  const turn = mixTurn(from.rotation, to.rotation, fraction)
+  return { position: mix(from.position, to.position, fraction), rotation: turn.euler, quaternion: turn.quat }
 }
 
 /** Problems with a clip set (empty when valid): each key is the clip id (or `<clip>_<variant>`), every clip passes `checkAnimation`, and a `stage` event names its stage. */

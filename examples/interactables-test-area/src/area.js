@@ -299,14 +299,21 @@ function clusterStatics(type, spec, statics) {
 function partMotionPose(motion, ry, GT) {
   const pose = GT.poseOf(motion, 1)
   const [x, y, z, w] = pose.quaternion
+  const p = pose.position
+  const px = p[0] * Math.cos(ry) + p[2] * Math.sin(ry)
+  const pz = -p[0] * Math.sin(ry) + p[2] * Math.cos(ry)
+  // a turn about one of the part's axes (every hinge, knob and rocker of the catalog) is that one angle: Euler XYZ of a door past 90 degrees
+  // would be (180, 82, 180) degrees, the same turn at the end but not one to mix angle by angle
+  const along = [x, y, z].map((c) => Math.abs(c) > 1e-9)
+  if (along.filter(Boolean).length <= 1) {
+    const turn = /** @type {Triple} */ ([x, y, z].map((c) => (Math.abs(c) > 1e-9 ? 2 * Math.atan2(c, w) : 0)))
+    return { position: [round(px), round(p[1]), round(pz)], rotation: [round(turn[0]), round(turn[1]), round(turn[2])] }
+  }
   // quaternion -> Euler XYZ (the order of three's default Euler)
   const m13 = 2 * (x * z + w * y)
   const ey = Math.asin(Math.max(-1, Math.min(1, m13)))
   const ex = Math.abs(m13) < 0.9999999 ? Math.atan2(-2 * (y * z - w * x), 1 - 2 * (x * x + y * y)) : Math.atan2(2 * (y * z + w * x), 1 - 2 * (x * x + z * z))
   const ez = Math.abs(m13) < 0.9999999 ? Math.atan2(-2 * (x * y - w * z), 1 - 2 * (y * y + z * z)) : 0
-  const p = pose.position
-  const px = p[0] * Math.cos(ry) + p[2] * Math.sin(ry)
-  const pz = -p[0] * Math.sin(ry) + p[2] * Math.cos(ry)
   return { position: [round(px), round(p[1]), round(pz)], rotation: [round(ex), round(ey), round(ez)] }
 }
 

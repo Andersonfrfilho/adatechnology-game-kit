@@ -5,7 +5,7 @@ import { createAudioSink } from '@adatechnology/game-audio'
 import { DEFAULT_GROUND_LAYOUT, GROUND_BURST_MAX, GROUND_ID, createKitWorldSync, createLoading, physicsHostOf, probeOf } from '@adatechnology/game-kit-defaults/world'
 import { MIN_PIECE_MASS_KG, dragSoundKey, impactKey, impactSoundKeys, specFromObject3D } from '@adatechnology/game-destruction-three'
 import { bodyMass, FIRST_PERSON_LAYER, KNOCK_CHEST, KNOCK_DOWN_SPEED, knockOf, surfaceOfMaterial } from '@adatechnology/game-contracts'
-import type { GaitId, SurfaceId } from '@adatechnology/game-contracts'
+import type { ClipSample, GaitId, SurfaceId } from '@adatechnology/game-contracts'
 import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './body-sounds'
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS, PLAYER_WALK_PUSH_NEWTONS } from '@adatechnology/game-player'
@@ -17,7 +17,7 @@ import { WATER_SHOT_BY_CALIBER, waterShotClassOf } from '@adatechnology/game-vfx
 import { createStaticBatcher } from '@adatechnology/game-render-three'
 import type { StaticBatcher } from '@adatechnology/game-render-three'
 import type { FluidRenderer } from '@adatechnology/game-fluids-three'
-import { checkAnimation, checkBench, checkDestructible, checkSpec, createEnvironmentBus, createRainCover, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
+import { checkAnimation, checkBench, sampleClip, checkDestructible, checkSpec, createEnvironmentBus, createRainCover, sealBlock, sealOpener, shotExtras, twistStroke, useToHit } from '@adatechnology/game-contracts'
 import type { AnimationClipSpec, HandPose, HandTargetSource, HandTargets, MuzzleSource, HostEvent, HostTool, ToolHand, ItemUseDef, TwistStroke, ModuleArea, ModuleBench, HostMovable, ModuleHost, TestableModule, ToolCommand, ToolCommandResult } from '@adatechnology/game-contracts'
 import { type Scheduler } from '@adatechnology/game-runtime'
 import { createArena } from './arena'
@@ -1008,8 +1008,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (!restPose.has(obj)) restPose.set(obj, { p: [obj.position.x, obj.position.y, obj.position.z], r: [obj.rotation.x, obj.rotation.y, obj.rotation.z] })
       const rest = restPose.get(obj)!
       const pose = poseAt(clip, part, Math.max(0, Math.min(1, fraction)) * clip.duration)
-      obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
-      obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
+      placePart(obj, rest, pose)
       followPart(e, part, obj, rest)
     },
     isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
@@ -4075,25 +4074,22 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const r = inspectTarget()
     return r ? entryOf(r.object) : undefined
   }
-  const poseAt = (clip: AnimationClipSpec, id: string | null, time: number): { position: Vec3; rotation: Vec3 } => {
-    const pick = (k: AnimationClipSpec['keys'][number]): { position?: Vec3; rotation?: Vec3 } | undefined => (id === null ? k : k.parts?.[id])
-    const pts = clip.keys.map((k) => ({ t: k.t, position: pick(k)?.position ?? ZERO, rotation: pick(k)?.rotation ?? ZERO }))
-    if (pts.length === 0 || pts[0].t > 0) pts.unshift({ t: 0, position: ZERO, rotation: ZERO })
-    let a = pts[0]
-    let b = pts[pts.length - 1]
-    if (time >= b.t) a = b
-    else for (let i = 0; i < pts.length - 1; i++) if (time >= pts[i].t && time < pts[i + 1].t) [a, b] = [pts[i], pts[i + 1]]
-    const f = a === b || b.t <= a.t ? 0 : (time - a.t) / (b.t - a.t)
-    const mix = (x: Vec3, y: Vec3): Vec3 => [x[0] + (y[0] - x[0]) * f, x[1] + (y[1] - x[1]) * f, x[2] + (y[2] - x[2]) * f]
-    return { position: mix(a.position, b.position), rotation: mix(a.rotation, b.rotation) }
+  // the clip's turn mixed as a quaternion (`sampleClip`): mixing Euler angles one by one tips a door that opens past 90 degrees out of its plane
+  const poseAt = (clip: AnimationClipSpec, id: string | null, time: number): ClipSample => sampleClip(clip, id === null ? undefined : id, time)
+  const restTurn = new THREE.Quaternion()
+  const restEuler = new THREE.Euler()
+  /** A part at rest, then the clip's move: position added in the parent's frame, the turn on top of the rest rotation (about the part's own axes). */
+  const placePart = (obj: THREE_NS.Object3D, rest: { p: Vec3; r: Vec3 }, pose: ClipSample): void => {
+    obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
+    restTurn.setFromEuler(restEuler.set(rest.r[0], rest.r[1], rest.r[2]))
+    obj.quaternion.set(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]).premultiply(restTurn)
   }
   const applyClip = (pl: Playing): void => {
     for (const [id, obj] of pl.targets) {
       const rest = restPose.get(obj)
       if (!rest) continue
       const pose = poseAt(pl.clip, id === '' ? null : id, pl.t)
-      obj.position.set(rest.p[0] + pose.position[0], rest.p[1] + pose.position[1], rest.p[2] + pose.position[2])
-      obj.rotation.set(rest.r[0] + pose.rotation[0], rest.r[1] + pose.rotation[1], rest.r[2] + pose.rotation[2])
+      placePart(obj, rest, pose)
       // animations are visual only: move the part's collision/raycast shape to the same pose
       if (id !== '') followPart(pl.entry, id, obj, rest)
     }
