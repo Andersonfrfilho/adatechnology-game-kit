@@ -44,8 +44,8 @@ export type SeatingOptions = {
 }
 
 export type Seating = {
-  /** Sits on `objectId` (default: the aimed thing), on `seatId` (default: the seat nearest the player). Null when there is no seat there. */
-  sit(objectId?: string, seatId?: string): RoomSeat | null
+  /** Sits on `objectId` (default: the aimed thing), on `seatId` (default: the seat nearest the player, of `pose` when the thing has one). Null when there is no seat there. */
+  sit(objectId?: string, seatId?: string, pose?: ItemSeat['pose']): RoomSeat | null
   /** Gets up at the seat's exit; false when not seated or the exit is blocked. */
   stand(): boolean
   /** Once a frame, before the player moves: a walk key or a jump gets up. */
@@ -72,10 +72,11 @@ export function createSeating(o: SeatingOptions): Seating {
     root.getWorldQuaternion(q)
     return e.setFromQuaternion(q, 'YXZ').y
   }
-  const nearest = (holder: SeatHolder): ItemSeat | undefined => {
+  const nearest = (holder: SeatHolder, pose?: ItemSeat['pose']): ItemSeat | undefined => {
     let best: ItemSeat | undefined
     let bestDistance = Infinity
-    for (const seat of holder.seats) {
+    const ofPose = holder.seats.filter((seat) => seat.pose === pose)
+    for (const seat of ofPose.length > 0 ? ofPose : holder.seats) {
       const [x, , z] = toWorld(holder.root, seat.pos)
       const distance = Math.hypot(x - player.x, z - player.z)
       if (distance < bestDistance) {
@@ -98,10 +99,10 @@ export function createSeating(o: SeatingOptions): Seating {
   }
 
   const seating: Seating = {
-    sit(objectId, seatId) {
+    sit(objectId, seatId, pose) {
       const holder = objectId ? o.find(objectId) : o.pick()
       if (!holder) return null
-      const seat = seatId ? holder.seats.find((s) => s.id === seatId) : nearest(holder)
+      const seat = seatId ? holder.seats.find((s) => s.id === seatId) : nearest(holder, pose)
       if (!seat) return null
       const [x, y, z] = toWorld(holder.root, seat.pos)
       const eye = o.hasBody?.() ? STANDING_EYE : (seat.eye ?? (seat.pose === 'lie' ? LIE_EYE : SIT_EYE))
