@@ -11,6 +11,7 @@ import { changedHeights } from './engine-ground-heights'
 import { bandLength, latticePatchRead, readGroundBand, readGroundPatch } from './engine-ground-job'
 import type { GroundPatchRead } from './engine-ground-job'
 import type { GroundWorkerPort } from './engine-ground-port'
+import { GroundFollow } from './engine-ground-follow'
 import { GroundSchedule } from './engine-ground-schedule'
 import type { PendingGround } from './engine-ground-schedule'
 import { SOLID_RING } from './engine-ground-ring'
@@ -252,6 +253,11 @@ export class EnginePieces {
   /** The pieces by object id: what the sweep meets that the engine already has (`sweepOn`). */
   private readonly byObject = new Map<string, PieceBody>()
   private readonly byBody = new Map<BodyId, PieceBody>()
+  /** The same bodies as a set: what the engine leaves out when it lists the bodies that are not the pieces' (`GroundFollow`). */
+  private readonly bodyIds = new Set<BodyId>()
+  /** Ground under the bodies and characters of the world that are not the pieces. */
+  /** Ground under the bodies and characters of the world that are not the pieces. */
+  readonly follow: GroundFollow
   /** The engine's awake bodies as `finish` last read them (one crossing), and the pieces they are. */
   private readonly activeIds: BodyId[] = []
   private readonly active = new Set<PieceBody>()
@@ -313,6 +319,25 @@ export class EnginePieces {
     this.statics = new EngineStatics(world, GROUND)
     this.schedule = o.groundWorker ? new GroundSchedule(o.groundWorker, Math.max(1, Math.round(o.groundWorkerFrames ?? GROUND_WORKER_FRAMES))) : null
     if (this.schedule) this.warmGround(this.schedule)
+    this.follow = new GroundFollow({
+      world, skip: this.bodyIds, tile: TILE, margin: TILE_MARGIN, maxStops: MAX_PATH_STOPS, keyOrigin: TILE_KEY_ORIGIN, keyStride: TILE_KEY,
+      needs: (key) => { const tile = this.tiles.get(key); return !tile || tile.dirty !== null },
+      has: (key) => this.tiles.has(key),
+      layNow: this.layAt,
+      layLater: this.schedule ? this.askAt : this.layAt,
+      drop: (key) => this.dropTile(key),
+    })
+  }
+
+  /** A tile nobody needs any more: its bodies leave the world, and a piece or body that comes back asks for it again. */
+  private dropTile(key: number): void {
+    const tile = this.tiles.get(key)
+    if (!tile) return
+    this.world.removeBody(tile.ground)
+    if (tile.steps !== null) this.world.removeBody(tile.steps)
+    if (tile.solid !== null) this.world.removeBody(tile.solid)
+    if (tile.patch) this.schedule?.givePatch(tile.patch.heights)
+    this.tiles.delete(key)
   }
 
   /** The fixed bodies as a broad phase for the destruction world's rays (`engine-rays.ts`). */
@@ -348,6 +373,7 @@ export class EnginePieces {
     if (wakeNeighbours && (b.sleeping || link.sleeping)) this.wakeAround(b, link.pos)
     this.byUser.delete(link.user)
     this.byBody.delete(link.id)
+    this.bodyIds.delete(link.id)
     this.active.delete(b)
     if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
@@ -370,6 +396,7 @@ export class EnginePieces {
       if (t.solid !== null) this.world.removeBody(t.solid)
     }
     this.tiles.clear()
+    this.follow.clear()
     this.schedule?.clear()
     this.blastAgain.clear()
     this.blasts.length = 0
@@ -504,6 +531,7 @@ export class EnginePieces {
     // the tiles asked for `frames` updates ago, before anything asks again: at this update whatever the worker did
     this.applyDueGround()
     this.layBlastGround()
+    this.follow.update(dt, n)
     this.makeBodies(each)
     each((b) => this.hang(b))
     each((b) => this.sync(b, dt, h))
@@ -784,6 +812,7 @@ export class EnginePieces {
       this.links.set(b, link)
       this.byUser.set(user, b)
       this.byBody.set(id, b)
+      this.bodyIds.add(id)
       this.byObject.set(b.objectId, b)
       this.outOfStatics(b, link)
     })
