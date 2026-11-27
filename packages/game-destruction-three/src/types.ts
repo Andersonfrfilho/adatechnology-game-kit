@@ -14,6 +14,7 @@ import type { DebrisKind, DestructibleSpec, DestructionWorld, HitResult, Materia
 import type { WarmUpProbes } from '@adatechnology/game-contracts'
 import type { BlastDebrisOptions, DebrisCostOptions, ExplosionWorkOptions } from './blast-debris'
 import type { PiecePhysics } from './physics-option'
+import type { BlastQuery } from '@adatechnology/game-physics'
 import type { VfxWorld } from '@adatechnology/game-vfx'
 import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 import type { FragmentLifeRule } from './fragments'
@@ -51,6 +52,8 @@ export interface RendererOptions {
   rayBroadPhase?: boolean
   /** A blow of the engine on a fixed part of the drawn world (a flying piece into a wall) becomes a `blunt` hit of the world, with the energy of the blow (`engine-impacts.ts`); `true` for the defaults. Needs the pieces in a `PhysicsLoop`. Off by default. */
   contactHits?: boolean | EngineImpactsOptions
+  /** The engine's blast query (`PhysicsServices.blast`): a blast shoves the pieces it finds within its radius instead of measuring every piece in the system. Needs the pieces in a `PhysicsLoop`. Off by default. */
+  blastQuery?: BlastQuery
   /** Scene that receives fragments, loose pieces, decals and particles. */
   scene: THREE_NS.Scene
   world: DestructionWorld

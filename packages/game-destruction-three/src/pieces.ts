@@ -8,7 +8,7 @@ import { GROUND_ROLLING_DAMPING, PIECE_ROLLING_DAMPING } from './friction'
 import { clamp } from './math'
 import { boxesApartAlongGround, levelBoxesApart, shapeContact } from './piece-contacts'
 import type { ContactShape, ShapeContact } from './piece-contacts'
-import type { PhysicsLoop } from '@adatechnology/game-physics'
+import type { BlastQuery, BodyId, PhysicsLoop } from '@adatechnology/game-physics'
 import { createEngineImpacts } from './engine-impacts'
 import type { EngineImpactsOptions } from './engine-impacts'
 import { EnginePieces, groundTileKey, tileRollingAt } from './engine-pieces'
@@ -474,6 +474,22 @@ export class PieceSystem {
   /** Contact blows on the fixed parts become `blunt` hits of `destruction` (`engine-impacts.ts`); null when the pieces are not in the engine's loop. Returns the way to stop it. */
   contactHits(destruction: DestructionWorld, options?: EngineImpactsOptions): (() => void) | null {
     return this.engine && this.loop ? createEngineImpacts(this.loop, this.engine.statics, destruction, options) : null
+  }
+
+  /**
+   * The pieces a blast at `point` can reach: the bodies the engine's `blastQuery` finds within `radius` (the pieces among them), in the order of `list`, and the pieces that have no
+   * body yet. The pieces are not walked one by one to measure each one's distance; the caller still takes the distance to the centre of each, as before.
+   */
+  piecesInBlast(blastQuery: BlastQuery, point: Vec3, radius: number): PieceBody[] {
+    const engine = this.engine
+    if (!engine) return [...this.list]
+    const found = blastQuery.run({ origin: point, radius })
+    const reached = new Set<PieceBody>()
+    for (let i = 0; i < found.bodyCount; i++) {
+      const piece = engine.pieceOfBody(found.bodies[i] as BodyId)
+      if (piece) reached.add(piece)
+    }
+    return this.list.filter((piece) => reached.has(piece) || !engine.hasBody(piece))
   }
 
   /** The engine's fixed bodies as the broad phase of the world's rays, or null when the pieces are not in the engine. */
