@@ -5,13 +5,14 @@ import { createTestRoom } from '../src'
 import type { TestRoomItem } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import { stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 20" fill="currentColor"><path d="M0 0H10V10Z"/></svg>'
 
 const open = (catalog: TestRoomItem[] = demoItems('pt-BR'), extra: { toolMenu?: false } = {}) => {
   const container = document.createElement('div')
   document.body.appendChild(container)
-  const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog, renderer: stubRenderer(), ui: true, ...extra })
+  const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog, renderer: stubRenderer(), ui: true, ...extra })
   return { container, room }
 }
 const menuOf = (container: HTMLElement): HTMLElement => container.querySelector('[data-tool-menu]') as HTMLElement
@@ -122,7 +123,7 @@ describe('a weapon in each hand from the picker', () => {
     const renderer = stubRenderer()
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer, ui: true })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: demoItems('pt-BR'), renderer, ui: true })
     room.setTool('glock_17')
     expect(room.setOffTool('glock_17')).toBe(true)
     for (let i = 0; i < 40; i++) room.update(1 / 60)

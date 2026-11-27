@@ -3,6 +3,7 @@ import { createTestRoom } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import * as THREE from 'three'
 import { makeRoom, stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const text = (room: ReturnType<typeof makeRoom>) => room.log.toText()
 
@@ -254,7 +255,7 @@ describe('log quality', () => {
   })
 
   it('spawned things rest on the floor or the table and never log a landing', () => {
-    const room = makeRoom()
+    const room = makeRoom({ physics: 'own' })
     for (const item of demoItems('en')) room.spawn(item.id)
     room.spawn('coffee_cup', [3.5, 0, 0])
     for (let i = 0; i < 240; i++) room.update(1 / 60)
@@ -299,7 +300,7 @@ describe('ui', () => {
   it('builds the panels: catalogue tabs, log buttons, tests, and spawns from a button', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
     const buttons = [...container.querySelectorAll('button')].map((b) => b.textContent)
     for (const label of ['Furniture', 'Containers', 'Copy JSON', 'Download NDJSON', 'Download TXT', 'Clear', 'Reset all', 'Run all', 'actions', 'events', 'checks']) expect(buttons, label).toContain(label)
     const chairButton = [...container.querySelectorAll('button')].find((b) => b.textContent === 'Wooden chair')!
@@ -314,7 +315,7 @@ describe('ui', () => {
   it('the log panel keeps about 200 lines and updates coalesced lines in place', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
     for (let i = 0; i < 260; i++) room.log.add({ channel: 'action', type: 'x', text: `line ${i}` })
     const body = container.querySelector('.tr-logbody')!
     room.update(0.016)
@@ -446,7 +447,7 @@ describe('grenade blast', () => {
 
 describe('walking over what lies on the floor', () => {
   it('steps onto a low heavy block, is stopped by a tall heavy one and kicks a light cup away', () => {
-    const room = makeRoom()
+    const room = makeRoom({ physics: 'own' })
     const block = room.spawn('concrete_block', [0, 0, 2], 0)
     run(room, 1)
     expect(block.root.position.y).toBeLessThan(0.05)
@@ -484,7 +485,7 @@ describe('walking over what lies on the floor', () => {
 
 describe('the player against the objects', () => {
   it('does not walk through a spawned object, and pushes a light one along', () => {
-    const room = makeRoom()
+    const room = makeRoom({ physics: 'own' })
     const chair = room.spawn('chair', [0, 0, -2], 0)
     const z0 = chair.root.position.z
     room.look([0, 1.6, 1], [0, 1, -2])
@@ -545,7 +546,7 @@ describe('how long what breaks off stays on screen (debris)', () => {
   it('a burst of log lines waits for the frame and shows only the last ones', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
     const body = container.querySelector('.tr-logbody')!
     for (let i = 0; i < 1000; i++) room.log.add({ channel: 'event', type: 'boom', text: `boom ${i}` })
     expect(body.childElementCount).toBe(0)

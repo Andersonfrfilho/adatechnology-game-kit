@@ -5,6 +5,7 @@ import { createTestRoom, decodeBenchState } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import type { ScenarioContext } from '../src'
 import { makeRoom, stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const CONTROLS: ModuleControl[] = [
   { kind: 'number', id: 'size', name: 'Size', min: 0.5, max: 4, step: 0.5, unit: 'm', default: 1 },
@@ -100,7 +101,7 @@ describe('module bench', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const limited = newProbe()
-    createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false, debris: { particleLimit: 40 } }).loadModule(benchedModule(limited))
+    createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: false, debris: { particleLimit: 40 } }).loadModule(benchedModule(limited))
     expect(limited.host?.particleLimit?.()).toBe(40)
   })
 
@@ -274,7 +275,7 @@ describe('bench panel', () => {
   const roomWithUi = (): { room: ReturnType<typeof createTestRoom>; container: HTMLElement } => {
     const container = document.createElement('div')
     document.body.appendChild(container)
-    const room = createTestRoom({ THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'en', catalog: demoItems('en'), renderer: stubRenderer(), ui: true })
     return { room, container }
   }
 

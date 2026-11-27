@@ -40,7 +40,7 @@ const run = (room: TestRoom, seconds: number): void => {
   for (let t = 0; t < seconds; t += 1 / 60) room.update(1 / 60)
 }
 const bottom = (root: THREE.Object3D): number => new THREE.Box3().setFromObject(root).min.y
-const laid = (length: number): TestRoom => makeRoom({ ...EVERY_EVENT_IN_ITS_FRAME, catalog: CATALOG, scenery: { shelf: null, table: { spec: tableSpec(length), position: AT, free: true, top: { part: 'top', y: TOP } } } })
+const laid = (length: number, physics?: 'own'): TestRoom => makeRoom({ ...(physics ? { physics } : {}), ...EVERY_EVENT_IN_ITS_FRAME, catalog: CATALOG, scenery: { shelf: null, table: { spec: tableSpec(length), position: AT, free: true, top: { part: 'top', y: TOP } } } })
 /** The legs of the left end knocked out: the top goes down on that end. */
 const tip = (room: TestRoom, length: number): void => {
   for (const leg of ['leg_00', 'leg_01']) {
@@ -80,7 +80,7 @@ describe('what lies on a top that tips over slides as its friction says', () => 
     for (const thing of things) expect(bottom(thing.root as THREE.Object3D)).toBeLessThan(0.1)
   })
   it('a long table on its broken end (~10 degrees, under the 22-26 degrees the friction holds): an upright can stays, a can lying on its side rolls down', () => {
-    const room = laid(4.4)
+    const room = laid(4.4, 'own')
     const upright = room.spawn('can', [0.6, TOP, AT[2] - 0.15], 0)
     const lying = room.spawn('can', [0.9, TOP, AT[2] + 0.15], 0)
     // on its side, its axis across the slope: it rolls down the top

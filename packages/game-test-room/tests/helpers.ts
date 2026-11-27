@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { createTestRoom } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import type { TestRoom, TestRoomOptions } from '../src'
+import { roomPhysics } from './support/room-physics'
 
 /** A WebGLRenderer stand-in: the room only needs these members, and happy-dom cannot make a real GL context. */
 export function stubRenderer(): THREE.WebGLRenderer {
@@ -20,5 +21,5 @@ export function makeRoom(extra: Partial<TestRoomOptions> = {}): TestRoom {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const locale = extra.locale ?? 'en'
-  return createTestRoom({ THREE, container, locale, catalog: demoItems(locale), renderer: stubRenderer(), ui: false, ...extra })
+  return createTestRoom({ THREE, container, locale, catalog: demoItems(locale), renderer: stubRenderer(), ui: false, physics: extra.physics ?? roomPhysics(), ...extra })
 }

@@ -25,8 +25,8 @@ describe('a hand grenade going off 0.8 m from a 2 kg shovel lying on the floor',
   it.each([
     ['end on', [0.8, 0.05, 0], false],
     ['broadside', [0, 0.05, 0.8], true],
-  ] as const)('%s: throws it at single-digit speed, slows its rise by gravity, and it lands and rests within a few metres', (_side, offset, hops) => {
-    const room = makeRoom({ catalog: demoItems('en', [shovel]) })
+  ] as const)('%s: throws it at single-digit speed, slows its rise by gravity, and it lands and rests within a few metres', (side, offset, hops) => {
+    const room = makeRoom({ catalog: demoItems('en', [shovel]), ...(side === 'end on' ? { physics: 'own' as const } : {}) })
     const { root, objectId } = room.spawn('item_shovel', [0, 0, -3], 0)
     room.update(0.5)
     const start = root.position.clone()

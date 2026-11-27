@@ -5,6 +5,7 @@ import type { TestableModule } from '@adatechnology/game-contracts'
 import { createTestRoom } from '../src'
 import { demoItems } from './fixtures/demo-items'
 import { stubRenderer } from './helpers'
+import { roomPhysics } from './support/room-physics'
 
 const box = (): HTMLElement => {
   const container = document.createElement('div')
@@ -13,7 +14,7 @@ const box = (): HTMLElement => {
 }
 
 describe('the loading indicator in the room', () => {
-  const roomOf = (locale: string, ui: boolean, container = box()) => ({ container, room: createTestRoom({ THREE, container, locale, catalog: demoItems(locale), renderer: stubRenderer(), ui }) })
+  const roomOf = (locale: string, ui: boolean, container = box()) => ({ container, room: createTestRoom({ physics: roomPhysics(), THREE, container, locale, catalog: demoItems(locale), renderer: stubRenderer(), ui }) })
 
   it('openAreaAsync shows "Opening <area>" in the locale of the room while the area is laid, then takes it down', async () => {
     for (const [locale, text] of [['en', 'Opening Furniture…'], ['pt-BR', 'Abrindo Móveis…']] as const) {
@@ -80,7 +81,7 @@ describe('the loading indicator in the room', () => {
 
   it('spawns an item that declares itself slow behind the indicator, with its name, and any other at once', async () => {
     const container = box()
-    const room = createTestRoom({ THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: true })
+    const room = createTestRoom({ physics: roomPhysics(), THREE, container, locale: 'pt-BR', catalog: [], renderer: stubRenderer(), ui: true })
     const plain = (id: string, name: string, slow?: boolean) => ({ id, name, group: 'Veículos', movable: false, ...(slow ? { slow } : {}), build: () => new THREE.Group() })
     room.loadModule({ id: 'fleet', name: 'Frota', group: 'Veículos', items: () => [plain('fast_car', 'Carro rápido'), plain('heavy_bus', 'Ônibus', true)] })
     const click = (name: string): void => ([...container.querySelectorAll('.tr-item button')].find((b) => b.textContent?.includes(name)) as HTMLButtonElement).click()

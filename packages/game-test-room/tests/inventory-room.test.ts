@@ -28,7 +28,7 @@ const digger = (): RoomAvatar => {
 
 /** The room on dirt with a shovel lying 1.2 m ahead of the player (its blade in front of the eye), damaged by `damage` before it is picked up. */
 function withShovel(damage: (room: Room, objectId: string) => void): { room: Room; objectId: string; look: (ahead: number) => void; wait: (seconds: number, ahead?: number) => void } {
-  const room = makeRoom({ catalog: demoItems('en', [shovelItem]), inventory: { inside: [1.5, 0.6, 0.6] } })
+  const room = makeRoom({ physics: 'own', catalog: demoItems('en', [shovelItem]), inventory: { inside: [1.5, 0.6, 0.6] } })
   room.setAvatar(digger())
   room.terrain.setLayout({ surface: 'dirt' })
   const objectId = room.spawn('item_shovel', [-0.5, 0, -1.2], 0).objectId
@@ -108,7 +108,7 @@ describe('the bag in the test room', () => {
 
   it('refuses by weight, with a localized reason in the log and the bag untouched', () => {
     // a bag long enough for the shovel: the weight is the only reason left (a backpack would say too long first)
-    const room = makeRoom({ catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR', maxCarryKg: 0.2, inventory: { inside: [1.5, 0.6, 0.6] } })
+    const room = makeRoom({ physics: 'own', catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR', maxCarryKg: 0.2, inventory: { inside: [1.5, 0.6, 0.6] } })
     room.setAvatar(digger())
     room.spawn('item_shovel', [-0.5, 0, -1.2], 0)
     room.update(0.4)
@@ -120,7 +120,7 @@ describe('the bag in the test room', () => {
   })
 
   it('refuses by volume when the bag is too small', () => {
-    const room = makeRoom({ catalog: demoItems('en', [shovelItem]), inventory: { litres: 1, inside: [2, 2, 2] } })
+    const room = makeRoom({ physics: 'own', catalog: demoItems('en', [shovelItem]), inventory: { litres: 1, inside: [2, 2, 2] } })
     room.setAvatar(digger())
     room.spawn('item_shovel', [-0.5, 0, -1.2], 0)
     room.update(0.4)
@@ -155,7 +155,7 @@ describe('the bag in the test room', () => {
   })
 
   it('a 1.1 m shovel does not fit a backpack: too_long, said in the language of the room, and it can still be held', () => {
-    const room = makeRoom({ catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR' })
+    const room = makeRoom({ physics: 'own', catalog: demoItems('pt-BR', [shovelItem]), locale: 'pt-BR' })
     room.setAvatar(digger())
     room.spawn('item_shovel', [-0.5, 0, -1.2], 0)
     room.update(0.4)

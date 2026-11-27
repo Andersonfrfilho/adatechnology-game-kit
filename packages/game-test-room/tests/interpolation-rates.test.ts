@@ -63,7 +63,7 @@ const expectSameTicks = (runs: ReturnType<typeof ticksAt>[]): void => {
 
 describe('the same scene gives the same state per tick at 60, 120 and 144 Hz (spec 010 T3.6, C5)', () => {
   it('on the kit own solver: a 4 MJ blast on the sobrado', () => {
-    const runs = RATES.map((rate) => ticksAt(rate, () => ({ room: makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 } }), loop: null })))
+    const runs = RATES.map((rate) => ticksAt(rate, () => ({ room: makeRoom({ catalog: [...demoItems('en'), SOBRADO], worldOptions: { seed: 7 }, physics: 'own' }), loop: null })))
     expectSameTicks(runs)
   })
 
