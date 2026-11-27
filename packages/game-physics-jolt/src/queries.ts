@@ -71,6 +71,14 @@ export const rayFirst = (w: JoltWorldHost, c: Cast, filter?: QueryFilter): RayHi
   return hitOf(w, col.mHit.mBodyID.GetIndexAndSequenceNumber(), col.mHit.mSubShapeID2, col.mHit.mFraction * c.length)
 }
 
+const NO_HIT = (): void => undefined
+
+/** A collide sink that adds each body once, however many of its triangles or sub shapes the query met (a ground heightfield is thousands): nothing is kept per hit. */
+const collectBodies = (out: BodyId[]): ((hit: JoltNS.CollideShapeResult) => void) => (hit) => {
+  const body = hit.mBodyID2.GetIndexAndSequenceNumber() as BodyId
+  if (!out.includes(body)) out.push(body)
+}
+
 const sphere = (w: JoltWorldHost, radius: number): JoltNS.Shape => {
   const key = Math.round(radius * 1000)
   let s = w.sphereShapes.get(key)
@@ -90,16 +98,13 @@ export const overlapSphere = (w: JoltWorldHost, at: { readonly center: Vec3; rea
   const c = w.collideCollector
   c.Reset()
   w.r1.Set(0, 0, 0)
-  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
   out.length = 0
-  const hits = c.mHits
-  const seen = new Set<number>()
-  for (let i = 0; i < hits.size(); i++) {
-    const k = hits.at(i).mBodyID2.GetIndexAndSequenceNumber()
-    if (!seen.has(k)) {
-      seen.add(k)
-      out.push(k as BodyId)
-    }
+  w.onCollide = collectBodies(out)
+  try {
+    w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
+  } finally {
+    w.onCollide = NO_HIT
+    J.destroy(m)
   }
   return out.length
 }
@@ -152,13 +157,13 @@ export const overlapShape = (w: JoltWorldHost, at: { readonly shape: ShapeDesc; 
   const c = w.collideCollector
   c.Reset()
   w.r1.Set(0, 0, 0)
-  w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
-  J.destroy(m)
   out.length = 0
-  const hits = c.mHits
-  for (let i = 0; i < hits.size(); i++) {
-    const k = hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId
-    if (!out.includes(k)) out.push(k)
+  w.onCollide = collectBodies(out)
+  try {
+    w.system.GetNarrowPhaseQuery().CollideShape(shape, w.v2, m, w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
+  } finally {
+    w.onCollide = NO_HIT
+    J.destroy(m)
   }
   return out.length
 }
@@ -187,16 +192,13 @@ export const contactBodies = (w: JoltWorldHost, id: BodyId, out: BodyId[]): numb
     const was = w.collideSettings.mMaxSeparationDistance
     w.collideSettings.mMaxSeparationDistance = TOUCH_MARGIN
     const self = new J.IgnoreSingleBodyFilter(e.id)
+    w.onCollide = collectBodies(out)
     try {
       w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, touchableBy(e.layer)), self, w.shapeFilter)
     } finally {
+      w.onCollide = NO_HIT
       w.collideSettings.mMaxSeparationDistance = was
       J.destroy(self)
-    }
-    const hits = c.mHits
-    for (let i = 0; i < hits.size(); i++) {
-      const k = hits.at(i).mBodyID2.GetIndexAndSequenceNumber() as BodyId
-      if (!out.includes(k)) out.push(k)
     }
     return out.length
   }
@@ -216,15 +218,27 @@ export const sphereCastAll = (w: JoltWorldHost, c: Cast & { readonly radius: num
   const col = w.castCollector
   col.Reset()
   w.r1.Set(0, 0, 0)
-  w.system.GetNarrowPhaseQuery().CastShape(cast, w.castSettings, w.r1, col, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
-  J.destroy(cast)
-  col.Sort()
-  out.length = 0
-  const hits = col.mHits
-  for (let i = 0; i < hits.size(); i++) {
-    const h = hits.at(i)
-    out.push(hitOf(w, h.mBodyID2.GetIndexAndSequenceNumber(), h.mSubShapeID2, h.mFraction * c.length))
+  // one hit per body (the nearest): a body of thousands of triangles must not become thousands of results in the heap
+  const nearest = new Map<number, { fraction: number; sub: number }>()
+  w.onCast = (hit) => {
+    const body = hit.mBodyID2.GetIndexAndSequenceNumber()
+    const held = nearest.get(body)
+    if (held && held.fraction <= hit.mFraction) return
+    nearest.set(body, { fraction: hit.mFraction, sub: hit.mSubShapeID2.GetValue() })
   }
+  try {
+    w.system.GetNarrowPhaseQuery().CastShape(cast, w.castSettings, w.r1, col, w.bpFilter, filterFor(w, filter), bodiesFor(w, filter), w.shapeFilter)
+  } finally {
+    w.onCast = NO_HIT
+    J.destroy(cast)
+    J.destroy(m)
+  }
+  out.length = 0
+  for (const [body, h] of nearest) {
+    w.subShape.SetValue(h.sub)
+    out.push(hitOf(w, body, w.subShape, h.fraction * c.length))
+  }
+  out.sort((a, b) => a.distance - b.distance)
   return out.length
 }
 
@@ -238,26 +252,28 @@ export const penetration = (w: JoltWorldHost, id: BodyId, out: Float64Array, amo
   w.r1.Set(0, 0, 0)
   // with `among`, a body outside it is left out before the narrow phase, not after: the ground under a thin plate in a crater is thousands of triangle hits otherwise (5 ms)
   const bodies = among ? amongFilter(w, among, id) : new J.IgnoreSingleBodyFilter(e.id)
-  w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, STATIC_ONLY), bodies, w.shapeFilter)
-  if (among) {
-    // the set is the caller's: not held past the query (CLAUDE.md §8)
-    w.among.set = NO_BODIES
-    w.among.self = -1
-  } else J.destroy(bodies)
   let depth = 0
-  const hits = c.mHits
-  for (let i = 0; i < hits.size(); i++) {
-    const h = hits.at(i)
-    if (h.mPenetrationDepth <= depth || (among && !among.has(h.mBodyID2.GetIndexAndSequenceNumber() as BodyId))) continue
+  w.onCollide = (h) => {
+    if (h.mPenetrationDepth <= depth || (among && !among.has(h.mBodyID2.GetIndexAndSequenceNumber() as BodyId))) return
     const a = h.mPenetrationAxis
     const l = Math.hypot(a.GetX(), a.GetY(), a.GetZ())
-    if (l < 1e-9) continue
+    if (l < 1e-9) return
     depth = h.mPenetrationDepth
     // the axis moves the fixed body out of the query's shape: the query's body goes the other way
     out[0] = -a.GetX() / l
     out[1] = -a.GetY() / l
     out[2] = -a.GetZ() / l
   }
+  try {
+    w.system.GetNarrowPhaseQuery().CollideShape(e.body.GetShape(), w.v2, e.body.GetCenterOfMassTransform(), w.collideSettings, w.r1, c, w.bpFilter, filterFor(w, STATIC_ONLY), bodies, w.shapeFilter)
+  } finally {
+    w.onCollide = NO_HIT
+  }
+  if (among) {
+    // the set is the caller's: not held past the query (CLAUDE.md §8)
+    w.among.set = NO_BODIES
+    w.among.self = -1
+  } else J.destroy(bodies)
   return depth
 }
 

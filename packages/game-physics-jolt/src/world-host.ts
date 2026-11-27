@@ -61,9 +61,14 @@ export interface JoltWorldHost {
   /** The body filter of `penetration` with `among` (made on first use), the set it lets through and the queried body it leaves out, both cleared after each query. */
   readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId>; self: number }
   readonly collideSettings: JoltNS.CollideShapeSettings
-  readonly collideCollector: JoltNS.CollideShapeAllHitCollisionCollector
+  /** Hands each hit to `onCollide` and keeps none: a ground of thousands of triangles must not become thousands of results in the heap. */
+  readonly collideCollector: JoltNS.CollideShapeCollectorJS
+  onCollide: (hit: JoltNS.CollideShapeResult) => void
   readonly castSettings: JoltNS.ShapeCastSettings
-  readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
+  readonly castCollector: JoltNS.CastShapeCollectorJS
+  onCast: (hit: JoltNS.ShapeCastResult) => void
+  /** Scratch sub shape id for reading the tag of a cast hit. */
+  readonly subShape: JoltNS.SubShapeID
   readonly sphereShapes: Map<number, JoltNS.Shape>
   /** The capsules `setCharacterShape` and the walkers use, by radius and half height: let go of at `dispose`. */
   readonly characterShapes: Map<string, JoltNS.Shape>

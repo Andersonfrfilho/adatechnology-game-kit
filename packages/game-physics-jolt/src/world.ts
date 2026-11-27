@@ -55,6 +55,8 @@ import { applyBuoyancy } from './buoyancy'
 import { createVehicle, driveVehicle, rebuildVehicle, removeVehicle, settleVehicles, vehicleBody, vehicleWheels, wheelContacts } from './vehicles'
 import { readContacts, watchContacts } from './watched-contacts'
 
+const NO_HIT = (): void => undefined
+
 /**
  * The kit's physics contract over one Jolt `PhysicsSystem`. Its fields without `private` are the adapter's own: the files beside this one (contacts, friction,
  * joints, vehicles, queries, state) work on them; nothing outside the package does.
@@ -113,9 +115,12 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
   readonly layerFilters = new Map<string, JoltNS.ObjectLayerFilterJS>()
   readonly among: { filter: JoltNS.BodyFilterJS | null; set: ReadonlySet<BodyId>; self: number } = { filter: null, set: new Set(), self: -1 }
   readonly collideSettings: JoltNS.CollideShapeSettings
-  readonly collideCollector: JoltNS.CollideShapeAllHitCollisionCollector
+  readonly collideCollector: JoltNS.CollideShapeCollectorJS
+  onCollide: (hit: JoltNS.CollideShapeResult) => void = NO_HIT
   readonly castSettings: JoltNS.ShapeCastSettings
-  readonly castCollector: JoltNS.CastShapeAllHitCollisionCollector
+  readonly castCollector: JoltNS.CastShapeCollectorJS
+  onCast: (hit: JoltNS.ShapeCastResult) => void = NO_HIT
+  readonly subShape: JoltNS.SubShapeID
   readonly sphereShapes = new Map<number, JoltNS.Shape>()
   readonly queryShapes = new Map<string, JoltNS.Shape>()
   readonly characterShapes = new Map<string, JoltNS.Shape>()
@@ -221,9 +226,16 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
     this.bodyFilter = new J.BodyFilter()
     this.shapeFilter = new J.ShapeFilter()
     this.collideSettings = new J.CollideShapeSettings()
-    this.collideCollector = new J.CollideShapeAllHitCollisionCollector()
+    this.collideCollector = new J.CollideShapeCollectorJS()
+    this.collideCollector.Reset = () => undefined
+    this.collideCollector.OnBody = () => undefined
+    this.collideCollector.AddHit = (pointer: number) => this.onCollide(J.wrapPointer(pointer, J.CollideShapeResult))
     this.castSettings = new J.ShapeCastSettings()
-    this.castCollector = new J.CastShapeAllHitCollisionCollector()
+    this.castCollector = new J.CastShapeCollectorJS()
+    this.castCollector.Reset = () => undefined
+    this.castCollector.OnBody = () => undefined
+    this.castCollector.AddHit = (pointer: number) => this.onCast(J.wrapPointer(pointer, J.ShapeCastResult))
+    this.subShape = new J.SubShapeID()
     this.activeIds = new J.BodyIDVector()
     this.listener = threading.contactCallbacks === 'js' ? makeListener(this) : null
     if (this.listener) this.system.SetContactListener(this.listener)
@@ -939,7 +951,7 @@ export class JoltWorld implements PhysicsWorld, JoltWorldHost {
       J.destroy(this.among.filter)
       this.among.filter = null
     }
-    for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.activeIds]) J.destroy(o)
+    for (const o of [this.v1, this.v2, this.r1, this.q1, this.ray, this.raySettings, this.rayCollector, this.rayClosest, this.bpFilter, this.objFilter, this.bodyFilter, this.shapeFilter, this.collideSettings, this.collideCollector, this.castSettings, this.castCollector, this.subShape, this.activeIds]) J.destroy(o)
     if (this.ignoreFilter) J.destroy(this.ignoreFilter)
     J.destroy(this.iface)
     if (this.listener) J.destroy(this.listener)

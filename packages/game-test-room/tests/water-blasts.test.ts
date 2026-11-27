@@ -12,7 +12,7 @@ const run = (room: TestRoom, seconds: number): void => {
 
 /** The ground area with its pond: the middle of the pond lot and the water there. */
 const openPond = (): { room: TestRoom; centre: Vec3; level: number; depth: number } => {
-  const room = makeRoom({ physics: 'own' })
+  const room = makeRoom()
   room.loadModule(createTerrainTestModule())
   room.openArea('terrain')
   run(room, 2)
