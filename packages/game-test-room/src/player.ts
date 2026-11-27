@@ -41,7 +41,7 @@ export interface PlayerOptions {
    * The physics world of the room's loop: the body is then a walker in it (`player-body.ts`) and the view stands where the feet are drawn between the last two
    * steps, set in the scheduler's `present` phase. Without it the room walks the player itself.
    */
-  engine?: EngineBody & { readonly scheduler: Pick<Scheduler, 'add'> }
+  engine?: EngineBody & { readonly scheduler: Pick<Scheduler, 'add'>; /** Runs after the view stands on the drawn feet: the room puts the body's eyes back where it wants the camera. */ readonly afterPresent?: () => void }
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -243,6 +243,7 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       if (!context.simulated || context.scripted) return
       locomotion.present?.(context.alpha)
       apply()
+      o.engine?.afterPresent?.()
     },
     { phase: 'present', order: -100, id: 'player.present' },
   )
