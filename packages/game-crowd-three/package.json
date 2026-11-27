@@ -52,6 +52,7 @@
     "@adatechnology/game-characters-three": "workspace:^",
     "@adatechnology/game-contracts": "workspace:^",
     "@adatechnology/game-crowd": "workspace:^",
+    "@adatechnology/game-physics": "workspace:^",
     "@adatechnology/game-player": "workspace:^",
     "@adatechnology/game-shapes-three": "workspace:^"
   },
@@ -64,6 +65,8 @@
     "@adatechnology/game-animals-three": "workspace:^",
     "@adatechnology/game-characters-undead": "workspace:^",
     "@adatechnology/game-infection": "workspace:^",
+    "@adatechnology/game-physics-jolt": "workspace:^",
+    "@adatechnology/game-test-room": "workspace:^",
     "@adatechnology/golden-tool": "workspace:^",
     "@types/node": "^22.10.7",
     "@types/three": "^0.160.0",

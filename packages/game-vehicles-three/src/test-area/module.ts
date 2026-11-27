@@ -19,6 +19,8 @@ import { createVehicleRainCovers } from '../rain-cover'
 import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
 import type { LaneDamage } from './lane-damage'
 import { createPhysicalCar, physicalCarColliders, physicsServicesOf } from './physical-car'
+import { createRunOverLink } from './run-over-link'
+import type { RunOverLink } from './run-over-link'
 import type { PhysicalCar } from './physical-car'
 import { createScenarios } from './scenarios'
 import { fill, TEXT } from './text'
@@ -101,6 +103,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   const rainCovers = createVehicleRainCovers()
   let host: ModuleHost | null = null
   const physicalCars = new Set<PhysicalCar>()
+  let runOverLink: RunOverLink | undefined
   const planCache = createHullPlanCache()
   let three: Three | null = null
   let counter = 0
@@ -190,7 +193,7 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       if (services) {
         // on the engine's loop the car is a body of its own (hulls, parts that come off): the fixed world keeps no copy of the drawing
         const colliders = physicalCarColliders(kit.THREE as Three, d, root as THREE_NS.Object3D, { budget: COLLIDER_BUDGET, fleetKey: key, hullCeilingOf: fleet.hullCeilingOf, planCache, workers: host?.workers })
-        const car = createPhysicalCar({ THREE: kit.THREE as Three, services, vehicle: d, root: root as THREE_NS.Object3D, colliders })
+        const car = createPhysicalCar({ THREE: kit.THREE as Three, services, vehicle: d, root: root as THREE_NS.Object3D, colliders, runOver: (runOverLink ??= createRunOverLink(services)) })
         const disposeVehicle = d.dispose?.bind(d)
         d.dispose = () => {
           physicalCars.delete(car)
@@ -670,6 +673,8 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         stopLodBatch?.()
         for (const car of physicalCars) car.dispose()
         physicalCars.clear()
+        runOverLink?.dispose()
+        runOverLink = undefined
         cabins.clear(effects())
         rainCovers.clear()
         clearHelpers()
