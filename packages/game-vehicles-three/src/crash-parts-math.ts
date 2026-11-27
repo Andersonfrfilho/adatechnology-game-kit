@@ -51,3 +51,14 @@ export const withoutPart = (total: BodyMass, part: BodyMass): BodyMass => {
   const inertia = [0, 1, 2].map((k) => Math.max(floor, total.inertia[k]! - (part.inertia[k]! + lever(part.mass, partOffset, k)) - lever(mass, shift, k))) as unknown as Vec3
   return { mass, centre, inertia }
 }
+
+/** The whole car as the kit has it: every part's mass at the centre of its box, the centre of mass of them all, and the moments about that centre. */
+export const bodyMassOf = (parts: readonly { readonly mass: number; readonly box: { readonly center: Vec3; readonly size: Vec3 } }[]): BodyMass => {
+  const mass = parts.reduce((sum, part) => sum + part.mass, 0)
+  const centre = [0, 1, 2].map((k) => parts.reduce((sum, part) => sum + part.mass * part.box.center[k]!, 0) / mass) as unknown as Vec3
+  const inertia = [0, 1, 2].map((k) => parts.reduce((sum, part) => {
+    const offset: Vec3 = [part.box.center[0] - centre[0], part.box.center[1] - centre[1], part.box.center[2] - centre[2]]
+    return sum + boxInertia(part.mass, part.box.size)[k]! + lever(part.mass, offset, k)
+  }, 0)) as unknown as Vec3
+  return { mass, centre, inertia }
+}

@@ -1,4 +1,4 @@
-import type { BodyId, PhysicsWorld, ShapeDesc } from '@adatechnology/game-physics'
+import type { BodyId, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 
 import { holdWithin } from './crash-parts-clamp'
 import type { VehicleColliders, VehicleHull } from './colliders'
@@ -30,9 +30,9 @@ export interface ChassisHulls {
   /** The compound of the car's hulls, each child tagged with its part's number. */
   shape(): ShapeDesc
   /** Takes the part's children out of the compound; the points they held (frame), for the body the part becomes. */
-  release(world: PhysicsWorld, chassis: BodyId, partId: string): Float32Array[]
+  release(world: SeamWorld, chassis: BodyId, partId: string): Float32Array[]
   /** The hulls the drawing has now, in the compound: those that changed are given to the engine, held to the old ones where `isTouching` says the part touches something. */
-  settle(world: PhysicsWorld, chassis: BodyId, isTouching: (points: Float32Array) => boolean): ChassisSettle
+  settle(world: SeamWorld, chassis: BodyId, isTouching: (points: Float32Array) => boolean): ChassisSettle
   /** Children still in the compound. */
   count(): number
   /** Whether some hull is held back, or the drawing's division is not back yet: the next settle has work. */
