@@ -21,7 +21,7 @@ const DROP_FROM_M = 3
 const SURFACE_LAYERS = ['static', 'corpse'] as const
 const DOWN: Vec3 = [0, -1, 0]
 
-const roundedTo = (value: number): number => Math.round(value / SIZE_STEP) * SIZE_STEP
+const roundedTo = (value: number): number => Math.max(SIZE_STEP, Math.round(value / SIZE_STEP) * SIZE_STEP)
 
 /**
  * The bodies the dead of a crowd have in the host's engine: each corpse that enters the crowd's ledger is made a body of the world's corpse applier (`PhysicsServices.corpses()`,
