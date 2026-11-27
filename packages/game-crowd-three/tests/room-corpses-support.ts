@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 
+import { GUIDE, corpseBodyKit, createRig } from '@adatechnology/game-characters'
 import { UNDEAD_TYPES, undeadCrowdPack } from '@adatechnology/game-characters-undead'
 import type { CrowdPack } from '@adatechnology/game-crowd'
 import { KIT_WORLD, createPhysicsLoop, isPhysicsServices } from '@adatechnology/game-physics'
@@ -87,6 +88,16 @@ export const crowdHash = (module: CrowdTestModule): string => {
   return JSON.stringify({ agents, corpses: module.crowd.corpses.entries.map((entry) => ({ id: entry.id, age: entry.age, data: entry.data })) })
 }
 
+const kit = corpseBodyKit({ rig: createRig({ body: GUIDE, height: 1.8, build: 1 }), body: GUIDE, build: 1 })
+
+/** The body of the T5.4 pile test, in the world of the room: the same place (a heap dropped from 0.3 m up, 0.45 m a layer) and turn, made straight in the corpse applier. */
+const bodyAt = (room: CrowdRoom, id: number): number => {
+  const index = id - 1
+  const [x, z] = heapAt(index)
+  room.services()!.corpses().add({ id, kit, position: [x, 0.3 + Math.floor(index / 10) * 0.45, z], yaw: id * 0.7 })
+  return id
+}
+
 export type PileRun = { readonly costs: readonly number[]; readonly asleepAtS: number; readonly ids: readonly number[] }
 
 const allAsleep = (room: CrowdRoom, ids: readonly number[]): boolean => {
@@ -98,7 +109,7 @@ const allAsleep = (room: CrowdRoom, ids: readonly number[]): boolean => {
  * 100 agents killed one every 3 frames against a wall, as the T5.4 pile test drops 100 bodies, but through the crowd and the room: the step of the loop is timed in each frame
  * (the quantity the T5.4 test reads), and the run goes on until every body of the pile sleeps or `limitSeconds` pass.
  */
-export const dropPile = (room: CrowdRoom, limitSeconds: number): PileRun => {
+export const dropPile = (room: CrowdRoom, limitSeconds: number, how: 'crowd' | 'engine' = 'crowd'): PileRun => {
   const loop = room.loop!
   const costs: number[] = []
   // the room drives the loop with the fixed steps its own clock decided (`stepFixed`); a host without a clock calls `step`
@@ -117,7 +128,7 @@ export const dropPile = (room: CrowdRoom, limitSeconds: number): PileRun => {
   for (let frame = 0; frame < limitSeconds * 60 && asleepAtS < 0; frame++) {
     if (frame % BIRTH_EVERY_FRAMES === 0 && ids.length < 100) {
       const [x, z] = heapAt(ids.length)
-      ids.push(killAt(room.module, x, z))
+      ids.push(how === 'crowd' ? killAt(room.module, x, z) : bodyAt(room, ids.length + 1))
     }
     room.room.update(STEP)
     if (frame > lastBirthFrame && frame % 6 === 0 && allAsleep(room, ids)) asleepAtS = frame / 60
