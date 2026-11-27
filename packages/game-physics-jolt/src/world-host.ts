@@ -5,6 +5,7 @@ import type { BodyDesc, BodyId, JointId, Rolling, SensorEvent, ShapeDesc } from 
 import type { Contacts } from './contact-rows'
 import type { Jolt } from './constants'
 import type { RagdollCache } from './ragdoll-cache'
+import type { SlabIndex } from './seam'
 import type { BodyEntry, JointEntry, JoltCharacter, RagdollEntry, VehicleEntry, WatchedContacts } from './entries'
 
 /** What the files beside `world.ts` need of the world: `JoltWorld` satisfies it, and they import this, so none of them imports `world.ts` back. */
@@ -73,6 +74,8 @@ export interface JoltWorldHost {
   readonly pairLog: number[]
   readonly activeIds: JoltNS.BodyIDVector
   readonly ignored: Set<number>
+  /** The flat slabs of the world (`Slab`): the contact listener looks for seam contacts only while there are any. */
+  readonly slabs: SlabIndex
   addIgnoredKey(key: number): void
   clearIgnored(): void
   readonly points: Map<number, { xyz: Float32Array; n: number; step: number }>
