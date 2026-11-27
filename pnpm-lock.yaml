@@ -568,6 +568,9 @@ importers:
       '@adatechnology/game-crowd':
         specifier: workspace:^
         version: link:../game-crowd
+      '@adatechnology/game-physics':
+        specifier: workspace:^
+        version: link:../game-physics
       '@adatechnology/game-player':
         specifier: workspace:^
         version: link:../game-player
@@ -590,6 +593,12 @@ importers:
       '@adatechnology/game-infection':
         specifier: workspace:^
         version: link:../game-infection
+      '@adatechnology/game-physics-jolt':
+        specifier: workspace:^
+        version: link:../game-physics-jolt
+      '@adatechnology/game-test-room':
+        specifier: workspace:^
+        version: link:../game-test-room
       '@adatechnology/golden-tool':
         specifier: workspace:^
         version: link:../../tools/golden
@@ -2220,6 +2229,15 @@ importers:
         specifier: workspace:^
         version: link:../game-vehicles-proving
     devDependencies:
+      '@adatechnology/game-characters-undead':
+        specifier: workspace:^
+        version: link:../game-characters-undead
+      '@adatechnology/game-crowd':
+        specifier: workspace:^
+        version: link:../game-crowd
+      '@adatechnology/game-crowd-three':
+        specifier: workspace:^
+        version: link:../game-crowd-three
       '@adatechnology/game-physics-jolt':
         specifier: workspace:^
         version: link:../game-physics-jolt

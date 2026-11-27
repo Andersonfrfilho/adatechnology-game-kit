@@ -2,6 +2,7 @@ import { CROWD_PHYSICS_DEFAULTS, HERD_ROLES, HORDE_COMMAND, STATE, bindInfection
 import type { CivilianBuilding, CivilianSpec, Civilians, Crowd, CrowdEventMap, CrowdPack, CrowdPhysicsOptions, CrowdType, Flock, Herd, HordeSimInit, HordeThreadLike, InfectionBinding, InfectionModelLike } from '@adatechnology/game-crowd'
 import type { BakeBuilders, BakeSpec, Three } from '@adatechnology/game-characters-three'
 import type { BenchChange, ModuleArea, ModuleControl, ModuleHost, ModuleLayer, ModuleMetric, ModuleScenario, TestableModule } from '@adatechnology/game-contracts'
+import { isPhysicsServices } from '@adatechnology/game-physics'
 import { createPlayer } from '@adatechnology/game-player'
 import type { Player, PlayerAction } from '@adatechnology/game-player'
 import type * as THREE_NS from 'three'
@@ -13,6 +14,8 @@ import { createCrowdInstances } from '../instances'
 import type { CrowdInstance } from '../instances'
 import { createCrowdRenderer } from '../renderer'
 import type { CrowdRenderer, CrowdRendererVariety } from '../renderer'
+import { createCrowdBodies } from './crowd-bodies'
+import type { CrowdBodies } from './crowd-bodies'
 import { crowdBenchTextOf } from './locale'
 import type { CrowdBenchText } from './locale'
 import { BUILTIN_SCENES } from './scenes'
@@ -192,6 +195,18 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
   }
   let world = build(settings.seed)
 
+  // with the engine's loop the agents and doors are bodies of it; the horde in a thread keeps its own agents and the page's copy is only drawn
+  let bodies: CrowdBodies | null = null
+  const unbindBodies = (): void => {
+    bodies?.dispose()
+    bodies = null
+  }
+  const bindBodies = (): void => {
+    unbindBodies()
+    if (options.hordeThread || !host || !isPhysicsServices(host.physics)) return
+    bodies = createCrowdBodies(host.physics, world.crowd)
+  }
+
   const wire = (): void => {
     for (const off of offs.splice(0)) off()
     const { crowd, herd, civilians } = world
@@ -256,6 +271,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     removeProps?.()
     removeProps = null
     world.binding?.unbind()
+    unbindBodies()
     renderer?.dispose()
     if (renderer) (host?.scene as THREE_NS.Object3D | undefined)?.remove(renderer.group)
     renderer = null
@@ -264,6 +280,7 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
     herdView = null
     world = build(settings.seed)
     wire()
+    bindBodies()
     if (host) removeProps = sceneOf()?.props?.(host, { cx, cz }, options.props ?? {}) ?? null
     fit()
     lastMessage = ''
@@ -749,6 +766,9 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
         })
       })
       if (host) removeProps = sceneOf()?.props?.(host, { cx, cz }, options.props ?? {}) ?? null
+      bindBodies()
+      // a cleared room gives back the doors it tore and the agents' capsules are made again where the agents stand
+      const offClear = lent.onClear?.(bindBodies)
       // the bench state arrives right after `attach`: once it has been applied the drawing is made and every batch with it, before the host's warm-up draws the scene
       if (options.eager) queueMicrotask(() => prepareDrawing())
       return () => {
@@ -757,6 +777,8 @@ export function createCrowdTestModule(options: CrowdTestModuleOptions): CrowdTes
         offGraphics?.()
         offFixed()
         offBlast()
+        offClear?.()
+        unbindBodies()
         stopThread()
         removeProps?.()
         removeProps = null
