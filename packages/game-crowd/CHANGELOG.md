@@ -1,5 +1,13 @@
 # @adatechnology/game-crowd
 
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies [3b5f3be]
+  - @adatechnology/game-physics@0.7.0
+  - @adatechnology/game-characters@0.2.31
+
 ## 0.8.2
 
 ### Patch Changes

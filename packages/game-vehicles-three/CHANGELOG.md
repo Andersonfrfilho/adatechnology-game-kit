@@ -1,5 +1,18 @@
 # @adatechnology/game-vehicles-three
 
+## 0.13.0
+
+### Minor Changes
+
+- 3b5f3be: Com o laço do motor, o módulo da multidão da sala cria os agentes como cápsulas cinemáticas e as portas como folhas numa dobradiça que cede, e solta tudo ao sair; o carro físico da sala atropela a multidão (`createRunOver`, o agente derrubado vai a `Crowd.knockDown`). Os dois módulos se encontram pelo canal novo `PhysicsServices.channel(name)` (`CROWD_AGENTS_CHANNEL`), em qualquer ordem. Com `hordeThread` ou sem serviços (`own`) nada muda.
+
+### Patch Changes
+
+- Updated dependencies [3b5f3be]
+  - @adatechnology/game-physics@0.7.0
+  - @adatechnology/game-vehicles-driving@0.3.1
+  - @adatechnology/game-vehicles-proving@0.4.1
+
 ## 0.12.1
 
 ### Patch Changes

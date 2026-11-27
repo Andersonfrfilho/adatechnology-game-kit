@@ -1,5 +1,12 @@
 # @adatechnology/game-weapons-three
 
+## 0.27.1
+
+### Patch Changes
+
+- Updated dependencies [3b5f3be]
+  - @adatechnology/game-physics@0.7.0
+
 ## 0.27.0
 
 ### Minor Changes

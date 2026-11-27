@@ -1,5 +1,12 @@
 # @adatechnology/game-destruction-three
 
+## 0.28.1
+
+### Patch Changes
+
+- Updated dependencies [3b5f3be]
+  - @adatechnology/game-physics@0.7.0
+
 ## 0.28.0
 
 ### Minor Changes

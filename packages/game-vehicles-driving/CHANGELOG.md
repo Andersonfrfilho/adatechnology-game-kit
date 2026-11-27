@@ -1,5 +1,12 @@
 # @adatechnology/game-vehicles-driving
 
+## 0.3.1
+
+### Patch Changes
+
+- Updated dependencies [3b5f3be]
+  - @adatechnology/game-physics@0.7.0
+
 ## 0.3.0
 
 ### Minor Changes
