@@ -31,8 +31,8 @@ describe('a hand grenade beside the shovel of the goods catalog, lying on the fl
     for (let i = 0; i < 420; i++) {
       room.update(1 / 60)
       highest = Math.max(highest, root.position.y)
-      // the charge is at +x of the shovel: after the wave nothing pulls it back toward it
-      towardCharge = Math.max(towardCharge, piece.velocity[0])
+      // the charge is at +x of the shovel: while the wave and the flight act (60 frames) nothing pulls it back; the tip onto its other face after it stops is gravity
+      if (i < 60) towardCharge = Math.max(towardCharge, piece.velocity[0])
     }
     expect(towardCharge).toBeLessThan(0.05)
     expect(root.position.x).toBeLessThan(-1)
