@@ -48,6 +48,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
   const anchor = new Float64Array(3)
   const ghost = { x: 0, y: 0, z: 0 }
   const lastStep = new Float64Array(3)
+  const lastFree = new Float64Array(3)
   let wantX = 0
   let wantZ = 0
   let alpha = 0
@@ -76,13 +77,13 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
       beforeStep: (h) => {
         if (walker.parked) return
         walker.read(now)
-        observeStep(h)
+        if (!revertIfInside(h)) observeStep(h)
         if (wantX === 0 && wantZ === 0) return walker.setIntent(0, 0)
         const feet = now[1] as number
         // caught inside something the player walks out of it, whichever way
-        if (blockedAt(now[0] as number, now[2] as number, PLAYER_RADIUS, feet, false)) return walker.setIntent(wantX, wantZ)
-        const intentX = blockedAt((now[0] as number) + wantX * h, now[2] as number, PLAYER_RADIUS, feet, false) ? 0 : wantX
-        const intentZ = blockedAt(now[0] as number, (now[2] as number) + wantZ * h, PLAYER_RADIUS, feet, false) ? 0 : wantZ
+        if (blockedAt(now[0] as number, now[2] as number, PLAYER_RADIUS, feet, 'bodiless')) return walker.setIntent(wantX, wantZ)
+        const intentX = blockedAt((now[0] as number) + wantX * h, now[2] as number, PLAYER_RADIUS, feet, 'bodiless') ? 0 : wantX
+        const intentZ = blockedAt(now[0] as number, (now[2] as number) + wantZ * h, PLAYER_RADIUS, feet, 'bodiless') ? 0 : wantZ
         walker.setIntent(intentX, intentZ)
       },
     },
@@ -99,6 +100,30 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
   walker.read(now)
   walker.drawn(0, drawn)
   lastStep.set(now)
+  lastFree.set(now)
+
+  /**
+   * What the world has no body for stops the feet where they were free: a throw or a slide that ended inside it goes back (the speed that went in is a slam). True when it went back.
+   */
+  const revertIfInside = (h: number): boolean => {
+    const x = now[0] as number
+    const z = now[2] as number
+    if (!blockedAt(x, z, PLAYER_RADIUS, now[1] as number, 'bodiless')) {
+      lastFree.set(now)
+      return false
+    }
+    // caught inside it before (a piece fell on the spot): the walk out is free
+    if (blockedAt(lastFree[0] as number, lastFree[2] as number, PLAYER_RADIUS, lastFree[1] as number, 'bodiless')) return false
+    const speed = Math.hypot(x - (lastStep[0] as number), z - (lastStep[2] as number)) / h
+    if (inKnock && !slam && Math.max(speed, stepSpeed) >= SLAM_MIN_SPEED) slam = { speed: Math.max(speed, stepSpeed), x: x - (lastFree[0] as number), z: z - (lastFree[2] as number) }
+    walker.teleport([lastFree[0] as number, now[1] as number, lastFree[2] as number])
+    walker.read(now)
+    lastStep.set(now)
+    stepSpeed = 0
+    lastDx = 0
+    lastDz = 0
+    return true
+  }
 
   /** What the last fixed step did, from the feet before it and after it. */
   const observeStep = (h: number): void => {
@@ -126,6 +151,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
     walker.read(now)
     walker.drawn(alpha, drawn)
     lastStep.set(now)
+    lastFree.set(now)
     stepSpeed = 0
     lastDx = 0
     lastDz = 0
@@ -256,7 +282,7 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
       held = value
       sync()
     },
-    canStand: (x, z) => !blockedAt(x, z, PLAYER_RADIUS, feetNow()[1] as number, false),
+    canStand: (x, z) => !blockedAt(x, z, PLAYER_RADIUS, feetNow()[1] as number, 'all'),
     moveBy(dx, dz) {
       if (dx === 0 && dz === 0) return
       if (walker.parked) {
@@ -269,8 +295,8 @@ export const createEngineLocomotion = (o: LocomotionContext, start: Vec3, engine
       let x = now[0] as number
       let z = now[2] as number
       for (let i = 0; i < steps; i++) {
-        if (!blockedAt(x + dx / steps, z, PLAYER_RADIUS, feet, false)) x += dx / steps
-        if (!blockedAt(x, z + dz / steps, PLAYER_RADIUS, feet, false)) z += dz / steps
+        if (!blockedAt(x + dx / steps, z, PLAYER_RADIUS, feet, 'all')) x += dx / steps
+        if (!blockedAt(x, z + dz / steps, PLAYER_RADIUS, feet, 'all')) z += dz / steps
       }
       walker.teleport([x, feet, z])
       resync()

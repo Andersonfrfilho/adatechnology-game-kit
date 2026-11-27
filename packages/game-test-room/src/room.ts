@@ -648,13 +648,13 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   }
   /**
    * The footing of the player at (x, z) with the feet at `feet`: what is drawn there and not lighter than `KICK_MASS` (that is kicked, see
-   * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body.
+   * `kickLight`) is stepped onto when its top is within `STEP_UP` of the feet and stops the player when it is taller and reaches the body. `bodiless`: only what the physics world has no body for.
    */
-  const footing = (x: number, z: number, radius: number, feet: number): { floor: number; blocked: boolean } => {
+  const footing = (x: number, z: number, radius: number, feet: number, bodiless = false): { floor: number; blocked: boolean } => {
     let floor = -Infinity
     let blocked = false
     for (const s of renderer.solidsNear(x, z, radius)) {
-      if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS) continue
+      if ((s.piece?.mass ?? s.loose?.mass ?? Infinity) < KICK_MASS || (bodiless && (s.piece || s.loose))) continue
       // a wall whose follower says where it stops a body (its breach, the piece of it that came loose and stands) is not measured by its whole box
       if (followerOwns(s.objectId)) continue
       const dx = Math.max(s.min[0] - x, 0, x - s.max[0])
@@ -721,7 +721,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     camera,
     dom,
     colliders: standingColliders,
-    footing: (x, z, radius, feet) => footing(x, z, radius, feet),
+    footing,
     blockers,
     limit: arenaSize,
     floorAt: terrain.footAt,

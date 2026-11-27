@@ -41,7 +41,7 @@ export const createOwnLocomotion = (o: LocomotionContext, start: Vec3): Locomoti
     floorLevel += move
     if (move > 0) stepLag += move
   }
-  const blocked = (x: number, z: number, radius = PLAYER_RADIUS): boolean => blockedAt(x, z, radius, floorLevel + y, true)
+  const blocked = (x: number, z: number, radius = PLAYER_RADIUS): boolean => blockedAt(x, z, radius, floorLevel + y, 'all')
   /** The widest body that fits where the player is, or null when not even the narrowest does: how deep something has come into the player. */
   const clearRadius = (): number | null => {
     for (const share of CLEAR_SHARES) if (!blocked(px.x, px.z, PLAYER_RADIUS * share)) return PLAYER_RADIUS * share

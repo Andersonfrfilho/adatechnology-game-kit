@@ -16,7 +16,7 @@ export const LANDING_MIN_SPEED = 1
 export interface LocomotionContext {
   readonly colliders: Array<[number, number, number, number]>
   readonly blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
-  readonly footing?: (x: number, z: number, radius: number, feet: number) => { floor: number; blocked: boolean }
+  readonly footing?: (x: number, z: number, radius: number, feet: number, bodiless?: boolean) => { floor: number; blocked: boolean }
   readonly limit: number
   readonly floorAt?: (x: number, z: number) => number
   readonly speedAt?: (x: number, z: number) => number
@@ -84,19 +84,25 @@ export interface Locomotion {
   dispose(): void
 }
 
+export type FootingKind = 'all' | 'bodiless' | 'none'
+
 export interface BlockedTest {
   readonly outside: (x: number, z: number) => boolean
-  /** Whether a body of `radius` cannot stand at (x, z): the arena's edge, the colliders, the blockers and, when `withFooting`, what is taller than the feet can step on. */
-  readonly blocked: (x: number, z: number, radius: number, feet: number, withFooting: boolean) => boolean
+  /**
+   * Whether a body of `radius` cannot stand at (x, z): the arena's edge, the colliders, the blockers and, by `footing`, what is taller than the feet can step on: `all` of it,
+   * only what the physics world has no body for (`bodiless`), or `none`.
+   */
+  readonly blocked: (x: number, z: number, radius: number, feet: number, footing: FootingKind) => boolean
 }
 
 export const createBlockedTest = (o: LocomotionContext): BlockedTest => {
   const outside = (x: number, z: number): boolean => Math.abs(x) > o.limit - PLAYER_RADIUS || Math.abs(z) > o.limit - PLAYER_RADIUS
-  const blocked = (x: number, z: number, radius: number, feet: number, withFooting: boolean): boolean => {
+  const blocked = (x: number, z: number, radius: number, feet: number, footing: FootingKind): boolean => {
     if (outside(x, z)) return true
     for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
     if (o.blockers) for (const isBlocked of o.blockers) if (isBlocked(x, z, radius)) return true
-    return withFooting && o.footing ? o.footing(x, z, radius, feet).blocked : false
+    if (footing === 'none' || !o.footing) return false
+    return footing === 'bodiless' ? o.footing(x, z, radius, feet, true).blocked : o.footing(x, z, radius, feet).blocked
   }
   return { outside, blocked }
 }

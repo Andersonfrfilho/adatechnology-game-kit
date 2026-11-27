@@ -31,9 +31,10 @@ export interface PlayerOptions {
   blockers?: ReadonlySet<(x: number, z: number, radius: number) => boolean>
   /**
    * What stands where the body would be, asked on every step with the feet height: `floor` is the highest top it can step onto there (a low
-   * heap of debris; 0 is the floor), `blocked` that something taller is in the way. Without it the floor is flat and only the colliders stop.
+   * heap of debris; 0 is the floor), `blocked` that something taller is in the way. Without it the floor is flat and only the colliders stop. `bodiless`: only what the
+   * physics world has no body for (the veto of the engine path).
    */
-  footing?: (x: number, z: number, radius: number, feet: number) => { floor: number; blocked: boolean }
+  footing?: (x: number, z: number, radius: number, feet: number, bodiless?: boolean) => { floor: number; blocked: boolean }
   /**
    * The physics world of the room's loop: the body is then a walker in it (`player-body.ts`) and the view stands where the feet are drawn between the last two
    * steps, set in the scheduler's `present` phase. Without it the room walks the player itself.
