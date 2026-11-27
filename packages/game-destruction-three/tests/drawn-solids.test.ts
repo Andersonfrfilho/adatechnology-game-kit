@@ -119,6 +119,31 @@ const doorFrame = (s: Stage) => {
   s.renderer.bind('frame', root, { parts: { frame: { mesh, range: [ranges[0]![0], ranges[2]![1]] } } })
 }
 
+/**
+ * A kennel as the household draws it: a floor, a back, two sides, a front with a doorway (two jambs and a lintel) and a flat top, eight boxes in one part. The box around
+ * it has a vertex at each corner and its six faces covered, and is air inside: 0.7 x 0.6 x 0.7 m out, boards 3 cm thick, the doorway 0.36 m wide and 0.4 m high.
+ */
+const kennel = (s: Stage, how: 'ranged' | 'plain' = 'ranged') => {
+  const { geometry, ranges } = merge([
+    placed(new THREE.BoxGeometry(0.7, 0.03, 0.7), [0, 0.015, 60]),
+    placed(new THREE.BoxGeometry(0.7, 0.03, 0.7), [0, 0.585, 60]),
+    placed(new THREE.BoxGeometry(0.7, 0.54, 0.03), [0, 0.3, 59.665]),
+    placed(new THREE.BoxGeometry(0.03, 0.54, 0.64), [-0.335, 0.3, 60]),
+    placed(new THREE.BoxGeometry(0.03, 0.54, 0.64), [0.335, 0.3, 60]),
+    placed(new THREE.BoxGeometry(0.17, 0.54, 0.03), [-0.265, 0.3, 60.335]),
+    placed(new THREE.BoxGeometry(0.17, 0.54, 0.03), [0.265, 0.3, 60.335]),
+    placed(new THREE.BoxGeometry(0.36, 0.14, 0.03), [0, 0.5, 60.335]),
+  ])
+  const mesh = new THREE.Mesh(geometry)
+  const root = new THREE.Group()
+  root.add(mesh)
+  s.scene.add(root)
+  root.updateMatrixWorld(true)
+  s.world.addObject('kennel', [partState('body', 'wood', { mass: 9 })])
+  // a part of a merged mesh (a house's) or a mesh of its own (a piece of furniture): the same boards either way
+  s.renderer.bind('kennel', root, { parts: { body: how === 'plain' ? mesh : { mesh, range: [ranges[0]![0], ranges[7]![1]] } } })
+}
+
 /** The height of the first thing the engine has under (x, z) looking down from 50 m: the drawn top, in the engine's own world. */
 const topUnder = (s: Stage, x: number, z: number): number => {
   const hit = s.physics.rayFirst([x, 50, z], [0, -1, 0], 100)
@@ -184,6 +209,23 @@ engineOnly('every drawn fixed thing collides in the engine', () => {
     expect(block.bottom()).toBeGreaterThan(-0.03)
   })
 
+  it('a hollow thing drawn as one part (a kennel: boards round the air, a doorway in the front) is its boards, not the box around the air: what is inside lies on its floor and a ray goes in by the doorway', () => {
+    const s = stage()
+    kennel(s)
+    s.run(0.2)
+    const held = s.statics().bodies.get('kennel')!.held
+    expect(held.get('body:0')!.solid.mesh).toBeDefined()
+    // by the doorway to the back board, 0.65 m in from the front face
+    const through = s.physics.rayFirst([0, 0.2, 62], [0, 0, -1], 4)
+    expect(through?.distance).toBeCloseTo(2 + 0.32, 2)
+    const chip = drop(s, 'chip_inside', [0, 0.3, 60], 0.04)
+    s.run(3)
+    expect(chip.piece.sleeping).toBe(true)
+    expect(chip.bottom()).toBeGreaterThan(0.02)
+    expect(chip.bottom()).toBeLessThan(0.05)
+    expect(Math.hypot(chip.root.position.x, chip.root.position.z - 60)).toBeLessThan(0.2)
+  })
+
   it('a door frame made a piece collides as its two posts and its lintel, not as the slab filling the doorway', () => {
     const s = stage()
     doorFrame(s)
@@ -193,6 +235,24 @@ engineOnly('every drawn fixed thing collides in the engine', () => {
     const volume = piece.partBoxes!.reduce((sum, box) => sum + 8 * box.half[0]! * box.half[1]! * box.half[2]!, 0)
     // the box around the frame is 1 x 2.1 x 0.17 m = 0.357 m3: the three boxes hold about an eighth of it
     expect(volume).toBeLessThan(0.1)
+  })
+
+  it.each(['ranged', 'plain'] as const)('a kennel made a piece (%s mesh) collides as its eight boards, not as the box around the air in it: a chip let go inside it lies on its floor', (how) => {
+    const s = stage()
+    kennel(s, how)
+    s.run(0.2)
+    const piece = s.renderer.makePiece('kennel') as unknown as { sleeping: boolean; partBoxes?: Array<{ half: number[] }> }
+    expect(piece.partBoxes).toHaveLength(8)
+    const volume = piece.partBoxes!.reduce((sum, box) => sum + 8 * box.half[0]! * box.half[1]! * box.half[2]!, 0)
+    // the box around the kennel is 0.7 x 0.6 x 0.7 m = 0.294 m3: its boards hold about a fifth of it
+    expect(volume).toBeLessThan(0.08)
+    s.run(1)
+    const chip = drop(s, 'chip_in_piece', [0, 0.3, 60], 0.04)
+    s.run(3)
+    expect(chip.piece.sleeping).toBe(true)
+    expect(chip.bottom()).toBeGreaterThan(0.02)
+    expect(chip.bottom()).toBeLessThan(0.06)
+    expect(Math.hypot(chip.root.position.x, chip.root.position.z - 60)).toBeLessThan(0.2)
   })
 
   it('a part that breaks has no body any more: nothing collides where nothing is drawn', () => {

@@ -7,6 +7,8 @@ import type { StaticSolid } from './engine-statics'
 const FIT = 0.01
 /** A box holds a part only when the part's own triangles lie in each of its faces and cover at least this share of the face (a raised panel leaves its edge short, a frame leaves most of it open): a door frame (two posts and a lintel) has a box's eight corners and none of its faces. */
 const FILL = 0.5
+/** A box holds a part only when the part's triangles enclose at least this share of the box: boards round the air (a kennel, a crate, a cabinet drawn as one part) have a box's corners and cover its faces, and what is inside them is not theirs. */
+const SOLID = 0.5
 /** The thinnest half (m) a drawn plane (a sheet with no thickness) is held by. */
 const MIN_HALF = 0.005
 /** A part whose every side is under this (m) is collapsed to a point (hidden by its host): nothing is drawn there. */
@@ -53,8 +55,8 @@ const turn = (vx: number, vy: number, vz: number, q: readonly [number, number, n
 }
 
 /**
- * What a fixed drawn part collides as, in world space, for an engine: one box turned as drawn where a box fits it (every corner has a vertex within `FIT` and its
- * triangles cover its faces), else the box turned to fit the world vertices where that one fits, else the triangles as drawn (`mesh`, static only). A part collapsed to
+ * What a fixed drawn part collides as, in world space, for an engine: one box turned as drawn where a box fits it (every corner has a vertex within `FIT`, its
+ * triangles cover its faces and enclose `SOLID` of it), else the box turned to fit the world vertices where that one fits, else the triangles as drawn (`mesh`, static only). A part collapsed to
  * a point is nothing (`CLAUDE.md` §12). A pure function of the job: the worker and the main thread give the same bits (`staticCollidersKind`).
  */
 export function measureStaticPart(job: StaticPartJob): StaticSolid[] {
@@ -75,7 +77,7 @@ export function measureStaticPart(job: StaticPartJob): StaticSolid[] {
   const half = [size[0] / 2, size[1] / 2, size[2] / 2]
   // the box of the geometry in its own frame, turned by the mesh: the drawn box of a wall, a table top, a beam
   const straight = { center: centre, half, axes: IDENTITY, tolerance: [FIT / s[0], FIT / s[1], FIT / s[2]] }
-  if (hugs(points, straight) && fillsFaces(points, found, from, straight)) {
+  if (hugs(points, straight) && fillsFaces(points, found, from, straight) && fillsVolume(points, found, from, straight)) {
     const [cx, cy, cz] = turn(centre[0] * scale[0], centre[1] * scale[1], centre[2] * scale[2], quat)
     return [{ center: [cx + pos[0], cy + pos[1], cz + pos[2]], half: [Math.max(MIN_HALF, half[0] * s[0]), Math.max(MIN_HALF, half[1] * s[1]), Math.max(MIN_HALF, half[2] * s[2])], rotation: [quat[0], quat[1], quat[2], quat[3]] }]
   }
@@ -88,7 +90,7 @@ export function measureStaticPart(job: StaticPartJob): StaticSolid[] {
     world[i + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]
   }
   const turned = fitOrientedBox(world as unknown as number[])
-  if (turned && fitsTurned(world, turned) && fillsFaces(world, found, from, turnedBox(turned))) return [turned]
+  if (turned && fitsTurned(world, turned) && fillsFaces(world, found, from, turnedBox(turned)) && fillsVolume(world, found, from, turnedBox(turned))) return [turned]
   return [trimeshOf(world, from, found)]
 }
 
@@ -138,6 +140,26 @@ const fillsFaces = (points: Points, found: ArrayLike<number>, from: number, box:
     if (covered[k * 2] < area * FILL || covered[k * 2 + 1] < area * FILL) return false
   }
   return true
+}
+
+/**
+ * Whether the part's triangles enclose at least `SOLID` of the box (the volume they close about the box's centre, whichever way the mesh is wound): a hollow thing covers the
+ * faces of the box around it and holds only its boards. A sheet with no thickness encloses nothing and neither does its box: it is held as before.
+ */
+const fillsVolume = (points: Points, found: ArrayLike<number>, from: number, box: FitBox): boolean => {
+  if (found.length === 0) return true
+  const whole = 8 * box.half[0] * box.half[1] * box.half[2]
+  if (!(whole > 0)) return true
+  const [cx, cy, cz] = box.center
+  let six = 0
+  for (let i = 0; i + 2 < found.length; i += 3) {
+    const a = (found[i] - from) * 3, b = (found[i + 1] - from) * 3, c = (found[i + 2] - from) * 3
+    const ax = points[a] - cx, ay = points[a + 1] - cy, az = points[a + 2] - cz
+    const bx = points[b] - cx, by = points[b + 1] - cy, bz = points[b + 2] - cz
+    const dx = points[c] - cx, dy = points[c + 1] - cy, dz = points[c + 2] - cz
+    six += ax * (by * dz - bz * dy) + ay * (bz * dx - bx * dz) + az * (bx * dy - by * dx)
+  }
+  return Math.abs(six) / 6 >= whole * SOLID
 }
 
 /** The triangles of the part in world space (its vertices and the triangles of the geometry that start in its range), with the box around them as the box of the solid. */

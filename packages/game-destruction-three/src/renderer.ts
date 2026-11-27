@@ -3149,28 +3149,35 @@ class Renderer implements DestructionRenderer {
   }
 
   /**
-   * The boxes of one mesh in the piece's frame, from its centre of mass, turned as the mesh is drawn: a plain mesh is its geometry's box in its own space, turned by its
-   * place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
+   * The boxes of one mesh in the piece's frame, from its centre of mass, turned as the mesh is drawn: a mesh drawn as boxes round the air is those boxes (`hollowBoxesOf`);
+   * else a plain mesh is its geometry's box in its own space, turned by its place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
    * of those vertices in the merged mesh's space is the box around a tilted sheet, mostly air.
    */
   private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
     const [cx, cy, cz] = at.from
-    if (mv.range) {
-      const own: number[] = []
-      this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
-      const drawn = hollowBoxesOf(own)
-      if (drawn) {
-        const pos = new this.THREE.Vector3()
-        const quat = new this.THREE.Quaternion()
-        const scale = new this.THREE.Vector3()
-        at.m4.decompose(pos, quat, scale)
-        for (const box of drawn) {
-          const c = new this.THREE.Vector3((box.low[0]! + box.high[0]!) / 2, (box.low[1]! + box.high[1]!) / 2, (box.low[2]! + box.high[2]!) / 2).applyMatrix4(at.m4)
-          const half: Vec3 = [Math.abs((box.high[0]! - box.low[0]!) * scale.x) / 2, Math.abs((box.high[1]! - box.low[1]!) * scale.y) / 2, Math.abs((box.high[2]! - box.low[2]!) * scale.z) / 2]
-          out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half, rotation: [quat.x, quat.y, quat.z, quat.w] })
-        }
-        return
+    // a mesh drawn as boxes with air between them (a kennel's boards, a door frame, the two slabs of a roof) is held box by box, ranged or not: the box around them is not drawn
+    const own: number[] = []
+    this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
+    const drawn = hollowBoxesOf(own)
+    if (drawn) {
+      const pos = new this.THREE.Vector3()
+      const quat = new this.THREE.Quaternion()
+      const scale = new this.THREE.Vector3()
+      at.m4.decompose(pos, quat, scale)
+      const c = new this.THREE.Vector3()
+      const q = new this.THREE.Quaternion()
+      // a turned box keeps its shape under one scale only: the mean of the three stands for a mesh scaled unevenly
+      const even = (Math.abs(scale.x) + Math.abs(scale.y) + Math.abs(scale.z)) / 3
+      for (const box of drawn) {
+        c.set(box.center[0]!, box.center[1]!, box.center[2]!).applyMatrix4(at.m4)
+        const half: Vec3 = box.rotation ? [box.half[0]! * even, box.half[1]! * even, box.half[2]! * even] : [Math.abs(box.half[0]! * scale.x), Math.abs(box.half[1]! * scale.y), Math.abs(box.half[2]! * scale.z)]
+        if (box.rotation) q.set(box.rotation[0]!, box.rotation[1]!, box.rotation[2]!, box.rotation[3]!).premultiply(quat).normalize()
+        else q.copy(quat)
+        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [Math.max(0.005, half[0]), Math.max(0.005, half[1]), Math.max(0.005, half[2])], rotation: [q.x, q.y, q.z, q.w] })
       }
+      return
+    }
+    if (mv.range) {
       // fitted in the mesh's own space, which a split or a move does not change, and carried into the piece by the pose: the same boxes, turned and moved, with no fit
       if (isRigidPose(at.m4.elements)) {
         const turn = new this.THREE.Quaternion().setFromRotationMatrix(at.m4)
