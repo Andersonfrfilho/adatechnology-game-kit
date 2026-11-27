@@ -217,7 +217,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   Mecânica? sim · Aceite por comando? sim: `grep` das camadas novas na `arquitetura.md` · `haiku`.
 - ✅ **T6.20 Emenda do C8 no `spec.md`** (D2) com o texto aprovado pelo dono (feito em 2026-11-26, texto do dono sem mudar uma palavra, logo abaixo da tabela de condições; D2 confirmada no §20 do `design/veiculos.md`).
   Mecânica? sim · Aceite por comando? sim: `grep` da emenda · `haiku`.
-- ✅ **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4; feito em 2026-11-26, `evidence.md` `## T6.21`; passa com o teto de 96 cascos do desenho, e **não** com os ~1 270 que a T6.4 mediu: ver lá).
+- [ ] **T6.21 Heap dos 200 carros estacionados** e variante do B6 com 20 carros na ilha (10.4; feito em 2026-11-26, `evidence.md` `## T6.21`; passa com o teto de 96 cascos do desenho, e **não** com os ~1 270 que a T6.4 mediu: ver lá). **Pendente: remedir com carga < 4 (§15)**: o p99 gravado (6,01 ms) passa do limite de 5 ms (`evidence.md` `## Registro honesto da Fase S`).
   Mecânica? sim · Aceite por comando? sim: `heap.test.ts`, `cascade.test.ts` · `sonnet`.
 - **T6.25 Sonda da sala do veículo no `leak.mjs`** (§8). **Sonda escrita em 2026-11-26 (`evidence.md` `## T6.25`, fase `vehicle`, README em `examples/test-room/`); sem ✅: o aceite é à mão e o navegador não foi aberto; o dono roda na T8.5.**
   Mecânica? sim · Aceite por comando? sim (à mão) · `sonnet`.
@@ -251,7 +251,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
 - [x] TS.4 ✅ Veículos na sala (cascos B, `createCrashParts`, `world: SeamWorld`; `evidence.md` `## TS.4`).
 - [x] TS.5 ✅ Armas: cápsulas e granada no motor (`ProjectileModel.body`, `thrown-body.ts`, `WeaponFx.clearLoose`; régua do dono 100/100 no chão da sala de produção; `evidence.md` `## TS.5`).
 - [x] TS.6 ✅ Multidão e atropelamento (desligado com `hordeThread`; `PhysicsServices.channel`, `crowd-bodies.ts`, `run-over-link.ts`; `evidence.md` `## TS.6`).
-- [x] TS.7 ✅ Cadáveres na sala (T5.4b/c/d): os mortos da multidão são corpos do motor da sala (`game-crowd-three`), desenhados onde o motor os tem, restauráveis num mundo novo. Aceite: `room-corpses.test.ts` verde; pilha de 100 na faixa `test:cost` (`evidence.md` `## TS.7`).
+- [ ] TS.7 Cadáveres na sala (T5.4b/c/d): os mortos da multidão são corpos do motor da sala (`game-crowd-three`), desenhados onde o motor os tem, restauráveis num mundo novo. Aceite: `room-corpses.test.ts` verde; pilha de 100 na faixa `test:cost` (`evidence.md` `## TS.7`). **Pendente: remedir com carga < 4 (§15)**: p99 de 12,8 a 19,9 ms contra o limite de 10 ms.
 - [ ] TS.8 `contactHits` atrás de opção (custo medido) e `blastQuery`.
 - [ ] TS.9 Jogador no motor (desenho aprovado em `design/integracao-sala.md` §7; decisões do dono de 2026-11-27: gravidade real 9,81 com impulso de pulo 3,99 m/s, mesma altura de 0,81 m; sombra do jogador na camada `agent`). Grupo das tasks abaixo.
   - [x] TS.9a ✅ `pushCharacter` respeita o eixo y; `CharacterDesc.gravity?` (9,81). Aceite: pulo sobe v²/2g ± 2 cm. `haiku`.
@@ -268,7 +268,7 @@ Worktree `adatechnology-game-kit-wt/engine-jolt`, branch `spike/engine-jolt`.
   - [x] TS.9l ✅ Paridade de bloqueio own x engine (lista blockers sem corpo, falha se crescer). `sonnet`.
   - [ ] TS.9m Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
   - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. 
-- [x] TS.8 ✅ `contactHits` ligado por padrão (custo medido: dentro do orçamento) e `blastQuery` na explosão (`evidence.md` `## TS.8`).
+- [ ] TS.8 `contactHits` ligado por padrão (custo medido: dentro do orçamento) e `blastQuery` na explosão (`evidence.md` `## TS.8`). **Pendente: remedir com carga < 4 (§15)**: o custo foi decidido com ruído de 9 a 37 ms.
 - [ ] TS.9 🧠 Jogador no motor (desenho antes).
   - [x] TS.9m ✅ Custo: `test:cost` 1 jogador + 200 corpos ≤ 0,05 ms de mediana. `haiku`.
   - [ ] TS.9n À mão (§9): `check:room` com prints em 1ª e 3ª pessoa. **Pendente, do dono** (não roda em CI nem aqui): ver `evidence.md` § TS.9n para o que olhar. 
