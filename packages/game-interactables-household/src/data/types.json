@@ -272,7 +272,7 @@
     "d": 0.38,
     "h": 0.3,
     "y": 0.9,
-    "solid": false,
+    "solid": true,
     "massKg": 14,
     "sounds": {
       "leaves": {
