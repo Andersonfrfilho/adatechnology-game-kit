@@ -2,6 +2,7 @@ import { createWeather } from '@adatechnology/game-weather'
 import type { WeatherSample } from '@adatechnology/game-weather'
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import { cloudCoverOf, cloudDarknessOf, createSky, createWeatherRenderer, starVisibilityOf, sunsetOf } from '../src'
 
 const sampleOf = (state: string, startHour = 12): WeatherSample => createWeather({ seed: 3, start: state, startHour, autoSchedule: false }).sample()
@@ -12,6 +13,12 @@ const domeOf = (options: { sun?: THREE.DirectionalLight } = {}) => {
   const sky = createSky(THREE, scene, { camera, ...options })
   return { scene, camera, sky }
 }
+
+describe('sky dome: origin', () => {
+  it('is marked as drawn by the kit, so the scene audit tells it from something drawn on the spot', () => {
+    expect(kitOriginOf(domeOf().sky.object)).toEqual({ owner: 'game-weather-three', kind: 'effect', id: 'sky-dome' })
+  })
+})
 
 describe('sky dome: cloud cover', () => {
   it('is scattered when clear, full overcast in rain and in an overcast, and followed by the dome', () => {
