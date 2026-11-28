@@ -2530,7 +2530,7 @@ class Renderer implements DestructionRenderer {
       } else if (old.partBoxes) this.fitPartBoxes(b, old)
       // at load what is left stood as it was: it is not woken
       if (!this.splittingAtLoad) old.sleeping = false
-    } else if (kitOriginOf(b.root)?.kind === 'furniture' && !this.splittingAtLoad) {
+    } else if (kitOriginOf(b.root)?.kind === 'furniture' && !this.splittingAtLoad && !this.heldByWorld(objectId)) {
       // furniture only stands on the floor: what stayed (a leg, two legs and a board) is loose too, and what cannot stand on its own topples; at load it stands as it stood
       const piece = this.makePiece(objectId)
       ;(piece as PieceBody).apart = true
@@ -2849,7 +2849,8 @@ class Renderer implements DestructionRenderer {
       body.sleeping = false
       return
     }
-    if (structural) return
+    // what is still set in the ground or fixed to a wall (a pole, a mast) stands by its own load path too, however little of its foot is drawn
+    if (structural || this.heldByWorld(objectId)) return
     const boxOf = (mv: MeshVis): THREE_NS.Box3 => this.visuals.worldBox(mv, new this.THREE.Box3())
     const whole = [...b.parts.values()].flatMap((pv) => pv.meshes).map(boxOf).filter((one) => !one.isEmpty())
     // what hangs (a wall cabinet, a lamp) is held by what it hangs on: only what stood on something can lose its footing
@@ -2921,7 +2922,7 @@ class Renderer implements DestructionRenderer {
 
   private releaseIfFloating(objectId: string): boolean {
     const b = this.bounds.get(objectId)
-    if (!b || b.piece || this.pieceSys.get(objectId) || !this.autoSplit || UNCHECKED_KINDS.has(this.kindOf(b))) return false
+    if (!b || b.piece || this.pieceSys.get(objectId) || !this.autoSplit || UNCHECKED_KINDS.has(this.kindOf(b)) || this.heldByWorld(objectId)) return false
     const boxes = this.shownBoxes(objectId)
     if (boxes.length === 0) return false
     // the object as it was whole (it has not moved: it is no piece): one that hung (a wall cabinet, a lamp) is held by what it hangs on, not checked here
@@ -2959,6 +2960,11 @@ class Renderer implements DestructionRenderer {
   }
 
   /** The kind of kit piece a bound object is, by the mark on its root or the nearest one above it (a house binds a group inside its marked root); '' when unmarked. */
+  /** Whether what is left of the object is fixed where it was laid and still anchored (`DestructionWorld.fixedInPlace`): it stands by its load path, it is never let go as a piece. */
+  private heldByWorld(objectId: string): boolean {
+    return this.world.fixedInPlace(objectId)
+  }
+
   private kindOf(b: Bound): string {
     for (let o: THREE_NS.Object3D | null = b.root; o; o = o.parent) {
       const kind = kitOriginOf(o)?.kind

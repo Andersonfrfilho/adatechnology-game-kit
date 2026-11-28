@@ -146,6 +146,31 @@ describe('furniture that came apart', () => {
     expect(new THREE.Box3().setFromObject(board).max.y).toBeLessThan(0.45)
   })
 
+  it('a pole of the catalogue fixed in the ground keeps standing when its top breaks off: its foot is anchored, so its own load path answers', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const loosened: string[] = []
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), onLoosened: (objectId) => loosened.push(objectId) })
+    world.addObject('pole', [partState('shaft', 'concrete', { mass: 200 }), partState('arm', 'wood', { mass: 6 })], [['shaft'], ['arm']])
+    world.anchored.add('shaft')
+    world.fixed.add('pole')
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.26, 6.4, 0.26))
+    shaft.position.y = 3.2
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.09, 0.09))
+    arm.position.y = 6.1
+    const root = new THREE.Group()
+    root.add(shaft, arm)
+    markKitOrigin(root, { owner: 'test', kind: 'furniture', id: 'service_entrance' })
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('pole', root, { parts: { shaft, arm } })
+    world.emit({ type: 'detach', object: 'pole', joint: 'j', parts: ['shaft', 'arm'] })
+    for (let t = 0; t < 2; t += 1 / 60) renderer.update(1 / 60)
+    expect(renderer.piece('pole')).toBeNull()
+    expect(loosened).toEqual([])
+    expect(new THREE.Box3().setFromObject(shaft).max.y).toBeGreaterThan(6.3)
+  })
+
   it('a fixed object that is not furniture keeps standing', () => {
     const scene = new THREE.Scene()
     const world = new FakeWorld()

@@ -5,7 +5,7 @@ import type { PartDestruction } from '@adatechnology/game-interactables'
  * on the SDK; the host maps the tags to the SDK's parts. `body` is the default for everything that is not a movable part.
  */
 export interface TypeDestruction {
-  body: { material: string; joint: string }
+  body: { material: string; joint: string; reinforcement?: PartDestruction['reinforcement'] }
   /** First match wins. A string matches the part id exactly, a RegExp is tested against it. */
   parts: Array<[string | RegExp, PartDestruction]>
 }
@@ -20,6 +20,8 @@ const cabinet: TypeDestruction = { body: mdfBody, parts: [[/^drawer/, drawer], [
 const fridgeLike: TypeDestruction = { body: { material: 'steel', joint: 'weld' }, parts: [[/^door/, door('steel')]] }
 const bin: TypeDestruction = { body: { material: 'plastic', joint: 'fused' }, parts: [['lid', door('plastic', 'hinge', 'lid')]] }
 const upholstery = { material: 'fabric', joint: 'glue' }
+/** The cage of a small concrete pole (the padrão's): 10 mm bars, 10 cm apart (`PartDestruction.reinforcement`). */
+const POLE_CAGE = { material: 'steel', spacing: 0.1, diameter: 0.01 }
 
 export const DESTRUCTION: Record<string, TypeDestruction> = {
   fridge: fridgeLike,
@@ -46,7 +48,8 @@ export const DESTRUCTION: Record<string, TypeDestruction> = {
   },
   wall_socket: { body: { material: 'plastic', joint: 'screw' }, parts: [] },
   wall_switch: { body: { material: 'plastic', joint: 'screw' }, parts: [['rocker', { material: 'plastic', joint: 'clip', piece: 'rocker' }]] },
-  service_entrance: { body: { material: 'steel', joint: 'bolt' }, parts: [['meter_door', door('steel')]] },
+  // a cast concrete pole (NBR 8451: CA-50 bars in the concrete), its segments held by the bars; the meter box, the cross arm and the bracket are bolted to it
+  service_entrance: { body: { material: 'concrete', joint: 'rebar', reinforcement: POLE_CAGE }, parts: [['meter_door', door('steel')]] },
   conduit_run: { body: { material: 'plastic', joint: 'clip' }, parts: [] },
   service_mast: { body: { material: 'steel', joint: 'clip' }, parts: [] },
   electrical_panel: {

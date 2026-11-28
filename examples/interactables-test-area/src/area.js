@@ -28,7 +28,8 @@ import { buildScenarios } from './scenarios.js'
 /** @typedef {{ id: string; indices: number[]; box: number[]; vol: number; material: string; key: string; mover: false; tag?: undefined; source?: undefined }} BodyPiece */
 /** @typedef {{ id: string; source: PartSpec; indices: number[]; box: number[]; vol: number; material: string; mover: true; tag: Partial<PartDestruction>; key?: undefined }} MoverPiece */
 /** @typedef {BodyPiece | MoverPiece} AnyPiece */
-/** @typedef {{ explodes?: PartDestruction['explodes']; contains?: PartDestruction['contains']; mass?: number; hp?: number; thickness?: number }} PartExtra */
+/** @typedef {import('@adatechnology/game-contracts').PartSpec} DestructionPart */
+/** @typedef {{ explodes?: PartDestruction['explodes']; contains?: PartDestruction['contains']; mass?: number; hp?: number; thickness?: number; anchored?: boolean; reinforcement?: DestructionPart['reinforcement']; units?: DestructionPart['units']; structure?: DestructionPart['structure'] }} PartExtra */
 /** @typedef {[number, number, number]} Triple */
 /** @typedef {NonNullable<import('@adatechnology/game-contracts').DestructibleSpec['joints']>[number]['kind']} JointKind */
 /** @typedef {{ position: Triple; rotation: Triple }} PartPose */
@@ -39,6 +40,10 @@ import { buildScenarios } from './scenarios.js'
 /** @type {Readonly<Record<string, number>>} */
 const MAX_PIECES = { bbq: 30, clothesline: 24, dog_house: 24, gas_bottle: 6, microwave: 10, washing_machine: 12, tv: 8, fridge_compact: 12, utility_sink: 12, wall_socket: 3, wall_switch: 3 }
 const DEFAULT_MAX_PIECES = 18
+/** Metres above the floor a piece's foot may stand and still be set in the ground, for a type fixed where it is laid (a pole, a mast). */
+const GROUND_TOUCH = 0.02
+/** Side of the blocks a reinforced concrete piece comes off in (`PartSpec.units`), metres: one bay of its cage, as the house's members. */
+const CAGE_UNIT = 0.1
 const WOOD_FAMILY = new Set(['wood_soft', 'wood_hard', 'mdf', 'plywood'])
 const METAL_FAMILY = new Set(['steel', 'aluminium', 'cast_iron', 'copper'])
 const UPHOLSTERED = new Set(['sofa', 'armchair', 'bed_double', 'bed_single'])
@@ -459,10 +464,22 @@ function analyse(hh, type, GT) {
   }
   const totalWeight = all.reduce((sum, pc) => sum + weight(pc), 0) || 1
   // the real mass of the object (the pack's `massKg`): the drawing is solid blocks, so the volume alone would give a fridge of two tonnes
-  const targetMass = hh.types.find((t) => t.id === type)?.massKg
+  const def = hh.types.find((t) => t.id === type)
+  const targetMass = def?.massKg
+  // what the type fixes where it is laid standing on the floor (a pole, a mast) is set in the ground: the pieces at its foot are anchored, the rest stands on them
+  const planted = def?.fixed === true && def.y <= 0
+  const cage = body.reinforcement
   const parts = all.map((pc) => {
     /** @type {PartExtra} */
     const extra = {}
+    if (planted && !pc.mover && pc.box[1] <= GROUND_TOUCH) extra.anchored = true
+    // a reinforced concrete body (a concrete pole): each concrete piece is a column with its cage, so a hit chips the concrete off in blocks, the bars show and bend under the load
+    if (cage && !pc.mover && pc.material === body.material) {
+      const thin = Math.min(pc.box[3] - pc.box[0], pc.box[4] - pc.box[1], pc.box[5] - pc.box[2])
+      extra.reinforcement = { material: cage.material, spacing: cage.spacing, diameter: cage.diameter }
+      extra.units = { size: [CAGE_UNIT, CAGE_UNIT, round(Math.max(thin, 0.01))], bond: 'stack', mortar: pc.material }
+      extra.structure = { role: 'column' }
+    }
     const own = pc.mover ? pc.tag : null
     if (own?.explodes) extra.explodes = { ...own.explodes }
     if (own?.contains) extra.contains = { ...own.contains }
@@ -496,7 +513,8 @@ function analyse(hh, type, GT) {
   const uf = new Map(pieces.map((p) => [p.id, p.id]))
   /** @type {(x: string) => string} */
   const find = (x) => (uf.get(x) === x ? x : (uf.set(x, find(/** @type {string} */ (uf.get(x)))), /** @type {string} */ (uf.get(x))))
-  const kindOf = (/** @type {AnyPiece} */ a, /** @type {AnyPiece} */ b) => (a.material.includes('glass') || b.material.includes('glass') ? 'clip' : bodyKind)
+  // in a reinforced body the bars hold only the concrete together: what is fixed to it (a meter box, a cross arm) is bolted on
+  const kindOf = (/** @type {AnyPiece} */ a, /** @type {AnyPiece} */ b) => (a.material.includes('glass') || b.material.includes('glass') ? 'clip' : cage && (a.material !== body.material || b.material !== body.material) ? 'bolt' : bodyKind)
   for (const e of edges) {
     if ((degree.get(e.a.id) ?? 0) >= 5 || (degree.get(e.b.id) ?? 0) >= 5) continue
     degree.set(e.a.id, (degree.get(e.a.id) ?? 0) + 1)
@@ -530,7 +548,7 @@ function analyse(hh, type, GT) {
     joints.push({ a: m.id, b: best.id, kind: /** @type {JointKind} */ (m.tag.joint ?? 'hinge') })
   }
 
-  const destructible = { name: type, parts, joints, tags: ['furniture', type] }
+  const destructible = { name: type, parts, joints, tags: ['furniture', type], ...(planted ? { fixed: true } : {}) }
   const animations = buildAnimations(spec, partIds, GT, new Set(movers.map((m) => m.source.id)))
   return { spec, pieces, movers, partIds, destructible, animations }
 }
