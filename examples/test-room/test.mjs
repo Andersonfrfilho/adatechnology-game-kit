@@ -82,10 +82,28 @@ if (runs('scenarios')) {
   await page.goto(`${url}?scenario=all${SHARD ? `&shard=${SHARD}` : ''}`, { timeout: 180000 })
   await page.waitForFunction(() => window.__testRoomReport, null, { timeout: 600000 })
   Object.assign(report, await page.evaluate(() => window.__testRoomReport))
+  /** @type {Record<string, string[]>} */
+  const failedData = await page.evaluate(() => {
+    /** @type {Record<string, string[]>} */
+    const byScenario = {}
+    for (const entry of window.__testRoom.log.entries({ channel: 'check' })) {
+      if (entry.type !== 'fail' || typeof entry.data?.scenario !== 'string') continue
+      let text = ''
+      try {
+        text = JSON.stringify(entry.data).slice(0, 1200)
+      } catch {
+        text = '(data not serialisable)'
+      }
+      ;(byScenario[entry.data.scenario] ??= []).push(text)
+    }
+    return byScenario
+  })
   console.log(`\nscenarios${SHARD ? ` ${SHARD}` : ''}: ${report.passed} passed, ${report.failed} failed`)
   for (const r of report.results) {
     console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.id}  ${r.name}`)
     for (const c of r.checks) if (!c.ok) console.log(`   ✗ ${c.label}`)
+    // what the failed check measured (the rows, the pieces that failed): the label alone says how many, never which
+    for (const data of failedData[r.id] ?? []) console.log(`     ${data}`)
   }
   // the behaviour log of the run
   const ndjson = await page.evaluate(() => window.__testRoom.log.toNDJSON())
@@ -120,7 +138,7 @@ if (runs('views')) {
     const extra = content.all.filter((/** @type {string} */ id) => id.startsWith('weapon_') || id.startsWith('item_')).length
     const demoLeft = DEMO_IDS.filter((id) => content.all.includes(id))
     const spawnOk = Object.values(content.spawnable).every(Boolean)
-    const contentOk = content.counts.household === 51 && content.counts.weapons > 100 && content.counts.goods > 300 && demoLeft.length === 0 && spawnOk && extra > 400
+    const contentOk = content.counts.household === 52 && content.counts.weapons > 100 && content.counts.goods > 300 && demoLeft.length === 0 && spawnOk && extra > 400
     console.log(`${contentOk ? 'PASS' : 'FAIL'}  default page loads the SDK content`, JSON.stringify({ counts: content.counts, demoLeft, spawnable: content.spawnable }))
     if (!contentOk) report.failed++
   }
@@ -177,8 +195,8 @@ if (runs('views')) {
     })
     await page.waitForTimeout(400)
     await page.screenshot({ path: join(shotsDir, 'third-person.png'), ...SHOT })
-    const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: document.querySelector('.tr-help')?.textContent ?? '' }))
-    bodyOk = before.mode === 'first' && before.visible === true && before.hint && after.mode === 'third' && after.visible === true && /V:/.test(after.help)
+    const after = await page.evaluate(() => ({ mode: window.__testRoom.cameraMode, visible: window.__testRoom.avatar?.root.visible, help: [...document.querySelectorAll('.tr-keys kbd')].map((key) => key.textContent ?? '').join('|') }))
+    bodyOk = before.mode === 'first' && before.visible === true && before.hint && after.mode === 'third' && after.visible === true && /(^|\W)V(\W|$)/.test(after.help)
     console.log(`${bodyOk ? 'PASS' : 'FAIL'}  the player body: drawn in first person and after V, hint on the HUD and in the log`, JSON.stringify({ before, after: { mode: after.mode, visible: after.visible } }))
 
 
