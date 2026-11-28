@@ -1,5 +1,16 @@
 # @adatechnology/game-vehicles-three
 
+## 0.14.5
+
+### Patch Changes
+
+- Updated dependencies [03afe1d]
+- Updated dependencies [58ea189]
+  - @adatechnology/game-physics@0.11.0
+  - @adatechnology/game-vehicles@0.8.3
+  - @adatechnology/game-vehicles-driving@0.3.6
+  - @adatechnology/game-vehicles-proving@0.4.6
+
 ## 0.14.4
 
 ### Patch Changes

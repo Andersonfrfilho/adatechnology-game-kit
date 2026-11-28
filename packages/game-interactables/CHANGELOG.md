@@ -1,5 +1,12 @@
 # @adatechnology/game-interactables
 
+## 0.6.10
+
+### Patch Changes
+
+- Updated dependencies [03afe1d]
+  - @adatechnology/game-physics@0.11.0
+
 ## 0.6.9
 
 ### Patch Changes

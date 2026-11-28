@@ -1,5 +1,18 @@
 # @adatechnology/game-physics-jolt
 
+## 0.7.5
+
+### Patch Changes
+
+- 03afe1d: O destroço grande de uma quebra (20 cm ou mais, e as barras de uma armadura) passa a ser movido por um corpo rígido do motor, na camada nova `rubble`, que
+  encontra o mundo fixo e outro `rubble` e mais nada. A tábua quebrada cai, apoia e deita como toda peça; a física leve do `FragmentSystem` fica só com a lasca.
+  O pedaço que nasce dentro de um sólido fixo ou encostado no pedaço ao lado atravessa aquilo até sair. `DestructionRenderer.pieces()` não devolve esses corpos.
+  `FragmentSystemOptions.rigid` (`RigidDebris`) é a porta; sem ela o `FragmentSystem` se comporta como antes.
+  O golpe de um destroço num sólido fixo não vira dano (`ImpactReaderOptions.ignores`, novo em `game-physics`), e ele não entra na explosão, no fluxo aleatório nem
+  no orçamento das peças.
+- Updated dependencies [03afe1d]
+  - @adatechnology/game-physics@0.11.0
+
 ## 0.7.4
 
 ### Patch Changes

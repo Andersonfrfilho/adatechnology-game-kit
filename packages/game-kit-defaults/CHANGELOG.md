@@ -1,5 +1,17 @@
 # @adatechnology/game-kit-defaults
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [03afe1d]
+- Updated dependencies [58ea189]
+  - @adatechnology/game-physics@0.11.0
+  - @adatechnology/game-physics-jolt@0.7.5
+  - @adatechnology/game-destruction-three@1.2.0
+  - @adatechnology/game-vehicles@0.8.3
+  - @adatechnology/game-crowd@0.8.8
+
 ## 1.0.2
 
 ### Patch Changes
