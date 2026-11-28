@@ -4,15 +4,18 @@ import * as THREE from 'three'
 
 import { makeRoom, stubRenderer } from './helpers'
 
-/** The stub renderer plus what the program warm-up calls, with the parallel compile three r158+ has. */
+/** The stub renderer plus what the program warm-up calls, with the parallel compile three r158+ has (`compileAsync` only marks it: the link is `compile` and the kit's own wait). */
 function warmableRenderer() {
   const order: string[] = []
   const renderer = Object.assign(stubRenderer(), {
     toneMapping: THREE.NoToneMapping,
     outputColorSpace: THREE.SRGBColorSpace,
     debug: { checkShaderErrors: true },
-    compile: vi.fn(() => new Set()),
-    compileAsync: vi.fn(async () => void order.push('compileAsync')),
+    compile: vi.fn(() => {
+      order.push('compile')
+      return new Set()
+    }),
+    compileAsync: vi.fn(),
     render: vi.fn(() => void order.push('render')),
     setRenderTarget: vi.fn(),
     initTexture: vi.fn(),
@@ -28,9 +31,9 @@ describe('room.warmUpAsync', () => {
     const room = makeRoom({ renderer })
     try {
       await room.warmUpAsync()
-      expect(order[0]).toBe('compileAsync')
-      expect(order.filter((step) => step === 'compileAsync').length).toBeGreaterThan(0)
-      expect(order.indexOf('render')).toBeGreaterThan(order.indexOf('compileAsync'))
+      expect(order[0]).toBe('compile')
+      expect(order.indexOf('render')).toBeGreaterThan(order.indexOf('compile'))
+      expect((renderer as unknown as { compileAsync: ReturnType<typeof vi.fn> }).compileAsync).not.toHaveBeenCalled()
       expect((renderer as unknown as { debug: { checkShaderErrors: boolean } }).debug.checkShaderErrors).toBe(false)
     } finally {
       room.dispose()

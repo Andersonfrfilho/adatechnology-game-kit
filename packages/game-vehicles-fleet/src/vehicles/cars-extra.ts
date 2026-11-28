@@ -2992,7 +2992,7 @@ export function installCarsExtra(fx: FleetContext): void {
             frameR: 0.009,
           })
           const e = K.grid(1, 0, { z1: 0.1, y0: 0.64, y1: 0.72, du: 0.03, dv: 0.03 }).at(0.5, 0.67)
-          kit.emblem(c, e.p.x + 0.025, 0.67, 0, 0.045)
+          kit.emblem(c, e.p.x + 0.018, 0.67, 0, 0.045) // the badge is this sedan's foremost point: 7 mm back, as much as its layers grew (the length the team measured)
           /* rubber strip on the chrome bumper */
           const bg = c.meta.frontBumper.userData.grid
           c.deform.push(K.skin(bg, MT.rubber, { u0: 0.02, u1: 0.98, yb: 0.37, yt: 0.405, off: 0.02, nv: 1 }))

@@ -11,7 +11,7 @@ type WheelOptions = Parameters<BuildContext['wheel']>[4] & { track?: number }
 /** A wheel of `kit.car`: [x, radius, width, options]. */
 export type CarWheel = readonly [number, number, number, WheelOptions?]
 type LampSpec = { style?: string; w?: number; h?: number; y?: number; in?: number; yaw?: number; dx?: number; mat?: Material; wrap?: number }
-type GrilleSpec = { style?: string; w?: number; h?: number; y?: number; emblem?: boolean }
+type GrilleSpec = { style?: string; w?: number; h?: number; y?: number; emblem?: boolean; emblemBack?: number }
 /** The spec of `kit.car` (see the comment above it). */
 export type CarSpec = {
   W: number
@@ -339,7 +339,7 @@ export function installCar(kit: Kit) {
       const gr = Object.assign({ style: 'bars', w: W * 0.44, h: Math.max(0.08, hy - bumperY - 0.12) }, s.grille || {})
       const gy = gr.y || (bumperY + hy) / 2 + 0.02
       const gx = I.profX(it, gy, true)
-      /* 2 mm ahead of where the shell's front bulge reaches, never on its plane (CLAUDE.md §13) */ kit.grille(c, { style: gr.style, x: gx + 0.027, y: gy, w: gr.w, h: gr.h, col: s.col, emblem: gr.emblem })
+      /* 2 mm ahead of where the shell's front bulge reaches, never on its plane (CLAUDE.md §13) */ kit.grille(c, { style: gr.style, x: gx + 0.027, y: gy, w: gr.w, h: gr.h, col: s.col, emblem: gr.emblem, emblemBack: gr.emblemBack })
     } else kit.emblem(c, I.profX(it, hy + 0.02, true) + 0.055, hy + 0.02, 0, 0.04)
     const tl = Object.assign({ style: 'wrap', w: s.tailW || 0.3, h: s.tailH || 0.14, in: 0.05 }, s.tl || {})
     const ty = tl.y || s.tailLightY || s.tailY - 0.05

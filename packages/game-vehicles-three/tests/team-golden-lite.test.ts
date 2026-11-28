@@ -50,7 +50,7 @@ const entries = Object.entries(golden.vehicles as unknown as Record<string, Gold
 
 // Owner decision (2026-11-12, CLAUDE.md §13): a part drawn flush with another z-fights, so it now sits 1-3 mm off it or stops where the other begins (the spokes of a wheel, one behind the other).
 // The triangles, draw calls, size, damageable boxes and the vertex and index count of every class stay the page's; only the positions of the flush parts moved, so the vertex hash differs.
-const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['hatch', 'seda', 'picape', 'suv', 'van', 'leopardo', 'moto', 'trator', 'lancha', 'heli'])
+const Z_FIGHTING_FIXES: ReadonlySet<string> = new Set(['hatch', 'seda', 'picape', 'suv', 'van', 'leopardo', 'moto', 'trator', 'lancha', 'heli', 'onibus'])
 const withoutHash = (classes: Record<string, unknown>): Record<string, unknown> => Object.fromEntries(Object.entries(classes).map(([cls, value]) => [cls, { ...(value as object), hash: undefined }]))
 
 describe('team golden: Frota Leve, light and high quality', () => {

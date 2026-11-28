@@ -16,8 +16,8 @@
   },
   "apc_6x6": {
     "above": 15644,
-    "below": 14410,
-    "side": 9323
+    "below": 14415,
+    "side": 9326
   },
   "armored_car_6x6": {
     "above": 10189,
@@ -25,9 +25,9 @@
     "side": 8297
   },
   "armored_truck": {
-    "above": 19770,
-    "below": 31444,
-    "side": 12054
+    "above": 19835,
+    "below": 31526,
+    "side": 12100
   },
   "attack_helicopter": {
     "above": 38430,
@@ -56,21 +56,21 @@
   },
   "boxy_hatch": {
     "above": 4427,
-    "below": 5725,
+    "below": 5740,
     "side": 2333
   },
   "cargo_van": {
-    "above": 4455,
+    "above": 4456,
     "below": 11383,
     "side": 4328
   },
   "city_bus": {
-    "above": 9540,
-    "below": 22159,
-    "side": 6009
+    "above": 9586,
+    "below": 22209,
+    "side": 6042
   },
   "classic_six_sedan": {
-    "above": 811,
+    "above": 812,
     "below": 7283,
     "side": 1437
   },
@@ -80,19 +80,19 @@
     "side": 964
   },
   "compact_hatch": {
-    "above": 3500,
-    "below": 7392,
-    "side": 2222
+    "above": 3504,
+    "below": 7413,
+    "side": 2224
   },
   "compact_pickup": {
     "above": 5047,
     "below": 6748,
-    "side": 2770
+    "side": 2778
   },
   "compact_suv": {
-    "above": 3421,
-    "below": 6853,
-    "side": 2134
+    "above": 3424,
+    "below": 6921,
+    "side": 2143
   },
   "crop_duster": {
     "above": 6439,
@@ -107,22 +107,22 @@
   "cruiser": {
     "above": 1576,
     "below": 1820,
-    "side": 1337
+    "side": 1340
   },
   "delivery_bike": {
-    "above": 1393,
-    "below": 1550,
-    "side": 1089
+    "above": 1397,
+    "below": 1551,
+    "side": 1092
   },
   "electric_hatch": {
-    "above": 2736,
-    "below": 6496,
-    "side": 1902
+    "above": 2744,
+    "below": 6519,
+    "side": 1909
   },
   "entry_hatch": {
-    "above": 2318,
-    "below": 5648,
-    "side": 1690
+    "above": 2331,
+    "below": 5846,
+    "side": 1756
   },
   "family_hatch": {
     "above": 3566,
@@ -161,8 +161,8 @@
   },
   "large_suv": {
     "above": 9955,
-    "below": 11850,
-    "side": 3969
+    "below": 11879,
+    "side": 3972
   },
   "light_4x4": {
     "above": 4448,
@@ -180,12 +180,12 @@
     "side": 9819
   },
   "midsize_pickup": {
-    "above": 6627,
+    "above": 6634,
     "below": 10936,
     "side": 3303
   },
   "midsize_sedan": {
-    "above": 3012,
+    "above": 3015,
     "below": 6071,
     "side": 2106
   },
@@ -201,7 +201,7 @@
   },
   "naked_bike": {
     "above": 1021,
-    "below": 1074,
+    "below": 1076,
     "side": 912
   },
   "patrol_boat": {
@@ -245,9 +245,9 @@
     "side": 6422
   },
   "rideshare_hatch": {
-    "above": 3782,
-    "below": 5926,
-    "side": 2606
+    "above": 3794,
+    "below": 5936,
+    "side": 2613
   },
   "river_skiff": {
     "above": 1320,
@@ -260,9 +260,9 @@
     "side": 40840
   },
   "school_bus": {
-    "above": 13890,
-    "below": 22078,
-    "side": 7708
+    "above": 13896,
+    "below": 22080,
+    "side": 7711
   },
   "scooter": {
     "above": 1323,
@@ -295,19 +295,19 @@
     "side": 5543
   },
   "tanker_truck": {
-    "above": 31935,
-    "below": 37380,
-    "side": 20668
+    "above": 31962,
+    "below": 37398,
+    "side": 20686
   },
   "taxi": {
     "above": 6460,
-    "below": 7825,
+    "below": 7826,
     "side": 2882
   },
   "tractor": {
     "above": 5842,
-    "below": 12230,
-    "side": 6650
+    "below": 12232,
+    "side": 6651
   },
   "trail_bike": {
     "above": 1776,
@@ -325,7 +325,7 @@
     "side": 14934
   },
   "troop_truck": {
-    "above": 13290,
+    "above": 13291,
     "below": 34110,
     "side": 13350
   },
@@ -335,13 +335,13 @@
     "side": 4092
   },
   "turbo_hatch": {
-    "above": 4254,
-    "below": 6163,
-    "side": 2781
+    "above": 4259,
+    "below": 6164,
+    "side": 2782
   },
   "v8_coupe": {
-    "above": 4534,
-    "below": 10547,
-    "side": 3261
+    "above": 4551,
+    "below": 10599,
+    "side": 3276
   }
 }
