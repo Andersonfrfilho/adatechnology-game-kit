@@ -41,9 +41,9 @@ const box = await room(`const s = r.spawned().find((o) => o.itemId === 'sedan');
   return { min, max }`).catch((e) => ({ error: String(e) }))
 console.log('car box', JSON.stringify(box))
 const weapons = (process.env.WEAPONS ?? 'glock_17,colt_m4a1,shotgun_pump_12,barrett_m82a1').split(',').filter((id) => id && id !== 'none')
-/** @param {string} weapon @param {number[]} from @param {number[]} target @param {string} [midShot] a print a few frames after the round lands */
 /** What went wrong: a weapon that would not fire, a round that left nothing on the car, a door that did not open. @type {string[]} */
 const failures = []
+/** @param {string} weapon @param {number[]} from @param {number[]} target @param {string} [midShot] a print a few frames after the round lands */
 async function fire(weapon, from, target, midShot) {
   await room('r.setTool(a)', weapon)
   for (let tries = 0; tries < 160; tries++) {
