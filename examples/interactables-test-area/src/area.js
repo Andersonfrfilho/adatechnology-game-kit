@@ -44,6 +44,8 @@ const DEFAULT_MAX_PIECES = 18
 const GROUND_TOUCH = 0.02
 /** Side of the blocks a reinforced concrete piece comes off in (`PartSpec.units`), metres: one bay of its cage, as the house's members. */
 const CAGE_UNIT = 0.1
+/** Thinnest concrete piece that holds a cage (two covers and a bar): the pole's rings, a liner or a cap are concrete without steel. */
+const CAGE_MIN = 0.1
 const WOOD_FAMILY = new Set(['wood_soft', 'wood_hard', 'mdf', 'plywood'])
 const METAL_FAMILY = new Set(['steel', 'aluminium', 'cast_iron', 'copper'])
 const UPHOLSTERED = new Set(['sofa', 'armchair', 'bed_double', 'bed_single'])
@@ -474,10 +476,10 @@ function analyse(hh, type, GT) {
     const extra = {}
     if (planted && !pc.mover && pc.box[1] <= GROUND_TOUCH) extra.anchored = true
     // a reinforced concrete body (a concrete pole): each concrete piece is a column with its cage, so a hit chips the concrete off in blocks, the bars show and bend under the load
-    if (cage && !pc.mover && pc.material === body.material) {
-      const thin = Math.min(pc.box[3] - pc.box[0], pc.box[4] - pc.box[1], pc.box[5] - pc.box[2])
+    const side = Math.min(pc.box[3] - pc.box[0], pc.box[4] - pc.box[1], pc.box[5] - pc.box[2])
+    if (cage && !pc.mover && pc.material === body.material && side >= CAGE_MIN) {
       extra.reinforcement = { material: cage.material, spacing: cage.spacing, diameter: cage.diameter }
-      extra.units = { size: [CAGE_UNIT, CAGE_UNIT, round(Math.max(thin, 0.01))], bond: 'stack', mortar: pc.material }
+      extra.units = { size: [CAGE_UNIT, CAGE_UNIT, round(side)], bond: 'stack', mortar: pc.material }
       extra.structure = { role: 'column' }
     }
     const own = pc.mover ? pc.tag : null
