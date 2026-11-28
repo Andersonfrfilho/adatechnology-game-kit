@@ -698,7 +698,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     floorAt: terrain.footAt,
     speedAt: terrain.walkFactorAt,
     start: arena.playerStart,
-    crouchKeys: options.crouch?.keys, ...(kit.physics.services ? { engine: { services: kit.physics.services, scheduler, stepHeight: STEP_UP, afterPresent: () => placeEye() } } : {}),
+    crouchKeys: options.crouch?.keys, afterView: () => placeEye(), ...(kit.physics.services ? { engine: { services: kit.physics.services, scheduler, stepHeight: STEP_UP } } : {}),
     onSlam: (event) => slamPlayer(event),
     onFeet: (event) => {
       const at = player.position
