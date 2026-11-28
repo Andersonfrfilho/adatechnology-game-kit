@@ -97,6 +97,7 @@ export function installLights(kit: Kit) {
   kit.halo = halo
   function lampKit(g: Object3D, d: number, inner: Object3D[], lens: Object3D[], lensMat: MeshStandardMaterial, refl?: MeshStandardMaterial) {
     refl = refl || MATERIALS.reflector
+    let nProj = 0
     return {
       housing: function (w: number, h: number, y?: number, z?: number, geoFn?: (geo: BufferGeometry) => void) {
         const geo = roundedBoxGeometry(d, h, w, Math.min(0.03, h * 0.4))
@@ -117,7 +118,8 @@ export function installLights(kit: Kit) {
         return m
       },
       proj: function (y: number, z: number, r: number, mat: MeshStandardMaterial) {
-        const bz = gm(g, new THREE.CylinderGeometry(r * 1.3, r * 1.45, 0.03, 18), refl!, d / 2 - 0.03, y, z)
+        /* two projectors whose bezels overlap: each later one sits 2 mm further back, never with a cap on the other's plane (CLAUDE.md §13) */
+        const bz = gm(g, new THREE.CylinderGeometry(r * 1.3, r * 1.45, 0.03, 18), refl!, d / 2 - 0.03 - nProj++ * 0.002, y, z)
         bz.rotation.z = -PI / 2
         if (refl !== MATERIALS.reflector) inner.push(bz)
         const e = gm(g, new THREE.SphereGeometry(r, 14, 10), mat, d / 2 - 0.022, y, z)
@@ -300,10 +302,11 @@ export function installLights(kit: Kit) {
     ;(parent || c.vehicle).add(g)
     const d1 = gm(g, new THREE.CylinderGeometry(r, r, 0.012, 24), MATERIALS.chrome)
     d1.rotation.z = PI / 2
-    const d2 = gm(g, new THREE.CylinderGeometry(r * 0.78, r * 0.78, 0.014, 24), MATERIALS.trim)
+    /* each layer of the badge 3 mm proud of the one under it on both faces (1 mm was inside the fight, CLAUDE.md §13) */
+    const d2 = gm(g, new THREE.CylinderGeometry(r * 0.78, r * 0.78, 0.018, 24), MATERIALS.trim)
     d2.rotation.z = PI / 2
-    gm(g, roundedBoxGeometry(0.016, r * 0.32, r * 1.4, 0.005), MATERIALS.chrome)
-    gm(g, roundedBoxGeometry(0.016, r * 1.0, r * 0.22, 0.005), MATERIALS.chrome, 0, 0, r * 0.25).rotation.x = 0.5
+    gm(g, roundedBoxGeometry(0.024, r * 0.32, r * 1.4, 0.005), MATERIALS.chrome)
+    gm(g, roundedBoxGeometry(0.03, r * 1.0, r * 0.22, 0.005), MATERIALS.chrome, 0, 0, r * 0.25).rotation.x = 0.5
     return g
   }
   /* Grille. o: { style: bars|mesh|big|seven|closed|truck, x, y, z, w, h, col, emblem } */

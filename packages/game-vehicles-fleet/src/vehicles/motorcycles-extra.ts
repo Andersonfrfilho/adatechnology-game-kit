@@ -290,8 +290,8 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
     return b
   }
   function plateMoto(c: VehicleContext, x: number, y: number, txt?: string) {
-    c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.009, y, 0)
-    c.text(txt || kit.config.plate.slice(0, 5), 0.2, 0.135, x - 0.003, y, 0, '-x', {
+    c.roundBox(0.02, 0.15, 0.2, 0.008, MT.trim, x + 0.007, y, 0) // 3 mm behind the tail's face, not 1 (CLAUDE.md §13)
+    c.text(txt || kit.config.plate.slice(0, 5), 0.2, 0.135, x - 0.005, y, 0, '-x', {
       w: 300,
       h: 220,
       bg: '#f2f2ee',
@@ -430,8 +430,9 @@ export function installMotorcyclesExtra(fx: FleetContext): void {
       g.add(d)
       for (let q = 0; q < 12; q++) {
         const a2 = (q / 12) * PI * 2,
-          sl = new THREE.Mesh(G.roundedBox(rimR * 0.42, 0.016, 0.006, 0.005), o.slot || CM('#1c1e21', { metalness: 0.5, roughness: 0.4 }))
-        sl.position.set(Math.cos(a2) * rimR * 0.62, Math.sin(a2) * rimR * 0.62, s * (hw * 0.72 + 0.0105))
+          sl = new THREE.Mesh(G.roundedBox(rimR * 0.42, 0.016, 0.006, 0.002), o.slot || CM('#1c1e21', { metalness: 0.5, roughness: 0.4 }))
+        /* the slot stands on the disc's face and 6 mm off it (a rounding as deep as the slot flattened it onto the face, CLAUDE.md §13) */
+        sl.position.set(Math.cos(a2) * rimR * 0.62, Math.sin(a2) * rimR * 0.62, s * (hw * 0.72 + 0.013))
         sl.rotation.z = a2
         g.add(sl)
       }
