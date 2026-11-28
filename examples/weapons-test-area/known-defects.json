@@ -138,23 +138,5 @@
     "value": "no item weapon_flamethrower",
     "found": "2026-11-22",
     "evidence": "room.arsenal.weapons has the id; room.measure('weapon_<id>') is null: no catalogue item. These ids are the generic or bare-hand entries (pistol_9mm..., fists, hand, kick, shove) and flamethrower (m2_flamethrower has an item)"
-  },
-  {
-    "id": "weapon_machete/strike-first",
-    "what": "use-not-animated",
-    "value": {
-      "pixelShare": 0.001
-    },
-    "found": "2026-11-22",
-    "evidence": "machete, first person, fixed clock, 1 warm-up step after the look: room.use returned 'ok' at all five samples (0, 6, 12, 18 and 30 steps after the use); the share of pixels that differ from the first frame (the first sample, taken after the warm-up) is [0, 0.001, 0.001, 0.001] for the four later samples, all under the 0.003 limit. This rests on the pixels of this one camera (the game camera) and nothing else: the room's hand targets were not used as a signal. The molotov throw in the same camera is the control of the run: recorded as animated (`animated: true` in shots/index.json), which is 0.003 of the frame or more. The samples stop 30 steps (0.5 s) after the use, so a swing that starts later is outside what was looked at. Whether the swing is drawn in a way this camera cannot see is not known"
-  },
-  {
-    "id": "weapon_hammer/strike-first",
-    "what": "use-not-animated",
-    "value": {
-      "pixelShare": 0.001
-    },
-    "found": "2026-11-22",
-    "evidence": "hammer, first person, fixed clock, 1 warm-up step after the look: room.use returned 'ok' at all five samples (0, 6, 12, 18 and 30 steps after the use); the share of pixels that differ from the first frame (the first sample, taken after the warm-up) is [0, 0.001, 0.001, 0.001] for the four later samples, all under the 0.003 limit. This rests on the pixels of this one camera (the game camera) and nothing else: the room's hand targets were not used as a signal. The molotov throw in the same camera is the control of the run: recorded as animated (`animated: true` in shots/index.json), which is 0.003 of the frame or more. The samples stop 30 steps (0.5 s) after the use, so a swing that starts later is outside what was looked at. Whether the swing is drawn in a way this camera cannot see is not known"
   }
 ]

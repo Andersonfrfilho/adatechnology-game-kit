@@ -4,8 +4,8 @@
 // The room's physics is Jolt (`window.__roomPhysics`, made by the Jolt boot of build.mjs), and Jolt's wasm loads asynchronously: the room cannot be made
 // in the first synchronous script of the page anymore. So the bare room carries its bundle as inert text, and its boot script loads Jolt, runs the room
 // bundle (which sets `window.__testRoom`) and then runs, in document order, every area script appended with `withArea` (inert text as well). An area's
-// boot expression still reads `window.__testRoom` as a room that exists. `window.__testRoomReady` is the promise of that room, for a page that drives
-// its own loading screen (the floorplan area).
+// boot expression still reads `window.__testRoom` as a room that exists. `window.__testRoomReady` is the promise of that room once its shaders are
+// warm (`window.__testRoomWarm`), for a page that drives its own loading screen (the floorplan area) and for the checks that photograph it.
 
 /** The attribute that marks an area script of the bare room: the boot runs these after the room exists. */
 export const AREA_SCRIPT_ATTRIBUTE = 'data-room-area'
@@ -28,7 +28,13 @@ export const BARE_ROOM_BOOT = `(function () {
     if (!window.__testRoom) throw new Error('the room bundle did not make window.__testRoom')
     var areas = document.querySelectorAll('script[type="text/plain"][${AREA_SCRIPT_ATTRIBUTE}]')
     for (var i = 0; i < areas.length; i++) run(areas[i].textContent)
-    return window.__testRoom
+    // the shaders of the room and of the areas are linked over several tasks, and nothing is drawn meanwhile (game-kit-defaults' render): a check that
+    // photographs the room waits for __testRoomWarm, or its first picture is the last frame drawn before the warm-up (an empty floor)
+    var room = window.__testRoom
+    return Promise.resolve(typeof room.warmUpAsync === 'function' ? room.warmUpAsync() : undefined).then(function () {
+      window.__testRoomWarm = true
+      return room
+    })
   }).catch(function (error) {
     window.__testRoomError = String(error && error.message ? error.message : error)
     console.error('test room: ' + window.__testRoomError)
