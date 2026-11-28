@@ -1,0 +1,299 @@
+{
+  "$comment": "Hits of the size-blind-motion rule (motion.mjs): an angular-velocity write, pose slerp or spin constant that does not cite a half-measure, reach or inertia (regra 12; docs/analise-arquitetura-e-validacao-2026-11.md 10.2, listed on ccfbd5a04). `match` is the start of the line, `anchor` the enclosing function or constant, `risk` the weight in the analysis. Only shrinks: fix the code and take the entry out; a new entry is the owner's decision.",
+  "pending": [
+    {
+      "file": "packages/game-characters-three/src/first-person/arms.ts",
+      "anchor": "mixPose",
+      "match": "out.q.copy(a.q).slerp(b.q, k)",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-characters-three/src/wounds/flying.ts",
+      "anchor": "<module>",
+      "match": "const BOUNCE_SPIN = 0.4",
+      "risk": "low",
+      "reference": "10.1 #16"
+    },
+    {
+      "file": "packages/game-crowd/src/physics/thrown.ts",
+      "anchor": "<module>",
+      "match": "const MAX_SPIN = 8",
+      "risk": "low",
+      "reference": "10.1 #17"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "<module>",
+      "match": "const MASONRY_TOPPLE = 0.4",
+      "risk": "medium",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "toppled",
+      "match": "return { ...f, velocity: [f.velocity[0] + nx * k, f.velocity[1], f.velocity[2] + nz * k], angularVel",
+      "risk": "medium",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "faceArea",
+      "match": "velocity: [dv[0] * k, dv[1] * k + 0.5 * rnd(), dv[2] * k], angularVelocity: [(rnd() - 0.5) * 8, (rnd",
+      "risk": "high",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "plasterFlakes",
+      "match": "velocity: [out0[0] * k, out0[1] * k + 0.5 * rnd(), out0[2] * k], angularVelocity: [(rnd() - 0.5) * 1",
+      "risk": "high",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "craterFragments",
+      "match": "velocity: [vdir[0] * k, vdir[1] * k + 0.5 * rnd(), vdir[2] * k], angularVelocity: [(rnd() - 0.5) * 2",
+      "risk": "high",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "failPart",
+      "match": "angularVelocity: [(rnd() - 0.5) * 12, (rnd() - 0.5) * 12, (rnd() - 0.5) * 12],",
+      "risk": "high",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction/src/world.ts",
+      "anchor": "tearAt",
+      "match": "angularVelocity: [(rnd() - 0.5) * 30, (rnd() - 0.5) * 30, (rnd() - 0.5) * 30], mass,",
+      "risk": "high",
+      "reference": "10.1 #3; 10.2 (world.ts:4401 row)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/engine-pieces.ts",
+      "anchor": "<module>",
+      "match": "const STILL_SPIN = 0.45",
+      "risk": "medium",
+      "reference": "10.1 #5; 10.2 (engine-pieces.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/engine-pieces.ts",
+      "anchor": "<module>",
+      "match": "const TOPPLE = 3",
+      "risk": "high",
+      "reference": "10.1 #5; 10.2 (engine-pieces.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/engine-pieces.ts",
+      "anchor": "<module>",
+      "match": "const PUSH_SPIN = 0.3",
+      "risk": "medium",
+      "reference": "10.1 #5; 10.2 (engine-pieces.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "<module>",
+      "match": "const SHEET_SWAY = 3",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "<module>",
+      "match": "const TIP_TURN = 3",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "match": "f.ang.x += (this.rng() - 0.5) * 2 * tumble",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "match": "f.ang.z += (this.rng() - 0.5) * 2 * tumble",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "match": "f.ang.multiplyScalar(Math.exp(-6 * dt))",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "match": "f.ang.multiplyScalar(Math.exp(-0.15 * dt))",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "match": "f.ang.x += tip.z * TIP_TURN * dt * 10",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "match": "f.ang.z -= tip.x * TIP_TURN * dt * 10",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "flutter",
+      "match": "f.ang.x += (this.rng() - 0.5) * SHEET_SWAY * 4 * dt",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "flutter",
+      "match": "f.ang.z += (this.rng() - 0.5) * SHEET_SWAY * 4 * dt",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "settle",
+      "match": "mesh.quaternion.slerp(this.q, clamp(dt * 7, 0, 1))",
+      "risk": "high",
+      "reference": "10.1 #1, #2; 10.2 (fragments.ts rows)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/pieces.ts",
+      "anchor": "<module>",
+      "match": "const STILL_SPIN = 0.45",
+      "risk": "medium",
+      "reference": "10.1 #6; 10.2 (pieces.ts row)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/renderer.ts",
+      "anchor": "<module>",
+      "match": "const EDGE_NUDGE = 1",
+      "risk": "high",
+      "reference": "10.1 #4; 10.2 (EDGE_NUDGE row)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/renderer.ts",
+      "anchor": "<module>",
+      "match": "const HINGE_STILL_SPIN = 0.5",
+      "risk": "medium",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-destruction-three/src/renderer.ts",
+      "anchor": "shove",
+      "match": "body.angularVelocity[i] = (body.angularVelocity[i] as number) + (spin[i] as number)",
+      "risk": "high",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-destruction-three/src/renderer.ts",
+      "anchor": "dropCage",
+      "match": "velocity: [(rnd() - 0.5) * 0.4, 0, (rnd() - 0.5) * 0.4], angularVelocity: [(rnd() - 0.5) * 1.5, (rnd",
+      "risk": "medium",
+      "reference": "10.1 #7; 10.2"
+    },
+    {
+      "file": "packages/game-destruction-three/src/renderer.ts",
+      "anchor": "feetOf",
+      "match": "loose.angularVelocity[0] += away.z * EDGE_NUDGE",
+      "risk": "high",
+      "reference": "10.1 #4; 10.2 (EDGE_NUDGE row)"
+    },
+    {
+      "file": "packages/game-destruction-three/src/renderer.ts",
+      "anchor": "feetOf",
+      "match": "loose.angularVelocity[2] -= away.x * EDGE_NUDGE",
+      "risk": "high",
+      "reference": "10.1 #4; 10.2 (EDGE_NUDGE row)"
+    },
+    {
+      "file": "packages/game-interactables/src/engine-leaf.ts",
+      "anchor": "<module>",
+      "match": "const AIM_GAIN = 8",
+      "risk": "medium",
+      "reference": "10.2 (last row)"
+    },
+    {
+      "file": "packages/game-items-three/src/test-area/area.ts",
+      "anchor": "<module>",
+      "match": "const SPIN = 0.6",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-test-room/src/room.ts",
+      "anchor": "followHeld",
+      "match": "root.quaternion.slerp(targetQ, placed ? 1 : Math.min(1, k * 0.9))",
+      "risk": "medium",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-test-room/src/room.ts",
+      "anchor": "floatPiece",
+      "match": "piece.angularVelocity = [piece.angularVelocity[0] * keep, piece.angularVelocity[1] * keep, piece.ang",
+      "risk": "medium",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-test-room/src/thrown-body.ts",
+      "anchor": "<module>",
+      "match": "const THROW_SPIN = 8",
+      "risk": "medium",
+      "reference": "10.2 (last row)"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/debris.ts",
+      "anchor": "<module>",
+      "match": "const DEFAULT_SPIN = 12",
+      "risk": "medium",
+      "reference": "10.1 #10; 10.2"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/engine.ts",
+      "anchor": "<module>",
+      "match": "const FIRE_FLICKER_SWAY = 0.25",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-weapons-three/src/box-fx.ts",
+      "anchor": "stow",
+      "match": "hand.quaternion.slerpQuaternions(stowFrom.quaternion, hand.quaternion.clone(), k)",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-weapons-three/src/fx/hand-hold.ts",
+      "anchor": "blendPose",
+      "match": "const q = new THREE.Quaternion(...a.quaternion).slerp(new THREE.Quaternion(...b.quaternion), k)",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-weapons-three/src/fx/holstered.ts",
+      "anchor": "step",
+      "match": "place(entry, { position: motion.start.position.clone().lerp(target.position, k), quaternion: motion.",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    },
+    {
+      "file": "packages/game-weapons-three/src/fx/viewmodel.ts",
+      "anchor": "stow",
+      "match": "hand.quaternion.slerpQuaternions(stowFrom.quaternion, hand.quaternion.clone(), k)",
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.2"
+    }
+  ]
+}

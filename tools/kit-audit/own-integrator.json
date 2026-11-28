@@ -1,0 +1,278 @@
+{
+  "$comment": "Integrators of the own-integrator rule (motion.mjs): code outside game-physics that advances a position, angle or speed by a velocity, spin, acceleration or gravity times a time step. `anchor` is the enclosing function, `lines` how many such lines it holds (docs/analise-arquitetura-e-validacao-2026-11.md 10.1, found on ccfbd5a04). Only shrinks: hand the body to the engine and take the entry out; a new integrator is the owner's decision.",
+  "pending": [
+    {
+      "file": "packages/game-characters-three/src/instanced/flying-limbs.ts",
+      "anchor": "update",
+      "lines": 5,
+      "risk": "medium",
+      "reference": "10.1 #16"
+    },
+    {
+      "file": "packages/game-characters-three/src/wounds/flying.ts",
+      "anchor": "update",
+      "lines": 2,
+      "risk": "medium",
+      "reference": "10.1 #16"
+    },
+    {
+      "file": "packages/game-characters-three/src/wounds/pendulum.ts",
+      "anchor": "stepPendulum",
+      "lines": 1,
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.1"
+    },
+    {
+      "file": "packages/game-contracts/src/blast-knock.ts",
+      "anchor": "stepKnock",
+      "lines": 1,
+      "risk": "low",
+      "reference": "10.1 #18"
+    },
+    {
+      "file": "packages/game-crowd/src/crowd.ts",
+      "anchor": "frame",
+      "lines": 2,
+      "risk": "medium",
+      "reference": "10.1 #17"
+    },
+    {
+      "file": "packages/game-destruction/src/wind.ts",
+      "anchor": "solveWallFrame",
+      "lines": 2,
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.1"
+    },
+    {
+      "file": "packages/game-destruction-three/src/fragments.ts",
+      "anchor": "step",
+      "lines": 2,
+      "risk": "high",
+      "reference": "10.1 #1"
+    },
+    {
+      "file": "packages/game-floorplan-three/src/destruction/world.ts",
+      "anchor": "owns",
+      "lines": 2,
+      "risk": "medium",
+      "reference": "10.1 #8"
+    },
+    {
+      "file": "packages/game-fluids/src/film/drops.ts",
+      "anchor": "update",
+      "lines": 1,
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.1"
+    },
+    {
+      "file": "packages/game-fluids/src/world.ts",
+      "anchor": "stepContainer",
+      "lines": 2,
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.1"
+    },
+    {
+      "file": "packages/game-interactables-three/src/effects.ts",
+      "anchor": "advance",
+      "lines": 4,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-terrain/src/debris.ts",
+      "anchor": "update",
+      "lines": 4,
+      "risk": "low",
+      "reference": "10.1 #22"
+    },
+    {
+      "file": "packages/game-test-room/src/explosives.ts",
+      "anchor": "flyBare",
+      "lines": 2,
+      "risk": "low",
+      "reference": "10.1 #14"
+    },
+    {
+      "file": "packages/game-test-room/src/own-locomotion.ts",
+      "anchor": "update",
+      "lines": 3,
+      "risk": "medium",
+      "reference": "10.1 (player locomotion, \"Nao abri\")"
+    },
+    {
+      "file": "packages/game-vehicles/src/explosion.ts",
+      "anchor": "tickBoom",
+      "lines": 4,
+      "risk": "medium",
+      "reference": "10.1 #15"
+    },
+    {
+      "file": "packages/game-vehicles/src/explosion.ts",
+      "anchor": "tickFlying",
+      "lines": 4,
+      "risk": "medium",
+      "reference": "10.1 #15"
+    },
+    {
+      "file": "packages/game-vehicles/src/particles.ts",
+      "anchor": "tickParticles",
+      "lines": 9,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vehicles-driving/src/arcade.ts",
+      "anchor": "step",
+      "lines": 1,
+      "risk": "medium",
+      "reference": "10.1 (vehicles-driving, \"Nao abri\")"
+    },
+    {
+      "file": "packages/game-vehicles-driving/src/semi/driver.ts",
+      "anchor": "substep",
+      "lines": 2,
+      "risk": "medium",
+      "reference": "10.1 (vehicles-driving, \"Nao abri\")"
+    },
+    {
+      "file": "packages/game-vfx/src/effects/behaviors/blocks.ts",
+      "anchor": "update",
+      "lines": 3,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/effects/behaviors/car.ts",
+      "anchor": "act",
+      "lines": 2,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/effects/behaviors/cylinder.ts",
+      "anchor": "act",
+      "lines": 1,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/pools/chunk-motion.ts",
+      "anchor": "updateChunks",
+      "lines": 4,
+      "risk": "medium",
+      "reference": "10.1 #9"
+    },
+    {
+      "file": "packages/game-vfx/src/pools/puffs.ts",
+      "anchor": "moveFree",
+      "lines": 4,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/pools/sparks.ts",
+      "anchor": "updateSparks",
+      "lines": 4,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/sprites/kind-pool.ts",
+      "anchor": "update",
+      "lines": 1,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/water/motion.ts",
+      "anchor": "moveDrop",
+      "lines": 3,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/water/motion.ts",
+      "anchor": "ageBubble",
+      "lines": 1,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/water/motion.ts",
+      "anchor": "ageMist",
+      "lines": 3,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/debris.ts",
+      "anchor": "move",
+      "lines": 4,
+      "risk": "medium",
+      "reference": "10.1 #10"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/engine.ts",
+      "anchor": "leaveDecal",
+      "lines": 1,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/meshes.ts",
+      "anchor": "update",
+      "lines": 7,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/meshes.ts",
+      "anchor": "ride",
+      "lines": 3,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/sprites.ts",
+      "anchor": "update",
+      "lines": 4,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-vfx/src/workshop/streaks.ts",
+      "anchor": "update",
+      "lines": 4,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-weapons-three/src/box-fx.ts",
+      "anchor": "stepBody",
+      "lines": 5,
+      "risk": "low",
+      "reference": "10.1 #13"
+    },
+    {
+      "file": "packages/game-weapons-three/src/fx/particles.ts",
+      "anchor": "update",
+      "lines": 5,
+      "risk": "low",
+      "reference": "10.1 #11"
+    },
+    {
+      "file": "packages/game-weapons-three/src/test-area/explosives-bench.ts",
+      "anchor": "stepShells",
+      "lines": 4,
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.1"
+    },
+    {
+      "file": "packages/game-weapons-three/src/test-area/showcase.ts",
+      "anchor": "show",
+      "lines": 1,
+      "risk": "low",
+      "reference": "found by the rule on ccfbd5a04; not in 10.1"
+    }
+  ]
+}
