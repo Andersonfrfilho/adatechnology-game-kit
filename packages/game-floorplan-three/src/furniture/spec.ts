@@ -1,5 +1,4 @@
 import { inferJoints } from '@adatechnology/game-destruction'
-import { structureFill } from './structure-fill.js'
 import { holdLooseGroups } from './hold-loose.js'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-contracts'
@@ -240,9 +239,6 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
     if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
     else if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
-    // what the block is built as: boards around air, a sheet around insulation, foam in a cover (its mass, not a solid block's)
-    const fill = structureFill(material, p.shape)
-    if (fill < 1) part.fill = Math.round(fill * 1e4) / 1e4
     if (p.rotation) part.rotation = p.rotation
     if (!LOOSE.has(material) && p.min[1] <= FLOOR_TOUCH) part.anchored = true
     // a book on a shelf is taken off it with one hand, and is called a book once it is off
