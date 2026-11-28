@@ -38,8 +38,5 @@ nasciam dentro de um sólido e nunca paravam. O #575 remendou o caso das caixas;
 
 ## Fora do escopo (dívida declarada)
 
-- Forma exata de cilindro, cone e esfera no motor: nesta spec cada primitiva redonda colide pela caixa orientada **dela** (a perna é uma caixa de 2r × h × 2r,
-  não a caixa em volta das quatro pernas). Forma redonda exata é a spec seguinte.
-- Casas (`game-floorplan-three`), veículos e destroços: seguem no caminho atual. As 14 peças do `hollow-catalogue.test.ts` (catálogo antigo de móveis do
-  floorplan) só saem quando esse construtor passar a entregar sólidos.
-- `difference`, `extrude`, `lathe`, `mesh`: entram como a caixa orientada da geometria delas, marcadas `fitted`.
+Paga em 2026-11-28 (`evidence.md`): cilindro colide como cilindro, curva como casco, peça só é redonda se o desenho a preenche, e as 14 peças do catálogo de
+móveis saíram da lista. Fica a guarda de ar para as casas.
