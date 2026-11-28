@@ -28,10 +28,12 @@ Para controle total: `createItems({ packs: [goodsPack, ...], remove, include })`
 | `GOODS_ARSENAL_RECORDS` | caixas de munição e armas como item, para `itemsFromArsenal` |
 | `createGoodsFindsProvider(catalog)`, `FLOORPLAN_POOL_KEYS`, `FLOORPLAN_PLACES`, `POOL_PLACES` | provedor de achados para `engine.registerFindsProvider` da planta: as categorias de móvel (`fridge`, `kitchen_cabinet`, `wardrobe`...) ligadas aos pools das casas, os lugares da planta (`shack`, `cabin`, `camp`...) ligados aos do catálogo; pool só em casa/apartamento/cabana |
 | `GOODS_PROVENANCE` | origem do item (time, household, tipos do visor, ids do jogo, de onde vêm o id e a medida) |
+| `goodsItemUse`, `createGoodsItemUse`, `drinkHydrationOf` | O uso na mão e o efeito de cada item (`ModuleItemUse`); a sede de uma bebida sai do volume, numa fonte só: `drink.thirst` por litro do líquido (`LIQUIDS` do `game-fluids`) × os litros de um uso (garrafa ou uma dose), igual ao líquido bebido do copo. `player.use(efeito)` do `game-player` aplica no corpo |
 | `GOODS_STRINGS`, `goodsText`, `pickGoodsLocale` | chaves `item.<id>`, `category.<id>`, `place.<id>`, `rarity.<id>`, `container.<id>`, `recipe.<id>` |
 
 ## Compõe com
 - `@adatechnology/game-items`: dependência; define os tipos e consome o pacote.
+- `@adatechnology/game-fluids`: dependência; a sede que cada líquido mata por litro.
 - `@adatechnology/game-interactables-household`: pega daqui os itens e os textos `item.*` (T3.1g).
 - `@adatechnology/game-items-three`: desenha por `size`; o `model` dos 23 itens modelados (`items.json`) é a chave do modelo dele.
 - `@adatechnology/game-floorplan` (por `createGoodsFindsProvider`): o que há nos móveis da casa.
