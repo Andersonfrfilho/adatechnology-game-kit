@@ -116,6 +116,8 @@ export type KitWorld<TRecord = unknown> = {
   /** The sun's shadow map and the renderer's pixel ratio for a quality level, on a renderer the host made. */
   setQuality(quality: KitWorldQuality): void
   warmUp(): void
+  /** The warm-up spread over tasks (`ProgramWarmup.warmUpAsync`): what a loading screen awaits so the page keeps answering while the driver links. */
+  warmUpAsync(): Promise<void>
   render: KitWorldRender['render']
   start: KitWorldRender['start']
   /** The display loop of `start` runs (false before it, after its stop, and where there are no display frames). */

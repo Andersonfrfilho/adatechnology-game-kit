@@ -188,7 +188,9 @@ const boot = `(function () {
     task.step(lang === 'en' ? 'Preparing the picture…' : 'Preparando a imagem…', 100)
     return paint()
   }).then(function () {
-    window.__bootRoom.warmUp()
+    // over several tasks: done in one, the browser showed its "page not responding" dialog while the programs linked
+    return window.__bootRoom.warmUpAsync()
+  }).then(function () {
     return paint()
   }).then(function () {
     window.__testRoom = window.__bootRoom

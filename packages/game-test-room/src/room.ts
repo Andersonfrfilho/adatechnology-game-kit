@@ -4960,6 +4960,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       audio?.warmUp()
       kit.warmUp()
     },
+    warmUpAsync: async () => {
+      audio?.warmUp()
+      await kit.warmUpAsync()
+    },
     animations: animationsOf,
     playAnimation,
     useLeaf: (objectId, part) => doors.useLeaf(objectId, part),
