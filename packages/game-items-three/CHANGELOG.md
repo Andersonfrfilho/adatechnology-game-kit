@@ -1,5 +1,27 @@
 # @adatechnology/game-items-three
 
+## 0.11.0
+
+### Minor Changes
+
+- a41cb89: Usar o item na mão e golpes por família.
+
+  - `game-items`: usos na mão sem líquido (`HAND_USES`, `createHandUse`): comer com a mão em mordidas, tomar remédio, aplicar curativo, usar sabonete; `game-contracts` ganha `ModuleItemUse` (`TestableItem.use`).
+  - `game-items-goods`: `goodsItemUse` diz o uso e o efeito de cada item pelo tipo e pelos efeitos do catálogo (higiene ganha `use_hygiene` e o efeito `wash`; álcool na ferida aplica, não bebe).
+  - `game-weapons`: famílias de golpe (`MELEE_FAMILIES`): faca corta e estoca em sequência, facão/machadinha/martelo cortam de cima, taco/cano/pé de cabra/machado giram com as duas mãos; `game-weapons-three` dá o movimento de cada uma (`FAMILY_MOTIONS`) e `game-characters-people` os clipes do corpo `knife_slash` e `knife_stab`.
+  - `game-characters-three`: o corpo leva à boca o que se come ou bebe (comer de lata incluído) e junta as duas mãos no sabonete e no curativo (`AvatarItemUsePose.body`).
+  - `game-test-room`: F usa o item na mão com o rótulo do uso na legenda (pt-BR e en); a comida diminui a cada mordida e some no fim, o efeito vai para o aviso e o registro; o golpe das armas de família toca o clipe do corpo e o movimento da arma.
+
+### Patch Changes
+
+- Updated dependencies [a41cb89]
+  - @adatechnology/game-contracts@0.44.0
+  - @adatechnology/game-items@0.3.0
+  - @adatechnology/game-shapes-three@0.4.2
+  - @adatechnology/game-floorplan-three@4.1.4
+  - @adatechnology/game-fluids@0.6.13
+  - @adatechnology/game-interactables@0.6.9
+
 ## 0.10.7
 
 ### Patch Changes

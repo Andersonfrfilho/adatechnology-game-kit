@@ -1,5 +1,13 @@
 # @adatechnology/game-vehicles
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [a41cb89]
+  - @adatechnology/game-contracts@0.44.0
+  - @adatechnology/game-shapes-three@0.4.2
+
 ## 0.8.0
 
 ### Minor Changes

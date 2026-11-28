@@ -1,5 +1,35 @@
 # @adatechnology/game-kit-defaults
 
+## 1.0.1
+
+### Patch Changes
+
+- cce7ba2: Móvel solto que perde o piso sob um pé (furo de tiro, cova, cratera) volta a olhar os pés: se os que ainda apoiam não seguram o centro, vira peça e tomba para o buraco (`onLoosened` com causa `ground`).
+- 9a371a1: `warmUpAsync` no mundo do kit e na sala (`room.warmUpAsync()`): o aquecimento em várias tarefas para uma tela de carregamento esperar. A página da sala usa essa versão no fim da carga ("Preparando a imagem…"); a síncrona travava ~10 s numa tarefa só.
+- 5c3c88c: Aquecimento de shaders em várias tarefas (`ProgramWarmup.warmUpAsync`): cada estado de neblina é linkado em paralelo (`compileAsync`) antes de ser desenhado, e cada estado, efeito e lote de programas ganha a própria tarefa. O host do mundo (`createKitWorld`) usa a versão assíncrona e não desenha mais nada enquanto ela roda. O aquecimento desliga `checkShaderErrors` do three (três leituras de log síncronas por programa, 19 s na carga da sala) e confere o `LINK_STATUS` de cada programa. Na carga da sala de teste, a tarefa única de 21 a 25 s some (o navegador mostrava "Página sem resposta").
+- Updated dependencies [1435810]
+- Updated dependencies [013367c]
+- Updated dependencies [cce7ba2]
+- Updated dependencies [a41cb89]
+- Updated dependencies [5c3c88c]
+  - @adatechnology/game-shapes@0.5.0
+  - @adatechnology/game-destruction-three@1.1.0
+  - @adatechnology/game-contracts@0.44.0
+  - @adatechnology/game-characters-people@0.5.0
+  - @adatechnology/game-render-three@0.5.0
+  - @adatechnology/game-audio@0.15.8
+  - @adatechnology/game-crowd@0.8.7
+  - @adatechnology/game-destruction@0.30.2
+  - @adatechnology/game-fluids@0.6.13
+  - @adatechnology/game-fluids-three@0.6.8
+  - @adatechnology/game-runtime@0.3.8
+  - @adatechnology/game-terrain@0.9.8
+  - @adatechnology/game-terrain-three@0.6.10
+  - @adatechnology/game-urban@0.7.4
+  - @adatechnology/game-vehicles@0.8.1
+  - @adatechnology/game-vfx-three@0.10.12
+  - @adatechnology/game-workers@0.1.8
+
 ## 1.0.0
 
 ### Major Changes

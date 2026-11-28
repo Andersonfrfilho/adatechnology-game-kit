@@ -1,5 +1,26 @@
 # @adatechnology/game-interactables-three
 
+## 0.4.0
+
+### Minor Changes
+
+- 1435810: A colisão vem das primitivas que o construtor desenha (spec 019). `generate({ solids: true })` lista em cada lote os sólidos de que ele foi assado
+  (`ShapeBatch.solids`: a caixa de cada primitiva, girada como foi desenhada); o mesh api do `game-interactables-three` grava a lista em
+  `mesh.userData.solids`; e o `game-destruction-three` segura a malha por ela, fixa e solta, sem ler vértice. Uma peça desenhada em volta do ar (casinha,
+  banco de pernas, pia) deixa de colidir como a caixa em volta de tudo. Malha sem a lista (casa, veículo) segue pelo caminho de antes.
+
+### Patch Changes
+
+- Updated dependencies [1435810]
+- Updated dependencies [a41cb89]
+- Updated dependencies [5c3c88c]
+  - @adatechnology/game-shapes@0.5.0
+  - @adatechnology/game-contracts@0.44.0
+  - @adatechnology/game-render-three@0.5.0
+  - @adatechnology/game-props3d@0.3.6
+  - @adatechnology/game-shapes-three@0.4.2
+  - @adatechnology/game-interactables@0.6.9
+
 ## 0.3.7
 
 ### Patch Changes

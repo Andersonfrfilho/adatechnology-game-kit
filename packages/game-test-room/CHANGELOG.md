@@ -1,5 +1,51 @@
 # @adatechnology/game-test-room
 
+## 1.1.0
+
+### Minor Changes
+
+- 7856ce6: Fome e sede do jogador, e o efeito dos itens no corpo.
+
+  - `game-player`: porte do `needs` do jogo do time (fome e sede de 0 a 100, começam em 20, sobem no relógio do jogo, mais rápido correndo e mais devagar com vigor alto; acima de 90 tiram vida até a morte por fome e sede). `player.use(efeito)` aplica o efeito que o catálogo resolveu: comida e bebida pela saciedade e hidratação do item, analgésico cura, curativo estanca, álcool limpa a ferida, calmante tira o pânico. `createBodyVitals` dá o mesmo corpo a quem não usa `createPlayer`; o HUD ganha as barras de fome e sede e `createVitalsPanel` mostra a caixa do corpo sozinha.
+  - `game-test-room`: a sala tem esse corpo. Comer, beber (pelo litro e pela sede do líquido), tomar remédio e fazer curativo mudam vida, fome e sede; a caixa do corpo fica no canto de baixo à esquerda e a legenda diz quanto cada uma mudou (fome 20 → 12).
+  - `game-items-goods`: a sede de uma bebida sai do volume bebido, numa fonte só: a sede que um litro do líquido mata (`drink.thirst` de `LIQUIDS` do game-fluids) vezes os litros de um uso (a garrafa, ou uma dose do galão). 500 ml da garrafa e 500 ml do líquido no copo dão o mesmo (`drinkHydrationOf`).
+
+- 9a371a1: `warmUpAsync` no mundo do kit e na sala (`room.warmUpAsync()`): o aquecimento em várias tarefas para uma tela de carregamento esperar. A página da sala usa essa versão no fim da carga ("Preparando a imagem…"); a síncrona travava ~10 s numa tarefa só.
+- ca79762: Legenda de teclas da sala: cada tecla e o que ela faz numa linha, num painel aberto ao carregar e alternado com F1 ou ?, que some ao travar o mouse; um selo "F1: teclas" fica no canto. Substitui a linha corrida de ajuda, que os painéis cobriam.
+- a41cb89: Usar o item na mão e golpes por família.
+
+  - `game-items`: usos na mão sem líquido (`HAND_USES`, `createHandUse`): comer com a mão em mordidas, tomar remédio, aplicar curativo, usar sabonete; `game-contracts` ganha `ModuleItemUse` (`TestableItem.use`).
+  - `game-items-goods`: `goodsItemUse` diz o uso e o efeito de cada item pelo tipo e pelos efeitos do catálogo (higiene ganha `use_hygiene` e o efeito `wash`; álcool na ferida aplica, não bebe).
+  - `game-weapons`: famílias de golpe (`MELEE_FAMILIES`): faca corta e estoca em sequência, facão/machadinha/martelo cortam de cima, taco/cano/pé de cabra/machado giram com as duas mãos; `game-weapons-three` dá o movimento de cada uma (`FAMILY_MOTIONS`) e `game-characters-people` os clipes do corpo `knife_slash` e `knife_stab`.
+  - `game-characters-three`: o corpo leva à boca o que se come ou bebe (comer de lata incluído) e junta as duas mãos no sabonete e no curativo (`AvatarItemUsePose.body`).
+  - `game-test-room`: F usa o item na mão com o rótulo do uso na legenda (pt-BR e en); a comida diminui a cada mordida e some no fim, o efeito vai para o aviso e o registro; o golpe das armas de família toca o clipe do corpo e o movimento da arma.
+
+### Patch Changes
+
+- cce7ba2: Móvel solto que perde o piso sob um pé (furo de tiro, cova, cratera) volta a olhar os pés: se os que ainda apoiam não seguram o centro, vira peça e tomba para o buraco (`onLoosened` com causa `ground`).
+- Updated dependencies [1435810]
+- Updated dependencies [013367c]
+- Updated dependencies [7856ce6]
+- Updated dependencies [cce7ba2]
+- Updated dependencies [9a371a1]
+- Updated dependencies [a41cb89]
+- Updated dependencies [5c3c88c]
+  - @adatechnology/game-destruction-three@1.1.0
+  - @adatechnology/game-player@0.13.0
+  - @adatechnology/game-kit-defaults@1.0.1
+  - @adatechnology/game-contracts@0.44.0
+  - @adatechnology/game-items@0.3.0
+  - @adatechnology/game-weapons@0.14.0
+  - @adatechnology/game-render-three@0.5.0
+  - @adatechnology/game-shapes-three@0.4.2
+  - @adatechnology/game-audio@0.15.8
+  - @adatechnology/game-destruction@0.30.2
+  - @adatechnology/game-fluids@0.6.13
+  - @adatechnology/game-fluids-three@0.6.8
+  - @adatechnology/game-runtime@0.3.8
+  - @adatechnology/game-terrain@0.9.8
+  - @adatechnology/game-terrain-three@0.6.10
+
 ## 1.0.2
 
 ### Patch Changes

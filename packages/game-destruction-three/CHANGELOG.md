@@ -1,5 +1,33 @@
 # @adatechnology/game-destruction-three
 
+## 1.1.0
+
+### Minor Changes
+
+- 1435810: A colisão vem das primitivas que o construtor desenha (spec 019). `generate({ solids: true })` lista em cada lote os sólidos de que ele foi assado
+  (`ShapeBatch.solids`: a caixa de cada primitiva, girada como foi desenhada); o mesh api do `game-interactables-three` grava a lista em
+  `mesh.userData.solids`; e o `game-destruction-three` segura a malha por ela, fixa e solta, sem ler vértice. Uma peça desenhada em volta do ar (casinha,
+  banco de pernas, pia) deixa de colidir como a caixa em volta de tudo. Malha sem a lista (casa, veículo) segue pelo caminho de antes.
+- cce7ba2: Móvel solto que perde o piso sob um pé (furo de tiro, cova, cratera) volta a olhar os pés: se os que ainda apoiam não seguram o centro, vira peça e tomba para o buraco (`onLoosened` com causa `ground`).
+
+### Patch Changes
+
+- 013367c: Nenhuma caixa do motor guarda ar (CLAUDE.md §12). Uma peça desenhada como tábuas em volta do ar (a casinha de cachorro, um batente, as águas de um telhado, uma
+  chapa com vão de porta) colidia como a caixa em volta de tudo: as lascas das próprias tábuas nasciam dentro de um sólido e nunca paravam, e o que caía em cima
+  ficava apoiado no nada. Agora a peça solta é segurada tábua por tábua também quando é uma malha própria (antes só a faixa de uma malha unida), caixa girada na
+  malha conta como caixa girada, e uma parte fixa oca vira os triângulos desenhados em vez de uma caixa cheia.
+- Updated dependencies [1435810]
+- Updated dependencies [a41cb89]
+- Updated dependencies [5c3c88c]
+  - @adatechnology/game-shapes@0.5.0
+  - @adatechnology/game-contracts@0.44.0
+  - @adatechnology/game-render-three@0.5.0
+  - @adatechnology/game-shapes-three@0.4.2
+  - @adatechnology/game-audio@0.15.8
+  - @adatechnology/game-destruction@0.30.2
+  - @adatechnology/game-terrain@0.9.8
+  - @adatechnology/game-vfx-three@0.10.12
+
 ## 1.0.0
 
 ### Major Changes

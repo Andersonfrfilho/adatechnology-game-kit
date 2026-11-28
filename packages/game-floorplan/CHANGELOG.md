@@ -1,5 +1,12 @@
 # @adatechnology/game-floorplan
 
+## 0.5.7
+
+### Patch Changes
+
+- Updated dependencies [a41cb89]
+  - @adatechnology/game-contracts@0.44.0
+
 ## 0.5.6
 
 ### Patch Changes
