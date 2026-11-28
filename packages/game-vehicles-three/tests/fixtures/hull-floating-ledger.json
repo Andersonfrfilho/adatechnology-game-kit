@@ -16,7 +16,7 @@
   },
   "apc_6x6": {
     "above": 10063,
-    "below": 10561,
+    "below": 10567,
     "side": 6848
   },
   "armored_car_6x6": {
@@ -26,8 +26,8 @@
   },
   "armored_truck": {
     "above": 14766,
-    "below": 25048,
-    "side": 9899
+    "below": 25063,
+    "side": 9903
   },
   "attack_helicopter": {
     "above": 41905,
@@ -56,13 +56,13 @@
   },
   "boxy_hatch": {
     "above": 2335,
-    "below": 3558,
-    "side": 1423
+    "below": 3567,
+    "side": 1430
   },
   "cargo_van": {
     "above": 3464,
     "below": 9535,
-    "side": 3304
+    "side": 3305
   },
   "city_bus": {
     "above": 6923,
@@ -70,7 +70,7 @@
     "side": 5754
   },
   "classic_six_sedan": {
-    "above": 266,
+    "above": 268,
     "below": 4654,
     "side": 1058
   },
@@ -80,9 +80,9 @@
     "side": 724
   },
   "compact_hatch": {
-    "above": 1828,
-    "below": 5398,
-    "side": 1404
+    "above": 1830,
+    "below": 5408,
+    "side": 1405
   },
   "compact_pickup": {
     "above": 3835,
@@ -90,8 +90,8 @@
     "side": 2091
   },
   "compact_suv": {
-    "above": 1754,
-    "below": 4753,
+    "above": 1756,
+    "below": 4793,
     "side": 1407
   },
   "crop_duster": {
@@ -105,24 +105,24 @@
     "side": 2644
   },
   "cruiser": {
-    "above": 1027,
-    "below": 1204,
-    "side": 918
+    "above": 1029,
+    "below": 1206,
+    "side": 919
   },
   "delivery_bike": {
     "above": 1081,
     "below": 1039,
-    "side": 706
+    "side": 708
   },
   "electric_hatch": {
     "above": 2388,
-    "below": 5674,
-    "side": 1498
+    "below": 5675,
+    "side": 1499
   },
   "entry_hatch": {
-    "above": 1050,
-    "below": 3565,
-    "side": 1112
+    "above": 1096,
+    "below": 3850,
+    "side": 1192
   },
   "family_hatch": {
     "above": 2343,
@@ -132,7 +132,7 @@
   "fastback_sedan": {
     "above": 3104,
     "below": 4303,
-    "side": 1604
+    "side": 1612
   },
   "fishing_boat": {
     "above": 39687,
@@ -146,13 +146,13 @@
   },
   "highway_police_sedan": {
     "above": 3979,
-    "below": 5123,
+    "below": 5124,
     "side": 1837
   },
   "hybrid_suv": {
     "above": 2979,
-    "below": 4257,
-    "side": 1501
+    "below": 4259,
+    "side": 1504
   },
   "jet_ski": {
     "above": 16,
@@ -161,8 +161,8 @@
   },
   "large_suv": {
     "above": 7116,
-    "below": 9008,
-    "side": 2961
+    "below": 9028,
+    "side": 2968
   },
   "light_4x4": {
     "above": 2315,
@@ -180,19 +180,19 @@
     "side": 9772
   },
   "midsize_pickup": {
-    "above": 4972,
+    "above": 4992,
     "below": 7925,
-    "side": 2779
+    "side": 2782
   },
   "midsize_sedan": {
     "above": 1660,
     "below": 3896,
-    "side": 1199
+    "side": 1201
   },
   "midsize_suv": {
     "above": 2607,
     "below": 5033,
-    "side": 1722
+    "side": 1727
   },
   "monster_truck": {
     "above": 11672,
@@ -202,7 +202,7 @@
   "naked_bike": {
     "above": 671,
     "below": 612,
-    "side": 591
+    "side": 592
   },
   "patrol_boat": {
     "above": 34364,
@@ -221,7 +221,7 @@
   },
   "police_sedan": {
     "above": 3975,
-    "below": 5121,
+    "below": 5122,
     "side": 1816
   },
   "quad_bike": {
@@ -260,8 +260,8 @@
     "side": 50646
   },
   "school_bus": {
-    "above": 10058,
-    "below": 18995,
+    "above": 10060,
+    "below": 19008,
     "side": 7644
   },
   "scooter": {
@@ -285,7 +285,7 @@
     "side": 448
   },
   "step_through_scooter": {
-    "above": 223,
+    "above": 224,
     "below": 355,
     "side": 239
   },
@@ -301,7 +301,7 @@
   },
   "taxi": {
     "above": 4829,
-    "below": 5825,
+    "below": 5835,
     "side": 2364
   },
   "tractor": {
@@ -325,9 +325,9 @@
     "side": 13705
   },
   "troop_truck": {
-    "above": 6485,
+    "above": 6489,
     "below": 28522,
-    "side": 10499
+    "side": 10500
   },
   "turbine_helicopter": {
     "above": 6161,
@@ -335,13 +335,13 @@
     "side": 4315
   },
   "turbo_hatch": {
-    "above": 2800,
+    "above": 2801,
     "below": 4118,
     "side": 1806
   },
   "v8_coupe": {
     "above": 2850,
-    "below": 7372,
+    "below": 7393,
     "side": 2117
   }
 }
