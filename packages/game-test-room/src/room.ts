@@ -82,6 +82,8 @@ import type { BagHost } from './inventory-room'
 import { createModuleViews } from './module-views'
 import type { HudState, InspectInfo, RoomUi } from './ui'
 import { runSteps, runStepsAsync } from './steps'
+import { createRoomVitals } from './room-vitals'
+import { ammoText, numberFormat } from './hud-format'
 import { vehicleLeafKey } from './vehicle-leaf-key'
 import { weaponMenuGroups } from './tool-menu-groups'
 import type {
@@ -227,10 +229,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const loading = createLoading({ container: options.container, draw: options.ui !== false, working: t('loading.working') })
   // the small corner picture a module can lend (`host.cornerImage`); `ui: false` draws nothing
   const cornerImage = options.ui !== false ? createCornerImage({ container: options.container, labels: { open: t('corner.open'), close: t('corner.close'), source: t('corner.source') } }) : null
-  const num = (n: number, digits = 1): string => {
-    const s = (Math.round(n * 10 ** digits) / 10 ** digits).toFixed(digits)
-    return locale.toLowerCase().startsWith('pt') ? s.replace('.', ',') : s
-  }
+  const num = numberFormat(locale)
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // The world: the kit's host (`createKitWorldSync`, spec 011) makes the renderer, scene, camera, sun, ground, destruction, liquids, sound, effects, the
@@ -480,6 +479,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     const s = splitOf.get(objectId)
     return s ? (partNameOf({ world, spec: specs.get(s.so.objectId), objectId, text: S.text }) ?? `${s.name} (${t('piece')})`) : objectId
   }
+  const vitals = createRoomVitals(t)
   const narrator = createNarrator({
     world,
     fluids,
@@ -519,6 +519,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     pending.push(ev)
   })
   fluids.on('*', (ev: FluidEvent) => {
+    if (ev.type === 'drink') vitals.drank(ev.thirst)
     narrator.fluid(ev)
     fire('event', ev)
   })
@@ -3271,9 +3272,10 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     useItemName = def.id
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
     handUseEnd = () => {
-      const told = t(use.consumes ? 'act.used_up' : 'act.used', { name: e.name, effect: handUseEffectText(use, t) })
+      const moved = vitals.used(use)
+      const told = `${t(use.consumes ? 'act.used_up' : 'act.used', { name: e.name, effect: handUseEffectText(use, t) })}${moved ? ` · ${moved}` : ''}`
       say(told)
-      action('used_item', told, { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id, consumes: use.consumes, ...(use.effect ? { effect: use.effect.id, ...use.effect } : {}) } })
+      action('used_item', told, { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id, consumes: use.consumes, ...(use.effect ? { effect: use.effect.id, ...use.effect } : {}), hunger: vitals.body.state.hunger, thirst: vitals.body.state.thirst, health: vitals.body.state.health } })
       if (use.consumes) removeEntry(e.so.objectId)
     }
     return true
@@ -3369,7 +3371,8 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (useItemPlayer.done) {
       if (e && useLiters !== null && useItemName === 'eat') {
         const left = (e.containerId ? fluids.container(e.containerId)?.liters : undefined) ?? 0
-        action('ate', t(left <= 1e-4 ? 'act.ate_all' : 'act.ate', { name: e.name, grams: Math.round((useLiters - left) * 1000) }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { liters: Math.round((useLiters - left) * 1000) / 1000 } })
+        const moved = vitals.ate(e.item?.use, (useLiters - left) / (e.fluidStart ?? useLiters))
+        action('ate', `${t(left <= 1e-4 ? 'act.ate_all' : 'act.ate', { name: e.name, grams: Math.round((useLiters - left) * 1000) })}${moved ? ` · ${moved}` : ''}`, { objectId: e.so.objectId, itemId: e.so.itemId, data: { liters: Math.round((useLiters - left) * 1000) / 1000 } })
       }
       useLiters = null
       useItemPlayer = null
@@ -3894,6 +3897,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     stepStrikes(dt)
     updateAnimations(dt)
     updateItemUse(dt)
+    vitals.update(dt, player.running)
     explosives.update(dt)
     syncContainers(dt)
   })
@@ -4015,16 +4019,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       hudAimHit = undefined
     }
   }
-  const ammoText = (state: WeaponState): string => {
-    const kind = state.def.action.kind
-    if (kind === 'firearm') return `${state.ammo}/${state.capacity}${state.reserve ? ` · ${state.reserve}` : ''}`
-    return kind === 'hand' || kind === 'melee' || kind === 'tool' ? '' : `${num(state.ammo, 0)}`
-  }
   const readHudState = (): HudState => {
     const page = Math.floor(toolIndex / 10)
     const slots = loadout.slice(page * 10, page * 10 + 10).map((id) => arsenal.name(id))
-    const left = offTool ? ammoText(offTool) : ''
-    const ammo = `${ammoText(tool)}${left ? ` | ${t('hud.left')} ${left}` : ''}`
+    const left = offTool ? ammoText(offTool, num) : ''
+    const ammo = `${ammoText(tool, num)}${left ? ` | ${t('hud.left')} ${left}` : ''}`
     return {
       toolName: offToolId ? `${toolName()} + ${toolName(offToolId)}` : toolName(),
       toolId,
@@ -4047,6 +4046,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       quality: qualityName,
       camera: avatar ? cameraMode : null,
       objects: [...entries.values()].filter((e) => !e.arena).length,
+      vitals: vitals.view(),
     }
   }
 
@@ -5005,12 +5005,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (state.armed !== undefined) armedForced = state.armed
     },
     avatarState: () => ({ ...avatarState }),
+    body: () => vitals.body.state,
     handState: () => ({ ...lastHand }),
     setDebugCamera(view) {
-      if (!view) {
-        debugView = null
-        return
-      }
+      debugView = view ? debugView : null
+      if (!view) return
       debugView ??= new THREE.PerspectiveCamera(60, camera.aspect, 0.01, 200)
       debugView.fov = view.fov ?? 40
       debugView.aspect = camera.aspect
@@ -5098,7 +5097,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return m
     }
     ui = createUi({
-      container,
+      container, locale,
       strings: S,
       t,
       log,

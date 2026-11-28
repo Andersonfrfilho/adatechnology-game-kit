@@ -41,9 +41,10 @@ const element = <K extends keyof HTMLElementTagNameMap>(tag: K, className?: stri
 
 type Gauge = { readonly row: HTMLElement; set(value: number, max: number): void }
 
-function createGauge(label: string, tone: 'hp' | 'stamina'): Gauge {
+/** `hp` greens when full and reds when low; `need` (hunger, thirst) turns amber past half and red past `starving` (a share of the bar). */
+function createGauge(label: string, tone: 'hp' | 'stamina' | 'need', starving = 0.9): Gauge {
   const row = element('div', 'gp-hud-row')
-  const bar = element('div', tone === 'hp' ? 'gp-hud-bar hp' : 'gp-hud-bar')
+  const bar = element('div', tone === 'hp' ? 'gp-hud-bar hp' : tone === 'need' ? 'gp-hud-bar need' : 'gp-hud-bar')
   const fill = element('i')
   const value = element('output')
   bar.appendChild(fill)
@@ -62,6 +63,7 @@ function createGauge(label: string, tone: 'hp' | 'stamina'): Gauge {
       fill.style.width = `${percent}%`
       value.textContent = String(shownValue)
       if (tone === 'hp') bar.className = share <= LOW_SHARE ? 'gp-hud-bar bad' : share <= WARN_SHARE ? 'gp-hud-bar warn' : 'gp-hud-bar hp'
+      else if (tone === 'need') bar.className = share > starving ? 'gp-hud-bar bad' : share > WARN_SHARE ? 'gp-hud-bar warn' : 'gp-hud-bar need'
     },
   }
 }
@@ -79,36 +81,85 @@ function statusTags(view: PlayerHudView, text: PlayerHudText): Array<{ readonly 
   return tags
 }
 
-/**
- * The player's HUD over the game's view (DOM, no three.js): the health and stamina bars with the bleeding, the infection and the wounds under them at the bottom left, the
- * weapon and its rounds at the bottom right, a name at the top left, the body's messages at the top centre and the crosshair in the first person. Small boxes at the edges:
- * the view stays clear, and nothing takes the mouse.
- */
-export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHudOptions): PlayerHud {
+/** The body's box of the HUD on its own (health, stamina, hunger, thirst, and the bleeding, infection and wounds under them), for a host that lays out its own screen. */
+export type VitalsPanel = {
+  /** The box (class `gp-hud-vitals`: the bottom left of an element of class `gp-hud`, which gives it the font). */
+  readonly element: HTMLElement
+  update(view: PlayerHudView): void
+}
+
+/** The vitals box of `createPlayerHud`, alone: put `element` inside an element of class `gp-hud` (the style goes in the document once). */
+export function createVitalsPanel(locale = 'pt-BR'): VitalsPanel {
   const text = playerHudTextOf(locale)
   ensurePlayerHudStyle()
-  const restorePosition = positionContainer(container)
-  const root = element('div', 'gp-hud')
-  root.dataset.hud = 'player'
-  const titleBox = element('div', 'gp-hud-pill gp-hud-title')
-  const messageBox = element('div', 'gp-hud-message')
   const vitals = element('div', 'gp-hud-vitals')
   const health = createGauge(text.health, 'hp')
   const stamina = createGauge(text.stamina, 'stamina')
   const status = element('div', 'gp-hud-status')
   vitals.append(health.row, stamina.row, status)
-  const weaponBox = element('div', 'gp-hud-pill gp-hud-weapon')
-  const cross = element('div', 'gp-hud-cross')
-  cross.appendChild(element('i'))
-  root.append(titleBox, messageBox, vitals, weaponBox, cross)
-  container.appendChild(root)
-
+  // the hunger and thirst rows come with the first view that has them, and go with the first that has not
+  let needs: { readonly hunger: Gauge; readonly thirst: Gauge } | null = null
   // the status line is rebuilt only when one of these scalars moves: the frame allocates nothing
   let lastBleeding: boolean | null = null
   let lastInfection = ''
   let lastWounds: readonly string[] | null = null
   let lastWoundCount = -1
   let lastAlive: boolean | null = null
+  return {
+    element: vitals,
+    update(view) {
+      if (view.alive !== lastAlive) {
+        lastAlive = view.alive
+        vitals.style.display = view.alive ? 'flex' : 'none'
+      }
+      health.set(view.health, view.maxHealth)
+      stamina.set(view.stamina, view.maxStamina)
+      stamina.row.style.display = view.maxStamina > 0 ? '' : 'none'
+      if (view.hunger !== undefined && view.thirst !== undefined) {
+        const max = view.needMax ?? 100
+        if (!needs) {
+          const starving = max > 0 ? (view.needStarving ?? max * 0.9) / max : 0.9
+          needs = { hunger: createGauge(text.hunger, 'need', starving), thirst: createGauge(text.thirst, 'need', starving) }
+          vitals.insertBefore(needs.hunger.row, status)
+          vitals.insertBefore(needs.thirst.row, status)
+        }
+        needs.hunger.set(view.hunger, max)
+        needs.thirst.set(view.thirst, max)
+      } else if (needs) {
+        needs.hunger.row.remove()
+        needs.thirst.row.remove()
+        needs = null
+      }
+      if (view.bleeding === lastBleeding && view.infection === lastInfection && view.wounds === lastWounds && view.wounds.length === lastWoundCount) return
+      lastBleeding = view.bleeding
+      lastInfection = view.infection
+      lastWounds = view.wounds
+      lastWoundCount = view.wounds.length
+      const tags = statusTags(view, text)
+      status.replaceChildren(...tags.map((tag) => element('span', tag.tone ? `gp-hud-tag ${tag.tone}` : 'gp-hud-tag', tag.label)))
+    },
+  }
+}
+
+/**
+ * The player's HUD over the game's view (DOM, no three.js): the health, stamina, hunger and thirst bars with the bleeding, the infection and the wounds under them at the bottom left, the
+ * weapon and its rounds at the bottom right, a name at the top left, the body's messages at the top centre and the crosshair in the first person. Small boxes at the edges:
+ * the view stays clear, and nothing takes the mouse.
+ */
+export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHudOptions): PlayerHud {
+  ensurePlayerHudStyle()
+  const restorePosition = positionContainer(container)
+  const root = element('div', 'gp-hud')
+  root.dataset.hud = 'player'
+  const titleBox = element('div', 'gp-hud-pill gp-hud-title')
+  const messageBox = element('div', 'gp-hud-message')
+  const vitals = createVitalsPanel(locale)
+  const weaponBox = element('div', 'gp-hud-pill gp-hud-weapon')
+  const cross = element('div', 'gp-hud-cross')
+  cross.appendChild(element('i'))
+  root.append(titleBox, messageBox, vitals.element, weaponBox, cross)
+  container.appendChild(root)
+
   let lastView: 'first' | 'third' | null = null
   let messageTimer: ReturnType<typeof setTimeout> | null = null
   const setTitle = (next: string | null): void => {
@@ -118,21 +169,7 @@ export function createPlayerHud({ container, locale = 'pt-BR', title }: PlayerHu
   setTitle(title ?? null)
 
   return {
-    update(view) {
-      if (view.alive !== lastAlive) {
-        lastAlive = view.alive
-        vitals.style.display = view.alive ? 'flex' : 'none'
-      }
-      health.set(view.health, view.maxHealth)
-      stamina.set(view.stamina, view.maxStamina)
-      if (view.bleeding === lastBleeding && view.infection === lastInfection && view.wounds === lastWounds && view.wounds.length === lastWoundCount) return
-      lastBleeding = view.bleeding
-      lastInfection = view.infection
-      lastWounds = view.wounds
-      lastWoundCount = view.wounds.length
-      const tags = statusTags(view, text)
-      status.replaceChildren(...tags.map((tag) => element('span', tag.tone ? `gp-hud-tag ${tag.tone}` : 'gp-hud-tag', tag.label)))
-    },
+    update: (view) => vitals.update(view),
     setTitle,
     setWeapon(weapon) {
       weaponBox.replaceChildren()

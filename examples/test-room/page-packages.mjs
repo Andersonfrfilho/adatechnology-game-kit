@@ -15,6 +15,7 @@ export const DIST_SUBPATHS = /** @type {Record<string, string[]>} */ ({
   'game-shapes': ['worker-kinds'],
   'game-vehicles': ['worker-kinds'],
   'game-kit-defaults': ['world'],
+  'game-player': ['hud'],
 })
 
 /** Other dist files the build reads (inlined as a classic script). */

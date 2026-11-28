@@ -2,7 +2,11 @@ import { SWING_LEAD_SECONDS, footstepSoundId, hitSoundId, landSoundId, surfaceOf
 import type { BlowId, BodyFoleyId, SurfaceId } from '@adatechnology/game-contracts'
 
 import defaults from './data/defaults.json'
+import { NEEDS_DEFAULTS, advanceNeeds } from './needs'
+import type { NeedsRules } from './needs'
 import { createRng } from './rng'
+import { applyItemEffect } from './vitals'
+import type { ItemEffect, ItemEffectResult } from './vitals'
 import type {
   Attributes,
   DeathCause,
@@ -47,6 +51,8 @@ export type PlayerOptions = {
   /** An individual infection (`true` uses the defaults; an object patches them). Off by default: the normal world comes first. */
   readonly infection?: boolean | Partial<InfectionRule>
   readonly numbers?: Partial<PlayerNumbers>
+  /** Hunger and thirst (`NEEDS_DEFAULTS`, the team game's): an object patches them, `false` keeps them still. */
+  readonly needs?: boolean | Partial<NeedsRules>
   readonly fist?: MeleeItem
   readonly position?: { readonly x?: number; readonly z?: number; readonly yaw?: number }
   /** Standing skull-top height in metres (default `numbers.heightMetres`, 1.80 m). Scales collider height and radius (Spec 012 R3/H5). */
@@ -70,6 +76,10 @@ export type Player = {
   readonly derived: Derived
   readonly numbers: PlayerNumbers
   readonly infection: InfectionRule | null
+  /** The hunger and thirst rules, or null when they are off. */
+  readonly needs: NeedsRules | null
+  /** An item used in the hand (`ModuleItemUse.effect`): food and drink feed, a painkiller heals, a dressing stops the bleeding. */
+  use(effect: ItemEffect): ItemEffectResult
   update(dt: number, input?: PlayerInput, world?: PlayerWorld): void
   /** A hit that opens a wound (drawn from the wound table) and may infect. `by` is the agent that hit, if any. */
   hurt(amount: number, by?: number): void
@@ -126,7 +136,7 @@ export const drawWound = (wounds: WoundTable, random: () => number): string => {
 const clamp = (v: number, a: number, b: number): number => (v < a ? a : v > b ? b : v)
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t
 
-const freshState = (derived: Derived, position: PlayerOptions['position']): PlayerState => ({
+const freshState = (derived: Derived, position: PlayerOptions['position'], needs: NeedsRules | null): PlayerState => ({
   x: position?.x ?? 0,
   z: position?.z ?? 0,
   y: 0,
@@ -138,6 +148,8 @@ const freshState = (derived: Derived, position: PlayerOptions['position']): Play
   turned: false,
   health: derived.maxHealth,
   stamina: derived.maxStamina,
+  hunger: needs?.start.hunger ?? 0,
+  thirst: needs?.start.thirst ?? 0,
   crouch: false,
   running: false,
   stepTimer: 0,
@@ -185,9 +197,11 @@ export function createPlayer(options: PlayerOptions = {}): Player {
   const wounds = options.wounds ?? PLAYER_DEFAULTS.wounds
   const infection: InfectionRule | null =
     options.infection === undefined || options.infection === false ? null : options.infection === true ? PLAYER_DEFAULTS.infection : { ...PLAYER_DEFAULTS.infection, ...options.infection }
+  const needs: NeedsRules | null =
+    options.needs === false ? null : options.needs === undefined || options.needs === true ? NEEDS_DEFAULTS : { ...NEEDS_DEFAULTS, ...options.needs, start: { ...NEEDS_DEFAULTS.start, ...options.needs.start } }
   const fist = options.fist ?? PLAYER_DEFAULTS.fist
   const listeners = new Map<PlayerEventName, Set<(event: never) => void>>()
-  let P = freshState(derived, options.position)
+  let P = freshState(derived, options.position, needs)
   // the controller's feet, read every step it walks: a vault lifts the body over them
   const feet = new Float64Array(3)
   let defaultWorld: PlayerWorld = options.world ?? {}
@@ -370,6 +384,7 @@ export function createPlayer(options: PlayerOptions = {}): Player {
         message('bandaged', 2)
       }
     }
+    if (needs) P.health -= advanceNeeds(P, dt, { running: P.running, vigor: attributes.vigor }, needs)
     if (P.health <= 0) {
       die(P.infected ? 'infected' : P.bleeding ? 'bled_out' : 'hunger_thirst')
       return
@@ -591,6 +606,8 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     derived,
     numbers,
     infection,
+    needs,
+    use: (effect) => (P.alive ? applyItemEffect(P, effect, { maxHealth: derived.maxHealth, ...(needs ? { needs } : {}) }) : { applied: false, health: 0, hunger: 0, thirst: 0, stoppedBleeding: false, calmed: false }),
     update,
     hurt: (amount) => hurt(amount),
     bite: () => bite(),
@@ -623,6 +640,9 @@ export function createPlayer(options: PlayerOptions = {}): Player {
     save: () => ({ state: structuredClone(P), attributes }),
     load(save) {
       P = structuredClone(save.state)
+      // a save from before the needs: the body starts fed
+      P.hunger ??= needs?.start.hunger ?? 0
+      P.thirst ??= needs?.start.thirst ?? 0
       world.controller?.teleport(P.x, P.y, P.z)
     },
     setWorld(next) {
