@@ -1667,7 +1667,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   /** The first-person arms take the hands of the tool, on the first-person layer, every frame the eye is the view. */
   const updateFirstPersonArms = (dt: number): void => {
     if (!firstPersonArms || cameraMode !== 'first') return
-    firstPersonArms.update(dt, { camera, targets: lastHand.targets, stance: lastHand.stance, speed: player.speed, running: avatarState.running, crouch: avatarState.crouch })
+    firstPersonArms.update(scheduler.paused ? 0 : dt * scheduler.timeScale, { camera, targets: lastHand.targets, stance: lastHand.stance, speed: player.speed, running: avatarState.running, crouch: avatarState.crouch })
     firstPersonArms.root.traverse((node) => node.layers.set(FIRST_PERSON_LAYER))
   }
   const setCameraMode = (mode: CameraMode): void => {
