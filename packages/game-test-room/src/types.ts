@@ -667,6 +667,8 @@ export interface TestRoom {
    * in the world, the log or the sound. Call it once the lights of the scene are set (a module that adds lights changes the programs).
    */
   warmUp(): void
+  /** `warmUp` spread over tasks: what a loading screen awaits, so the browser never sees the page stop answering while the programs link. */
+  warmUpAsync(): Promise<void>
   /** Animations of the aimed (or held) item: what the animations panel shows. */
   animations(): AnimationInfo | null
   /**

@@ -97,6 +97,7 @@ function assembleKitWorld<TRecord>({ THREE, options, physics }: { readonly THREE
       light.setShadowQuality(next)
     },
     warmUp: budget.warmUp,
+    warmUpAsync: budget.warmUpAsync,
     render: render.render,
     start: render.start,
     get isLooping() {
