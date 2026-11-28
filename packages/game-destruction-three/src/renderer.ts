@@ -3194,8 +3194,17 @@ class Renderer implements DestructionRenderer {
     // the feet it had whole are not drawn any more (the leg is gone): only its height says how far in the centre must be
     if (this.standsWith(held, null, centre, feet.floor)) return
     const inside = insideBy(convexHull(held), [centre[0], centre[2]])
-    const reach = Math.max(body.halfExtents[0], body.halfExtents[2])
+    // as far as the piece itself reaches the way it goes over: its longest side stood for it whichever way that was, and a table 4.4 m long going over across its
+    // 46 cm was pushed 2.2 m out from its middle, ten times its own width (19.5 rad/s in one update: a table top doing a pirouette)
+    const reach = this.reachAlong(body, inside.out.x, inside.out.z)
     this.pieceSys.impulse(body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + inside.out.x * reach, feet.floor, centre[2] + inside.out.z * reach])
+  }
+
+  /** How far (m) the box of a piece reaches from its middle along the level direction (x, z), turned as it is: the support of its box that way. */
+  private reachAlong(body: PieceBody, x: number, z: number): number {
+    const e = new this.THREE.Matrix4().makeRotationFromQuaternion(body.root.quaternion).elements
+    const [hx, hy, hz] = body.halfExtents
+    return hx * Math.abs(e[0] * x + e[2] * z) + hy * Math.abs(e[4] * x + e[6] * z) + hz * Math.abs(e[8] * x + e[10] * z)
   }
 
   /**

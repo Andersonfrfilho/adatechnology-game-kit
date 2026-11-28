@@ -28,3 +28,9 @@ Decidido pelo dono em 2026-11-04, depois de latinhas paradas no ar sobre uma mes
 - **Teste de catálogo no CI** (`game-floorplan-three/tests/broken-catalogue.test.ts`, sem GPU): todo móvel do catálogo tem as pernas quebradas, e
   depois (1) nada parado fica sem apoio e (2) o raio que passa onde estava cada perna quebrada só encontra o que está desenhado. Peça nova entra
   no catálogo e passa por esse teste.
+- **Nenhuma regra do kit gira uma peça.** O empurrão que o kit dá por conta própria (começar o tombo do que ficou sem pé, acabar com o equilíbrio numa
+  beirada) só começa a queda: o peso faz o resto. O teste `game-floorplan-three/tests/broken-catalogue-spin.test.ts` (CI, sem GPU) solta cada móvel do
+  catálogo como a sala solta, quebra as partes uma a uma do chão para cima (a perna, depois o que ela segurava, como os tiros fazem) e mede o canto mais
+  rápido de toda peça que estava parada: nos passos logo depois da quebra ele não ganha mais de 4,5 m/s. Roda em três tamanhos (o do catálogo, três vezes
+  mais comprido e três vezes mais fundo), porque o defeito cresce com a proporção da peça: a mesa de 4,4 m da sala girava a 19,5 rad/s e a do catálogo,
+  de 2 m, mal passava do limite. Peça nova entra no catálogo e passa por esse teste nos três tamanhos.

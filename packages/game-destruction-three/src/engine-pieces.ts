@@ -157,6 +157,25 @@ const RING_SEGMENTS = 16
 const TOPPLE = 3
 /** How many times the point-mass bound on gravity's hold the push is: the engine held a 5 cm leg against 2.5 times it, and tipped it at 3 (measured). */
 const HOLD_MARGIN = 4
+/**
+ * The same push cannot be more than this many times what gravity itself gives the piece about that edge, with the inertia it really has (`holdPush`). The point-mass
+ * bound above forgets the body's own inertia: for a leg standing on its end the two are close (the leg's is 0.75 of the point's, so 6 leaves its push as it was), but
+ * for a board lying flat that touches by one point for an instant the point-mass bound has both its lengths at millimetres and gave thousands of rad/s² (a 20 kg board
+ * 4.4 m long went from rest to 8 rad/s in one update, a table leg to 32: boards doing pirouettes under a burst).
+ */
+const HOLD_MARGIN_REAL = 6
+
+/**
+ * The push (rad/s²) that ends a balancing act on a narrow support (`HOLD_MARGIN` times the point-mass bound on gravity's hold), never more than `HOLD_MARGIN_REAL`
+ * times what gravity gives the body about that edge: g e / (k + h² + e²), with `turning` (k, m²) its moment of inertia per kilogram about the axis through its
+ * centre of mass, `edge` (e) how far the edge is from under the centre and `height` (h) how high the centre is over it.
+ */
+export const holdPush = (params: { readonly edge: number; readonly height: number; readonly gravity: number; readonly turning: number }): number => {
+  const e = Math.abs(params.edge)
+  const arm = params.height * params.height + e * e
+  if (arm <= 0) return 0
+  return Math.min((HOLD_MARGIN * params.gravity * e) / arm, (HOLD_MARGIN_REAL * params.gravity * e) / (params.turning + arm))
+}
 /** A support whose middle is closer than this (m) to the centre of mass is under it: which way it goes over is then not read from the contact points, which flicker. */
 const SIDE_DEAD = 0.01
 /** How far (m) the lowest corners of a piece's box may be from the floor it stands on to count as its support (`topple`). */
@@ -1041,11 +1060,26 @@ export class EnginePieces {
   /**
    * The push (rad/s2) that turns a piece about the edge of its support at `edge` (m from its centre, `height` m above it): the kit's `TOPPLE`, and on a support narrow both ways (a leg, a pole: a plate on its
    * edge is narrow one way only) at least what beats gravity's hold (at most `g |edge| / (height^2 + edge^2)` for any shape: a 5 cm leg 74 cm tall held against `TOPPLE` alone and stood for ever). Not where only
-   * the contacts of one instant sit off its centre: a box rocking on a table's edge reads like that, and stays.
+   * the contacts of one instant sit off its centre: a box rocking on a table's edge reads like that, and stays. `turning` is the piece's own inertia about that edge's
+   * axis (`turningOf`): the strong push is bounded by it (`holdPush`).
    */
-  private topplePush(edge: number, height: number, isNarrow: boolean): number {
+  private topplePush(edge: number, height: number, isNarrow: boolean, turning: number): number {
     const push = TOPPLE * Math.min(height, 1)
-    return isNarrow ? Math.max(push, (HOLD_MARGIN * this.o.gravity * Math.abs(edge)) / (height * height + edge * edge)) : push
+    return isNarrow ? Math.max(push, holdPush({ edge, height, gravity: this.o.gravity, turning })) : push
+  }
+
+  /**
+   * The moment of inertia of the piece per kilogram (m²) about the world axis `axis` (0 x, 2 z) through its centre of mass, as the box it is: what resists its turning
+   * about the edge it would go over (`holdPush`).
+   */
+  private turningOf(b: PieceBody, axis: 0 | 2): number {
+    const [hx, hy, hz] = b.halfExtents
+    const { x, y, z, w } = b.root.quaternion
+    // the world axis in the piece's own frame: that row of its rotation
+    const ax = axis === 0 ? 1 - 2 * (y * y + z * z) : 2 * (x * z - y * w)
+    const ay = axis === 0 ? 2 * (x * y - z * w) : 2 * (y * z + x * w)
+    const az = axis === 0 ? 2 * (x * z + y * w) : 1 - 2 * (x * x + y * y)
+    return ((hy * hy + hz * hz) * ax * ax + (hx * hx + hz * hz) * ay * ay + (hx * hx + hy * hy) * az * az) / 3
   }
 
   private topple(b: PieceBody, dt: number): void {
@@ -1118,7 +1152,7 @@ export class EnginePieces {
     // gravity takes it over; pushed on through the fall, a 3 kg sheet 5 m wide was driven down faster than it falls (4 cm of energy made in the room)
     if (wx <= wz) {
       const edge = dirX > 0 ? x1 : x0
-      const dw = edge * dirX > 0 ? -dirX * this.topplePush(edge, height, isColumn && Math.abs(w[2]!) < PUSH_SPIN) * dt : 0
+      const dw = edge * dirX > 0 ? -dirX * this.topplePush(edge, height, isColumn && Math.abs(w[2]!) < PUSH_SPIN, this.turningOf(b, 2)) * dt : 0
       const rx = -edge
       const ry = -low
       w[2] += dw
@@ -1126,7 +1160,7 @@ export class EnginePieces {
       v[1] += dw * rx
     } else {
       const edge = dirZ > 0 ? z1 : z0
-      const dw = edge * dirZ > 0 ? dirZ * this.topplePush(edge, height, isColumn && Math.abs(w[0]!) < PUSH_SPIN) * dt : 0
+      const dw = edge * dirZ > 0 ? dirZ * this.topplePush(edge, height, isColumn && Math.abs(w[0]!) < PUSH_SPIN, this.turningOf(b, 0)) * dt : 0
       const rz = -edge
       const ry = -low
       w[0] += dw
