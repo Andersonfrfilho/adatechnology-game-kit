@@ -69,15 +69,22 @@ function standsAlone(group: readonly PartSpec[], boxOf: HoldLooseParams['boxOf']
   return Math.min(across(0), across(2)) >= STANDS_ALONE * height
 }
 
-/** Joins every group but the biggest to the nearest part of it, unless it stands on the floor by itself: a pool's ladder, a wall bracket are the piece; a stool is not. */
+/**
+ * Joins every group but the biggest to the nearest part of it, unless it stands on the floor by itself: a pool's ladder, a wall bracket are the piece; a stool is not.
+ * A group held by its own anchor (a tap screwed to the wall over a laundry tub) is joined by a joint that `tears`: it is one piece with the body while the body
+ * stands, and the body that loses its feet is not held up by it. A plain joint there hung the tub in the air from its tap (CLAUDE.md §12).
+ */
 function joinBodies({ parts, joints, boxOf }: HoldLooseParams, byId: ReadonlyMap<string, PartSpec>): void {
   const groups = groupsOf(parts, joints).map((ids) => ids.map((id) => byId.get(id) as PartSpec)).sort((a, b) => b.length - a.length)
   const [main, ...rest] = groups
   if (!main) return
+  const mainAnchored = main.some((part) => part.anchored)
   for (const group of rest) {
     if (standsAlone(group, boxOf)) continue
     const joint = nearestJoint(group, main, boxOf, Infinity)
-    if (joint) joints.push(joint)
+    if (!joint) continue
+    // `a` is the group's part, `b` the body's: the group hangs on the body only while the body's own anchors hold it
+    joints.push(mainAnchored && group.some((part) => part.anchored) ? { ...joint, tears: true } : joint)
   }
 }
 

@@ -83,6 +83,8 @@ describe('every piece of furniture of the catalogue, its feet broken', () => {
     const floating = [...drawn].filter(([o, boxes]) => {
       const piece = renderer.piece(o)
       if (piece && !piece.sleeping) return false
+      // what is left still held by its own anchor (a tap screwed to the wall over a laundry tub, once the tub fell off it) hangs where it is fixed, as a mirror does
+      if (!piece && world.fixedInPlace(o)) return false
       const others = [...drawn].filter(([other]) => other !== o).flatMap(([, b]) => b)
       // any of its parts may be what it rests by: a tap lies on the rim of the tub by its spout, its lowest knob over the basin
       return !boxes.some((b) => rests(b, others))
