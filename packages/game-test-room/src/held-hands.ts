@@ -112,6 +112,8 @@ export type HeldHands = {
   drawOn(root: THREE_NS.Object3D, layer: number): void
 }
 
+const awayKey = (move: { readonly hand: BodyHand; readonly weapon: string }): string => `${move.hand}:${move.weapon}`
+
 type Taking = { readonly request: TakeRequest; readonly grip: ItemGrip; held: boolean; from: Pose | null }
 
 export const createHeldHands = <TCarried extends { readonly weaponId: string }>(host: HeldHandsHost<TCarried>): HeldHands => {
@@ -121,7 +123,7 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
   let taking: Taking | null = null
   let targets: HandTargets | null = null
   let item: Pose | null = null
-  /** Weapons off the hands and where: kept to bring them back. */
+  /** Weapons off the hands and where, by hand and weapon (a pistol in each hand is two of the same id): kept to bring them back. */
   const away = new Map<string, HandsMove>()
   const stashed = new Map<string, TCarried>()
   let drawn: { readonly root: THREE_NS.Object3D; readonly layer: number } | null = null
@@ -155,11 +157,11 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
     }
     stash(move.weapon)
     host.equip(move.hand, null)
-    away.set(move.weapon, move)
+    away.set(awayKey(move), move)
     host.report({ type: move.move, weapon: move.weapon, hand: move.hand, slot: move.slot ?? '', seconds, ...(from ? { from } : {}) })
   }
   const arrive = (move: HandsMove): void => {
-    away.delete(move.weapon)
+    away.delete(awayKey(move))
     host.equip(move.hand, move.weapon)
     const carried = stashed.get(move.weapon)
     stashed.delete(move.weapon)
@@ -195,7 +197,7 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
   /** Weapons still on their way back when something else starts: in hand at once. */
   const finishDraws = (): void => {
     if (!timeline) return
-    for (const step of timeline.sequence.steps) if (step.kind === 'draw' && step.move && away.has(step.move.weapon)) arrive(step.move)
+    for (const step of timeline.sequence.steps) if (step.kind === 'draw' && step.move && away.has(awayKey(step.move))) arrive(step.move)
     timeline = null
   }
   const phaseOf = (): { phase: TakePhase; progress: number } | null => {
@@ -213,7 +215,7 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
       return taking !== null && !taking.held
     },
     get away() {
-      return [...away.keys()]
+      return [...away.values()].map((move) => move.weapon)
     },
     get targets() {
       return targets
@@ -250,7 +252,7 @@ export const createHeldHands = <TCarried extends { readonly weaponId: string }>(
       if (!done) return
       // the holstered weapons come back, seen; the slung ones hang until H, the dropped ones lie on the floor
       const back = drawBackOf(done).flatMap((entry) => {
-        const move = away.get(entry.weapon)
+        const move = away.get(awayKey(entry))
         return move && move.hand === entry.hand ? [move] : []
       })
       startDraw(back)
