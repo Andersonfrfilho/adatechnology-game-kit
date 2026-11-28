@@ -74,6 +74,13 @@ deslocada (`SKEW`).
 | `hollow-test.mjs` (sala, entrada medida pelo próprio motor) | 0 em 21 peças (redondas puladas) | **0 em 24 peças**, redondas incluídas |
 | `broken-catalogue.test.ts` | `laundry_tub` vermelho | verde |
 
+### Candeeiro de pé (`floor_lamp`) e a massa dos móveis
+
+Ao juntar a main (8c9722476, massa dos móveis como casca do material) com a regra "redonda só se cheia", o candeeiro passou a cair sozinho no
+`furniture-laid-still`. Medido: a base de 2,5 cm desenhada como `metal` virou chapa de aço de 1,2 mm, o centro de massa subiu para 1,09 m sobre um pé de 26 cm,
+e a regra de equilíbrio do motor (`NARROW` 0,3) o derruba. Antes ele era "redondo" e pulava a regra. A base de um candeeiro de pé é ferro fundido
+(`WEIGHTED_FOOT` em `furniture/spec.ts`): a parte de metal no chão desses tipos é `cast_iron` (casca de 6 mm).
+
 ### Casas e veículos
 
 - Veículos não passam pela medição do `game-destruction-three`: têm colisor próprio por cascos convexos (`game-vehicles`, `game-vehicles-three/src/colliders.ts`).

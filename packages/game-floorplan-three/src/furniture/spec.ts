@@ -257,6 +257,13 @@ const LOOSE = new Set(['paper'])
 const PLANTED = new Set(['mailbox', 'correio', 'clothesline', 'tree_small', 'fruit_tree', 'bbq_simple'])
 /** Installed in the house: plumbed and bolted to the floor or the wall (a toilet, a basin, a shower stall, a laundry tub). Fixed until blows tear it off. */
 const INSTALLED = new Set(['toilet', 'washbasin', 'pedestal_basin', 'shower', 'shower_large', 'laundry_tub'])
+/**
+ * What stands on one weighted foot (a floor lamp): its metal part on the floor is cast iron, solid enough to keep it up. Drawn as `metal` it would be a 1.2 mm steel sheet
+ * (`structureFill`), the weight would go up into the shade, and a lamp 1.5 m tall on a 26 cm foot falls by itself.
+ */
+const WEIGHTED_FOOT = new Set(['floor_lamp'])
+const FOOT_MATERIAL = 'cast_iron'
+
 const BASE_MATERIAL: Record<string, string> = {
   wood: 'wood_hard',
   metal: 'steel',
@@ -354,6 +361,7 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
       // a board of a case (`hollowCases`) keeps the material it was made of
     } else if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
     else if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
+    if (WEIGHTED_FOOT.has(name) && p.key === 'metal' && p.min[1] <= FLOOR_TOUCH) material = FOOT_MATERIAL
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
     // what the block is built as: boards around air, a sheet around insulation, foam in a cover (its mass, not a solid block's)
     const fill = structureFill(material, p.shape)
