@@ -457,11 +457,11 @@ export function toilet(c: Ctx): void {
     { label: 'prompt.flush', at: false, noSweep: true },
   )
   c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, 0.12], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
-  // the bowl: a square inside the seat opening's water disc (radius 0.13), from the drain's height up to the seat. The flush is water running down from under the rim
-  // into the drain, inside the bowl: never a column as wide as the bowl, nor a spray that leaves it
-  const bowl: BasinSpec = { id: 'bowl', from: [-0.095, 0.3, 0.025], to: [0.095, 0.4, 0.215] }
+  // the bowl: a square inside the bowl body (the ellipsoid round z 0.02 narrows to r 0.152 at the rim's foot, y 0.36) and under the rim, its top 2 cm under the seat.
+  // The flush is water running down from under the rim into the drain, inside the bowl: never a column as wide as the bowl, nor a spray that leaves it
+  const bowl: BasinSpec = { id: 'bowl', from: [-0.07, 0.31, 0], to: [0.07, 0.385, 0.14] }
   c.add('basins', bowl)
-  const rim: Vec3 = [0, 0.39, 0.12]
+  const rim: Vec3 = [0, 0.38, 0.07]
   c.add('emitters', { id: 'flush_water', kind: 'water', pos: rim, dir: [0, -1, 0], source: 'flush', size: 0.08, ...streamInto(bowl, rim) })
   c.interact('use_flush', [0, ty + th + 0.05, -hd + 0.1], { do: 'toggle_fixture', fixture: 'flush' }, 'prompt.flush')
   c.add('damage', { target: 'self', kind: 'plastic', hp: 60 })

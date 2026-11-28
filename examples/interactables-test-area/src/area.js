@@ -57,6 +57,8 @@ const KEY_OVERRIDES = {
   sink_bathroom: { wood: 'mdf' },
   mailbox: { wood: 'steel' },
 }
+// a bowl filled to the brim spills over its lip at the first wobble of the load: it starts at most this much full
+const BOWL_FILL_MAX = 0.7
 // fixtures that hold water: inner volume (m), litres at the start, where the opening is
 /** @type {Readonly<Record<string, FluidFixture>>} */
 const FLUIDS = {
@@ -656,8 +658,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   }
 
   /**
-   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl, from its floor, held by the piece the floor belongs to. As much water
-   * as the bowl holds at most.
+   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl, from its floor, held by the piece the floor belongs to. Its level is
+   * the litres over the bowl's floor area, and never more water than the bowl holds.
    * @param {FluidFixture} f
    * @param {{ from: Triple; to: Triple }} bowl
    * @param {ReturnType<typeof analyse>} a
@@ -665,15 +667,15 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   function bowlFluid(f, bowl, a) {
     const size = /** @type {Triple} */ ([0, 1, 2].map((k) => round(bowl.to[k] - bowl.from[k])))
     const offset = /** @type {Triple} */ ([round((bowl.from[0] + bowl.to[0]) / 2), round(bowl.from[1]), round((bowl.from[2] + bowl.to[2]) / 2)])
-    const holds = round(size[0] * size[1] * size[2] * 1000, 2)
-    const capacity = Math.min(f.capacity, holds)
+    // the fluid world fills the shape in proportion to `capacity`: the shape is the whole bowl, so its capacity is what the bowl holds, or the level would stand higher than the litres
+    const capacity = round(size[0] * size[1] * size[2] * 1000, 2)
     const inside = (/** @type {{ position: number[]; shape: { size: number[] } }} */ p) => [0, 1, 2].every((k) => Math.abs(offset[k] + (k === 1 ? 0.005 : 0) - p.position[k]) <= p.shape.size[k] / 2 + 0.01)
     const part = a.destructible.parts.find(inside) ?? a.destructible.parts[0]
     return {
       container: {
         capacity,
         liquid: 'water',
-        liters: Math.min(f.liters, capacity),
+        liters: Math.min(f.liters, round(capacity * BOWL_FILL_MAX, 2)),
         temperature: 18,
         shape: { kind: /** @type {const} */ ('box'), size },
         opening: Math.min(f.opening, Math.min(size[0], size[2]) / 2),

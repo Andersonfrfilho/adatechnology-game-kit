@@ -48,4 +48,13 @@ describe('basins: the water stays in the bowl', () => {
     const lid = bbox(b.rec.primitives.flatMap((p) => cornersOf(p))).max[1]
     expect(top - travel).toBeGreaterThan(lid + 0.002)
   })
+  it('toilet: the bowl lies inside the bowl body (the ellipsoid round z 0.02, radius 0.19 at y 0.3) up to the rim, so its water never shows through the china', () => {
+    const basin = build('toilet').spec.basins?.[0]
+    if (!basin) throw new Error('toilet has no bowl')
+    const rimFoot = 0.36
+    for (let y = basin.from[1]; y <= Math.min(basin.to[1], rimFoot); y += 0.005) {
+      const radius = 0.19 * Math.sqrt(Math.max(0, 1 - ((y - 0.3) / 0.1) ** 2))
+      for (const x of [basin.from[0], basin.to[0]]) for (const z of [basin.from[2], basin.to[2]]) expect(Math.hypot(x, z - 0.02), `y ${y.toFixed(3)}`).toBeLessThan(radius - 0.005)
+    }
+  })
 })
