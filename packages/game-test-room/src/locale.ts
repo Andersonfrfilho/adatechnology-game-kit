@@ -314,6 +314,11 @@ const en: RoomStrings = {
     'effect.calm': 'calmer',
     'effect.wash': 'hands washed',
     'effect.none': 'used',
+    'vitals.moved': '{need} {from} → {to}',
+    'vitals.hunger': 'hunger',
+    'vitals.thirst': 'thirst',
+    'vitals.health': 'health',
+    'vitals.bleeding_stopped': 'no longer bleeding',
 
     'hud.reloading': 'Reloading...',
     'hud.empty': 'Empty',
@@ -797,6 +802,11 @@ const ptBR: RoomStrings = {
     'effect.calm': 'mais calmo',
     'effect.wash': 'mãos lavadas',
     'effect.none': 'usado',
+    'vitals.moved': '{need} {from} → {to}',
+    'vitals.hunger': 'fome',
+    'vitals.thirst': 'sede',
+    'vitals.health': 'vida',
+    'vitals.bleeding_stopped': 'parou de sangrar',
 
     'hud.reloading': 'Recarregando...',
     'hud.empty': 'Sem munição',

@@ -148,6 +148,10 @@ export type PlayerState = {
   turned: boolean
   health: number
   stamina: number
+  /** 0 fed, `needs.max` starving (`advanceNeeds`). */
+  hunger: number
+  /** 0 quenched, `needs.max` parched. */
+  thirst: number
   crouch: boolean
   running: boolean
   stepTimer: number

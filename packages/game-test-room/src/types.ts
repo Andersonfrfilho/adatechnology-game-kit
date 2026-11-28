@@ -10,6 +10,7 @@
  */
 import type { BlastPacingOptions, KitLoading as RoomLoading, KitWorldGraphicsOptions } from '@adatechnology/game-kit-defaults/world'
 import type { LightBudget } from '@adatechnology/game-render-three'
+import type { BodyVitalsState } from '@adatechnology/game-player'
 import type * as THREE_NS from 'three'
 import type { AudioEngine } from '@adatechnology/game-audio'
 import type { BlastOptions, DestructibleSpec, DestructionEvent, DestructionOptions, DestructionWorld, Vec3 } from '@adatechnology/game-destruction'
@@ -707,6 +708,8 @@ export interface TestRoom {
   setDebugCamera(view: { position: Vec3; target: Vec3; fov?: number } | null): void
   /** What the avatar was last given. */
   avatarState(): RoomAvatarState
+  /** The room's body (game-player `createBodyVitals`): health, hunger, thirst, bleeding and wounds, live (a test may set them; the HUD and the item uses read them). */
+  body(): BodyVitalsState
   /** `first` (the camera is the eye) or `third` (over the shoulder). V toggles it when a body is set. Logged as a `camera` action. */
   setCameraMode(mode: CameraMode): void
   readonly cameraMode: CameraMode

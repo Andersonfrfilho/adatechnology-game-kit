@@ -13,7 +13,7 @@ export const PLAYER_HUD_CSS = `
 .gp-hud-row output{text-align:right;font-variant-numeric:tabular-nums}
 .gp-hud-bar{height:7px;background:#2a2e36;border-radius:4px;overflow:hidden}
 .gp-hud-bar i{display:block;height:100%;width:0;background:#4fc3f7}
-.gp-hud-bar.hp i{background:#66bb6a}.gp-hud-bar.warn i{background:#ffb300}.gp-hud-bar.bad i{background:#ef5350}
+.gp-hud-bar.hp i{background:#66bb6a}.gp-hud-bar.need i{background:#c8a165}.gp-hud-bar.warn i{background:#ffb300}.gp-hud-bar.bad i{background:#ef5350}
 .gp-hud-status{display:flex;flex-wrap:wrap;gap:4px}
 .gp-hud-status:empty{display:none}
 .gp-hud-tag{border-radius:4px;padding:0 6px;background:#2a2e36}

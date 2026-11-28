@@ -29,3 +29,7 @@ export { HANDS_TIMING, createTakeTimeline, planDrawSequence, planTakeSequence } 
 export type { HandsTiming, TakeProgress, TakeSequence, TakeStep, TakeStepKind, TakeTimeline } from './take-sequence'
 export { STEP_POSE_DEFAULTS, createStepPose } from './step-pose'
 export type { StepPose, StepPoseOptions, StepPosition } from './step-pose'
+export { NEEDS_DEFAULTS, advanceNeeds, createNeedsState, isStarving, needsHoursOf, nourish } from './needs'
+export type { NeedsRules, NeedsState, Nourishment } from './needs'
+export { applyItemEffect, createBodyVitals } from './vitals'
+export type { BodyVitals, BodyVitalsOptions, BodyVitalsState, ItemEffect, ItemEffectResult, VitalsBody } from './vitals'

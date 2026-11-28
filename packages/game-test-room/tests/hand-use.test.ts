@@ -50,7 +50,9 @@ describe('using an item in the hand without a liquid', () => {
     run(room, 2)
     const used = room.log.entries({ type: 'used_item' })
     expect(used).toHaveLength(1)
-    expect(used[0]!.text).toBe('test_apple: satiety +8, hydration +6. Used up')
+    // the body ate it: hunger and thirst fall by the apple's own satiety and hydration (from 20, plus the seconds that went by)
+    expect(used[0]!.text).toBe('test_apple: satiety +8, hydration +6. Used up · hunger 20 → 12, thirst 20 → 14')
+    expect(used[0]!.data?.hunger).toBeCloseTo(12.21, 2)
     expect(room.spawned()).toHaveLength(0)
   })
 

@@ -1,4 +1,6 @@
 import type { ControlValue } from '@adatechnology/game-contracts'
+import { createVitalsPanel } from '@adatechnology/game-player/hud'
+import type { PlayerHudView } from '@adatechnology/game-player/hud'
 import { createBenchPanel } from './bench-panel'
 import type { BenchView, MetricRow } from './bench-panel'
 import type { WritableLog } from './log'
@@ -81,10 +83,14 @@ export interface HudState {
   objects: number
   /** The view when the room has a body (`null`: no body, no shortcut). */
   camera: 'first' | 'third' | null
+  /** The body's health, hunger and thirst (game-player `PlayerHudView`), drawn at the bottom left; absent, no box. */
+  vitals?: PlayerHudView
 }
 
 export interface UiOptions {
   container: HTMLElement
+  /** The language of the body's box (`pt-BR` or `en`). Default `en`. */
+  locale?: string
   strings: RoomStrings
   t: (key: string, vars?: Record<string, string | number>) => string
   log: WritableLog
@@ -189,7 +195,7 @@ const CSS = `
 .tr-slot{pointer-events:auto;min-width:64px;max-width:92px;padding:3px 5px;background:rgba(10,12,16,.68);border:1px solid #3a404c;border-radius:5px;color:#cfd3da;cursor:pointer;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tr-slot b{color:#ffd23f;margin-right:3px}
 .tr-slot.on{border-color:#ffd23f;color:#fff;background:rgba(60,50,10,.8)}
-.tr-left{position:absolute;top:8px;left:8px;bottom:70px;width:min(400px,36vw);display:flex;flex-direction:column;gap:8px}
+.tr-left{position:absolute;top:8px;left:8px;bottom:84px;width:min(400px,36vw);display:flex;flex-direction:column;gap:8px}
 .tr-right{position:absolute;top:8px;right:8px;bottom:8px;width:min(310px,34vw);display:flex;flex-direction:column;gap:8px}
 .tr-panel{background:rgba(12,14,19,.82);border:1px solid #2c313b;border-radius:8px;padding:8px;pointer-events:auto;overflow:auto}
 .tr-panel h3{margin:0 0 6px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#9aa3b2;font-weight:600}
@@ -312,6 +318,12 @@ export function createUi(o: UiOptions): RoomUi {
   const held = mk('div', 'tr-held')
   const hotbar = mk('div', 'tr-hotbar')
   bottom.append(held, hotbar)
+  // the body's box of game-player's HUD (health, hunger, thirst), inside a box of its own class for its font
+  const vitalsBox = mk('div', 'gp-hud')
+  const vitalsPanel = createVitalsPanel(o.locale ?? 'en')
+  vitalsBox.dataset.hud = 'vitals'
+  vitalsBox.style.display = 'none'
+  vitalsBox.appendChild(vitalsPanel.element)
   let currentTool = ''
   const menuOptions = o.toolMenu
   const toolMenu = menuOptions
@@ -660,7 +672,7 @@ export function createUi(o: UiOptions): RoomUi {
   }
   toggle.onclick = togglePanels
 
-  root.append(cross, ring, top, bottom, help.badge, help.element, left, right, toggle, ...(toolMenu ? [toolMenu.element] : []))
+  root.append(vitalsBox, cross, ring, top, bottom, help.badge, help.element, left, right, toggle, ...(toolMenu ? [toolMenu.element] : []))
 
   // inspector
   const bar = (value: number, max: number, cls: string): HTMLElement => {
@@ -762,6 +774,8 @@ export function createUi(o: UiOptions): RoomUi {
     flushLog,
     hud(s) {
       currentTool = s.toolId
+      vitalsBox.style.display = s.vitals ? '' : 'none'
+      if (s.vitals) vitalsPanel.update(s.vitals)
       toolBox.textContent = ''
       toolBox.append(document.createTextNode(s.toolName))
       if (s.ammo) toolBox.append(mk('small', undefined, s.ammo))

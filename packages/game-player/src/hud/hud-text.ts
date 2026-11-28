@@ -2,6 +2,8 @@
 export type PlayerHudText = {
   readonly health: string
   readonly stamina: string
+  readonly hunger: string
+  readonly thirst: string
   readonly bleeding: string
   readonly wounds: string
   readonly infected: string
@@ -20,6 +22,8 @@ export type PlayerHudText = {
 const PT_BR: PlayerHudText = {
   health: 'Vida',
   stamina: 'Fôlego',
+  hunger: 'Fome',
+  thirst: 'Sede',
   bleeding: 'Sangrando',
   wounds: 'Ferimentos',
   infected: 'Infectado',
@@ -38,6 +42,8 @@ const PT_BR: PlayerHudText = {
 const EN: PlayerHudText = {
   health: 'Health',
   stamina: 'Stamina',
+  hunger: 'Hunger',
+  thirst: 'Thirst',
   bleeding: 'Bleeding',
   wounds: 'Wounds',
   infected: 'Infected',

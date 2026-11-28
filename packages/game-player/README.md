@@ -50,14 +50,31 @@ player.grab(agentIndex) // 3 s to break free
 player.knock(1.5)
 ```
 
+## Hunger and thirst, and what items do to the body
+
+Port of the team game's needs (G 57255-57344, `needs` in `data/defaults.json`): `hunger` and `thirst` on the body's state, 0 fed and quenched up to 100,
+start at 20 and rise on the game clock (1 game hour is 50 s; hunger 2.5/h, 4/h running, thirst 4/h, times 1.1 − 0.02 × vigor). Past 90 either one costs
+0.2 health a second, and a body that dies of it dies of `hunger_thirst`. `createPlayer({ needs: false })` keeps them still; an object patches the rules.
+
+`player.use(effect)` applies an item's effect as the catalogue resolved it (`ModuleItemUse.effect`, from `goodsItemUse` of game-items-goods): food and
+drink take their own `satiety` and `hydration` off hunger and thirst (salted food makes you thirsty), `heal` gives back `params.amount` health up to the
+most, `stop_bleeding` stops the bleeding, `clean_wound` cleans the last wound, `calm` takes the panic away; it answers how much each moved. The pure parts
+are `advanceNeeds`, `nourish` and `applyItemEffect`; `createBodyVitals()` is the same body for a host without `createPlayer` (the test room uses it).
+
+```ts
+const result = player.use({ id: 'consume_nutrition', satiety: 25, hydration: -5 }) // canned beans: { hunger: -25, thirst: +5, ... }
+player.use(goodsItemUse(painkillers)!.effect!) // +15 health
+```
+
 ## HUD and death screen (`./hud`)
 
-`@adatechnology/game-player/hud` is the body's screen, in DOM and with no three.js, laid over the game's view: the health and stamina bars with the
+`@adatechnology/game-player/hud` is the body's screen, in DOM and with no three.js, laid over the game's view: the health, stamina, hunger and thirst bars with the
 bleeding, the infection stage and the wounds under them (bottom left), the weapon in the hand and its rounds (bottom right, only when the hand holds
 one), a name at the top left, the body's `message` events at the top centre and the crosshair in the first person. Nothing in it takes the mouse.
 The death screen opens once the body has been dead `delaySeconds` (1.5 s: the death camera settles first), frees the pointer lock and shows the
 cause, the time survived and two buttons: restart the scene (also Enter or R) and back to the start. Each hook fires once until the body lives
-again. The words are `pt-BR` (default) and `en`.
+again. The words are `pt-BR` (default) and `en`. A host with its own screen (the test room) mounts the body's box alone: `createVitalsPanel(locale)`,
+its `element` inside an element of class `gp-hud`. Hunger and thirst grow amber past half and red once they cost health.
 
 ```ts
 import { createDeathScreen, createPlayerHud, playerHudViewOf } from '@adatechnology/game-player/hud'
