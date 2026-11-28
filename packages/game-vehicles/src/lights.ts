@@ -18,7 +18,7 @@ export type TaillightOptions = LampPlacement & {
   /** length of the wrap-around */
   wrap?: number
 }
-export type GrilleOptions = { x: number; y: number; z?: number; w?: number; h?: number; style?: 'bars' | 'mesh' | 'big' | 'seven' | 'closed' | 'truck'; col?: ColorRepresentation; emblem?: boolean }
+export type GrilleOptions = { x: number; y: number; z?: number; w?: number; h?: number; style?: 'bars' | 'mesh' | 'big' | 'seven' | 'closed' | 'truck'; col?: ColorRepresentation; emblem?: boolean; /** metres the badge sits behind its usual place on the grille (a car whose foremost point is the badge keeps its measured length) */ emblemBack?: number }
 import { clamp } from './util'
 
 export function installLights(kit: Kit) {
@@ -360,7 +360,7 @@ export function installLights(kit: Kit) {
     g.children.forEach(function (m) {
       m.castShadow = true
     })
-    if (o.emblem !== false) kit.emblem(c, 0.05, st === 'closed' ? h * 0.12 : 0, 0, Math.min(0.05, h * 0.3), g)
+    if (o.emblem !== false) kit.emblem(c, 0.05 - (o.emblemBack ?? 0), st === 'closed' ? h * 0.12 : 0, 0, Math.min(0.05, h * 0.3), g)
     return g
   }
 

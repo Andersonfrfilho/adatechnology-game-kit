@@ -1924,7 +1924,8 @@ export function installSuvPickupVan(fx: FleetContext): void {
         tailLightY: 2.06,
         noAntenna: true,
         hl: { style: 'round', w: 0.2, h: 0.2, y: 2.03, in: 0.12, yaw: 0 },
-        grille: { style: 'bars', w: 1.0, h: 0.3, y: 2.0 },
+        /* the badge is this truck's foremost point: 9 mm back, where it was before its layers grew 7 mm and the grille came 2 mm ahead (the length the team measured) */
+        grille: { style: 'bars', w: 1.0, h: 0.3, y: 2.0, emblemBack: 0.009 },
         tl: { style: 'vertical', w: 0.12, h: 0.28, y: 2.06, in: 0.0 },
         interior: { rows: 1, col: '#202224', trim: '#141516', front: 'bench' },
         hood: { motor: 'v8' },
