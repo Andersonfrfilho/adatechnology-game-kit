@@ -13,6 +13,8 @@ export interface EngineImpactsOptions {
   readonly minApproach?: number
   /** The radius (m) of the blunt contact. Default 0.1. */
   readonly contactRadius?: number
+  /** Bodies whose blows hit nothing: the debris left of a part that broke (`rubble`), which breaks nothing of the world. Default none. */
+  readonly harmless?: (body: BodyId) => boolean
 }
 
 const DEFAULT_MIN_IMPULSE = 30
@@ -35,6 +37,8 @@ export const createEngineImpacts = (loop: PhysicsLoop, statics: EngineStatics, d
     accepts: (body: BodyId) => statics.ownerOf.has(body),
     onImpact: (impact) => {
       if (impact.approach < minApproach) return
+      // debris is no object of the world: what is left of a column that crumbled does not crack the roof it was holding up
+      if (options.harmless?.(impact.other)) return
       const object = statics.ownerOf.get(impact.body)
       const part = statics.partOf.get(impact.body)
       if (object === undefined || part === undefined || destruction.part(object, part) === null) return

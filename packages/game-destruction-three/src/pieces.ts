@@ -378,7 +378,8 @@ export class PieceSystem {
 
   /** Contact blows on the fixed parts become `blunt` hits of `destruction` (`engine-impacts.ts`). Returns the way to stop it. */
   contactHits(destruction: DestructionWorld, options?: EngineImpactsOptions): () => void {
-    return createEngineImpacts(this.loop, this.engine.statics, destruction, options)
+    const engine = this.engine
+    return createEngineImpacts(this.loop, engine.statics, destruction, { harmless: (body) => engine.pieceOfBody(body)?.debris === true, ...options })
   }
 
   /**
