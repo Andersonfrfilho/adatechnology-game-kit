@@ -104,7 +104,9 @@ export const createBlockedTest = (o: LocomotionContext): BlockedTest => {
   const blocked = (x: number, z: number, radius: number, feet: number, footing: FootingKind): boolean => {
     if (outside(x, z)) return true
     for (const c of o.colliders) if (x > c[0] - radius && x < c[2] + radius && z > c[1] - radius && z < c[3] + radius) return true
-    if (o.blockers) for (const isBlocked of o.blockers) if (!o.bodiedBlockers?.has(isBlocked) && isBlocked(x, z, radius)) return true
+    // a blocker with its body in the world is left to the body only where the world moves the feet (`bodiless`: the walker's intent); a move the room places
+    // itself (`moveBy`: a scripted walk, a teleport the world cannot stop) and `canStand` hold it too, or the house wall is walked through
+    if (o.blockers) for (const isBlocked of o.blockers) if (!(footing === 'bodiless' && o.bodiedBlockers?.has(isBlocked)) && isBlocked(x, z, radius)) return true
     if (footing === 'none' || !o.footing) return false
     return footing === 'bodiless' ? o.footing(x, z, radius, feet, true).blocked : o.footing(x, z, radius, feet).blocked
   }

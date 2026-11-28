@@ -130,6 +130,35 @@ describe('what stops the player: the room on its own against the bodies of the w
     }
   })
 
+  it('a scripted walk (room.walk, a move the room places itself) stops at a blocker with its body too: the house wall is not walked through', { timeout: 120000 }, async () => {
+    const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
+    // a masonry wall of a house: 17 cm thick, its body in the world (a teleport past its middle is pushed out on the far side)
+    const thinWall: TestableModule<ScenarioContext> = {
+      ...wallModule(),
+      id: 'thin_wall_probe',
+      attach: (host) => host.addBlocker?.((x, z, radius) => x > 7 - radius && x < 7.17 + radius && z > -1 - radius && z < 1 + radius, () => [{ center: [7.085, 1.4, 0], half: [0.085, 1.4, 1] }]) ?? (() => undefined),
+    }
+    const engine = makeRoom({ catalog: demoItems('en'), physics: createPhysicsLoop(world) })
+    engine.loadModule(thinWall)
+    for (let frame = 0; frame < 30; frame++) engine.update(1 / 60)
+    try {
+      engine.look([5, 1.7, 0], [10, 1.7, 0])
+      // the room places the feet itself: past the wall in one move, read before the world steps (the world's push-out of a body caught inside a thin wall
+      // may as well send it to the far side, which is how the houses' walls were walked through)
+      engine.walk([8, 0, 0], 0)
+      expect(engine.playerPosition[0]).toBeGreaterThan(6)
+      expect(engine.playerPosition[0]).toBeLessThanOrEqual(7 - 0.3 + 0.05)
+      for (let hop = 0; hop < 20; hop++) {
+        engine.walk([engine.playerPosition[0] + 0.25, 0, 0], 0.1)
+        for (let frame = 0; frame < 8; frame++) engine.update(0.05)
+      }
+      expect(engine.playerPosition[0]).toBeLessThanOrEqual(7 - 0.3 + 0.05)
+    } finally {
+      engine.dispose()
+      world.dispose()
+    }
+  })
+
   it('the post of the tap is a body of the world: a ray along the floor of the room hits it', { timeout: 120000 }, async () => {
     const world = (await createJoltEngine()).createWorld({ ...KIT_WORLD })
     const engine = arenaOf(createPhysicsLoop(world))
