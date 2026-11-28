@@ -16,7 +16,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
 /** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
-await page.goto(`${url}?scene=doors&table=0&ui=0&items=sink_kitchen,washer,kitchen_cabinet_base,sink_bathroom,kitchen_cabinet_wall`, { timeout: 180000 })
+await page.goto(`${url}?scene=doors&table=0&ui=0&items=sink_kitchen,washing_machine,kitchen_cabinet_base,sink_bathroom,kitchen_cabinet_wall`, { timeout: 180000 })
 await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned().some((s) => s.itemId === 'sedan'), null, { timeout: 2400000, polling: 5000 })
 await page.waitForTimeout(3000)
 const objs = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z], ry: s.root.rotation.y, leaves: window.__testRoom.leaves(s.objectId) })).filter((s) => s.leaves.length))
