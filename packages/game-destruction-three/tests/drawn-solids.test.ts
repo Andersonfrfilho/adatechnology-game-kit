@@ -144,6 +144,25 @@ const kennel = (s: Stage, how: 'ranged' | 'plain' = 'ranged') => {
   s.renderer.bind('kennel', root, { parts: { body: how === 'plain' ? mesh : { mesh, range: [ranges[0]![0], ranges[7]![1]] } } })
 }
 
+/**
+ * A stool as the mesh api of game-interactables-three hands it over (spec 019): one mesh of a round seat on four round legs, with the solids it was built from in
+ * `userData.solids`, each the box of one primitive. The seat is 0.4 m across and 3 cm thick at 0.4 m; the legs are 4 cm across, 0.15 m from the middle each way.
+ */
+const stool = (s: Stage, at: number, how: 'fixed' | 'loose' = 'fixed') => {
+  const legs = [[-0.15, -0.15], [0.15, -0.15], [-0.15, 0.15], [0.15, 0.15]] as const
+  const { geometry } = merge([...legs.map(([x, z]) => placed(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 12), [x, 0.2, z])), placed(new THREE.CylinderGeometry(0.2, 0.2, 0.03, 16), [0, 0.415, 0])])
+  const mesh = new THREE.Mesh(geometry)
+  mesh.userData.solids = [...legs.map(([x, z]) => ({ kind: 'cylinder', center: [x, 0.2, z], half: [0.02, 0.2, 0.02], rotation: [0, 0, 0, 1] })), { kind: 'cylinder', center: [0, 0.415, 0], half: [0.2, 0.015, 0.2], rotation: [0, 0, 0, 1] }]
+  const root = new THREE.Group()
+  root.add(mesh)
+  root.position.set(0, 0, at)
+  s.scene.add(root)
+  root.updateMatrixWorld(true)
+  s.world.addObject('stool', [partState('body', 'wood', { mass: 4 })])
+  s.renderer.bind('stool', root, { parts: { body: mesh } })
+  return how === 'loose' ? (s.renderer.makePiece('stool') as unknown as { sleeping: boolean; partBoxes?: Array<{ half: number[] }> }) : null
+}
+
 /** The height of the first thing the engine has under (x, z) looking down from 50 m: the drawn top, in the engine's own world. */
 const topUnder = (s: Stage, x: number, z: number): number => {
   const hit = s.physics.rayFirst([x, 50, z], [0, -1, 0], 100)
@@ -253,6 +272,56 @@ engineOnly('every drawn fixed thing collides in the engine', () => {
     expect(chip.bottom()).toBeGreaterThan(0.02)
     expect(chip.bottom()).toBeLessThan(0.06)
     expect(Math.hypot(chip.root.position.x, chip.root.position.z - 60)).toBeLessThan(0.2)
+  })
+
+  it('a mesh that says what it was built from (userData.solids) is held by that, fixed: a stool is its four legs and its seat, and a block put under the seat lies on the floor', () => {
+    const s = stage()
+    stool(s, 80)
+    s.run(0.2)
+    const held = s.statics().bodies.get('stool')!.held
+    expect(held.size).toBe(5)
+    expect([...held.values()].every((entry) => entry.solid.mesh === undefined)).toBe(true)
+    // the seat from above, the floor between the legs from the side
+    expect(topUnder(s, 0, 80)).toBeCloseTo(0.43, 2)
+    expect(s.physics.rayFirst([-1, 0.2, 80], [1, 0, 0], 2)).toBeNull()
+    expect(s.physics.rayFirst([-1, 0.2, 79.85], [1, 0, 0], 2)?.distance).toBeCloseTo(1 - 0.17, 2)
+    const block = drop(s, 'under_seat', [0, 0.2, 80], 0.05)
+    s.run(3)
+    expect(block.piece.sleeping).toBe(true)
+    expect(block.bottom()).toBeLessThan(0.03)
+    expect(Math.hypot(block.root.position.x, block.root.position.z - 80)).toBeLessThan(0.1)
+  })
+
+  it('and let go: the piece is those five boxes, not the box around the legs and the air between them', () => {
+    const s = stage()
+    const piece = stool(s, 90, 'loose')!
+    expect(piece.partBoxes).toHaveLength(5)
+    const volume = piece.partBoxes!.reduce((sum, box) => sum + 8 * box.half[0]! * box.half[1]! * box.half[2]!, 0)
+    // the box around the stool is 0.4 x 0.43 x 0.4 m = 0.069 m3; its legs and seat as boxes are 0.0074 m3
+    expect(volume).toBeLessThan(0.01)
+    s.run(2)
+    expect(piece.sleeping).toBe(true)
+    const block = drop(s, 'under_loose_seat', [0, 0.15, 90], 0.05)
+    s.run(3)
+    expect(block.piece.sleeping).toBe(true)
+    expect(block.bottom()).toBeLessThan(0.03)
+    expect(Math.hypot(block.root.position.x, block.root.position.z - 90)).toBeLessThan(0.1)
+  })
+
+  it('a list that is not solids is not used: the mesh is measured from what is drawn', () => {
+    const s = stage()
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 0.2, 1))
+    mesh.userData.solids = [{ center: [0, 0, 0], half: [9, 9, 'nine'], rotation: [0, 0, 0, 1] }]
+    const root = new THREE.Group()
+    root.add(mesh)
+    root.position.set(0, 0.1, 100)
+    s.scene.add(root)
+    root.updateMatrixWorld(true)
+    s.world.addObject('slab', [partState('body', 'concrete', { mass: 400 })])
+    s.renderer.bind('slab', root, { parts: { body: mesh } })
+    s.run(0.2)
+    expect(topUnder(s, 0, 100)).toBeCloseTo(0.2, 2)
+    expect(topUnder(s, 3, 100)).toBe(-Infinity)
   })
 
   it('a part that breaks has no body any more: nothing collides where nothing is drawn', () => {

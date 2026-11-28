@@ -17,6 +17,7 @@ import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
 import { isTurned } from './internal'
 import { drawnSolidsOf } from './drawn-solids'
+import { builtSolidsOf } from './built-solids'
 import { OWN_MESH, RANGED, hollowBoxesOf } from './drawn-boxes'
 import { isRigidPose } from './rigid-pose'
 import type { MeasureBudget } from './drawn-solids'
@@ -3161,6 +3162,26 @@ class Renderer implements DestructionRenderer {
    */
   private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
     const [cx, cy, cz] = at.from
+    // a mesh of its own that says what it was built from (spec 019) is held by that, box by box: nothing is read back from its vertices
+    const built = mv.range ? null : builtSolidsOf(mv.mesh)
+    if (built) {
+      const pos = new this.THREE.Vector3()
+      const quat = new this.THREE.Quaternion()
+      const scale = new this.THREE.Vector3()
+      at.m4.decompose(pos, quat, scale)
+      const c = new this.THREE.Vector3()
+      const q = new this.THREE.Quaternion()
+      const even = (Math.abs(scale.x) + Math.abs(scale.y) + Math.abs(scale.z)) / 3
+      for (const solid of built) {
+        c.set(solid.center[0], solid.center[1], solid.center[2]).applyMatrix4(at.m4)
+        q.set(solid.rotation[0], solid.rotation[1], solid.rotation[2], solid.rotation[3])
+        const turned = Math.abs(q.w) < 1 - 1e-9
+        const s: Vec3 = turned ? [even, even, even] : [Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z)]
+        q.premultiply(quat).normalize()
+        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [Math.max(0.005, solid.half[0] * s[0]), Math.max(0.005, solid.half[1] * s[1]), Math.max(0.005, solid.half[2] * s[2])], rotation: [q.x, q.y, q.z, q.w] })
+      }
+      return
+    }
     // a mesh drawn as boxes with air between them (a kennel's boards, a door frame, the two slabs of a roof) is held box by box, ranged or not: the box around them is not drawn
     const own: number[] = []
     this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)

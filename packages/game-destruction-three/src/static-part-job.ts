@@ -1,6 +1,7 @@
 import { fitOrientedBox, hugs } from '@adatechnology/game-shapes'
 import type { OrientedBox } from '@adatechnology/game-shapes'
 
+import type { BuiltSolid } from './built-solids'
 import type { StaticSolid } from './engine-statics'
 
 /** A box fits a drawn part when each of its eight corners has a vertex within this (m): a box drawn is a box held, a cylinder or a chamfered post is not. */
@@ -34,6 +35,8 @@ export interface StaticPartJob {
   /** The triangles of the part as vertex numbers of the host (three each), `from` its first vertex. */
   readonly found: Uint32Array
   readonly from: number
+  /** The solids the mesh was built from (`builtSolidsOf`), in the mesh's frame: with them the part is those boxes, and nothing is measured. */
+  readonly solids?: readonly BuiltSolid[]
 }
 
 const IDENTITY = [1, 0, 0, 0, 1, 0, 0, 0, 1]
@@ -73,6 +76,8 @@ export function measureStaticPart(job: StaticPartJob): StaticSolid[] {
   const size = [high[0] - low[0], high[1] - low[1], high[2] - low[2]]
   const s = [Math.abs(scale[0]), Math.abs(scale[1]), Math.abs(scale[2])]
   if (Math.max(size[0] * s[0], size[1] * s[1], size[2] * s[2]) < COLLAPSED) return []
+  // what the builder drew, box by box (spec 019): the part is that, turned and put where the mesh is
+  if (job.solids && job.solids.length > 0) return job.solids.map((solid) => builtSolidIn(solid, pos, quat, scale))
   const centre = [(low[0] + high[0]) / 2, (low[1] + high[1]) / 2, (low[2] + high[2]) / 2]
   const half = [size[0] / 2, size[1] / 2, size[2] / 2]
   // the box of the geometry in its own frame, turned by the mesh: the drawn box of a wall, a table top, a beam
@@ -92,6 +97,22 @@ export function measureStaticPart(job: StaticPartJob): StaticSolid[] {
   const turned = fitOrientedBox(world as unknown as number[])
   if (turned && fitsTurned(world, turned) && fillsFaces(world, found, from, turnedBox(turned)) && fillsVolume(world, found, from, turnedBox(turned))) return [turned]
   return [trimeshOf(world, from, found)]
+}
+
+/** A solid of the mesh (its frame) as a box of the world: carried by the mesh's place, turn and scale. A turned solid keeps its shape under one scale only, so the mean of the three stands for a mesh scaled unevenly. */
+const builtSolidIn = (solid: BuiltSolid, pos: readonly number[], quat: readonly [number, number, number, number], scale: readonly number[]): StaticSolid => {
+  const [cx, cy, cz] = turn(solid.center[0] * scale[0], solid.center[1] * scale[1], solid.center[2] * scale[2], quat)
+  const [ax, ay, az, aw] = quat
+  const [bx, by, bz, bw] = solid.rotation
+  const turned = Math.abs(bw) < 1 - 1e-9
+  const even = (Math.abs(scale[0]) + Math.abs(scale[1]) + Math.abs(scale[2])) / 3
+  const s = turned ? [even, even, even] : [Math.abs(scale[0]), Math.abs(scale[1]), Math.abs(scale[2])]
+  return {
+    center: [cx + pos[0], cy + pos[1], cz + pos[2]],
+    half: [Math.max(MIN_HALF, solid.half[0] * s[0]), Math.max(MIN_HALF, solid.half[1] * s[1]), Math.max(MIN_HALF, solid.half[2] * s[2])],
+    // the mesh's turn, then the solid's own
+    rotation: [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz],
+  }
 }
 
 /** The buffers of a measured part to transfer back (the triangles of a trimesh). */
