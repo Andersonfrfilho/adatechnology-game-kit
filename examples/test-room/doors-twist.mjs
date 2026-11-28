@@ -44,7 +44,6 @@ for (const o of objs) {
     const box = await page.evaluate((id) => { const s = window.__testRoom.spawned().find((x) => x.objectId === id); if (!s) return [0, 0, 0, 0]; const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.x, b.min.z, b.max.x, b.max.z] }, o.id)
     const samples = []
     let intoCar = 0
-    let shotTaken = false
     const t0 = Date.now()
     while (Date.now() - t0 < 60000) {
       const v = await page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [o.id, leaf])
@@ -55,13 +54,11 @@ for (const o of objs) {
         const [x, , z] = await page.evaluate(() => window.__testRoom.playerPosition)
         if (x > box[0] + 0.25 && x < box[2] - 0.25 && z > box[1] + 0.25 && z < box[3] - 0.25) intoCar++
       }
-      if (!shotTaken && v > 0.3 && v < 0.7 && li === 0) { await page.screenshot({ path: join(out, `doors-twist-${o.item}-meio.png`) }); shotTaken = true }
       if (v > 0.98 || (Date.now() - t0 > 4000 && (await page.evaluate(() => window.__testRoom.door)) === null)) break
       await page.waitForTimeout(40)
     }
     await page.waitForTimeout(500)
     const end = axisAngle(mul(inv(rest), (await quatOf(o.id, leaf)) ?? rest))
-    if (li === 0) await page.screenshot({ path: join(out, `doors-twist-${o.item}-aberta.png`) })
     let dev = 0
     for (const s of samples) if (s.d.angle > 0.05) dev = Math.max(dev, Math.acos(Math.min(1, Math.abs(s.d.axis[0] * end.axis[0] + s.d.axis[1] * end.axis[1] + s.d.axis[2] * end.axis[2]))))
     worst = Math.max(worst, dev)
@@ -72,6 +69,41 @@ for (const o of objs) {
     await page.evaluate(([o, p]) => window.__testRoom.useLeaf(o, p), [o.id, leaf])
     await page.waitForFunction(() => window.__testRoom.door === null, null, { timeout: 60000 }).catch(() => {})
     await page.waitForTimeout(300)
+  }
+}
+// the shots: each object from the side and a step back, so the whole leaf is in the frame, its open clip played (the same pose the hand drives), mid-swing and open;
+// one file per object (`-2`, `-3` for the second and third of an item)
+/** @type {Record<string, number>} */
+const count = {}
+for (const o of objs) {
+  const n = (count[o.item] = (count[o.item] ?? 0) + 1)
+  const name = `doors-twist-${o.item}${n > 1 ? `-${n}` : ''}`
+  const box = await page.evaluate((id) => { const s = window.__testRoom.spawned().find((x) => x.objectId === id); if (!s) return [0, 0, 0, 0, 0, 0]; const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z] }, o.id)
+  const centre = [((box[0] ?? 0) + (box[3] ?? 0)) / 2, ((box[1] ?? 0) + (box[4] ?? 0)) / 2, ((box[2] ?? 0) + (box[5] ?? 0)) / 2]
+  const size = Math.max((box[3] ?? 0) - (box[0] ?? 0), (box[4] ?? 0) - (box[1] ?? 0), (box[5] ?? 0) - (box[2] ?? 0))
+  const back = 1.2 + size * 1.1
+  // in front and to the side of the object (its front looks along +z turned by ry), a little above its top
+  const fx = Math.sin(o.ry)
+  const fz = Math.cos(o.ry)
+  /** @type {[number, number, number]} */
+  const eye = [(centre[0] ?? 0) + (fx * 0.8 + fz * 0.6) * back, (box[4] ?? 1) + 0.6, (centre[2] ?? 0) + (fz * 0.8 - fx * 0.6) * back]
+  /** @type {[number, number, number]} */
+  const target = [centre[0] ?? 0, centre[1] ?? 0, centre[2] ?? 0]
+  await page.evaluate(([e, t]) => window.__testRoom.look(e, t), /** @type {[[number, number, number], [number, number, number]]} */ ([eye, target]))
+  await page.waitForTimeout(300)
+  // the clips of the aimed item: the eye now rests on this object
+  const clips = await page.evaluate((id) => { const a = window.__testRoom.animations(); return a?.objectId === id ? a.clips : [] }, o.id)
+  const clip = clips.find((c) => c.id.startsWith('open'))
+  if (!clip) { console.log('no open clip for the shots of', o.item, clips.map((c) => c.id).join(',')); continue }
+  await page.evaluate(([c, id]) => window.__testRoom.playAnimation(c, id), [clip.id, o.id])
+  await page.waitForTimeout(clip.duration * 500)
+  await page.screenshot({ path: join(out, `${name}-meio.png`) })
+  await page.waitForTimeout(clip.duration * 500 + 400)
+  await page.screenshot({ path: join(out, `${name}-aberta.png`) })
+  const close = clips.find((c) => c.id.startsWith('close'))
+  if (close) {
+    await page.evaluate(([c, id]) => window.__testRoom.playAnimation(c, id), [close.id, o.id])
+    await page.waitForTimeout(close.duration * 1000 + 300)
   }
 }
 console.log(`worst drift ${(worst * 180 / Math.PI).toFixed(2)} deg; ${failures.length} failures ${failures.join(', ')}`)
