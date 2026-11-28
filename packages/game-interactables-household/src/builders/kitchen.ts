@@ -465,9 +465,10 @@ export function toilet(c: Ctx): void {
     { label: 'prompt.flush', at: false, noSweep: true },
   )
   c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, BOWL_Z], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
-  // the bowl's water: a square in the trap, from the bottom of the bowl to below the rim; its corners run into the porcelain, so only the water inside the
-  // bowl shows. The flush is water running down from under the rim into the trap, inside the bowl
-  const bowl: BasinSpec = { id: 'bowl', from: [-0.075, 0.26, BOWL_Z - 0.075], to: [0.075, 0.36, BOWL_Z + 0.075] }
+  // the bowl's water: a disc in the trap, from the bottom of the bowl to below the rim, as wide as the bowl's inside at the water's level (0.12 at 0.32-0.37 m);
+  // under the water's surface it runs into the porcelain, so only the water inside the bowl shows. The flush is water running down from under the rim into the
+  // trap, inside the bowl
+  const bowl: BasinSpec = { id: 'bowl', from: [-0.12, 0.26, BOWL_Z - 0.12], to: [0.12, 0.36, BOWL_Z + 0.12], shape: 'round' }
   c.add('basins', bowl)
   const rim: Vec3 = [0, 0.385, BOWL_Z]
   c.add('emitters', { id: 'flush_water', kind: 'water', pos: rim, dir: [0, -1, 0], source: 'flush', size: 0.08, ...streamInto(bowl, rim) })
