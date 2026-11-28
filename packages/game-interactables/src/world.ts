@@ -1,3 +1,4 @@
+import { FLUSH_RUN_SECONDS } from './fixture-emitters'
 import { mergeColliders } from './colliders'
 import { fitsSlot, generateLoot } from './loot'
 import { format, resolveStrings } from './locale'
@@ -43,7 +44,7 @@ const AUTO_RANGE = 2
 /** How far behind a socket's face (m) a plug may be and still take it: a plug on the wall's other side is a wall's thickness (10 cm or more) behind it. */
 const SOCKET_BEHIND = 0.05
 const SMOKE_TAIL = 20
-const FLUSH_SECONDS = 2
+const FLUSH_SECONDS = FLUSH_RUN_SECONDS
 const ACTOR_HEIGHT = 1.7
 const PUSH_GAIN = 1.2
 const SWEEP_STEPS = 24
