@@ -106,6 +106,26 @@ describe('createEffects', () => {
     expect(stream.visible).toBe(false)
   })
 
+  it('water that lands in a bowl stays in it: no drop rises over the rim nor lands past the walls, and the stream is narrower than the bowl', () => {
+    const fx = createEffects(THREE, new THREE.Scene())
+    // a toilet's flush, even said as wide as a shower: it falls 9 cm into a bowl 10 cm deep with walls 9.5 cm round it
+    const bowl = { radius: 0.095, depth: 0.1 }
+    const flush: ActiveEmitter = { id: 'flush', object: 'o', kind: 'water', pos: [0, 0.39, 0], dir: [0, -1, 0], size: 0.3, reach: 0.09, bowl, intensity: 1 }
+    const wp = fx.objects.water.geometry.getAttribute('position') as THREE.BufferAttribute
+    let seen = 0
+    for (let i = 0; i < 90; i++) {
+      fx.update(1 / 60, [flush])
+      for (let j = 0; j < fx.stats().byKind.water; j++, seen++) {
+        expect(wp.getY(j)).toBeLessThanOrEqual(0.3 + bowl.depth + 1e-6)
+        expect(Math.hypot(wp.getX(j), wp.getZ(j))).toBeLessThan(bowl.radius)
+      }
+    }
+    expect(seen).toBeGreaterThan(100)
+    const g = fx.meshes.streams[0].geometry
+    g.computeBoundingBox()
+    expect(g.boundingBox!.max.x).toBeLessThan(bowl.radius)
+  })
+
   it('a tap stream stops at its reach and a thin stream narrows', () => {
     const fx = createEffects(THREE, new THREE.Scene())
     const tap: ActiveEmitter = { id: 'tap', object: 'o', kind: 'water', pos: [0, 1.1, 0], dir: [0, -1, 0], size: 0.02, reach: 0.3, intensity: 1 }

@@ -8,7 +8,7 @@ import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import type { AreaPlacement, GroundLayout, GroundZone, ModuleArea } from '@adatechnology/game-contracts'
 import type { ItemSize } from '@adatechnology/game-test-room'
 
-import { ON_THE_WALL } from './house-tables-data.js'
+import { ON_THE_WALL, SECTIONS } from './house-tables-data.js'
 import type { HouseSection, Locale } from './house-tables-data.js'
 import { layHouseTables } from './house-tables-layout.js'
 
@@ -73,6 +73,12 @@ export interface LayHouseCompleteOptions {
   readonly catalogue?: HouseCatalogue
 }
 
+/**
+ * What a house stands on a counter (a microwave), piece id to the id it stands on, from the rooms of the house: the household catalogue draws it at the counter's
+ * height (the microwave's base 0.9 m up), so laid in a slot of its own on the floor it would hang in the air. It goes over its counter instead, as in the kitchen.
+ */
+export const ON_TOP_OF: Readonly<Record<string, string>> = Object.assign({}, ...SECTIONS.map((section) => section.onTopOf ?? {}))
+
 /** Least width of a labelled slot (the sign is 3 m at most and shrinks to the slot), metres. */
 const SLOT_MIN = 1.7
 const SLOT_GAP = 0.6
@@ -134,7 +140,7 @@ function slotsOf(catalogue: HouseCatalogue, measure: LayHouseCompleteOptions['me
   const onTheWall = new Set(ON_THE_WALL)
   const slots: Slot[] = []
   for (const item of [...catalogue.household, ...catalogue.furniture]) {
-    if (onTheWall.has(item)) continue
+    if (onTheWall.has(item) || (item in ON_TOP_OF && [...catalogue.household, ...catalogue.furniture].includes(ON_TOP_OF[item] as string))) continue
     const size = measureOf(measure, item)
     if (!size) {
       missing.push(item)
@@ -158,6 +164,8 @@ export function layHouseComplete(options: LayHouseCompleteOptions): HouseComplet
   const placements: AreaPlacement[] = [...tables.area.placements]
   const zones: GroundZone[] = [...(tables.ground.zones ?? [])]
   const onFloor = new Set<string>()
+  // a counter's sign names what stands on it too
+  const labelOf = (item: string): string => [item, ...Object.keys(ON_TOP_OF).filter((top) => ON_TOP_OF[top] === item)].map(nameOf).join(' + ')
   let z = floorStart(placements, measure(FINDS_TABLE_ID)?.d ?? 0, plan.firstZ)
   for (const line of linesOf(slotsOf(catalogue, measure, missing), plan.halfX)) {
     const depth = Math.max(...line.map((slot) => slot.size.d))
@@ -165,11 +173,22 @@ export function layHouseComplete(options: LayHouseCompleteOptions): HouseComplet
     let x = -plan.halfX
     for (const slot of line) {
       placements.push({ item: slot.item, position: [x + slot.width / 2, 0, centreZ] })
-      zones.push({ rect: [x + SLOT_GAP / 4, centreZ - depth / 2 - 0.1, x + slot.width - SLOT_GAP / 4, z], surface: 'tile_floor', label: nameOf(slot.item) })
+      zones.push({ rect: [x + SLOT_GAP / 4, centreZ - depth / 2 - 0.1, x + slot.width - SLOT_GAP / 4, z], surface: 'tile_floor', label: labelOf(slot.item) })
       onFloor.add(slot.item)
       x += slot.width
     }
     z = centreZ - depth / 2 - LINE_GAP
+  }
+  // what stands on a counter is laid over the counter's slot, at the floor: the catalogue draws it at the counter's height
+  for (const [item, base] of Object.entries(ON_TOP_OF)) {
+    const under = placements.find((placement) => placement.item === base)
+    if (!under || onFloor.has(item)) continue
+    if (!measureOf(measure, item)) {
+      missing.push(item)
+      continue
+    }
+    placements.push({ item, position: [under.position[0], 0, under.position[2]] })
+    onFloor.add(item)
   }
   return {
     area: { placements, ...(tables.area.view ? { view: tables.area.view } : {}) },

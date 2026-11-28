@@ -609,10 +609,14 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
    * @param {string} loc
    * @param {string} type
    * @param {ReturnType<typeof analyse>} a
+   * @param {ObjectSpec} [spec]
    */
-  function fluidOf(loc, type, a) {
+  function fluidOf(loc, type, a, spec) {
     const f = FLUIDS[type]
     if (!f) return undefined
+    // the water lies in the bowl the piece says it has (`basins`): its floor, its walls. A piece that says none gets the box over its basin piece
+    const bowl = spec?.basins?.[0]
+    if (bowl) return bowlFluid(f, bowl, a)
     const basin = a.pieces.find((/** @type {{ material: string; }} */ p) => p.material === 'ceramic') ?? a.pieces[0]
     const part = /** @type {(typeof a.destructible.parts)[number]} */ (a.destructible.parts.find((p) => p.id === basin.id))
     const top = part.position[1] + part.shape.size[1] / 2
@@ -628,6 +632,35 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
       part: part.id,
       uses: ['pour'],
       offset: /** @type {Triple} */ ([part.position[0], round(top - f.size[1] - 0.01), part.position[2]]),
+    }
+  }
+
+  /**
+   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl, from its floor, held by the piece the floor belongs to. As much water
+   * as the bowl holds at most.
+   * @param {FluidFixture} f
+   * @param {{ from: Triple; to: Triple }} bowl
+   * @param {ReturnType<typeof analyse>} a
+   */
+  function bowlFluid(f, bowl, a) {
+    const size = /** @type {Triple} */ ([0, 1, 2].map((k) => round(bowl.to[k] - bowl.from[k])))
+    const offset = /** @type {Triple} */ ([round((bowl.from[0] + bowl.to[0]) / 2), round(bowl.from[1]), round((bowl.from[2] + bowl.to[2]) / 2)])
+    const holds = round(size[0] * size[1] * size[2] * 1000, 2)
+    const capacity = Math.min(f.capacity, holds)
+    const inside = (/** @type {{ position: number[]; shape: { size: number[] } }} */ p) => [0, 1, 2].every((k) => Math.abs(offset[k] + (k === 1 ? 0.005 : 0) - p.position[k]) <= p.shape.size[k] / 2 + 0.01)
+    const part = a.destructible.parts.find(inside) ?? a.destructible.parts[0]
+    return {
+      container: {
+        capacity,
+        liquid: 'water',
+        liters: Math.min(f.liters, capacity),
+        temperature: 18,
+        shape: { kind: /** @type {const} */ ('box'), size },
+        opening: Math.min(f.opening, Math.min(size[0], size[2]) / 2),
+      },
+      part: part?.id,
+      uses: ['pour'],
+      offset,
     }
   }
 
@@ -652,7 +685,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         }
         if (a.animations.length) item.animations = a.animations
         if (a.spec.seats?.length) item.seats = a.spec.seats
-        const fluid = fluidOf(loc, t.id, a)
+        const fluid = fluidOf(loc, t.id, a, a.spec)
         if (fluid) item.fluid = fluid
         if (!t.solid || t.group === 'window' || t.fixed) item.movable = false
         if (t.pushable) item.pushable = true

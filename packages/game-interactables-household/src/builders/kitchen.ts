@@ -1,4 +1,4 @@
-import type { Vec3 } from '@adatechnology/game-interactables'
+import type { BasinSpec, Vec3 } from '@adatechnology/game-interactables'
 import type { Ctx } from '../ctx'
 import { HANDLE, dropDoor, hingedDoor, shell } from '../parts'
 import { mix, round3, shade } from '../util'
@@ -11,9 +11,9 @@ const CHROME = 0xd2d6da
 
 /**
  * Kitchen / bathroom tap: base, stem, curved spout toward +z and a lever part. Returns the outlet position.
- * `y` is the counter top the tap stands on.
+ * `y` is the counter top the tap stands on; `basin` the bowl under it, where its stream lands.
  */
-function tap(c: Ctx, x: number, y: number, z: number, id: string, partId: string): Vec3 {
+function tap(c: Ctx, x: number, y: number, z: number, id: string, partId: string, basin: BasinSpec): Vec3 {
   c.cyl('metal', x, y - 0.002, z, 0.03, 0.022, STEEL, 'cyl') // sunk 2 mm, so its foot never lies on a rim or counter face
   c.cyl('metal', x, y + 0.02, z, 0.017, 0.19, CHROME, 'cyl') // ends inside the head, not on its top
   c.cyl('metal', x, y + 0.2, z, 0.021, 0.02, STEEL, 'cyl')
@@ -33,7 +33,7 @@ function tap(c: Ctx, x: number, y: number, z: number, id: string, partId: string
   )
   const outlet: Vec3 = [round3(x), round3(y + 0.185), round3(z + 0.18)]
   c.add('fixtures', { id, kind: 'tap', outlet, dir: [0, -1, 0], flow: 7, part: partId, tank: 'auto' })
-  c.add('emitters', { id: `${id}_water`, kind: 'water', pos: outlet, dir: [0, -1, 0], source: id, size: 0.02, reach: 0.3 })
+  c.add('emitters', { id: `${id}_water`, kind: 'water', pos: outlet, dir: [0, -1, 0], source: id, size: 0.02, ...streamInto(basin, outlet) })
   c.interact(`use_${id}`, [round3(x + 0.05), round3(y + 0.126), round3(z)], { do: 'toggle_fixture', fixture: id }, 'prompt.tap', 1.3)
   return outlet
 }
@@ -198,7 +198,18 @@ interface SinkOptions {
   steel: boolean
 }
 
-function counterWithBasin(c: Ctx, o: SinkOptions): void {
+/**
+ * Where a stream from `outlet` straight down lands in a basin: it falls to the basin's floor, no shorter (it would end in the air over the water) and no longer
+ * (through the basin), and the basin's walls round that point catch what splashes.
+ */
+function streamInto(basin: BasinSpec, outlet: Vec3): { reach: number; bowl: { radius: number; depth: number } } {
+  const [x, , z] = outlet
+  const radius = Math.max(0.01, Math.min(x - basin.from[0], basin.to[0] - x, z - basin.from[2], basin.to[2] - z))
+  return { reach: round3(outlet[1] - basin.from[1]), bowl: { radius: round3(radius), depth: round3(basin.to[1] - basin.from[1]) } }
+}
+
+/** Draws the counter and its basin, says the basin (`basins`) and answers it. */
+function counterWithBasin(c: Ctx, o: SinkOptions): BasinSpec {
   const { hw, hd } = c
   const y0 = o.top - 0.04
   const zf = hd - HANDLE + 0.02
@@ -224,6 +235,9 @@ function counterWithBasin(c: Ctx, o: SinkOptions): void {
   c.b(mat, o.bx0 - 0.02, o.top, o.bz1, o.bx1 + 0.02, o.top + 0.004, o.bz1 + 0.02, wall)
   c.b(mat, o.bx0 - 0.02, o.top, o.bz0, o.bx0, o.top + 0.004, o.bz1, wall)
   c.b(mat, o.bx1, o.top, o.bz0, o.bx1 + 0.02, o.top + 0.004, o.bz1, wall)
+  const basin: BasinSpec = { id: 'basin', from: [round3(o.bx0), round3(yb + 0.01), round3(o.bz0)], to: [round3(o.bx1), round3(o.top), round3(o.bz1)] }
+  c.add('basins', basin)
+  return basin
 }
 
 /** Drain pipe from the basin down to a trap and back to the wall. `z` is where the drain leaves the basin. */
@@ -260,10 +274,10 @@ export function sinkKitchen(c: Ctx): void {
   const bx1 = -hw * 0.05
   const bz0 = -hd * 0.65
   const bz1 = hd * 0.45
-  counterWithBasin(c, { top, bx0, bx1, bz0, bz1, depth: KITCHEN_BASIN_DEPTH, counter: 0x7c7a78, steel: true })
+  const basin = counterWithBasin(c, { top, bx0, bx1, bz0, bz1, depth: KITCHEN_BASIN_DEPTH, counter: 0x7c7a78, steel: true })
   // drainboard grooves on the right
   for (let i = 0; i < 7; i++) c.b('metal', bx1 + 0.06, top, bz0 + 0.04 + i * 0.07, hw - 0.06, top + 0.004, bz0 + 0.052 + i * 0.07, 0x9a9ea2)
-  tap(c, (bx0 + bx1) / 2, top, -hd + 0.07, 'tap', 'tap_handle')
+  tap(c, (bx0 + bx1) / 2, top, -hd + 0.07, 'tap', 'tap_handle', basin)
   pipes(c, (bx0 + bx1) / 2, top - KITCHEN_BASIN_DEPTH, (bz0 + bz1) / 2)
   // doors
   const mid = 0.0015
@@ -289,9 +303,9 @@ export function sinkBathroom(c: Ctx): void {
   c.b('plain', -hw + 0.01, 0, -hd + 0.03, hw - 0.01, 0.08, zr - 0.04, 0x3a3836)
   const bz0 = -hd * 0.5
   const bz1 = hd * 0.55
-  counterWithBasin(c, { top, bx0: -hw * 0.6, bx1: hw * 0.6, bz0, bz1, depth: BATHROOM_BASIN_DEPTH, counter: 0xe9e4da, steel: false })
+  const basin = counterWithBasin(c, { top, bx0: -hw * 0.6, bx1: hw * 0.6, bz0, bz1, depth: BATHROOM_BASIN_DEPTH, counter: 0xe9e4da, steel: false })
   c.b('plain', -hw, top, -hd, hw, top + 0.08, -hd + 0.015, 0xe9e4da) // backsplash lip
-  tap(c, 0, top, -hd + 0.07, 'tap', 'tap_handle')
+  tap(c, 0, top, -hd + 0.07, 'tap', 'tap_handle', basin)
   pipes(c, 0, top - BATHROOM_BASIN_DEPTH, (bz0 + bz1) / 2)
   hingedDoor(c, { id: 'door', x0: -hw + 0.003, x1: hw - 0.003, y0: 0.083, y1: top - 0.043, zf, t, side: c.M.hinge ?? 'left', color: body, inner: lining, style: 'flat', handle: 'knob', label: 'prompt.door' })
   c.container({
@@ -322,7 +336,9 @@ export function utilitySink(c: Ctx): void {
   c.cyl('metal', 0, tubTop - 0.276, 0, 0.035, 0.004, 0x6a6e72, 'cyl')
   // washboard at the front, slanted
   c.b('plain', x0 + 0.04, tubTop - 0.27, z1 - 0.2, x0 + 0.04 + (x1 - x0) * 0.4, tubTop - 0.1, z1 - 0.06, 0xdadddc, 0, 0.5)
-  tap(c, 0, tubTop + 0.08, -hd + 0.08, 'tap', 'tap_handle')
+  const tub: BasinSpec = { id: 'basin', from: [round3(x0 + 0.03), round3(tubTop - 0.276), round3(z0 + 0.03)], to: [round3(x1 - 0.03), tubTop, round3(z1 - 0.03)] }
+  c.add('basins', tub)
+  tap(c, 0, tubTop + 0.08, -hd + 0.08, 'tap', 'tap_handle', tub)
   c.add('fixtures', { id: 'basin', kind: 'utility_sink', outlet: [0, round3(tubTop - 0.1), 0], dir: [0, -1, 0], flow: 12, tank: 'auto' })
 }
 
@@ -395,6 +411,9 @@ export function shower(c: Ctx): void {
   c.collider('wall_left', -hw, 0, -hd + 0.03, -hw + 0.03, h, hd - 0.05)
 }
 
+/** How far the flush button goes down when pressed, metres (of its 12 mm over the lid). */
+const FLUSH_TRAVEL = 0.008
+
 export function toilet(c: Ctx): void {
   const { hd } = c
   const w = c.main(0xf4f5f4)
@@ -427,8 +446,9 @@ export function toilet(c: Ctx): void {
     { label: 'prompt.toilet_lid', at: [0, seatY + 0.05, 0.14] },
   )
   // flush button on the cistern lid
+  // pressed, the button goes down 8 mm of its 12: its top stays 4 mm over the lid (all the way in, its top would lie on the lid's, the two faces fighting)
   c.part(
-    'flush_button', [0, ty + th + 0.025, -hd + 0.1], { kind: 'slide', axis: [0, -1, 0], distance: 0.012 },
+    'flush_button', [0, ty + th + 0.025, -hd + 0.1], { kind: 'slide', axis: [0, -1, 0], distance: FLUSH_TRAVEL },
     () => {
       c.cyl('metal', 0, ty + th + 0.025, -hd + 0.1, 0.04, 0.012, 0xd2d6da, 'cyl')
       c.cyl('metal', 0, ty + th + 0.037, -hd + 0.1, 0.03, 0.002, 0xe6eaee, 'cyl')
@@ -436,7 +456,12 @@ export function toilet(c: Ctx): void {
     { label: 'prompt.flush', at: false, noSweep: true },
   )
   c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, 0.12], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
-  c.add('emitters', { id: 'flush_water', kind: 'water', pos: [0, 0.38, 0.12], dir: [0, -1, 0], source: 'flush', size: 0.2, reach: 0.12 })
+  // the bowl: a square inside the water's disc (radius 0.14 at 0.395), from the drain's height up to the seat. The flush is water running down from under the rim
+  // into the drain, inside the bowl: never a column as wide as the bowl, nor a spray that leaves it
+  const bowl: BasinSpec = { id: 'bowl', from: [-0.095, 0.3, 0.025], to: [0.095, 0.4, 0.215] }
+  c.add('basins', bowl)
+  const rim: Vec3 = [0, 0.39, 0.12]
+  c.add('emitters', { id: 'flush_water', kind: 'water', pos: rim, dir: [0, -1, 0], source: 'flush', size: 0.08, ...streamInto(bowl, rim) })
   c.interact('use_flush', [0, ty + th + 0.05, -hd + 0.1], { do: 'toggle_fixture', fixture: 'flush' }, 'prompt.flush')
   c.add('damage', { target: 'self', kind: 'plastic', hp: 60 })
 }

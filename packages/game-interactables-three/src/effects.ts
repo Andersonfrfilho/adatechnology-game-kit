@@ -387,12 +387,24 @@ export function createEffects(THREE: ThreeLib, a: EffectsOptions | ThreeNS.Objec
       arc.r0 = size * 0.45
       arc.r1 = arc.r0 * 1.2
     }
+    // a stream into a bowl is never wider than the bowl
+    if (e.bowl) {
+      const most = Math.max(0.004, e.bowl.radius * 0.7)
+      arc.r0 = Math.min(arc.r0, most)
+      arc.r1 = Math.min(arc.r1, most)
+    }
     return true
   }
 
   const emitWater = (e: ActiveEmitter, k: number, nSpray: number, nSplash: number, nMist: number): void => {
     const size = e.size > 0 ? e.size : 0.05
-    const wide = size >= 0.1
+    const bowl = e.bowl
+    // a spray opens out only on open floor: in a bowl its walls hold it in
+    const wide = size >= 0.1 && !bowl
+    // the walls of a bowl catch what splashes: no drop rises over its rim (v^2 = 2 g h) nor flies past its walls before it falls back (out and back in 2 vy / g)
+    const riseMax = bowl ? Math.sqrt(2 * 9.8 * Math.max(0.01, bowl.depth)) * 0.85 : Infinity
+    const outMax = (vy: number): number => (bowl ? (bowl.radius * 0.6 * 9.8) / (2 * Math.max(vy, 0.3)) : Infinity)
+    const within = bowl ? bowl.radius * 0.3 : Infinity
     for (let j = 0; j < nSpray; j++) {
       const s = rand()
       const t = s * arc.t
@@ -420,14 +432,23 @@ export function createEffects(THREE: ThreeLib, a: EffectsOptions | ThreeNS.Objec
     const ez = arc.z + arc.vz * arc.t
     for (let j = 0; j < nSplash; j++) {
       const a = rand() * Math.PI * 2
-      const r = arc.r1 * Math.sqrt(rand())
-      const sp = (wide ? 0.5 : 0.25) + rand() * 0.7
-      spawn(pools.water, ex + Math.cos(a) * r, arc.stopY + 0.005, ez + Math.sin(a) * r, Math.cos(a) * sp, 0.9 + rand() * 1.3, Math.sin(a) * sp, 0.3 + rand() * 0.25, 0.014 + rand() * 0.018, 0.01, rand(), 3, arc.stopY)
+      const r = Math.min(arc.r1, within) * Math.sqrt(rand())
+      // drawn in the same order as on open floor, so a stream that lands on the floor draws the same drops
+      const sp0 = (wide ? 0.5 : 0.25) + rand() * 0.7
+      const vy0 = 0.9 + rand() * 1.3
+      const vy = bowl ? riseMax * (0.5 + (0.5 * (vy0 - 0.9)) / 1.3) : vy0
+      const sp = Math.min(sp0, outMax(vy))
+      spawn(pools.water, ex + Math.cos(a) * r, arc.stopY + 0.005, ez + Math.sin(a) * r, Math.cos(a) * sp, vy, Math.sin(a) * sp, 0.3 + rand() * 0.25, 0.014 + rand() * 0.018, 0.01, rand(), 3, arc.stopY)
     }
     for (let j = 0; j < nMist; j++) {
       const a = rand() * Math.PI * 2
-      const r = arc.r1 * 1.4 * Math.sqrt(rand())
-      spawn(pools.water, ex + Math.cos(a) * r, arc.stopY + 0.02, ez + Math.sin(a) * r, Math.cos(a) * 0.15, 0.18 + rand() * 0.15, Math.sin(a) * 0.15, 0.7 + rand() * 0.5, 0.06 + size * 0.2, 0.2 + size * 0.5, rand(), 4, arc.stopY)
+      const r = Math.min(arc.r1 * 1.4, within) * Math.sqrt(rand())
+      const up0 = 0.18 + rand() * 0.15
+      const life = 0.7 + rand() * 0.5
+      // the haze over a bowl rises to its rim at most: it drifts without gravity, so its speed is the rise over its life
+      const up = bowl ? Math.min(up0, Math.max(0.005, bowl.depth - 0.03) / life) : up0
+      const drift = bowl ? Math.min(0.15, (bowl.radius * 0.5) / life) : 0.15
+      spawn(pools.water, ex + Math.cos(a) * r, arc.stopY + 0.02, ez + Math.sin(a) * r, Math.cos(a) * drift, up, Math.sin(a) * drift, life, 0.06 + size * 0.2, 0.2 + size * 0.5, rand(), 4, arc.stopY)
     }
     void k
   }
