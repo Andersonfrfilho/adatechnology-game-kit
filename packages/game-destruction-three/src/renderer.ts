@@ -218,6 +218,29 @@ const profileOf = (points: readonly Vec3[], axis: 0 | 1 | 2, half: number, radiu
 /** How far (m) over its support what is left of a broken object may be and still stand; where under its lowest boxes the support is looked for (shares of the box). */
 const BROKEN_GAP = 0.03
 const BROKEN_SAMPLES: ReadonlyArray<readonly [number, number]> = [[0.5, 0.5], [0.1, 0.1], [0.9, 0.1], [0.1, 0.9], [0.9, 0.9]]
+/**
+ * Discs of changed ground kept for `checkUndermined` between two updates (a burst of fire digs one per round); how far past a disc (m) the floor the feet stood on is read,
+ * and how far below or above the feet it may be there and still be that floor (the rim of a crater is heaped, the edge of a dug hole slumps).
+ */
+const UNDERMINED_MAX = 64
+const UNDERMINED_RIM = 0.04
+const UNDERMINED_RIM_DROP = 0.05
+const UNDERMINED_RIM_RISE = 0.1
+/**
+ * How far the centre must be inside the feet that still hold, per metre of its height, for what lost the floor under a foot (or a leg) to stay up. A bed or a table on four
+ * legs that loses one is left with its centre near the line between the two beside the gap (a headboard pulls it 10 cm in): the frame is wood, not a rigid box, and that
+ * corner sags down to the floor. A cabinet on a full base that loses a patch of floor keeps its centre well inside the rest and stands.
+ */
+const UNDERMINED_STAND = 0.4
+/** Share of the hold of its whole feet (how far inside them its centre was) that keeps it up whatever its height: a wardrobe with a corner of its base over a hole. */
+const UNDERMINED_KEEP = 0.6
+/** Solids of one merged mesh `solidBoxesOf` takes apart, at most; past it the mesh keeps its one box. Positions closer than this (m) are one corner. */
+const SOLIDS_MAX = 64
+/** Speed (m/s) the corner over the gap is started down with: what is balanced on the line between two feet goes the way its corner went, not stays (`checkUndermined`). */
+const UNDERMINED_PUSH = 0.6
+/** Slower than this (m/s) a piece lies still for `checkUndermined`. */
+const UNDERMINED_STILL = 0.05
+const SOLID_WELD = 1e-4
 /** Kinds of object that answer to a load path of their own (a house, a wall, the ground), not to `checkBroken`. */
 const UNCHECKED_KINDS: ReadonlySet<string> = new Set(['structure', 'room', 'ground'])
 /** A part's fire lasts until the part stops burning (`stopFire`); this is only the ceiling the effects world needs. */
@@ -420,6 +443,8 @@ class Renderer implements DestructionRenderer {
   private readonly pieceBoxes = new WeakMap<PieceBody, { at: number; boxes: number[] }>()
   /** Objects broken since the last update: `checkBroken` looks at what is left of them. */
   private readonly broken = new Set<string>()
+  /** Discs of ground that changed since the last update (`wakeRegion`): `checkUndermined` looks at what stood on them. */
+  private readonly undermined: Array<{ x: number; z: number; radius: number }> = []
   private staticAt = 0
   private queue: DestructionEvent[] = []
   /** The cover of each body around a part of the world that went off, read as the event is emitted: before the blast tore or moved anything. */
@@ -1152,6 +1177,7 @@ class Renderer implements DestructionRenderer {
     this.work?.beginFrame()
     if (!this.attached) this.drainQueue()
     this.checkBroken()
+    this.checkUndermined()
     for (const b of this.bounds.values()) b.onFrame?.(dt)
     // a settling object keeps moving between its (throttled) `settle` events
     for (const b of this.bounds.values()) if (b.soilNode && this.world.state(b.id)?.soil?.status === 'yielding') this.onSettle(b.id)
@@ -2847,6 +2873,8 @@ class Renderer implements DestructionRenderer {
         if (!body.round) this.setContacts(b, body, left)
       }
       body.sleeping = false
+      // furniture lying still on what is left of its legs (a bed with one shot off) is on the line between the two beside the gap: it goes down that way
+      if (!structural && !body.round && !body.held && kitOriginOf(b.root)?.kind === 'furniture' && Math.hypot(...body.velocity) <= UNDERMINED_STILL) this.goOverIfBalanced(b, body, left)
       return
     }
     if (structural) return
@@ -2942,6 +2970,154 @@ class Renderer implements DestructionRenderer {
     return true
   }
 
+  /**
+   * The ground changed under what stands on feet (`wakeRegion`: a hole shot, dug or blown in the floor): furniture and what the host lets move (`shoveable`), not a piece yet or
+   * a piece lying still. It looks at its feet again (`lowPoints`): a point of them with nothing left under it (`holdsAt`) no longer holds. While the points that still hold keep its
+   * centre inside their polygon by `UNDERMINED_STAND` it stands (a cabinet on a full base over a small hole); otherwise it becomes a piece if it was not one, its corner over the
+   * gap is started down, and the engine takes it into the hole by its own weight: a bed with a leg over the hole goes down on that corner until its frame meets the floor, and
+   * what lay on it slides or falls off. Structures answer to their own load path.
+   */
+  private checkUndermined(): void {
+    if (this.undermined.length === 0) return
+    const discs = this.undermined.splice(0)
+    const inDisc = (x: number, z: number, d: { x: number; z: number; radius: number }): boolean => Math.hypot(x - d.x, z - d.z) <= d.radius
+    for (const b of [...this.bounds.values()]) {
+      // what stands on feet: furniture, and what the host lets move though heavy (`shoveable`); a wall or a house answers to its own load path, rubble and small things
+      // lie on the ground by their whole box and the pieces find it again by themselves (`PieceSystem.wakeRegion`)
+      if (this.kindOf(b) !== 'furniture' && !this.o.shoveable?.(b.id)) continue
+      const was = b.piece ?? this.pieceSys.get(b.id) ?? null
+      // a piece on the move finds the new ground by itself; one that lay still on it (asleep, or just woken by the same change) is looked at like what is not a piece yet
+      if (was && (was.held || Math.hypot(...was.velocity) > UNDERMINED_STILL)) continue
+      const meshes = this.meshesOf(b).filter((mv) => this.visuals.shown(mv))
+      const boxes = meshes.map((mv) => this.visuals.worldBox(mv, new this.THREE.Box3())).filter((one) => !one.isEmpty())
+      if (boxes.length === 0) continue
+      const reach = boxes.reduce((all, one) => all.union(one), new this.THREE.Box3())
+      if (!discs.some((d) => Math.hypot(Math.max(reach.min.x - d.x, 0, d.x - reach.max.x), Math.max(reach.min.z - d.z, 0, d.z - reach.max.z)) <= d.radius)) continue
+      // the feet are the points it is drawn lowest by (the bottoms of its legs, the base of a cabinet), read from its vertices: a mesh merged from the frame and the legs
+      // has a box that reaches the floor everywhere under it, the legs do not
+      const feet = this.lowPoints(meshes)
+      if (!feet) continue
+      const { floor, points } = feet
+      const held: Array<[number, number]> = []
+      const lost: Array<[number, number]> = []
+      for (const point of points) (this.holdsAt(b.id, point[0], point[1], floor) ? held : lost).push(point)
+      if (lost.length === 0) continue
+      // only what stood on that ground loses it: the floor just past the disc, toward the foot, is where its feet were (a wall cabinet over a crater never stood there)
+      if (!lost.some(([x, z]) => discs.some((d) => inDisc(x, z, d) && this.stoodBeside(x, z, d, floor)))) continue
+      const centre = centreOfBoxes(boxes)
+      if (this.standsWith(held, points, centre, floor)) continue
+      let body: PieceBody
+      if (was) body = was
+      else {
+        const piece = this.makePiece(b.id)
+        body = b.piece ?? (piece as PieceBody)
+        body.apart = true
+        this.setContacts(b, body, meshes, true)
+      }
+      // started down over the gap (the middle of the feet that went), and its weight does the rest
+      const gx = lost.reduce((sum, p) => sum + p[0], 0) / lost.length - centre[0]
+      const gz = lost.reduce((sum, p) => sum + p[1], 0) / lost.length - centre[2]
+      const length = Math.hypot(gx, gz)
+      body.sleeping = false
+      body.still = 0
+      body.calmAt = null
+      if (held.length > 0 && length > 1e-6) this.pieceSys.impulse(body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + gx, floor, centre[2] + gz])
+      if (!was) this.o.onLoosened?.(b.id, body, 'ground')
+    }
+  }
+
+  /**
+   * A piece whose feet that still hold keep its centre inside their polygon by less than `UNDERMINED_STAND` per metre of its height is started down over the nearest edge of
+   * that polygon (its weight does the rest); one that stands on nothing falls by itself.
+   */
+  private goOverIfBalanced(b: Bound, body: PieceBody, meshes: readonly MeshVis[]): void {
+    const feet = this.lowPoints(meshes)
+    if (!feet) return
+    const held = feet.points.filter(([x, z]) => this.holdsAt(b.id, x, z, feet.floor))
+    if (held.length < 3) return
+    const centre = centreOfBoxes(meshes.map((mv) => this.visuals.worldBox(mv, new this.THREE.Box3())).filter((one) => !one.isEmpty()))
+    // the feet it had whole are not drawn any more (the leg is gone): only its height says how far in the centre must be
+    if (this.standsWith(held, null, centre, feet.floor)) return
+    const inside = insideBy(convexHull(held), [centre[0], centre[2]])
+    const reach = Math.max(body.halfExtents[0], body.halfExtents[2])
+    this.pieceSys.impulse(body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + inside.out.x * reach, feet.floor, centre[2] + inside.out.z * reach])
+  }
+
+  /**
+   * Whether what stands on the points `held` of its feet (`all` of them whole) stays up with its centre at `centre`: the centre is inside what holds by `UNDERMINED_STAND` per metre of its height above `floor`, or it keeps
+   * most of the hold it had (`UNDERMINED_KEEP` of how far inside its whole feet `all` the centre was; null when those are gone with a leg).
+   */
+  private standsWith(held: ReadonlyArray<[number, number]>, all: ReadonlyArray<[number, number]> | null, centre: readonly [number, number, number], floor: number): boolean {
+    if (held.length < 3) return false
+    const now = insideBy(convexHull([...held]), [centre[0], centre[2]]).depth
+    if (now > UNDERMINED_STAND * (centre[1] - floor)) return true
+    return all !== null && now >= UNDERMINED_KEEP * insideBy(convexHull([...all]), [centre[0], centre[2]]).depth
+  }
+
+  /**
+   * Where `meshes` touch the floor, (x, z) in the world, and how high that floor is (their lowest drawn point); null with nothing drawn. The bottom faces (triangles
+   * within `FEET_BAND` of the lowest point) give their corners, the middles of their sides and their own middles: the base of a cabinet is held along its edges and
+   * across, not only at its four corners, and a mesh merged from a frame and its legs is held under each leg, not in the air between them.
+   */
+  private lowPoints(meshes: readonly MeshVis[]): { floor: number; points: Array<[number, number]> } | null {
+    const faces: number[] = []
+    let floor = Infinity
+    for (const mv of meshes) {
+      mv.mesh.updateWorldMatrix(true, false)
+      const points: number[] = []
+      this.visuals.rangePoints(mv, mv.mesh.matrixWorld, points)
+      const count = points.length / 3
+      const index = mv.mesh.geometry.getIndex()?.array
+      const from = mv.range ? mv.range[0] : 0
+      const total = index ? index.length : count
+      for (let i = 0; i + 2 < total; i += 3) {
+        const a = (index ? index[i]! : i) - from, b = (index ? index[i + 1]! : i + 1) - from, c = (index ? index[i + 2]! : i + 2) - from
+        if (a < 0 || b < 0 || c < 0 || a >= count || b >= count || c >= count) continue
+        for (const k of [a, b, c]) {
+          faces.push(points[k * 3]!, points[k * 3 + 1]!, points[k * 3 + 2]!)
+          floor = Math.min(floor, points[k * 3 + 1]!)
+        }
+      }
+    }
+    if (faces.length === 0) return null
+    const out: Array<[number, number]> = []
+    const seen = new Set<string>()
+    const add = (x: number, z: number): void => {
+      // the same corner is in several faces: once each, to the millimetre
+      const key = `${Math.round(x * 1000)},${Math.round(z * 1000)}`
+      if (seen.has(key)) return
+      seen.add(key)
+      out.push([x, z])
+    }
+    for (let i = 0; i < faces.length; i += 9) {
+      if (faces[i + 1]! > floor + FEET_BAND || faces[i + 4]! > floor + FEET_BAND || faces[i + 7]! > floor + FEET_BAND) continue
+      const ax = faces[i]!, az = faces[i + 2]!, bx = faces[i + 3]!, bz = faces[i + 5]!, cx = faces[i + 6]!, cz = faces[i + 8]!
+      add(ax, az)
+      add(bx, bz)
+      add(cx, cz)
+      add((ax + bx) / 2, (az + bz) / 2)
+      add((bx + cx) / 2, (bz + cz) / 2)
+      add((ax + cx) / 2, (az + cz) / 2)
+      add((ax + bx + cx) / 3, (az + bz + cz) / 3)
+    }
+    return out.length > 0 ? { floor, points: out } : null
+  }
+
+  /** Whether the ground, a fixed top or a piece (not `objectId` itself) is within `BROKEN_GAP` under the point (x, z) of a foot at height `y`. */
+  private holdsAt(objectId: string, x: number, z: number, y: number): boolean {
+    return Math.max(this.groundAt(x, z), this.staticTopAtBut(objectId, x, z, y, BROKEN_GAP), this.pieceSys.topAt(x, z, y, BROKEN_GAP, objectId)) >= y - BROKEN_GAP
+  }
+
+  /** Whether the ground just past the disc `d`, on the way from its middle to the foot at (x, z), is where the object's feet (`floor`) were: it stood on the ground that went. */
+  private stoodBeside(x: number, z: number, d: { x: number; z: number; radius: number }, floor: number): boolean {
+    const fx = x - d.x, fz = z - d.z
+    const length = Math.hypot(fx, fz)
+    const ux = length > 1e-6 ? fx / length : 1, uz = length > 1e-6 ? fz / length : 0
+    const reach = d.radius + UNDERMINED_RIM
+    const ground = this.groundAt(d.x + ux * reach, d.z + uz * reach)
+    return ground >= floor - BROKEN_GAP - UNDERMINED_RIM_DROP && ground <= floor + UNDERMINED_RIM_RISE
+  }
+
   /** Whether the lowest of `boxes` (world boxes of the object `objectId`) has the ground, a fixed top or a piece within `BROKEN_GAP` under it. */
   private standsOn(objectId: string, boxes: ReadonlyArray<readonly [number, number, number, number, number, number]>): boolean {
     if (boxes.length === 0) return false
@@ -3002,7 +3178,7 @@ class Renderer implements DestructionRenderer {
    * what holds it and it goes over until the top meets the floor. Past `CONTACT_MESHES` meshes it keeps the corners of its box; up to `PART_BOX_MESHES`, what lands on it lands
    * on its parts.
    */
-  private setContacts(b: Bound, body: PieceBody, meshes: MeshVis[]): void {
+  private setContacts(b: Bound, body: PieceBody, meshes: MeshVis[], fitWhole = false): void {
     if (meshes.length > PART_BOX_MESHES) {
       body.contacts = undefined
       body.partBoxes = undefined
@@ -3019,7 +3195,7 @@ class Renderer implements DestructionRenderer {
       this.visuals.localBox(mv, lb)
       if (lb.isEmpty()) continue
       m4.multiplyMatrices(inv, mv.mesh.matrixWorld)
-      this.partBoxesOf(mv, { lb, m4, from: [cx, cy, cz] }, boxes)
+      this.partBoxesOf(mv, { lb, m4, from: [cx, cy, cz], fitWhole }, boxes)
       lb.applyMatrix4(m4)
       for (let i = 0; i < 8; i++) points.push([(i & 1 ? lb.max.x : lb.min.x) - cx, (i & 2 ? lb.max.y : lb.min.y) - cy, (i & 4 ? lb.max.z : lb.min.z) - cz])
     }
@@ -3153,8 +3329,22 @@ class Renderer implements DestructionRenderer {
    * place in the piece; a part drawn by a range of a merged mesh (a roof sheet in the house's roof mesh) is fitted to its own vertices (`fitOrientedBoxes`), since the box
    * of those vertices in the merged mesh's space is the box around a tilted sheet, mostly air.
    */
-  private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3 }, out: PartBox[]): void {
+  private partBoxesOf(mv: MeshVis, at: { readonly lb: THREE_NS.Box3; readonly m4: THREE_NS.Matrix4; readonly from: Vec3; readonly fitWhole?: boolean }, out: PartBox[]): void {
     const [cx, cy, cz] = at.from
+    // a whole mesh drawn as more than one solid (a frame and its legs merged in one geometry) stands on each of them when asked (`checkUndermined`): its one box would stand over the hole
+    const solids = at.fitWhole && !mv.range ? solidBoxesOf(mv.mesh.geometry) : null
+    if (solids) {
+      const pos = new this.THREE.Vector3()
+      const quat = new this.THREE.Quaternion()
+      const scale = new this.THREE.Vector3()
+      at.m4.decompose(pos, quat, scale)
+      for (const box of solids) {
+        const c = new this.THREE.Vector3((box[0] + box[3]) / 2, (box[1] + box[4]) / 2, (box[2] + box[5]) / 2).applyMatrix4(at.m4)
+        const half: Vec3 = [Math.max(0.005, Math.abs((box[3] - box[0]) * scale.x) / 2), Math.max(0.005, Math.abs((box[4] - box[1]) * scale.y) / 2), Math.max(0.005, Math.abs((box[5] - box[2]) * scale.z) / 2)]
+        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half, rotation: [quat.x, quat.y, quat.z, quat.w] })
+      }
+      return
+    }
     if (mv.range) {
       const own: number[] = []
       this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
@@ -3852,6 +4042,7 @@ class Renderer implements DestructionRenderer {
   wakeRegion(x: number, z: number, radius: number): void {
     this.fragments.wakeRegion(x, z, radius)
     this.pieceSys.wakeRegion(x, z, radius)
+    if (this.autoSplit && this.undermined.length < UNDERMINED_MAX) this.undermined.push({ x, z, radius })
   }
 
   stats(): { fragments: number; particles: number; pieces: number; decals: number } {
@@ -3919,6 +4110,60 @@ function lighten(color: number, t: number): number {
     return Math.round(c + (255 - c) * t) << shift
   }
   return ch(16) | ch(8) | ch(0)
+}
+
+/**
+ * The boxes (in the geometry's own space: min x, y, z, max x, y, z) of the separate solids a merged geometry is drawn of: triangles that share a corner (by position, so the
+ * faces of one box, drawn with vertices of their own, are one solid) belong together. Null for one solid, or for more than `SOLIDS_MAX`.
+ */
+function solidBoxesOf(geometry: THREE_NS.BufferGeometry): Array<[number, number, number, number, number, number]> | null {
+  const position = geometry.getAttribute('position')
+  if (!position || position.count <= 24) return null
+  const parent = new Int32Array(position.count)
+  for (let i = 0; i < parent.length; i++) parent[i] = i
+  const find = (i: number): number => {
+    while (parent[i] !== i) {
+      parent[i] = parent[parent[i]!]!
+      i = parent[i]!
+    }
+    return i
+  }
+  const join = (a: number, b: number): void => {
+    const ra = find(a), rb = find(b)
+    if (ra !== rb) parent[ra] = rb
+  }
+  const corners = new Map<string, number>()
+  for (let i = 0; i < position.count; i++) {
+    const key = `${Math.round(position.getX(i) / SOLID_WELD)},${Math.round(position.getY(i) / SOLID_WELD)},${Math.round(position.getZ(i) / SOLID_WELD)}`
+    const first = corners.get(key)
+    if (first === undefined) corners.set(key, i)
+    else join(i, first)
+  }
+  const index = geometry.getIndex()
+  const triangles = index ? index.count / 3 : position.count / 3
+  for (let t = 0; t < triangles; t++) {
+    const a = index ? index.getX(t * 3) : t * 3
+    join(a, index ? index.getX(t * 3 + 1) : t * 3 + 1)
+    join(a, index ? index.getX(t * 3 + 2) : t * 3 + 2)
+  }
+  const boxes = new Map<number, [number, number, number, number, number, number]>()
+  for (let i = 0; i < position.count; i++) {
+    const root = find(i)
+    const x = position.getX(i), y = position.getY(i), z = position.getZ(i)
+    const box = boxes.get(root)
+    if (!box) {
+      if (boxes.size >= SOLIDS_MAX) return null
+      boxes.set(root, [x, y, z, x, y, z])
+      continue
+    }
+    box[0] = Math.min(box[0], x)
+    box[1] = Math.min(box[1], y)
+    box[2] = Math.min(box[2], z)
+    box[3] = Math.max(box[3], x)
+    box[4] = Math.max(box[4], y)
+    box[5] = Math.max(box[5], z)
+  }
+  return boxes.size > 1 ? [...boxes.values()] : null
 }
 
 /** The convex hull (counter-clockwise) of points on the ground, (x, z). */
