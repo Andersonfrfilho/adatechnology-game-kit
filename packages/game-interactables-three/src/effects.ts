@@ -1,5 +1,5 @@
 import type { ActiveEmitter, EmitterKind } from '@adatechnology/game-interactables'
-import { warnOnce } from '@adatechnology/game-contracts'
+import { markKitOrigin, warnOnce } from '@adatechnology/game-contracts'
 import { isRoutedKind, routedParticleRequest } from './routed-particles'
 import type { ParticleEffects, PoolKind } from './routed-particles'
 import type { CanvasFactory, ThreeLib, ThreeNS } from './types'
@@ -245,7 +245,7 @@ export function createEffects(THREE: ThreeLib, a: EffectsOptions | ThreeNS.Objec
       depthWrite: false,
       blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
     })
-    const points = new THREE.Points(geo, mat)
+    const points = markKitOrigin(new THREE.Points(geo, mat), { owner: 'game-interactables-three', kind: 'effect', id: kind })
     points.frustumCulled = false
     points.name = `effects:${kind}`
     scene.add(points)

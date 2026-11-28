@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
+import { kitOriginOf } from '@adatechnology/game-contracts'
 import type { ActiveEmitter } from '@adatechnology/game-interactables'
 import { createEffects } from '../src'
 import { fakeDocument } from './helpers'
@@ -30,6 +31,11 @@ describe('createEffects', () => {
     expect(fx.stats().byKind.smoke).toBeGreaterThan(5)
     expect(fx.objects.smoke.geometry.drawRange.count).toBe(fx.stats().byKind.smoke)
     expect(fx.stats().byKind.fire).toBe(0)
+  })
+
+  it('marks each pool as drawn by the kit, so the scene audit tells it from something drawn on the spot', () => {
+    const fx = createEffects(THREE, { scene: new THREE.Scene(), camera: null, maxParticles: 200, document: fakeDocument() })
+    for (const [kind, points] of Object.entries(fx.objects)) expect(kitOriginOf(points)).toEqual({ owner: 'game-interactables-three', kind: 'effect', id: kind })
   })
 
   it('smoke rises, fades and dies; particles disappear after the emitter stops', () => {

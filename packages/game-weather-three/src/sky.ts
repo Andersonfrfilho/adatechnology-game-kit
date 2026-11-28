@@ -1,5 +1,6 @@
 import type * as THREE_NS from 'three'
 import type { WeatherSample } from '@adatechnology/game-weather'
+import { markKitOrigin } from '@adatechnology/game-contracts'
 import { SKY_FRAGMENT, SKY_VERTEX } from './sky-shader'
 import { cloudCoverOf, cloudDarknessOf, nightnessOf, starVisibilityOf, sunDirectionOf, sunsetOf, sunVisibilityOf } from './sky-state'
 import type { HostSun } from './sky-state'
@@ -78,7 +79,7 @@ function createDome(THREE: ThreeLib, camera: THREE_NS.Camera): { readonly mesh: 
   }
   const geometry = new THREE.SphereGeometry(1, 24, 12)
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, side: THREE.BackSide, depthTest: false, depthWrite: false, fog: false, toneMapped: false })
-  const mesh = new THREE.Mesh(geometry, material)
+  const mesh = markKitOrigin(new THREE.Mesh(geometry, material), { owner: 'game-weather-three', kind: 'effect', id: 'sky-dome' })
   mesh.name = 'sky-dome'
   mesh.renderOrder = SKY_DOME.renderOrder
   mesh.frustumCulled = false
