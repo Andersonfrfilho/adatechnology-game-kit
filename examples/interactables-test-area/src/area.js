@@ -57,10 +57,10 @@ const KEY_OVERRIDES = {
   sink_bathroom: { wood: 'mdf' },
   mailbox: { wood: 'steel' },
 }
-// fixtures that hold water: inner volume (m), litres at the start, where the opening is
-/** @type {Readonly<Record<string, FluidFixture>>} */
 // a bowl filled to the brim spills over its lip at the first wobble of the load: it starts at most this much full
 const BOWL_FILL_MAX = 0.7
+// fixtures that hold water: inner volume (m), litres at the start, where the opening is
+/** @type {Readonly<Record<string, FluidFixture>>} */
 const FLUIDS = {
   sink_kitchen: { liters: 4, capacity: 14, size: [0.5, 0.16, 0.36], opening: 0.2 },
   sink_bathroom: { liters: 2, capacity: 6, size: [0.34, 0.12, 0.28], opening: 0.15 },
