@@ -40,6 +40,7 @@ for (const o of objs) {
     /** @type {[number, number, number]} */
     const eye = [o.at[0] + fwd[0] * 2.2 + fwd[1] * 1.2, 1.9, o.at[2] + fwd[1] * 2.2 - fwd[0] * 1.2]
     await page.evaluate(([e, t]) => window.__testRoom.look(e, t), /** @type {[[number, number, number], [number, number, number]]} */ ([eye, [o.at[0] ?? 0, (o.at[1] ?? 0) + 0.7, o.at[2] ?? 0]]))
+    const lockedBefore = await page.evaluate(() => window.__testRoom.log.entries().filter((e) => e.type === 'door_locked').length)
     await page.evaluate(([o, p]) => window.__testRoom.useLeaf(o, p), [o.id, leaf])
     const box = await page.evaluate((id) => { const s = window.__testRoom.spawned().find((x) => x.objectId === id); if (!s) return [0, 0, 0, 0]; const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.x, b.min.z, b.max.x, b.max.z] }, o.id)
     const samples = []
@@ -62,6 +63,13 @@ for (const o of objs) {
     let dev = 0
     for (const s of samples) if (s.d.angle > 0.05) dev = Math.max(dev, Math.acos(Math.min(1, Math.abs(s.d.axis[0] * end.axis[0] + s.d.axis[1] * end.axis[1] + s.d.axis[2] * end.axis[2]))))
     worst = Math.max(worst, dev)
+    // a leaf the scene locked only rattles: nothing to measure, and it says so instead of passing on no motion
+    const locked = (await page.evaluate(() => window.__testRoom.log.entries().filter((e) => e.type === 'door_locked').length)) > lockedBefore
+    if (locked) {
+      console.log(`LOCK ${o.item} ${leaf}: locked by the scene, it rattles and does not move (not measured)`)
+      await page.waitForFunction(() => window.__testRoom.door === null, null, { timeout: 60000 }).catch(() => {})
+      continue
+    }
     const ok = dev < 0.01 && intoCar === 0
     if (!ok) failures.push(`${o.item}:${leaf}`)
     if (intoCar) console.log(`FAIL ${o.item} ${leaf}: the player was inside the car in ${intoCar} samples`)
@@ -86,9 +94,23 @@ for (const o of objs) {
   const fx = Math.sin(o.ry)
   const fz = Math.cos(o.ry)
   /** @type {[number, number, number]} */
-  const eye = [(centre[0] ?? 0) + (fx * 0.8 + fz * 0.6) * back, (box[4] ?? 1) + 0.6, (centre[2] ?? 0) + (fz * 0.8 - fx * 0.6) * back]
-  /** @type {[number, number, number]} */
   const target = [centre[0] ?? 0, centre[1] ?? 0, centre[2] ?? 0]
+  // to the right of its front, or to the left when something else stands between that eye and the object (a barbecue in front of a wardrobe)
+  /** @type {Array<[number, number, number]>} */
+  const eyes = [1, -1].map((side) => [(centre[0] ?? 0) + (fx * 0.8 + side * fz * 0.6) * back, (box[4] ?? 1) + 0.6, (centre[2] ?? 0) + (fz * 0.8 - side * fx * 0.6) * back])
+  const hidden = await page.evaluate(([id, list, t]) => {
+    const T = window.__THREE
+    const others = window.__testRoom.spawned().filter((x) => x.objectId !== id).map((x) => new T.Box3().setFromObject(x.root))
+    return list.map((e) => {
+      const from = new T.Vector3(e[0], e[1], e[2])
+      const to = new T.Vector3(t[0], t[1], t[2])
+      const ray = new T.Ray(from, to.clone().sub(from).normalize())
+      const far = from.distanceTo(to)
+      const hit = new T.Vector3()
+      return others.some((b) => ray.intersectBox(b, hit) !== null && from.distanceTo(hit) < far)
+    })
+  }, /** @type {[string, Array<[number, number, number]>, [number, number, number]]} */ ([o.id, eyes, target]))
+  const eye = /** @type {[number, number, number]} */ (eyes[hidden[0] && !hidden[1] ? 1 : 0])
   await page.evaluate(([e, t]) => window.__testRoom.look(e, t), /** @type {[[number, number, number], [number, number, number]]} */ ([eye, target]))
   await page.waitForTimeout(300)
   // the clips of the aimed item: the eye now rests on this object
@@ -99,6 +121,9 @@ for (const o of objs) {
   await page.waitForTimeout(clip.duration * 500)
   await page.screenshot({ path: join(out, `${name}-meio.png`) })
   await page.waitForTimeout(clip.duration * 500 + 400)
+  // the same view as mid-swing: the eye drifts while the clip plays
+  await page.evaluate(([e, t]) => window.__testRoom.look(e, t), /** @type {[[number, number, number], [number, number, number]]} */ ([eye, target]))
+  await page.waitForTimeout(200)
   await page.screenshot({ path: join(out, `${name}-aberta.png`) })
   const close = clips.find((c) => c.id.startsWith('close'))
   if (close) {
