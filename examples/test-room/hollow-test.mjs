@@ -21,6 +21,11 @@ const loadPlaywright = () => {
 const { chromium } = loadPlaywright()
 const base = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? pathToFileURL(join(here, 'dist/test-room.html')).href
 
+/**
+ * What the script reads of a renderer piece: its root, its centre in the root and the boxes the engine holds of it (`partBoxes`, else one box of `halfExtents`).
+ * @typedef {{ objectId: string; root: import('three').Object3D; centerV: import('three').Vector3; halfExtents: [number, number, number]; round?: unknown; partBoxes?: Array<{ center: [number, number, number]; half: [number, number, number]; rotation?: [number, number, number, number] }> }} EnginePiece
+ */
+
 /** Pieces whose boxes still hold air: empty since spec 019 (a piece is held by the solids its builder drew). A piece that has to enter it is debt counted, with the reason. */
 const KNOWN = new Set(/** @type {string[]} */ (JSON.parse(process.env.HOLLOW_KNOWN ?? 'null') ?? []))
 
@@ -63,7 +68,8 @@ const found = await page.evaluate(async () => {
   const out = {}
   let looked = 0
   for (const { id, so } of laid) {
-    const piece = r.renderer.pieces().find((/** @type {any} */ p) => p.objectId === so.objectId)
+    // the renderer's piece with what the engine holds of it: its centre and the boxes of its parts (internal fields of game-destruction-three, not of the public `Piece`)
+    const piece = /** @type {EnginePiece | undefined} */ (/** @type {unknown} */ (r.renderer.pieces().find((/** @type {any} */ p) => p.objectId === so.objectId)))
     // a round piece (a can, a lamp: `round`) is a cylinder or a sphere in the engine, not the box read here
     if (!piece || piece.round) continue
     looked++
