@@ -11,6 +11,7 @@ import type {
   FragmentLifeRule,
   GroundWorkerPort,
   JitWarmUpOptions,
+  LoosenCause,
   Piece,
   PiecePhysics,
   Quality,
@@ -59,7 +60,7 @@ export type KitWorldDebrisOptions = {
 export type DestructionEvents = {
   readonly piece: (piece: Piece) => void
   readonly released: (pieceIds: readonly string[]) => void
-  readonly loosened: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
+  readonly loosened: (objectId: string, piece: Piece, cause: LoosenCause) => void
   readonly brokenChecked: (objectId: string, released: boolean) => void
 }
 

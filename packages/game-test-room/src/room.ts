@@ -381,7 +381,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     e.piece = piece
     leaveFootprint(objectId)
     rendererPieces.set(objectId, piece)
-    if (!handTake.wasTakenFrom(objectId)) action('loosened', t(cause === 'blast' ? 'act.loosened' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
+    if (!handTake.wasTakenFrom(objectId)) action('loosened', t(cause === 'blast' ? 'act.loosened' : cause === 'ground' ? 'act.lost_ground' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
   })
   // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
   kit.destruction.on('brokenChecked', (objectId, released) => {

@@ -39,6 +39,7 @@ export type {
   Object3D,
   Piece,
   LooseBody,
+  LoosenCause,
   DeferredQueueRegistration,
   MakePieceOptions,
   SolidBox,
