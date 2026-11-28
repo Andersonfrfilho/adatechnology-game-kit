@@ -39,3 +39,7 @@ Decidido pelo dono em 2026-11-04, depois de latinhas paradas no ar sobre uma mes
   pedaços de 10 cm a 4,2 m, em três seções (tábua, ripa, viga), deitados e inclinados até 80°, com giro, uns por cima dos outros: 4 s depois nenhum tem o meio a
   mais de 20 cm do chão e 6 s depois nenhum se mexe. Regra de física nova no sistema de estilhaços é escrita pela velocidade da ponta (m/s), nunca em rad/s
   fixo: o que serve para uma lasca de 5 cm joga uma tábua de 4 m para cima.
+- **Tudo que quebra sossega.** O teste `game-floorplan-three/tests/broken-catalogue-settles.test.ts` (CI) quebra cada móvel do catálogo até o fim, parte por
+  parte, e 8 s depois confere que nada solto ainda se mexe, nem destroço nem peça. O que já falhava quando o teste foi escrito está contado em `KNOWN` (14
+  móveis em 2026-11-28: 11 com destroço que não para, `floor_lamp`, `shower` e `shower_large` com peça que não para), e essa lista só diminui: peça nova não
+  entra nela, peça consertada sai.
