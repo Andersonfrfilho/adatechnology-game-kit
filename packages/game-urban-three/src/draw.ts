@@ -416,6 +416,67 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     }
   }
 
+  /**
+   * Solids (boxes, prisms, cylinders, cones) whose bottoms lie on one height and overlap — a post on the deck it stands through, a lamp's base on its
+   * pole's foot, both on the ground — would draw two downward faces on one plane. The later one reaches 2 mm lower, its top where it was (CLAUDE.md §13).
+   * Footprints are the solids' circles, kept in a 4 m grid so a whole district stays linear.
+   */
+  const sinkBottoms = (parts: readonly UrbanPart[]): ((part: UrbanPart, made: Obj[]) => void) => {
+    const CELL = 4
+    const cells = new Map<string, Array<{ y: number; x: number; z: number; r: number }>>()
+    const near = (x: number, z: number, r: number, visit: (key: string) => boolean): boolean => {
+      for (let i = Math.floor((x - r) / CELL); i <= Math.floor((x + r) / CELL); i++) for (let k = Math.floor((z - r) / CELL); k <= Math.floor((z + r) / CELL); k++) if (visit(`${i},${k}`)) return true
+      return false
+    }
+    return (part, made) => {
+      let height: number, r: number, centred: boolean
+      if (part.shape === 'box') {
+        if (part.rz) return
+        height = part.height
+        r = Math.hypot(part.width, part.depth) / 2
+        centred = true
+      } else if (part.shape === 'prism') {
+        height = part.height
+        r = Math.hypot(part.width, part.depth) / 2
+        centred = false
+      } else if (part.shape === 'cylinder') {
+        height = part.height
+        r = Math.max(part.radiusTop, part.radiusBottom)
+        centred = true
+      } else if (part.shape === 'cone') {
+        height = part.height
+        r = part.radius
+        centred = true
+      } else return
+      if (!(height > 0)) return
+      let x = part.x, y = part.y, z = part.z
+      for (let parent = part.parent; parent >= 0; parent = parts[parent]!.parent) {
+        const group = parts[parent]!
+        if (group.shape !== 'group') return
+        const c = Math.cos(group.ry || 0), sn = Math.sin(group.ry || 0)
+        const rx = x * c + z * sn, rz = -x * sn + z * c
+        x = group.x + rx
+        y = group.y + y
+        z = group.z + rz
+      }
+      const bottom = centred ? y - height / 2 : y
+      let sink = 0
+      const clash = (key: string): boolean => (cells.get(key) ?? []).some((other) => Math.abs(other.y - (bottom - sink)) < PLANE_LAYER_GAP / 2 && Math.hypot(other.x - x, other.z - z) < other.r + r)
+      while (near(x, z, r, clash)) sink += PLANE_LAYER_GAP
+      const entry = { y: bottom - sink, x, z, r }
+      near(x, z, r, (key) => {
+        const list = cells.get(key)
+        if (list) list.push(entry)
+        else cells.set(key, [entry])
+        return false
+      })
+      if (!sink) return
+      const mesh = made[0]!
+      mesh.scale.y *= (height + sink) / height
+      mesh.position.y -= centred ? sink / 2 : sink
+    }
+  }
+
   /** Draws a scene: its parts in order, then the instanced boxes, the lit windows and the dark windows. */
   function draw(scene: UrbanScene, drawOptions: DrawOptions = {}): DrawnUrban {
     const root = markKitOrigin(drawOptions.root ?? new THREE.Group(), { owner: 'game-urban-three', kind: 'urban' })
@@ -424,9 +485,11 @@ export function createUrbanThree(THREE: Three, options: UrbanThreeOptions = {}) 
     animatedLenses = new Set()
     const objects: Obj[][] = []
     const layer = options.standOut === false ? () => undefined : layerPlanes(scene.parts)
+    const sink = options.standOut === false ? () => undefined : sinkBottoms(scene.parts)
     for (const part of scene.parts) {
       const made = drawPart(part, animators, lights)
       layer(part, made)
+      sink(part, made)
       objects.push(made)
       const parent = part.parent < 0 ? root : (objects[part.parent] as Obj[])[0]
       parent.add(...made)
