@@ -1,4 +1,5 @@
 import { inferJoints } from '@adatechnology/game-destruction'
+import { structureFill } from './structure-fill.js'
 import { holdLooseGroups } from './hold-loose.js'
 import { markKitOrigin } from '@adatechnology/game-contracts'
 import type { DestructibleSpec, JointSpec, PartSpec } from '@adatechnology/game-contracts'
@@ -253,7 +254,7 @@ function shadeBoard(color: number, board: number): number {
 const FLOOR_TOUCH = 0.005
 const LOOSE = new Set(['paper'])
 /** Never loose in the world: set in the ground by a post or roots (a mailbox, a clothesline, a small tree) or built in masonry on the spot (a brick barbecue). */
-const PLANTED = new Set(['mailbox', 'correio', 'clothesline', 'tree_small', 'bbq_simple'])
+const PLANTED = new Set(['mailbox', 'correio', 'clothesline', 'tree_small', 'fruit_tree', 'bbq_simple'])
 /** Installed in the house: plumbed and bolted to the floor or the wall (a toilet, a basin, a shower stall, a laundry tub). Fixed until blows tear it off. */
 const INSTALLED = new Set(['toilet', 'washbasin', 'pedestal_basin', 'shower', 'shower_large', 'laundry_tub'])
 const BASE_MATERIAL: Record<string, string> = {
@@ -354,6 +355,9 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
     } else if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
     else if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
+    // what the block is built as: boards around air, a sheet around insulation, foam in a cover (its mass, not a solid block's)
+    const fill = structureFill(material, p.shape)
+    if (fill < 1) part.fill = Math.round(fill * 1e4) / 1e4
     if (p.rotation) part.rotation = p.rotation
     if (!LOOSE.has(material) && p.min[1] <= FLOOR_TOUCH) part.anchored = true
     // a book on a shelf is taken off it with one hand, and is called a book once it is off
