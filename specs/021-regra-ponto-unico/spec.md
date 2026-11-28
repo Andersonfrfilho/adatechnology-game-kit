@@ -39,7 +39,8 @@ Em dois dias o dono achou à mão três causas do "mesmo" defeito (peça girando
 
 ## Dívida achada pela régua (`KNOWN` do `kit-energy.test.ts`, só diminui)
 
-Três casos já criavam energia quando o teste foi escrito. Corrigir muda o comportamento visível da regra: **decisão do dono**.
+Três casos já criavam energia quando o teste foi escrito; cada um fica gravado com a fração da queda que dava (não pode piorar). Corrigir muda o
+comportamento visível da regra: **decisão do dono**.
 
 | Tamanho | Regra | Caso | Deu | Queda | Causa |
 |---|---|---|---|---|---|

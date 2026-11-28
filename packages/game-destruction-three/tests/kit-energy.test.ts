@@ -56,17 +56,18 @@ const FURNITURE: Record<string, readonly Box[]> = {
 }
 
 /**
- * What already made energy when this test was written (2026-11-28), by size, rule, piece and scenario. The list only shrinks: a rule fixed takes its line out, and no new line
- * comes in. Each is a decision of the owner, since the fix changes how the rule looks (spec 021):
+ * What already made energy when this test was written (2026-11-28), by size, rule, piece and scenario, with the share of the piece's fall it gave then (given / fall,
+ * rounded up). The list only shrinks and no line gets worse: a rule fixed takes its line out, and a case giving more than it did fails like a new one. Each is a decision of
+ * the owner, since the fix changes how the rule looks (spec 021):
  * - three times as tall, the long table: it went over earlier and lies on its side when the next leg breaks; `goOverIfBalanced` places its push from the centre of the drawn
  *   boxes (`centreOfBoxes`), 1.08 m from the middle of the piece's box that the impulse turns it about, so the arm is 2.25 m where its reach is 1.17 m.
  * - a third of its size, the bed: `UNDERMINED_PUSH` is a speed (0.6 m/s) whatever the size, so what it gives over the fall of the piece grows as 1 / size (0.53 of the fall at
  *   full size, 1.8 at a third), in `goOverIfBalanced` and in `checkUndermined` alike.
  */
-const KNOWN: ReadonlySet<string> = new Set([
-  'three times as tall · goOverIfBalanced: long_table, a piece losing its feet one by one',
-  'a third of its size · goOverIfBalanced: bed, a piece losing its feet one by one',
-  'a third of its size · checkUndermined: bed, standing, the floor going from under one foot',
+const KNOWN: ReadonlyMap<string, number> = new Map([
+  ['three times as tall · goOverIfBalanced: long_table, a piece losing its feet one by one', 2.0],
+  ['a third of its size · goOverIfBalanced: bed, a piece losing its feet one by one', 1.98],
+  ['a third of its size · checkUndermined: bed, standing, the floor going from under one foot', 1.78],
 ])
 
 type Scenario = 'a piece losing its feet one by one' | 'standing, losing one foot' | 'standing, the floor going from under one foot'
@@ -183,7 +184,7 @@ describe('no rule of the kit gives a piece more energy than its own fall', () =>
         const { overs, pushes } = measure(type, [wide, tall, deep], scenario)
         for (const over of overs) {
           const key = `${size} · ${over.rule}: ${type}, ${scenario}`
-          if (KNOWN.has(key)) known.push(key)
+          if (over.given / over.fall <= (KNOWN.get(key) ?? 0)) known.push(key)
           else made.push(`${key}: gave ${over.given.toFixed(3)} J, its fall ${over.fall.toFixed(3)} J`)
         }
         for (const [rule, count] of pushes) pushed.set(rule, (pushed.get(rule) ?? 0) + count)
@@ -191,7 +192,7 @@ describe('no rule of the kit gives a piece more energy than its own fall', () =>
     }
     expect(made).toEqual([])
     // a line of KNOWN that no longer makes energy comes out of it
-    expect(new Set(known), 'KNOWN only shrinks').toEqual(new Set([...KNOWN].filter((key) => key.startsWith(`${size} · `))))
+    expect(new Set(known), 'KNOWN only shrinks').toEqual(new Set([...KNOWN.keys()].filter((key) => key.startsWith(`${size} · `))))
     // the cases do reach the rules they guard: a sweep that pushes nothing proves nothing
     for (const rule of Object.values(KIT_RULE)) expect(pushed.get(rule), rule).toBeGreaterThan(0)
   })

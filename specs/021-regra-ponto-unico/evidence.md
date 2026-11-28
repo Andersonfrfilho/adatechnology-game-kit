@@ -10,15 +10,16 @@ Em todo tamanho as quatro regras ligadas são exercitadas (`pushes > 0`).
 ## A2 — revertendo o #610 a régua nomeia a regra
 
 `const reach = this.reachAlong(...)` trocado por `Math.max(...body.halfExtents)` só para a prova (desfeito): 5 dos 5 tamanhos reprovam, todas as linhas
-novas começam por `goOverIfBalanced`. Exemplos:
+novas começam por `goOverIfBalanced`:
 
-| Tamanho | Caso | Deu | Queda |
+| Tamanho | Caso (perdendo os pés um a um) | Deu | Queda |
 |---|---|---|---|
-| desenho | mesa 4,4 m, perdendo os pés | 11.877,8 J | 648,0 J |
-| desenho | cama | 1.581,0 J | 395,1 J |
-| desenho | mesa 1,6 m | 489,5 J | 256,0 J |
-| 3x mais comprido | mesa 4,4 m | 440,7 J | 216,0 J |
-| 1/3 | mesa 4,4 m | 39,9 J | 0,46 J |
+| desenho | mesa 4,4 m (duas vezes) | 440,7 J e 300,6 J | 216,0 J e 163,0 J |
+| 3x mais comprido | mesa 4,4 m | 11.877,8 J | 648,0 J |
+| 3x mais comprido | cama / bancada / mesa / banco | 1.581,0 / 532,2 / 489,5 / 22,5 J | 395,1 / 254,3 / 256,0 / 6,3 J |
+| 3x mais fundo | banco (duas vezes) | 25,6 J e 22,5 J | 23,2 J e 6,7 J |
+| 3x mais alto | mesa 4,4 m | 403,7 J | 99,9 J (a linha de `KNOWN` aceita até 2,0 da queda: piorou, reprova) |
+| 1/3 | mesa 4,4 m (duas vezes), mesa, bancada, banco | 39,9 / 11,9 / 0,76 / 0,76 / 0,029 J | 0,46 / 1,75 / 0,27 / 0,27 / 0,018 J |
 
 ## Resolução da régua
 
