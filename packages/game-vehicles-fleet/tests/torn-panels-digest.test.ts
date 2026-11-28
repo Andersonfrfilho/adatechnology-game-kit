@@ -17,8 +17,10 @@ const HITS = ['side_rear_left', 'hood', 'door_front_right', 'roof', 'bumper_fron
    opening: the doors' skins are cut out of the body (875 to 944 nodes). Retaken when a door or lid that comes off became a closed volume (its skin, the
    fold round its edge and its inner panel, door-shell.ts) and an opened lid lines its trunk (a tub and a seal): the same torn parts, closed (944 to 956 nodes). Retaken when the cabins met the R6 table (spec 012, phase 3): the inner trim of the sedan is
    shorter and the dash compact, so its torn doors carry less of it (956 to 940 nodes). Retaken when the flush parts of the
-   hood, lamps, grille and trims moved 1 to 3 mm apart (CLAUDE.md §13): the same 940 nodes, only those small offsets differ. */
-const GOLDEN_DIGEST = '940:1860128591'
+   hood, lamps, grille and trims moved 1 to 3 mm apart (CLAUDE.md §13): the same 940 nodes, only those small offsets differ. Retaken when a part hung on a door
+   that reaches past its edges (the cabin's trim panel, drawn per seat row and up to 27 cm longer than the door) became cut at the door's edges, the part over
+   the door going with it and the rest staying on the body: the two torn doors leave four pieces of trim behind (940 to 944 nodes). */
+const GOLDEN_DIGEST = '944:1473369245'
 
 function digestOf(root: Object3D): string {
   let h = 2166136261
