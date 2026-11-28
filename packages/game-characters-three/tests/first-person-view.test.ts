@@ -296,10 +296,12 @@ describe('eye clip', () => {
     expect(hips.length).toBeGreaterThan(0)
     expect(planeWhileDrawn(hips[0]!, viewCamera)).not.toBeNull()
     expect(renderer.localClippingEnabled).toBe(true)
-    // the legs are not cut at all
+    // the legs are not cut by the eye's plane: only by the lens cut, which keeps what lies past the camera's near plane (a look down sees the legs whole)
     let leg: THREE.Mesh | null = null
     for (const l of avatar.rig.legs as unknown as Array<{ g: THREE.Object3D }>) l.g.traverse((o) => { if (!leg && (o as THREE.Mesh).isMesh) leg = o as THREE.Mesh })
-    expect(planeWhileDrawn(leg!, viewCamera)).toBeNull()
+    before(leg!, viewCamera)
+    expect(materialsOf(leg!)[0]!.clippingPlanes).toHaveLength(1)
+    after(leg!, viewCamera)
   })
 
   it('puts the plane back after the draw, and leaves other cameras and the third person whole', () => {
@@ -311,5 +313,75 @@ describe('eye clip', () => {
     expect(planeWhileDrawn(mesh, otherCamera)).toBeNull()
     avatar.setView('third', viewCamera)
     expect(planeWhileDrawn(mesh, viewCamera)).toBeNull()
+  })
+})
+
+describe('lens cut', () => {
+  /** Every drawn mesh of the body below the head (the head and the neck are hidden in first person anyway). */
+  const bodyMeshes = (avatar: ReturnType<typeof createPlayerAvatar>): THREE.Mesh[] => {
+    const head = new Set(hiddenObjects(avatar))
+    const out: THREE.Mesh[] = []
+    avatar.root.traverse((o) => { if ((o as THREE.Mesh).isMesh && !head.has(o) && o.visible) out.push(o as THREE.Mesh) })
+    return out
+  }
+  /** The planes a mesh is drawn with by `camera` (none: drawn whole). */
+  const planesOf = (mesh: THREE.Mesh, camera: THREE.Camera): THREE.Plane[] => {
+    before(mesh, camera)
+    const planes = (materialsOf(mesh)[0]!.clippingPlanes ?? []).map((plane) => plane.clone())
+    after(mesh, camera)
+    return planes
+  }
+  /** The first-person camera at the body's eye (or `back` metres behind it, as the room pulls it out of a wall), looking ahead and `pitch` down. */
+  const eyeCamera = (avatar: ReturnType<typeof createPlayerAvatar>, pitch: number, back = 0): THREE.PerspectiveCamera => {
+    const camera = new THREE.PerspectiveCamera(70, 16 / 9, 0.05, 500)
+    const eye = avatar.eye()
+    const ahead = new THREE.Vector3(0, -Math.sin(pitch), Math.cos(pitch)).transformDirection(avatar.root.matrixWorld)
+    camera.position.copy(eye).addScaledVector(ahead, -back)
+    camera.lookAt(camera.position.clone().add(ahead))
+    camera.updateMatrixWorld(true)
+    return camera
+  }
+  const POSES: ReadonlyArray<[string, (avatar: ReturnType<typeof createPlayerAvatar>) => void]> = [
+    ['idle', (avatar) => { for (let i = 0; i < 60; i++) avatar.update(1 / 60, {}) }],
+    ['walk', (avatar) => { for (let i = 0; i < 50; i++) avatar.update(1 / 60, { speed: 1.4 }) }],
+    ['crouch', (avatar) => { for (let i = 0; i < 60; i++) avatar.update(1 / 60, { crouch: true }) }],
+    ['front kick', (avatar) => { toRoomAvatar(avatar).strike?.('front_kick'); for (let i = 0; i < 12; i++) avatar.update(1 / 60, {}) }],
+    ['bat swing', (avatar) => { toRoomAvatar(avatar).strike?.('bat_swing'); for (let i = 0; i < 18; i++) avatar.update(1 / 60, {}) }],
+  ]
+
+  for (const [pose, put] of POSES) {
+    for (const [pitch, back] of [[0.15, 0], [0.5, 0], [0.15, 0.15], [1.2, 0.1]] as const) {
+      it(`${pose}, looking ${pitch} rad down, the camera ${back} m behind the eye: no part of the body is drawn within the near plane's slab`, () => {
+        const avatar = createPlayerAvatar(THREE, {})
+        put(avatar)
+        avatar.root.updateMatrixWorld(true)
+        const camera = eyeCamera(avatar, pitch, back)
+        avatar.setView('first', camera)
+        const forward = camera.getWorldDirection(new THREE.Vector3())
+        const v = new THREE.Vector3()
+        for (const mesh of bodyMeshes(avatar)) {
+          const planes = planesOf(mesh, camera)
+          const position = mesh.geometry.attributes.position!
+          for (let i = 0; i < position.count; i++) {
+            v.fromBufferAttribute(position, i).applyMatrix4(mesh.matrixWorld)
+            const along = v.clone().sub(camera.position).dot(forward)
+            // a vertex in front of the camera and nearer than its near plane plus a hair is cut away by one of the planes it is drawn with
+            if (along > -0.02 && along < camera.near + 0.02) expect(planes.some((plane) => plane.distanceToPoint(v) < 0), `${mesh.name || mesh.uuid} ${along.toFixed(3)} m ahead`).toBe(true)
+          }
+        }
+      })
+    }
+  }
+
+  it('a look down still sees the legs: what lies past the lens cut is drawn', () => {
+    const avatar = settle()
+    avatar.root.updateMatrixWorld(true)
+    const camera = eyeCamera(avatar, 1.1)
+    avatar.setView('first', camera)
+    let leg: THREE.Mesh | null = null
+    for (const l of avatar.rig.legs as unknown as Array<{ g: THREE.Object3D }>) l.g.traverse((o) => { if (!leg && (o as THREE.Mesh).isMesh) leg = o as THREE.Mesh })
+    const [lens] = planesOf(leg!, camera)
+    const foot = (avatar.rig.legs as unknown as Array<{ g: THREE.Object3D }>)[0]!.g.localToWorld(new THREE.Vector3(0, -0.8, 0.05))
+    expect(lens!.distanceToPoint(foot)).toBeGreaterThan(0)
   })
 })

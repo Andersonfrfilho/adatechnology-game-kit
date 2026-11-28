@@ -315,7 +315,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
   const armsHider = createHeadHider(rig.arms.map((arm) => arm.g as unknown as THREE_NS.Object3D))
   // the trunk: the upper body and the hips drawn on the figure itself (the legs are groups of their own and stay whole)
   const hips = (rig.fig as unknown as THREE_NS.Object3D).children.filter((child) => (child as THREE_NS.Mesh).isMesh)
-  const eyeClip = createEyeClip(THREE, { roots: [rig.upper as unknown as THREE_NS.Object3D, ...hips], eye: eyeSocket, front: rig.upper as unknown as THREE_NS.Object3D, behind: EYE_CLIP_BEHIND })
+  const eyeClip = createEyeClip(THREE, { roots: [rig.upper as unknown as THREE_NS.Object3D, ...hips], lensRoots: rig.legs.map((leg) => leg.g as unknown as THREE_NS.Object3D), eye: eyeSocket, front: rig.upper as unknown as THREE_NS.Object3D, behind: EYE_CLIP_BEHIND })
   const eyeLocal = new THREE.Vector3()
   let bob = 0 // the vertical bob the gait adds to the hips target, taken off the eye by `1 - eyeBob`
   let hipWithoutBob: number | null = null // the hips' cascade run again on the target with no bob, so the bob left after smoothing can be told apart
