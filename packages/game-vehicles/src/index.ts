@@ -1,4 +1,6 @@
 export { createVehicleKit } from './kit'
+export { bulletHoleShape, holeStyleOf, GOUGE_COS, HEAVY_CALIBER_MM, RIFLE_ENERGY_DENSITY, RIFLE_SPEED } from './hole-shape'
+export type { BulletHoleInput, BulletHoleShape, HoleStyle } from './hole-shape'
 export { registerLocale, resolveStrings, listLocales, format, createTranslate } from './locale'
 export type { LocaleStrings, PartialLocaleStrings, Translate } from './locale'
 export { LEGACY_STATES, LEGACY_ZONE_IDS, SEED_SALTS, legacyZoneId, legacyGlassId, legacyLightId, registerLegacySeeds } from './legacy-seeds'

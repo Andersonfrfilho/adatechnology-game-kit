@@ -30,19 +30,20 @@ export const defaultEffectIds: VehicleEffectIds = {
   ignite: 'volumetric_fire',
   explode: 'car_fuel_tank',
   glass: 'glass_burst',
-  sparks: 'impact_metal',
+  sparks: 'impact_bodywork',
   leak: 'vehicle_leak',
   leakIgnited: 'vehicle_leak_ignited',
   exhaust: 'vehicle_exhaust',
 }
 
 /**
- * The sounds the module asks of `host.audio`, by id of the host's banks: the horn (placed at the car), and the vehicle's own sounds (`createVehicleSound`: the starter, the
- * crashes by speed, the tyres). The engine loops come from the engine profile.
+ * The sounds the module asks of `host.audio`, by id of the host's banks: the horn (placed at the car), a round into the thin sheet of the body (`skinHit`, a light
+ * round; `skinHitHeavy`, a rifle round, a slug or a heavy calibre: the recordings of `game-audio`), and the vehicle's own sounds (`createVehicleSound`: the starter,
+ * the crashes by speed, the tyres). The engine loops come from the engine profile.
  */
-export type VehicleSoundIds = { readonly horn: string } & VehicleSoundKeys
+export type VehicleSoundIds = { readonly horn: string; readonly skinHit: string; readonly skinHitHeavy: string } & VehicleSoundKeys
 
-export const defaultSoundIds: VehicleSoundIds = { horn: 'horn_car', ...DEFAULT_VEHICLE_SOUND_KEYS }
+export const defaultSoundIds: VehicleSoundIds = { horn: 'horn_car', skinHit: 'metal_thin', skinHitHeavy: 'metal_bullet', ...DEFAULT_VEHICLE_SOUND_KEYS }
 
 /** A damaged vehicle of the area: the item id, the fleet vehicle it is built from and the scenario of the kit applied while building. */
 export type VehicleWreck = { readonly key: string; readonly vehicle: string; readonly scenario: string }
@@ -69,7 +70,7 @@ export type VehiclesTestOptions = {
   readonly vehicles?: readonly string[]
   /** Wrecks laid out after the vehicles: item `key` is the fleet vehicle `vehicle` built with the registered damage `scenario` (default `sedan_burnt` and `hatch_burnt`, the fleet's `burnt`; an empty list lays none). */
   readonly wrecks?: readonly VehicleWreck[]
-  /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` (pool and drips only), `vehicle_leak_ignited` (the whole sequence) and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, and the point-based `glass_burst` and `impact_metal`). */
+  /** Effect ids requested through `host.effects` (the defaults are ids of `game-vfx`: the Garagem's `car_fuel_tank` blast, the `vehicle_fire`, `vehicle_leak` (pool and drips only), `vehicle_leak_ignited` (the whole sequence) and `vehicle_exhaust` recipes written around a car from `engine_smoke` and `fuel_leak`, the point-based `glass_burst`, and `impact_bodywork` for a round into the skin: sparks, a flash, paint flakes and slivers, no mark of its own). */
   readonly effects?: Partial<VehicleEffectIds>
   /** Sound ids requested through `host.audio` (the defaults: the vehicle bank of this package). */
   readonly sounds?: Partial<VehicleSoundIds>

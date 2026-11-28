@@ -122,4 +122,19 @@ export interface WorkshopContext {
   readonly trace: WorkshopTrace | undefined
   /** The closed spaces the carried sprites (smoke, dust, steam) do not cross; absent: none. */
   readonly confiner?: Confiner
+  /**
+   * The debris pieces touch what is round them (the host turned it on, `WorkshopEngine.setDebrisContacts`): they pile on the pieces at rest under them and
+   * do not go through `obstacles` (the player), which push them. Absent: they only bounce on the ground, as the Workshop page (its recording) does.
+   */
+  debrisContacts?: { readonly obstacles: () => readonly DebrisObstacle[] }
+}
+
+/** An upright body the debris pieces stop against and are pushed off by (a person standing): a vertical cylinder. */
+export interface DebrisObstacle {
+  readonly x: number
+  readonly z: number
+  /** Height of its foot and of its top, metres. */
+  readonly bottom: number
+  readonly top: number
+  readonly radius: number
 }

@@ -1,5 +1,6 @@
 import type { MutableVec3 } from '../random'
 import { coneDirection, drawRange } from './direction'
+import { RestingGrid, pushOutOfObstacles } from './debris-contact'
 import type { DebrisSpawn, WorkshopContext } from './types'
 
 const CAPACITY = 500
@@ -46,6 +47,7 @@ export class DebrisPool {
   count = 0
   private next = 0
   private readonly direction: MutableVec3 = { x: 0, y: 0, z: 0 }
+  private readonly resting = new RestingGrid()
 
   constructor(private readonly context: WorkshopContext) {}
 
@@ -87,14 +89,23 @@ export class DebrisPool {
 
   update(dt: number): void {
     this.count = 0
+    const contacts = this.context.debrisContacts
+    const obstacles = contacts?.obstacles() ?? []
+    let moving = false
+    for (const piece of this.pieces) {
+      if (!piece.on) continue
+      piece.life -= dt
+      if (piece.life <= 0) piece.on = false
+      else if (!piece.rest) moving = true
+    }
+    // what is at rest is what the moving pieces land on; with nothing moving nothing is asked
+    if (moving && contacts) this.resting.rebuild(this.pieces)
+    else this.resting.clear()
     for (const piece of this.pieces) {
       if (!piece.on) continue
       this.count++
-      piece.life -= dt
-      if (piece.life <= 0) {
-        piece.on = false
-        continue
-      }
+      // a foot that steps into a pile pushes the pieces it meets and wakes them
+      if (obstacles.length > 0 && pushOutOfObstacles(piece, obstacles)) piece.rest = false
       if (!piece.rest) this.move(piece, dt)
     }
   }
@@ -112,7 +123,8 @@ export class DebrisPool {
     piece.rx += piece.ax * dt
     piece.ry += piece.ay * dt
     piece.rz += piece.az * dt
-    const groundHeight = this.context.groundAt(piece.x, piece.z) + Math.min(piece.sx, piece.sy, piece.sz) * 0.5
+    // the ground, or the top of the pieces already lying under it (a pile)
+    const groundHeight = Math.max(this.context.groundAt(piece.x, piece.z) + Math.min(piece.sx, piece.sy, piece.sz) * 0.5, this.resting.supportUnder(piece))
     if (piece.y >= groundHeight) return
     piece.y = groundHeight
     piece.vy *= -piece.bounce

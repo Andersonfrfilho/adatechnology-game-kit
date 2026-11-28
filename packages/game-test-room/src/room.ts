@@ -49,6 +49,7 @@ import { createLog } from './log'
 import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
+import { bindDebrisToPlayer } from './debris-contacts'
 import { createPlayer, PLAYER_RADIUS, type PlayerSlam } from './player'
 import { createModuleBlockers } from './module-blockers'
 import { createSceneryBlocking } from './scenery-blocking'
@@ -737,7 +738,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     },
   })
   player.look(arena.playerStart, [0, 1.5, arena.wallZ])
-
+  bindDebrisToPlayer(vfx.world.workshop(), player)
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Spawning
   // ---------------------------------------------------------------------------------------------------------------------------------------
@@ -3386,7 +3387,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       if (next && e?.opened) useItem(next)
     }
   }
-
 
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // Tap

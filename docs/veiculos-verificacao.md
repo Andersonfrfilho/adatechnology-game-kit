@@ -38,6 +38,31 @@ O teste da frota agora **reprova**, porta por porta, em toda a frota:
 - **friso de fechamento (a linha preta entre as portas) indo com a porta**: era a "haste vertical". Fica na carroceria e some enquanto uma das portas
   que ele marca está aberta.
 
+## Furo de bala na lataria: encostado na chapa, pelo calibre (2026-11-28)
+
+Print do dono: furo no carro visto de lado virava lasca preta solta no ar. Causa: a cada `hole` do carro o módulo de veículos pedia o efeito `impact_metal`
+sem a normal da chapa, e o efeito deixava uma mancha de 5 cm no mundo virada para +z (fora do painel, a até 2 cm dele, e parada quando a porta abria). Agora
+o pedido é `impact_bodywork` (`game-vfx`), com a normal e o caminho da bala: faíscas no reflexo, clarão, lascas de tinta e de chapa pelos pedaços de
+detrito da oficina (os mesmos do tiro na parede) e nenhuma marca própria. O furo é só o do carro (`holeDecal`), filho da peça.
+
+- **Forma pelo calibre** (`bulletHoleShape`, `game-vehicles`): 9 mm furo redondo e limpo; fuzil (5.56, 7.62) furo menor com pétalas e anel largo de
+  tinta lascada; 12 ga slug e .50 furo grande rasgado; chumbo que para na chapa, só a covinha sem furo; bala de raspão (|cos| < 0,45), risco comprido.
+  Sem tabela por arma: vem do diâmetro, da energia e da massa (ou da energia por mm² quando o tiro não traz a massa).
+- **Encostado na chapa**: disco a 1 mm, normais em bacia (a luz lê o amassado), `polygonOffset` constante; perto de borda (porta, para-lama) o anel
+  encolhe até a borda inteira estar sobre a chapa (`fitMark`).
+- Testes: `game-vehicles/tests/hole-shape.test.ts` (calibres da tabela do SDK), `game-vehicles-fleet/tests/bullet-mark-on-skin.test.ts` (6 carros, tiro
+  inclinado: o anel fica a no máximo 3,5 mm da pele e a marca olha para a normal da chapa), `game-vfx/tests/vehicle-effects.test.ts` (sem marca própria,
+  lascas para fora da chapa, mais e maiores com calibre maior).
+- No jogo real: `examples/test-room/car-holes-test.mjs` (sedã: 9 mm, 5.56, escopeta e .50 lado a lado, dois de raspão, vista rasante dos dois lados,
+  de perto, no impacto e com a porta aberta); prints `examples/test-room/shots/car-holes-*.png` e `debris-pile-*.png`.
+- **Lascas que se tocam** (`game-vfx`, `WorkshopEngine.setDebrisContacts`; a sala liga em `debris-contacts.ts`): os pedaços de detrito da oficina
+  (os do efeito de impacto do concreto e os da lata) empilham sobre os que já estão parados e param no corpo do jogador, que os empurra ao andar; parados,
+  não custam nada por quadro. Desligado, quicam só no chão como a página da oficina (os goldens dela não mudam). Teste `game-vfx/tests/debris-contacts.test.ts`;
+  no jogo, `examples/test-room/debris-pile-test.mjs` (174 pedaços, 20 sobre outros, nenhum dentro do jogador).
+- **Som na lata pelo calibre** (`skinHitSound`, módulo de veículos): gravação `metal_thin` (chapa fina) para chumbo, fuzil e pistola, mais alta quanto maior
+  o furo; `metal_bullet` para slug e calibre pesado.
+- **Pendência:** a lasca do tijolo é outro sistema (partículas `chips` de vida curta, de `vfx.burst`), que só quica no chão e some em 2 a 4 s: não empilha.
+
 ## Vidro embaçado por dentro
 
 Desde 2026-11-05: `createWindshieldMist` (`game-vehicles-three`) põe uma película clara em cada vidro do `context.glass`, **filha do próprio vidro** (desce com a

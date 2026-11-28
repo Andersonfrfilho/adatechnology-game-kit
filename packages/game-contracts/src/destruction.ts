@@ -872,7 +872,7 @@ export type DestructionEvent =
   /** A thin ductile plate bent by `angle` more radians about `hinge` (`PartState.bend` holds the total). */
   | (EventBase & { type: 'bend'; part: string; hinge: BendHinge; angle: number; worldPoint: Vec3 })
   /** `powder`: the part's loose dry contents (`PartSpec.powder`), which puff out of the hole. */
-  | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number }; /** Joules the round still carries out of the part, when the part knows. */ energyLeft?: number })
+  | (EventBase & { type: 'hole'; part: string; hole: Hole; worldPoint: Vec3; exitPoint?: Vec3; powder?: { color: number }; /** Joules the round still carries out of the part, when the part knows. */ energyLeft?: number; /** The surface normal at `worldPoint` in world space (facing the round), when the part knows its drawn surface. */ worldNormal?: Vec3; /** Which way the round was going, in world space (unit), when the part knows. */ direction?: Vec3 })
   | (EventBase & { type: 'crack'; part: string; crack: Crack; worldPoint: Vec3 })
   | (EventBase & { type: 'ricochet'; part: string; point: Vec3; direction: Vec3; energy: number })
   /** Bits thrown off a part; `material` is what they are made of when it is not the part's own (the plaster coat over a brick wall). */

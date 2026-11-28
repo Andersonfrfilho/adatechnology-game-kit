@@ -16,6 +16,8 @@ import { createVehicleLod, createVehicleLodQueue } from '../vehicle-lod'
 import type { VehicleLod } from '../vehicle-lod'
 import { createCabinSmoke } from '../cabin-smoke'
 import { createVehicleRainCovers } from '../rain-cover'
+import { bodyworkValues, skinHitSound } from './bodywork-effect'
+import type { VehicleEffectEvent } from './bodywork-effect'
 import { createLaneDamage, LANE_DAMAGE } from './lane-damage'
 import type { LaneDamage } from './lane-damage'
 import { createPhysicalCar, physicalCarColliders, physicsServicesOf } from './physical-car'
@@ -186,7 +188,10 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
       const kit = r.userData.kit as VehicleKit
       // the host's fluid world lays what leaks, as much as came out: the car draws no puddle of its own
       const d = createVehicleDestructible(kit, r.userData.vehicle as VehicleContext, { id, frame: root, name: text.items[itemKey] ?? key, creaseQueue, puddles: false })
-      tapEffects(d)
+      tapEffects(d, () => {
+        const entry = placed.get((root as THREE_NS.Object3D).uuid)
+        return (entry?.paint ?? primaryPaint(r.userData.vehicle as VehicleContext))?.color.getHex()
+      })
       // an engine collides with what the vehicle draws, piece by piece, not with its damage-zone boxes
       // (a vehicle that just spawned fills in over several updates)
       const services = physicsServicesOf(host)
@@ -255,11 +260,11 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
   }
 
   // events of the vehicle become effect requests: the module owns no particle code
-  const tapEffects = (d: { hit(h: never): unknown[]; update?(dt: number): unknown[] }): void => {
-    const request = (events: unknown[]): void => {
+  const tapEffects = (d: { hit(h: never): unknown[]; update?(dt: number): unknown[] }, paint: () => number | undefined): void => {
+    const request = (events: unknown[], ballistic = false): void => {
       const fx = effects()
       if (!fx) return
-      for (const e of events as { type: string; part?: string; point?: Vec3; worldPoint?: Vec3 }[]) {
+      for (const e of events as VehicleEffectEvent[]) {
         const position = e.point ?? e.worldPoint
         if (!position) continue
         // a pierced tank only leaks; when the leak catches fire the whole sequence plays (the fire runs to the tank, then the blast)
@@ -267,13 +272,19 @@ export function createVehiclesTestModule(options: VehiclesTestOptions = {}): Tes
         else if (e.type === 'explode') fx.play({ effect: effectIds.explode, point: position })
         else if (e.type === 'leak') fx.play({ effect: effectIds.leak, point: position })
         else if (e.type === 'fracture' && /glass|window|windshield/.test(e.part ?? '')) fx.play({ effect: effectIds.glass, point: position })
-        else if (e.type === 'hole') fx.play({ effect: /glass|window|windshield/.test(e.part ?? '') ? effectIds.glass : effectIds.sparks, point: position })
+        else if (e.type === 'hole' && /glass|window|windshield/.test(e.part ?? '')) fx.play({ effect: effectIds.glass, point: position })
+        // the round into the skin: sparks off the panel, paint flakes and slivers, sized by the hole; the hole itself is the vehicle's, on the panel
+        else if (e.type === 'hole') {
+          fx.play({ effect: effectIds.sparks, point: position, ...(e.worldNormal ? { normal: e.worldNormal } : {}), values: bodyworkValues(e, paint()) })
+          audio()?.play({ ...skinHitSound(e.hole?.diameter, soundIds), position, urgent: true })
+        } else if (e.type === 'dent' && ballistic) audio()?.play({ ...skinHitSound(undefined, soundIds), position, urgent: true })
       }
     }
     const hit = d.hit.bind(d)
     d.hit = (h) => {
       const events = hit(h)
-      request(events)
+      // a round that stopped in the sheet still rings it (a pellet's dent)
+      request(events, (h as { readonly type?: string }).type === 'ballistic')
       return events
     }
     if (d.update) {

@@ -1,6 +1,7 @@
 import type { WorkshopEngine } from '../workshop/engine'
 import type { Vec3Tuple } from '../workshop/types'
 import { bloodHit, impact } from './builders/blood'
+import { bodyworkHitOf, bodyworkImpact } from './builders/bodywork'
 import type { ImpactMaterial } from './builders/blood'
 import { explode, fireEmit } from './builders/fire'
 import type { FireEmitOptions } from './builders/fire'
@@ -16,7 +17,7 @@ export interface MacroContext {
 
 type MacroArgs = readonly unknown[]
 
-/** The helpers the page's recipes share (`bloodHit`, `impact`, `fireEmit`, `explode`, `muzzle`, `casing`, `chips`, `sparkAt`, `rustAt`), called by name from a step. */
+/** The helpers the page's recipes share (`bloodHit`, `impact`, `fireEmit`, `explode`, `muzzle`, `casing`, `chips`, `sparkAt`, `rustAt`, `bodyworkImpact`), called by name from a step. */
 export const MACROS: Readonly<Record<string, (context: MacroContext, args: MacroArgs) => void>> = {
   blood_hit: ({ engine }, [point, direction, age, scale]) => bloodHit(engine, point as Vec3Tuple, direction as Vec3Tuple, age as number, scale as number | undefined),
   impact: ({ engine }, [material, point, normal, scale, age]) => impact(engine, material as ImpactMaterial, point as Vec3Tuple, normal as Vec3Tuple, scale as number | undefined, age as number | undefined),
@@ -27,4 +28,6 @@ export const MACROS: Readonly<Record<string, (context: MacroContext, args: Macro
   chips: ({ engine }, [point, direction, count, spread]) => chips(engine, point as Vec3Tuple, direction as Vec3Tuple, count as number, spread as number | undefined),
   spark_at: ({ engine }, [point, direction, count, spread]) => sparkAt(engine, point as Vec3Tuple, direction as Vec3Tuple, count as number, spread as number | undefined),
   rust_at: ({ engine }, [point, count]) => rustAt(engine, point as Vec3Tuple, count as number),
+  bodywork_impact: ({ engine }, [point, normal, direction, bore, paint, metal]) =>
+    bodyworkImpact(engine, point as Vec3Tuple, normal as Vec3Tuple, bodyworkHitOf({ direction, bore, paint, metal })),
 }
