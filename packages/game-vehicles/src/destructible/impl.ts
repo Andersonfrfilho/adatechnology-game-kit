@@ -35,6 +35,9 @@ import { VehicleVisuals } from './visual'
 import type { PartSink } from './visual'
 import { createVehicleClips } from './clips'
 import { raycastMeshesLikeThree } from '../tri-index'
+import { bulletHoleShape } from '../hole-shape'
+import { createMarkFitter } from './mark-fit'
+import type { BulletHoleShape } from '../hole-shape'
 
 export interface VehicleDestructibleOptions {
   /** Object id the host gives (`DestructibleImpl.id`). Default: the vehicle key. */
@@ -760,6 +763,9 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
 
   // ---- hits ----------------------------------------------------------------------------------------------------------------------------
   const normalOf = (d: PartDef, v: Vector3): Vector3 => faceNormal(d, v)
+  const fitter = createMarkFitter({ vector: (x, y, z) => new V3(x, y, z), surfaceRay: (ray) => surfaceRay(ray), toWorld, dirToWorld })
+  /** The mark shrunk until its rim lies on the panel: a hole by an edge is smaller, never hanging off it (no visuals: nothing drawn, nothing to fit). */
+  const fitMark = (v: Vector3, n: Vector3, shape: BulletHoleShape, along: Vector3): BulletHoleShape => (vis ? fitter(shape, { point: v, normal: n, along }) : shape)
   const ballistic = (h: Hit, out: DestructionEvent[]): void => {
     sync()
     const M = toFrameMatrix()
@@ -778,16 +784,21 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
     const cosInc = Math.abs(dir.dot(n))
     const metal = d.material === 'steel' || d.material === 'aluminium'
     const worldPoint = toWorld(v)
+    // a hollow point or soft lead opens up in the panel: a wider hole than its calibre
+    const opens = (h.piercing ?? 1) < SOFT_LEAD ? EXPANDED_HOLE : 1
+    const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1) * opens)
+    /** The mark of this round on this part (style, bore, ring, dent, stretch), from the round and how it met the panel. */
+    const shapeOf = (pierced: boolean): BulletHoleShape =>
+      bulletHoleShape({ caliberMm: cal, energy: E, ...(h.mass !== undefined ? { massGrams: h.mass } : {}), cosIncidence: cosInc, through: pierced, material: d.material, boreDiameter: holeDiam })
     if (metal && !through && cosInc < 0.3 && E > 40) {
       const refl = dir.clone().addScaledVector(n, -2 * dir.dot(n))
       out.push(ev({ type: 'ricochet', part: d.id, point: worldPoint, direction: r3(dirToWorld(refl)), energy: r2(E * 0.4) }))
       damage(p, E * 0.05, 'ballistic', h.source, out, worldPoint, pieces)
       vis?.spark([v.x, v.y, v.z], [refl.x, refl.y, refl.z], 6)
+      // a round at a slant scrapes the paint off along its path: a gouge, no bore
+      vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], fitMark(v, n, shapeOf(false), dir), d, [dir.x, dir.y, dir.z])
       return
     }
-    // a hollow point or soft lead opens up in the panel: a wider hole than its calibre
-    const opens = (h.piercing ?? 1) < SOFT_LEAD ? EXPANDED_HOLE : 1
-    const holeDiam = Math.max(0.006, (cal / 1000) * (d.material === 'glass' ? 1.4 : 1) * opens)
     /** What a round keeps after going through: it spends on the part the share of its penetration the part's steel takes (a skin little, a door about half of a pistol round), else the part's resistance out of its energy. */
     const energyLeft = (): number => {
       const metal = d.material === 'steel' || d.material === 'aluminium'
@@ -799,8 +810,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       if (!hole) return
       const hp: PartState['holes'][number] = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), diameter: r2(holeDiam), through }
       p.holes.push(hp)
-      out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, ...(through ? { energyLeft: r2(energyLeft()) } : {}), ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
-      vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], holeDiam, d)
+      out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, worldNormal: r3(dirToWorld(n.clone().normalize())), direction: r3(dirToWorld(dir)), ...(through ? { energyLeft: r2(energyLeft()) } : {}), ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
+      vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], d.material === 'glass' ? shapeOf(through) : fitMark(v, n, shapeOf(through), dir), d, [dir.x, dir.y, dir.z])
       if (d.role === 'mirror') vis?.shatterMirror(d.id)
       startLeak(p, v, cal, out, dir)
     }
@@ -834,6 +845,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
           const dent: PartState['dents'][number] = { point: r3(fromVehicle(v, M)), normal: r3(fromVehicle(n, new THREE.Matrix4().extractRotation(M))), radius: r2(Math.max(0.02, holeDiam * 2)), depth: r2(Math.min(0.03, E / 60000 + 0.002)) }
           p.dents.push(dent)
           out.push(ev({ type: 'dent', part: d.id, dent, worldPoint }))
+          // the round stopped in the sheet: a dimple with the paint crushed off, no bore (a shotgun's pellets leave a cluster of them)
+          vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], fitMark(v, n, shapeOf(false), dir), d, [dir.x, dir.y, dir.z])
         }
         vis?.spark([v.x, v.y, v.z], [dir.x, dir.y, dir.z], through ? 4 : 8)
         let amount = through ? E * 0.6 : E * 0.25

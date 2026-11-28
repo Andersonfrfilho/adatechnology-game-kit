@@ -11,7 +11,7 @@ import { MeshPool } from './meshes'
 import type { MeshParticle, Quaternion } from './meshes'
 import { SpritePool } from './sprites'
 import { StreakPool } from './streaks'
-import type { DebrisSpawn, DecalOptions, MeshSpawn, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './types'
+import type { DebrisObstacle, DebrisSpawn, DecalOptions, MeshSpawn, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './types'
 import { FlashLightPool, WaveRingPool } from './waves'
 
 const QUALITY_MULTIPLIERS = [1, 0.5, 0.2] as const
@@ -113,6 +113,15 @@ export class WorkshopEngine {
     this.debris = new DebrisPool(this.context)
     this.decals = new DecalPool(this.context)
     this.lights = new FlashLightPool(this.context)
+  }
+
+  /**
+   * Turns on the touch of the debris pieces (a game's world; the Workshop page's recording has none): they pile on the pieces at rest under them, and the
+   * upright bodies `obstacles` answers (the player, asked once a frame while a piece moves) stop them and push them. `null` turns it off.
+   */
+  setDebrisContacts(obstacles: (() => readonly DebrisObstacle[]) | null): void {
+    if (obstacles) this.context.debrisContacts = { obstacles }
+    else delete this.context.debrisContacts
   }
 
   get random(): RandomStream {

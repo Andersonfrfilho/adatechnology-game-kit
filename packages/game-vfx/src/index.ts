@@ -34,7 +34,7 @@ export type { LensBlob, Placement, PostProcess, WorkshopOptions } from './worksh
 export type { Decal } from './workshop/decals'
 export { MeshPool } from './workshop/meshes'
 export type { MeshParticle, Quaternion } from './workshop/meshes'
-export type { DebrisSpawn, DecalOptions, MeshShape, MeshSpawn, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './workshop/types'
+export type { DebrisObstacle, DebrisSpawn, DecalOptions, MeshShape, MeshSpawn, SpriteSpawn, SpriteSystem, Vec3Tuple, WorkshopContext, WorkshopTrace } from './workshop/types'
 export { SPRITE_KINDS, patchSpriteKinds } from './sprites/kinds'
 export type { SpriteGround, SpriteKind, SpriteKindDef } from './sprites/kinds'
 export { SpriteKindPool } from './sprites/kind-pool'
