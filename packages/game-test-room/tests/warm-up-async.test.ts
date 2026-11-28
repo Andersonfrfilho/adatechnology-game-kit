@@ -11,7 +11,11 @@ function warmableRenderer() {
     toneMapping: THREE.NoToneMapping,
     outputColorSpace: THREE.SRGBColorSpace,
     debug: { checkShaderErrors: true },
-    compile: vi.fn(() => new Set()),
+    // the parallel link is game-render-three's own (`linkInParallel`: `compile`, then the wait on each program); `compileAsync` only marks a three that links in parallel
+    compile: vi.fn(() => {
+      order.push('compile')
+      return new Set()
+    }),
     compileAsync: vi.fn(async () => void order.push('compileAsync')),
     render: vi.fn(() => void order.push('render')),
     setRenderTarget: vi.fn(),
@@ -28,9 +32,10 @@ describe('room.warmUpAsync', () => {
     const room = makeRoom({ renderer })
     try {
       await room.warmUpAsync()
-      expect(order[0]).toBe('compileAsync')
-      expect(order.filter((step) => step === 'compileAsync').length).toBeGreaterThan(0)
-      expect(order.indexOf('render')).toBeGreaterThan(order.indexOf('compileAsync'))
+      expect(order[0]).toBe('compile')
+      expect(order.indexOf('render')).toBeGreaterThan(order.indexOf('compile'))
+      // three r160's compileAsync throws from its timer on a material disposed while it links: the warm-up never calls it
+      expect(order).not.toContain('compileAsync')
       expect((renderer as unknown as { debug: { checkShaderErrors: boolean } }).debug.checkShaderErrors).toBe(false)
     } finally {
       room.dispose()
