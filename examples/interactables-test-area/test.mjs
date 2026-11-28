@@ -63,7 +63,7 @@ for (const lang of languages) {
     const checks = room.log.entries({ channel: 'check' }).filter((e) => e.data?.module === r.module)
     return { module: r.module, ok: r.ok, items: r.items.length, scenarios: r.scenarios.length, problems: r.problems, checks: checks.length, failed: checks.filter((e) => e.type !== 'pass').map((e) => e.text), clips: checks.filter((e) => e.data?.check === 'animation').length }
   })
-  check(`[${lang}] module loaded, 51 items, contract report ok`, rep.ok && rep.items === 51 && rep.problems.length === 0, rep)
+  check(`[${lang}] module loaded, 52 items, contract report ok`, rep.ok && rep.items === 52 && rep.problems.length === 0, rep)
   check(`[${lang}] every checkAnimation line in the room log passed`, rep.clips > 100 && rep.failed.length === 0, { clips: rep.clips, failed: rep.failed.slice(0, 3) })
 
   const spawned = await page.evaluate(() => {
@@ -128,7 +128,7 @@ for (const lang of languages) {
     room.clear()
     return { ok: r?.ok && r.problems.length === 0, items: r?.items?.length ?? 0, scenarios: r?.scenarios?.length ?? 0, run: { passed: run.passed, failed: run.failed, bad: run.results.filter((x) => !x.ok).map((x) => `${x.id}: ${x.checks.filter((c) => !c.ok).map((c) => c.label).join('; ')}`) } }
   })
-  check(`[${lang}] the urban module is loaded (17 items, 8 scenarios), and the light budget and the road dashes are green`, city.ok && city.items === 17 && city.scenarios === 8 && city.run.passed === 2 && city.run.failed === 0, city)
+  check(`[${lang}] the urban module is loaded (18 items, 8 scenarios), and the light budget and the road dashes are green`, city.ok && city.items === 18 && city.scenarios === 8 && city.run.passed === 2 && city.run.failed === 0, city)
   // the house and the yard on tables: the kitchen alone (it fits the plain room) lays every piece, and a grenade under its table throws what lies on it, leaving nothing in the air
   const kitchen = await page.evaluate(async () => {
     const room = window.__testRoom
@@ -227,7 +227,7 @@ for (const lang of languages) {
     const loaded = window.__furnitureReport.floorplan
     return { module: loaded?.module, ok: loaded?.ok, problems: loaded?.problems ?? [], items: loaded?.items?.length ?? 0, scenarios: loaded?.scenarios?.length ?? 0 }
   })
-  check(`[${lang}] the floorplan module is loaded too (5 houses and 14 furniture, 8 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 19 && floorplan.scenarios === 8, floorplan)
+  check(`[${lang}] the floorplan module is loaded too (127 items, 8 scenarios)`, floorplan.module === 'floorplan_area' && floorplan.ok && floorplan.problems.length === 0 && floorplan.items === 127 && floorplan.scenarios === 8, floorplan)
   const effects = await page.evaluate(() => {
     const loaded = window.__furnitureReport.vfx
     const bench = /** @type {RoomBench} */ (window.__testRoom.bench('vfx'))
@@ -259,7 +259,7 @@ for (const lang of languages) {
     return result
   }, 6e4)
   check(`[${lang}] the sound and weather modules are loaded too: a storm writes host.environment, a sound plays on the room engine, the furniture scene keeps its fog off`, sky.weather && sky.sound && sky.rain > 10 && sky.visibility < 120 && sky.peak >= 1 && sky.fog, sky)
-  check(`[${lang}] the weather picture is loaded too: the storm draws the 14 000-point curtain and 4 000 near streaks over the furniture, seven picture layers, the sky left to the room`, sky.picture.curtain && sky.picture.drawn === 14000 && sky.picture.near === 4000 && sky.picture.layers.length === 7 && sky.picture.skyOn === false && sky.picture.rig, sky.picture)
+  check(`[${lang}] the weather picture is loaded too: the storm draws the 14 000-point curtain and 4 000 near streaks over the furniture, seven picture layers, the sky dome drawn`, sky.picture.curtain && sky.picture.drawn === 14000 && sky.picture.near === 4000 && sky.picture.layers.length === 7 && sky.picture.skyOn === true && sky.picture.rig, sky.picture)
   check(`[${lang}] the weather bridges: the storm's wind (4.5, 0) goes to the effects world and back to the breeze, the rain and wind loops are open, the thunder is in the room engine`, Math.abs(sky.wind[0] - 4.5) < 1e-9 && sky.wind[2] === 0 && Math.abs(sky.windAfter[0] - 3.5) < 1e-9 && Math.abs(sky.windAfter[2] - 1.5) < 1e-9 && sky.loops >= 1 && sky.thunder, sky)
 
   // the player area rides along: its report is clean and its six scenarios pass in this room too
@@ -334,7 +334,20 @@ if (PART === 'all' || PART === 'house') {
     const room = window.__testRoom
     return room.runScenarios(room.scenarios.filter((s) => s.id.startsWith('house_complete_')))
   })
-  for (const result of report.results) check(`house_complete: ${result.name}`, result.ok, result.checks.filter((c) => !c.ok).map((c) => c.label))
+  // which pieces failed each trial: the label says how many, the room log says which
+  const houseFailedData = await page.evaluate(() =>
+    window.__testRoom.log
+      .entries({ channel: 'check' })
+      .filter((entry) => entry.type === 'fail')
+      .map((entry) => {
+        try {
+          return JSON.stringify(entry.data).slice(0, 1200)
+        } catch {
+          return '(data not serialisable)'
+        }
+      }),
+  )
+  for (const result of report.results) check(`house_complete: ${result.name}`, result.ok, { failed: result.checks.filter((c) => !c.ok).map((c) => c.label), data: houseFailedData })
   await page.screenshot({ path: join(shots, '06-whole-house-after-trials.png'), timeout: 300000 })
   await page.close()
 }

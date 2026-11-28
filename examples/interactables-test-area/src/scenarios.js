@@ -279,16 +279,16 @@ export function buildScenarios(locale, analysisOf) {
       const hold = (/** @type {string} */ id, /** @type {Triple} */ eye, /** @type {Triple} */ target, /** @type {number} */ seconds) => {
         room.look(eye, target)
         const leaned = room.push.begin()
-        expect(leaned && room.push.state?.objectId === id && /** @type {RoomPushState} */ (room.push.state).phase === 'grip', T(`Encostou em ${id}: o anel começa`, `Leaned on ${id}: the ring starts`))
+        expect(leaned && room.push.state?.objectId === id && room.push.state?.phase === 'grip', T(`Encostou em ${id}: o anel começa`, `Leaned on ${id}: the ring starts`), { leaned, held: room.push.state?.objectId ?? null, phase: room.push.state?.phase ?? null })
         step(seconds)
       }
       const rootOf = (/** @type {string} */ id) => /** @type {SpawnedObject} */ (room.spawned().find((s) => s.objectId === id)).root
       // light: it follows the player, and the player keeps its distance
       const light = spawn(room, 'nightstand', [-2, 0, 3])
       hold(light, [-2, 1.7, 4.2], [-2, 0.4, 3], 0.2)
-      expect(/** @type {RoomPushState} */ (room.push.state).progress < 1, T('O anel não enche na hora', 'The ring does not fill at once'))
+      expect((room.push.state?.progress ?? 1) < 1, T('O anel não enche na hora', 'The ring does not fill at once'))
       step(0.5)
-      expect(/** @type {RoomPushState} */ (room.push.state).phase === 'push', T('12 kg: em menos de 1 s o jogador empurra', '12 kg: under 1 s the player pushes'), { phase: /** @type {RoomPushState} */ (room.push.state).phase })
+      expect(room.push.state?.phase === 'push', T('12 kg: em menos de 1 s o jogador empurra', '12 kg: under 1 s the player pushes'), { phase: room.push.state?.phase })
       const lightZ = rootOf(light).position.z
       const playerZ = room.playerPosition[2]
       room.push.setWalk([0, -1])
@@ -311,7 +311,7 @@ export function buildScenarios(locale, analysisOf) {
       hold(heavy, [2, 1.7, 4.4], [2, 0.6, 3], 3)
       room.push.setWalk([0, -1])
       step(1)
-      expect(/** @type {RoomPushState} */ (room.push.state).phase === 'strain' && /** @type {RoomPushState} */ (room.push.state).block === 'too_heavy', T('400 kg: faz força e não vai', '400 kg: strains and it does not go'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
+      expect(room.push.state?.phase === 'strain' && room.push.state?.block === 'too_heavy', T('400 kg: faz força e não vai', '400 kg: strains and it does not go'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
       expect(rootOf(heavy).position.z === heavyZ, T('A churrasqueira não saiu do lugar', 'The grill did not move'))
       room.push.setWalk(null)
       room.push.end()
@@ -319,18 +319,18 @@ export function buildScenarios(locale, analysisOf) {
       const wall = spawn(room, 'wardrobe', [0, 0, -9])
       const wardrobeBack = () => new window.__THREE.Box3().setFromObject(rootOf(wall)).min.z
       hold(wall, [0, 1.7, -7.9], [0, 1.2, -9], 2.5)
-      expect(/** @type {RoomPushState} */ (room.push.state).phase === 'push', T('90 kg de madeira dá para empurrar', '90 kg of wood can be pushed'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
+      expect(room.push.state?.phase === 'push', T('90 kg de madeira dá para empurrar', '90 kg of wood can be pushed'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
       room.push.setWalk([0, -1])
       step(4)
       const stoppedAt = wardrobeBack()
-      expect(/** @type {RoomPushState} */ (room.push.state).phase === 'strain' && /** @type {RoomPushState} */ (room.push.state).block === 'obstacle', T('Bateu na parede e travou', 'It hit the wall and locked'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
+      expect(room.push.state?.phase === 'strain' && room.push.state?.block === 'obstacle', T('Bateu na parede e travou', 'It hit the wall and locked'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
       expect(stoppedAt > -11.1, T(`Parou antes de atravessar a parede (fundos em z=${stoppedAt.toFixed(2)})`, `Stopped short of the wall (back at z=${stoppedAt.toFixed(2)})`))
       const stuckPlayer = room.playerPosition[2]
       step(0.5)
       expect(room.playerPosition[2] === stuckPlayer && wardrobeBack() === stoppedAt, T('Nem o móvel nem o jogador avançam', 'Neither the piece nor the player advance'))
       room.push.setWalk([0, 1])
       step(0.5)
-      expect(wardrobeBack() > stoppedAt + 0.1 && /** @type {RoomPushState} */ (room.push.state).block === null, T('Puxado para trás, solta da parede', 'Pulled back, it comes off the wall'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
+      expect(wardrobeBack() > stoppedAt + 0.1 && room.push.state?.block === null, T('Puxado para trás, solta da parede', 'Pulled back, it comes off the wall'), /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (room.push.state)))
       room.push.setWalk(null)
       room.push.end()
     }),
