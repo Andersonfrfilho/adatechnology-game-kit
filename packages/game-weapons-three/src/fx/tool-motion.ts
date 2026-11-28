@@ -6,16 +6,20 @@
 
 import { MELEE_FAMILIES } from '@adatechnology/game-weapons'
 
-/** One key of a motion: the share of its time (0..1), the offset from the hold (metres) and the turn about the grip (radians, x then y then z). */
+/** One key of a motion: the share of its time (0..1), the offset from the hold (metres) and the turn (radians, Euler x then y then z: x raises the point, y swings it to the left, z rolls it about itself). */
 export interface ToolMotionKey {
   readonly at: number
   readonly offset: readonly [number, number, number]
   readonly turn: readonly [number, number, number]
 }
 
-/** A motion of a tool: its keys, from the hold back to the hold. */
+/**
+ * A motion of a tool: its keys, from the hold back to the hold. `pivot: 'grip'` turns the tool about the hand that holds it (a wrist's cut, a bat's swing written as
+ * the hands' path); left out, the turn is about where the hold hangs from (the eye in first person, the shoulder on the body), as the shovel's motions were written.
+ */
 export interface ToolMotion {
   readonly keys: readonly ToolMotionKey[]
+  readonly pivot?: 'grip'
 }
 
 const HOLD: Omit<ToolMotionKey, 'at'> = { offset: [0, 0, 0], turn: [0, 0, 0] }
@@ -59,26 +63,47 @@ const SHOVEL_SWING: ToolMotion = {
 }
 
 /**
- * A knife's cut (`short_blade` of game-weapons' melee families), from the low hold: raised up and back by the right shoulder, the edge brought down and across in front of the chest
- * where it meets what is there (the clip's impact, 0.2 s of 0.46), carried past to the left hip and back to the hold.
+ * A knife's cut (`short_blade` of game-weapons' melee families), turned about the grip: drawn up and back by the right shoulder with the edge laid back, then the hand
+ * sweeps down and across the chest with the blade laid flat across the view, point to the left (the clip's impact, 0.2 s of 0.46), carried on past the left hip and back.
  */
 const KNIFE_SLASH: ToolMotion = {
+  pivot: 'grip',
   keys: [
     { at: 0, ...HOLD },
-    { at: 0.3, offset: [0.06, 0.3, 0.04], turn: [0.35, 0, -0.5] },
-    { at: 0.43, offset: [-0.1, 0.2, -0.2], turn: [-0.6, 0, 0.5] },
-    { at: 0.62, offset: [-0.24, 0.04, -0.12], turn: [-1, 0, 0.9] },
+    { at: 0.28, offset: [0.07, 0.2, 0.05], turn: [0.5, -0.9, 0] },
+    { at: 0.43, offset: [-0.14, 0.06, -0.07], turn: [0.1, 0.9, 0] },
+    { at: 0.62, offset: [-0.2, -0.08, 0], turn: [-0.2, 1.3, 0] },
     { at: 1, ...HOLD },
   ],
 }
 
-/** A knife's thrust: the hand drawn back and up to the ribs, then driven out at chest height along the aim (the impact, 0.18 s of 0.42), held a moment and pulled back. */
+/**
+ * A knife's thrust, turned about the grip: the hand drawn back to the ribs, then driven out at chest height toward the aim with the point forward and leaning in, so the
+ * blade shows beside the fist instead of behind it (the impact, 0.18 s of 0.42), held a moment and pulled back.
+ */
 const KNIFE_STAB: ToolMotion = {
+  pivot: 'grip',
   keys: [
     { at: 0, ...HOLD },
-    { at: 0.28, offset: [0.02, 0.06, 0.08], turn: [0.15, 0, 0] },
-    { at: 0.43, offset: [-0.04, 0.12, -0.22], turn: [-0.5, 0, 0] },
-    { at: 0.6, offset: [-0.04, 0.11, -0.2], turn: [-0.45, 0, 0] },
+    { at: 0.28, offset: [0.03, -0.05, 0.08], turn: [0.15, -0.1, 0] },
+    { at: 0.43, offset: [-0.1, 0.07, -0.12], turn: [0.1, 0.55, 0] },
+    { at: 0.6, offset: [-0.1, 0.07, -0.11], turn: [0.1, 0.52, 0] },
+    { at: 1, ...HOLD },
+  ],
+}
+
+/**
+ * A bat's swing (`bat_swing`), the hands' path with the bat turned about them: drawn back behind the right shoulder, the barrel laid back and down over it; swung level
+ * through the chest, the bat across the view pointing left where it hits (the clip's impact, 0.3 s of 0.7); carried round and up over the left shoulder (follow-through), and back.
+ */
+const BAT_SWING: ToolMotion = {
+  pivot: 'grip',
+  keys: [
+    { at: 0, ...HOLD },
+    { at: 0.29, offset: [0.12, 0.12, 0.1], turn: [1.9, -0.6, 0] },
+    { at: 0.43, offset: [-0.1, 0.04, -0.07], turn: [-0.3, 1.2, 0] },
+    { at: 0.64, offset: [-0.28, 0.1, 0], turn: [2, 1, 0] },
+    { at: 0.8, offset: [-0.2, 0.06, 0.02], turn: [1.8, 0.8, 0] },
     { at: 1, ...HOLD },
   ],
 }
@@ -98,7 +123,8 @@ const ONE_HAND_CHOP: ToolMotion = {
 export const FAMILY_MOTIONS: ReadonlyMap<string, ReadonlyMap<string, ToolMotion>> = new Map([
   ['short_blade', new Map([['slash', KNIFE_SLASH], ['stab', KNIFE_STAB]])],
   ['one_hand_swing', new Map([['chop', ONE_HAND_CHOP]])],
-  // a bat, a pipe or an axe swung with both hands goes as the shovel's swing
+  ['bat_swing', new Map([['bat_swing', BAT_SWING]])],
+  // an axe or a pickaxe swung with both hands goes as the shovel's swing
   ['two_hand_swing', new Map([['swing', SHOVEL_SWING]])],
 ])
 

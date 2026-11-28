@@ -32,3 +32,12 @@ export const waterEntryAlong = (terrain: WaterLevels, ray: { readonly origin: Ve
   }
   return null
 }
+
+/** Metres per second a body has to hit the water at for a splash. */
+export const WATER_ENTRY_SPEED = 1.5
+/** The recorded splash a round or a blast on water plays. */
+export const WATER_SPLASH_SOUND = 'water_splash'
+/** Per second, the share of the speed of the water a wave crest moves that a floating body takes. */
+export const WAVE_GRIP = 3
+/** Below this push (m/s) a wave leaves a floater asleep. */
+export const WAVE_WAKE = 0.03

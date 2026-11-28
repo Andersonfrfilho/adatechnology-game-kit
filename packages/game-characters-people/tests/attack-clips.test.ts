@@ -36,6 +36,8 @@ const EXPECTED: Record<string, Expectation> = {
   // a knife in one hand: the hand is the knife's motion, the body turns into the cut and lunges into the thrust
   knife_slash: { duration: 0.46, channels: 'body', impactAt: [0.15, 0.25], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
   knife_stab: { duration: 0.42, channels: 'body', impactAt: [0.15, 0.22], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
+  // a bat in both hands: drawn back behind the shoulder, swung level through the chest, carried round over the other shoulder
+  bat_swing: { duration: 0.7, channels: 'body', impactAt: [0.25, 0.35], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
 }
 
 function mirrorPose(pose: Record<string, number>): Record<string, number> {

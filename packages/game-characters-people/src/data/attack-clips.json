@@ -1631,6 +1631,144 @@
           }
         }
       ]
+    },
+    {
+      "id": "bat_swing",
+      "source": {
+        "authored": "game-kit",
+        "note": "authored in the kit from a baseball swing: the bat drawn back behind the right shoulder with the weight on the back leg, the front foot striding in, the hips then the shoulders turning level through the chest where it hits, and the follow-through carrying round with the head held on the target; the hands are the bat's (game-weapons-three TOOL_MOTIONS bat_swing), the clip moves the body"
+      },
+      "duration": 0.7,
+      "loop": false,
+      "channels": "body",
+      "keys": [
+        {
+          "t": 0,
+          "pose": {
+            "lean": 0.05,
+            "twist": 0,
+            "side": 0,
+            "drop": 0,
+            "headX": 0.25,
+            "headY": 0,
+            "headZ": 0,
+            "legL": 0,
+            "kneeL": 0.05,
+            "legR": 0,
+            "kneeR": 0.05
+          }
+        },
+        {
+          "t": 0.2,
+          "pose": {
+            "lean": 0.03,
+            "twist": -0.75,
+            "side": 0,
+            "drop": -0.04,
+            "headX": 0.25,
+            "headY": 0.45,
+            "headZ": 0,
+            "legL": 0.08,
+            "kneeL": 0.15,
+            "legR": -0.18,
+            "kneeR": 0.28
+          }
+        },
+        {
+          "t": 0.3,
+          "pose": {
+            "lean": 0.14,
+            "twist": 0.3,
+            "side": 0,
+            "drop": -0.08,
+            "headX": 0.25,
+            "headY": -0.1,
+            "headZ": 0,
+            "legL": 0.32,
+            "kneeL": 0.32,
+            "legR": -0.26,
+            "kneeR": 0.34
+          }
+        },
+        {
+          "t": 0.45,
+          "pose": {
+            "lean": 0.1,
+            "twist": 0.95,
+            "side": -0.06,
+            "drop": -0.06,
+            "headX": 0.25,
+            "headY": -0.5,
+            "headZ": 0,
+            "legL": 0.3,
+            "kneeL": 0.26,
+            "legR": -0.24,
+            "kneeR": 0.4
+          }
+        },
+        {
+          "t": 0.56,
+          "pose": {
+            "lean": 0.08,
+            "twist": 0.8,
+            "side": -0.04,
+            "drop": -0.04,
+            "headX": 0.25,
+            "headY": -0.4,
+            "headZ": 0,
+            "legL": 0.22,
+            "kneeL": 0.2,
+            "legR": -0.16,
+            "kneeR": 0.3
+          }
+        },
+        {
+          "t": 0.7,
+          "pose": {
+            "lean": 0.05,
+            "twist": 0,
+            "side": 0,
+            "drop": 0,
+            "headX": 0.25,
+            "headY": 0,
+            "headZ": 0,
+            "legL": 0,
+            "kneeL": 0.05,
+            "legR": 0,
+            "kneeR": 0.05
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.windup"
+          }
+        },
+        {
+          "t": 0.2,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.strike"
+          }
+        },
+        {
+          "t": 0.3,
+          "type": "impact",
+          "data": {
+            "kind": "swing"
+          }
+        },
+        {
+          "t": 0.45,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.recover"
+          }
+        }
+      ]
     }
   ],
   "locales": {

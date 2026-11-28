@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { createHandUse, HAND_USES, handUseOf } from '../src'
+import { aimHandUse, createHandUse, HAND_USE_REACH, HAND_USES, handUseOf } from '../src'
 
 describe('hand uses', () => {
   it('starts and ends every use at the hand rest, with keys in order inside the duration', () => {
@@ -35,6 +35,33 @@ describe('hand uses', () => {
     expect(handUseOf('take_medicine')?.body).toBe('mouth')
     expect(handUseOf('apply_dressing')?.body).toBe('two_hands')
     expect(handUseOf('use_hygiene')?.body).toBe('two_hands')
+  })
+
+  it('switches a flashlight, lights a lighter, talks on a radio and turns a key, each at its own action', () => {
+    const actionsOf = (id: string): string[] => {
+      const player = createHandUse(handUseOf(id)!)
+      const seen: string[] = []
+      while (!player.done) for (const event of player.update(1 / 60)) seen.push(event.action)
+      return seen
+    }
+    expect(actionsOf('toggle_flashlight')).toEqual(['switch'])
+    expect(actionsOf('light_lighter')).toEqual(['ignite'])
+    expect(actionsOf('use_radio')).toEqual(['tune', 'talk'])
+    expect(actionsOf('turn_key')).toEqual(['turn'])
+    expect(handUseOf('use_radio')?.body).toBe('mouth')
+    expect(handUseOf('turn_key')?.body).toBe('reach')
+  })
+
+  it('takes a key to the lock it is aimed at, no farther than an arm reaches, and leaves the other keys where they were', () => {
+    const def = handUseOf('turn_key')!
+    const lock = [0.05, -0.3, -0.5] as const
+    const aimed = aimHandUse(def, lock)
+    const firstReach = aimed.keys.find((key) => key.reach)!
+    expect(firstReach.position.map((n) => +n.toFixed(6))).toEqual([...lock])
+    expect(aimed.keys[0]!.position).toEqual(def.keys[0]!.position)
+    const far = aimHandUse(def, [0, 0, -3]).keys.find((key) => key.reach)!
+    expect(Math.hypot(...far.position)).toBeCloseTo(HAND_USE_REACH, 6)
+    expect(aimHandUse(handUseOf('eat_food')!, lock)).toBe(handUseOf('eat_food'))
   })
 
   it('stops when cancelled', () => {

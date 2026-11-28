@@ -114,9 +114,10 @@ describe('melee families in the room', () => {
     expect(played).toEqual(['punch_right', 'shove_two_hands', 'front_kick'])
   })
 
-  it('cuts then thrusts with a knife, swings a bat as the shovel and chops with a machete', () => {
+  it('cuts then thrusts with a knife, swings a bat with its own swing, an axe as the shovel and chops with a machete', () => {
     expect(struckBy('knife', 3)).toEqual(['knife_slash', 'knife_stab', 'knife_slash'])
-    expect(struckBy('baseball_bat', 1)).toEqual(['shovel_swing'])
+    expect(struckBy('baseball_bat', 1)).toEqual(['bat_swing'])
+    expect(struckBy('axe', 1)).toEqual(['shovel_swing'])
     expect(struckBy('machete', 1)).toEqual(['knife_slash'])
     expect(DEFAULT_STRIKE_CLIPS.knife).toBe('knife_slash')
   })

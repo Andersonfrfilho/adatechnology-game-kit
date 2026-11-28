@@ -91,8 +91,11 @@ export type AvatarItemUsePose = {
   readonly rotation: readonly [number, number, number]
   /** How closed the other hand is (0 open to 1 closed) when it works on the item, as a hand turning a cap off opens between strokes; the room brings it there with `reach`. */
   readonly gripL?: number
-  /** Which arms the use takes (`HandUseDef.body` of game-items): the item to the `mouth` (a drink, a bite, a pill), or `two_hands` together in front of the body (soap, a dressing). Left out, the drinks go to the mouth by `id`. */
-  readonly body?: 'mouth' | 'two_hands'
+  /**
+   * Which arms the use takes (`HandUseDef.body` of game-items): the item to the `mouth` (a drink, a bite, a pill, a radio), `two_hands` together in front of the body (soap,
+   * a dressing), the one `hand` raised before the chest (a flashlight, a lighter) or that arm stretched out to `reach` ahead (a key to its lock). Left out, the drinks go to the mouth by `id`.
+   */
+  readonly body?: 'mouth' | 'two_hands' | 'hand' | 'reach'
 }
 
 /** The fluid uses that take the item to the mouth when the use does not say (`AvatarItemUsePose.body`). */
@@ -466,6 +469,11 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
         elbL: -1.05 - 0.85 * raise + 0.12 * tilt,
         headX: -0.26 * tilt,
       }
+    }
+    if (body === 'reach') {
+      // the arm carried out ahead at chest height, the elbow straightening as the item goes farther from the eye
+      const out = clamp((-position[2] - 0.4) / 0.2, 0, 1)
+      return { armL: -0.45 - 1.0 * out, armLz: 0.22 + 0.12 * out, elbL: -1.05 + 0.85 * out }
     }
     if (id === 'open' || id === 'close' || itemUse.gripL !== undefined) {
       const reach = clamp((0.22 - position[0]) / 0.12, 0, 1)

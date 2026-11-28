@@ -19,7 +19,10 @@ describe('melee families', () => {
   })
 
   it('swings a bat with both hands and chops with a machete, and puts no weapon in two families', () => {
-    expect(meleeFamilyOf('baseball_bat')?.blows[0]?.motion).toBe('swing')
+    expect(meleeFamilyOf('baseball_bat')?.blows[0]).toMatchObject({ clip: 'bat_swing', motion: 'bat_swing' })
+    // a pipe, a crowbar and a sledgehammer are clubs swung as the bat; an axe keeps the shovel's low swing
+    for (const club of ['iron_pipe', 'crowbar', 'sledgehammer', 'nail_bat']) expect(meleeFamilyOf(club)?.id, club).toBe('bat_swing')
+    expect(meleeFamilyOf('axe')?.blows[0]?.motion).toBe('swing')
     expect(meleeFamilyOf('machete')?.blows[0]?.motion).toBe('chop')
     const all = MELEE_FAMILIES.flatMap((family) => family.weapons)
     expect(new Set(all).size).toBe(all.length)

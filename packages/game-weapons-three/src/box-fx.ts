@@ -22,6 +22,9 @@ import type { ItemModels } from './item-models'
 import { BODY_ACTIONS } from './props'
 import { buildWeaponModel } from './weapon-item-model'
 
+/** How far from the shoulder pocket of the body (`bodyHold`) the hand reaches with a tool in a blow, metres. */
+const TOOL_REACH = 0.47
+
 export interface WeaponFxOptions {
   /** The item models of game-items-three (`itemModels` there) that draw the weapons the gallery did not model; default `itemModels` there (deprecated: pass it). */
   items?: ItemModels
@@ -161,8 +164,29 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   const applyMotion = (frame: THREE_NS.Quaternion): void => {
     if (!motion) return
     const at = sampleToolMotion(motion.clip, motion.elapsed / motion.duration)
-    hand.position.add(v.set(at.offset[0], at.offset[1], at.offset[2]).applyQuaternion(frame))
+    // a motion turned about the grip keeps the holding hand where the turn found it; the offset then moves both
+    const anchor = motion.clip.pivot === 'grip' ? heldAnchor(heldHold()) : null
+    if (anchor) {
+      hand.updateMatrixWorld(true)
+      anchor.part.localToWorld(gripBefore.copy(anchor.offset))
+    }
     hand.quaternion.multiply(q.setFromEuler(new THREE.Euler(at.turn[0], at.turn[1], at.turn[2])))
+    if (anchor) {
+      hand.updateMatrixWorld(true)
+      hand.position.add(gripBefore.sub(anchor.part.localToWorld(gripAfter.copy(anchor.offset))))
+    }
+    hand.position.add(v.set(at.offset[0], at.offset[1], at.offset[2]).applyQuaternion(frame))
+  }
+  /** On the body a motion never takes the grip farther from the shoulder than the arm reaches, so the hand stays on the tool through the whole blow. */
+  const keepInReach = (shoulder: readonly [number, number, number]): void => {
+    const anchor = heldAnchor(heldHold())
+    if (!anchor) return
+    hand.updateMatrixWorld(true)
+    const away = anchor.part.localToWorld(gripAfter.copy(anchor.offset)).sub(gripBefore.set(shoulder[0], shoulder[1], shoulder[2]))
+    const distance = away.length()
+    if (distance <= TOOL_REACH) return
+    hand.position.sub(away.multiplyScalar(1 - TOOL_REACH / distance))
+    hand.updateMatrixWorld(true)
   }
   let dip = 0
   let reloading = false
@@ -184,6 +208,8 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
   // first person: the tool and the arms are drawn on the first-person layer through the lens of a tool in one hand (`VIEW_HOLD.tool`), carried point up
   const restBox = new THREE.Box3()
   const noMotion = new THREE.Vector3()
+  const gripBefore = new THREE.Vector3()
+  const gripAfter = new THREE.Vector3()
   let inLens = false
   const setLens = (on: boolean): void => {
     if (on !== inLens) options.viewmodelFov?.(on ? VIEW_HOLD.tool.fov : null)
@@ -401,8 +427,9 @@ export function createBoxFx(options: WeaponFxOptions): BoxFx {
         hand.position.add(v.set(0, -0.12 * dip, 0.05 * kick).applyQuaternion(camera.quaternion))
         q.setFromEuler(new THREE.Euler(0.14 * kick - 0.25 * dip, 0, 0.6 * dip))
         hand.quaternion.multiply(q)
-        const body = (options.bodyHold?.() ?? eyeFrame()).quaternion
-        applyMotion(bodyFrame.set(body[0], body[1], body[2], body[3]))
+        const body = options.bodyHold?.() ?? eyeFrame()
+        applyMotion(bodyFrame.set(body.quaternion[0], body.quaternion[1], body.quaternion[2], body.quaternion[3]))
+        if (motion) keepInReach(body.position)
       }
       stow(dt)
       for (const body of [...bodies]) {

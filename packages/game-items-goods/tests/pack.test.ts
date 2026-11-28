@@ -15,7 +15,7 @@ describe('the goods pack', () => {
     expect(catalog.places.size).toBe(24)
     expect(catalog.containers.size).toBe(17)
     expect(catalog.recipes.size).toBe(33)
-    expect(catalog.useEffects).toHaveLength(10)
+    expect(catalog.useEffects).toHaveLength(13)
   })
 
   it('has unique, English, snake_case ids', () => {
