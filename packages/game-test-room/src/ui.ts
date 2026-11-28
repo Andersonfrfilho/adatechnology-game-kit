@@ -195,7 +195,8 @@ const CSS = `
 .tr-slot{pointer-events:auto;min-width:64px;max-width:92px;padding:3px 5px;background:rgba(10,12,16,.68);border:1px solid #3a404c;border-radius:5px;color:#cfd3da;cursor:pointer;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tr-slot b{color:#ffd23f;margin-right:3px}
 .tr-slot.on{border-color:#ffd23f;color:#fff;background:rgba(60,50,10,.8)}
-.tr-left{position:absolute;top:8px;left:8px;bottom:84px;width:min(400px,36vw);display:flex;flex-direction:column;gap:8px}
+.tr-left{position:absolute;top:8px;left:8px;bottom:136px;width:min(400px,36vw);display:flex;flex-direction:column;gap:8px}
+.tr-root>.gp-hud .gp-hud-vitals{bottom:36px}
 .tr-right{position:absolute;top:8px;right:8px;bottom:8px;width:min(310px,34vw);display:flex;flex-direction:column;gap:8px}
 .tr-panel{background:rgba(12,14,19,.82);border:1px solid #2c313b;border-radius:8px;padding:8px;pointer-events:auto;overflow:auto}
 .tr-panel h3{margin:0 0 6px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#9aa3b2;font-weight:600}
