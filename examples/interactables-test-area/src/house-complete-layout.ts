@@ -79,6 +79,11 @@ export interface LayHouseCompleteOptions {
  */
 export const ON_TOP_OF: Readonly<Record<string, string>> = Object.assign({}, ...SECTIONS.map((section) => section.onTopOf ?? {}))
 
+/** The height of the top of a placed piece: where it stands plus its measured height. */
+export function topOf(measure: LayHouseCompleteOptions['measure'], placement: AreaPlacement): number {
+  return placement.position[1] + (measureOf(measure, placement.item)?.h ?? 0)
+}
+
 /** Least width of a labelled slot (the sign is 3 m at most and shrinks to the slot), metres. */
 const SLOT_MIN = 1.7
 const SLOT_GAP = 0.6
@@ -179,7 +184,8 @@ export function layHouseComplete(options: LayHouseCompleteOptions): HouseComplet
     }
     z = centreZ - depth / 2 - LINE_GAP
   }
-  // what stands on a counter is laid over the counter's slot, at the floor: the catalogue draws it at the counter's height
+  // what stands on a counter is laid over the counter's slot, on its top: it is a loose body the room sets down by the bottom of what it draws, so it stands on the
+  // counter (never inside it on the floor) and goes with it
   for (const [item, base] of Object.entries(ON_TOP_OF)) {
     const under = placements.find((placement) => placement.item === base)
     if (!under || onFloor.has(item)) continue
@@ -187,7 +193,7 @@ export function layHouseComplete(options: LayHouseCompleteOptions): HouseComplet
       missing.push(item)
       continue
     }
-    placements.push({ item, position: [under.position[0], 0, under.position[2]] })
+    placements.push({ item, position: [under.position[0], topOf(measure, under), under.position[2]] })
     onFloor.add(item)
   }
   return {
