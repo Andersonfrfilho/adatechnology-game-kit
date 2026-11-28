@@ -306,7 +306,7 @@ export function installInterior(kit: Kit) {
       } else kit.seat(c, x, fl, 0, { w: zi * 2 - 0.1, n: r === 2 ? 2 : 3, mat: fab, back: back, lean: lean, h: seatH * 0.95, role: 'rear' })
       const trimLen = Math.min(0.8, (o.rowPitch ?? 0.88) - 0.06)
       ;[-1, 1].forEach(function (s) {
-        c.roundBox(trimLen, belt - fl - 0.08, 0.035, 0.015, trim, x + 0.12, (belt + fl) / 2 + 0.02, s * (zi + 0.02 + (r % 2) * 0.002)) // rows that overlap: every other trim 2 mm out
+        c.roundBox(trimLen, belt - fl - 0.08, 0.035, 0.015, trim, x + 0.12, (belt + fl) / 2 + 0.02, s * (zi + 0.02))
         c.roundBox(0.3, 0.05, 0.07, 0.02, fab, x + 0.16, fl + seatH + 0.16, s * (zi - 0.015))
         c.roundBox(0.08, 0.025, 0.02, 0.008, MATERIALS.chrome, x + 0.36, belt - 0.11, s * (zi - 0.005))
       })

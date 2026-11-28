@@ -38,7 +38,7 @@
         ],
         "headroomMetres": 0.991,
         "legroomMetres": 0.574,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_left"
       },
       {
@@ -64,7 +64,7 @@
         ],
         "headroomMetres": 0.991,
         "legroomMetres": 0.574,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_right"
       }
     ],
@@ -130,7 +130,7 @@
         ],
         "headroomMetres": 0.954,
         "legroomMetres": 0.574,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_left"
       },
       {
@@ -156,7 +156,7 @@
         ],
         "headroomMetres": 0.954,
         "legroomMetres": 0.574,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_right"
       }
     ],
@@ -222,7 +222,7 @@
         ],
         "headroomMetres": 0.964,
         "legroomMetres": 0.574,
-        "widthMetres": 0.435,
+        "widthMetres": 0.433,
         "doorId": "door_rear_left"
       },
       {
@@ -248,7 +248,7 @@
         ],
         "headroomMetres": 0.964,
         "legroomMetres": 0.574,
-        "widthMetres": 0.435,
+        "widthMetres": 0.433,
         "doorId": "door_rear_right"
       }
     ],
@@ -314,7 +314,7 @@
         ],
         "headroomMetres": 1.067,
         "legroomMetres": 0.574,
-        "widthMetres": 0.48,
+        "widthMetres": 0.478,
         "doorId": "door_rear_left"
       },
       {
@@ -340,7 +340,7 @@
         ],
         "headroomMetres": 1.067,
         "legroomMetres": 0.574,
-        "widthMetres": 0.48,
+        "widthMetres": 0.478,
         "doorId": "door_rear_right"
       }
     ],
@@ -406,7 +406,7 @@
         ],
         "headroomMetres": 0.948,
         "legroomMetres": 0.574,
-        "widthMetres": 0.474,
+        "widthMetres": 0.472,
         "doorId": "door_rear_left"
       },
       {
@@ -432,7 +432,7 @@
         ],
         "headroomMetres": 0.948,
         "legroomMetres": 0.574,
-        "widthMetres": 0.474,
+        "widthMetres": 0.472,
         "doorId": "door_rear_right"
       }
     ],
@@ -498,7 +498,7 @@
         ],
         "headroomMetres": 0.964,
         "legroomMetres": 0.574,
-        "widthMetres": 0.48,
+        "widthMetres": 0.478,
         "doorId": "door_rear_left"
       },
       {
@@ -524,7 +524,7 @@
         ],
         "headroomMetres": 0.964,
         "legroomMetres": 0.574,
-        "widthMetres": 0.48,
+        "widthMetres": 0.478,
         "doorId": "door_rear_right"
       }
     ],
@@ -590,7 +590,7 @@
         ],
         "headroomMetres": 0.964,
         "legroomMetres": 0.574,
-        "widthMetres": 0.48,
+        "widthMetres": 0.478,
         "doorId": "door_rear_left"
       },
       {
@@ -616,7 +616,7 @@
         ],
         "headroomMetres": 0.964,
         "legroomMetres": 0.574,
-        "widthMetres": 0.48,
+        "widthMetres": 0.478,
         "doorId": "door_rear_right"
       }
     ],
@@ -890,7 +890,7 @@
         ],
         "headroomMetres": 1.015,
         "legroomMetres": 0.574,
-        "widthMetres": 0.487,
+        "widthMetres": 0.485,
         "doorId": "door_rear_left"
       },
       {
@@ -916,7 +916,7 @@
         ],
         "headroomMetres": 1.015,
         "legroomMetres": 0.574,
-        "widthMetres": 0.487,
+        "widthMetres": 0.485,
         "doorId": "door_rear_right"
       }
     ],
@@ -982,7 +982,7 @@
         ],
         "headroomMetres": 1.024,
         "legroomMetres": 0.574,
-        "widthMetres": 0.517,
+        "widthMetres": 0.515,
         "doorId": "door_rear_left"
       },
       {
@@ -1008,7 +1008,7 @@
         ],
         "headroomMetres": 1.024,
         "legroomMetres": 0.574,
-        "widthMetres": 0.517,
+        "widthMetres": 0.515,
         "doorId": "door_rear_right"
       }
     ],
@@ -1074,7 +1074,7 @@
         ],
         "headroomMetres": 1.026,
         "legroomMetres": 0.574,
-        "widthMetres": 0.515,
+        "widthMetres": 0.513,
         "doorId": "door_rear_left"
       },
       {
@@ -1100,7 +1100,7 @@
         ],
         "headroomMetres": 1.026,
         "legroomMetres": 0.574,
-        "widthMetres": 0.515,
+        "widthMetres": 0.513,
         "doorId": "door_rear_right"
       }
     ],
@@ -1166,7 +1166,7 @@
         ],
         "headroomMetres": 1.116,
         "legroomMetres": 0.574,
-        "widthMetres": 0.515,
+        "widthMetres": 0.513,
         "doorId": "door_rear_left"
       },
       {
@@ -1192,7 +1192,7 @@
         ],
         "headroomMetres": 1.116,
         "legroomMetres": 0.574,
-        "widthMetres": 0.515,
+        "widthMetres": 0.513,
         "doorId": "door_rear_right"
       },
       {
@@ -1284,7 +1284,7 @@
         ],
         "headroomMetres": 1.069,
         "legroomMetres": 0.294,
-        "widthMetres": 0.477,
+        "widthMetres": 0.475,
         "doorId": "door_rear_left"
       },
       {
@@ -1310,7 +1310,7 @@
         ],
         "headroomMetres": 1.069,
         "legroomMetres": 0.294,
-        "widthMetres": 0.477,
+        "widthMetres": 0.475,
         "doorId": "door_rear_right"
       }
     ],
@@ -1376,7 +1376,7 @@
         ],
         "headroomMetres": 1.134,
         "legroomMetres": 0.454,
-        "widthMetres": 0.519,
+        "widthMetres": 0.517,
         "doorId": "door_rear_left"
       },
       {
@@ -1402,7 +1402,7 @@
         ],
         "headroomMetres": 1.134,
         "legroomMetres": 0.454,
-        "widthMetres": 0.519,
+        "widthMetres": 0.517,
         "doorId": "door_rear_right"
       }
     ],
@@ -1468,7 +1468,7 @@
         ],
         "headroomMetres": 1.149,
         "legroomMetres": 0.454,
-        "widthMetres": 0.525,
+        "widthMetres": 0.523,
         "doorId": "door_rear_left"
       },
       {
@@ -1494,7 +1494,7 @@
         ],
         "headroomMetres": 1.149,
         "legroomMetres": 0.454,
-        "widthMetres": 0.525,
+        "widthMetres": 0.523,
         "doorId": "door_rear_right"
       }
     ],
@@ -2973,7 +2973,7 @@
           0
         ],
         "headroomMetres": 0.95,
-        "legroomMetres": 1.358,
+        "legroomMetres": 1.318,
         "widthMetres": 2.438,
         "doorId": "hatch_driver"
       }
@@ -3812,7 +3812,7 @@
         ],
         "headroomMetres": 1.034,
         "legroomMetres": 0.414,
-        "widthMetres": 0.436,
+        "widthMetres": 0.435,
         "doorId": "door_rear_left"
       },
       {
@@ -3838,7 +3838,7 @@
         ],
         "headroomMetres": 1.034,
         "legroomMetres": 0.414,
-        "widthMetres": 0.436,
+        "widthMetres": 0.435,
         "doorId": "door_rear_right"
       }
     ],
@@ -3904,7 +3904,7 @@
         ],
         "headroomMetres": 1.049,
         "legroomMetres": 0.414,
-        "widthMetres": 0.442,
+        "widthMetres": 0.44,
         "doorId": "door_rear_left"
       },
       {
@@ -3930,7 +3930,7 @@
         ],
         "headroomMetres": 1.049,
         "legroomMetres": 0.414,
-        "widthMetres": 0.442,
+        "widthMetres": 0.44,
         "doorId": "door_rear_right"
       }
     ],
@@ -3996,7 +3996,7 @@
         ],
         "headroomMetres": 1.044,
         "legroomMetres": 0.414,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_left"
       },
       {
@@ -4022,7 +4022,7 @@
         ],
         "headroomMetres": 1.044,
         "legroomMetres": 0.414,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_right"
       }
     ],
@@ -4088,7 +4088,7 @@
         ],
         "headroomMetres": 1.054,
         "legroomMetres": 0.414,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_left"
       },
       {
@@ -4114,7 +4114,7 @@
         ],
         "headroomMetres": 1.054,
         "legroomMetres": 0.414,
-        "widthMetres": 0.467,
+        "widthMetres": 0.465,
         "doorId": "door_rear_right"
       }
     ],
@@ -4180,7 +4180,7 @@
         ],
         "headroomMetres": 0.966,
         "legroomMetres": 0.574,
-        "widthMetres": 0.479,
+        "widthMetres": 0.477,
         "doorId": "door_rear_left"
       },
       {
@@ -4206,7 +4206,7 @@
         ],
         "headroomMetres": 0.966,
         "legroomMetres": 0.574,
-        "widthMetres": 0.479,
+        "widthMetres": 0.477,
         "doorId": "door_rear_right"
       }
     ],
@@ -4272,7 +4272,7 @@
         ],
         "headroomMetres": 0.969,
         "legroomMetres": 0.514,
-        "widthMetres": 0.489,
+        "widthMetres": 0.487,
         "doorId": "door_rear_left"
       },
       {
@@ -4298,7 +4298,7 @@
         ],
         "headroomMetres": 0.969,
         "legroomMetres": 0.514,
-        "widthMetres": 0.489,
+        "widthMetres": 0.487,
         "doorId": "door_rear_right"
       }
     ],
@@ -4364,7 +4364,7 @@
         ],
         "headroomMetres": 0.909,
         "legroomMetres": 0.314,
-        "widthMetres": 0.478,
+        "widthMetres": 0.476,
         "doorId": "door_front_left"
       },
       {
@@ -4390,7 +4390,7 @@
         ],
         "headroomMetres": 0.909,
         "legroomMetres": 0.314,
-        "widthMetres": 0.478,
+        "widthMetres": 0.476,
         "doorId": "door_front_right"
       }
     ],
