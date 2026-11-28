@@ -380,7 +380,7 @@ const en: RoomStrings = {
     'hud.tilt': 'tilt (hold)',
     'hud.equip': 'equip {weapon}',
 
-    'ui.help': 'Click: look · WASD: walk · Shift: run · C: crouch (tap stays, hold while pressed) · Space: jump · M: fly mode (noclip) · 1-0 / wheel: tool · ’ (key left of 1): every weapon by category · LMB: use (bare hands: punch) · E: grab/drop (hold against furniture: push) · G or RMB: throw · R: reload · Q: fire mode · X: clear a jam · B: safety · H: weapon back to the hands from the holster or sling · Y: detonate charges set down · K: kick · L: sit/get up (hold: lie down) · U: actions of the aimed piece · N: strike combo on/off · Tab: panels · Esc: free the mouse',
+    'ui.help': 'Click: look · WASD: walk · Shift: run · C: crouch (tap stays, hold while pressed) · Space: jump · M: fly mode (noclip) · 1-0 / wheel: tool · ’ (key left of 1): every weapon by category · LMB: use (bare hands: punch; a melee weapon: strike) · E: grab/drop (hold against furniture: push) · F: use what is in the hand (eat, drink, take medicine, apply, use) · G or RMB: throw · R: reload · Q: fire mode · X: clear a jam · B: safety · H: weapon back to the hands from the holster or sling · Y: detonate charges set down · K: kick · L: sit/get up (hold: lie down) · U: actions of the aimed piece · N: strike combo on/off · Tab: panels · Esc: free the mouse',
     'ui.help.camera': 'V: 1st/3rd person (Shift+V: kick)',
     'ui.keys.title': 'Keys (F1 or ? to show and hide)',
     'ui.keys.badge': 'F1: keys',
@@ -863,7 +863,7 @@ const ptBR: RoomStrings = {
     'hud.tilt': 'inclinar (segurar)',
     'hud.equip': 'equipar {weapon}',
 
-    'ui.help': 'Clique: olhar · WASD: andar · Shift: correr · C: agachar (toque fixa, segurar só enquanto aperta) · Espaço: pular · M: modo livre / voo (noclip) · 1-0 / roda: ferramenta · ’ (tecla à esquerda do 1): todas as armas por categoria · botão esquerdo: usar (mão livre: soco) · E: pegar/soltar (segurar encostado no móvel: empurrar) · G ou botão direito: arremessar · R: recarregar · Q: modo de tiro · X: destravar · B: trava · H: arma do coldre/bandoleira de volta às mãos · Y: detonar cargas postas · K: chute · L: sentar/levantar (segurar: deitar) · U: ações da peça na mira · N: liga/desliga a sequência de golpes · Tab: painéis · Esc: soltar o mouse',
+    'ui.help': 'Clique: olhar · WASD: andar · Shift: correr · C: agachar (toque fixa, segurar só enquanto aperta) · Espaço: pular · M: modo livre / voo (noclip) · 1-0 / roda: ferramenta · ’ (tecla à esquerda do 1): todas as armas por categoria · botão esquerdo: usar (mão livre: soco; arma branca: golpear) · E: pegar/soltar (segurar encostado no móvel: empurrar) · F: usar o que está na mão (comer, beber, tomar remédio, aplicar, usar) · G ou botão direito: arremessar · R: recarregar · Q: modo de tiro · X: destravar · B: trava · H: arma do coldre/bandoleira de volta às mãos · Y: detonar cargas postas · K: chute · L: sentar/levantar (segurar: deitar) · U: ações da peça na mira · N: liga/desliga a sequência de golpes · Tab: painéis · Esc: soltar o mouse',
     'ui.help.camera': 'V: 1ª/3ª pessoa (Shift+V: chute)',
     'ui.keys.title': 'Teclas (F1 ou ? mostra e esconde)',
     'ui.keys.badge': 'F1: teclas',
