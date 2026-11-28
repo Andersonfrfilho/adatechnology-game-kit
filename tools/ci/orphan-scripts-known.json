@@ -1,0 +1,23 @@
+[
+  "examples/audio-test-area/body-reel.mjs",
+  "examples/crowd-test-area/shots.mjs",
+  "examples/crowd-test-area/sim-thread.mjs",
+  "examples/floorplan-test-area/doors-test.mjs",
+  "examples/player-test-area/first-person-body.mjs",
+  "examples/reference-district/determinism.mjs",
+  "examples/test-room/audit.mjs",
+  "examples/test-room/doors-test.mjs",
+  "examples/test-room/doors-twist.mjs",
+  "examples/test-room/hands-test.mjs",
+  "examples/test-room/hollow-test.mjs",
+  "examples/test-room/push-collider-test.mjs",
+  "examples/test-room/push-load-test.mjs",
+  "examples/test-room/push-test.mjs",
+  "examples/test-room/pushable-test.mjs",
+  "examples/test-room/rolling-test.mjs",
+  "examples/test-room/settle-test.mjs",
+  "examples/test-room/sound-audit-impacts.mjs",
+  "examples/test-room/sound-casing-levels.mjs",
+  "examples/test-room/sound-probe.mjs",
+  "examples/test-room/sound-sync.mjs"
+]
