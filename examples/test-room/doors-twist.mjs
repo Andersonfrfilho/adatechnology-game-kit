@@ -99,6 +99,9 @@ for (const o of objs) {
   await page.waitForTimeout(clip.duration * 500)
   await page.screenshot({ path: join(out, `${name}-meio.png`) })
   await page.waitForTimeout(clip.duration * 500 + 400)
+  // the same view as mid-swing: the eye drifts while the clip plays
+  await page.evaluate(([e, t]) => window.__testRoom.look(e, t), /** @type {[[number, number, number], [number, number, number]]} */ ([eye, target]))
+  await page.waitForTimeout(200)
   await page.screenshot({ path: join(out, `${name}-aberta.png`) })
   const close = clips.find((c) => c.id.startsWith('close'))
   if (close) {
