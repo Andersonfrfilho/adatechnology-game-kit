@@ -321,6 +321,8 @@ const UNDERMINED_KEEP = 0.6
 const SOLIDS_MAX = 64
 /** Speed (m/s) the corner over the gap is started down with: what is balanced on the line between two feet goes the way its corner went, not stays (`checkUndermined`). */
 const UNDERMINED_PUSH = 0.6
+/** The ids of the bodies the big debris moves by (`FragmentSystemOptions.rigid`) start with this: no object of the world has such an id. */
+const DEBRIS_ID = 'debris#'
 /** Slower than this (m/s) a piece lies still for `checkUndermined`. */
 const UNDERMINED_STILL = 0.05
 const SOLID_WELD = 1e-4
@@ -610,6 +612,8 @@ class Renderer implements DestructionRenderer {
   /** The parts the ground went down under, drawn going down (`subside`). */
   private readonly settlement: SettlementView
   private readonly fragments: FragmentSystem
+  /** Count of the bodies made for big debris: each gets an id of its own. */
+  private debrisMade = 0
   private readonly ground: GroundSpots
   private readonly pieceSys: PieceSystem
   private readonly cages: RebarCages
@@ -695,6 +699,23 @@ class Renderer implements DestructionRenderer {
       sweep: (from, direction, distance) => (typeof this.world.raycast === 'function' ? this.world.raycast([from[0], from[1], from[2]], [direction[0], direction[1], direction[2]], distance) : null),
       maxAwake: o.maxAwakeFragments ?? Infinity,
       ...(o.interpolate ? { interpolate: true } : {}),
+      rigid: {
+        add: (mesh, half, mass, velocity, angular) => {
+          const body = this.pieceSys.create(`${DEBRIS_ID}${++this.debrisMade}`, mesh, [half[0], half[1], half[2]], new THREE.Vector3(), mass, [velocity[0], velocity[1], velocity[2]], [angular[0], angular[1], angular[2]])
+          body.debris = true
+          return body
+        },
+        remove: (handle) => this.pieceSys.remove((handle as PieceBody).objectId),
+        push: (handle, x, z) => {
+          const body = handle as PieceBody
+          body.velocity[0] = x
+          body.velocity[2] = z
+          body.velocity[1] = Math.max(body.velocity[1], 0.3)
+          body.sleeping = false
+          body.still = 0
+          body.calmAt = null
+        },
+      },
     })
     this.cages = new RebarCages(THREE, o.scene)
     this.settledBatches = new SettledBatches(THREE, o.scene, o.settledBatches ?? { enabled: false })
@@ -1201,11 +1222,12 @@ class Renderer implements DestructionRenderer {
   }
 
   pieces(): Piece[] {
-    return [...this.pieceSys.list]
+    return this.pieceSys.list.filter((piece) => !piece.debris)
   }
 
   piece(objectId: string): Piece | null {
-    return this.pieceSys.get(objectId)
+    const piece = this.pieceSys.get(objectId)
+    return piece && !piece.debris ? piece : null
   }
 
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void {
@@ -1238,6 +1260,8 @@ class Renderer implements DestructionRenderer {
 
   /** A piece thrown into a wall: the wall takes the blow of its weight where it met it, the piece takes it too, and each sounds as its material does. */
   private slam(p: PieceBody, hit: PieceSweepHit, speed: number): void {
+    // debris is no object of the world: it breaks nothing and nothing of it breaks again
+    if (p.debris) return
     const energy = 0.5 * p.mass * speed * speed
     const direction: Vec3 = [-hit.normal[0], -hit.normal[1], -hit.normal[2]]
     this.landingSound(hit.object, hit.point, clamp(speed / 10, 0.2, 1))
@@ -1251,6 +1275,7 @@ class Renderer implements DestructionRenderer {
   }
 
   private hardLanding(p: PieceBody, point: Vec3, speed: number): void {
+    if (p.debris) return
     this.landingSound(p.objectId, point, clamp(speed / 10, 0.2, 1))
     // the piece just moved this frame: the world must know where it is before the hit is resolved against its parts
     this.syncBound(p.objectId)

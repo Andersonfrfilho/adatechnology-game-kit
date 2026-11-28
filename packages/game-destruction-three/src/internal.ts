@@ -147,6 +147,8 @@ export interface PieceFriction {
 }
 
 export interface PieceBody extends Piece {
+  /** The body a big piece of debris moves by (`FragmentSystemOptions.rigid`): no object of the world, so it is no piece to the host (`DestructionRenderer.pieces`). */
+  debris?: true
   /** Which body of `objectId` this is (counts up per body made): a push queued for a piece reaches only that body, never one made later under the same id. */
   readonly generation: number
   /** `localCenter` as a vector (kept in sync with it). */

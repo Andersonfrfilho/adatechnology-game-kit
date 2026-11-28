@@ -55,13 +55,15 @@ export type Motion = 'static' | 'kinematic' | 'dynamic'
  * What the body is, for filtering. The adapter maps layers to its broadphase; `collides` is the default pair table (`LAYER_PAIRS`).
  * `sensor` bodies report overlap and never push.
  */
-export type Layer = 'static' | 'debris' | 'prop' | 'character' | 'agent' | 'vehicle' | 'sensor' | 'corpse'
-export const LAYERS: readonly Layer[] = ['static', 'debris', 'prop', 'character', 'agent', 'vehicle', 'sensor', 'corpse']
+export type Layer = 'static' | 'debris' | 'prop' | 'character' | 'agent' | 'vehicle' | 'sensor' | 'corpse' | 'rubble'
+export const LAYERS: readonly Layer[] = ['static', 'debris', 'prop', 'character', 'agent', 'vehicle', 'sensor', 'corpse', 'rubble']
 
 /**
  * Which layers meet (symmetric). Crowd agents (kinematic, driven by game-crowd) do not meet each other: game-crowd separates them itself. They do not meet a `vehicle`
  * either: a parked car must not stop on a person, and running one over is the host's own query (veiculos.md 7.8), not a contact. A `corpse` (a dead body of any
  * rung of the body LOD) meets the fixed world, debris, props, characters and vehicles, other corpses, and sensors, and not agents: a horde climbing a pile does not shove it.
+ * `rubble` (what is left of a part that broke: half a board, a chunk of wall) meets the fixed world and other rubble only: it falls, leans and lies as a rigid body does,
+ * and neither shoves nor is shoved by a loose piece, a person or a car, which the host keeps deciding for itself (it is stepped on and kicked by the host's own rule).
  */
 export const LAYER_PAIRS: ReadonlyArray<readonly [Layer, Layer]> = [
   ['static', 'debris'], ['static', 'prop'], ['static', 'character'], ['static', 'vehicle'],
@@ -70,6 +72,7 @@ export const LAYER_PAIRS: ReadonlyArray<readonly [Layer, Layer]> = [
   ['character', 'character'], ['character', 'vehicle'], ['character', 'agent'],
   ['vehicle', 'vehicle'],
   ['sensor', 'debris'], ['sensor', 'prop'], ['sensor', 'character'], ['sensor', 'agent'], ['sensor', 'vehicle'],
+  ['static', 'rubble'], ['rubble', 'rubble'],
   ['corpse', 'static'], ['corpse', 'debris'], ['corpse', 'prop'], ['corpse', 'character'], ['corpse', 'vehicle'], ['corpse', 'sensor'], ['corpse', 'corpse'],
 ]
 

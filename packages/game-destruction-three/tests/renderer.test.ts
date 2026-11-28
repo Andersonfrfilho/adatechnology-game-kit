@@ -157,9 +157,15 @@ describe('fracture', () => {
 
   it('lands rubble on what is still built under it (a slab), not only on the terrain', () => {
     const { scene, world, renderer } = setup()
-    // a slab whose top is at 2.8 m over x in [-2, 2]: the world casts rays down onto it
-    ;(world as unknown as { raycast: (o: number[], d: number[], max: number) => unknown }).raycast = (o, _d, max) =>
-      Math.abs(o[0]!) <= 2 && o[1]! > 2.8 && o[1]! - 2.8 <= max ? { object: 'house', part: 'slab', point: [o[0], 2.8, o[2]], normal: [0, 1, 0], distance: o[1]! - 2.8 } : null
+    // a slab whose top is at 2.8 m over x in [-2, 2], standing in the world
+    world.addObject('house', [partState('slab', 'concrete')])
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(4, 0.2, 4))
+    slab.position.set(0, 2.7, 0)
+    const house = new THREE.Group()
+    house.add(slab)
+    scene.add(house)
+    house.updateMatrixWorld(true)
+    renderer.bind('house', house, { parts: { slab } })
     world.addObject('o1', [partState('top', 'ceramic')])
     world.emit({ type: 'fracture', object: 'o1', part: 'top', style: 'crumble', fragments: [frag('tile', { center: [0, 4, 0], velocity: [0, 0, 0], size: [0.3, 0.25, 0.018] }), frag('out', { center: [3, 4, 0], velocity: [0, 0, 0], size: [0.3, 0.25, 0.018] })], point: [0, 4, 0] })
     for (let i = 0; i < 240; i++) renderer.update(1 / 60)

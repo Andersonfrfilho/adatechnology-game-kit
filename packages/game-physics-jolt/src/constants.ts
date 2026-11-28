@@ -10,7 +10,7 @@ export const LAYER_INDEX = new Map<Layer, number>(LAYERS.map((layer, i) => [laye
 export const QUERY_LAYER = LAYERS.length
 /** The layer a vehicle's wheel probes run as: it meets what a wheel can stand on and not people, dead bodies or sensors. */
 export const WHEEL_PROBE_LAYER = LAYERS.length + 1
-export const WHEEL_BLIND_LAYERS: readonly string[] = ['agent', 'corpse', 'sensor']
+export const WHEEL_BLIND_LAYERS: readonly string[] = ['agent', 'corpse', 'sensor', 'rubble']
 export const NUM_OBJECT_LAYERS = LAYERS.length + 2
 /** Broadphase layers: what does not move, what moves, and the crowd agents (many, kinematic, moved every frame). */
 export const BP_STATIC = 0
