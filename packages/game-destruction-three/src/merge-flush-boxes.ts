@@ -10,7 +10,8 @@ const sameTurn = (a: PartBox, b: PartBox): boolean => {
 
 /** The axis along which `b` continues `a` (same size and place on the other two, touching on this one), or -1. */
 const flushAxis = (a: PartBox, b: PartBox): number => {
-  if (!sameTurn(a, b)) return -1
+  // a cylinder continued by another box is not one box
+  if (a.round || b.round || a.hull || b.hull || !sameTurn(a, b)) return -1
   let along = -1
   for (let axis = 0; axis < 3; axis++) {
     const same = Math.abs(a.half[axis]! - b.half[axis]!) < FLUSH && Math.abs(a.center[axis]! - b.center[axis]!) < FLUSH

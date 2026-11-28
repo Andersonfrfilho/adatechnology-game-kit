@@ -17,7 +17,8 @@ import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
 import { isTurned } from './internal'
 import { drawnSolidsOf } from './drawn-solids'
-import { builtSolidsOf } from './built-solids'
+import { builtSolidsOf, isRoundSolid } from './built-solids'
+import type { BuiltSolid } from './built-solids'
 import { OWN_MESH, RANGED, hollowBoxesOf } from './drawn-boxes'
 import { isRigidPose } from './rigid-pose'
 import type { MeasureBudget } from './drawn-solids'
@@ -144,12 +145,87 @@ const PREFIT_SLICE_MS = 1
 
 /** Most meshes a loose piece of furniture touches the ground by, each by its own corners (`setContacts`); one with more stands on its box. */
 const CONTACT_MESHES = 12
-/** Most meshes of a loose piece other pieces land on one by one (`partBoxes`: a shelf's boards, not the box around the shelf); one with more is landed on by its box. */
-const PART_BOX_MESHES = 64
+/** Most meshes of a loose piece other pieces land on one by one (`partBoxes`: a shelf's boards, not the box around the shelf; the shelf unit of the catalogue has 65); one with more is landed on by its box. */
+const PART_BOX_MESHES = 96
 /** Points of the drawing looked at to tell a round piece (per mesh), how alike its two other sides must be (share of the larger) and how far past their circle a point may be. */
 const ROUND_SAMPLES = 400
 const ROUND_SIDES = 0.12
 const ROUND_SLACK = 1.12
+/**
+ * A piece is round (a cylinder or a ball in the engine) only when what is drawn fills at least this share of that round shape: a can, a bottle, a log do; a stool on four
+ * legs, a round table on one foot, a pot's rim do not, and as one cylinder the air under the seat or inside the rim would be solid (CLAUDE.md §12, spec 019).
+ */
+const ROUND_FILL = 0.9
+/** Points looked at each way across the round shape to measure how much of it is drawn (`ROUND_FILL`): a grid of this many cells per side. */
+const FILL_GRID = 8
+
+/** The radius the engine's round body has at `at` along its axis: the outer edge of the profile's convex hull (the engine holds a tapered piece by that hull). */
+const hullRadiusAt = (profile: ReadonlyArray<readonly [number, number]> | undefined, radius: number, at: number): number => {
+  if (!profile || profile.length < 2) return radius
+  // upper hull of (at, r): a ring under the line between its neighbours is inside the hull
+  const hull: Array<readonly [number, number]> = []
+  for (const point of profile) {
+    while (hull.length >= 2) {
+      const [a, ra] = hull[hull.length - 2]!
+      const [b, rb] = hull[hull.length - 1]!
+      if ((b - a) * (point[1] - ra) - (rb - ra) * (point[0] - a) >= 0) hull.pop()
+      else break
+    }
+    hull.push(point)
+  }
+  if (at <= hull[0]![0]) return hull[0]![1]
+  for (let i = 1; i < hull.length; i++) {
+    const [a, ra] = hull[i - 1]!
+    const [b, rb] = hull[i]!
+    if (at <= b) return ra + ((rb - ra) * (at - a)) / (b - a || 1)
+  }
+  return hull[hull.length - 1]![1]
+}
+
+type PrimitiveGeometry = THREE_NS.BufferGeometry & { readonly type?: string; readonly parameters?: Record<string, unknown> }
+
+/** Whether a point of a mesh's own space is inside what the mesh draws: its solids (`userData.solids`), else the primitive three made it as, else its geometry's box. */
+const insideDrawn = (mesh: THREE_NS.Mesh, built: readonly BuiltSolid[] | null, x: number, y: number, z: number): boolean => {
+  if (built) {
+    for (const solid of built) {
+      // into the solid's frame: q^-1 * (p - c) * q
+      const [qx, qy, qz, qw] = solid.rotation
+      const px = x - solid.center[0], py = y - solid.center[1], pz = z - solid.center[2]
+      const tx = 2 * (-qy * pz + qz * py), ty = 2 * (-qz * px + qx * pz), tz = 2 * (-qx * py + qy * px)
+      const lx = px + qw * tx - qy * tz + qz * ty, ly = py + qw * ty - qz * tx + qx * tz, lz = pz + qw * tz - qx * ty + qy * tx
+      const [hx, hy, hz] = solid.half
+      if (solid.kind === 'cylinder' || solid.kind === 'cone') {
+        if (Math.abs(ly) <= hy && (lx / hx) ** 2 + (lz / hz) ** 2 <= 1) return true
+      } else if (solid.kind === 'sphere') {
+        if ((lx / hx) ** 2 + (ly / hy) ** 2 + (lz / hz) ** 2 <= 1) return true
+      } else if (Math.abs(lx) <= hx && Math.abs(ly) <= hy && Math.abs(lz) <= hz) return true
+    }
+    return false
+  }
+  const geometry = mesh.geometry as PrimitiveGeometry
+  const p = geometry.parameters ?? {}
+  const n = (key: string, fallback: number): number => (typeof p[key] === 'number' ? (p[key] as number) : fallback)
+  switch (geometry.type) {
+    case 'BoxGeometry':
+      return Math.abs(x) <= n('width', 1) / 2 && Math.abs(y) <= n('height', 1) / 2 && Math.abs(z) <= n('depth', 1) / 2
+    case 'CylinderGeometry':
+    case 'ConeGeometry': {
+      const h = n('height', 1) / 2
+      if (Math.abs(y) > h || p.openEnded === true) return false
+      const top = geometry.type === 'ConeGeometry' ? 0 : n('radiusTop', 1)
+      const bottom = geometry.type === 'ConeGeometry' ? n('radius', 1) : n('radiusBottom', 1)
+      return Math.hypot(x, z) <= bottom + ((top - bottom) * (y + h)) / (2 * h || 1)
+    }
+    case 'SphereGeometry':
+      return Math.hypot(x, y, z) <= n('radius', 1)
+    default: {
+      if (!geometry.boundingBox) geometry.computeBoundingBox()
+      const box = geometry.boundingBox
+      return !!box && x >= box.min.x && x <= box.max.x && y >= box.min.y && y <= box.max.y && z >= box.min.z && z <= box.max.z
+    }
+  }
+}
+
 /** Points around each rim of a round piece (and around a ball's three great circles). */
 const RIM_POINTS = 12
 
@@ -1072,12 +1148,56 @@ class Renderer implements DestructionRenderer {
     const radii = ([0, 1, 2] as const).map(fits)
     if (radii.every((r) => r !== null)) {
       const radius = (half[0] + half[1] + half[2]) / 3
+      if (this.drawnShareOf(b, body, (q) => Math.hypot(q[0], q[1], q[2]) <= radius) < ROUND_FILL) return null
       return { kind: 'sphere', axis: 1, radius, inertia: body.inertiaGiven ?? this.inertiaOf(b, body, 'sphere', 1, radius) }
     }
     const axis = ([0, 1, 2] as const).find((k) => radii[k] !== null)
     if (axis === undefined) return null
     const radius = radii[axis] ?? 0
-    return { kind: 'cylinder', axis, radius, inertia: body.inertiaGiven ?? this.inertiaOf(b, body, 'cylinder', axis, radius), profile: profileOf(points, axis, half[axis], radius) }
+    const profile = profileOf(points, axis, half[axis], radius)
+    const [i, j] = axis === 0 ? [1, 2] : axis === 1 ? [0, 2] : [0, 1]
+    if (this.drawnShareOf(b, body, (q) => Math.abs(q[axis]) <= half[axis] && Math.hypot(q[i], q[j]) <= hullRadiusAt(profile, radius, q[axis])) < ROUND_FILL) return null
+    return { kind: 'cylinder', axis, radius, inertia: body.inertiaGiven ?? this.inertiaOf(b, body, 'cylinder', axis, radius), profile }
+  }
+
+  /** The vertices of a mesh about the centre of its box (`lb`, its own space), scaled as it is drawn: the points of the hull the engine holds it by (`PartBox.hull`). */
+  private hullOf(mv: MeshVis, lb: THREE_NS.Box3, scale: THREE_NS.Vector3): number[] {
+    const own: number[] = []
+    this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
+    const c = lb.getCenter(new this.THREE.Vector3())
+    const out: number[] = []
+    for (let i = 0; i < own.length; i += 3) out.push((own[i]! - c.x) * Math.abs(scale.x), (own[i + 1]! - c.y) * Math.abs(scale.y), (own[i + 2]! - c.z) * Math.abs(scale.z))
+    return out
+  }
+
+  /**
+   * The share of a round body the engine would hold (`inside`: a point from the piece's centre of mass) that is drawn: a grid of points through its box (`FILL_GRID`), those
+   * inside the body, and of them those inside a primitive of the piece (`insideDrawn`). Primitives that overlap count once (a lamp's glow over its shade).
+   */
+  private drawnShareOf(b: Bound, body: PieceBody, inside: (q: Vec3) => boolean): number {
+    const inv = specFrameInverse(this.THREE, b.root)
+    const meshes = this.meshesOf(b).filter((mv) => this.visuals.shown(mv) && !mv.host).map((mv) => {
+      mv.mesh.updateWorldMatrix(true, false)
+      return { mesh: mv.mesh, built: builtSolidsOf(mv.mesh), back: new this.THREE.Matrix4().multiplyMatrices(inv, mv.mesh.matrixWorld).invert() }
+    })
+    const [cx, cy, cz] = body.localCenter
+    const half = body.halfExtents
+    const p = new this.THREE.Vector3()
+    let shape = 0
+    let drawn = 0
+    for (let a = 0; a < FILL_GRID; a++) for (let c = 0; c < FILL_GRID; c++) for (let d = 0; d < FILL_GRID; d++) {
+      const q: Vec3 = [half[0] * (((a + 0.5) / FILL_GRID) * 2 - 1), half[1] * (((c + 0.5) / FILL_GRID) * 2 - 1), half[2] * (((d + 0.5) / FILL_GRID) * 2 - 1)]
+      if (!inside(q)) continue
+      shape++
+      for (const m of meshes) {
+        p.set(q[0] + cx, q[1] + cy, q[2] + cz).applyMatrix4(m.back)
+        if (insideDrawn(m.mesh, m.built, p.x, p.y, p.z)) {
+          drawn++
+          break
+        }
+      }
+    }
+    return shape === 0 ? 1 : drawn / shape
   }
 
   pieces(): Piece[] {
@@ -3402,7 +3522,8 @@ class Renderer implements DestructionRenderer {
         const turned = Math.abs(q.w) < 1 - 1e-9
         const s: Vec3 = turned ? [even, even, even] : [Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z)]
         q.premultiply(quat).normalize()
-        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [Math.max(0.005, solid.half[0] * s[0]), Math.max(0.005, solid.half[1] * s[1]), Math.max(0.005, solid.half[2] * s[2])], rotation: [q.x, q.y, q.z, q.w] })
+        const round = isRoundSolid(solid) && Math.abs(s[0] - s[2]) <= 1e-9
+        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [Math.max(0.005, solid.half[0] * s[0]), Math.max(0.005, solid.half[1] * s[1]), Math.max(0.005, solid.half[2] * s[2])], rotation: [q.x, q.y, q.z, q.w], ...(round ? { round: true as const } : {}) })
       }
       return
     }
@@ -3454,11 +3575,16 @@ class Renderer implements DestructionRenderer {
     at.m4.decompose(pos, quat, scale)
     const c = at.lb.getCenter(new this.THREE.Vector3()).applyMatrix4(at.m4)
     const size = at.lb.getSize(new this.THREE.Vector3())
-    out.push({
-      center: [c.x - cx, c.y - cy, c.z - cz],
-      half: [Math.max(0.005, Math.abs(size.x * scale.x) / 2), Math.max(0.005, Math.abs(size.y * scale.y) / 2), Math.max(0.005, Math.abs(size.z * scale.z) / 2)],
-      rotation: [quat.x, quat.y, quat.z, quat.w],
-    })
+    const half: Vec3 = [Math.max(0.005, Math.abs(size.x * scale.x) / 2), Math.max(0.005, Math.abs(size.y * scale.y) / 2), Math.max(0.005, Math.abs(size.z * scale.z) / 2)]
+    // a mesh made as one straight whole cylinder (`CylinderGeometry`) is held as that cylinder; one made as another round primitive (half a log, a cone, a ball) as the
+    // hull of its vertices: never as the box around it, whose corners are air
+    const geometry = mv.mesh.geometry as PrimitiveGeometry
+    const params = geometry.parameters ?? {}
+    const whole = typeof params.thetaLength !== 'number' || Math.abs(params.thetaLength - 2 * Math.PI) < 1e-6
+    const cylinder = geometry.type === 'CylinderGeometry' && !mv.range
+    const straight = cylinder && whole && params.openEnded !== true && isRoundSolid({ kind: params.radiusTop === params.radiusBottom ? 'cylinder' : 'cone', half })
+    const curved = !mv.range && !straight && (cylinder || geometry.type === 'ConeGeometry' || geometry.type === 'SphereGeometry')
+    out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half, rotation: [quat.x, quat.y, quat.z, quat.w], ...(straight ? { round: true as const } : {}), ...(curved ? { hull: this.hullOf(mv, at.lb, scale) } : {}) })
   }
 
   /**

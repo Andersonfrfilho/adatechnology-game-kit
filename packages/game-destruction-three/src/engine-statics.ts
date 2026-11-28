@@ -15,6 +15,8 @@ export interface StaticSolid {
   readonly mesh?: StaticMesh
   /** Names the part across lists (a part measured again is the same part): without it, the place in the list. */
   readonly key?: string
+  /** A round primitive: a cylinder along the solid's own y, its radius the mean of its x and z halves (see `PartBox.round`). */
+  readonly round?: true
   /** The Coulomb friction and rolling resistance of the part's material; without it the body has the ground's. */
   readonly friction?: { readonly static: number; readonly dynamic: number; readonly rolling: number; readonly rollingDamping?: number }
 }
@@ -87,7 +89,11 @@ const orientedReach = (s: StaticSolid): Vec3 => {
   ]
 }
 
-const shapeOf = (s: StaticSolid): ShapeDesc => (s.mesh ? { kind: 'trimesh', vertices: s.mesh.vertices, indices: s.mesh.indices } : { kind: 'box', half: s.half })
+const shapeOf = (s: StaticSolid): ShapeDesc => {
+  if (s.mesh) return { kind: 'trimesh', vertices: s.mesh.vertices, indices: s.mesh.indices }
+  if (s.round) return { kind: 'cylinder', halfHeight: s.half[1], radius: (s.half[0] + s.half[2]) / 2 }
+  return { kind: 'box', half: s.half }
+}
 
 /**
  * The host's fixed things in the engine: one static body per drawn part of an object, a box turned as drawn or the triangles where no box fits. A new list for an object is

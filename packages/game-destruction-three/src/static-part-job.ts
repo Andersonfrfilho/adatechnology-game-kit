@@ -1,6 +1,7 @@
 import { fitOrientedBox, hugs } from '@adatechnology/game-shapes'
 import type { OrientedBox } from '@adatechnology/game-shapes'
 
+import { isRoundSolid } from './built-solids'
 import type { BuiltSolid } from './built-solids'
 import type { StaticSolid } from './engine-statics'
 
@@ -108,6 +109,7 @@ const builtSolidIn = (solid: BuiltSolid, pos: readonly number[], quat: readonly 
   const even = (Math.abs(scale[0]) + Math.abs(scale[1]) + Math.abs(scale[2])) / 3
   const s = turned ? [even, even, even] : [Math.abs(scale[0]), Math.abs(scale[1]), Math.abs(scale[2])]
   return {
+    ...(isRoundSolid(solid) && Math.abs(s[0] - s[2]) <= 1e-9 ? { round: true as const } : {}),
     center: [cx + pos[0], cy + pos[1], cz + pos[2]],
     half: [Math.max(MIN_HALF, solid.half[0] * s[0]), Math.max(MIN_HALF, solid.half[1] * s[1]), Math.max(MIN_HALF, solid.half[2] * s[2])],
     // the mesh's turn, then the solid's own

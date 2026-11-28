@@ -26,7 +26,7 @@ const base = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? pathToFil
  * @typedef {{ objectId: string; root: import('three').Object3D; centerV: import('three').Vector3; halfExtents: [number, number, number]; round?: unknown; partBoxes?: Array<{ center: [number, number, number]; half: [number, number, number]; rotation?: [number, number, number, number] }> }} EnginePiece
  */
 
-/** Pieces whose boxes still hold air: empty since spec 019 (a piece is held by the solids its builder drew). A piece that has to enter it is debt counted, with the reason. */
+/** Pieces whose colliders still hold air: empty since spec 019. A piece that has to enter it is debt counted, with the reason. */
 const KNOWN = new Set(/** @type {string[]} */ (JSON.parse(process.env.HOLLOW_KNOWN ?? 'null') ?? []))
 
 const browser = await chromium.launch({ args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--no-sandbox'] })
@@ -59,6 +59,10 @@ const found = await page.evaluate(async () => {
     }
   })
   await new Promise((resolve) => setTimeout(resolve, 4000))
+  /** @type {{ rayFirst(from: number[], direction: number[], length: number): { distance: number } | null }} */
+  const engine = /** @type {any} */ (window).__roomPhysics.world
+  /** A ray through the very middle of a face runs along an edge of a drawn cylinder's cap and three's raycast misses it: the grid is set off by a share of a cell. */
+  const SKEW = 0.0731
   const caster = new T.Raycaster()
   // whatever layer a mesh draws in (a batch, the first person's), it is drawn
   caster.layers.enableAll()
@@ -70,8 +74,8 @@ const found = await page.evaluate(async () => {
   for (const { id, so } of laid) {
     // the renderer's piece with what the engine holds of it: its centre and the boxes of its parts (internal fields of game-destruction-three, not of the public `Piece`)
     const piece = /** @type {EnginePiece | undefined} */ (/** @type {unknown} */ (r.renderer.pieces().find((/** @type {any} */ p) => p.objectId === so.objectId)))
-    // a round piece (a can, a lamp: `round`) is a cylinder or a sphere in the engine, not the box read here
-    if (!piece || piece.round) continue
+    // a round piece (a can) is looked into by its box too: where each ray enters it is the engine's to say (a cylinder, a hull), not this script's
+    if (!piece) continue
     looked++
     /** @type {any[]} */
     const meshes = []
@@ -98,14 +102,17 @@ const found = await page.evaluate(async () => {
       for (let axis = 0; axis < 3; axis++) for (const way of [-1, 1]) for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) {
         const local = [0, 0, 0]
         local[axis] = -way * (box.half[axis] + 0.01)
-        local[(axis + 1) % 3] = box.half[(axis + 1) % 3] * (((i + 0.5) / GRID) * 2 - 1) * MIDDLE
-        local[(axis + 2) % 3] = box.half[(axis + 2) % 3] * (((j + 0.5) / GRID) * 2 - 1) * MIDDLE
+        local[(axis + 1) % 3] = box.half[(axis + 1) % 3] * (((i + 0.5 + SKEW) / GRID) * 2 - 1) * MIDDLE
+        local[(axis + 2) % 3] = box.half[(axis + 2) % 3] * (((j + 0.5 + SKEW) / GRID) * 2 - 1) * MIDDLE
         origin.set(local[0], local[1], local[2]).applyQuaternion(turn).add(at)
         direction.set(axis === 0 ? way : 0, axis === 1 ? way : 0, axis === 2 ? way : 0).applyQuaternion(turn)
         caster.set(origin, direction)
         caster.far = 2 * box.half[axis] + 0.02
+        // where the ray enters what the engine holds of the piece (its box, its cylinder, its hull): a ray that never enters it holds no air of it
+        const entry = engine.rayFirst([origin.x, origin.y, origin.z], [direction.x, direction.y, direction.z], caster.far)
+        if (!entry) continue
         const hit = caster.intersectObjects(meshes, false)[0]
-        const deep = (hit ? hit.distance : caster.far) - 0.01
+        const deep = (hit ? hit.distance : caster.far) - entry.distance
         if (deep <= AIR) continue
         open++
         worst = Math.max(worst, deep)

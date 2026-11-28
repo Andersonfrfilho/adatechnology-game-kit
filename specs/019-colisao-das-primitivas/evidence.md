@@ -45,8 +45,48 @@ molde (uma vez por molde, `WeakMap`).
 Na rodada de todos os dependentes com a máquina carregada: `game-interactables-household/review` (wardrobe), `game-destruction-three/engine-ground-net` e
 `jit-warmup` (contagem de heap), `game-test-room/interpolation-rates`. Cada um passa rodando sozinho.
 
-## Dívida que fica (declarada na spec)
+## 2026-11-28 — A dívida (sessão `opus`, ordem do dono: "corrige o laundry_tub ... e tbm todas as dívida")
 
-- 14 peças do `hollow-catalogue.test.ts` (catálogo de móveis do `game-floorplan-three`): o construtor delas não usa o mesh api.
-- Cilindro, cone e esfera colidem pela caixa da própria primitiva, não pela forma redonda.
-- Casas e veículos seguem medidos pelo desenho.
+### `laundry_tub` (vermelho na main, CI 46093206999)
+
+Causa: o 9222e952d pôs o tanque em `INSTALLED` (fixo). O `joinBodies` soldava ao corpo a torneira, que já tem âncora própria na parede (`metal_1`); com os
+pés quebrados o mundo via uma âncora viva no mesmo grupo (`fixedInPlace`) e o tanque ficava parado a 0,5 m. A solda entre um grupo com âncora própria e o
+corpo ancorado virou junta que rasga (`tears`): o móvel entra como um grupo só (`catalogue-one-group` verde) e, sem os pés, o tanque cai e deita no chão; a
+torneira fica na parede. Uma primeira versão (não soldar) deixava 14 móveis com dois grupos ao entrar e foi descartada.
+
+### As 14 peças do `hollow-catalogue.test.ts`
+
+Não eram "construtor sem sólidos" (cada parte desse catálogo já é uma malha de uma primitiva): eram três defeitos do motor, cada um com a sua correção.
+
+| Defeito | Peças | Correção |
+|---|---|---|
+| peça "redonda" vira um cilindro ou casco maciço (banco de pernas, mesa de pé central, abajur, chafariz) | stool, coffee_table_round, floor_lamp, outdoor_pot, pendant, hanging_plant, table_lamp, fountain, floor_plant, soaking_tub, ceiling_light | redonda só se o desenho preenche 90% da forma, por amostragem |
+| cilindro grande segurado pela caixa em volta (quinas com até 16% do raio de ar) | fountain, water_tank, ceiling_light | cilindro reto colide como cilindro (`PartBox.round`, `StaticSolid.round`) |
+| meio cilindro, cone, esfera segurados pela caixa | bbq_simple | casco convexo dos vértices (`PartBox.hull`) |
+| mais de 64 malhas: uma caixa só | shelf_unit (65) | limite 96 |
+
+A guarda achou também um defeito dela mesma: o raio do meio da grade cai sobre a aresta da tampa de um cilindro e o raycast do three erra; a grade foi
+deslocada (`SKEW`).
+
+| Guarda | Antes | Agora |
+|---|---|---|
+| `hollow-catalogue.test.ts` (CI) | 14 na lista de dívida | **lista removida**, 124/124 |
+| `hollow-test.mjs` (sala, entrada medida pelo próprio motor) | 0 em 21 peças (redondas puladas) | **0 em 24 peças**, redondas incluídas |
+| `broken-catalogue.test.ts` | `laundry_tub` vermelho | verde |
+
+### Candeeiro de pé (`floor_lamp`) e a massa dos móveis
+
+Ao juntar a main (8c9722476, massa dos móveis como casca do material) com a regra "redonda só se cheia", o candeeiro passou a cair sozinho no
+`furniture-laid-still`. Medido: a base de 2,5 cm desenhada como `metal` virou chapa de aço de 1,2 mm, o centro de massa subiu para 1,09 m sobre um pé de 26 cm,
+e a regra de equilíbrio do motor (`NARROW` 0,3) o derruba. Antes ele era "redondo" e pulava a regra. A base de um candeeiro de pé é ferro fundido
+(`WEIGHTED_FOOT` em `furniture/spec.ts`): a parte de metal no chão desses tipos é `cast_iron` (casca de 6 mm).
+
+### Casas e veículos
+
+- Veículos não passam pela medição do `game-destruction-three`: têm colisor próprio por cascos convexos (`game-vehicles`, `game-vehicles-three/src/colliders.ts`).
+- Casas: parte fixa que não é uma caixa cheia vira os triângulos desenhados (exato); destroço solto é tijolo ou tábua (caixa). **Não há guarda de ar para
+  as casas**: não está medido, só argumentado.
+
+## Dívida que fica
+
+- Guarda de ar para as casas (destroços de faixa de malha unida medidos por `fitOrientedBoxes`).

@@ -1,5 +1,6 @@
 import { defaultFurnitureCatalog } from '@adatechnology/game-kit-defaults'
 import * as THREE from 'three'
+import { ConvexHull } from 'three/examples/jsm/math/ConvexHull.js'
 import { createDestruction } from '@adatechnology/game-destruction'
 import { createDestructionRenderer } from '@adatechnology/game-destruction-three'
 import { describe, expect, it } from 'vitest'
@@ -8,8 +9,10 @@ import { furnitureSpec } from '../src'
 import { fakeDocument } from './helpers/fake-document'
 import { physicsOption } from './setup-physics'
 
-type Solid = { readonly center: readonly number[]; readonly half: readonly number[]; readonly rotation: readonly number[]; readonly mesh?: unknown }
-type Piece = { readonly localCenter: readonly [number, number, number]; readonly halfExtents: readonly number[]; readonly partBoxes?: ReadonlyArray<{ readonly center: readonly number[]; readonly half: readonly number[]; readonly rotation?: readonly number[] }> }
+/** A round collider: a cylinder along `axis` of its box, its radius at a point of that axis (`radiusAt`, from the centre). */
+type Round = { readonly axis: number; readonly radiusAt: (along: number) => number }
+type Solid = { readonly center: readonly number[]; readonly half: readonly number[]; readonly rotation: readonly number[]; readonly mesh?: unknown; readonly round?: true | Round; readonly hull?: readonly number[] }
+type Piece = { readonly localCenter: readonly [number, number, number]; readonly halfExtents: readonly number[]; readonly round?: { readonly axis: number; readonly radius: number; readonly profile?: ReadonlyArray<readonly [number, number]> }; readonly partBoxes?: ReadonlyArray<{ readonly center: readonly number[]; readonly half: readonly number[]; readonly rotation?: readonly number[]; readonly round?: true; readonly hull?: readonly number[] }> }
 type Statics = { bodies: Map<string, { held: Map<string, { solid: Solid }> }> }
 
 /** How far (m) into a box of the engine a ray may go before it meets what is drawn: the fit of a box to its part is 1 cm, a sunk detail 2 mm. */
@@ -18,10 +21,50 @@ const AIR = 0.05
 const OPEN_RAYS = 3
 /** The share of each face (from its middle) the rays go in by: a round leg or a trunk held as the box around it leaves its corners empty, and that is the fit, not air held. */
 const MIDDLE = 0.6
+/** A ray through the very middle of a face runs along an edge of the triangles of a drawn cylinder's cap (from its centre to its first vertex) and three's raycast misses it: the grid is set off by a share of a cell no drawing lines up with. */
+const SKEW = 0.0731
 /** Rays across each face of a box, each way along each of its axes. */
 const GRID = 5
 /** A box thinner than this any way holds less air than `AIR`: a sheet is not looked into (its edges are often not drawn). */
 const THIN = AIR + 0.01
+
+/** The cylinder of a round collider: a part box's own (along its y, the mean of its x and z halves), or the piece's (`round`, its profile when it tapers). */
+const roundOf = (solid: Solid): Round | null => {
+  if (!solid.round) return null
+  if (solid.round !== true) return solid.round
+  const radius = (solid.half[0]! + solid.half[2]!) / 2
+  return { axis: 1, radiusAt: () => radius }
+}
+
+/**
+ * How far along the ray (from its origin, `local` in the collider's frame, going `way` along `axis`) it enters the collider: the box face, or the cylinder's side or end.
+ * Null when the ray never enters it (it passes beside a cylinder, in the corner of its box).
+ */
+const entryOf = (solid: Solid, local: readonly number[], axis: number, way: number): number | null => {
+  const along = solid.half[axis]!
+  if (solid.hull) {
+    // a hull (half a log, a cone): where the ray first meets it, in the box's frame
+    const points: THREE.Vector3[] = []
+    for (let i = 0; i < solid.hull.length; i += 3) points.push(new THREE.Vector3(solid.hull[i], solid.hull[i + 1], solid.hull[i + 2]))
+    const ray = new THREE.Ray(new THREE.Vector3(local[0], local[1], local[2]), new THREE.Vector3(axis === 0 ? way : 0, axis === 1 ? way : 0, axis === 2 ? way : 0))
+    const hit = new ConvexHull().setFromPoints(points).intersectRay(ray, new THREE.Vector3())
+    return hit ? hit.distanceTo(ray.origin) : null
+  }
+  const round = roundOf(solid)
+  if (!round) return 0.01
+  const c = round.axis
+  if (axis === c) {
+    // along the cylinder: in by the end it comes from, if it is inside that end's circle
+    const [i, j] = [0, 1, 2].filter((k) => k !== c) as [number, number]
+    return Math.hypot(local[i]!, local[j]!) <= round.radiusAt(-way * along) ? 0.01 : null
+  }
+  // across it: the other axis across the cylinder is how far from its axis the ray passes
+  const other = [0, 1, 2].find((k) => k !== c && k !== axis)!
+  const radius = round.radiusAt(local[c]!)
+  const off = Math.abs(local[other]!)
+  if (off >= radius) return null
+  return along + 0.01 - Math.sqrt(radius * radius - off * off)
+}
 
 /** Every box the engine holds of the thing whose inside is not drawn: a ray goes in by one of its faces and meets nothing of the thing for more than `AIR`. */
 const boxesHoldingAir = (root: THREE.Object3D, solids: ReadonlyMap<string, { solid: Solid }>): string[] => {
@@ -51,14 +94,16 @@ const boxesHoldingAir = (root: THREE.Object3D, solids: ReadonlyMap<string, { sol
       for (const way of [-1, 1]) for (let i = 0; i < GRID; i++) for (let j = 0; j < GRID; j++) {
         const local = [0, 0, 0]
         local[axis] = -way * (along + 0.01)
-        local[u] = solid.half[u]! * (((i + 0.5) / GRID) * 2 - 1) * MIDDLE
-        local[v] = solid.half[v]! * (((j + 0.5) / GRID) * 2 - 1) * MIDDLE
+        local[u] = solid.half[u]! * (((i + 0.5 + SKEW) / GRID) * 2 - 1) * MIDDLE
+        local[v] = solid.half[v]! * (((j + 0.5 + SKEW) / GRID) * 2 - 1) * MIDDLE
         origin.set(local[0]!, local[1]!, local[2]!).applyQuaternion(turn).add(centre)
         direction.set(axis === 0 ? way : 0, axis === 1 ? way : 0, axis === 2 ? way : 0).applyQuaternion(turn)
+        const entry = entryOf(solid, local, axis, way)
+        if (entry === null) continue
         caster.set(origin, direction)
         caster.far = 2 * along + 0.02
         const hit = caster.intersectObjects(meshes, false)[0]
-        const air = (hit ? hit.distance : caster.far) - 0.01
+        const air = (hit ? hit.distance : caster.far) - entry
         if (air <= AIR) continue
         open++
         worst = Math.max(worst, air)
@@ -71,11 +116,6 @@ const boxesHoldingAir = (root: THREE.Object3D, solids: ReadonlyMap<string, { sol
 
 const types = defaultFurnitureCatalog().map((entry) => entry.type)
 
-/**
- * Debt counted (2026-11-27): pieces whose box, once let go, still holds air. They are round or one-shell shapes held as the box around them (a stool's legs under its
- * seat, a tub, a pot, a lamp's shade). The list only gets shorter: a piece fitted by its own parts leaves it, and a piece not listed must hold none.
- */
-const KNOWN = new Set(['coffee_table_round', 'shelf_unit', 'floor_lamp', 'outdoor_pot', 'fountain', 'ceiling_light', 'pendant', 'floor_plant', 'table_lamp', 'hanging_plant', 'soaking_tub', 'bbq_simple', 'stool', 'water_tank'])
 
 // CLAUDE.md §12, "nenhum colisor sem geometria": a kennel drawn as one part was one box in the engine, and the chips of its own boards, made inside it, never came to rest
 describe('every piece of furniture of the catalogue, whole: the engine holds what is drawn, never the air in it', () => {
@@ -104,10 +144,21 @@ describe('every piece of furniture of the catalogue, whole: the engine holds wha
     const piece = renderer.makePiece(id) as unknown as Piece | null
     if (!piece) return
     const [cx, cy, cz] = piece.localCenter
-    const boxes = piece.partBoxes ?? [{ center: [0, 0, 0], half: piece.halfExtents }]
-    const loose = new Map(boxes.map((box, i) => [`piece box ${i}`, { solid: { center: [box.center[0]! + cx, box.center[1]! + cy, box.center[2]! + cz], half: box.half, rotation: box.rotation ?? [0, 0, 0, 1] } }] as const))
-    const air = boxesHoldingAir(root, loose)
-    if (KNOWN.has(type)) expect(air.length, `${type} holds no air any more: take it out of KNOWN`).toBeGreaterThan(0)
-    else expect(air, 'let go (the boxes of the piece)').toEqual([])
+    // a round piece is its cylinder (along `round.axis`, its profile when it tapers), the rest the boxes of its parts or its box
+    const round = piece.round
+    const radiusAt = (along: number): number => {
+      const profile = round?.profile
+      if (!round || !profile || profile.length < 2) return round?.radius ?? 0
+      const k = profile.findIndex(([at]) => at >= along)
+      if (k <= 0) return profile[k === 0 ? 0 : profile.length - 1]![1]
+      const [a, ra] = profile[k - 1]!
+      const [b, rb] = profile[k]!
+      return ra + ((rb - ra) * (along - a)) / (b - a || 1)
+    }
+    const boxes: ReadonlyArray<{ readonly center: readonly number[]; readonly half: readonly number[]; readonly rotation?: readonly number[]; readonly round?: true | Round; readonly hull?: readonly number[] }> = round
+      ? [{ center: [0, 0, 0], half: piece.halfExtents, round: { axis: round.axis, radiusAt } }]
+      : (piece.partBoxes ?? [{ center: [0, 0, 0], half: piece.halfExtents }])
+    const loose = new Map(boxes.map((box, i) => [`piece box ${i}`, { solid: { center: [box.center[0]! + cx, box.center[1]! + cy, box.center[2]! + cz], half: box.half, rotation: box.rotation ?? [0, 0, 0, 1], ...(box.round ? { round: box.round } : {}), ...(box.hull ? { hull: box.hull } : {}) } }] as const))
+    expect(boxesHoldingAir(root, loose), 'let go (the colliders of the piece)').toEqual([])
   })
 })
