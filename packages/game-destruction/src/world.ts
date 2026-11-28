@@ -6597,6 +6597,11 @@ export const createDestruction = (options: DestructionOptions = {}): Destruction
       }).events
     },
     state: (id) => objects.get(id)?.st ?? impls.get(id)?.impl.state() ?? null,
+    anchoredParts: (id) => objects.get(id)?.parts.filter((p) => p.anchored && !isLost(p)).map((p) => p.spec.id) ?? [],
+    fixedInPlace: (id) => {
+      const o = objects.get(id)
+      return !!o && o.spec.fixed === true && o.parts.some((p) => p.anchored && !isLost(p))
+    },
     snapshot: (id) => {
       const st = objects.get(id)?.st ?? impls.get(id)?.impl.state()
       return st ? clone(st) : null

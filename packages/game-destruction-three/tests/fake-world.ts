@@ -97,6 +97,20 @@ export class FakeWorld {
     return this.objects.get(id) ?? null
   }
 
+  /** Parts a test says are set in the ground or fixed to a wall (`PartSpec.anchored`), by their ids. */
+  anchored = new Set<string>()
+
+  anchoredParts(id: string): string[] {
+    return (this.objects.get(id)?.parts ?? []).filter((p) => this.anchored.has(p.id) && p.status !== 'broken').map((p) => p.id)
+  }
+
+  /** Objects a test says are fixed where they were laid (`DestructibleSpec.fixed`). */
+  fixed = new Set<string>()
+
+  fixedInPlace(id: string): boolean {
+    return this.fixed.has(id) && this.anchoredParts(id).length > 0
+  }
+
   part(id: string, partId: string): PartState | null {
     return this.objects.get(id)?.parts.find((p) => p.id === partId) ?? null
   }

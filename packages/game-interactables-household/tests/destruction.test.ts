@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { HOUSEHOLD_TYPES } from '../src'
+import { HOUSEHOLD_TYPES, createHousehold } from '../src'
 import { REGIONS, build } from './helpers'
 
 // Material ids of @adatechnology/game-destruction (copied: this package does not depend on it).
@@ -8,7 +8,7 @@ const MATERIALS = [
   'brick', 'plaster', 'stone', 'plastic', 'rubber', 'fabric', 'foam', 'leather', 'paper', 'foliage', 'green_wood', 'cactus', 'flesh_fruit',
   'wax', 'soil',
 ]
-const JOINTS = ['screw', 'bolt', 'nail', 'weld', 'glue', 'hinge', 'slide', 'clip', 'tie', 'mortar', 'fused', 'stem']
+const JOINTS = ['screw', 'bolt', 'nail', 'weld', 'glue', 'hinge', 'slide', 'clip', 'tie', 'mortar', 'fused', 'stem', 'rebar']
 const PIECES = ['door', 'drawer', 'leg', 'top', 'glass', 'shelf', 'lid', 'panel', 'handle', 'knob', 'button', 'rocker', 'breaker', 'slat', 'cord', 'curtain', 'flap', 'flag', 'cloth', 'valve', 'bucket']
 const FLUIDS = ['water', 'fuel', 'oil', 'gas', 'sap', 'acid', 'blood']
 
@@ -41,6 +41,18 @@ describe('destruction tags', () => {
     expect(dr.destruction).toEqual({ material: 'mdf', joint: 'slide', piece: 'drawer' })
     expect(build('shower').spec.parts!.find((p) => p.id === 'glass_door')!.destruction?.material).toBe('tempered_glass')
     expect(build('curtain').spec.parts![0].destruction?.material).toBe('fabric')
+  })
+
+  it('the service pole is reinforced concrete set in the ground, never a loose body', () => {
+    const d = build('service_entrance').spec.destruction!
+    expect(d).toMatchObject({ material: 'concrete', joint: 'rebar' })
+    expect(MATERIALS).toContain(d.reinforcement!.material)
+    expect(d.reinforcement!.diameter).toBeGreaterThanOrEqual(0.006)
+    expect(d.reinforcement!.spacing).toBeGreaterThan(d.reinforcement!.diameter)
+    const def = createHousehold().types.find((t) => t.id === 'service_entrance')!
+    expect(def).toMatchObject({ fixed: true, y: 0 })
+    // a small concrete pole of the padrão weighs a few hundred kilograms, not the 60 kg of a steel tube
+    expect(def.massKg).toBeGreaterThan(150)
   })
 
   it.each(REGIONS)('gas_bottle (%s) explodes and holds pressurized gas', (region) => {

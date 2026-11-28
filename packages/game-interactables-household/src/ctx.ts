@@ -257,7 +257,7 @@ export class Ctx {
       this.collider('body', -this.hw, this.y0, -this.hd, this.hw, this.y0 + this.h, this.hd)
     }
     const body = DESTRUCTION[this.type]?.body
-    if (body && !this.spec.destruction) this.spec.destruction = { ...body }
+    if (body && !this.spec.destruction) this.spec.destruction = body.reinforcement ? { ...body, reinforcement: { ...body.reinforcement } } : { ...body }
     for (const k of Object.keys(s)) if (Array.isArray(s[k]) && (s[k] as unknown[]).length === 0) delete s[k]
     return this.spec
   }

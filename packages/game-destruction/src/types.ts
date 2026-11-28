@@ -754,6 +754,17 @@ export interface DestructionWorld {
    * through the API (`hit`, `disassemble`, `setLiters`...). Do not keep it across frames to compare "before" and "after": use `snapshot`.
    */
   state(id: string): ObjectState | null
+  /**
+   * The parts that hold the object to the world now: anchored by its spec (`PartSpec.anchored`: set in the ground, fixed to a wall), not lost and not let go by the
+   * ground under them (`groundLoss`). An object with one stands by its own load path, so a host never makes it a loose body for having lost its feet. Empty for an
+   * unknown object or a registered impl.
+   */
+  anchoredParts(id: string): string[]
+  /**
+   * Whether the object is fixed where it was laid (`DestructibleSpec.fixed`: a pole set in the ground, a mast clamped to a wall) and still has an anchored part
+   * (`anchoredParts`): what is left of it stands by its own load path, so a host never lets it go as a loose body for having lost its feet. False for an unknown object.
+   */
+  fixedInPlace(id: string): boolean
   /** The part's LIVE state (see `state`): read-only, mutated by the world. */
   part(id: string, partId: string): PartState | null
   /** A deep copy of the object's state at this moment: safe to keep, compare and mutate. Null for an unknown id. */

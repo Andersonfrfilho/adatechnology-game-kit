@@ -92,7 +92,7 @@ export interface PartSpec {
 }
 
 /** Joint kinds of the destruction SDK (`JointKind`). */
-export type DestructionJoint = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'slide' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem'
+export type DestructionJoint = 'screw' | 'bolt' | 'nail' | 'weld' | 'glue' | 'hinge' | 'slide' | 'clip' | 'tie' | 'mortar' | 'fused' | 'stem' | 'rebar'
 
 /** What a part is made of and how it is attached. Field names and shapes mirror the SDK's `PartSpec`. */
 export interface PartDestruction {
@@ -106,6 +106,11 @@ export interface PartDestruction {
   explodes?: { energy: number; radius: number; atC?: number }
   /** Fluid inside the part; `fluid` is an SDK `FluidKind` (`water`, `fuel`, `oil`, `gas`...). */
   contains?: { fluid: string; liters: number; pressurized?: boolean }
+  /**
+   * Steel cast inside a concrete body (a concrete pole, a precast post): the SDK material of the bars, metres between them and their diameter. A host gives the
+   * concrete its cage (`PartSpec.reinforcement` of the destruction SDK), so a hit chips the concrete off where it lands, the bars show there and bend under the load.
+   */
+  reinforcement?: { material: string; spacing: number; diameter: number }
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
