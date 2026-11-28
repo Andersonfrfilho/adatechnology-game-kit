@@ -21,6 +21,7 @@ import type {
   ShapePart,
   ShapePoint,
   ShapeSchema,
+  ShapeSolid,
   UvRect,
 } from './types'
 
@@ -38,6 +39,7 @@ export function keyOptions(options: GenerateOptions = {}): Record<string, unknow
     materialAlias: options.materialAlias,
     instancing: options.instancing,
     levels: options.levels,
+    ...(options.solids ? { solids: true } : {}),
   }
 }
 
@@ -88,6 +90,7 @@ class Accumulator {
   readonly colors = new FloatList()
   readonly indices = new IndexList()
   readonly ranges: NamedRange[] = []
+  readonly solids: ShapeSolid[] = []
   vertices = 0
   constructor(
     readonly material: string,
@@ -110,6 +113,7 @@ interface Settings {
   readonly generators?: GenerateOptions['generators']
   readonly isolatedGenerators?: boolean
   readonly autoMin?: number
+  readonly solids: boolean
 }
 
 interface LevelSpec {
@@ -218,7 +222,74 @@ function boundsOf(positions: Float32Array): Bounds {
   return { min, max }
 }
 
-function finish(acc: Accumulator, indexed: boolean, withColors: boolean): ShapeBatch {
+/** The box of a template in its own space (centre and half sizes), read once: the cache hands the same template to every node drawn with the same parameters. */
+const templateBoxes = new WeakMap<PrimitiveBuffers, { readonly center: readonly [number, number, number]; readonly half: readonly [number, number, number] }>()
+const templateBoxOf = (t: PrimitiveBuffers): { readonly center: readonly [number, number, number]; readonly half: readonly [number, number, number] } => {
+  const known = templateBoxes.get(t)
+  if (known) return known
+  const { min, max } = boundsOf(t.positions)
+  const box = { center: [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2] as const, half: [(max[0] - min[0]) / 2, (max[1] - min[1]) / 2, (max[2] - min[2]) / 2] as const }
+  templateBoxes.set(t, box)
+  return box
+}
+
+/** How far from a right angle (as a cosine) two axes of a transform may be for its box to be the primitive's own box turned. */
+const SQUARE = 1e-5
+
+/** The unit quaternion (x, y, z, w) of the frame whose axes are the unit vectors `x`, `y`, `z` (right-handed). */
+const quaternionOfAxes = (x: readonly number[], y: readonly number[], z: readonly number[]): [number, number, number, number] => {
+  const [m00, m10, m20] = x as [number, number, number]
+  const [m01, m11, m21] = y as [number, number, number]
+  const [m02, m12, m22] = z as [number, number, number]
+  const trace = m00 + m11 + m22
+  if (trace > 0) {
+    const s = 0.5 / Math.sqrt(trace + 1)
+    return [(m21 - m12) * s, (m02 - m20) * s, (m10 - m01) * s, 0.25 / s]
+  }
+  if (m00 > m11 && m00 > m22) {
+    const s = 2 * Math.sqrt(1 + m00 - m11 - m22)
+    return [0.25 * s, (m01 + m10) / s, (m02 + m20) / s, (m21 - m12) / s]
+  }
+  if (m11 > m22) {
+    const s = 2 * Math.sqrt(1 + m11 - m00 - m22)
+    return [(m01 + m10) / s, 0.25 * s, (m12 + m21) / s, (m02 - m20) / s]
+  }
+  const s = 2 * Math.sqrt(1 + m22 - m00 - m11)
+  return [(m02 + m20) / s, (m12 + m21) / s, 0.25 * s, (m10 - m01) / s]
+}
+
+/**
+ * The solid a primitive is once baked by `world` (`ShapeSolid`): the box of its template carried by the transform, its axes the transform's own. A transform that shears
+ * (axes not at right angles) or flattens an axis has no such box: the solid is then the box around the carried corners along the batch's axes, marked `fitted`.
+ */
+function solidOf(kind: string, t: PrimitiveBuffers, world: readonly number[], vertexStart: number, vertexCount: number): ShapeSolid {
+  const box = templateBoxOf(t)
+  const e = world as readonly number[]
+  const center = transformPoint(e, box.center[0], box.center[1], box.center[2])
+  const axes = [[e[0]!, e[1]!, e[2]!], [e[4]!, e[5]!, e[6]!], [e[8]!, e[9]!, e[10]!]]
+  const lengths = axes.map((a) => Math.hypot(a[0]!, a[1]!, a[2]!))
+  const dot = (a: readonly number[], b: readonly number[]): number => a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!
+  const square = (i: number, j: number): boolean => Math.abs(dot(axes[i]!, axes[j]!)) <= SQUARE * lengths[i]! * lengths[j]!
+  if (lengths.every((l) => l > 0) && square(0, 1) && square(0, 2) && square(1, 2)) {
+    const [x, y, z] = axes.map((a, k) => [a[0]! / lengths[k]!, a[1]! / lengths[k]!, a[2]! / lengths[k]!]) as [number[], number[], number[]]
+    // a mirrored transform is left-handed: a box is the same with one axis turned round
+    const handed = x[0]! * (y[1]! * z[2]! - y[2]! * z[1]!) - x[1]! * (y[0]! * z[2]! - y[2]! * z[0]!) + x[2]! * (y[0]! * z[1]! - y[1]! * z[0]!)
+    const third = handed < 0 ? [-z[0]!, -z[1]!, -z[2]!] : z
+    return { kind, center, half: [box.half[0] * lengths[0]!, box.half[1] * lengths[1]!, box.half[2] * lengths[2]!], rotation: quaternionOfAxes(x, y, third), vertexStart, vertexCount }
+  }
+  const low = [Infinity, Infinity, Infinity]
+  const high = [-Infinity, -Infinity, -Infinity]
+  for (let corner = 0; corner < 8; corner++) {
+    const p = transformPoint(e, box.center[0] + (corner & 1 ? box.half[0] : -box.half[0]), box.center[1] + (corner & 2 ? box.half[1] : -box.half[1]), box.center[2] + (corner & 4 ? box.half[2] : -box.half[2]))
+    for (let k = 0; k < 3; k++) {
+      low[k] = Math.min(low[k]!, p[k]!)
+      high[k] = Math.max(high[k]!, p[k]!)
+    }
+  }
+  return { kind, center: [(low[0]! + high[0]!) / 2, (low[1]! + high[1]!) / 2, (low[2]! + high[2]!) / 2], half: [(high[0]! - low[0]!) / 2, (high[1]! - low[1]!) / 2, (high[2]! - low[2]!) / 2], rotation: [0, 0, 0, 1], vertexStart, vertexCount, fitted: true }
+}
+
+function finish(acc: Accumulator, indexed: boolean, withColors: boolean, withSolids: boolean): ShapeBatch {
   const positions = acc.positions.done()
   const indices = indexed ? (acc.vertices > 65535 ? acc.indices.array.slice(0, acc.indices.length) : Uint16Array.from(acc.indices.array.subarray(0, acc.indices.length))) : undefined
   return {
@@ -231,6 +302,7 @@ function finish(acc: Accumulator, indexed: boolean, withColors: boolean): ShapeB
     ...(indices ? { indices } : {}),
     ranges: acc.ranges,
     bounds: boundsOf(positions),
+    ...(withSolids ? { solids: acc.solids } : {}),
   }
 }
 
@@ -399,7 +471,10 @@ function runLevel(schema: ShapeSchema, settings: Settings, level: LevelSpec): Le
           return
         }
       }
-      bake(accOf(target, next.material), template, m, rgbOf(next.color), next.uv, settings.indexed)
+      const acc = accOf(target, next.material)
+      const first = acc.vertices
+      bake(acc, template, m, rgbOf(next.color), next.uv, settings.indexed)
+      if (settings.solids) acc.solids.push(solidOf(node.kind, template, m, first, acc.vertices - first))
     }
 
     if (snapshot) {
@@ -434,7 +509,7 @@ function runLevel(schema: ShapeSchema, settings: Settings, level: LevelSpec): Le
       if (colors) colors.set(colorChannels(colorHex(instance.color), space ?? 'srgb'), index * 3)
     })
     for (const acc of collector.accs.values()) {
-      const batch = finish(acc, settings.indexed, false)
+      const batch = finish(acc, settings.indexed, false, false)
       instanced.push({
         material: acc.material,
         part: collector.part,
@@ -466,7 +541,7 @@ function runLevel(schema: ShapeSchema, settings: Settings, level: LevelSpec): Le
   }
 
   const batches: ShapeBatch[] = []
-  for (const target of targets) for (const acc of target.accs.values()) if (acc.vertices > 0 && (!settings.indexed || acc.indices.length > 0)) batches.push(finish(acc, settings.indexed, space !== null))
+  for (const target of targets) for (const acc of target.accs.values()) if (acc.vertices > 0 && (!settings.indexed || acc.indices.length > 0)) batches.push(finish(acc, settings.indexed, space !== null, settings.solids))
   return { level: { distance: level.distance, detail: level.detail, batches, instanced }, parts, points, primitives }
 }
 
@@ -486,6 +561,7 @@ export function generate(schema: ShapeSchema, options: GenerateOptions = {}): Sh
     ...(options.generators ? { generators: options.generators } : {}),
     ...(options.isolatedGenerators ? { isolatedGenerators: true } : {}),
     ...(options.instancing ? { autoMin: Math.max(2, options.instancing.minCount) } : {}),
+    solids: options.solids === true,
   }
   const specs: LevelSpec[] = [{ distance: 0, detail: 1, index: 0 }, ...(schema.lod ?? []).map((rule, index) => ({ ...rule, index: index + 1 }))]
   const wanted = options.levels ? specs.filter((spec) => options.levels!.includes(spec.index)) : specs

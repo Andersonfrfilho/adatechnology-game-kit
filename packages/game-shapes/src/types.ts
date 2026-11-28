@@ -276,6 +276,26 @@ export interface Bounds {
   readonly max: [number, number, number]
 }
 
+/**
+ * One primitive baked into a batch, as the solid it is: its own box, turned as it was drawn, in the batch's space (the part's, or the root's for the static body).
+ * A box is the box; a cylinder, a cone or a sphere is the box around that one primitive (2r x h x 2r), never the box around several of them. What reads
+ * `ShapeBatch.solids` (a physics engine) holds the piece by what its builder drew, with no vertex read back (spec 019).
+ */
+export interface ShapeSolid {
+  /** The kind of the node that drew it (`'box'`, `'cylinder'`...). */
+  readonly kind: string
+  readonly center: readonly [number, number, number]
+  /** Half the size along each of the solid's own axes (after the node's scale). */
+  readonly half: readonly [number, number, number]
+  /** The solid's axes in the batch's space, as a unit quaternion (x, y, z, w). */
+  readonly rotation: readonly [number, number, number, number]
+  /** The vertices of the batch this primitive added. */
+  readonly vertexStart: number
+  readonly vertexCount: number
+  /** True when the box is not the primitive's own shape turned (a sheared transform): it is the box around its vertices along the batch's axes. */
+  readonly fitted?: true
+}
+
 /** Everything of one (part, material): baked, ready for one draw call. */
 export interface ShapeBatch {
   readonly material: string
@@ -288,6 +308,8 @@ export interface ShapeBatch {
   readonly indices?: Uint16Array | Uint32Array
   readonly ranges: readonly NamedRange[]
   readonly bounds: Bounds
+  /** One per primitive baked in, in the order they were (`GenerateOptions.solids`); absent without the option. */
+  readonly solids?: readonly ShapeSolid[]
 }
 
 /** A node drawn many times: its geometry once (in the node's space) and one matrix per copy (in the part's space). */
@@ -386,4 +408,6 @@ export interface GenerateOptions {
    * (a schema built in code, used once and never cached: the hash would cost more than a small shape).
    */
   readonly key?: string | false
+  /** Each batch lists the solids it was baked from (`ShapeBatch.solids`): what a physics engine holds the piece by. Off by default: the output is the same bytes as without it. */
+  readonly solids?: boolean
 }
