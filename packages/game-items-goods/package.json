@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@adatechnology/game-contracts": "workspace:^",
+    "@adatechnology/game-fluids": "workspace:^",
     "@adatechnology/game-items": "workspace:^"
   },
   "devDependencies": {

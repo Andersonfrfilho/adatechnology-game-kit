@@ -21,5 +21,5 @@ export { BODY_SLOTS, createItemContracts, DENSITY_KG_PER_LITRE, HEAT_RESISTANT_M
 export type { ItemContractOptions, ItemImpact, ItemLeftover, ItemPart, KindedItem } from './contracts'
 export { checkGoodsItems, createGoodsKinds, lootCategoriesOf } from './kinds'
 export type { CheckGoodsOptions } from './kinds'
-export { createGoodsItemUse, goodsItemUse } from './item-use'
+export { createGoodsItemUse, drinkHydrationOf, goodsItemUse } from './item-use'
 export type { GoodsItemUse, GoodsItemUseOptions } from './item-use'
