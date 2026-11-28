@@ -13,6 +13,7 @@ const out = join(here, 'shots')
 mkdirSync(out, { recursive: true })
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--use-gl=angle', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--no-sandbox'] })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+/** @type {string[]} */
 const errors = []
 page.on('pageerror', (e) => errors.push(e.message))
 await page.goto(`${url}?scene=doors&table=0&ui=0&items=sink_kitchen,washer,kitchen_cabinet_base,sink_bathroom,kitchen_cabinet_wall`, { timeout: 180000 })
@@ -20,10 +21,14 @@ await page.waitForFunction(() => window.__testRoom && window.__testRoom.spawned(
 await page.waitForTimeout(3000)
 const objs = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z], ry: s.root.rotation.y, leaves: window.__testRoom.leaves(s.objectId) })).filter((s) => s.leaves.length))
 console.log(JSON.stringify(objs.map((o) => [o.item, o.leaves])))
-const quatOf = (o, p) => page.evaluate(([o, p]) => { const r = window.__testRoom; const s = r.spawned().find((x) => x.objectId === o); const g = s.root.getObjectByName(p); return g ? g.quaternion.toArray() : null }, [o, p])
-const mul = (a, b) => [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
-const inv = (q) => [-q[0], -q[1], -q[2], q[3]]
-const axisAngle = (q) => { const s = Math.hypot(q[0], q[1], q[2]); return { axis: s < 1e-9 ? [0, 0, 0] : [q[0] / s, q[1] / s, q[2] / s], angle: 2 * Math.atan2(s, q[3]) } }
+/** @typedef {[number, number, number, number]} Quat4 */
+/** @returns {Promise<Quat4 | null>} */
+const quatOf = (/** @type {string} */ o, /** @type {string} */ p) => page.evaluate(([o, p]) => { const s = window.__testRoom.spawned().find((x) => x.objectId === o); const g = s?.root.getObjectByName(p); return g ? /** @type {Quat4} */ (g.quaternion.toArray()) : null }, [o, p])
+/** @returns {Quat4} */
+const mul = (/** @type {Quat4} */ a, /** @type {Quat4} */ b) => [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
+/** @returns {Quat4} */
+const inv = (/** @type {Quat4} */ q) => [-q[0], -q[1], -q[2], q[3]]
+const axisAngle = (/** @type {Quat4} */ q) => { const s = Math.hypot(q[0], q[1], q[2]); return { axis: s < 1e-9 ? [0, 0, 0] : [q[0] / s, q[1] / s, q[2] / s], angle: 2 * Math.atan2(s, q[3]) } }
 let worst = 0
 const failures = []
 for (const o of objs) {
@@ -32,10 +37,11 @@ for (const o of objs) {
     const rest = await quatOf(o.id, leaf)
     if (!rest) { console.log('no group', o.item, leaf); continue }
     const fwd = [Math.sin(o.ry), Math.cos(o.ry)]
+    /** @type {[number, number, number]} */
     const eye = [o.at[0] + fwd[0] * 2.2 + fwd[1] * 1.2, 1.9, o.at[2] + fwd[1] * 2.2 - fwd[0] * 1.2]
-    await page.evaluate(([e, t]) => window.__testRoom.look(e, t), [eye, [o.at[0], o.at[1] + 0.7, o.at[2]]])
+    await page.evaluate(([e, t]) => window.__testRoom.look(e, t), /** @type {[[number, number, number], [number, number, number]]} */ ([eye, [o.at[0] ?? 0, (o.at[1] ?? 0) + 0.7, o.at[2] ?? 0]]))
     await page.evaluate(([o, p]) => window.__testRoom.useLeaf(o, p), [o.id, leaf])
-    const box = await page.evaluate((id) => { const s = window.__testRoom.spawned().find((x) => x.objectId === id); const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.x, b.min.z, b.max.x, b.max.z] }, o.id)
+    const box = await page.evaluate((id) => { const s = window.__testRoom.spawned().find((x) => x.objectId === id); if (!s) return [0, 0, 0, 0]; const b = new window.__THREE.Box3().setFromObject(s.root); return [b.min.x, b.min.z, b.max.x, b.max.z] }, o.id)
     const samples = []
     let intoCar = 0
     let shotTaken = false
@@ -43,7 +49,7 @@ for (const o of objs) {
     while (Date.now() - t0 < 60000) {
       const v = await page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [o.id, leaf])
       const q = await quatOf(o.id, leaf)
-      samples.push({ v, d: axisAngle(mul(inv(rest), q)) })
+      samples.push({ v, d: axisAngle(mul(inv(rest), q ?? rest)) })
       if (o.item === 'sedan') {
         // the car's own box at rest, shrunk by its doors and mirrors: the player's feet never get in there
         const [x, , z] = await page.evaluate(() => window.__testRoom.playerPosition)
@@ -54,7 +60,7 @@ for (const o of objs) {
       await page.waitForTimeout(40)
     }
     await page.waitForTimeout(500)
-    const end = axisAngle(mul(inv(rest), await quatOf(o.id, leaf)))
+    const end = axisAngle(mul(inv(rest), (await quatOf(o.id, leaf)) ?? rest))
     if (li === 0) await page.screenshot({ path: join(out, `doors-twist-${o.item}-aberta.png`) })
     let dev = 0
     for (const s of samples) if (s.d.angle > 0.05) dev = Math.max(dev, Math.acos(Math.min(1, Math.abs(s.d.axis[0] * end.axis[0] + s.d.axis[1] * end.axis[1] + s.d.axis[2] * end.axis[2]))))
