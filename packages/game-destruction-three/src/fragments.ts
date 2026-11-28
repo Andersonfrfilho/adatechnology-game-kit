@@ -129,6 +129,8 @@ export interface RigidDebris {
   remove(handle: RigidHandle): void
   /** Gives it this speed on the floor (m/s), as a kick does. */
   push(handle: RigidHandle, velocityX: number, velocityZ: number): void
+  /** Adds this speed (m/s) and this turn (rad/s) to what it has, as a blast does. */
+  shove(handle: RigidHandle, velocity: readonly [number, number, number], spin: readonly [number, number, number]): void
 }
 
 export interface FragmentSystemOptions {
@@ -530,13 +532,19 @@ export class FragmentSystem {
     for (const f of this.list) {
       const d = this.v.copy(f.mesh.position).sub(this.w.set(point[0], point[1], point[2]))
       const dist = d.length()
-      // a rigid one is thrown with the host's loose pieces
-      if (dist > radius || f.dying || f.rigid) continue
+      if (dist > radius || f.dying) continue
       const k = (1 - dist / radius) ** 2 * speed
       d.normalize().multiplyScalar(k)
       d.y += k * 0.4
+      const spin = this.w.set(this.rng() - 0.5, this.rng() - 0.5, this.rng() - 0.5).multiplyScalar(k)
+      if (f.rigid) {
+        // turned by the speed of its end, as a landing turns it (`TUMBLE_REACH`): the same turn that spins a chip would whirl a board
+        spin.multiplyScalar(Math.min(1, TUMBLE_REACH / Math.max(f.half.x, f.half.y, f.half.z)))
+        this.o.rigid?.shove(f.rigid, [d.x, d.y, d.z], [spin.x, spin.y, spin.z])
+        continue
+      }
       f.vel.add(d)
-      f.ang.add(this.w.set(this.rng() - 0.5, this.rng() - 0.5, this.rng() - 0.5).multiplyScalar(k))
+      f.ang.add(spin)
       this.rouse(f)
     }
   }
