@@ -97,3 +97,40 @@ describe('a leak drips from the hole and draws no pool of its size', () => {
     for (const d of pools(vfx)) expect(d.y).toBeCloseTo(1.2, 1)
   })
 })
+
+describe('a round into a car skin (impact_bodywork)', () => {
+  /** Plays one round at the side of a car (normal -x, the round going +x and back), `bore` metres across, and runs a few frames. */
+  const shoot = (bore: number) => {
+    const vfx = world()
+    const handle = vfx.play('impact_bodywork', [2, 0.7, 1], { normal: [-1, 0, 0], values: { bore, paint: 0x8a1c1c, dx: 0.8, dy: -0.2, dz: -0.56 } })
+    expect(handle).not.toBeNull()
+    for (let i = 0; i < 3; i++) vfx.update(1 / 60)
+    const engine = vfx.workshop()
+    const debris = engine.debris.pieces.filter((piece) => piece.on)
+    const decals = engine.decals.decals.filter((decal) => decal.on)
+    return { debris, decals }
+  }
+
+  it('leaves no mark of its own: the hole is the vehicle’s, on the panel that goes with the door', () => {
+    expect(shoot(0.009).decals).toHaveLength(0)
+  })
+
+  it('throws paint flakes and sheet slivers off the hit, out of the panel, as the debris pieces a shot wall throws', () => {
+    const { debris } = shoot(0.009)
+    expect(debris.length).toBeGreaterThan(0)
+    expect(debris.some((piece) => piece.color === 0x8a1c1c)).toBe(true)
+    for (const piece of debris) {
+      // off the side of the car (normal -x): nothing flies into the panel
+      expect(piece.vx).toBeLessThan(0.5)
+      expect(Math.hypot(piece.x - 2, piece.y - 0.7, piece.z - 1)).toBeLessThan(0.5)
+    }
+  })
+
+  it('throws more and bigger pieces the bigger the round (a slug against a 9 mm)', () => {
+    const pistol = shoot(0.009).debris
+    const slug = shoot(0.0185).debris
+    expect(slug.length).toBeGreaterThan(pistol.length)
+    const biggest = (pieces: typeof pistol) => Math.max(...pieces.map((piece) => Math.max(piece.sx, piece.sz)))
+    expect(biggest(slug)).toBeGreaterThan(biggest(pistol))
+  })
+})

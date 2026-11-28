@@ -18,6 +18,8 @@ import type { CreaseWork } from './crease-queue'
 import { subdivideNear } from './subdivide-near'
 import { closeDoorSkin, cutStripOverDoor, isDoorSeam, leaveDeepSkinOnBody } from './door-open'
 import { buildTrunkBay } from './trunk-bay'
+import { holeMarkGeometry, holeMarkMaterial } from './hole-mark'
+import type { BulletHoleShape } from '../hole-shape'
 
 /** A node the visuals move, hide or cut: most are meshes of the body, read as one (a group just has no geometry). */
 type Obj = Mesh<BufferGeometry, MeshStandardMaterial> & SceneNode
@@ -33,8 +35,10 @@ export interface DetachOptions {
   away?: [number, number, number]
 }
 
-/** A hole's mark is wider than the bore: the chipped paint and bare metal around it. */
-const HOLE_DECAL_SCALE = 2.4
+/** A mark lies this far off its panel, metres: enough for the depth buffer at a few metres, too little to read as standing off the panel at a grazing view. */
+const HOLE_LIFT = 0.001
+/** The smallest mark drawn, metres across. */
+const HOLE_MIN_MARK = 0.004
 /** How many holes one instanced batch draws before a new batch starts (a door full of holes still draws as one). */
 const HOLE_BATCH_CAPACITY = 64
 /** From a door's skin to its inner card, metres. */
@@ -73,7 +77,6 @@ const DOOR_SILL = 0.25
 const DOOR_STRIP_OVER = 0.05
 /** A door's cut goes this far past the lower edge of its pane, metres. */
 const DOOR_TOP_OVER_PANE = 0.03
-const HOLE_TEXTURE_SIZE = 64
 /** How far outside a lamp's box a glowing piece still belongs to that lamp, metres. */
 const LAMP_BOX_MARGIN = 0.03
 /** A material glows when its emissive colour is brighter than this (the sum of its channels) at an intensity over zero. */
@@ -147,50 +150,6 @@ const SIDEWALL_SHARE = 0.3
 const MIRROR_GLASS_MIN = 0.05
 /** A mirror shows what is behind it: darker than chrome, or it reads as a white square against the sky. */
 const MIRROR_GLASS_COLOR = '#59636a'
-/** Per material: the ring the round leaves around the bore. */
-const HOLE_RIM: Record<string, string> = { steel: '#b7bcc0', aluminium: '#d3d6d8', plastic: '#d9d6cc', rubber: '#141414', glass: '#eef3f5' }
-const holeMaterials = new WeakMap<object, Map<string, Material>>()
-let holeDisc: BufferGeometry | null = null
-
-function holeDiscGeometry(THREE: Three): BufferGeometry {
-  holeDisc = holeDisc ?? new THREE.CircleGeometry(1, 12)
-  return holeDisc
-}
-/** Dark bore, the bare ring and the jagged edge of the chipped finish, shared by every hole of one material. */
-function holeMaterial(kit: VehicleKit, material: string): Material {
-  const key = kit as unknown as object
-  const cache = holeMaterials.get(key) ?? new Map<string, Material>()
-  holeMaterials.set(key, cache)
-  const known = cache.get(material)
-  if (known) return known
-  const I = (kit as unknown as { _: KitShared })._
-  const THREE: Three = kit.THREE
-  const canvas = (kit as unknown as { document?: Document }).document?.createElement?.('canvas')
-  const x = canvas?.getContext?.('2d')
-  let made: Material = I.MATERIALS.dark
-  if (x) {
-    canvas!.width = canvas!.height = HOLE_TEXTURE_SIZE
-    const mid = HOLE_TEXTURE_SIZE / 2
-    x.fillStyle = HOLE_RIM[material] ?? HOLE_RIM.steel
-    x.beginPath()
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2
-      const r = mid * (i % 2 ? 0.98 : 0.76)
-      x.lineTo(mid + Math.cos(a) * r, mid + Math.sin(a) * r)
-    }
-    x.closePath()
-    x.fill()
-    x.fillStyle = '#050505'
-    x.beginPath()
-    x.arc(mid, mid, mid * 0.42, 0, Math.PI * 2)
-    x.fill()
-    const map = new THREE.CanvasTexture(canvas!)
-    made = new THREE.MeshStandardMaterial({ map, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, roughness: 0.55, metalness: material === 'steel' || material === 'aluminium' ? 0.6 : 0 })
-  }
-  cache.set(material, made)
-  return made
-}
-
 function isGlowing(material: { emissive?: { r: number; g: number; b: number }; emissiveIntensity?: number }): boolean {
   const { emissive, emissiveIntensity } = material
   return !!emissive && (emissiveIntensity ?? 0) > 0 && emissive.r + emissive.g + emissive.b >= GLOW_MIN_EMISSIVE
@@ -1250,32 +1209,26 @@ export class VehicleVisuals implements CreaseWork {
   }
 
   // ---- marks -------------------------------------------------------------------------------------------------------------------------------
-  /** A bullet hole: a dark disc lying on the surface at `point` (`c.vehicle` coordinates). */
-  holeDecal(point: [number, number, number], normal: [number, number, number], diameter: number, part?: PartDef): void {
+  /**
+   * A bullet mark lying on the panel at `point` (`c.vehicle` coordinates), facing out along `normal`: its look and size come from `shape` (`bulletHoleShape`), its
+   * long axis lies along `along` (the round's path) over the panel, and it is a child of the part's carrier so it goes where the panel goes.
+   */
+  holeDecal(point: [number, number, number], normal: [number, number, number], shape: BulletHoleShape, part?: PartDef, along?: [number, number, number]): void {
     const THREE = this.THREE
     // a pane that broke has no surface left to carry the hole
     const pane = part?.role === 'glass' ? this.panesOf(part).find((g) => g.visible) : undefined
     if (part?.role === 'glass' && (!pane || pane.userData.glass?.broken)) return
-    const radius = Math.max(0.006, diameter / 2) * HOLE_DECAL_SCALE
-    const n = new THREE.Vector3(...normal)
+    const across = Math.max(HOLE_MIN_MARK, shape.markDiameter) / 2
+    const n = new THREE.Vector3(...normal).normalize()
     // the mark is on the panel, so it goes where the panel goes (a door that swings, a pane on it)
     const carrier = (part && (this.plates.get(part.id) ?? (part.id === this.hood?.id ? this.c.hood?.piv : undefined))) ?? (pane && pane.parent !== this.c.vehicle ? pane.parent : null)
     const parent = carrier ?? this.c.vehicle
-    const material = holeMaterial(this.kit, part?.material ?? 'steel')
+    const material = holeMarkMaterial(this.kit, part?.material ?? 'steel', shape.style)
     const key = `${parent.uuid}|${material.uuid}`
     let batches = this.holes.get(key)
     let batch = batches?.[batches.length - 1]
     if (!batch || batch.count >= HOLE_BATCH_CAPACITY) {
-      batch = new THREE.InstancedMesh(holeDiscGeometry(THREE), material, HOLE_BATCH_CAPACITY)
-      batch.count = 0
-      batch.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
-      batch.castShadow = false
-      batch.receiveShadow = false
-      batch.userData.decal = true
-      batch.userData.noFollow = true
-      batch.renderOrder = 3
-      batch.raycast = () => {}
-      batch.frustumCulled = false
+      batch = this.holeBatch(material)
       parent.add(batch)
       if (!batches) {
         batches = []
@@ -1283,19 +1236,32 @@ export class VehicleVisuals implements CreaseWork {
       }
       batches.push(batch)
     }
-    // the world pose of the disc (the same a single mesh had: scaled by the bore, its +z along the surface normal, lifted off the panel)
-    const at = this.c.vehicle.localToWorld(new THREE.Vector3(...point).addScaledVector(n, 0.003))
-    const toward = this.c.vehicle.localToWorld(new THREE.Vector3(...point).addScaledVector(n, 1.003))
-    const pose = new THREE.Object3D()
-    pose.position.copy(at)
-    pose.scale.set(radius, radius, 1)
-    pose.lookAt(toward)
-    pose.updateMatrix()
+    // the mark's axes on the panel: x along the round's path over it (a gouge's length), y across it, z out of the panel
+    const u = new THREE.Vector3(...(along ?? [0, 0, 0])).addScaledVector(n, -new THREE.Vector3(...(along ?? [0, 0, 0])).dot(n))
+    if (u.lengthSq() < 1e-8) u.crossVectors(n, Math.abs(n.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0))
+    u.normalize()
+    const w = new THREE.Vector3().crossVectors(n, u)
+    const at = new THREE.Vector3(...point).addScaledVector(n, HOLE_LIFT)
+    const local = new THREE.Matrix4().makeBasis(u.multiplyScalar(across * shape.elongation), w.multiplyScalar(across), n).setPosition(at)
     parent.updateWorldMatrix(true, false)
-    const instance = new THREE.Matrix4().copy(parent.matrixWorld).invert().multiply(pose.matrix)
+    const instance = new THREE.Matrix4().copy(parent.matrixWorld).invert().multiply(this.c.vehicle.matrixWorld).multiply(local)
     batch.setMatrixAt(batch.count, instance)
     batch.count += 1
     batch.instanceMatrix.needsUpdate = true
+  }
+  /** A new batch of marks of one material (a door full of holes still draws as one). */
+  private holeBatch(material: Material): InstancedMesh {
+    const batch = new this.THREE.InstancedMesh(holeMarkGeometry(this.THREE), material, HOLE_BATCH_CAPACITY)
+    batch.count = 0
+    batch.instanceMatrix.setUsage(this.THREE.DynamicDrawUsage)
+    batch.castShadow = false
+    batch.receiveShadow = false
+    batch.userData.decal = true
+    batch.userData.noFollow = true
+    batch.renderOrder = 3
+    batch.raycast = () => {}
+    batch.frustumCulled = false
+    return batch
   }
   /** The door or lid a hinge group stands for. */
   /** The part a separately drawn piece stands for (a mirror on the door, a battery under the hood), so a shot at it lands on that part. */
