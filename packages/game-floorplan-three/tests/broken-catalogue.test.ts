@@ -24,6 +24,22 @@ const rests = (box: Box, others: readonly Box[]): boolean => {
   return others.some((o) => o !== box && o[1] <= box[1] + REST_GAP && o[4] >= box[1] - REST_GAP && o[0] < box[3] && o[3] > box[0] && o[2] < box[5] && o[5] > box[2])
 }
 
+const gapOf = (a: Box, b: Box): number => Math.max(0, a[0] - b[3], b[0] - a[3], a[1] - b[4], b[1] - a[4], a[2] - b[5], b[2] - a[5])
+
+/** Whether every box of an object fixed where it was laid is held: its anchored parts' own boxes, what rests, and what touches a held box, link by link (a tap's spout on its body on the wall plate). */
+const heldByAnchor = (boxes: readonly Box[], anchors: readonly Box[], others: readonly Box[]): boolean => {
+  if (anchors.length === 0) return false
+  const held: Box[] = [...anchors]
+  let left = boxes.filter((b) => !anchors.some((a) => a.every((v, k) => Math.abs(v - b[k]!) < 1e-6)))
+  for (let grew = true; grew && left.length > 0; ) {
+    const now = left.filter((b) => rests(b, others) || held.some((h) => gapOf(b, h) <= REST_GAP))
+    grew = now.length > 0
+    held.push(...now)
+    left = left.filter((b) => !now.includes(b))
+  }
+  return left.length === 0
+}
+
 const inside = (point: readonly number[], boxes: readonly Box[], tolerance: number): boolean =>
   boxes.some((b) => point[0]! > b[0] - tolerance && point[0]! < b[3] + tolerance && point[1]! > b[1] - tolerance && point[1]! < b[4] + tolerance && point[2]! > b[2] - tolerance && point[2]! < b[5] + tolerance)
 
@@ -83,9 +99,9 @@ describe('every piece of furniture of the catalogue, its feet broken', () => {
     const floating = [...drawn].filter(([o, boxes]) => {
       const piece = renderer.piece(o)
       if (piece && !piece.sleeping) return false
-      // what is left of it held by the wall it was laid against (the tap over a laundry tub, the hood over a counter: anchored above the floor) hangs there
-      if (!piece && world.fixedInPlace(o) && world.anchoredParts(o).length > 0 && boxes.every((b) => b[1] > REST_GAP)) return false
       const others = [...drawn].filter(([other]) => other !== o).flatMap(([, b]) => b)
+      // what is left of it held by the wall it was laid against (the tap over a laundry tub, the hood over a counter) hangs there, every box of it the anchor's, resting, or hanging from one that is, link by link: a tub hung from its tap is floating
+      if (!piece && world.fixedInPlace(o)) return !heldByAnchor(boxes, world.anchoredParts(o).flatMap((part) => renderer.shownBoxes(o, part)), others)
       // any of its parts may be what it rests by: a tap lies on the rim of the tub by its spout, its lowest knob over the basin
       return !boxes.some((b) => rests(b, others))
     }).map(([o]) => o)
