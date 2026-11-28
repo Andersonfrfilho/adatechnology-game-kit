@@ -563,6 +563,10 @@ export interface Hit {
   mass?: number
   /** 0..1, how much of the blow is an edge that cuts through (slash 0.85, blunt 0, explosive 1; a bullet carries its own). */
   cut?: number
+  /** A hand-held blow: which way the striking face moves across the surface (world, unit): a cut runs along it, a club's crease lies along it. */
+  sweep?: Vec3
+  /** A hand-held blow: the length of the line the weapon meets the surface along (a bat's barrel), metres; absent: a round face or an edge. */
+  contactLength?: number
   /** A part the caller already resolved, by id (a crowd raycast against capsules); the impl then skips its own part search. */
   part?: string
   /**

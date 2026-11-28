@@ -26,16 +26,24 @@ function markCounts(root: THREE.Object3D): Map<THREE.InstancedMesh, number> {
   return counts
 }
 
-/** The world matrix of the mark a round just added (the last instance of the batch that grew). */
-function newMark(root: THREE.Object3D, before: Map<THREE.InstancedMesh, number>): Mark | undefined {
+/** The world matrix of the entry mark a round just added: of the marks it added (its entry, and through a door its exit and the hole in the card), the one facing out along `normal`. */
+function newMark(root: THREE.Object3D, before: Map<THREE.InstancedMesh, number>, normal: THREE.Vector3): Mark | undefined {
   root.updateMatrixWorld(true)
+  let best: Mark | undefined
+  let facing = -Infinity
   for (const [batch, count] of markCounts(root)) {
-    if (count <= (before.get(batch) ?? 0)) continue
-    const matrix = new THREE.Matrix4()
-    batch.getMatrixAt(count - 1, matrix)
-    return { matrix: matrix.premultiply(batch.matrixWorld) }
+    for (let i = before.get(batch) ?? 0; i < count; i++) {
+      const matrix = new THREE.Matrix4()
+      batch.getMatrixAt(i, matrix)
+      matrix.premultiply(batch.matrixWorld)
+      const dot = new THREE.Vector3().setFromMatrixColumn(matrix, 2).normalize().dot(normal)
+      if (dot > facing) {
+        facing = dot
+        best = { matrix }
+      }
+    }
   }
-  return undefined
+  return best
 }
 
 /** Rounds from a slant (from the front and from above, as the owner shot) at the side panels of one model: what each mark does wrong. */
@@ -63,7 +71,7 @@ function auditModel(key: string): string[] {
     if (!hit || /glass|window|windshield|tyre|wheel|light|mirror/.test(hit.part)) continue
     const before = markCounts(item.root)
     d.hit({ ...SHOT, point: hit.point, part: hit.part, normal: hit.normal, direction: direction.toArray() as [number, number, number] })
-    const mark = newMark(item.root, before)
+    const mark = newMark(item.root, before, new THREE.Vector3(...hit.normal).normalize())
     if (!mark) continue
     const where = `${hit.part} at ${hit.point.map((v) => v.toFixed(2)).join(', ')}`
     const normal = new THREE.Vector3(...hit.normal).normalize()

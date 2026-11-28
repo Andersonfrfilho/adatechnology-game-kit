@@ -19,7 +19,9 @@ import { subdivideNear } from './subdivide-near'
 import { closeDoorSkin, cutStripOverDoor, isDoorSeam, leaveDeepSkinOnBody } from './door-open'
 import { buildTrunkBay } from './trunk-bay'
 import { holeMarkGeometry, holeMarkMaterial } from './hole-mark'
-import type { BulletHoleShape } from '../hole-shape'
+import type { MarkLook } from './hole-mark'
+import { pressDent, sheetMeshesAt, surfaceAlong } from './dent-at'
+import type { DentSpec } from './dent-at'
 
 /** A node the visuals move, hide or cut: most are meshes of the body, read as one (a group just has no geometry). */
 type Obj = Mesh<BufferGeometry, MeshStandardMaterial> & SceneNode
@@ -1213,7 +1215,7 @@ export class VehicleVisuals implements CreaseWork {
    * A bullet mark lying on the panel at `point` (`c.vehicle` coordinates), facing out along `normal`: its look and size come from `shape` (`bulletHoleShape`), its
    * long axis lies along `along` (the round's path) over the panel, and it is a child of the part's carrier so it goes where the panel goes.
    */
-  holeDecal(point: [number, number, number], normal: [number, number, number], shape: BulletHoleShape, part?: PartDef, along?: [number, number, number]): void {
+  holeDecal(point: [number, number, number], normal: [number, number, number], shape: MarkLook, part?: PartDef, along?: [number, number, number]): void {
     const THREE = this.THREE
     // a pane that broke has no surface left to carry the hole
     const pane = part?.role === 'glass' ? this.panesOf(part).find((g) => g.visible) : undefined
@@ -1248,6 +1250,22 @@ export class VehicleVisuals implements CreaseWork {
     batch.setMatrixAt(batch.count, instance)
     batch.count += 1
     batch.instanceMatrix.needsUpdate = true
+  }
+  /** A dent pressed into the sheet at `spec` (world): the sheet's meshes bend there and their normals smooth over the next frames; answers whether any sheet was met. */
+  pressDent(spec: DentSpec): boolean {
+    const changed = pressDent(this.THREE, sheetMeshesAt(this.THREE, this.c.vehicle, spec), spec)
+    for (const mesh of changed) this.smoothLater(mesh as Obj)
+    return changed.length > 0
+  }
+  /** The first drawn surface behind a point on a path (`c.vehicle` coordinates): a door's card behind its skin. */
+  surfaceBehind(point: [number, number, number], dir: [number, number, number], reach: number): { point: [number, number, number]; normal: [number, number, number]; far: [number, number, number] } | null {
+    const V = this.THREE.Vector3
+    const found = surfaceAlong(this.THREE, this.c.vehicle, { origin: this.c.vehicle.localToWorld(new V(...point)), direction: new V(...dir).transformDirection(this.c.vehicle.matrixWorld), reach })
+    if (!found) return null
+    const p = this.c.vehicle.worldToLocal(found.point)
+    const far = this.c.vehicle.worldToLocal(found.far)
+    const n = found.normal.transformDirection(this.c.vehicle.matrixWorld.clone().invert())
+    return { point: [p.x, p.y, p.z], normal: [n.x, n.y, n.z], far: [far.x, far.y, far.z] }
   }
   /** A new batch of marks of one material (a door full of holes still draws as one). */
   private holeBatch(material: Material): InstancedMesh {

@@ -98,6 +98,7 @@ for (const area of areas) steps.push({ label: `open ${area}`, args: [`examples/$
 if (areas.includes('test-room')) {
   // a round into a car: the mark lies on the panel and goes with the door; the chips of a shot pile up and stop at the player
   steps.push({ label: 'bullet holes on the car', args: ['examples/test-room/car-holes-test.mjs'], needs: 'build test-room' })
+  steps.push({ label: 'blows on the car', args: ['examples/test-room/car-blows-test.mjs'], needs: 'build test-room' })
   steps.push({ label: 'shot chips pile and stop at the player', args: ['examples/test-room/debris-pile-test.mjs'], needs: 'build test-room' })
 }
 if (chosen.has('scene')) steps.push({ label: 'where every drawn piece comes from', args: ['tools/kit-audit/scene.mjs', '--check'] })

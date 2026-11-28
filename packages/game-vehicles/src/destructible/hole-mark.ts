@@ -7,6 +7,18 @@ import type { BufferGeometry, Material } from '../three-types'
 import type { KitShared, Three } from '../types'
 import type { VehicleKit } from '../api'
 import type { HoleStyle } from '../hole-shape'
+import { drawExtraMark, EXTRA_MARK_STYLES } from './mark-textures'
+import type { ExtraMarkStyle } from './mark-textures'
+
+/** Every mark a vehicle's skin takes: a round's entry (`HoleStyle`) or one of the others (a blade's, a dent's paint, a round's exit). */
+export type MarkStyle = HoleStyle | ExtraMarkStyle
+
+/** What `holeDecal` draws: the style, the size across (metres) and the stretch along the swing or the round's path. */
+export interface MarkLook {
+  readonly style: MarkStyle
+  readonly markDiameter: number
+  readonly elongation: number
+}
 
 const TEXTURE_SIZE = 128
 /** Rings and spokes of the shared disc: enough vertices for the bowl of normals to read smooth. */
@@ -189,7 +201,7 @@ function drawMark(x: CanvasRenderingContext2D, material: string, style: HoleStyl
 }
 
 /** The material of every mark of one panel material and one style (shared, never disposed with a vehicle: the kit owns it). */
-export function holeMarkMaterial(kit: VehicleKit, material: string, style: HoleStyle): Material {
+export function holeMarkMaterial(kit: VehicleKit, material: string, style: MarkStyle): Material {
   const key = kit as unknown as object
   const cache = materials.get(key) ?? new Map<string, Material>()
   materials.set(key, cache)
@@ -203,7 +215,8 @@ export function holeMarkMaterial(kit: VehicleKit, material: string, style: HoleS
   let made: Material = shared.MATERIALS.dark
   if (canvas && context) {
     canvas.width = canvas.height = TEXTURE_SIZE
-    drawMark(context, material, style)
+    if (EXTRA_MARK_STYLES.has(style)) drawExtraMark(context, TEXTURE_SIZE, style as ExtraMarkStyle)
+    else drawMark(context, material, style as HoleStyle)
     const map = new THREE.CanvasTexture(canvas)
     const metal = material === 'steel' || material === 'aluminium'
     // a constant pull towards the eye (units) keeps the mark in front of its own panel; a slope-scaled one (factor) would pull it through the panel before it at a grazing view
