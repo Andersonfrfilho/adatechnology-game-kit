@@ -191,6 +191,12 @@ const SWEEP_MIN_SPEED = 1
 const WALL_RESTITUTION = 0.25
 const WALL_GLIDE = 0.7
 
+/** The reach (m) of the debris the tumble of a landing was set for (a chip, a shard): a longer piece is turned less, so its end moves as fast as theirs. */
+const TUMBLE_REACH = 0.1
+
+/** A piece being laid flat is laid once its end is this close (m) to where it lies. */
+const LAID_GAP = 0.005
+
 /** A fragment stays on a face other than its flattest only when that face is at least this fraction of its height across (it would tip past atan(0.6), 31°). */
 const STAND_RATIO = 0.6
 /** Seconds a fragment stays slow on what is under it before it sleeps. */
@@ -722,6 +728,8 @@ export class FragmentSystem {
     // lying on the pile with its centre past the edge of what holds it: it slides and turns off that edge
     const tip = pile > floor ? this.offEdge : null
     let contact = false
+    // still being laid flat (`settle` turns it without a spin): it is not at rest yet, however slow
+    let turning = false
     if (mesh.position.y - ext < gy) {
       contact = true
       mesh.position.y = gy + ext
@@ -730,9 +738,10 @@ export class FragmentSystem {
         f.vel.x *= 0.7
         f.vel.z *= 0.7
         f.ang.multiplyScalar(0.55)
-        // a hit on a corner makes it tumble a little
-        f.ang.x += (this.rng() - 0.5) * 2
-        f.ang.z += (this.rng() - 0.5) * 2
+        // a hit on a corner makes it tumble a little: by the speed of its end, so a board metres long is not turned as fast as a chip
+        const tumble = Math.min(1, TUMBLE_REACH / Math.max(h.x, h.y, h.z))
+        f.ang.x += (this.rng() - 0.5) * 2 * tumble
+        f.ang.z += (this.rng() - 0.5) * 2 * tumble
       } else {
         f.vel.y = 0
         // Coulomb friction on the floor: the sliding speed falls by mu g each second, so a piece leaving at v slides v^2 / (2 mu g), as a body of the piece system
@@ -752,9 +761,14 @@ export class FragmentSystem {
       f.vel.z += tip.z * TIP_SPEED * dt * 10
       f.ang.x += tip.z * TIP_TURN * dt * 10
       f.ang.z -= tip.x * TIP_TURN * dt * 10
-    } else if (contact && f.vel.lengthSq() < 4) this.settle(f, dt)
+    } else if (contact && f.vel.lengthSq() < 4) {
+      turning = this.settle(f, dt)
+      // turned flatter, it reaches less far down: it stays on what holds it (a board metres long was left centimetres up by each turn, fell, bounced and stood up again)
+      this.m.makeRotationFromQuaternion(mesh.quaternion)
+      mesh.position.y = gy + (Math.abs(e[1]) * h.x + Math.abs(e[5]) * h.y + Math.abs(e[9]) * h.z) * sc
+    }
     f.contact = contact
-    if (contact && isSlow(f)) {
+    if (contact && !turning && isSlow(f)) {
       f.still += dt
       if (f.still > SETTLE_SECONDS) this.sleep(f)
     } else {
@@ -848,8 +862,8 @@ export class FragmentSystem {
     f.ang.z += (this.rng() - 0.5) * SHEET_SWAY * 4 * dt
   }
 
-  /** Tip the fragment towards lying on its flattest face. */
-  private settle(f: Live, dt: number): void {
+  /** Tip the fragment towards lying on its flattest face. True while its end is still more than `LAID_GAP` from lying. */
+  private settle(f: Live, dt: number): boolean {
     const mesh = f.mesh
     this.m.makeRotationFromQuaternion(mesh.quaternion)
     const e = this.m.elements
@@ -871,6 +885,8 @@ export class FragmentSystem {
     this.dq.setFromUnitVectors(this.v, this.w)
     this.q.copy(this.dq).multiply(mesh.quaternion)
     mesh.quaternion.slerp(this.q, clamp(dt * 7, 0, 1))
+    // how far its end still is from lying: the lean left, over its longest half
+    return Math.sqrt(Math.max(0, 1 - this.v.y * this.v.y)) * Math.max(half[0], half[1], half[2]) > LAID_GAP
   }
 
   /** Remove the fragments of one object (after `restore`). */

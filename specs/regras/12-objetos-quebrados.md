@@ -34,3 +34,8 @@ Decidido pelo dono em 2026-11-04, depois de latinhas paradas no ar sobre uma mes
   rápido de toda peça que estava parada: nos passos logo depois da quebra ele não ganha mais de 4,5 m/s. Roda em três tamanhos (o do catálogo, três vezes
   mais comprido e três vezes mais fundo), porque o defeito cresce com a proporção da peça: a mesa de 4,4 m da sala girava a 19,5 rad/s e a do catálogo,
   de 2 m, mal passava do limite. Peça nova entra no catálogo e passa por esse teste nos três tamanhos.
+- **Destroço de qualquer comprimento deita e fica.** O pedaço que sobra de uma quebra (lasca, toco, meia tábua, tábua inteira) cai, deita no chão ou em cima de
+  outro e para: não fica em pé na ponta, não sobe e não continua se mexendo. O teste `game-destruction-three/tests/long-debris-settles.test.ts` (CI) solta
+  pedaços de 10 cm a 4,2 m, em três seções (tábua, ripa, viga), deitados e inclinados até 80°, com giro, uns por cima dos outros: 4 s depois nenhum tem o meio a
+  mais de 20 cm do chão e 6 s depois nenhum se mexe. Regra de física nova no sistema de estilhaços é escrita pela velocidade da ponta (m/s), nunca em rad/s
+  fixo: o que serve para uma lasca de 5 cm joga uma tábua de 4 m para cima.
