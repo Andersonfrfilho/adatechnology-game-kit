@@ -1,7 +1,8 @@
 /**
  * A hand-held blow on a vehicle's skin leaves its mark where it landed: a dent pressed into the sheet (a fist, a boot, a hammer), a crease along a club's barrel,
  * the paint crazed over a hard dent, and a blade's scratch, cut or gash along its swing. The size comes from the blow (`strikeMarkShape`); a heavy blow (a crash, a
- * blast) is the kit's own impact and leaves none of these.
+ * blast) is the kit's own impact and leaves none of these, and so does any blow the host does not mark as struck by hand (`Hit.handHeld`): a crash's
+ * contacts crumple the body by their own rules.
  */
 import type { Hit, SurfaceRay, SurfaceRayHit } from '@adatechnology/game-contracts'
 import type { Vector3 } from '../three-types'
@@ -56,7 +57,7 @@ function marksOf(shape: StrikeMarkShape): MarkLook | null {
 export function createStrikeMarker(deps: StrikeMarkDeps): (hit: Hit) => void {
   return (hit) => {
     const visuals = deps.visuals()
-    if (!visuals || (hit.type !== 'blunt' && hit.type !== 'slash') || (hit.energy ?? 0) >= HAND_BLOW_LIMIT || !hit.direction) return
+    if (!visuals || !hit.handHeld || (hit.type !== 'blunt' && hit.type !== 'slash') || (hit.energy ?? 0) >= HAND_BLOW_LIMIT || !hit.direction) return
     const dir = deps.vector(...hit.direction).normalize()
     const start = deps.vector(...hit.point).addScaledVector(dir, -LOOK_BACK)
     const surface = deps.surfaceRay({ origin: [start.x, start.y, start.z], direction: [dir.x, dir.y, dir.z], maxDistance: LOOK_BACK * 2.5 })
