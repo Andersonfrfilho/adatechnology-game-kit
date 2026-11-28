@@ -21,6 +21,7 @@ import type { BlastShoveOptions } from '@adatechnology/game-contracts'
 import type { FragmentLifeRule } from './fragments'
 import type { SettledBatchOptions, SettledBatchStats } from './settled-batches'
 import type { JitWarmUpOptions } from './jit-warmup'
+import type { KitEnergyOver, KitRuleTally } from './kit-energy'
 
 export type ThreeNamespace = typeof THREE_NS
 export type Object3D = THREE_NS.Object3D
@@ -226,6 +227,11 @@ export interface RendererOptions {
    */
   onBrokenChecked?: (objectId: string, released: boolean) => void
   /**
+   * A rule of the kit that moves a piece by itself (starting the fall of what lost a leg or its ground, the push over an edge: `KIT_RULE`) gave a piece more kinetic energy since it
+   * was last at rest than the piece's own fall would release: energy the kit made, which is a bug of that rule. Nothing is cut; the host logs it. `DestructionRenderer.kitEnergy` counts them.
+   */
+  onKitEnergy?: (over: KitEnergyOver) => void
+  /**
    * Called when a sound should play; the host maps keys to audio (e.g. `impact_metal`, `shatter_glass`, `ignite`, `explode`). `burn_loop` is sent when a part starts to burn and `burn_end` when it burns out or is put out.
    * An impact or a break also sends `detail.keys`, the keys to try before `key`, most specific first (`impact_concrete_ballistic`, `impact_concrete`, `impact_masonry_ballistic`, `impact_masonry`).
    * An explosion sends its named effect, radius and confinement; `primed` sends the seconds of its leak.
@@ -395,6 +401,8 @@ export interface DestructionRenderer {
   setHostSolids(id: string, source: (() => readonly HostSolid[]) | null): void
   /** Push a piece (throws, blasts). */
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void
+  /** What each rule of the kit that moves a piece by itself (`KIT_RULE`) gave the pieces it pushed, against their own fall (see `onKitEnergy`). */
+  kitEnergy(): KitRuleTally[]
   /** Integrate fragments, pieces and particles; apply pending visual changes. Call once per frame after `world.update`. */
   update(dt: number): void
   /** With `interpolate`: the awake pieces and fragments drawn `alpha` (0 to 1) of the way from the pose before the last step to the step's. Call in the present phase; 1 draws the step's pose. */
