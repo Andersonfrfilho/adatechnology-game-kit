@@ -17,6 +17,11 @@ Decidido pelo dono em 2026-11-04, depois de latinhas paradas no ar sobre uma mes
 - **Nenhum colisor sem geometria.** A colisão de um objeto quebrado é medida de novo a partir do que ainda está desenhado
   (`DestructionRenderer.shownBoxes`, por parte). A sala de teste mede o jogador contra essas caixas, nunca contra a caixa do objeto inteiro
   nem contra a pegada antiga. Cada destroço é uma peça com a própria caixa, que acompanha o corpo.
+- **Nenhuma caixa guarda ar.** Uma peça desenhada em volta do ar (casinha, armário, banco de pernas) nunca colide como a caixa em volta de tudo: a lasca
+  que nasce dentro de um sólido não para nunca, e o que cai em cima fica apoiado no nada. A peça feita pelo mesh api colide pelos **sólidos que o
+  construtor desenhou** (`userData.solids`, spec 019), fixa e solta, sem ler vértice. Construtor novo entrega os sólidos; quem ainda adivinha pela malha
+  (casa, veículo, catálogo antigo de móveis) é dívida contada no `hollow-catalogue.test.ts`, que só diminui. Guardas: `solids-catalogue.test.ts` (CI, todo o
+  catálogo), `hollow-catalogue.test.ts` (CI) e `examples/test-room/hollow-test.mjs` (sala, fora do CI por §9, lista de dívida vazia).
 - **Invariante em tempo de execução.** Depois de cada quebra, o renderer confere o objeto no update seguinte (`onBrokenChecked`). Se achar o que
   sobrou dele sem apoio, solta na hora. A sala registra a falha no log (`check`/`fail`, `invariant: broken_floating`): é bug de quem deveria ter
   soltado antes.

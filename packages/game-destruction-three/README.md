@@ -98,6 +98,14 @@ material, into a new mesh that becomes the loose piece, and the range is collaps
 melted or burnt-out part vanishes the same way. `restore` and `clear` put the merged mesh's original geometry and material back and remove the
 loose meshes. An invalid range (outside the geometry or empty) throws from `bind`.
 
+### A mesh that says what it was built from (`userData.solids`)
+
+A mesh of its own (not a range of a merged one) may list the solids it was built from in `userData.solids`: `{ center, half, rotation }` each, in the mesh's
+space (`ShapeSolid` of `@adatechnology/game-shapes`; the mesh api of `@adatechnology/game-interactables-three` writes it). The renderer then holds the mesh by
+that list, fixed (one box of the engine per solid) and let go (the boxes of the piece), and reads no vertex back: a kennel is its boards with its doorway open,
+a stool is its four legs and its seat with the floor free under it. The list is read as data: one entry that is not a solid and the mesh is measured from what
+is drawn, as a mesh with no list is (a house, a vehicle). CLAUDE.md §12 and spec 019.
+
 ## What each event draws
 
 | Event | Visual | Sound key |
