@@ -23,10 +23,10 @@
   ]
  },
  "props3d/chandelier:high": {
-  "hash": "4cc07854",
+  "hash": "d174e6c",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 2436dace",
+   "0/0 Mesh 77aada96",
    "0/1 Mesh 15e8e17d",
    "0/2 Mesh fc8da495"
   ]
@@ -133,50 +133,50 @@
   ]
  },
  "props3d/sofa_l:high": {
-  "hash": "2ed12f2",
+  "hash": "26301041",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 24a4f9f8",
-   "0/1 Mesh 353b8e1d"
+   "0/1 Mesh 2ce3d0f6"
   ]
  },
  "props3d/double_bed_modern:high": {
-  "hash": "5699d295",
+  "hash": "efe2f7ac",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 35c4b981",
+   "0/0 Mesh bdcda536",
    "0/1 Mesh 2050ab33",
    "0/2 Mesh ccb327d1"
   ]
  },
  "props3d/home_office:high": {
-  "hash": "440c2933",
+  "hash": "1f6df87",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh ac6ac31b",
-   "0/1 Mesh 8d575a29",
-   "0/2 Mesh 500749b0",
+   "0/1 Mesh 30c6db47",
+   "0/2 Mesh 91cdd6",
    "0/3 Mesh 97ea6756"
   ]
  },
  "props3d/closet:high": {
-  "hash": "c25a9e2f",
+  "hash": "60ba5407",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh c729caa6",
+   "0/0 Mesh 52ee41b2",
    "0/1 Mesh 17689a6d",
    "0/2 Mesh 46c00446",
    "0/3 Mesh 99cecd49"
   ]
  },
  "props3d/vanity:high": {
-  "hash": "c71a467e",
+  "hash": "b783107f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 6b542858",
-   "0/1 Mesh c4ced5a4",
+   "0/0 Mesh d30431a8",
+   "0/1 Mesh a0a65d6f",
    "0/2 Mesh 93488ded",
-   "0/3 Mesh 4f3d1bac"
+   "0/3 Mesh ed33ace8"
   ]
  },
  "props3d/ac_condenser:high": {
@@ -223,19 +223,19 @@
   ]
  },
  "props3d/gourmet_counter:high": {
-  "hash": "1863afd1",
+  "hash": "85b8d67f",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ef0473bd",
-   "0/1 Mesh e8161d89",
-   "0/2 Mesh e61e23d7"
+   "0/0 Mesh a8e48f66",
+   "0/1 Mesh 3ee1b367",
+   "0/2 Mesh 99695152"
   ]
  },
  "props3d/sauna:high": {
-  "hash": "1380b523",
+  "hash": "717125df",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 6b6fbccf",
+   "0/0 Mesh b78909ef",
    "0/1 Mesh 8ef88a52",
    "0/2 Mesh ed75090b",
    "0/3 Mesh 9c3981bf",
@@ -253,30 +253,30 @@
   ]
  },
  "props3d/pool:high": {
-  "hash": "5be2833",
+  "hash": "4b286397",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh cf516c4f",
+   "0/0 Mesh 1d9e9239",
    "0/1 Mesh 60c10eb4",
    "0/2 Mesh 6fefbf22",
-   "0/3 Mesh c44763bd"
+   "0/3 Mesh c65cdb27"
   ]
  },
  "props3d/deck:high": {
-  "hash": "2ed89344",
+  "hash": "a1d9e7",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 3aafebad",
+   "0/0 Mesh 51d48494",
    "0/1 Mesh dfdc2706"
   ]
  },
  "props3d/sun_lounger:high": {
-  "hash": "27f36519",
+  "hash": "81c35e03",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 9ddd93d7",
+   "0/0 Mesh 2e7b7105",
    "0/1 Mesh e70137c3",
-   "0/2 Mesh 1a034b47"
+   "0/2 Mesh a684c0f7"
   ]
  },
  "props3d/garden_bed:high": {
@@ -314,36 +314,36 @@
   ]
  },
  "props3d/slide:high": {
-  "hash": "484a479c",
+  "hash": "89acf8c2",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh f2bf2986",
-   "0/1 Mesh f85cab59"
+   "0/1 Mesh d09f03f7"
   ]
  },
  "props3d/swing:high": {
-  "hash": "a7f6c41c",
+  "hash": "185ae4b9",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 400e8f93",
+   "0/0 Mesh 8ab6f778",
    "0/1 Mesh 6204c870"
   ]
  },
  "props3d/bbq_simple:high": {
-  "hash": "b9e992b6",
+  "hash": "44de9d44",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 9b2f34c3",
-   "0/1 Mesh c16be423",
+   "0/0 Mesh 28857f39",
+   "0/1 Mesh 4a80e08f",
    "0/2 Mesh 8b850a28"
   ]
  },
  "props3d/garage_car:high": {
-  "hash": "38c7d6e",
+  "hash": "c28dc918",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh b43cc14",
-   "0/1 Mesh 8325400a",
+   "0/1 Mesh fb0a7ec2",
    "0/2 Mesh 136afab4"
   ]
  },
@@ -356,10 +356,10 @@
   ]
  },
  "props3d/barricade:high": {
-  "hash": "e30e570a",
+  "hash": "e62c37a8",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5e0794c6",
+   "0/0 Mesh bf1a8764",
    "0/1 Mesh 19d0dbd8",
    "0/2 Mesh 52739cb6",
    "0/3 Mesh 28ef3731"
@@ -396,11 +396,11 @@
   ]
  },
  "props3d/canned_food:high": {
-  "hash": "9f0c1824",
+  "hash": "def41723",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f1f04888",
-   "0/1 Mesh 1460ee67"
+   "0/0 Mesh 13f9c7a4",
+   "0/1 Mesh d058e3d4"
   ]
  },
  "props3d/water_jug:high": {
@@ -411,10 +411,10 @@
   ]
  },
  "props3d/floor_mattress:high": {
-  "hash": "9f13d750",
+  "hash": "28a3d96a",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ad35d452"
+   "0/0 Mesh 23a6c458"
   ]
  },
  "props3d/lantern:high": {
@@ -427,29 +427,29 @@
   ]
  },
  "props3d/candles:high": {
-  "hash": "5ff7ab92",
+  "hash": "fa77ca84",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh abd8f657",
+   "0/0 Mesh f1843a01",
    "0/1 Mesh b6c21149",
    "0/2 PointLight c3e5ab3e"
   ]
  },
  "props3d/open_suitcases:high": {
-  "hash": "7a498954",
+  "hash": "f5d2db2f",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 44e7c17e",
-   "0/1 Mesh 21dec870",
+   "0/1 Mesh 6c7f7ae1",
    "0/2 Mesh c081b47a"
   ]
  },
  "props3d/clothes_on_floor:high": {
-  "hash": "d8a6749b",
+  "hash": "ae7cf08c",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a6d83721",
-   "0/1 Mesh eefb9f41"
+   "0/0 Mesh 20aa45f3",
+   "0/1 Mesh b355cfe0"
   ]
  },
  "props3d/fallen_chair:high": {
@@ -460,17 +460,17 @@
   ]
  },
  "props3d/blood_stains:high": {
-  "hash": "bba96032",
+  "hash": "8931aeaf",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh fab6d2fc"
+   "0/0 Mesh 73497c09"
   ]
  },
  "props3d/open_door:high": {
-  "hash": "8d18c60d",
+  "hash": "1328b94",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 33d5a9b0",
+   "0/0 Mesh bf07a28d",
    "0/1 Mesh 15540d3e"
   ]
  },
@@ -556,13 +556,13 @@
   ]
  },
  "household/wardrobe:high": {
-  "hash": "1bd1e5f",
+  "hash": "b85f77bc",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 5357850d",
    "0/1 Mesh 10e29b86",
-   "0/2 Mesh 776ffed8",
-   "0/3 Mesh 1888ff6b",
+   "0/2 Mesh b67f8664",
+   "0/3 Mesh f8e3d73a",
    "0/4 Group 363d4486",
    "0/4/0 Mesh 56481829",
    "0/4/1 Mesh ae751d6",
@@ -759,12 +759,12 @@
   ]
  },
  "household/service_entrance:high": {
-  "hash": "66f6a0ee",
+  "hash": "fbcf38c8",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a4518d7a",
-   "0/1 Mesh c0cf6f2a",
-   "0/2 Mesh 204f07ea",
+   "0/0 Mesh 7a06c740",
+   "0/1 Mesh 26e63a64",
+   "0/2 Mesh 144edaa6",
    "0/3 Group 2f4ffa5",
    "0/3/0 Mesh cd1d42d0",
    "0/3/1 Mesh 6d98f14e"
@@ -1027,60 +1027,60 @@
   ]
  },
  "household/bbq:high": {
-  "hash": "a79c781d",
+  "hash": "f6085920",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a3ef8264",
-   "0/1 Mesh 662f2124",
+   "0/0 Mesh fb8babb2",
+   "0/1 Mesh c1c0b569",
    "0/2 Group 6ad3c0fd",
    "0/2/0 Mesh 60b529fd",
    "0/2/1 Mesh a9564edb"
   ]
  },
  "household/clothesline:high": {
-  "hash": "f9d83ba2",
+  "hash": "f31efd30",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh aaa1dc5d",
    "0/1 Group bd96cf9e",
-   "0/1/0 Mesh 10056127",
-   "0/1/1 Mesh 1e0692ca",
+   "0/1/0 Mesh bfd2a8a4",
+   "0/1/1 Mesh c03819c",
    "0/2 Group 35c2faba",
-   "0/2/0 Mesh 3c99382e",
-   "0/2/1 Mesh b817cdfa",
+   "0/2/0 Mesh ade8a8e9",
+   "0/2/1 Mesh d342fa2c",
    "0/3 Group 188a2efa",
-   "0/3/0 Mesh 3e3eff19",
-   "0/3/1 Mesh efa8c84",
-   "0/4 Group c4cfb9ee",
-   "0/4/0 Mesh ea6c941e",
-   "0/4/1 Mesh 9d7297c7",
-   "0/5 Group 39da2e52",
-   "0/5/0 Mesh eee871ff",
-   "0/5/1 Mesh 7ab28d4f",
+   "0/3/0 Mesh 146a2620",
+   "0/3/1 Mesh 27239eaf",
+   "0/4 Group a04101c",
+   "0/4/0 Mesh e7e30e6a",
+   "0/4/1 Mesh 438b66f2",
+   "0/5 Group c0a50e5e",
+   "0/5/0 Mesh ddf54adc",
+   "0/5/1 Mesh 40aba26a",
    "0/6 Group 6725891a",
-   "0/6/0 Mesh 41077b3e",
-   "0/6/1 Mesh db4b2f86",
+   "0/6/0 Mesh 787ea891",
+   "0/6/1 Mesh bb32b1c4",
    "0/7 Group 9aba359e",
-   "0/7/0 Mesh fe542b8a",
-   "0/7/1 Mesh 820dc3f9",
-   "0/8 Group 1c803ce2",
-   "0/8/0 Mesh b0285b5",
-   "0/8/1 Mesh 826bbf76",
-   "0/9 Group d2ab8984",
-   "0/9/0 Mesh 7266079a",
-   "0/9/1 Mesh 35ee6e02",
+   "0/7/0 Mesh 3c4bfb65",
+   "0/7/1 Mesh a21dc769",
+   "0/8 Group abb45a2a",
+   "0/8/0 Mesh bf5597fa",
+   "0/8/1 Mesh 64f990d7",
+   "0/9 Group e6d3d178",
+   "0/9/0 Mesh 9b29b20b",
+   "0/9/1 Mesh deab6ebb",
    "0/10 Group 228ef5ce",
-   "0/10/0 Mesh d9130826",
-   "0/10/1 Mesh f5619b2e",
-   "0/11 Group 87c5c86",
-   "0/11/0 Mesh cdc39f3",
-   "0/11/1 Mesh 14238355",
-   "0/12 Group 5224c75a",
-   "0/12/0 Mesh 9f58f516",
-   "0/12/1 Mesh cec4dd7",
-   "0/13 Group c49a9598",
-   "0/13/0 Mesh c36b648a",
-   "0/13/1 Mesh dce018ca"
+   "0/10/0 Mesh 301c6645",
+   "0/10/1 Mesh d120c530",
+   "0/11 Group ff1990cc",
+   "0/11/0 Mesh 3362b20",
+   "0/11/1 Mesh 25bdd654",
+   "0/12 Group c934c7e0",
+   "0/12/0 Mesh 88e846f3",
+   "0/12/1 Mesh 28ae9d87",
+   "0/13 Group ba43cbf0",
+   "0/13/0 Mesh 7557f836",
+   "0/13/1 Mesh 6ead72f7"
   ]
  },
  "household/bunk_bed:high": {
@@ -1092,13 +1092,13 @@
   ]
  },
  "household/wood_stove:high": {
-  "hash": "b2c7e1d8",
+  "hash": "542dec66",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 14d3ca34",
-   "0/1 Mesh 7c5a0bbc",
+   "0/0 Mesh a241b269",
+   "0/1 Mesh 14961fe3",
    "0/2 Group f78766bf",
-   "0/2/0 Mesh 94a1f82e",
+   "0/2/0 Mesh d9699104",
    "0/2/1 Mesh 49fcc987"
   ]
  },
@@ -1112,28 +1112,28 @@
   ]
  },
  "household/outhouse:high": {
-  "hash": "5a8ab22c",
+  "hash": "9fa3af48",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ed883e83",
+   "0/0 Mesh aa65c245",
    "0/1 Mesh 4797ef05",
    "0/2 Mesh 6c068227",
    "0/3 Group e71a1bfa",
    "0/3/0 Mesh 705573db",
    "0/4 Group 496adb41",
-   "0/4/0 Mesh 7df9d763",
+   "0/4/0 Mesh cac59445",
    "0/4/1 Mesh 44bc11e9"
   ]
  },
  "household/well:high": {
-  "hash": "d802f499",
+  "hash": "e7934ff",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 953e9231",
+   "0/0 Mesh 851b776f",
    "0/1 Mesh 18de0502",
-   "0/2 Mesh 7a40ba19",
+   "0/2 Mesh 8427e262",
    "0/3 Group be49746",
-   "0/3/0 Mesh a23d5315",
+   "0/3/0 Mesh 8e03d9b2",
    "0/4 Group a11a5ae4",
    "0/4/0 Mesh 40ec9b98",
    "0/4/1 Mesh 6af78414",
@@ -1152,10 +1152,10 @@
   ]
  },
  "household/campfire:high": {
-  "hash": "bbdeac84",
+  "hash": "4b030dac",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 4a7a3cfb",
+   "0/0 Mesh 8fc53273",
    "0/1 Mesh bd5fc41c"
   ]
  },
@@ -1169,10 +1169,10 @@
   ]
  },
  "household/gas_canister:high": {
-  "hash": "b47a6b10",
+  "hash": "e59b72b6",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh c17f2dbf",
+   "0/0 Mesh d9e1d9f1",
    "0/1 Group 7c03906e",
    "0/1/0 Mesh 7076663b"
   ]
@@ -1228,10 +1228,10 @@
   ]
  },
  "props3d/chandelier:game": {
-  "hash": "4b15293b",
+  "hash": "318dfc52",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 9ba23753",
+   "0/0 Mesh bc2585e8",
    "0/1 Mesh 2b4ea337"
   ]
  },
@@ -1326,38 +1326,38 @@
   ]
  },
  "props3d/sofa_l:game": {
-  "hash": "cca2f0df",
+  "hash": "88bd5389",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 886ee2e9"
+   "0/0 Mesh 7a48dfd3"
   ]
  },
  "props3d/double_bed_modern:game": {
-  "hash": "e0691342",
+  "hash": "4be80aaa",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 28c543b8"
+   "0/0 Mesh 59edd02c"
   ]
  },
  "props3d/home_office:game": {
-  "hash": "c98f6b35",
+  "hash": "373c2958",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ee75af43"
+   "0/0 Mesh 114134d2"
   ]
  },
  "props3d/closet:game": {
-  "hash": "ecf635c4",
+  "hash": "25c2bd75",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 126dcb92"
+   "0/0 Mesh 53ad5a3b"
   ]
  },
  "props3d/vanity:game": {
-  "hash": "b13e6527",
+  "hash": "60abe30",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh e6a49c3d",
+   "0/0 Mesh 802a8d3a",
    "0/1 Mesh c6ba881"
   ]
  },
@@ -1404,17 +1404,17 @@
   ]
  },
  "props3d/gourmet_counter:game": {
-  "hash": "a7d8bbac",
+  "hash": "2fd18b63",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 25278b4a"
+   "0/0 Mesh f1f07055"
   ]
  },
  "props3d/sauna:game": {
-  "hash": "5205bb2a",
+  "hash": "615e048",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 21711492",
+   "0/0 Mesh 90ed1304",
    "0/1 Mesh e7925492",
    "0/2 Mesh 46485566"
   ]
@@ -1428,27 +1428,27 @@
   ]
  },
  "props3d/pool:game": {
-  "hash": "cbc292e9",
+  "hash": "9e39f0fd",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 4e4ef1c7",
+   "0/0 Mesh 5ab667df",
    "0/1 Mesh baafc792",
    "0/2 Mesh 4fe88238"
   ]
  },
  "props3d/deck:game": {
-  "hash": "7687d244",
+  "hash": "64dcdf6b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh cdab6b03",
+   "0/0 Mesh bbdd3bd0",
    "0/1 Mesh 69dcb43c"
   ]
  },
  "props3d/sun_lounger:game": {
-  "hash": "ce5f81ec",
+  "hash": "638ef12",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh e3431446"
+   "0/0 Mesh 26f0d9f8"
   ]
  },
  "props3d/garden_bed:game": {
@@ -1484,32 +1484,32 @@
   ]
  },
  "props3d/slide:game": {
-  "hash": "8face9b2",
+  "hash": "a9267251",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 1de2b68"
+   "0/0 Mesh d2e26e73"
   ]
  },
  "props3d/swing:game": {
-  "hash": "1f7614d5",
+  "hash": "c08a902c",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f463197f"
+   "0/0 Mesh 4444499a"
   ]
  },
  "props3d/bbq_simple:game": {
-  "hash": "c2d5e528",
+  "hash": "938df01",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh fb1eb5a2"
+   "0/0 Mesh 268c661b"
   ]
  },
  "props3d/garage_car:game": {
-  "hash": "5e1a1845",
+  "hash": "8eaaa4bf",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 17a9ff5c",
-   "0/1 Mesh ec7c00aa"
+   "0/1 Mesh d51f1ec2"
   ]
  },
  "props3d/window_boards:game": {
@@ -1520,10 +1520,10 @@
   ]
  },
  "props3d/barricade:game": {
-  "hash": "79c0e6a4",
+  "hash": "9dbea4b",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f88962fe"
+   "0/0 Mesh 14b4da29"
   ]
  },
  "props3d/sandbags:game": {
@@ -1555,10 +1555,10 @@
   ]
  },
  "props3d/canned_food:game": {
-  "hash": "937bb9e8",
+  "hash": "3e4f33fe",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh bd5b893a"
+   "0/0 Mesh 9bc63778"
   ]
  },
  "props3d/water_jug:game": {
@@ -1569,10 +1569,10 @@
   ]
  },
  "props3d/floor_mattress:game": {
-  "hash": "d19f76d0",
+  "hash": "d826839e",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh fdb6616a"
+   "0/0 Mesh c1d2f994"
   ]
  },
  "props3d/lantern:game": {
@@ -1585,26 +1585,26 @@
   ]
  },
  "props3d/candles:game": {
-  "hash": "f00aa7e4",
+  "hash": "7bc6c492",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 6780b0c9",
+   "0/0 Mesh 1840c8a3",
    "0/1 Mesh eba4541",
    "0/2 PointLight c3e5ab3e"
   ]
  },
  "props3d/open_suitcases:game": {
-  "hash": "edd2239",
+  "hash": "8749eff4",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh c6630213"
+   "0/0 Mesh 37bfcaee"
   ]
  },
  "props3d/clothes_on_floor:game": {
-  "hash": "97c522f6",
+  "hash": "77eb1b5a",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh dd7098f0"
+   "0/0 Mesh 3bfb2dc0"
   ]
  },
  "props3d/fallen_chair:game": {
@@ -1615,17 +1615,17 @@
   ]
  },
  "props3d/blood_stains:game": {
-  "hash": "6568231",
+  "hash": "277d2106",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 920eeecb"
+   "0/0 Mesh bf76c3c"
   ]
  },
  "props3d/open_door:game": {
-  "hash": "5c14fcda",
+  "hash": "2cd57d94",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 14cab18"
+   "0/0 Mesh 46aa4e52"
   ]
  },
  "household/fridge:game": {
@@ -1688,10 +1688,10 @@
   ]
  },
  "household/wardrobe:game": {
-  "hash": "8b255d42",
+  "hash": "af782c10",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a35f60ae",
+   "0/0 Mesh ee0ceb50",
    "0/1 Group 5a58749f",
    "0/1/0 Mesh 88ba2065",
    "0/2 Group 186fe7bb",
@@ -1847,10 +1847,10 @@
   ]
  },
  "household/service_entrance:game": {
-  "hash": "c719c30",
+  "hash": "927eadaa",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 181d54f",
+   "0/0 Mesh 7605898d",
    "0/1 Group 5050a01f",
    "0/1/0 Mesh 72cc9519",
    "0/1/1 Mesh cd6a7752"
@@ -2021,21 +2021,21 @@
   ]
  },
  "household/bbq:game": {
-  "hash": "29e8d2f6",
+  "hash": "42d20982",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 5da3796a",
+   "0/0 Mesh 7fd7b5c2",
    "0/1 Group 81993faa",
    "0/1/0 Mesh f3c4534a"
   ]
  },
  "household/clothesline:game": {
-  "hash": "1028f682",
+  "hash": "ace41ab5",
   "nodes": [
    "0 Group 99159f93",
    "0/0 Mesh 2fe6a0a1",
    "0/1 Group 962bf602",
-   "0/1/0 Mesh 16020657"
+   "0/1/0 Mesh 7fdb8bd0"
   ]
  },
  "household/bunk_bed:game": {
@@ -2046,12 +2046,12 @@
   ]
  },
  "household/wood_stove:game": {
-  "hash": "90809914",
+  "hash": "c75578e2",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 188ffe54",
+   "0/0 Mesh 5a19aabc",
    "0/1 Group 5257e764",
-   "0/1/0 Mesh 217202ce",
+   "0/1/0 Mesh cf10b93c",
    "0/1/1 Mesh f87b2947"
   ]
  },
@@ -2063,24 +2063,24 @@
   ]
  },
  "household/outhouse:game": {
-  "hash": "2dd159b4",
+  "hash": "25cfbd30",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 725d2f47",
+   "0/0 Mesh e6a49f85",
    "0/1 Group df38aa0",
    "0/1/0 Mesh af893370",
    "0/2 Group 57f08ba3",
-   "0/2/0 Mesh 8d868924"
+   "0/2/0 Mesh be4bc932"
   ]
  },
  "household/well:game": {
-  "hash": "fb4ce2ef",
+  "hash": "e689f647",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh e7c7826",
+   "0/0 Mesh 48788f7c",
    "0/1 Mesh 7f9d86a0",
    "0/2 Group 6b0d728b",
-   "0/2/0 Mesh 59197ad2",
+   "0/2/0 Mesh 8f1dca00",
    "0/3 Group 3292dae3",
    "0/3/0 Mesh ae6e28b6",
    "0/3/1 Mesh 11fa116d",
@@ -2098,10 +2098,10 @@
   ]
  },
  "household/campfire:game": {
-  "hash": "8edc474c",
+  "hash": "f63795be",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 1f2eca2a"
+   "0/0 Mesh 586f847c"
   ]
  },
  "household/camp_stove:game": {
@@ -2114,10 +2114,10 @@
   ]
  },
  "household/gas_canister:game": {
-  "hash": "d7bf380c",
+  "hash": "cdbaa484",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 6a15a9a6",
+   "0/0 Mesh f1e3a47e",
    "0/1 Group 7c03906e",
    "0/1/0 Mesh 7baf94c2"
   ]
@@ -2147,12 +2147,12 @@
   ]
  },
  "options/wardrobe:materials": {
-  "hash": "e287ef0e",
+  "hash": "d23ba70a",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ccd1db41",
+   "0/0 Mesh 8ba1efcf",
    "0/1 Mesh 10e29b86",
-   "0/2 Mesh 5bc23950",
+   "0/2 Mesh ce185414",
    "0/3 Group 3634711",
    "0/3/0 Mesh 21bec6b6",
    "0/3/1 Mesh 59ac19db",
@@ -2223,10 +2223,10 @@
   ]
  },
  "options/wardrobe:quality": {
-  "hash": "905d417d",
+  "hash": "19ef54bd",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh f877b7da",
+   "0/0 Mesh 4ca15e36",
    "0/1 Group 366218bf",
    "0/1/0 Mesh 7461bc05",
    "0/2 Group c1957572",

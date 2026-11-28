@@ -81,7 +81,7 @@ export function woodStove(c: Ctx): void {
   c.b('plain', x0 + t, by0 + 0.03, zb + t, x1 - t, top - 0.005, zb + t + 0.015, brick) // back
   c.b('plain', x0 + t, by0 + 0.03, zb + t + 0.015, x0 + t + 0.015, top - 0.005, zf - 0.03, mix(brick, 0xffffff, 0.08))
   c.b('plain', x1 - t - 0.015, by0 + 0.03, zb + t + 0.015, x1 - t, top - 0.005, zf - 0.03, mix(brick, 0xffffff, 0.08))
-  c.b('plain', x0 + t, top - 0.02, zb + t + 0.015, x1 - t, top - 0.005, zf - 0.03, mix(brick, 0x000000, 0.2)) // baffle
+  c.b('plain', x0 + t + 0.015, top - 0.02, zb + t + 0.015, x1 - t - 0.015, top - 0.007, zf - 0.032, mix(brick, 0x000000, 0.2)) // baffle, between the side liners
   c.b('plain', x0 + t + 0.03, by0 + 0.03, zb + t + 0.03, x1 - t - 0.03, by0 + 0.06, zf - 0.08, 0x5a4a42) // ash bed
   for (let i = 0; i < 5; i++) c.b('metal', x0 + t + 0.03, by0 + 0.06, zb + t + 0.04 + i * 0.06, x1 - t - 0.03, by0 + 0.07, zb + t + 0.05 + i * 0.06, shade(iron, 1.4)) // grate bars
   // cooking top: two rings and a lid plate, pot spot at the front, flue collar at the back
@@ -95,7 +95,7 @@ export function woodStove(c: Ctx): void {
   c.cyl('metal', fx, pipeBase, fz, 0.07, flueTop - pipeBase, shade(iron, 1.1), 'cyl')
   for (let y = pipeBase + 0.25; y < flueTop - 0.12; y += 0.45) c.cyl('metal', fx, y, fz, 0.076, 0.03, shade(iron, 1.5), 'cyl')
   c.cyl('metal', fx, flueTop - 0.05, fz, 0.1, 0.03, shade(iron, 0.9), 'cyl') // thimble ring
-  c.cyl('metal', fx, flueTop - 0.002, fz, 0.052, 0.002, 0x4a403a, 'cyl') // dark opening, a hair above the pipe end
+  c.cyl('metal', fx, flueTop - 0.001, fz, 0.052, 0.003, 0x4a403a, 'cyl') // dark opening, 2 mm above the pipe end (CLAUDE.md §13)
   // damper handle on the pipe
   c.b('metal', fx + 0.07, pipeBase + 0.2, fz - 0.008, fx + 0.17, pipeBase + 0.212, fz + 0.008, shade(iron, 1.6))
   // firebox door, hinged on the front edge (left side by default)
@@ -116,7 +116,7 @@ export function woodStove(c: Ctx): void {
       c.b('metal', dx0, dy0, zf, dx1, dy1, zf + dt, iron)
       c.b('metal', dx0 + 0.025, dy0 + 0.025, zf + dt, dx1 - 0.025, dy1 - 0.025, zf + dt + 0.004, shade(iron, 1.5)) // bezel
       c.plane('glass', (dx0 + dx1) / 2, (dy0 + dy1) / 2, zf + dt + 0.0065, dx1 - dx0 - 0.07, dy1 - dy0 - 0.07, 0x5a3a2a)
-      c.b('metal', hx - 0.008, (dy0 + dy1) / 2 - 0.05, zf + dt, hx + 0.008, (dy0 + dy1) / 2 + 0.05, zf + dt + 0.03, 0xb4b8bc) // handle
+      c.b('metal', hx - 0.008, (dy0 + dy1) / 2 - 0.05, zf + dt + 0.002, hx + 0.008, (dy0 + dy1) / 2 + 0.05, zf + dt + 0.03, 0xb4b8bc) // handle, rooted in the bezel
     },
     { label: 'prompt.firebox_door', at: [(dx0 + dx1) / 2, (dy0 + dy1) / 2, zf + dt + HANDLE] },
   )
@@ -251,8 +251,9 @@ export function outhouse(c: Ctx): void {
     }
   }
   // front: two jambs and a header around the door
-  boards(c, -bx, dx0, 0.05, wallTop, bz1 - t, t, wood)
-  boards(c, dx1, bx, 0.05, wallTop, bz1 - t, t, wood)
+  // between the side walls, which run the full depth (CLAUDE.md §13)
+  boards(c, -bx + t, dx0, 0.05, wallTop, bz1 - t, t, wood)
+  boards(c, dx1, bx - t, 0.05, wallTop, bz1 - t, t, wood)
   boards(c, dx0, dx1, doorTop, wallTop, bz1 - t, t, wood)
   // roof: a slab sloping to the back, with tar paper and a ridge batten
   const roofY = wallTop + 0.07
@@ -264,8 +265,8 @@ export function outhouse(c: Ctx): void {
   const sz1 = sz0 + 0.46
   const sx = bx - t
   c.b('wood', -sx, 0.05, sz1 - 0.025, sx, seatY - 0.03, sz1, shade(wood, 1.05)) // front panel
-  c.b('wood', -sx, 0.05, sz0, -sx + 0.025, seatY - 0.03, sz1, shade(wood, 0.95))
-  c.b('wood', sx - 0.025, 0.05, sz0, sx, seatY - 0.03, sz1, shade(wood, 0.95))
+  c.b('wood', -sx, 0.05, sz0, -sx + 0.025, seatY - 0.03, sz1 - 0.025, shade(wood, 0.95)) // sides stop at the front panel
+  c.b('wood', sx - 0.025, 0.05, sz0, sx, seatY - 0.03, sz1 - 0.025, shade(wood, 0.95))
   c.b('plain', -sx + 0.025, 0.05, sz0, sx - 0.025, 0.07, sz1 - 0.025, 0x3b2f27) // pit floor
   const hc = (sz0 + sz1) / 2
   const hr = 0.14
@@ -386,24 +387,29 @@ export function well(c: Ctx): void {
       const a = ((i + course * 0.5) / n) * Math.PI * 2
       const px = Math.sin(a) * rMid
       const pz = Math.cos(a) * rMid
-      c.box('plain', px, course * 0.45 + 0.004, pz, bwid, 0.442, 0.17, shade(stoneCol, 0.85 + c.rnd() * 0.3), Math.atan2(px, pz))
+      // neighbours overlap at the joints: every other block is 2 mm lower on top and higher at the bottom, so their faces never share a plane (CLAUDE.md §13)
+      const k = i % 2 ? 0.002 : 0
+      c.box('plain', px, course * 0.45 + 0.004 + k, pz, bwid, 0.442 - 2 * k, 0.17, shade(stoneCol, 0.85 + c.rnd() * 0.3), Math.atan2(px, pz))
     }
   }
   for (let i = 0; i < n; i++) {
     const a = ((i + 0.25) / n) * Math.PI * 2
     const px = Math.sin(a) * 0.47
     const pz = Math.cos(a) * 0.47
-    c.box('plain', px, rim, pz, bwid + 0.03, 0.05, 0.25, shade(stoneCol, 1.05 + c.rnd() * 0.12), Math.atan2(px, pz)) // coping slabs
+    const k = i % 2 ? 0.002 : 0
+    c.box('plain', px, rim + k, pz, bwid + 0.03, 0.05 - 2 * k, 0.25, shade(stoneCol, 1.05 + c.rnd() * 0.12), Math.atan2(px, pz)) // coping slabs
   }
   // shaft: dark wall floor and the water surface well below the rim
   c.cyl('plain', 0, 0, 0, rIn + 0.01, 0.1, 0x4a4742, 'cyl')
   c.cyl('water', 0, 0.1, 0, rIn, 0.01, 0x3a6a86, 'cyl')
   // frame: two posts, cross beam, gabled roof
-  for (const s of [-1, 1]) c.b('wood', s * 0.62 - 0.05, 0, -0.05, s * 0.62 + 0.05, 1.9, 0.05, wood)
+  for (const s of [-1, 1]) c.b('wood', s * 0.62 - 0.05, 0, -0.05, s * 0.62 + 0.05, 1.898, 0.05, wood) // under the beam's top
   c.b('wood', -0.68, 1.8, -0.06, 0.68, 1.9, 0.06, shade(wood, 0.9))
   for (const s of [-1, 1]) {
-    c.box('wood', 0, 1.99, s * 0.33, 1.46, 0.04, 0.8, shade(wood, 0.85), 0, s * 0.5)
-    c.box('plain', 0, 2.02, s * 0.33, 1.44, 0.01, 0.78, 0x56463a, 0, s * 0.5)
+    // the two slopes cross at the ridge: one is 4 mm shorter, so their end faces never share a plane
+    const e = s > 0 ? 0 : 0.004
+    c.box('wood', 0, 1.99, s * 0.33, 1.46 - e, 0.04, 0.8, shade(wood, 0.85), 0, s * 0.5)
+    c.box('plain', 0, 2.02, s * 0.33, 1.44 - e, 0.01, 0.78, 0x56463a, 0, s * 0.5)
   }
   c.b('wood', -0.69, 2.05, -0.03, 0.69, 2.12, 0.03, shade(wood, 0.7)) // ridge board
   // trough in front, hollow with water in it, and the chute that pours into it
@@ -426,7 +432,7 @@ export function well(c: Ctx): void {
     () => {
       c.rod('wood', 'x', 0, spindleY, 0, 0.045, 1.24, shade(wood, 1.1))
       c.b('wood', 0.62, spindleY - 0.01, -0.025, 0.69, spindleY + 0.01, 0.025, shade(wood, 0.9)) // arm
-      c.b('wood', 0.66, spindleY - 0.01, -0.025, 0.69, spindleY + 0.2, 0.025, shade(wood, 0.9))
+      c.b('wood', 0.662, spindleY - 0.008, -0.023, 0.688, spindleY + 0.2, 0.023, shade(wood, 0.9)) // 2 mm inside the arm's faces (CLAUDE.md §13)
       c.rod('wood', 'x', 0.70, spindleY + 0.2, 0, 0.022, 0.08, shade(wood, 0.7)) // knob
     },
     { label: 'prompt.well_crank', at: false, noSweep: true, group: 'draw' },

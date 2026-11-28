@@ -15,7 +15,7 @@ export function ceilingBuilders({ kit }: BuilderContext): Partial<BuilderMap> {
   B.chandelier = (M, a) => { const K = kit(M, a), t = K.ceiling(), on = !!M.on, y = t - 0.5, gold = K.metal(0x8a7a5a);
     K.box('metal', 0, y, 0, 0.012, 0.5, 0.012, gold); K.cyl('metal', 0, y - 0.04, 0, 0.06, 0.08, gold); K.cyl('metal', 0, y - 0.06, 0, 0.14, 0.015, gold);
     for (let i = 0; i < 6; i++) { const an = i * Math.PI / 3, cx = Math.cos(an), cz = Math.sin(an);
-      K.box('metal', cx * 0.14, y - 0.06, cz * 0.14, 0.28, 0.012, 0.012, gold, -an); K.cyl('plain', cx * 0.28, y - 0.06, cz * 0.28, 0.02, 0.09, 0xf0e6c8); K.cyl(on ? 'emissive' : 'plain', cx * 0.28, y + 0.03, cz * 0.28, 0.012, 0.03, on ? 0xffd890 : 0xe6d8b0, 0, 0, 'sphere');
+      K.box('metal', cx * 0.14, y - (M.visorScene ? 0.06 : 0.062), cz * 0.14, 0.28, 0.012, 0.012, gold, -an); /* (outside the Visor's scene the arms hang 2 mm under the disc, CLAUDE.md §13) */ K.cyl('plain', cx * 0.28, y - 0.06, cz * 0.28, 0.02, 0.09, 0xf0e6c8); K.cyl(on ? 'emissive' : 'plain', cx * 0.28, y + 0.03, cz * 0.28, 0.012, 0.03, on ? 0xffd890 : 0xe6d8b0, 0, 0, 'sphere');
       K.box('glass', cx * 0.3, y - 0.2, cz * 0.3, 0.025, 0.14, 0.025, 0xffffff, -an); K.box('glass', cx * 0.14, y - 0.18, cz * 0.14, 0.02, 0.12, 0.02, 0xffffff); }
     K.box('glass', 0, y - 0.3, 0, 0.05, 0.2, 0.05, 0xffffff, 0.7);
     if (M.light) K.light(0, y - 0.1, 0, 0xffd8a0, 6, 'chandelier'); };

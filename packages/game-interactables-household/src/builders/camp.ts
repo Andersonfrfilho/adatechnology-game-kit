@@ -83,7 +83,10 @@ export function campfire(c: Ctx): void {
     const px = Math.sin(a) * r
     const pz = Math.cos(a) * r
     const s = 0.17 + c.rnd() * 0.06
-    c.box('plain', px, 0, pz, s, 0.13 + c.rnd() * 0.05, s * 0.9, shade(0x8d8982, 0.7 + c.rnd() * 0.5), a + c.rnd() * 0.5)
+    // neighbouring stones overlap: each sits a little deeper in the ground and stands to its own height, so no two bottoms or tops share a
+    // plane (CLAUDE.md §13)
+    const sink = (i % 5) * 0.002
+    c.box('plain', px, -sink, pz, s, sink + 0.13 + (i % 5) * 0.011 + c.rnd() * 0.004, s * 0.9, shade(0x8d8982, 0.7 + c.rnd() * 0.5), a + c.rnd() * 0.5)
     if (i % 3 === 0) c.box('plain', px * 0.96, 0.13, pz * 0.96, s * 0.8, 0.08, s * 0.7, shade(0x8d8982, 0.8 + c.rnd() * 0.4), a)
   }
   c.cyl('plain', 0, 0.001, 0, ringR - 0.1, 0.03, 0x3a3836, 'cyl') // ash bed inside the ring
@@ -183,7 +186,7 @@ export function gasCanister(c: Ctx): void {
   const col = Number.parseInt(g.color.replace('#', ''), 16)
   c.cyl('metal', 0, Y + 0.001, 0, R * 0.96, 0.011, 0x6a6e72, 'cyl') // rolled bottom
   c.cyl('metal', 0, Y + 0.012, 0, R, H - 0.012 - 0.045, col, 'cyl')
-  c.cyl('metal', 0, Y + 0.012 + (H - 0.057) * 0.35, 0, R + 0.001, (H - 0.057) * 0.3, 0xf0ece0, 'cyl') // label band
+  c.cyl('metal', 0, Y + 0.012 + (H - 0.057) * 0.35, 0, R + 0.002, (H - 0.057) * 0.3, 0xf0ece0, 'cyl') // label band, 2 mm proud (CLAUDE.md §13)
   c.cyl('metal', 0, Y + H - 0.075, 0, R * 0.96, 0.04, col, 'sphere') // shoulder
   c.cyl('metal', 0, Y + H - 0.05, 0, R * 0.45, 0.012, 0x9a9ea2, 'cyl') // crimped top
   c.cyl('metal', 0, Y + H - 0.04, 0, R * 0.3, 0.02, 0xb08a34, 'cyl6') // valve neck
