@@ -11,6 +11,8 @@ import type { TestRoomOptions } from '@adatechnology/game-test-room'
 
 import { VEHICLES_AREA_ID, createVehiclesTestModule } from '../src'
 import { bodyMassOf } from '../src/crash-parts-math'
+import type { VehicleDestructible } from '@adatechnology/game-vehicles'
+import { framePartsOf } from '../src/test-area/physical-car'
 import type { PhysicalCar } from '../src/test-area/physical-car'
 import { planHulls } from '../src/worker-kinds'
 import type { HullPlanJob } from '../src/worker-kinds'
@@ -110,7 +112,7 @@ describe('TS.4: the room car on the engine loop', () => {
     const scene = await sceneOf('jolt')
     const car = stepUntilBuilt(scene)
     const root = rootOf(scene)
-    const centre = bodyMassOf((root.userData.destructible as { model: { parts: Parameters<typeof bodyMassOf>[0] } }).model.parts).centre
+    const centre = bodyMassOf(framePartsOf(THREE, root.userData.destructible as VehicleDestructible, root)).centre
     const drawn = root.localToWorld(new THREE.Vector3(...centre)).y
     for (let step = 0; step < 600 && !scene.world.isSleeping(car.chassis()!); step++) scene.loop.stepFixed(1)
     expect(scene.world.isSleeping(car.chassis()!)).toBe(true)

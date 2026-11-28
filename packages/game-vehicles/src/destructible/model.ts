@@ -12,6 +12,7 @@ import type { JointKind, MaterialId, ToolKind, Vec3 } from '@adatechnology/game-
 import type { DamageZone, HeadlightLens, VehicleContext, VehicleKit, VehicleLamp } from '../api'
 import { clamp, strHash } from '../util'
 import { strayLampsOf } from '../stray-lamps'
+import { supportSpanOf } from './support-span'
 import type { ArmourLevel } from './armour'
 
 /** What a part is, which decides its material, its joint and what happens when it comes off. */
@@ -57,6 +58,8 @@ export interface PartDef {
   material: MaterialId
   box: LocalBox
   mass: number
+  /** Where the part's mass sits, in the vehicle's space, when it is not the middle of its box: the synthetic chassis of a vehicle with no underbody zone holds the shell its box spans, and its weight sits over what the vehicle stands on. */
+  massCentre?: Vec3
   /** Energy in joules that wrecks the part. */
   hp: number
   /** The damage zone this part is, when it is one. */
@@ -427,15 +430,19 @@ export function buildVehicleModel(kit: VehicleKit, c: VehicleContext, options: M
     add({ id: lamp.side === 'center' ? what : `${what}_${lamp.side}`, role: 'light', name, material: glassLens ? 'glass' : 'plastic', box, mass: 0.4 + 4 * areaOf(box.size), hp: glassLens ? GLASS_LENS_HP : PLASTIC_LENS_HP, lamps: [lamp], visual: true, tags: ['light', `lens_${lens}`, ...(lamp.fog ? ['fog'] : [])] })
   }
 
-  // the hub is a synthetic frame part when the vehicle has no underbody or chassis zone
+  // the hub is a synthetic frame part when the vehicle has no underbody or chassis zone. Its weight is the structure the vehicle stands on, so it sits over
+  // what the vehicle stands on (the skids, the landing gear, the wheels), not at the middle of the whole length (a helicopter's tail boom carries little of it)
   if (!hubZone) {
     const h = Math.max(0.15, belt - clearance)
+    const box = floorPan({ center: [(F + R) / 2, clearance + h * 0.45, 0], size: [Math.max(0.4, L * 0.8), h * 0.7, Math.max(0.2, W * 0.9)] })
+    const support = supportSpanOf(c.vehicle as Object3D, inverse)
     add({
       id: hubId,
       role: 'frame',
       name: t('mechanics.chassis'),
       material: 'steel',
-      box: floorPan({ center: [(F + R) / 2, clearance + h * 0.45, 0], size: [Math.max(0.4, L * 0.8), h * 0.7, Math.max(0.2, W * 0.9)] }),
+      box,
+      ...(support ? { massCentre: [(support.front + support.rear) / 2, box.center[1], box.center[2]] as Vec3 } : {}),
       mass: mass * 0.25,
       hp: 150000 * armour,
       visual: false,
