@@ -102,6 +102,23 @@ engine and returns one message per problem with its path; `generate` throws on a
 | `instancing: { minCount }` | Instance identical leaf primitives repeated at least `minCount` times (off by default) |
 | `levels` | Only these level indices |
 | `generators` | Custom generators for this call only |
+| `solids` | Each batch lists the solids it was baked from (`batch.solids`, see below). Off by default: without it the output is the same bytes |
+
+## Solids: what a physics engine holds the piece by
+
+With `solids: true` every `ShapeBatch` has `solids`: one `ShapeSolid` per primitive baked into it, in the order they were, in the batch's space.
+
+```ts
+{ kind: 'box', center: [x, y, z], half: [hx, hy, hz], rotation: [qx, qy, qz, qw], vertexStart: 0, vertexCount: 24 }
+```
+
+It is the primitive's own box carried by the node's transform, turned as it was drawn. A box is the box. A cylinder, a cone or a sphere is the box around
+**that one** primitive (2r x h x 2r): four legs are four solids, never the box around them and the air between them. A transform that shears has no such box:
+the solid is then the box around it along the batch's axes, marked `fitted`. `vertexStart` and `vertexCount` say which vertices of the batch the primitive
+added.
+
+A collision made from this list needs no vertex read back, and cannot take the air inside a hollow thing for solid (spec 019). The mesh api of
+`@adatechnology/game-interactables-three` puts it in `mesh.userData.solids`, and `@adatechnology/game-destruction-three` holds the mesh by it.
 
 ## Buffers
 

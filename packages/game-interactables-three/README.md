@@ -74,6 +74,13 @@ ones this api made with its own templates before the move (`tests/exact-golden.t
   merged blind or clothesline is masked and lit like everything else; meshes with different materials are never mixed into one merged mesh.
 - `createScreen` asks for a `willReadFrequently` 2D context (the canvas is re-uploaded every redraw; this avoids the browser's readback warning).
 
+### Solids for the physics (`userData.solids`)
+
+Every mesh the mesh api makes carries `userData.solids`: the primitives it was drawn with, one box each, in the mesh's space (`ShapeSolid` of
+`@adatechnology/game-shapes`). Parts joined by `mergeParts` carry the solids of every part, each in its place. `@adatechnology/game-destruction-three` holds the
+mesh by that list, so what a builder draws is what collides (spec 019). `tests/solids-catalogue.test.ts` walks the whole catalogue: every vertex is in exactly
+one solid and inside it.
+
 ### Poses and sync
 
 `applyPose(THREE, group, motion, t)` poses a part from its `Motion` (hinge / rocker / knob rotate, slide translates, scale scales along

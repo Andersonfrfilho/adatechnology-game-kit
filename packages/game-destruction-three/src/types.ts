@@ -28,6 +28,9 @@ export type Mesh = THREE_NS.Mesh
 
 export type Quality = 'low' | 'medium' | 'high'
 
+/** Why the renderer made a bound object a piece on its own (`RendererOptions.onLoosened`). */
+export type LoosenCause = 'blast' | 'apart' | 'ground'
+
 /** What a sound key carries besides the point and the volume: the named explosion and its size, how enclosed it was, how long a leak lasts. */
 export interface SoundDetail {
   /** An impact or a break: the keys to try before the key itself, most specific first (material and blow, material, family and blow, family). */
@@ -210,8 +213,11 @@ export interface RendererOptions {
    * reaches with enough speed, the renderer makes it a piece (`makePiece`) and shoves it, and tells `onLoosened`. Without it only the pieces move. Never answer true for a wall or a fixture.
    */
   shoveable?: (objectId: string) => boolean
-  /** Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), or furniture came apart and what stayed is loose too (`apart`). */
-  onLoosened?: (objectId: string, piece: Piece, cause: 'blast' | 'apart') => void
+  /**
+   * Called when the renderer made a bound object a piece on its own: a blast shoved it (`blast`, see `shoveable`), furniture came apart and what stayed is loose too (`apart`),
+   * or the ground under its feet went (`ground`: a hole dug or blown under a leg of a bed, see `wakeRegion`) and it goes over into the gap.
+   */
+  onLoosened?: (objectId: string, piece: Piece, cause: LoosenCause) => void
   /**
    * After each break of a bound object (a part broke, came off, burned out or the object fell apart) the renderer checks it on the next update: what is left of an object that
    * is not a piece must stand on something (the ground, a fixed top, a piece). One left over air is made a piece on the spot and falls (`released` true); either way the host

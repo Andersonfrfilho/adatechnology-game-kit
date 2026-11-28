@@ -5,7 +5,20 @@
     "derived": "G 62005-62012 DERIV",
     "wounds": "G 62016 FERIDA (Personagens 3.7): share of each wound kind, and its infection chance (used only when an infection rule is on)",
     "infection": "G 62015 INFEC (the slice's accelerated clock: fever 30 s, delirium 70 s, death 120 s, reanimation 8 s after); G 68509 fever noise",
-    "numbers": "G 68427-68640 player, playerUpdate, frontZombies, shove, knife; G 68678-68681 the aim spread modifiers; G 65507 walkCad"
+    "numbers": "G 68427-68640 player, playerUpdate, frontZombies, shove, knife; G 68678-68681 the aim spread modifiers; G 65507 walkCad",
+    "needs": "G 57255 needs (fome 20, sede 20 at the start; 0 is fed, 100 starving), G 57271 useItem (food takes off its f, drink its s), G 57341-57344 (1 game hour = 50 s of the slice; hunger 2.5/h, 4/h running, thirst 4/h, times 1.1 - 0.02 x vigor; over 90 the body loses 0.2 health a second)"
+  },
+  "needs": {
+    "start": { "hunger": 20, "thirst": 20 },
+    "max": 100,
+    "gameHourSeconds": 50,
+    "hungerPerHour": 2.5,
+    "hungerRunningPerHour": 4,
+    "thirstPerHour": 4,
+    "vigorBase": 1.1,
+    "vigorPerPoint": -0.02,
+    "starvingAt": 90,
+    "starvingDamagePerSecond": 0.2
   },
   "attributes": { "strength": 5, "vigor": 5, "agility": 5, "perception": 5, "intellect": 5, "presence": 5 },
   "derived": {

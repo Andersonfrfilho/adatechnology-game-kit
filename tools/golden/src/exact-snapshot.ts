@@ -107,8 +107,10 @@ function geometryLines(g: SnapGeometry): string[] {
   return lines
 }
 
-// where the object comes from (`markKitOrigin` of game-contracts) is not part of the drawing: a builder that starts marking its root keeps its golden
-const PROVENANCE_KEYS = new Set(['kitOrigin'])
+// where the object comes from (`markKitOrigin` of game-contracts) is not part of the drawing: a builder that starts marking its root keeps its golden.
+// `solids` (spec 019) lists again, primitive by primitive, what the vertices already draw: a mesh that starts carrying it keeps its golden, and the golden
+// passing unrecorded says the drawing did not change a byte. What the list says is guarded by its own test (`solids-catalogue.test.ts`).
+const PROVENANCE_KEYS = new Set(['kitOrigin', 'solids'])
 function drawnUserData(userData: Fields): Fields | null {
   if (!userData) return null
   const keys = Object.keys(userData).filter((key) => !PROVENANCE_KEYS.has(key))

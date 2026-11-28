@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createPlayer } from '../src'
-import { createDeathScreen, createPlayerHud, createPlayerHudView, formatSurvived, playerHudViewOf, writePlayerHudView } from '../src/hud'
+import { createBodyVitals, createPlayer } from '../src'
+import { createDeathScreen, createPlayerHud, createPlayerHudView, createVitalsPanel, formatSurvived, playerHudViewOf, writePlayerHudView } from '../src/hud'
 import type { DeathScreen, PlayerHud } from '../src/hud'
 
 let hud: PlayerHud | undefined
@@ -27,12 +27,38 @@ describe('player HUD', () => {
     player.state.health = player.derived.maxHealth / 2
     hud.update(playerHudViewOf(player))
     const rows = [...document.querySelectorAll('.gp-hud-row')]
-    expect(rows.map((row) => row.querySelector('span')?.textContent)).toEqual(['Vida', 'Fôlego'])
+    expect(rows.map((row) => row.querySelector('span')?.textContent)).toEqual(['Vida', 'Fôlego', 'Fome', 'Sede'])
     expect(rows[0]?.querySelector('output')?.textContent).toBe(String(Math.round(player.derived.maxHealth / 2)))
     expect((rows[0]?.querySelector('i') as HTMLElement).style.width).toBe('50%')
     expect(rows[0]?.querySelector('.gp-hud-bar')?.className).toContain('warn')
     expect(rows[1]?.querySelector('output')?.textContent).toBe(String(Math.round(player.derived.maxStamina)))
     expect(textOf('.gp-hud-title')).toBe('Típico')
+  })
+
+  it('shows hunger and thirst as bars that turn amber past half and red once they cost health, and drops them for a body without needs', () => {
+    const player = createPlayer({ seed: 3 })
+    hud = createPlayerHud({ container: box(), locale: 'en' })
+    player.state.hunger = 60
+    player.state.thirst = 95
+    hud.update(playerHudViewOf(player))
+    const rows = [...document.querySelectorAll('.gp-hud-row')]
+    expect(rows.map((row) => row.querySelector('span')?.textContent)).toEqual(['Health', 'Stamina', 'Hunger', 'Thirst'])
+    expect(rows[2]?.querySelector('output')?.textContent).toBe('60')
+    expect(rows[2]?.querySelector('.gp-hud-bar')?.className).toContain('warn')
+    expect(rows[3]?.querySelector('.gp-hud-bar')?.className).toContain('bad')
+    player.state.hunger = 10
+    hud.update(playerHudViewOf(player))
+    expect(rows[2]?.querySelector('.gp-hud-bar')?.className).toBe('gp-hud-bar need')
+    hud.update(playerHudViewOf(createPlayer({ needs: false })))
+    expect(document.querySelectorAll('.gp-hud-row')).toHaveLength(2)
+  })
+
+  it('lays the vitals box out alone for a host with its own screen', () => {
+    const panel = createVitalsPanel('pt-BR')
+    const vitals = createBodyVitals()
+    panel.update({ alive: true, health: vitals.state.health, maxHealth: vitals.maxHealth, stamina: 0, maxStamina: 0, bleeding: false, wounds: [], infection: 'none', hunger: vitals.state.hunger, thirst: vitals.state.thirst, needMax: 100, needStarving: 90 })
+    expect([...panel.element.querySelectorAll('.gp-hud-row span')].map((span) => span.textContent)).toEqual(['Vida', 'Fôlego', 'Fome', 'Sede'])
+    expect(panel.element.querySelectorAll('output')[2]?.textContent).toBe('20')
   })
 
   it('lists the bleeding, the infection stage and the wounds the state has', () => {

@@ -8,6 +8,7 @@
 //   - `fluid` for the fixtures that hold water,
 //   - scenarios (pt-BR and en) written against the test room's `ScenarioContext`.
 import { buildScenarios } from './scenarios.js'
+import { createFixtureStreams } from './fixture-streams.js'
 
 /** @typedef {typeof import('@adatechnology/game-interactables-household')} HouseholdPack */
 /** @typedef {typeof import('@adatechnology/game-interactables-three')} InteractablesThree */
@@ -57,6 +58,8 @@ const KEY_OVERRIDES = {
   sink_bathroom: { wood: 'mdf' },
   mailbox: { wood: 'steel' },
 }
+// a bowl filled to the brim spills over its lip at the first wobble of the load: it starts at most this much full
+const BOWL_FILL_MAX = 0.7
 // fixtures that hold water: inner volume (m), litres at the start, where the opening is
 /** @type {Readonly<Record<string, FluidFixture>>} */
 const FLUIDS = {
@@ -559,10 +562,13 @@ function analyse(hh, type, GT) {
 // The module
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /**
- * @param {{ GameInteractablesHousehold: HouseholdPack, GameInteractablesThree: InteractablesThree, fillContainers?: (THREE: ThreeLib, group: import('three').Group, spec: ObjectSpec, type: string) => void, locale?: string }} options
+ * @param {{ GameInteractablesHousehold: HouseholdPack, GameInteractablesThree: InteractablesThree, fillContainers?: (THREE: ThreeLib, group: import('three').Group, spec: ObjectSpec, type: string) => void, createFixtureEmitters?: (spec: ObjectSpec) => import('@adatechnology/game-interactables').FixtureEmitters, locale?: string }} options
  * `fillContainers` puts the contents of the containers of a piece of furniture in its group (the entry gives the one that draws them as real items).
+ * `createFixtureEmitters` (game-interactables) makes the water of the taps, the shower and the flush run while their handles are worked; without it no water runs.
  */
-export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, locale: defaultLocale = 'en' }) {
+export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, createFixtureEmitters, locale: defaultLocale = 'en' }) {
+  // the water the taps, the shower and the flush run while their handles are worked (the room moves the parts; this draws the water)
+  const streams = createFixtureEmitters ? createFixtureStreams({ createFixtureEmitters, createEffects: GT.createEffects }) : null
   const isEn = (/** @type {string} */ l) => (l ?? defaultLocale) === 'en'
   /** @type {Partial<Record<'en' | 'pt-BR', Household>>} */
   const households = {}
@@ -622,6 +628,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     res.group.name = type
     res.group.userData.furnitureType = type
     fillContainers?.(THREE, res.group, spec, type)
+    streams?.track(res.group, spec, res.parts)
     return res.group
   }
 
@@ -656,8 +663,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   }
 
   /**
-   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl, from its floor, held by the piece the floor belongs to. As much water
-   * as the bowl holds at most.
+   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl, from its floor, held by the piece the floor belongs to. Its level is
+   * the litres over the bowl's floor area, and never more water than the bowl holds.
    * @param {FluidFixture} f
    * @param {{ from: Triple; to: Triple }} bowl
    * @param {ReturnType<typeof analyse>} a
@@ -665,15 +672,15 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   function bowlFluid(f, bowl, a) {
     const size = /** @type {Triple} */ ([0, 1, 2].map((k) => round(bowl.to[k] - bowl.from[k])))
     const offset = /** @type {Triple} */ ([round((bowl.from[0] + bowl.to[0]) / 2), round(bowl.from[1]), round((bowl.from[2] + bowl.to[2]) / 2)])
-    const holds = round(size[0] * size[1] * size[2] * 1000, 2)
-    const capacity = Math.min(f.capacity, holds)
+    // the fluid world fills the shape in proportion to `capacity`: the shape is the whole bowl, so its capacity is what the bowl holds, or the level would stand higher than the litres
+    const capacity = round(size[0] * size[1] * size[2] * 1000, 2)
     const inside = (/** @type {{ position: number[]; shape: { size: number[] } }} */ p) => [0, 1, 2].every((k) => Math.abs(offset[k] + (k === 1 ? 0.005 : 0) - p.position[k]) <= p.shape.size[k] / 2 + 0.01)
     const part = a.destructible.parts.find(inside) ?? a.destructible.parts[0]
     return {
       container: {
         capacity,
         liquid: 'water',
-        liters: Math.min(f.liters, capacity),
+        liters: Math.min(f.liters, round(capacity * BOWL_FILL_MAX, 2)),
         temperature: 18,
         shape: { kind: /** @type {const} */ ('box'), size },
         opening: Math.min(f.opening, Math.min(size[0], size[2]) / 2),
@@ -689,6 +696,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     name: isEn(defaultLocale) ? 'Furniture and objects' : 'Móveis e objetos',
     ground: { surface: 'tile_floor' },
     group: isEn(defaultLocale) ? 'Furniture & objects' : 'Móveis e objetos',
+    /** @param {import('@adatechnology/game-contracts').ModuleHost} host */
+    attach: (host) => streams?.attach(host) ?? (() => {}),
     /**
      * @param {string} loc
      */

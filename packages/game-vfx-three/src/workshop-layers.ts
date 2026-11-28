@@ -121,8 +121,56 @@ function rainLayer(THREE: ThreeLib, rain: WorkshopEngine['rain']): Drawn {
   }
 }
 
-const REST_LAYER = 0.002
-const REST_LAYERS = 4
+/** How far a settled piece's drawing steps (up, or off a side) to leave the plane of a face of a settled neighbour: past the 1 mm where faces fight. */
+const REST_STEP = 0.0015
+const REST_TRIES = 8
+const SAME_NORMAL = 0.9995
+
+type DebrisPieceView = WorkshopEngine['debris']['pieces'][number]
+
+/** A settled piece's box as drawn: centre, local axes (the columns of Rx·Ry·Rz, three.js order XYZ), half sizes, world half extents. */
+interface RestBox {
+  c: Float64Array
+  axes: Float64Array
+  half: Float64Array
+  ext: Float64Array
+}
+
+const restBox = (): RestBox => ({ c: new Float64Array(3), axes: new Float64Array(9), half: new Float64Array(3), ext: new Float64Array(3) })
+
+function boxOf(piece: DebrisPieceView, out: RestBox): void {
+  const cx = Math.cos(piece.rx), sx = Math.sin(piece.rx), cy = Math.cos(piece.ry), sy = Math.sin(piece.ry), cz = Math.cos(piece.rz), sz = Math.sin(piece.rz)
+  const a = out.axes
+  // column k of the rotation = the world direction of local axis k, as (x, y, z) at a[3k..3k+2]
+  a[0] = cy * cz; a[1] = sx * sy * cz + cx * sz; a[2] = sx * sz - cx * sy * cz
+  a[3] = -cy * sz; a[4] = cx * cz - sx * sy * sz; a[5] = cx * sy * sz + sx * cz
+  a[6] = sy; a[7] = -sx * cy; a[8] = cx * cy
+  out.half[0] = piece.sx / 2; out.half[1] = piece.sy / 2; out.half[2] = piece.sz / 2
+  out.c[0] = piece.x; out.c[1] = piece.y; out.c[2] = piece.z
+  for (let w = 0; w < 3; w++) out.ext[w] = Math.abs(a[w]!) * out.half[0]! + Math.abs(a[3 + w]!) * out.half[1]! + Math.abs(a[6 + w]!) * out.half[2]!
+}
+
+/**
+ * A face of `a` lying on a face of `b`: same direction (either way round on each box) and planes closer than a step, with overlapping boxes. Returns the
+ * world direction to step `a` along (into `push`), or false. A conservative test: the boxes' world extents overlap (grown by a step).
+ */
+function sharedPlane(a: RestBox, b: RestBox, push: Float64Array): boolean {
+  for (let w = 0; w < 3; w++) if (Math.abs(a.c[w]! - b.c[w]!) >= a.ext[w]! + b.ext[w]! + REST_STEP) return false
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+    const ax = a.axes[3 * i]!, ay = a.axes[3 * i + 1]!, az = a.axes[3 * i + 2]!
+    const dot = ax * b.axes[3 * j]! + ay * b.axes[3 * j + 1]! + az * b.axes[3 * j + 2]!
+    if (Math.abs(dot) < SAME_NORMAL) continue
+    // along this direction both boxes have a face at centre ± half: the faces that look the same way are on the same side
+    const ca = ax * a.c[0]! + ay * a.c[1]! + az * a.c[2]!
+    const cb = ax * b.c[0]! + ay * b.c[1]! + az * b.c[2]!
+    for (let side = -1; side <= 1; side += 2) {
+      if (Math.abs(ca + side * a.half[i]! - (cb + side * b.half[j]!)) >= REST_STEP * 0.75) continue
+      push[0] = ax * side; push[1] = ay * side; push[2] = az * side
+      return true
+    }
+  }
+  return false
+}
 
 function debrisLayer(THREE: ThreeLib, pool: WorkshopEngine['debris']): Drawn {
   const geometry = new THREE.BoxGeometry(1, 1, 1)
@@ -138,6 +186,34 @@ function debrisLayer(THREE: ThreeLib, pool: WorkshopEngine['debris']): Drawn {
   const matrix = new THREE.Matrix4()
   const colour = new THREE.Color()
   const hidden = new THREE.Matrix4().makeScale(0, 0, 0)
+  // a piece that settles is drawn a step off any face of a settled neighbour it would lie on (up for a flat face, out for a side), so two shards landing
+  // on each other never share a plane and flicker (CLAUDE.md §13). The engine's pool stays the page's (its recording is the golden); only the drawing
+  // moves, by millimetres, once, when the piece settles.
+  const offset = new Float64Array(DEBRIS_CAPACITY * 3)
+  const settled = new Uint8Array(DEBRIS_CAPACITY)
+  const boxes = Array.from({ length: DEBRIS_CAPACITY }, restBox)
+  const push = new Float64Array(3)
+  const settle = (index: number): void => {
+    const box = boxes[index]!
+    boxOf(pool.pieces[index]!, box)
+    let dx = 0, dy = 0, dz = 0
+    for (let tries = 0; tries < REST_TRIES; tries++) {
+      let clash = false
+      for (let other = 0; other < DEBRIS_CAPACITY && !clash; other++) {
+        if (other === index || !settled[other]) continue
+        if (!sharedPlane(box, boxes[other]!, push)) continue
+        clash = true
+        // a flat face steps up; a side steps out along its own direction
+        const up = Math.abs(push[1]!) > 0.7
+        const ux = up ? 0 : push[0]!, uy = up ? 1 : push[1]!, uz = up ? 0 : push[2]!
+        dx += ux * REST_STEP; dy += uy * REST_STEP; dz += uz * REST_STEP
+        box.c[0] = box.c[0]! + ux * REST_STEP; box.c[1] = box.c[1]! + uy * REST_STEP; box.c[2] = box.c[2]! + uz * REST_STEP
+      }
+      if (!clash) break
+    }
+    offset[3 * index] = dx; offset[3 * index + 1] = dy; offset[3 * index + 2] = dz
+    settled[index] = 1
+  }
   for (let index = 0; index < DEBRIS_CAPACITY; index++) mesh.setMatrixAt(index, hidden)
   mesh.setColorAt(0, colour.setHex(0xffffff))
   return {
@@ -146,17 +222,18 @@ function debrisLayer(THREE: ThreeLib, pool: WorkshopEngine['debris']): Drawn {
       let drawn = false
       for (let index = 0; index < DEBRIS_CAPACITY; index++) {
         const piece = pool.pieces[index]!
+        if (!piece.on || !piece.rest) settled[index] = 0
         if (!piece.on) {
           mesh.setMatrixAt(index, hidden)
           continue
         }
+        if (piece.rest && !settled[index]) settle(index)
         drawn = true
         const shrink = Math.min(1, piece.life / FADE_SECONDS)
         euler.set(piece.rx, piece.ry, piece.rz)
         quaternion.setFromEuler(euler)
-        // a settled piece is drawn up to 6 mm higher by its slot, so two flat shards lying on each other never share a plane (CLAUDE.md §13)
-        const lift = piece.rest ? (index % REST_LAYERS) * REST_LAYER : 0
-        matrix.compose(position.set(piece.x, piece.y + lift, piece.z), quaternion, scale.set(piece.sx * shrink, piece.sy * shrink, piece.sz * shrink))
+        const off = piece.rest ? 3 * index : -1
+        matrix.compose(position.set(piece.x + (off >= 0 ? offset[off]! : 0), piece.y + (off >= 0 ? offset[off + 1]! : 0), piece.z + (off >= 0 ? offset[off + 2]! : 0)), quaternion, scale.set(piece.sx * shrink, piece.sy * shrink, piece.sz * shrink))
         mesh.setMatrixAt(index, matrix)
         mesh.setColorAt(index, colour.setHex(piece.color))
       }

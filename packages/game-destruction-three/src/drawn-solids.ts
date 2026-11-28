@@ -4,6 +4,7 @@ import type { WorkerCoordinator } from '@adatechnology/game-contracts'
 
 import type { StaticSolid } from './engine-statics'
 import type { MeshVis } from './internal'
+import { builtSolidsOf } from './built-solids'
 import { measureStaticPart } from './static-part-job'
 import type { StaticPartJob } from './static-part-job'
 import type { Visuals } from './visual'
@@ -139,6 +140,7 @@ const jobOf = (THREE: typeof THREE_NS, mv: MeshVis, points: Float64Array, matrix
   const quat = new THREE.Quaternion()
   const scale = new THREE.Vector3()
   mv.mesh.matrixWorld.decompose(pos, quat, scale)
+  const built = mv.range ? null : builtSolidsOf(mv.mesh)
   return {
     points,
     matrix: Float64Array.from(matrix),
@@ -147,6 +149,8 @@ const jobOf = (THREE: typeof THREE_NS, mv: MeshVis, points: Float64Array, matrix
     scale: [scale.x, scale.y, scale.z],
     found: Uint32Array.from(trianglesOfPart(mv, local)),
     from: local.from,
+    // a mesh of its own that says what it was built from is held by that (a part of a merged mesh is only some of its mesh)
+    ...(built ? { solids: built } : {}),
   }
 }
 
