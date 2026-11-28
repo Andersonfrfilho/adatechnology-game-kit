@@ -5,11 +5,18 @@ const MAX_BOXES = 16
 /** How far (in the mesh's own units) a vertex may be from a corner of its box. */
 const CORNER = 1e-4
 /**
- * A part drawn as separate boxes holds the air between them when held as one box: under this share of the box around them they are held one by one. A board with a
- * doorway cut in it (two jambs and a lintel) fills about half of the box around it, and the doorway is air: only boards that all but fill their box (the planks of a
- * top, with the gaps between them) are one box.
+ * A part drawn as separate boxes holds the air between them when held as one box: under this share of the box around them they are held one by one. A part of a merged
+ * mesh (a house's: `RANGED`) keeps the share it always had; a mesh of its own (a piece of furniture: `OWN_MESH`) is held by its boxes unless they all but fill the box
+ * around them (the planks of a top, with the gaps between them): a board with a doorway cut in it (two jambs and a lintel) fills about half of its box, and the doorway is air.
  */
-const HOLLOW = 0.8
+export interface HollowRule {
+  /** The boxes are held one by one when they fill under this share of the box around them all. */
+  readonly share: number
+  /** Whether a box turned in the mesh's space (a roof slab) counts as a box, and one of them alone as the part. */
+  readonly turned: boolean
+}
+export const RANGED: HollowRule = { share: 0.5, turned: false }
+export const OWN_MESH: HollowRule = { share: 0.8, turned: true }
 
 /** A box a part is drawn with, in the mesh's own space: `rotation` (x y z w) when it is turned there (a roof slab), else it lies along the axes. */
 export type DrawnBox = { readonly center: readonly number[]; readonly half: readonly number[]; readonly rotation?: readonly number[] }
@@ -101,16 +108,16 @@ const turnedBoxOf = (points: ArrayLike<number>, first: number): DrawnBox | null 
 /**
  * The boxes a part is drawn with when they leave the box around them partly empty (a door frame: two posts and a lintel; a kennel: boards round the air; the slabs of a
  * roof, or one of them alone, turned in its mesh), from its vertices in the mesh's own space (x y z). Null when it is not drawn that way: every group of 24 vertices must be the eight
- * corners of a box, three vertices on each, lying along the axes or turned, and the boxes must fill under `HOLLOW` of the box around them all.
+ * corners of a box, three vertices on each, lying along the axes (or turned, by `rule`), and the boxes must fill under `rule.share` of the box around them all.
  */
-export const hollowBoxesOf = (points: ArrayLike<number>): DrawnBox[] | null => {
+export const hollowBoxesOf = (points: ArrayLike<number>, rule: HollowRule = RANGED): DrawnBox[] | null => {
   const count = points.length / 3
-  if (count === 0 || count % BOX_VERTICES !== 0 || count / BOX_VERTICES > MAX_BOXES) return null
+  if (count % BOX_VERTICES !== 0 || count / BOX_VERTICES < (rule.turned ? 1 : 2) || count / BOX_VERTICES > MAX_BOXES) return null
   const boxes: DrawnBox[] = []
   const low = [Infinity, Infinity, Infinity]
   const high = [-Infinity, -Infinity, -Infinity]
   for (let first = 0; first < count; first += BOX_VERTICES) {
-    const box = straightBoxOf(points, first) ?? turnedBoxOf(points, first)
+    const box = straightBoxOf(points, first) ?? (rule.turned ? turnedBoxOf(points, first) : null)
     if (!box) return null
     boxes.push(box)
   }
@@ -121,5 +128,5 @@ export const hollowBoxesOf = (points: ArrayLike<number>): DrawnBox[] | null => {
     }
   }
   const filled = boxes.reduce((sum, box) => sum + 8 * box.half[0]! * box.half[1]! * box.half[2]!, 0)
-  return filled < HOLLOW * (high[0]! - low[0]!) * (high[1]! - low[1]!) * (high[2]! - low[2]!) ? boxes : null
+  return filled < rule.share * (high[0]! - low[0]!) * (high[1]! - low[1]!) * (high[2]! - low[2]!) ? boxes : null
 }

@@ -17,7 +17,7 @@ import { GroundSpots } from './ground'
 import type { Bound, HostVis, MeshVis, PartBox, PartVis, PieceBody, PieceRound } from './internal'
 import { isTurned } from './internal'
 import { drawnSolidsOf } from './drawn-solids'
-import { hollowBoxesOf } from './drawn-boxes'
+import { OWN_MESH, RANGED, hollowBoxesOf } from './drawn-boxes'
 import { isRigidPose } from './rigid-pose'
 import type { MeasureBudget } from './drawn-solids'
 import { fitOrientedBoxes } from '@adatechnology/game-shapes'
@@ -3158,7 +3158,7 @@ class Renderer implements DestructionRenderer {
     // a mesh drawn as boxes with air between them (a kennel's boards, a door frame, the two slabs of a roof) is held box by box, ranged or not: the box around them is not drawn
     const own: number[] = []
     this.visuals.rangePoints(mv, new this.THREE.Matrix4(), own)
-    const drawn = hollowBoxesOf(own)
+    const drawn = hollowBoxesOf(own, mv.range ? RANGED : OWN_MESH)
     if (drawn) {
       const pos = new this.THREE.Vector3()
       const quat = new this.THREE.Quaternion()
@@ -3173,7 +3173,9 @@ class Renderer implements DestructionRenderer {
         const half: Vec3 = box.rotation ? [box.half[0]! * even, box.half[1]! * even, box.half[2]! * even] : [Math.abs(box.half[0]! * scale.x), Math.abs(box.half[1]! * scale.y), Math.abs(box.half[2]! * scale.z)]
         if (box.rotation) q.set(box.rotation[0]!, box.rotation[1]!, box.rotation[2]!, box.rotation[3]!).premultiply(quat).normalize()
         else q.copy(quat)
-        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [Math.max(0.005, half[0]), Math.max(0.005, half[1]), Math.max(0.005, half[2])], rotation: [q.x, q.y, q.z, q.w] })
+        // a mesh of its own may draw a sheet with no thickness (a liner): it is held 1 cm thick, as a plain mesh's box is; a part of a merged mesh is held as it always was
+        const thin = mv.range ? 0 : 0.005
+        out.push({ center: [c.x - cx, c.y - cy, c.z - cz], half: [Math.max(thin, half[0]), Math.max(thin, half[1]), Math.max(thin, half[2])], rotation: [q.x, q.y, q.z, q.w] })
       }
       return
     }

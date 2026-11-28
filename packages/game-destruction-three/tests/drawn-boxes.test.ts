@@ -1,7 +1,10 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 
-import { hollowBoxesOf } from '../src/drawn-boxes'
+import { OWN_MESH, RANGED, hollowBoxesOf as boxesOf } from '../src/drawn-boxes'
+
+/** As a mesh of its own is read (a piece of furniture). */
+const hollowBoxesOf = (points: ArrayLike<number>) => boxesOf(points, OWN_MESH)
 
 /** The vertices (x y z) of boxes as three.js draws them, each put (and turned) where it stands in the mesh. */
 const pointsOf = (boxes: ReadonlyArray<{ size: [number, number, number]; at: [number, number, number]; turn?: [number, number, number] }>): number[] => {
@@ -87,6 +90,14 @@ describe('the boxes a part is drawn with (hollowBoxesOf)', () => {
   it('what fills its box stays one box: a box alone, and the planks of a top with the gaps between them', () => {
     expect(hollowBoxesOf(pointsOf([{ size: [1, 0.04, 0.6], at: [0, 0, 0] }]))).toBeNull()
     expect(hollowBoxesOf(pointsOf([-0.42, -0.21, 0, 0.21, 0.42].map((z) => ({ size: [1, 0.04, 0.19] as [number, number, number], at: [0, 0, z] as [number, number, number] }))))).toBeNull()
+  })
+
+  it('a part of a merged mesh (of a house) keeps the rule it had: a door frame is its three boxes, a board with a doorway and a turned slab are left to the fit of the range', () => {
+    const frame = pointsOf([{ size: [0.05, 2.1, 0.17], at: [-0.475, 1.05, 0] }, { size: [0.05, 2.1, 0.17], at: [0.475, 1.05, 0] }, { size: [0.9, 0.05, 0.17], at: [0, 2.075, 0] }])
+    expect(boxesOf(frame, RANGED)).toHaveLength(3)
+    expect(boxesOf(frame)).toHaveLength(3)
+    expect(boxesOf(pointsOf([{ size: [0.125, 0.57, 0.004], at: [-0.2425, 0.285, 0] }, { size: [0.125, 0.57, 0.004], at: [0.2425, 0.285, 0] }, { size: [0.36, 0.11, 0.004], at: [0, 0.515, 0] }]), RANGED)).toBeNull()
+    expect(boxesOf(pointsOf([{ size: [0.5, 0.03, 0.84], at: [0, 0, 0], turn: [0, 0, 0.5] }]), RANGED)).toBeNull()
   })
 
   it('what is not drawn as boxes is not held this way (a cylinder)', () => {
