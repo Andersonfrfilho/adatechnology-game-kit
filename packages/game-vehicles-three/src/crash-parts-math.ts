@@ -7,6 +7,14 @@ export interface BodyMass {
   readonly inertia: Vec3
 }
 
+/** A part as the mass is worked out from: its mass and its box (centre and full size). */
+export interface MassPart {
+  readonly mass: number
+  readonly box: { readonly center: Vec3; readonly size: Vec3 }
+  /** Where its mass sits when not at the middle of its box (`PartDef.massCentre`). */
+  readonly massCentre?: Vec3 | undefined
+}
+
 /** The least a moment may fall to when a part's moments are taken off (kg m^2 per kg): a body never reaches zero inertia. */
 const MIN_INERTIA_PER_MASS = 1e-3
 
@@ -52,13 +60,29 @@ export const withoutPart = (total: BodyMass, part: BodyMass): BodyMass => {
   return { mass, centre, inertia }
 }
 
-/** The whole car as the kit has it: every part's mass at the centre of its box, the centre of mass of them all, and the moments about that centre. */
-export const bodyMassOf = (parts: readonly { readonly mass: number; readonly box: { readonly center: Vec3; readonly size: Vec3 } }[]): BodyMass => {
+/** The whole car as the kit has it: every part's mass where the part says it sits (`massCentre`, else the centre of its box), the centre of mass of them all, and the moments about that centre. */
+export const bodyMassOf = (parts: readonly MassPart[]): BodyMass => {
   const mass = parts.reduce((sum, part) => sum + part.mass, 0)
-  const centre = [0, 1, 2].map((k) => parts.reduce((sum, part) => sum + part.mass * part.box.center[k]!, 0) / mass) as unknown as Vec3
+  const at = (part: MassPart): Vec3 => part.massCentre ?? part.box.center
+  const centre = [0, 1, 2].map((k) => parts.reduce((sum, part) => sum + part.mass * at(part)[k]!, 0) / mass) as unknown as Vec3
   const inertia = [0, 1, 2].map((k) => parts.reduce((sum, part) => {
-    const offset: Vec3 = [part.box.center[0] - centre[0], part.box.center[1] - centre[1], part.box.center[2] - centre[2]]
+    const offset: Vec3 = [at(part)[0] - centre[0], at(part)[1] - centre[1], at(part)[2] - centre[2]]
     return sum + boxInertia(part.mass, part.box.size)[k]! + lever(part.mass, offset, k)
   }, 0)) as unknown as Vec3
   return { mass, centre, inertia }
+}
+
+/**
+ * The parts with their boxes moved into another frame by `toFrame` (a rigid matrix, column-major as `Matrix4.elements`): the model's parts are in the vehicle's own space,
+ * which the drawn vehicle turns inside its root (a quarter turn about y), and the chassis body is in the root's frame. A box turned off the axes keeps the size of its box round it.
+ */
+export const partsInFrame = <TPart extends MassPart>(parts: readonly TPart[], toFrame: ArrayLike<number>): TPart[] => {
+  const m = toFrame
+  const at = (row: number, column: number): number => m[column * 4 + row]!
+  const moved = ([x, y, z]: Vec3): Vec3 => [0, 1, 2].map((row) => at(row, 0) * x + at(row, 1) * y + at(row, 2) * z + at(row, 3)) as unknown as Vec3
+  return parts.map((part) => {
+    const [sx, sy, sz] = part.box.size
+    const size: Vec3 = [0, 1, 2].map((row) => Math.abs(at(row, 0)) * sx + Math.abs(at(row, 1)) * sy + Math.abs(at(row, 2)) * sz) as unknown as Vec3
+    return { ...part, box: { ...part.box, center: moved(part.box.center), size }, ...(part.massCentre ? { massCentre: moved(part.massCentre) } : {}) }
+  })
 }

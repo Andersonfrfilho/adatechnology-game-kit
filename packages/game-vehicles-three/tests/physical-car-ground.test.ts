@@ -9,6 +9,8 @@ import { createTestRoom } from '@adatechnology/game-test-room'
 
 import { VEHICLES_AREA_ID, createVehiclesTestModule } from '../src'
 import { bodyMassOf } from '../src/crash-parts-math'
+import type { VehicleDestructible } from '@adatechnology/game-vehicles'
+import { framePartsOf } from '../src/test-area/physical-car'
 import type { PhysicalCar } from '../src/test-area/physical-car'
 import { defaultVehicleFleet } from './default-fleet'
 import { fakeDocument } from './fake-dom'
@@ -36,7 +38,7 @@ describe('TS.1b: the room car has ground under it without a floor made by hand',
     const car = root.userData.physicalCar as PhysicalCar
     for (let frame = 0; frame < 400 && !car.isBuilt(); frame++) loop.stepFixed(1)
     expect(car.isBuilt()).toBe(true)
-    const centre = bodyMassOf((root.userData.destructible as { model: { parts: Parameters<typeof bodyMassOf>[0] } }).model.parts).centre
+    const centre = bodyMassOf(framePartsOf(THREE, root.userData.destructible as VehicleDestructible, root)).centre
     const drawn = root.localToWorld(new THREE.Vector3(...centre)).y
     for (let step = 0; step < 600 && !world.isSleeping(car.chassis()!); step++) loop.stepFixed(1)
     expect(world.isSleeping(car.chassis()!)).toBe(true)
