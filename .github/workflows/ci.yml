@@ -5,8 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# a new push to a pull request cancels the run of the push before it; on main every commit finishes its run (the group falls back to the run's own
+# id), so a merge never cancels the validation of the merge before it and a red main says which commit broke it
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
