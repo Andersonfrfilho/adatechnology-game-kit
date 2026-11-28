@@ -421,3 +421,156 @@ Três fatos da mesma madrugada confirmam o diagnóstico, e por isso ficam regist
 
 Estado dos itens do plano em 28/11, 03:10 -03: item 1 feito (#601); item 2 pela metade (#605 tira o cancelamento do CI da main; a proteção da branch
 depende do dono); item 5 começado (22 worktrees já mergeados e limpos removidos, de 93 para 71).
+
+## 10. Adendo — quem simula o quê, e as verificações que faltam (28/11)
+
+Levantado em 2026-11-28 sobre `69d175833` (main depois do #615), só leitura (`rg`/`sed`); nenhum teste foi rodado. As linhas citadas são desse commit.
+
+**O buraco que as seções 2 e 3 não viram.** A seção 2.2 lista onde o kit *adivinha a forma*. Não lista onde o kit *move coisas por conta própria*. As três
+causas da "tábua que gira, fica em pé, sobe e treme" estavam em três sistemas: forma adivinhada (spec 019), alavanca errada numa regra do kit (#610) e
+destroço grande simulado por uma física de lasca (#613, raiz na spec 020). As duas últimas são da mesma classe: **uma regra escrita para um tamanho,
+aplicada a qualquer tamanho**. Cada uma ganhou um teste de um caso, e o dono achou a seguinte à mão. O que falta é um inventário de quem move e
+testes que variem o tamanho sozinhos.
+
+### 10.1 A. Inventário: movimento fora do motor de corpos rígidos
+
+Modelos: **motor** = corpo do contrato (`game-physics/src/contract.ts`, Jolt); **motor+regra** = corpo do motor em que o kit escreve velocidade ou pose
+por cima; **próprio** = integrador escrito à mão; **roteiro** = pose animada sem dinâmica.
+
+| # | Onde | O que move | Modelo | Constantes veem o tamanho? | Guarda hoje | Risco |
+|---|---|---|---|---|---|---|
+| 1 | `game-destruction-three/src/fragments.ts:708-778` (`step`), `:820-845` (`pileUnder`), `:866-891` (`settle`) | todo destroço de fratura, inclusive o `isBig` (`:208-211`, `:469`: tábua de até 4,2 m) | próprio: Euler, chão pelo ponto mais baixo da caixa (`:719-731`), pilha por AABB, sem torque do peso, `settle` gira por `slerp` sem dinâmica | em parte: `TUMBLE_REACH` (`:742`) sim desde o #613; o resto não (10.2) | `long-debris-settles`, `long-debris-lies-down`, `settled-debris`, `fragment-wall`, `fragment-corner-support`, `support-lost`; `broken-catalogue-settles` com 11 móveis em `KNOWN` por destroço que não para | **alto** — já produziu a causa 3 e ainda tem dívida contada |
+| 2 | `fragments.ts:503-517` (`blast`), chamado em `renderer.ts:3672` | todo destroço no raio de uma explosão | próprio: soma velocidade e giro | não: a mesma velocidade para 10 g e 30 kg, e o giro em rad/s é o número da velocidade em m/s (`:513`) | `blast-debris*.test.ts` existem; não abri. Nenhum varia tamanho **[inferência]** | **alto** |
+| 3 | `game-destruction/src/world.ts:4401` (fratura geral), `:3505`, `:3540`, `:3937`, `:4579` | giro inicial de cada fragmento ao nascer | dado de entrada do item 1 | não: ±6, ±4, ±6, ±10 e ±15 rad/s por eixo, qualquer `f.size` | nenhum (`rg angularVelocity packages/game-destruction/tests` dá zero) | **alto** — a tábua de 4,2 m nasce com a ponta a até ~12 m/s por eixo |
+| 4 | `renderer.ts:3009-3072` (`loosenIfFootless`), `:3135-3181` (`checkUndermined`), `:3188-3201` (`goOverIfBalanced`), `:3604-3625` (`tipIfTopHeavy`) | móvel que perdeu pé ou chão | motor+regra: impulso (`pieceSys.impulse`) ou giro escrito direto (`:3068-3069`) | `goOverIfBalanced` sim desde o #610 (`reachAlong`); `EDGE_NUDGE` não; limiares em metros absolutos | `broken-catalogue-spin` (3 tamanhos: largura e fundo; **não** altura, **não** 0,1x, **não** massa); só `drawn-solids.test.ts` cita `undermined` | **alto** — causa 2 |
+| 5 | `engine-pieces.ts:1057-1170` (`topple`, `topplePush`), `:936-1019` (`outOfStatics`, levantar do chão), `:1676-1682` (caiu pelo chão), `:1696` (dormir) | peça do motor em equilíbrio estreito, peça nascida dentro de outra | motor+regra: aceleração angular somada, `setPose` (teletransporte), atrito trocado (`PROPPED_GRIP`) | `holdPush` (`:169-177`) é derivado de `g`, braço e inércia; `TOPPLE`, `WEDGE_LIFT`, `SINK`, `STILL_SPIN` não | `topple-energy`, `pieces-tipping`, `asleep-on-steep-top`, `engine-fast-chips` e `engine-ground-worker` (`fellThrough == 0`), `sweep-c6` | médio — só `fellThrough` é contado; os outros teletransportes não |
+| 6 | `game-destruction-three/src/pieces.ts` (1.330 linhas) | peças, quando não há motor | próprio: solver de caixas do kit | parcial (`TIP_SECONDS`, `SEPARATE_SPEED` fixos) | `pieces-stack`, `pieces-tipping` e outros | médio — a regra 15 já o congela; não conferi qual caminho a sala 4280 usa hoje |
+| 7 | `renderer.ts:2596-2609` | vergalhão solto de um pilar | vira destroço do item 1 (`lasting`) | não: ±0,75 rad/s para qualquer comprimento de barra | nenhum que eu tenha achado | médio |
+| 8 | `game-floorplan-three/src/destruction/world.ts:192-210` | peça que cai e fragmentos da casa **sem** renderer (`if (R) return`) | próprio, numa linha: gira 0,5 s e congela no ângulo em que estiver, pousa em `b.hy`; fragmento gira pela velocidade linear | não | `blast-presentation`, `construction-stages` citam `animate`; não abri | médio — só no caminho sem renderer; quem usa esse caminho **[não conferido]** |
+| 9 | `game-vfx/src/pools/chunk-motion.ts:15-63`, nascidos em `explosion.ts:214-245` | pedaços de explosão (0,07–0,45 m; `chunks.size` multiplica sem teto) | próprio; repouso arredonda `rx`/`rz` para um quarto de volta; chão = `sy * 0.45` em qualquer orientação | não | `pools.test.ts`, `world.test.ts`, goldens | médio — placa pode parar de pé e meio enterrada **[inferência]**; é só desenho, não colide |
+| 10 | `game-vfx/src/workshop/debris.ts:118-140` | 500 caixas das receitas; a maior literal é o capô de `effects/vehicles/boom.ts:21` (1,6 × 0,06 × 1,2 m) | próprio; altura de apoio = metade do **menor** lado em qualquer orientação (`:127`); repouso em quarto de volta | não: `DEFAULT_SPIN = 12`, limiares 0,5 e 0,3 m/s | `workshop-golden` (bit a bit), `debris-contacts.test.ts` | médio — mesma classe da causa 3, em peça de 1,6 m |
+| 11 | `game-vfx/src/pools/sparks.ts:64-80`, `puffs.ts`, `sprites/kind-pool.ts:234`, `workshop/meshes.ts:128-143`, `game-vehicles/src/particles.ts:269-319`, `game-weapons-three/src/fx/particles.ts:174` | faíscas, fumaça, partículas | próprio | não importa: sem forma | goldens de vfx | baixo |
+| 12 | `game-weapons-three/src/engine-loose.ts:83-98` | cápsula e granada | **motor** (`createBody`, material e resistência de rolagem) | sim: massa pela densidade | `engine-loose.test.ts`, `room-loose-bodies.test.ts`, `casing-level.test.ts` | baixo — é o padrão a copiar |
+| 13 | `game-weapons-three/src/box-fx.ts:333-355` | cápsula e carregador quando o host não dá mundo físico | próprio: giro ±10 a ±15 rad/s (`:276`), até 4 quiques | não, mas o tamanho é fixo | `world-effects`, `weapon-samples` | baixo |
+| 14 | `game-test-room/src/explosives.ts:579-600`, `:555`, `:666` | projétil sem corpo no motor | próprio; gira a 8 rad/s fixos | não | `explosives.test.ts` | baixo |
+| 15 | `game-vehicles/src/explosion.ts:187-190`, `:302-320` (`tickBoom`), `:352-380` (`tickFlying`) | o carro inteiro pula; para-choque voa | roteiro/próprio: `vy = sqrt(2·9,8·(1,0 ou 1,5))` para qualquer veículo, pousa em `B.y0`; peça pousa em `y = P.r` do referencial local | não: moto e ônibus pulam a mesma altura | `destructible.test.ts` cita; não abri | médio — sobe para alto se o mesmo veículo também for corpo do Jolt na cena **[não conferido]** |
+| 16 | `game-characters-three/src/instanced/flying-limbs.ts:100-125`, `wounds/flying.ts:70-95` | membros arrancados | próprio; `FLOOR_Y = 0.07` e `FLOOR_OFFSET = 0.08` constantes | não; chão parece ser um plano fixo, não `groundAt` **[inferência]** | `wounds.test.ts`, `instanced-runtime.test.ts` | médio |
+| 17 | `game-crowd/src/physics/` (2.151 linhas; `thrown.ts:173-180`), cápsulas cinemáticas em `engine-agents.ts:27` | multidão, corpo arremessado | próprio, com cápsula cinemática no motor | `MAX_SPIN = 8`; corpo de tamanho humano | `physics/thrown`, `determinism`, `state-hash`, `pen`, `knock-down` | baixo — é o subsistema próprio mais bem guardado (hash e determinismo) |
+| 18 | `game-contracts/src/blast-knock.ts:95-125` | pessoa derrubada por explosão | próprio (atrito 7 m/s²) | tamanho humano | não procurei | baixo |
+| 19 | `game-physics/src/engine-corpses-swap.ts:13-14,264-265` | cadáver ao trocar de nível (ragdoll, cadeia, cápsula) | motor+regra: levanta por passos (`LIFT_MAX = 0.05`, `BIRTH_LIFT_MAX = 3` m) | não | não abri | médio **[só as constantes foram lidas]** |
+| 20 | `game-interactables/src/engine-leaf.ts:73-101`, `engine-soft.ts` | porta, gaveta, cortina | motor+regra: `setVelocity` com ganho fixo (`AIM_GAIN = 8`), `setPose` | não | `engine-parts.test.ts` | médio **[inferência: não li o laço inteiro]** |
+| 21 | `game-test-room/src/room.ts:685-686` (chute), `:1330-1350` (empurrão), `:2129`, `:2985`, `:3164` (arremesso), `thrown-body.ts:8` | o que o jogador chuta, empurra e joga | **motor**, com impulso derivado (`(1+e)·m·M/(m+M)`, força em N, `velocidade × massa`) | sim, menos `THROW_SPIN = 8` rad/s | `push-load`, `room.test`, `strike`, `hand-use` | baixo |
+| 22 | `game-terrain/src/debris.ts:60-80` | torrões de terra | próprio, 2 quiques | não; peças pequenas | `terrain.test.ts` | baixo |
+
+Sem integrador em `src` pelo que o `rg` mostra: `game-items-three`, `game-props3d`, `game-vegetation*` (só geometria e `test-area`). Não abri:
+`game-vehicles-driving` (dinâmica própria, 1.952 linhas, já citada em 2.3), `game-animals/src/ragdoll.ts` e `chain.ts`, `game-characters/src/body/ragdoll.ts`,
+`game-fluids/src/film/`, `game-player/src/physics-controller.ts`, `own-locomotion.ts` (jogador, `GRAVITY = 13`).
+
+Três leituras do quadro:
+
+- **O padrão certo já existe no repositório**: itens 12 e 21 entregam o corpo ao motor com massa e material, e o que o kit dá é impulso derivado. Os
+  itens 1 a 4 são o contrário, e são os que o dono viu.
+- **Há uma régua de energia pronta e parada**: `game-destruction-three/tests/energy-ruler.ts` (C1 a C4 da spec 008: ilha não ganha energia, peça não
+  sobe acima do último repouso, tempo até tudo dormir). Só `bowl-energy`, `stack-energy` e as sondas da spec 008 a usam. Ela mede peças, não
+  destroços, e não roda no catálogo. Uma mesa a 19,5 rad/s num quadro é um ganho de energia que ela acusaria **[inferência: não rodei]**.
+- **Os itens 9 e 10 são a causa 3 esperando a vez**: integrador de lasca, repouso por quarto de volta, apoio pelo menor lado, e peça de 1,6 m.
+
+### 10.2 B. Constantes cegas ao tamanho
+
+Generalização das causas 2 e 3. Cada linha é um número em unidade que não escala (rad/s, m/s, metros ou segundos absolutos) aplicado a corpo de
+qualquer tamanho ou massa.
+
+| Onde | Valor | Aplicado a | Por que estoura |
+|---|---|---|---|
+| `fragments.ts:513` | giro += (rnd − 0,5) · `k`, com `k` em m/s | todo destroço numa explosão | unidade trocada: `k` chega a 20 (`renderer.ts:3672`), ±10 rad/s por eixo; numa tábua de 4,2 m a ponta ganha 21 m/s além dos 20 do centro |
+| `renderer.ts:3672` | `min(20, sqrt(E)·0,08)` m/s | todo destroço, qualquer massa | lasca de 10 g e meia tábua de 30 kg saem iguais; as peças usam `blastShove` (massa e área, `:3660`) e os destroços não |
+| `world.ts:4401` (núcleo) | ±6 rad/s por eixo (e ±4, ±6, ±10, ±15 nas outras quatro) | fragmento de qualquer `f.size` | velocidade da ponta = ω · L/2: 0,3 m/s na lasca de 10 cm, 12,6 m/s na tábua de 4,2 m |
+| `fragments.ts:177-178,760-763` | `TIP_TURN = 3` · `dt` · 10 = 30 rad/s² | destroço com o centro fora do apoio | aceleração da ponta de 63 m/s² (6 g) em 4,2 m; em 5 cm, 0,75 m/s² |
+| `fragments.ts:887` | `slerp(q, dt · 7)` | destroço sendo deitado | velocidade angular = 7 · ângulo, sem colisão no caminho: a 80° a ponta de 4,2 m varre a ~20 m/s por dentro do que estiver ali |
+| `fragments.ts:206` | lento = menos de ~0,11 m/s e ~0,45 rad/s | decide dormir | a 0,45 rad/s a ponta de 4,2 m anda a 0,94 m/s e a peça "está parada"; `pieces.ts:112` e `engine-pieces.ts:141` (`STILL_SPIN = 0.45`) repetem o mesmo limiar para móvel |
+| `fragments.ts:736-740` | quica se `vy < −0,6`; devolve 0,25; giro × 0,55 | qualquer massa | uma viga de 30 kg quica como uma lasca |
+| `fragments.ts:474` | `vel.y = max(vy, 0,3)` ao ser chutado | destroço grande de qualquer massa | salto fixo |
+| `renderer.ts:131,3068-3069` | `EDGE_NUDGE = 1` rad/s direto na velocidade angular | móvel equilibrado numa aresta | o topo sai a altura × 1: 0,4 m/s num banco, 6 m/s numa estante de 6 m, acima do limite de 4,5 do próprio teste, que não varia a altura |
+| `engine-pieces.ts:157,1067` | `TOPPLE = 3` · `min(altura, 1)` rad/s² | peça do motor em apoio estreito | acima de 1 m a aceleração angular não cai com o tamanho: com o centro de massa a 4 m do apoio ele ganha 12 m/s², mais que a gravidade |
+| `renderer.ts:323,3179` | impulso `massa × 0,6` no centro dos pés perdidos | móvel que perdeu chão | o giro resultante é J·r/I: depende da inércia real; coberto em largura e fundo, não com massa concentrada (tampo leve em base pesada) |
+| `renderer.ts:124,132-133,138` | `FEET_BAND = 0.03` m, `TIP_MIN_HEIGHT = 0.3` m, `TIP_STANDING_FEET = 0.1` m | decide o que é pé e o que tomba | a 0,1x (miniatura, item sobre a mesa) nada tem pé nem altura para tombar; a 10x a faixa de 3 cm não acha o pé de um rodízio |
+| `engine-pieces.ts:193,202,969` | `SINK = 0.005` m; `WEDGE_LIFT = 0.1 · 2^n` m | peça dentro de outra | folha de 4 mm é mais fina que o afundamento tolerado; o levantamento dobra sem olhar o tamanho da peça |
+| `pieces.ts:116,164` | `TIP_SECONDS = 3`, `SEPARATE_SPEED = 1.5` m/s | solver do kit | tempo de queda real cresce com a raiz da altura |
+| `fragments.ts:164,167` | `BIG_LENGTH = 0.2`, `BIG_WIDTH = 0.03` | escolhe o regime do destroço | fronteira absoluta entre duas físicas: 19 cm e 21 cm se comportam diferente |
+| `vfx/workshop/debris.ts:11,127,135` | `DEFAULT_SPIN = 12`; apoio pelo menor lado; repouso abaixo de 0,5 m/s | caixa de 5 cm a 1,6 m | ver item 10 de 10.1 |
+| `vehicles/explosion.ts:187-190` | pulo de 1,0 ou 1,5 m; giro ±0,25 rad/s | qualquer veículo | moto e ônibus |
+| `test-room/thrown-body.ts:8`, `interactables/engine-leaf.ts:13` | `THROW_SPIN = 8` rad/s; `AIM_GAIN = 8` 1/s | qualquer item jogado; qualquer folha de porta | pá de 1,1 m com a ponta a 4,4 m/s; portão largo com a borda rápida |
+
+O critério para corrigir cada uma já está na regra 12: regra de física se escreve pela **velocidade da ponta** (m/s) ou por energia, nunca em rad/s fixo.
+
+### 10.3 C. Verificações que projetos grandes usam, e o teste equivalente aqui
+
+Tudo abaixo roda em Node no CI: o Jolt em wasm já roda no vitest (`packages/game-floorplan-three/tests/setup-physics.ts:6`), então a regra 9 não é obstáculo.
+Custo é estimativa minha, não medida.
+
+| Prática | De onde vem (conferido) | Teste concreto neste repositório | O que afirma | Custo | Comando de aceite |
+|---|---|---|---|---|---|
+| **Comparar com a solução fechada** | Jolt `UnitTests/Physics/PhysicsTests.cpp`: `TestPhysicsFreeFall`, `TestPhysicsApplyForce`, `TestPhysicsApplyTorque`, `TestPhysicsCollisionElastic`/`Inelastic` conferem posição e velocidade contra a cinemática | `game-destruction-three/tests/fragment-analytic.test.ts`: um destroço solto de `h`, sem giro, toca o chão em `sqrt(2h/g)` e desliza `v²/(2μg)`; o mesmo para peça do motor | os dois integradores do kit obedecem ao básico em 4 tamanhos | 0,5 dia; segundos | `pnpm --filter @adatechnology/game-destruction-three test -- fragment-analytic` |
+| **Relação metamórfica de escala** | teste metamórfico (Chen, 1998; levantamentos de Segura 2016 e Chen 2018, lidos só pela Wikipédia); PhyFu (ASE 2023) usa leis físicas como oráculo e achou mais de 5 mil entradas erradas em 4 motores. A relação abaixo é dedução minha por análise dimensional, não vem de uma fonte | `scale-sweep.test.ts` em `game-destruction-three` e `game-floorplan-three`: o mesmo cenário a 0,1x, 0,3x, 1x, 3x e 10x de comprimento. Com `g` fixo, tempos escalam com `√s`, velocidades com `√s`, giros com `1/√s`. E trocar a densidade por `k` não muda a trajetória de corpo rígido sob peso e atrito | `ω(s)·√s` e `v(s)/√s` ficam numa faixa; massa × 10 não muda onde a peça para (fora de explosão) | 1–2 dias; dezenas de segundos | `pnpm --filter @adatechnology/game-destruction-three test -- scale-sweep` |
+| **Monitor de invariante em execução** | Hypothesis: invariante "run after every step"; Solver2D (Catto) nomeia "energy creation" e "jitter" como critérios; asserts de desenvolvimento do PhysX e Unreal (seção 5) | promover `energy-ruler.ts` de `tests/` para `src` e passar toda escrita do kit em velocidade ou pose por um ponto só, com o **nome da regra**; contador por regra e entrada no log da sala (`invariant: kit_energy`, ao lado de `broken_floating`, `room.ts:377`) | nenhuma regra dá mais energia do que a queda disponível do centro de massa; nada acordado depois de N s sem entrada; nada acima da altura em que nasceu; nada dormindo em pose instável | 3–4 dias | `pnpm --filter @adatechnology/game-destruction-three test -- kit-energy` falha com `goOverIfBalanced` revertido por opção |
+| **Propriedade com semente e encolhimento** | fast-check `commands` ("can efficiently shrink failing scenarios", replay por semente e caminho); Hypothesis imprime "a very short program" que reproduz | `property-break.test.ts` em `game-floorplan-three`: móvel × tamanho × ordem de quebra × ponto e energia do golpe, com os invariantes acima depois de cada passo | o que o `broken-catalogue-spin` afirma, sem alguém escolher "3x comprido" | 3–4 dias; orçado em minutos por `FC_NUM_RUNS` | `FC_NUM_RUNS=200 pnpm --filter @adatechnology/game-floorplan-three test -- property-break` |
+| **Diferencial** | Solver2D: oito solvers nas mesmas amostras, com os mesmos parâmetros | `light-vs-rigid.test.ts`: o mesmo destroço lançado no `FragmentSystem` e como corpo do motor; compara eixo para cima, altura do centro e tempo até dormir | as duas físicas concordam no repouso; a diferença é lista contada que só diminui e vira o aceite da spec 020 | 1–2 dias | `pnpm --filter @adatechnology/game-destruction-three test -- light-vs-rigid` |
+| **Determinismo por hash até dormir** | Box2D "Falling Hinges": em todo PR compara "the number of time steps it takes for all the bodies to go to sleep" e o hash das transformações; Rapier: `takeSnapshot()` + hash; Jolt tem `PhysicsDeterminismTests.cpp` (só o nome do arquivo conferido) | estender `determinism.test.ts`: além do hash, o **número de passos até tudo dormir** por móvel quebrado | regressão de "não sossega" aparece como passos a mais, sem depender de limiar | 1 dia | `pnpm --filter @adatechnology/game-destruction-three test -- determinism` |
+| **Replay de entrada gravada** | Fiedler, "Fix Your Timestep!" (passo fixo é a pré-condição); Jolt README: replicar a simulação "by replicating its inputs" | a sala já tem log (`examples/test-room/src/main.js:209`, `__testRoom.log.toNDJSON()`, `packages/game-test-room/src/log.ts`), mas é log de comportamento; se ele basta para refazer a entrada **[não conferido]**. Teste: `tests/replays/*.ndjson` refeitos em Node com hash por passo | todo defeito achado à mão vira arquivo que reprova até ser corrigido | 5–7 dias (é o item 9 da seção 6) | `pnpm --filter @adatechnology/game-test-room test -- replays` |
+| **Soak** | Godot-Physics-Tests: monitor de expiração (espera um prazo e julga); Box2D roda até dormir | rodada noturna em Node: catálogo quebrado até o fim, 60 s simulados, régua C4 (tempo até dormir) | acordados chegam a zero e a energia não sobe depois do último golpe | 1 dia; minutos, fora do CI de PR | `node tools/ci/soak-broken.mjs --seconds 60` (novo) sai com 0 |
+| **Varredura de catálogo com dívida contada** | Godot-Physics-Tests: teste "expected to fail" para acompanhar regressão de defeito conhecido | já é o padrão (`KNOWN`). Falta um número só: soma de todas as listas, gravada por commit | a soma não sobe | 0,5 dia | `node tools/ci/debt-count.mjs --check` (novo) |
+
+**Política de golden.** O golden bit a bit serve para o que é função pura de uma entrada pequena e muda raramente: plano de fratura, colisor de
+uma peça, tabela de materiais. Ele esconde regressão em trajetória: qualquer mudança legítima de constante regrava, e quem regrava decide (seção
+3.2, causa 4). Para movimento, a guarda é o invariante (parou, deitou, não ganhou energia, mesmos passos até dormir), não os bytes. O `workshop-golden`
+do item 10 de 10.1 é o exemplo: grava o capô de pé se ele parar de pé.
+
+**Não foi possível conferir** (cito só como pista, sem afirmar o conteúdo): o artigo do QuickCheck (Claessen e Hughes, ICFP 2000; a página da ACM
+respondeu 403); as palestras de Catto na GDC (a busca devolveu os PDFs `SequentialImpulses_GDC2006`, `SoftConstraints_GDC2011` e
+`UnderstandingConstraints_GDC2014` em box2d.org; não abri); as palestras de Gregorius; a suíte de testes do Bullet; os livros de Ericson, Millington e
+Gregory (a seção 5.3 já registra que só os índices foram vistos); o conteúdo de `PerformanceTest`, `Samples` e `PhysicsDeterminismTests.cpp` do Jolt
+(só as descrições do README e a lista de arquivos).
+
+URLs abertas neste adendo: https://github.com/jrouwe/JoltPhysics , https://github.com/jrouwe/JoltPhysics/tree/master/UnitTests/Physics ,
+https://raw.githubusercontent.com/jrouwe/JoltPhysics/master/UnitTests/Physics/PhysicsTests.cpp (os primeiros 100 mil caracteres),
+https://box2d.org/posts/2024/08/determinism/ , https://box2d.org/posts/2024/02/solver2d/ , https://gafferongames.com/post/fix_your_timestep/ ,
+https://fast-check.dev/docs/advanced/model-based-testing/ , https://hypothesis.readthedocs.io/en/latest/stateful.html , https://arxiv.org/abs/2307.10818 ,
+https://en.wikipedia.org/wiki/Metamorphic_testing , https://github.com/fabriceci/Godot-Physics-Tests , https://rapier.rs/docs/user_guides/javascript/determinism .
+
+### 10.4 D. Plano
+
+Ordem por (causas desta semana que o item pegaria antes do dono) ÷ custo. Causa 1 = forma adivinhada; 2 = alavanca errada; 3 = destroço grande na
+física de lasca. Entra depois dos itens 1 a 5 da seção 6 e substitui os itens 6 e 7 dela por algo mais estreito e mais barato.
+
+| # | Item | Pegaria | Modelo | Aceite por comando |
+|---|---|---|---|---|
+| 1 | **Varredura de escala no que já existe.** `SIZES` do `broken-catalogue-spin` ganha altura 3x, tudo a 0,3x e massa 10x; `long-debris-settles` ganha o lançamento real do núcleo (`world.ts:4401`) em vez de fragmento montado à mão | 2 e 3 | `haiku` | `pnpm --filter @adatechnology/game-floorplan-three test -- broken-catalogue-spin` passa com 6 tamanhos; com `EDGE_NUDGE` como está, o caso "três vezes mais alto" reprova ou entra numa lista `KNOWN` nomeada |
+| 2 | **Regra `size-blind-motion` no `kit-audit`.** Toda escrita em velocidade angular (`\.ang\.`, `angularVelocity`) ou `slerp` de pose em `packages/*/src` cujo lado direito não cita meia-medida, alcance ou inércia entra numa lista contada (as de 10.2 são a lista inicial) | 3 (o tombo de 1 rad/s fixo); não a 2, que era um braço de alavanca | `haiku` | `node tools/kit-audit/audit.mjs --check --rule size-blind-motion` sai com 0 contra a lista gravada, e com 1 se uma linha nova de rad/s fixo entrar |
+| 3 | **Diferencial leve × rígido.** O mesmo destroço nas duas físicas, de 10 cm a 4,2 m | 3, direto | `sonnet` | `pnpm --filter @adatechnology/game-destruction-three test -- light-vs-rigid` passa com a lista de divergência gravada; a lista esvazia quando a spec 020 fechar |
+| 4 | **Toda regra do kit passa por um ponto e é medida pela régua de energia**, com o nome da regra; destroços incluídos; contador por regra no log da sala | 2 (19,5 rad/s é energia criada) e 3 (subir acima de onde nasceu) | `opus` para decidir onde a régua mora e o contrato do ponto único; `sonnet` para ligar regra por regra | `pnpm --filter @adatechnology/game-destruction-three test -- kit-energy` passa; revertendo `reachAlong` para o maior lado por opção de teste, falha citando `goOverIfBalanced` |
+| 5 | **Relação de escala e solução fechada** (`scale-sweep`, `fragment-analytic`) para os dois integradores do kit e, depois, para os itens 9, 10 e 15 de 10.1 | 3; a 2 só se o cenário incluir quebra de pé | `sonnet` | os dois comandos de 10.3 passam; `rg -c "KNOWN" packages/game-destruction-three/tests/scale-sweep.test.ts` mostra a dívida nomeada |
+| 6 | **Teste de propriedade com semente** sobre móvel × tamanho × ordem de quebra × golpe, com os invariantes do item 4 | 2 e 3 sem ninguém escolher o tamanho; a 1 se o invariante "nenhuma caixa guarda ar" entrar junto | `sonnet` | `FC_NUM_RUNS=200 pnpm --filter @adatechnology/game-floorplan-three test -- property-break` passa em menos de 5 min e imprime a semente |
+| 7 | **Regra `own-integrator` no `kit-audit`.** Os integradores de 10.1 viram lista contada; integrador novo fora do motor reprova | nenhuma das três; impede a quarta | `haiku` | `node tools/kit-audit/audit.mjs --check --rule own-integrator` sai com 0 contra a lista de 10.1 |
+| 8 | **Passos até dormir no hash de determinismo, e soak noturno de 60 s** | 3 (8 s subindo e caindo) | `haiku` | `pnpm --filter @adatechnology/game-destruction-three test -- determinism` grava e compara `stepsToSleep`; `node tools/ci/soak-broken.mjs --seconds 60` sai com 0 |
+
+**O que não fazer:**
+
+- **Teto de velocidade angular ou de altura sem contador.** Um `min(ω, ωmax)` teria escondido as causas 2 e 3 e deixado a mesa "só um pouco torta".
+  Todo limite que corta entra com contador exposto e teste que exige zero, como `fellThrough` (`engine-pieces.ts:1679`, cobrado em `engine-fast-chips.test.ts`).
+- **Subir a régua quando ela reprova** (`EARLY_GAIN`, `LYING`, segundos de espera) ou pôr a peça em `KNOWN` na mesma sessão que escreveu o código.
+- **Regra nova em rad/s, ou limiar novo em metros absolutos**, em qualquer dos sistemas de 10.1.
+- **Exceção por móvel** (`if (type === 'table')`): o defeito é da proporção, não do tipo.
+- **Golden de trajetória** como guarda de movimento.
+- **Rever ou duplicar a spec 020 aqui**: o item 3 é o critério de aceite dela, não outra implementação.
+- **Mais um teste de um caso** para o próximo sintoma. Se o dono achar outro, a pergunta é qual linha de 10.1 e qual invariante do item 4 faltou.
+
+### 10.5 E. O que este adendo não conferiu
+
+Nenhum teste foi rodado: os riscos de 10.1 e os estouros de 10.2 são leitura de código e conta à mão, não medição; "a régua acusaria" e "a placa
+pararia de pé" são inferência. Os números de linha são de `69d175833`. Não abri os arquivos listados no fim de 10.1 nem os testes `blast-debris*`,
+`destructible.test.ts`, `blast-presentation` e `construction-stages`, então "guarda hoje" nessas linhas vem do nome do arquivo. Não conferi se o item 8
+de 10.1 (casa sem renderer) e o item 6 (solver do kit) ainda rodam em alguma página que o dono usa, nem se o veículo que pula (item 15) é ao mesmo
+tempo corpo do Jolt. A busca por integradores foi por padrão de texto (`-= g * dt`, `+= v * dt`, giro somado): um integrador escrito de outra forma
+(por exemplo com `lerp` de posição, ou mola) escapou, e é por isso que o item 7 do plano precisa ser regra e não esta lista. Não li a spec 020 nem o
+trabalho em andamento dela. Os custos de 10.3 e 10.4 são estimativa. Das fontes, o que está em "não foi possível conferir" não sustenta nenhuma
+afirmação deste adendo.
