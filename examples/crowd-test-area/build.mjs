@@ -6,6 +6,8 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { withArea } from '../test-room/area-page.mjs'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
 const pkg = (/** @type {string} */ name) => join(root, 'packages', name)
@@ -53,13 +55,10 @@ console.log(`dist/crowd-area.js ${(bundle.length / 1024).toFixed(0)} KB`)
 
 const roomHtml = process.env.ROOM_HTML || join(here, '../test-room/base/test-room.html')
 if (existsSync(roomHtml)) {
-  const safe = (/** @type {string} */ s) => s.replace(/<\/(script)/gi, '<\\/$1')
   const page = readFileSync(roomHtml, 'utf8')
-  const at = page.lastIndexOf('</body>')
-  if (at < 0) throw new Error('the room page has no </body>')
-  // the room page sets window.__testRoom synchronously; our script runs right after it, loads the module into that room and opens its area
+  // the room page runs our script once its room exists (window.__testRoom, after Jolt loads: withArea of examples/test-room/area-page.mjs); it loads the module into that room and opens its area
   const boot = `window.__crowdReport = CrowdArea.loadInto(window.__testRoom)`
-  const html = `${page.slice(0, at)}<script>${safe(bundle)}\n${boot}</script>\n${page.slice(at)}`
+  const html = withArea(page, bundle, boot)
   writeFileSync(join(here, 'dist/sala-multidao.html'), html)
   console.log(`dist/sala-multidao.html ${(html.length / 1024).toFixed(0)} KB`)
 } else {

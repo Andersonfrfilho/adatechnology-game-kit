@@ -292,24 +292,53 @@ describe('ProgramWarmup link checks', () => {
 })
 
 describe('ProgramWarmup.warmUpAsync', () => {
-  it('links each fog state with compileAsync just before drawing it, and draws what warmUp draws, giving the page a task between the steps', async () => {
+  it('links each fog state in parallel just before drawing it, and draws what warmUp draws, giving the page a task between the steps', async () => {
     const scene = new THREE.Scene()
     const fog = new THREE.Fog(0x888888, 1, 100)
     scene.fog = fog
     const { renderer } = fakeRenderer()
     const order: string[] = []
     const fogName = (): string => (scene.fog === null ? 'none' : (scene.fog as { isFogExp2?: boolean }).isFogExp2 === true ? 'exp2' : 'linear')
-    Object.assign(renderer, { compileAsync: vi.fn(async () => void order.push(`compile:${fogName()}`)) })
+    // the parallel link waits on each program three reports for what `compile` handed back; `compileAsync` only marks a three that has it
+    const linked = new THREE.MeshBasicMaterial()
+    let ready = false
+    Object.assign(renderer, { compileAsync: vi.fn(), properties: { get: () => ({ currentProgram: { isReady: () => ready } }) } })
+    renderer.compile.mockImplementation(() => {
+      order.push(`compile:${fogName()}`)
+      ready = false
+      setTimeout(() => (ready = true), 15)
+      return new Set([linked])
+    })
     renderer.render.mockImplementation(() => void order.push(`draw:${fogName()}`))
     const { probe } = fakeProbe('decals')
     const warmup = createProgramWarmup(THREE)
     warmup.register(probe)
     const childrenBefore = scene.children.length
     const report = await warmup.warmUpAsync(renderer, scene, new THREE.PerspectiveCamera(), { fogStates: ['none', 'linear', 'exp2'] })
-    expect(order).toEqual(['compile:none', 'draw:none', 'compile:linear', 'draw:linear', 'compile:exp2', 'draw:exp2'])
+    // drawState compiles again before it draws (a no-op for programs already linked)
+    expect(order.filter((entry, index) => entry.startsWith('draw') || !order[index - 1]?.startsWith('compile'))).toEqual(['compile:none', 'draw:none', 'compile:linear', 'draw:linear', 'compile:exp2', 'draw:exp2'])
+    expect(renderer.compileAsync).not.toHaveBeenCalled()
     expect(report.programs).toBe(0)
     expect(scene.fog).toBe(fog)
     expect(scene.children.length).toBe(childrenBefore)
+  })
+
+  it('drops a material disposed while its program links instead of reading the program it no longer has (three r160 compileAsync threw from its timer)', async () => {
+    const scene = new THREE.Scene()
+    const { renderer } = fakeRenderer()
+    const kept = new THREE.MeshBasicMaterial()
+    const disposed = new THREE.MeshBasicMaterial()
+    const programs = new Map<object, { isReady(): boolean } | undefined>([
+      [kept, { isReady: () => true }],
+      [disposed, { isReady: () => false }],
+    ])
+    Object.assign(renderer, { compileAsync: vi.fn(), properties: { get: (material: object) => ({ currentProgram: programs.get(material) }) } })
+    renderer.compile.mockImplementation(() => {
+      // the room is cleared while the program links: three forgets the program of the disposed material
+      setTimeout(() => programs.set(disposed, undefined), 5)
+      return new Set([kept, disposed])
+    })
+    await expect(createProgramWarmup(THREE).warmUpAsync(renderer, scene, new THREE.PerspectiveCamera(), { fogStates: ['none'] })).resolves.toBeDefined()
   })
 
   it('draws the same as warmUp on a renderer without compileAsync', async () => {

@@ -9,6 +9,7 @@ import { kitSfxDir } from '../../packages/game-audio/scripts/sfx-dir.mjs'
 import { mergeUserSfxManifests } from '../../packages/game-audio/scripts/sfx-merge.mjs'
 import { writeLocalIndex } from '../../site/local-index.mjs'
 import { dirtyStateOf, stampMarkupOf } from '../../tools/gpu/page-stamp.mjs'
+import { BARE_ROOM_BOOT } from './area-page.mjs'
 import { DIST_PACKAGES, DIST_SUBPATHS } from './page-packages.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -72,23 +73,8 @@ const page = (/** @type {string} */ bundle, /** @type {boolean} */ full) =>
   template
     .replace('/*STYLE*/', () => css)
     .replace('<!--BOOT-->', () => (full ? overlay : ''))
-    .replace('<script>/*BUNDLE*/</script>', () => (full ? `<script type="text/plain" id="room-bundle">${safe(bundle)}</script>` : `<script>${safe(bundle)}</script>`))
+    .replace('<script>/*BUNDLE*/</script>', () => `<script type="text/plain" id="room-bundle">${safe(bundle)}</script>`)
 
-// 1. the bare room, for the other areas (they add their own module over it)
-const baseHtml = page(await bundleMain(false), false)
-mkdirSync(join(here, 'base'), { recursive: true })
-const basePath = join(here, 'base/test-room.html')
-writeFileSync(basePath, baseHtml)
-
-// 2. the teams' content: interactables-test-area's entry loads every module (weapons, items, household furniture, characters, animals, vfx, audio, weather,
-//    houses, vehicles, vegetation, urban, player, crowd, stories). It builds over the bare room, so there is no cycle; here we only inline its bundle.
-execFileSync(process.execPath, [join(here, '../interactables-test-area/build.mjs')], { stdio: 'inherit', env: { ...process.env, ROOM_HTML: basePath } })
-const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-area.js'), 'utf8')
-
-// 3. the default page: the room, then the teams' content loaded into it. Both bundles ride as inert text so the HTML parses at once and the loading screen paints on the first frame;
-//    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
-const fullHtml = page(await bundleMain(true), true)
-const at = fullHtml.lastIndexOf('</body>')
 // the room's pieces step on Jolt: one world from KIT_WORLD and one loop, handed to the room (`window.__roomPhysics`; the room steps it each frame). The wasm
 // loads before the room's bundle runs
 const joltBoot = (
@@ -139,6 +125,25 @@ window.__joltBoot = () => (() => {
   })
 ).outputFiles[0].text
 console.log(`jolt boot: ${joltBoot.length} bytes`)
+
+// 1. the bare room, for the other areas (they add their own module over it with `withArea` of area-page.mjs). Its physics is Jolt too, whose wasm
+//    loads asynchronously: the room bundle rides as inert text and BARE_ROOM_BOOT runs it once Jolt is up, then the areas' scripts
+const bare = page(await bundleMain(false), false)
+const bareAt = bare.lastIndexOf('</body>')
+const baseHtml = `${bare.slice(0, bareAt)}<script>${safe(joltBoot)}</script>\n<script>${BARE_ROOM_BOOT}</script>\n${bare.slice(bareAt)}`
+mkdirSync(join(here, 'base'), { recursive: true })
+const basePath = join(here, 'base/test-room.html')
+writeFileSync(basePath, baseHtml)
+
+// 2. the teams' content: interactables-test-area's entry loads every module (weapons, items, household furniture, characters, animals, vfx, audio, weather,
+//    houses, vehicles, vegetation, urban, player, crowd, stories). It builds over the bare room, so there is no cycle; here we only inline its bundle.
+execFileSync(process.execPath, [join(here, '../interactables-test-area/build.mjs')], { stdio: 'inherit', env: { ...process.env, ROOM_HTML: basePath } })
+const area = readFileSync(join(here, '../interactables-test-area/dist/furniture-area.js'), 'utf8')
+
+// 3. the default page: the room, then the teams' content loaded into it. Both bundles ride as inert text so the HTML parses at once and the loading screen paints on the first frame;
+//    the boot script then runs the room bundle after a paint, loads the modules one at a time (yielding to the browser between them, with the step on the screen) and removes the screen.
+const fullHtml = page(await bundleMain(true), true)
+const at = fullHtml.lastIndexOf('</body>')
 const boot = `(function () {
   var lang = /[?&]lang=en(&|$)/.test(location.search) ? 'en' : 'pt'
   var title = lang === 'en' ? 'Loading the test room…' : 'Carregando a sala de testes…'
