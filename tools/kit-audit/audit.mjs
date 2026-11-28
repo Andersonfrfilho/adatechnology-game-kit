@@ -4,6 +4,7 @@
 // outside the household catalogue...). Each finding says which package should give the piece. No dependencies.
 //
 //   node tools/kit-audit/audit.mjs [--check] [--json] [--package game-weather-three]... [--domain vehicles]...
+//   node tools/kit-audit/audit.mjs --check --rule size-blind-motion|own-integrator   (only that motion rule; see motion.mjs)
 //
 // --check exits 1 when a finding is neither allowed nor a known pending one in allowlist.json, an own-frame-clock hit is not in clock-pending.json, or a `mustDrain: true` is not in must-drain-allowed.json (--strict-clocks: also when that list is not empty, the C3 gate). The owners and the words of each domain live in rules.json (see README.md).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
@@ -12,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 
 import { ownFrameClock } from './clock.mjs'
 import { mustDrainMessage, mustDrainViolations } from './must-drain.mjs'
+import { checkOwnIntegrator, checkSizeBlind, motionHits, OWN_INTEGRATOR_MESSAGE, SIZE_BLIND_MESSAGE } from './motion.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '../..')
@@ -125,10 +127,26 @@ export function group(findings) {
   return [...byKey.values()].map((entry) => ({ ...entry, words: [...entry.words] }))
 }
 
+/** The two motion rules, read from the same hits. @param {string} rule @param {boolean} isCheck @returns {number} the exit code */
+function runMotionRule(rule, isCheck) {
+  const hits = motionHits()
+  if (rule !== 'size-blind-motion' && rule !== 'own-integrator') {
+    console.error(`unknown rule "${rule}" (size-blind-motion, own-integrator)`)
+    return 2
+  }
+  const result = rule === 'size-blind-motion' ? checkSizeBlind(hits.sizeBlind) : checkOwnIntegrator(hits.integrators)
+  for (const hit of result.open) console.log(`FORA  ${rule} ${hit.file}:${hit.line} [${hit.anchor}]  ${hit.code}`)
+  for (const entry of result.stale) console.log(`VELHA ${rule} ${entry.file} [${entry.anchor}] nao casa mais: tire da lista`)
+  console.log(`${rule}: ${result.open.length} novos, ${result.known.length} pendentes na lista (${result.size} entradas), ${result.stale.length} entradas velhas. ${rule === 'size-blind-motion' ? SIZE_BLIND_MESSAGE : OWN_INTEGRATOR_MESSAGE}`)
+  return isCheck && (result.open.length > 0 || result.stale.length > 0) ? 1 : 0
+}
+
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) {
   const args = process.argv.slice(2)
   const valuesOf = (/** @type {string} */ flag) => args.flatMap((arg, index) => (arg === flag ? [args[index + 1]] : []))
+  const motionRule = valuesOf('--rule')[0]
+  if (motionRule !== undefined) process.exit(runMotionRule(motionRule, args.includes('--check')))
   const findings = audit({ packages: valuesOf('--package'), domains: valuesOf('--domain') })
   const grouped = group(findings)
   const open = grouped.filter((entry) => !entry.allowed && !entry.pending)
@@ -155,6 +173,14 @@ if (isMain) {
     for (const hit of drains) console.log(`FORA  must-drain ${mustDrainMessage(hit)}  ${hit.code}`)
     console.log(`must-drain: ${drains.length} novas filas mustDrain fora de must-drain-allowed.json`)
   }
-  if (args.includes('--check') && (open.length > 0 || clocks.open.length > 0 || drains.length > 0)) process.exit(1)
+  const motion = motionHits()
+  const sizeBlind = checkSizeBlind(motion.sizeBlind)
+  const integrators = checkOwnIntegrator(motion.integrators)
+  if (!args.includes('--json')) {
+    for (const hit of sizeBlind.open) console.log(`FORA  size-blind-motion ${hit.file}:${hit.line} [${hit.anchor}]  ${hit.code}`)
+    for (const hit of integrators.open) console.log(`FORA  own-integrator ${hit.file}:${hit.line} [${hit.anchor}]  ${hit.code}`)
+    console.log(`size-blind-motion: ${sizeBlind.open.length} novos, ${sizeBlind.size} na lista; own-integrator: ${integrators.open.length} novos, ${integrators.size} na lista (--rule <nome> mostra os detalhes)`)
+  }
+  if (args.includes('--check') && (open.length > 0 || clocks.open.length > 0 || drains.length > 0 || sizeBlind.open.length + sizeBlind.stale.length + integrators.open.length + integrators.stale.length > 0)) process.exit(1)
   if (args.includes('--strict-clocks') && (clocks.open.length > 0 || clocks.pending.length > 0 || clocks.stale.length > 0)) process.exit(1)
 }

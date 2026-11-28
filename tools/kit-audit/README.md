@@ -47,6 +47,27 @@ object literal around the key), and any value the rule cannot read (variable, te
 types (`mustDrain?: boolean`) and the plumbing of `game-runtime` are not registrations. `audit.mjs --check` runs it; a new entry is the owner's decision, written in `reason`.
 Tests: `tests/must-drain.test.mjs`.
 
+## The motion rules (size-blind-motion, own-integrator)
+
+Regra 12 and `docs/analise-arquitetura-e-validacao-2026-11.md` (10.1, 10.2, 10.4 items 2 and 7): a motion rule written for one size and applied to any size
+(a fixed rad/s on a 4 m board), and a hand-written integrator beside the rigid-body engine. `motion.mjs` reads `packages/*/src` (not tests, `dist`, shader
+sources, `game-physics` or `game-physics-jolt`); each rule has a counted list that only shrinks.
+
+```sh
+node tools/kit-audit/audit.mjs --check --rule size-blind-motion   # exit 1 on a hit not in size-blind-motion.json, or an entry that matches nothing
+node tools/kit-audit/audit.mjs --check --rule own-integrator      # same, against own-integrator.json
+```
+
+- `size-blind-motion`: a write to an angular velocity (`.ang.x +=`, `.ang.multiplyScalar(`, `angularVelocity[i] =`, `angularVelocity: [`, `SetAngularVelocity(`), a pose `slerp`,
+  or a constant named `*_SPIN`, `*_NUDGE`, `*_TOPPLE`, `*TIP_TURN`, `*_SWAY` or `*AIM_GAIN` set to a number, whose right-hand side does not name a half-measure, reach, radius or
+  inertia. Copies, zeroes and type declarations are not writes. An entry is `file` + `match` (the start of the line) + `anchor` (the function or constant, for the reader) + `risk` +
+  `reference` (the row of 10.1/10.2); `count` covers equal lines.
+- `own-integrator`: a line that advances a position, an angle or a speed by a velocity, spin, acceleration or gravity times a time step (`pos.y += vel.y * dt`,
+  `addScaledVector(vel, dt)`, `vy -= GRAVITY * dt`). An entry is `file` + `anchor` (the enclosing function) + `lines` (how many such lines it holds): a new anchor, or more lines in a listed one, fails.
+- A list entry is never added to pass the check: fix the code (hand the body to the engine; write the rule by the speed of the tip or by energy) and take the entry out, or the owner decides.
+- Not seen: a limit written as a bare number in a comparison (the `isSlow` threshold of `fragments.ts`), a motion written without a time-step name, and any package outside `packages/*/src`.
+  `audit.mjs --check` (CI) runs both rules too. Tests: `tests/motion.test.mjs`.
+
 ## The scene check
 
 The words miss a box whose code names nothing, so `scene.mjs` reads the screen instead. Every builder of the kit marks the root it returns

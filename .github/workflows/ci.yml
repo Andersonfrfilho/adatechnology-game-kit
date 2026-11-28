@@ -33,6 +33,10 @@ jobs:
       # outside its SDK fails here; the known ones are listed in docs/pecas-fora-do-sdk.md (tools/kit-audit/README.md)
       - run: node tools/kit-audit/audit.mjs --check
 
+      # motion written for one size and applied to any size, and integrators beside the rigid-body engine (regra 12): counted lists that only shrink (tools/kit-audit/motion.mjs)
+      - run: node tools/kit-audit/audit.mjs --check --rule size-blind-motion
+      - run: node tools/kit-audit/audit.mjs --check --rule own-integrator
+
       # every package that draws pieces walks its catalog through the z-fighting guard (CLAUDE.md §13, tools/z-fighting/coverage.mjs)
       - run: node tools/z-fighting/coverage.mjs
 
