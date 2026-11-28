@@ -50,11 +50,11 @@ describe('blows and rounds on the car body show where they landed, outside and i
     const away = new THREE.Vector3(0, 0.2, 0)
     const before = depthAt(s, new THREE.Vector3())
     const beforeAway = depthAt(s, away)
-    s.d.hit({ type: 'blunt', point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 25, radius: 0.1 })
+    s.d.hit({ type: 'blunt', handHeld: true, point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 25, radius: 0.1 })
     const punched = depthAt(s, new THREE.Vector3())
     expect(punched - before).toBeGreaterThan(0.002)
     expect(Math.abs(depthAt(s, away) - beforeAway)).toBeLessThan(0.0005)
-    s.d.hit({ type: 'blunt', point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 250, radius: 0.08 })
+    s.d.hit({ type: 'blunt', handHeld: true, point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 250, radius: 0.08 })
     expect(depthAt(s, new THREE.Vector3()) - punched).toBeGreaterThan(0.004)
   })
 
@@ -62,7 +62,7 @@ describe('blows and rounds on the car body show where they landed, outside and i
     const s = sedan()
     const sweep = new THREE.Vector3(0, 0, 0).crossVectors(s.out, new THREE.Vector3(0, 1, 0)).normalize()
     const before = [depthAt(s, sweep.clone().multiplyScalar(0.1)), depthAt(s, new THREE.Vector3(0, 0.1, 0))]
-    s.d.hit({ type: 'blunt', point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 150, radius: 0.1, contactLength: 0.3, sweep: sweep.toArray() as Vec3 })
+    s.d.hit({ type: 'blunt', handHeld: true, point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 150, radius: 0.1, contactLength: 0.3, sweep: sweep.toArray() as Vec3 })
     const alongBarrel = depthAt(s, sweep.clone().multiplyScalar(0.1)) - before[0]!
     const across = depthAt(s, new THREE.Vector3(0, 0.1, 0)) - before[1]!
     expect(alongBarrel).toBeGreaterThan(0.002)
@@ -73,7 +73,7 @@ describe('blows and rounds on the car body show where they landed, outside and i
     const s = sedan()
     const sweep = new THREE.Vector3(0, -1, 0)
     const before = marks(s.item.root).length
-    s.d.hit({ type: 'slash', point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 140, radius: 0.06, sweep: sweep.toArray() as Vec3 })
+    s.d.hit({ type: 'slash', handHeld: true, point: s.hit.point, direction: s.out.clone().negate().toArray() as Vec3, energy: 140, radius: 0.06, sweep: sweep.toArray() as Vec3 })
     const all = marks(s.item.root)
     expect(all.length).toBe(before + 1)
     const mark = all[all.length - 1]!
