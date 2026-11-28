@@ -62,5 +62,13 @@ await shot('feet')
 await room('r.look(a.eye, a.target)', { eye: [0.9, 0.5, WALL_FACE + 0.45], target: [0.15, 0.02, WALL_FACE + 0.3] })
 await page.waitForTimeout(400)
 await shot('side')
-console.log('errors', errors.slice(0, 5))
+/** @type {string[]} */
+const failures = errors.map((error) => `page error: ${error}`)
+if ('error' in counts) failures.push(String(counts.error))
+else {
+  if (counts.stacked === 0) failures.push('no chip lies on another one')
+  if (counts.insidePlayer > 0) failures.push(`${counts.insidePlayer} chips inside the player`)
+}
 await browser.close()
+console.log(failures.length === 0 ? 'debris-pile-test: the chips pile and stop at the player' : `debris-pile-test: ${failures.join('; ')}`)
+process.exitCode = failures.length === 0 ? 0 : 1

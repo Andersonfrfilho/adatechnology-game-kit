@@ -42,6 +42,8 @@ const box = await room(`const s = r.spawned().find((o) => o.itemId === 'sedan');
 console.log('car box', JSON.stringify(box))
 const weapons = (process.env.WEAPONS ?? 'glock_17,colt_m4a1,shotgun_pump_12,barrett_m82a1').split(',').filter((id) => id && id !== 'none')
 /** @param {string} weapon @param {number[]} from @param {number[]} target @param {string} [midShot] a print a few frames after the round lands */
+/** What went wrong: a weapon that would not fire, a round that left nothing on the car, a door that did not open. @type {string[]} */
+const failures = []
 async function fire(weapon, from, target, midShot) {
   await room('r.setTool(a)', weapon)
   for (let tries = 0; tries < 160; tries++) {
@@ -49,7 +51,9 @@ async function fire(weapon, from, target, midShot) {
     const status = await room('return r.use()')
     if (status === 'ok') {
       await page.waitForTimeout(80)
-      console.log(weapon, JSON.stringify(await room('const e = window.__carEvents.splice(0); return e.map((x) => [x.type, x.part, x.d, x.through, (x.p ?? []).map((v) => +v.toFixed(2))])')))
+      const events = await room('const e = window.__carEvents.splice(0); return e.map((x) => [x.type, x.part, x.d, x.through, (x.p ?? []).map((v) => +v.toFixed(2))])')
+      console.log(weapon, JSON.stringify(events))
+      if (!Array.isArray(events) || events.length === 0) failures.push(`${weapon}: the round left nothing on the car`)
       if (midShot) {
         await page.waitForTimeout(45)
         await room('r.pause()')
@@ -60,7 +64,7 @@ async function fire(weapon, from, target, midShot) {
     }
     await page.waitForTimeout(100)
   }
-  console.log('could not fire', weapon)
+  failures.push(`could not fire ${weapon}`)
   return false
 }
 if (box && 'min' in box) {
@@ -101,9 +105,12 @@ if (box && 'min' in box) {
   await view('side-back', at(0.72, yMid + 0.02, 0.06), at(0.3, yMid - 0.01, 0.0))
   // the door opened after the rounds: its holes go with it (CLAUDE.md §7)
   const opened = await room('const s = r.spawned().find((o) => o.itemId === "sedan"); return r.useLeaf(s.objectId, "door_front_right")')
-  console.log('door opened', opened)
+  if (!opened) failures.push('the front right door did not open')
   await page.waitForTimeout(2500)
   await view('door-open', at(0.85, yMid + 0.25, 1.6), at(0.5, yMid, -0.1))
 }
-console.log('errors', errors.slice(0, 5))
+if (!box || !('min' in box)) failures.push('no car in the room')
+for (const error of errors) failures.push(`page error: ${error}`)
 await browser.close()
+console.log(failures.length === 0 ? 'car-holes-test: every calibre marks the car' : `car-holes-test: ${failures.join('; ')}`)
+process.exitCode = failures.length === 0 ? 0 : 1
