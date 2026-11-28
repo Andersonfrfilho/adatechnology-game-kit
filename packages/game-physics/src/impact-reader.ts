@@ -22,6 +22,8 @@ export interface ImpactReaderOptions {
   readonly bodiesMax?: number
   /** Which bodies to tell about (a host that only cares about its fixed parts says so before anything is counted). Default every one. */
   readonly accepts?: (body: BodyId) => boolean
+  /** Bodies whose blows are not told at all, as if they had met nothing (asked for every contact row). Default none. */
+  readonly ignores?: (other: BodyId) => boolean
   readonly onImpact: (impact: Impact) => void
 }
 
@@ -52,6 +54,7 @@ export const createImpactReader = (loop: PhysicsLoop, options: ImpactReaderOptio
   const impact: Impact = { body: 0 as BodyId, other: 0 as BodyId, impulse: 0, approach: 0, point: [0, 0, 0], normal: [0, 0, 0] }
 
   const keep = (c: ContactBuffer, body: number, other: number, row: number, sign: number): void => {
+    if (options.ignores?.(other as BodyId)) return
     let at = Math.imul(body, 0x9e3779b1) & mask
     while (tableStamp[at] === stamp && tableKey[at] !== body) at = (at + 1) & mask
     let slot: number

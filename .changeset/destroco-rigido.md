@@ -8,3 +8,5 @@ O destroço grande de uma quebra (20 cm ou mais, e as barras de uma armadura) pa
 encontra o mundo fixo e outro `rubble` e mais nada. A tábua quebrada cai, apoia e deita como toda peça; a física leve do `FragmentSystem` fica só com a lasca.
 O pedaço que nasce dentro de um sólido fixo ou encostado no pedaço ao lado atravessa aquilo até sair. `DestructionRenderer.pieces()` não devolve esses corpos.
 `FragmentSystemOptions.rigid` (`RigidDebris`) é a porta; sem ela o `FragmentSystem` se comporta como antes.
+O golpe de um destroço num sólido fixo não vira dano (`ImpactReaderOptions.ignores`, novo em `game-physics`), e ele não entra na explosão, no fluxo aleatório nem
+no orçamento das peças.

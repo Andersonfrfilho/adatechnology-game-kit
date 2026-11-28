@@ -715,6 +715,16 @@ class Renderer implements DestructionRenderer {
           body.still = 0
           body.calmAt = null
         },
+        shove: (handle, velocity, spin) => {
+          const body = handle as PieceBody
+          for (let i = 0; i < 3; i++) {
+            body.velocity[i] = (body.velocity[i] as number) + (velocity[i] as number)
+            body.angularVelocity[i] = (body.angularVelocity[i] as number) + (spin[i] as number)
+          }
+          body.sleeping = false
+          body.still = 0
+          body.calmAt = null
+        },
       },
     })
     this.cages = new RebarCages(THREE, o.scene)
@@ -1952,7 +1962,8 @@ class Renderer implements DestructionRenderer {
     for (const [id, a] of this.staticNow()) scan(a, id, null, 6)
     const c = this.v1
     for (const pc of this.pieceSys.list) {
-      if (pc.held) continue
+      // debris is no piece to the host: it is thrown by the fragments' own blast, and takes nothing of the pieces' random stream
+      if (pc.held || pc.debris) continue
       // only the pieces whose box can reach the point are measured
       this.pieceSys.centerOf(pc, c)
       const reach = Math.hypot(pc.halfExtents[0], pc.halfExtents[1], pc.halfExtents[2]) + radius
@@ -3691,7 +3702,8 @@ class Renderer implements DestructionRenderer {
       reach(distance, { objectId: pc.objectId, generation: pc.generation, impulse, point }, [c.x, c.y, c.z])
     }
     const reached = this.o.blastQuery ? this.pieceSys.piecesInBlast(this.o.blastQuery, p, ev.radius) : [...this.pieceSys.list]
-    for (const pc of reached) shove(pc)
+    // the debris is thrown by the fragments' own blast below (`FragmentSystem.blast`), as every fragment is
+    for (const pc of reached) if (!pc.debris) shove(pc)
     if (this.o.shoveable) this.loosen(p, ev.radius, energy, reachOf, policy, reach)
     this.advanceWakes(0)
     this.fragments.blast(p, ev.radius, Math.min(20, Math.sqrt(energy) * 0.08))
@@ -3763,6 +3775,7 @@ class Renderer implements DestructionRenderer {
       if (centre.distanceTo(point) <= ev.radius) cover.set(objectId, reach.call(this.world, ev.point, [centre.x, centre.y, centre.z], { ignore: [ev.object, objectId] }))
     }
     for (const pc of this.pieceSys.list) {
+      if (pc.debris) continue
       this.pieceSys.centerOf(pc, centre)
       read(pc.objectId)
     }
