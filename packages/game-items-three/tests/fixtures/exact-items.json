@@ -5778,41 +5778,41 @@
   ]
  },
  "model/sheet_metal": {
-  "hash": "1640bad4",
+  "hash": "f0ff229e",
   "nodes": [
    "0 Group 42a4c0c",
-   "0/0 Group 636c321e",
-   "0/0/0 Mesh f41e5f48",
-   "0/0/1 Mesh 9803fbee",
-   "0/0/2 Mesh 117ff1c2",
-   "0/0/3 Mesh 90c79057",
-   "0/0/4 Mesh 61f0ea3f",
-   "0/0/5 Mesh 5111dc57",
-   "0/0/6 Mesh a6704c96",
-   "0/0/7 Mesh d3184812",
-   "0/0/8 Mesh 34e47ef",
-   "0/0/9 Mesh 3298d0a7"
+   "0/0 Group d8959cba",
+   "0/0/0 Mesh 14eb5eaf",
+   "0/0/1 Mesh 46877177",
+   "0/0/2 Mesh b889ce7b",
+   "0/0/3 Mesh d547c465",
+   "0/0/4 Mesh 427293ed",
+   "0/0/5 Mesh 17d7b7bc",
+   "0/0/6 Mesh c80b3a4d",
+   "0/0/7 Mesh ed3adaf9",
+   "0/0/8 Mesh 1c8032ea",
+   "0/0/9 Mesh fd3536c2"
   ]
  },
  "model/sheet_metal:merged": {
-  "hash": "f41575ad",
+  "hash": "3e7de2d2",
   "nodes": [
    "0 Group 42a4c0c",
-   "0/0 Mesh f91483c",
-   "0/1 Mesh f052673d",
-   "0/2 Mesh 6133d1aa",
-   "0/3 Mesh a080c16"
+   "0/0 Mesh 2221d1c5",
+   "0/1 Mesh 72b5cbfc",
+   "0/2 Mesh f545bc62",
+   "0/3 Mesh a3349673"
   ]
  },
  "model/sheet_metal:lod": {
-  "hash": "7e19f0fd",
+  "hash": "86b51f3e",
   "nodes": [
    "0 LOD b05ab310",
    "0/0 Group 36108d58",
-   "0/0/0 Mesh c12d96ca",
-   "0/0/1 Mesh c62d790b",
-   "0/0/2 Mesh c5fbe207",
-   "0/0/3 Mesh a3263b23",
+   "0/0/0 Mesh 6a2e4db7",
+   "0/0/1 Mesh 657ef2ce",
+   "0/0/2 Mesh df254497",
+   "0/0/3 Mesh 6f29e7fe",
    "0/1 Group 3a09e66b",
    "0/1/0 Mesh a41b50d8",
    "0/1/1 Mesh 83ff8e1b",
@@ -8506,33 +8506,33 @@
   ]
  },
  "model/laptop": {
-  "hash": "6b8a83c0",
+  "hash": "9ed56e20",
   "nodes": [
    "0 Group c8f74c91",
    "0/0 Group 74e240fd",
    "0/0/0 Mesh fe2675ee",
-   "0/0/1 Mesh 7d4c1213",
+   "0/0/1 Mesh 36a45477",
    "0/0/2 Mesh 36daded0",
    "0/0/3 Mesh 83bc512"
   ]
  },
  "model/laptop:merged": {
-  "hash": "d21260d8",
+  "hash": "5d3169bb",
   "nodes": [
    "0 Group c8f74c91",
    "0/0 Mesh b4d7d455",
-   "0/1 Mesh d631cd17",
+   "0/1 Mesh 5c341b7c",
    "0/2 Mesh 8ef50061",
    "0/3 Mesh 8d4342c6"
   ]
  },
  "model/laptop:lod": {
-  "hash": "4dea0c14",
+  "hash": "24073cf5",
   "nodes": [
    "0 LOD 25da3001",
    "0/0 Group cc75be3",
    "0/0/0 Mesh 438e6e54",
-   "0/0/1 Mesh 345f1f42",
+   "0/0/1 Mesh 4ca3a0b5",
    "0/0/2 Mesh 685419f0",
    "0/0/3 Mesh 65ca0a51",
    "0/1 Group ae643e68",
