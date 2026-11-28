@@ -250,8 +250,11 @@ describe('chip', () => {
     expect(renderer.stats().decals).toBe(2)
     world.emit({ type: 'chip', object: 'o1', part: 'wall', center: [0, 1, 0], size: [0.23, 0.075, 0.2], rotation: [0, 0, 0, 1], fragments: [fragment('wall#c0')] })
     renderer.update(0.016)
-    expect(renderer.stats().decals).toBe(1)
-    expect((wall.children[0] as THREE.Mesh).position.x).toBeCloseTo(0.8, 3)
+    // the spall on the unit went with it; what is on the unit's box now is the gap it left (`drawChipGap`), on the faces of the wall it went through
+    const marks = (wall.children as THREE.Mesh[]).map((m) => m.getWorldPosition(new THREE.Vector3()))
+    expect(marks.filter((p) => Math.abs(p.x - 0.8) < 1e-3)).toHaveLength(1)
+    expect(marks.filter((p) => Math.abs(p.x - 0.8) >= 1e-3).every((p) => Math.abs(p.x) <= 0.115 + 1e-3 && Math.abs(p.y - 1) <= 0.0375 + 1e-3 && Math.abs(p.z) >= 0.099)).toBe(true)
+    expect(renderer.stats().decals).toBe(marks.length)
   })
 })
 

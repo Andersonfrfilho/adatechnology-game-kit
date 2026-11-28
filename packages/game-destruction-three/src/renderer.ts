@@ -57,6 +57,12 @@ const REBAR_COLOR = 0x74665c
 const STEEL_DENSITY = 7850
 /** Metres around a unit that came out within which its decals go too: the plaster over it and the ragged edge that breaks with it. */
 const CHIP_DECAL_EDGE = 0.05
+/** How far inside the drawn face a unit's face may sit and still be on it (the drawing is round, the unit a box): its gap is drawn there (`drawChipGap`). */
+const CHIP_GAP_REACH = 0.03
+/** The broken inside of a gap is darker than the material's inner colour: it is in its own shadow. */
+const CHIP_GAP_SHADE = 0.4
+/** The gap's patch reaches a little past the unit's narrower side: its broken edge is ragged. */
+const CHIP_GAP_WIDTH = 1.15
 /** Radius of the rim of torn fibres around a hole in wood, in hole diameters. */
 /**
  * A round on concrete, stone or brick knocks a cone out of the face around its hole (front-face cratering): about five calibres across (a 7.62 leaves a crater of
@@ -2327,9 +2333,36 @@ class Renderer implements DestructionRenderer {
     const rotation = new T.Quaternion(ev.rotation[0], ev.rotation[1], ev.rotation[2], ev.rotation[3])
     for (const part of this.bounds.get(ev.object)?.parts.values() ?? []) for (const mv of part.meshes) this.visuals.clearDecals(mv, center, half, rotation)
     this.vfx.peekWorkshop()?.decals.clearInside(ev.center, [half.x, half.y, half.z], ev.rotation)
+    if (pv) this.drawChipGap(pv, ev, center, rotation)
     // a puff of the unit's own dust; not the bullet impact effect, which would leave its black mark on the hole the unit left
     this.vfx.burst('dust', ev.center, [0, 1, 0], ev.units ? Math.min(40, 8 + ev.units.length) : 8, ev.units ? 1.6 : 0.8, { color })
     this.impactSound(pv?.material ?? '', ev.center, 0.7, ev.blow)
+  }
+
+  /**
+   * The gap a unit leaves in an object the renderer draws whole (a concrete pole, a block, a post): on each outer face the unit reached, the broken inside of its material,
+   * as wide as the unit there, so the bars it bared show in a hole and not on a smooth face. A drawing that cuts its own gaps (the house's breach, `drawnSpalls`) takes none.
+   */
+  private drawChipGap(pv: PartVis, ev: Ev<'chip'>, center: THREE_NS.Vector3, rotation: THREE_NS.Quaternion): void {
+    const mv = this.nearestMesh(pv, center)
+    if (!mv || (mv.mesh.userData.drawnSpalls as string[] | undefined)?.includes(ev.part)) return
+    const def = this.world.materials.get(pv.material)
+    // darkened channel by channel on the hex as drawn (a three.js Color would darken it in linear space and give it back lighter)
+    const inner = def?.visual?.innerColor ?? fallbackColor(def)
+    const color = [16, 8, 0].reduce((hex, shift) => hex | (Math.round(((inner >> shift) & 0xff) * CHIP_GAP_SHADE) << shift), 0)
+    const box = this.visuals.worldBox(mv, new this.THREE.Box3())
+    for (let axis = 0; axis < 3; axis++) {
+      for (const side of [-1, 1]) {
+        const normal = new this.THREE.Vector3(axis === 0 ? side : 0, axis === 1 ? side : 0, axis === 2 ? side : 0).applyQuaternion(rotation)
+        const face = center.clone().addScaledVector(normal, ev.size[axis]! / 2)
+        const k = Math.abs(normal.x) >= Math.abs(normal.y) && Math.abs(normal.x) >= Math.abs(normal.z) ? 'x' : Math.abs(normal.y) >= Math.abs(normal.z) ? 'y' : 'z'
+        const surface = normal[k] > 0 ? box.max[k] : box.min[k]
+        if (Math.abs(face[k] - surface) > CHIP_GAP_REACH) continue
+        face[k] = surface
+        // as wide as the narrower side of the unit's face: a round part (a pole) shows its gap on its face, not past its edges
+        this.visuals.addSpall(mv, face, normal, (Math.min(ev.size[(axis + 1) % 3]!, ev.size[(axis + 2) % 3]!) / 2) * CHIP_GAP_WIDTH, color)
+      }
+    }
   }
 
   private onFracture(ev: Ev<'fracture'>): void {
