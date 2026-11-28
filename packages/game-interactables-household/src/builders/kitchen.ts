@@ -1,4 +1,5 @@
 import type { BasinSpec, Vec3 } from '@adatechnology/game-interactables'
+import type { LathePoint } from '@adatechnology/game-props3d'
 import type { Ctx } from '../ctx'
 import { HANDLE, dropDoor, hingedDoor, shell } from '../parts'
 import { mix, round3, shade } from '../util'
@@ -415,27 +416,34 @@ export function shower(c: Ctx): void {
 /** How far the flush button goes down when pressed, metres (of its 12 mm over the lid). */
 const FLUSH_TRAVEL = 0.008
 
+/** The toilet bowl's axis (z) and its profile (`[r, y]`): up outside from the floor to the rim, down inside to the bottom of the trap. */
+const BOWL_Z = 0.12
+const BOWL_PROFILE: readonly LathePoint[] = [
+  [0, 0], [0.12, 0], [0.11, 0.16], [0.15, 0.24], [0.185, 0.31], [0.19, 0.36], [0.19, 0.4],
+  [0.15, 0.4], [0.145, 0.37], [0.12, 0.32], [0.08, 0.28], [0.04, 0.255], [0, 0.25],
+]
+/** The seat: a ring 2.5 cm thick over the rim, open over the bowl. */
+const SEAT_PROFILE: readonly LathePoint[] = [[0.135, 0.4], [0.2, 0.4], [0.2, 0.425], [0.135, 0.425], [0.135, 0.4]]
+
 export function toilet(c: Ctx): void {
   const { hd } = c
   const w = c.main(0xf4f5f4)
   const sh = shade(w, 0.94)
-  // pedestal and bowl
-  c.cyl('plain', 0, 0, -0.02, 0.13, 0.28, sh, 'cyl')
-  c.cyl('plain', 0, 0.2, 0.02, 0.19, 0.2, w, 'sphere') // bowl body (ellipsoid)
-  // the back block stays 2 mm inside the rim's top and bottom (CLAUDE.md §13); the water shows through the seat's opening disc
-  c.b('plain', -0.17, 0.362, -0.2, 0.17, 0.398, -0.02, w)
-  c.cyl('plain', 0, 0.36, 0.12, 0.19, 0.04, w, 'cyl')
+  // pedestal and bowl: one hollow solid of revolution round the seat's axis (z 0.12), up outside from the floor and down inside to the bottom of the trap, so
+  // the bowl is open and the water and the flush show inside it
+  c.lathe('plain', 0, 0, BOWL_Z, BOWL_PROFILE, w)
+  // the back block stays 2 mm inside the rim's top and ends inside the bowl's wall, short of its opening (CLAUDE.md §13)
+  c.b('plain', -0.17, 0.362, -0.2, 0.17, 0.398, -0.04, sh)
   // cistern
   const ty = 0.42
   const th = 0.8 - ty - 0.025
   c.b('plain', -0.19, ty, -hd, 0.19, ty + th, -hd + 0.2, w)
   c.b('plain', -0.195, ty + th, -hd - 0.0, 0.195, ty + th + 0.025, -hd + 0.205, sh) // lid
   c.b('plain', -0.185, ty + 0.01, -hd + 0.2, 0.185, ty + 0.03, -hd + 0.215, sh)
-  // seat ring
+  // seat ring: a hollow ring over the rim, open over the bowl
   const seatY = 0.4
-  c.cyl('plain', 0, seatY, 0.12, 0.2, 0.025, 0xeef0f0, 'cyl')
-  c.cyl('plain', 0, seatY + 0.025, 0.12, 0.13, 0.002, 0xdfe8ec, 'cyl')
-  c.b('plain', -0.17, seatY + 0.002, -0.07, 0.17, seatY + 0.023, 0.0, 0xeef0f0)
+  c.lathe('plain', 0, 0, BOWL_Z, SEAT_PROFILE, 0xeef0f0)
+  c.b('plain', -0.17, seatY + 0.002, -0.07, 0.17, seatY + 0.023, -0.03, 0xeef0f0)
   // lid, hinged at the back of the seat
   c.part(
     'lid', [0, seatY + 0.025, -0.06], { kind: 'hinge', axis: [1, 0, 0], angle: -1.65 },
@@ -456,12 +464,13 @@ export function toilet(c: Ctx): void {
     },
     { label: 'prompt.flush', at: false, noSweep: true },
   )
-  c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, 0.12], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
-  // the bowl: a square inside the bowl body (the ellipsoid round z 0.02 narrows to r 0.152 at the rim's foot, y 0.36) and under the rim, its top 2 cm under the seat.
-  // The flush is water running down from under the rim into the drain, inside the bowl: never a column as wide as the bowl, nor a spray that leaves it
-  const bowl: BasinSpec = { id: 'bowl', from: [-0.07, 0.31, 0], to: [0.07, 0.385, 0.14] }
+  c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, BOWL_Z], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
+  // the bowl's water: a disc in the trap, from the bottom of the bowl to below the rim, as wide as the bowl's inside at the water's level (0.12 at 0.32-0.37 m);
+  // under the water's surface it runs into the porcelain, so only the water inside the bowl shows. The flush is water running down from under the rim into the
+  // trap, inside the bowl
+  const bowl: BasinSpec = { id: 'bowl', from: [-0.12, 0.26, BOWL_Z - 0.12], to: [0.12, 0.36, BOWL_Z + 0.12], shape: 'round' }
   c.add('basins', bowl)
-  const rim: Vec3 = [0, 0.38, 0.07]
+  const rim: Vec3 = [0, 0.385, BOWL_Z]
   c.add('emitters', { id: 'flush_water', kind: 'water', pos: rim, dir: [0, -1, 0], source: 'flush', size: 0.08, ...streamInto(bowl, rim) })
   c.interact('use_flush', [0, ty + th + 0.05, -hd + 0.1], { do: 'toggle_fixture', fixture: 'flush' }, 'prompt.flush')
   c.add('damage', { target: 'self', kind: 'plastic', hp: 60 })

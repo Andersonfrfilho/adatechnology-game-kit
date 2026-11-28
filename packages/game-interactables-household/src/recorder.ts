@@ -31,6 +31,7 @@ export function createRecorder(): HouseholdRecorder {
     leaf: (M, x, y, z, w, h, color, ry, rx) => push({ kind: 'leaf', M, x, y, z, w, h, color, ry, rx }),
     plane: (M, material, x, y, z, w, h, color, ry, rx, rz, uv) => push({ kind: 'plane', M, material, x, y, z, w, h, color, ry, rx, rz, uv }),
     light: (M, x, y, z, color, range, lightKind) => push({ kind: 'light', M, x, y, z, color, range, lightKind }),
+    lathe: (M, material, x, y, z, points, color) => push({ kind: 'lathe', M, material, x, y, z, points, color }),
     part(id, pivot, ry, draw) {
       const rec: RecordedPart = { id, pivot, ry, primitives: [] }
       parts[id] = rec
