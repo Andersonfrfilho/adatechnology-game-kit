@@ -179,6 +179,40 @@ const plyBreak = (inp: PlanInput, root: Box, limit: number): PlannedFragment[] =
 const granules = (inp: PlanInput, box: Box, count: number): PlannedFragment[] =>
   bsp(box, count, [0, 1, 2], inp.rnd).map((b) => ({ center: b.c, size: b.s, q: quat.identity(), shape: 'chunk' as const, weight: b.s[0] * b.s[1] * b.s[2] }))
 
+/** Least side of a slab a board breaks into round the point it was hit, metres: a hit nearer its edge than this does not cut a sliver off it. */
+const SLAB_MIN = 0.03
+
+/**
+ * A board cut across its face (`axes`, the two long ones) through the point it was hit (`hit`, part space): one cut along each axis that leaves at least
+ * `SLAB_MIN` each side, so the slabs meet at the hit; the biggest of them is cut again (`bsp`) until there are `count`.
+ */
+const splitAtHit = (root: Box, hit: Vec3, axes: [number, number], count: number, rnd: () => number): Box[] => {
+  let pieces: Box[] = [root]
+  for (const ax of axes) {
+    const half = root.s[ax] / 2
+    if (hit[ax] - -half < SLAB_MIN || half - hit[ax] < SLAB_MIN) continue
+    const next: Box[] = []
+    for (const b of pieces) {
+      const lo = b.c[ax] - b.s[ax] / 2
+      const hi = b.c[ax] + b.s[ax] / 2
+      for (const [from, to] of [[lo, hit[ax]], [hit[ax], hi]] as const) {
+        const c: Vec3 = [b.c[0], b.c[1], b.c[2]]
+        const s: Vec3 = [b.s[0], b.s[1], b.s[2]]
+        c[ax] = (from + to) / 2
+        s[ax] = to - from
+        next.push({ c, s })
+      }
+    }
+    pieces = next
+  }
+  while (pieces.length < count) {
+    pieces.sort((a, b) => b.s[axes[0]] * b.s[axes[1]] - a.s[axes[0]] * a.s[axes[1]])
+    const [big, ...rest] = pieces
+    pieces = [...bsp(big!, 2, axes, rnd), ...rest]
+  }
+  return pieces
+}
+
 /** Lumps the broken edge of an MDF board crumbles into, besides its slabs. */
 const CRUMBS = 6
 
@@ -254,7 +288,9 @@ export const planFragments = (inp: PlanInput): PlannedFragment[] => {
     if (inp.cut) return severAt(inp, root, inp.cut.at, inp.cut.gap)
     if (inp.form === 'plies') return plyBreak(inp, root, maxFragments)
     const n = Math.min(maxFragments, 2 + Math.floor(rnd() * 3))
-    for (const b of bsp(root, n, [0, 1, 2], rnd)) out.push({ center: b.c, size: b.s, q: idq, shape: 'slab', weight: b.s[0] * b.s[1] * b.s[2] })
+    // a board with no grain (MDF) cracks from where it was hit: its slabs meet at that point, as a panel breaks round the hole a round punched
+    const slabs = inp.form === 'granules' && dims[t] < Math.min(dims[u], dims[v]) / 4 ? splitAtHit(root, inp.hit, [u, v], n, rnd) : bsp(root, n, [0, 1, 2], rnd)
+    for (const b of slabs) out.push({ center: b.c, size: b.s, q: idq, shape: 'slab', weight: b.s[0] * b.s[1] * b.s[2] })
     if (inp.form !== 'granules') return out
     // the broken edges of an MDF board crumble: lumps out of a band around the point it broke at, sharing the mass with the slabs
     const crumbs = Math.min(CRUMBS, maxFragments - out.length)

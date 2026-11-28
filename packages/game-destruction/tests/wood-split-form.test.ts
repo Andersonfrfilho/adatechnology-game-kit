@@ -57,6 +57,25 @@ describe('wood comes apart by how it is made (MaterialDef.splitForm)', () => {
     }
   })
 
+  it('an MDF panel cracks from where it was hit: its slabs meet at that point, the lumps lie round it, all as thin as the panel', () => {
+    const hit: Vec3 = [0.004, 0.12, -0.08]
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const plan = planFragments({ style: 'snap', dims: [0.018, 0.8, 0.45], thickness: 0.018, hit, fragmentSize: [0.08, 0.35], maxFragments: 18, rnd: rng(seed), form: 'granules' })
+      const slabs = plan.filter((p) => p.shape === 'slab')
+      expect(slabs.length).toBeGreaterThanOrEqual(4)
+      for (const p of plan) expect(Math.min(...p.size)).toBeLessThanOrEqual(0.018)
+      // four slabs have a corner on the hit, along the two long axes of the panel
+      const cornered = slabs.filter((p) => [1, 2].every((a) => Math.abs(Math.abs(p.center[a]! - hit[a]!) - p.size[a]! / 2) < 1e-9))
+      expect(cornered.length).toBe(4)
+      // the slabs tile the panel
+      const area = slabs.reduce((sum, p) => sum + p.size[1]! * p.size[2]!, 0)
+      expect(area).toBeCloseTo(0.8 * 0.45, 9)
+      const lumps = plan.filter((p) => p.shape === 'chunk')
+      expect(lumps.length).toBeGreaterThan(0)
+      for (const l of lumps) expect(Math.hypot(l.center[1]! - hit[1]!, l.center[2]! - hit[2]!)).toBeLessThan(0.2)
+    }
+  })
+
   it('plywood peels apart: thin splinters and sheets in two or three layers that start apart', () => {
     const fragments = breakBoard([0.3, 1, 0.012], 'plywood')
     expect(fragments.length).toBeLessThanOrEqual(64)
