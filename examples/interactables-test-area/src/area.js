@@ -8,6 +8,7 @@
 //   - `fluid` for the fixtures that hold water,
 //   - scenarios (pt-BR and en) written against the test room's `ScenarioContext`.
 import { buildScenarios } from './scenarios.js'
+import { createFixtureStreams } from './fixture-streams.js'
 
 /** @typedef {typeof import('@adatechnology/game-interactables-household')} HouseholdPack */
 /** @typedef {typeof import('@adatechnology/game-interactables-three')} InteractablesThree */
@@ -561,10 +562,13 @@ function analyse(hh, type, GT) {
 // The module
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /**
- * @param {{ GameInteractablesHousehold: HouseholdPack, GameInteractablesThree: InteractablesThree, fillContainers?: (THREE: ThreeLib, group: import('three').Group, spec: ObjectSpec, type: string) => void, locale?: string }} options
+ * @param {{ GameInteractablesHousehold: HouseholdPack, GameInteractablesThree: InteractablesThree, fillContainers?: (THREE: ThreeLib, group: import('three').Group, spec: ObjectSpec, type: string) => void, createFixtureEmitters?: (spec: ObjectSpec) => import('@adatechnology/game-interactables').FixtureEmitters, locale?: string }} options
  * `fillContainers` puts the contents of the containers of a piece of furniture in its group (the entry gives the one that draws them as real items).
+ * `createFixtureEmitters` (game-interactables) makes the water of the taps, the shower and the flush run while their handles are worked; without it no water runs.
  */
-export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, locale: defaultLocale = 'en' }) {
+export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInteractablesThree: GT, fillContainers, createFixtureEmitters, locale: defaultLocale = 'en' }) {
+  // the water the taps, the shower and the flush run while their handles are worked (the room moves the parts; this draws the water)
+  const streams = createFixtureEmitters ? createFixtureStreams({ createFixtureEmitters, createEffects: GT.createEffects }) : null
   const isEn = (/** @type {string} */ l) => (l ?? defaultLocale) === 'en'
   /** @type {Partial<Record<'en' | 'pt-BR', Household>>} */
   const households = {}
@@ -624,6 +628,7 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     res.group.name = type
     res.group.userData.furnitureType = type
     fillContainers?.(THREE, res.group, spec, type)
+    streams?.track(res.group, spec, res.parts)
     return res.group
   }
 
@@ -691,6 +696,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
     name: isEn(defaultLocale) ? 'Furniture and objects' : 'Móveis e objetos',
     ground: { surface: 'tile_floor' },
     group: isEn(defaultLocale) ? 'Furniture & objects' : 'Móveis e objetos',
+    /** @param {import('@adatechnology/game-contracts').ModuleHost} host */
+    attach: (host) => streams?.attach(host) ?? (() => {}),
     /**
      * @param {string} loc
      */
