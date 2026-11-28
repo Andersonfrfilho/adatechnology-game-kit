@@ -46,17 +46,44 @@ const camera = (/** @type {import('@adatechnology/game-test-room').CameraMode} *
 const ids = await page.evaluate(() => window.__testRoom.spawned().map((s) => ({ id: s.objectId, item: s.itemId, at: [s.root.position.x, s.root.position.y, s.root.position.z] })))
 const idOf = (/** @type {string} */ item, n = 0) => ids.filter((/** @type {{ item: string; }} */ s) => s.item === item)[n]
 const opening = (/** @type {string} */ objectId, /** @type {string} */ part) => page.evaluate(([o, p]) => window.__testRoom.leafOpening(o, p), [objectId, part])
-const door = () => page.evaluate(() => window.__testRoom.door)
+/**
+ * The leaf the hand works, as last seen: a phase can last a single frame (a leaf the arm lets go of swings on alone, `release`), so the page records every
+ * state the room shows, each frame, and the checks read what was seen, not what is there at the instant they look.
+ * @typedef {{ __doorSeen?: { last: import('@adatechnology/game-test-room').RoomDoorState | null; phases: string[] } }} DoorWatch
+ */
+await page.evaluate(() => {
+  const w = /** @type {DoorWatch} */ (/** @type {unknown} */ (window))
+  w.__doorSeen = { last: null, phases: [] }
+  const watch = () => {
+    const d = window.__testRoom.door
+    const seen = w.__doorSeen
+    if (d && seen) {
+      seen.last = d
+      if (seen.phases[seen.phases.length - 1] !== d.phase) seen.phases.push(d.phase)
+    }
+    requestAnimationFrame(watch)
+  }
+  watch()
+})
+/** Forgets what was seen: called before each E. */
+const resetSeen = () => page.evaluate(() => { const w = /** @type {DoorWatch} */ (/** @type {unknown} */ (window)); w.__doorSeen = { last: null, phases: [] } })
+const door = () => page.evaluate(() => /** @type {DoorWatch} */ (/** @type {unknown} */ (window)).__doorSeen?.last ?? window.__testRoom.door)
 const lastAction = (/** @type {string} */ type) => page.evaluate((/** @type {string} */ t) => window.__testRoom.log.entries().filter((e) => e.type === t).length, type)
 /** A tap of E (shorter than the push hold), then waits for the hand to let go. */
 const tapE = async () => {
+  await resetSeen()
   await page.keyboard.down('KeyE')
   await page.waitForTimeout(60)
   await page.keyboard.up('KeyE')
 }
 const waitPhase = (/** @type {string} */ phase) =>
-  page.waitForFunction((/** @type {string | undefined} */ p) => window.__testRoom.door?.phase === p || window.__testRoom.log.entries().slice(-1)[0]?.type === 'door_blocked', phase, { timeout: 90000, polling: 30 }).catch(async (e) => {
-    console.log('waiting for', phase, JSON.stringify(await page.evaluate(() => ({ door: window.__testRoom.door, log: window.__testRoom.log.entries().slice(-5).map((x) => `${x.type} ${x.text} ${JSON.stringify(x.data ?? {})}`) }))))
+  page.waitForFunction((/** @type {string} */ p) => {
+    // a leaf the arm lets go of goes on alone (`release`): it swung, even if no frame showed `swing`
+    const seen = /** @type {DoorWatch} */ (/** @type {unknown} */ (window)).__doorSeen?.phases ?? []
+    const reached = seen.includes(p) || (p === 'swing' && seen.includes('release'))
+    return reached || window.__testRoom.door?.phase === p || window.__testRoom.log.entries().slice(-1)[0]?.type === 'door_blocked'
+  }, phase, { timeout: 90000, polling: 30 }).catch(async (e) => {
+    console.log('waiting for', phase, JSON.stringify(await page.evaluate(() => ({ door: window.__testRoom.door, seen: /** @type {DoorWatch} */ (/** @type {unknown} */ (window)).__doorSeen?.phases, log: window.__testRoom.log.entries().slice(-5).map((x) => `${x.type} ${x.text} ${JSON.stringify(x.data ?? {})}`) }))))
     throw e
   })
 const waitIdle = () => page.waitForFunction(() => window.__testRoom.door === null, null, { timeout: 60000, polling: 50 })
