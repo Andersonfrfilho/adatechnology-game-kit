@@ -61,6 +61,8 @@ export interface FurnitureSpecResult {
 interface Drawn {
   id: string
   key: string
+  /** Destruction material of this box when it is not the one of its key (the boards of a case: `hollowCases`). */
+  material?: string
   shape: PartSpec['shape']
   position: [number, number, number]
   rotation: [number, number, number] | null
@@ -107,7 +109,7 @@ function splitTopsIntoBoards(drawn: Drawn[], materialOf: Record<string, string>,
   if (carcassed) return tops
   for (let i = drawn.length - 1; i >= 0; i--) {
     const p = drawn[i]
-    if (p.key !== 'wood' || materialOf.wood !== 'wood_hard' || p.shape.kind !== 'box' || p.rotation) continue
+    if (p.material || p.key !== 'wood' || materialOf.wood !== 'wood_hard' || p.shape.kind !== 'box' || p.rotation) continue
     const [sx, sy, sz] = p.shape.size
     const across = sx < sz ? 0 : 2
     const width = Math.min(sx, sz)
@@ -129,6 +131,116 @@ function splitTopsIntoBoards(drawn: Drawn[], materialOf: Record<string, string>,
     tops.set(p.id, boards)
   }
   return tops
+}
+
+/**
+ * Case furniture (cupboards, sideboards, chests of drawers, wardrobes): the builders draw its body as one solid block behind the doors and drawer fronts, which
+ * broke into solid blocks. As bought it is a box of boards, and `hollowCases` makes it one.
+ */
+const CASES = /^(tv_unit|tv_unit_small|tv_unit_large|sideboard|china_cabinet|pantry|laundry_cabinet|wardrobe|wardrobe_small|wardrobe_large|closet_wardrobe|kitchen_cabinet|kitchen_cabinet_large|kitchen_cabinet_small|display_stand|dresser|nightstand|console_table|vanity_table)$/
+/** Of those, the ones whose fronts are drawers (`interaction/items.ts`, DRAWER_ITEM): each front pulls out a drawer box. */
+const DRAWER_CASES = /^(dresser|nightstand|console_table|vanity_table)$/
+/** A block of a case is its body when it is at least this deep, wide and tall (m). */
+const CASE_BODY_MIN = 0.2
+/** A front (a door, a drawer front) is a board at most this thick lying on the front face of the body, within `FRONT_REACH` of it. */
+const FRONT_THICK = 0.03
+const FRONT_REACH = 0.03
+/** Boards of the case (sides, top, bottom, shelves, rails), its back, and the drawers' sides and bottom, metres: an 18 mm MDF case on a 6 mm plywood back. */
+const CASE_BOARD = 0.018
+const CASE_BACK = 0.006
+const DRAWER_SIDE = 0.012
+const DRAWER_BOTTOM = 0.006
+/** Shelves of a door case: one every `SHELF_PITCH` of inner height (none under it); a wardrobe has one shelf `HANGING_SHELF_DROP` under its top, over the hanging space. */
+const SHELF_PITCH = 0.45
+const WARDROBES = /wardrobe/
+const HANGING_SHELF_DROP = 0.35
+
+/** A box of the case, from its corners, with the body's key and colour. */
+function board(body: Drawn, suffix: string, material: string, min: [number, number, number], max: [number, number, number], color = body.color): Drawn {
+  const size: [number, number, number] = [max[0] - min[0], max[1] - min[1], max[2] - min[2]]
+  const position: [number, number, number] = [(min[0] + max[0]) / 2, (min[1] + max[1]) / 2, (min[2] + max[2]) / 2]
+  return { id: `${body.id}_${suffix}`, key: body.key, material, shape: { kind: 'box', size }, position, rotation: null, color, min, max }
+}
+
+/**
+ * Each solid body of a case piece becomes the boards it is made of (`<id>_side_l`, `_side_r`, `_top`, `_bottom`, `_back`, `_shelf<n>`, `_rail<n>`): an 18 mm MDF
+ * carcass on a 6 mm plywood back, open at the front behind its doors and drawer fronts, which become MDF too. Behind each drawer front of a chest of drawers
+ * there is a drawer box (`_drawer<n>_side_l`, `_side_r`, `_back`, `_bottom`), with a rail between one drawer and the next. A shot breaks the board it hits,
+ * as MDF breaks (lumps and dust) or plywood (plies and splinters), and the case stays a box of what is left. Returns the ids of the boards made.
+ */
+function hollowCases(drawn: Drawn[], type: string): Set<string> {
+  const made = new Set<string>()
+  if (!CASES.test(type)) return made
+  const drawers = DRAWER_CASES.test(type)
+  for (let i = drawn.length - 1; i >= 0; i--) {
+    const body = drawn[i] as Drawn
+    if ((body.key !== 'wood' && body.key !== 'plain') || body.shape.kind !== 'box' || body.rotation) continue
+    const [sx, sy, sz] = body.shape.size
+    if (Math.min(sx, sy, sz) < CASE_BODY_MIN) continue
+    const fronts = drawn.filter((p) => {
+      if (p === body || p.shape.kind !== 'box' || p.rotation || (p.key !== 'wood' && p.key !== 'plain')) return false
+      const thick = p.max[2] - p.min[2]
+      if (thick > FRONT_THICK || thick >= p.max[0] - p.min[0] || thick >= p.max[1] - p.min[1]) return false
+      const cx = (p.min[0] + p.max[0]) / 2
+      const cy = (p.min[1] + p.max[1]) / 2
+      return Math.abs(p.min[2] - body.max[2]) <= FRONT_REACH && cx > body.min[0] && cx < body.max[0] && cy > body.min[1] && cy < body.max[1]
+    })
+    if (fronts.length === 0) continue
+    const [x0, y0, z0] = body.min
+    const [x1, y1, z1] = body.max
+    const T = CASE_BOARD
+    const zi = z0 + CASE_BACK
+    const inner = 0.92
+    const tone = (k: number): number => {
+      const c = (s: number): number => Math.min(255, Math.round(((body.color >> s) & 255) * k)) << s
+      return c(16) | c(8) | c(0)
+    }
+    const boards: Drawn[] = [
+      board(body, 'back', 'plywood', [x0, y0, z0], [x1, y1, zi], tone(0.8)),
+      board(body, 'side_l', 'mdf', [x0, y0, zi], [x0 + T, y1, z1]),
+      board(body, 'side_r', 'mdf', [x1 - T, y0, zi], [x1, y1, z1]),
+      board(body, 'top', 'mdf', [x0 + T, y1 - T, zi], [x1 - T, y1, z1]),
+      board(body, 'bottom', 'mdf', [x0 + T, y0, zi], [x1 - T, y0 + T, z1], tone(inner)),
+    ]
+    const ix0 = x0 + T
+    const ix1 = x1 - T
+    const iy0 = y0 + T
+    const iy1 = y1 - T
+    if (drawers) {
+      const stack = [...fronts].sort((a, b) => a.min[1] - b.min[1])
+      stack.forEach((front, k) => {
+        // the drawer: its sides 2 mm in from the case's, its bottom between them, its back 1 cm in front of the case's back; its front is the drawer front
+        const dy0 = Math.max(front.min[1] + 0.01, iy0 + 0.002)
+        const dy1 = Math.min(front.max[1] - 0.02, iy1 - 0.002)
+        const dz0 = zi + 0.01
+        const dz1 = front.min[2]
+        if (dy1 - dy0 < 0.04 || dz1 - dz0 < 0.1) return
+        const a = ix0 + 0.002
+        const b = ix1 - 0.002
+        boards.push(
+          board(body, `drawer${k}_side_l`, 'mdf', [a, dy0, dz0], [a + DRAWER_SIDE, dy1, dz1], tone(inner)),
+          board(body, `drawer${k}_side_r`, 'mdf', [b - DRAWER_SIDE, dy0, dz0], [b, dy1, dz1], tone(inner)),
+          board(body, `drawer${k}_back`, 'mdf', [a + DRAWER_SIDE, dy0, dz0], [b - DRAWER_SIDE, dy1, dz0 + DRAWER_SIDE], tone(inner)),
+          board(body, `drawer${k}_bottom`, 'mdf', [a + DRAWER_SIDE, dy0, dz0 + DRAWER_SIDE], [b - DRAWER_SIDE, dy0 + DRAWER_BOTTOM, dz1], tone(inner)),
+        )
+        // the rail the drawer above runs over, in the gap between the two fronts
+        const above = stack[k + 1]
+        if (!above) return
+        const mid = (front.max[1] + above.min[1]) / 2
+        if (above.min[1] - front.max[1] < T || mid - T / 2 < dy1 || mid + T / 2 > iy1) return
+        boards.push(board(body, `rail${k}`, 'mdf', [ix0, mid - T / 2, zi], [ix1, mid + T / 2, z1], tone(inner)))
+      })
+    } else {
+      const height = iy1 - iy0
+      const count = Math.max(0, Math.round(height / SHELF_PITCH) - 1)
+      const levels = WARDROBES.test(type) ? [iy1 - HANGING_SHELF_DROP] : Array.from({ length: count }, (_, k) => iy0 + ((k + 1) * height) / (count + 1))
+      levels.forEach((y, k) => boards.push(board(body, `shelf${k}`, 'mdf', [ix0, y - T / 2, zi], [ix1, y + T / 2, z1 - 0.02], tone(inner))))
+    }
+    for (const front of fronts) front.material = 'mdf'
+    drawn.splice(i, 1, ...boards)
+    for (const b of boards) made.add(b.id)
+  }
+  return made
 }
 
 /** Boards of one top are not cut from the same tree: each has its own tone. */
@@ -229,12 +341,15 @@ function recordSpec(THREE: Three, name: string, root: Mount, run: (A: FurnitureA
   run(A)
   if (!drawn.length) throw new Error(`game-floorplan-three: the builder of "${name}" drew no box or cylinder`)
 
+  hollowCases(drawn, name)
   const boardsOf = splitTopsIntoBoards(drawn, materialOf, Boolean(opts.carcass))
   const parts: PartSpec[] = drawn.map((p) => {
     const thin = Math.min(...(p.shape.kind === 'box' ? p.shape.size : p.shape.kind === 'cylinder' ? [p.shape.radius * 2, p.shape.height] : [p.shape.radius * 2]))
-    let material = materialOf[p.key] ?? 'plastic'
+    let material = p.material ?? materialOf[p.key] ?? 'plastic'
     // a case with shelves is MDF (as bought); elsewhere thin boards are pine and thick ones hardwood
-    if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
+    if (p.material) {
+      // a board of a case (`hollowCases`) keeps the material it was made of
+    } else if (p.key === 'wood' && material === 'wood_hard' && opts.carcass && !opts.materials?.wood) material = 'mdf'
     else if (p.key === 'wood' && material === 'wood_hard' && thin < WOOD_THIN) material = 'wood_soft'
     const part: PartSpec = { id: p.id, material, shape: p.shape, position: p.position }
     if (p.rotation) part.rotation = p.rotation
