@@ -159,6 +159,8 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
       mesh.name = id === null ? `static:${key}` : `part:${id}`
       if (id !== null) mesh.userData.part = id
       mesh.userData.material = key
+      // what the builder drew, primitive by primitive, in the mesh's own space: what a physics engine holds the mesh by, with no vertex read back (spec 019)
+      if (batch.solids) mesh.userData.solids = batch.solids
       mesh.castShadow = shadows
       mesh.receiveShadow = shadows
       into.add(mesh)
@@ -195,6 +197,7 @@ export function createMeshApi(THREE: ThreeLib, options: MeshApiOptions = {}): Me
         materialAlias,
         validate: false,
         key: false,
+        solids: true,
       })
       const batches = buffers.levels[0]?.batches ?? []
       const of = (id: string | null): { batches: ShapeBatch[]; points: ShapePoint[] } => ({ batches: batches.filter((b) => b.part === id), points: buffers.points.filter((p) => p.part === id) })

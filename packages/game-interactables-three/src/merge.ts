@@ -1,4 +1,5 @@
 import type { Motion, ObjectSpec } from '@adatechnology/game-interactables'
+import type { ShapeSolid } from '@adatechnology/game-shapes'
 import { poseOf } from './pose'
 import type { ThreeLib, ThreeNS } from './types'
 
@@ -68,10 +69,12 @@ interface Piece {
   matrix: ThreeNS.Matrix4
   /** Per-vertex extra attributes of this piece. */
   extra: Record<string, number[]>
+  /** The solids the piece's mesh carries (`userData.solids`), in the piece's own space. */
+  solids?: readonly ShapeSolid[] | undefined
 }
 
 /** Concatenates pieces (positions and normals moved by their matrices) into one geometry with the extra attributes. */
-function concat(THREE: ThreeLib, pieces: Piece[], extraSizes: Record<string, number>): ThreeNS.BufferGeometry {
+function concat(THREE: ThreeLib, pieces: readonly Piece[], extraSizes: Record<string, number>): ThreeNS.BufferGeometry {
   let verts = 0
   let idx = 0
   for (const p of pieces) {
@@ -123,6 +126,37 @@ function concat(THREE: ThreeLib, pieces: Piece[], extraSizes: Record<string, num
   return out
 }
 
+/**
+ * The solids of the pieces joined in one mesh (spec 019): each piece's own (`userData.solids` of its mesh), carried by the piece's place and numbered after the vertices of
+ * the pieces before it. None when a piece has none: a mesh that says only some of what it draws would be held by less than it is.
+ */
+function mergedSolids(THREE: ThreeLib, pieces: readonly Piece[]): ShapeSolid[] | undefined {
+  if (pieces.some((p) => !p.solids)) return undefined
+  const out: ShapeSolid[] = []
+  const position = new THREE.Vector3()
+  const turn = new THREE.Quaternion()
+  const scale = new THREE.Vector3()
+  const centre = new THREE.Vector3()
+  const own = new THREE.Quaternion()
+  let first = 0
+  for (const p of pieces) {
+    p.matrix.decompose(position, turn, scale)
+    for (const solid of p.solids ?? []) {
+      centre.set(solid.center[0], solid.center[1], solid.center[2]).applyMatrix4(p.matrix)
+      own.set(solid.rotation[0], solid.rotation[1], solid.rotation[2], solid.rotation[3]).premultiply(turn).normalize()
+      out.push({
+        ...solid,
+        center: [centre.x, centre.y, centre.z],
+        half: [solid.half[0] * Math.abs(scale.x), solid.half[1] * Math.abs(scale.y), solid.half[2] * Math.abs(scale.z)],
+        rotation: [own.x, own.y, own.z, own.w],
+        vertexStart: solid.vertexStart + first,
+      })
+    }
+    first += p.geometry.getAttribute('position').count
+  }
+  return out
+}
+
 function meshesOf(group: ThreeNS.Object3D): ThreeNS.Mesh[] {
   return group.children.filter((c): c is ThreeNS.Mesh => (c as ThreeNS.Mesh).isMesh)
 }
@@ -165,15 +199,17 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
           e = { base: mesh.material as ThreeNS.Material, pieces: [], mesh }
           map.set(key, e)
         }
-        e.pieces.push({ geometry: mesh.geometry, matrix: g.matrix, extra: extra(g, mesh.geometry.getAttribute('position').count) })
+        e.pieces.push({ geometry: mesh.geometry, matrix: g.matrix, extra: extra(g, mesh.geometry.getAttribute('position').count), solids: mesh.userData.solids as readonly ShapeSolid[] | undefined })
       }
     }
     return map
   }
-  const finishMesh = (name: string, key: string, geometry: ThreeNS.BufferGeometry, template: ThreeNS.Mesh, set: ReturnType<typeof patchedSet>, group: ThreeNS.Group): void => {
-    const mesh = new THREE.Mesh(geometry, set.material)
+  const finishMesh = (name: string, key: string, pieces: readonly Piece[], extraSizes: Record<string, number>, template: ThreeNS.Mesh, set: ReturnType<typeof patchedSet>, group: ThreeNS.Group): void => {
+    const mesh = new THREE.Mesh(concat(THREE, pieces, extraSizes), set.material)
     mesh.name = `${name}:${key}`
     mesh.userData.material = key
+    const solids = mergedSolids(THREE, pieces)
+    if (solids) mesh.userData.solids = solids
     mesh.castShadow = template.castShadow
     mesh.receiveShadow = template.receiveShadow
     mesh.customDepthMaterial = set.depth
@@ -227,7 +263,7 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
     for (const e of plan.values()) {
       const key = String(e.mesh.userData.material)
       const set = patchedSet(THREE, e.base, `swayBatch:${n}:${amplitude}`, patch)
-      finishMesh('merge:cloth', key, concat(THREE, e.pieces, { swayId: 1, swayAnchor: 1 }), e.mesh, set, merged)
+      finishMesh('merge:cloth', key, e.pieces, { swayId: 1, swayAnchor: 1 }, e.mesh, set, merged)
     }
     const batch: SwayBatch = {
       kind: 'sway',
@@ -281,7 +317,7 @@ export function mergeParts(THREE: ThreeLib, root: ThreeNS.Group, parts: Record<s
     for (const e of plan.values()) {
       const key = String(e.mesh.userData.material)
       const set = patchedSet(THREE, e.base, 'poseBatch', patch)
-      finishMesh(merged.name, key, concat(THREE, e.pieces, { batchPivot: 3 }), e.mesh, set, merged)
+      finishMesh(merged.name, key, e.pieces, { batchPivot: 3 }, e.mesh, set, merged)
     }
     const batch: PoseBatch = {
       kind: 'pose',
