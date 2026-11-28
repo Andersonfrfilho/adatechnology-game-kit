@@ -53,7 +53,10 @@ export function bbq(c: Ctx): void {
     const px = ix0 + 0.05 + c.rnd() * (ix1 - ix0 - 0.14)
     const pz = iz0 + 0.05 + c.rnd() * (iz1 - iz0 - 0.14)
     const s = 0.04 + c.rnd() * 0.04
-    c.b('plain', px, bedY + 0.03, pz, px + s, bedY + 0.03 + s * 0.8, pz + s, c.rnd() < 0.3 ? 0x555555 : 0x1c1c1e, c.rnd() * 3, 0, 0)
+    // lumps overlap: each sinks 1.4 mm more into the tray and stands 1.7 mm taller than the one before, so no two bottoms or tops share a
+    // plane (CLAUDE.md §13), and none reaches the tray's underside
+    const sink = 0.001 + i * 0.0014
+    c.b('plain', px, bedY + 0.03 - sink, pz, px + s, bedY + 0.03 + 0.032 + i * 0.0017, pz + s, c.rnd() < 0.3 ? 0x555555 : 0x1c1c1e, c.rnd() * 3, 0, 0)
   }
   // grill grate on side brackets
   const gy = 0.88
@@ -75,7 +78,7 @@ export function bbq(c: Ctx): void {
   bricks(c, sx0, topChamber + 0.36, -hd, sx1, stackTop, -hd + 0.32, brick)
   c.b('plain', sx0 - 0.02, stackTop, -hd - 0.0, sx1 + 0.02, stackTop + 0.03, -hd + 0.34, 0xd8d2c4) // cap slab
   c.cyl('metal', (sx0 + sx1) / 2, stackTop + 0.03, -hd + 0.16, 0.085, h - stackTop - 0.03, 0x6a6e72, 'cyl') // clay-lined flue pipe
-  c.cyl('metal', (sx0 + sx1) / 2, stackTop + 0.03, -hd + 0.16, 0.06, h - stackTop - 0.028, 0x1c1c1e, 'cyl') // dark flue opening
+  c.cyl('metal', (sx0 + sx1) / 2, stackTop + 0.032, -hd + 0.16, 0.06, h - stackTop - 0.03, 0x1c1c1e, 'cyl') // dark flue opening, 2 mm over the pipe's top and bottom
   // counter section: brick shell + steel door + stone top
   const topC = 0.9
   bricks(c, cx0, 0, -hd, cx1, topC - 0.04, -hd + 0.1, brick)
@@ -93,7 +96,7 @@ export function bbq(c: Ctx): void {
   c.b('plain', lx0, 0.05, lz0, lx1, topC - 0.12, lz0 + 0.004, 0xd8d4c8)
   c.b('plain', lx0, 0.05, lz0 + 0.004, lx0 + 0.004, topC - 0.12, lz1, 0xc8c4b8)
   c.b('plain', lx1 - 0.004, 0.05, lz0 + 0.004, lx1, topC - 0.12, lz1, 0xc8c4b8)
-  c.b('plain', lx0, 0.4, lz0, lx1, 0.416, lz1, 0xc8c4b8) // shelf
+  c.b('plain', lx0 + 0.004, 0.4, lz0 + 0.004, lx1 - 0.004, 0.416, lz1 - 0.004, 0xc8c4b8) // shelf, between the linings and short of the door
   hingedDoor(c, {
     id: 'counter_door', x0: lx0 + 0.002, x1: lx1 - 0.002, y0: 0.052, y1: topC - 0.122, zf, t: 0.025, side: 'left', color: 0x4a4e52, inner: 0x9a9ea2, style: 'flat', handle: 'bar_v', handleLen: 0.2, angle: 1.7, label: 'prompt.door',
   })
