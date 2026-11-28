@@ -392,6 +392,18 @@ export async function openRoomPage({ chromium, pageFile, query = '' }) {
   page.on('pageerror', (/** @type {Error} */ error) => errors.push(`pageerror: ${error.message}`))
   await page.goto(pathToFileURL(pageFile).href + query, { timeout: 180000 })
   await page.waitForFunction(() => /** @type {any} */ (window).__testRoom, null, { timeout: 120000 })
+  // the bare room (examples/test-room/area-page.mjs) draws nothing while its shaders link: the first sheet would be the empty floor drawn before (the bows read
+  // "rendered-empty"). A page without that flag (an older build) only gets the wait below
+  await page.waitForFunction(() => /** @type {any} */ (window).__testRoomWarm === true || !('__testRoomReady' in window), null, { timeout: 600000, polling: 500 })
+  // and a warm-up the room's own frame started before is over: the renderer draws frames again
+  await page.waitForFunction(() => {
+    const renderer = /** @type {any} */ (window).__testRoom.webgl
+    if (!renderer) return true
+    const seen = /** @type {any} */ (window).__sheetFrames ?? []
+    seen.push(renderer.info.render.frame)
+    ;/** @type {any} */ (window).__sheetFrames = seen.slice(-3)
+    return seen.length >= 3 && seen[seen.length - 1] > seen[seen.length - 3]
+  }, null, { timeout: 600000, polling: 300 })
   await page.waitForTimeout(1500)
   await page.evaluate(installRulerInPage)
   return { browser, context, page, external, errors }
