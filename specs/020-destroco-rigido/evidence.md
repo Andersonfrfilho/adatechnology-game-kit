@@ -15,3 +15,18 @@ Medido em 2026-11-28, worktree `spec-020-destroco-rigido`.
 - Goldens regravados: só `destruction/breach`, `destruction/spall`, `destruction/fracture`.
 - Caminho descartado, com o número: destroço na camada `debris` levantou uma porta 1,2 m numa explosão de 2 MJ e deu 5 m/s às piscinas quebradas.
 - Não medido: `perf-gate`; salas além da de teste; destroço de casa na sala (`?area=house_complete`).
+
+## Depois do primeiro CI (2026-11-28)
+
+O CI do #620 reprovou dois testes da sala, e os dois eram o destroço vazando para onde só peça entra:
+
+- **Dano de impacto.** O leitor de contatos (`engine-impacts`) transforma todo golpe num sólido fixo em golpe `blunt` no mundo. O destroço batendo na laje
+  rachava a laje (4 eventos `crack` a mais no quadro da explosão; `structure > logs stress and collapse` lia outra coluna). Agora o golpe de destroço não é
+  contado (`ImpactReaderOptions.ignores`): o que sobra de uma quebra não quebra de novo ao pousar.
+- **Fluxo aleatório e empurrão da explosão das peças.** O destroço estava na lista que a explosão empurra e que sorteia o ponto do empurrão. Saiu dela: é
+  lançado pela explosão dos próprios fragmentos (`RigidDebris.shove`), com o giro pela velocidade da ponta. Também saiu do orçamento de peças acordadas.
+- **Linha de base de passo regravada** (`game-test-room/tests/fixtures/step-equivalence.json`, 150 dos 180 quadros, do quadro da explosão em diante). Com
+  eventos e registros idênticos aos de antes, as peças diferem na 8ª casa decimal (4,00000001 m contra 4,00000004 m): o motor resolve em outra ordem por ter
+  mais corpos. Estável entre execuções (3 rodadas iguais). É regravação do mesmo tipo dos goldens, e não estava na lista de três que o dono aprovou.
+
+Suítes inteiras depois disso: `game-physics` 33, `game-destruction-three` 911, `game-test-room` 632.

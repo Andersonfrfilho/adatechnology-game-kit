@@ -21,6 +21,9 @@ const STRIP_TALL = 0.22
 const DOOR_BOTTOM = 0.25
 const DOOR_LOWER_DEPTH = 0.3
 const SHOT = { type: 'ballistic', energy: 527, caliber: 9 } as const
+/** A part on a door, below its window line (this far under the top of its zone), reaches no further than this past the door's skin along the car, metres. */
+const DOOR_WINDOW_LINE = 0.05
+const DOOR_PAST_EDGE = 0.04
 
 /** Points really on the pane, whatever its outline: the middles of its largest triangles, facing out. A trim or a seal may cover some, never all. */
 function paneAims(mesh: THREE.Mesh, vehicleCentre: THREE.Vector3): Array<{ at: THREE.Vector3; normal: THREE.Vector3 }> {
@@ -175,6 +178,15 @@ function auditModel(key: string): string[] {
     piv.traverse((o: THREE.Object3D) => {
       if (o instanceof THREE.Mesh && o.visible && !o.userData.decal && !o.userData.glass) hung.push({ o, b: new THREE.Box3().setFromObject(o).applyMatrix4(inverse) })
     })
+    // nothing that hangs on the door below its window stands past its edges along the car: open, it would stand in the air beside the door
+    const skinBox = new THREE.Box3()
+    for (const { o, b } of hung) if (o.userData.doorSkin) skinBox.union(b)
+    if (!skinBox.isEmpty())
+      for (const { b } of hung) {
+        if (b.getCenter(new THREE.Vector3()).y > zoneBox.y1 - DOOR_WINDOW_LINE) continue
+        const past = Math.max(skinBox.min.x - b.min.x, b.max.x - skinBox.max.x)
+        if (past > DOOR_PAST_EDGE) problems.push(`${id}: a part on the door stands ${(past * 100).toFixed(0)} cm past its edge`)
+      }
     const midHeight = (zoneBox.y0 + zoneBox.y1) / 2
     const foot = zoneBox.y0 + DOOR_BOTTOM
     // the skin's outer face over the lower half (the mirror stands out higher up), and how deep the lowest part of what hangs reaches behind it

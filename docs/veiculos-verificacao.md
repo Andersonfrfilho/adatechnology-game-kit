@@ -78,6 +78,22 @@ detrito da oficina (os mesmos do tiro na parede) e nenhuma marca própria. O fur
 - **Pendência:** a faca de cozinha (`knife`) tem alcance de 0,4 m medido do centro do corpo e não alcança a lateral do carro em pé (o corpo tem 0,3 m
   de raio). A faca tática (0,6 m) alcança. É um dado do arsenal para revisar.
 
+## Porta aberta: nada saindo além da borda da porta
+
+Corrigido em 2026-11-28 (o dono viu as portas "soltas, com formatos e coisas no ar" na sala). A cabine desenha o forro interno da porta **por fileira de
+banco**, não por porta: no `compact_hatch` o forro de trás ia de x -1,44 a -0,64 numa porta de -1,19 a -0,53, e abria 25 cm para fora da borda de trás,
+uma placa cinza no ar ao lado da porta. Faixa de pintura (táxi, 38 cm), estribo e friso longo (picapes, `light_4x4`) faziam o mesmo. Medido em 23 modelos.
+
+- O que a porta leva e passa das bordas dela ao longo do carro é **cortado nas duas bordas**, como a faixa que atravessava o vão (`fitToDoor` em
+  `destructible/visual.ts`, com `cutStripOverDoor`): o pedaço sobre a porta vai com ela, o resto fica na carroceria. Pedaço com menos de 3 cm sobre a porta fica todo na carroceria.
+- A moldura escura da janela, acima da linha da porta, não é mais pintada com o cinza do forro: só o painel abaixo da janela é forro.
+- O teste da frota (`vehicle-acceptance.test.ts`) agora **reprova** peça da porta, abaixo da janela, que passa mais de 4 cm da pele dela ao longo do carro.
+  Antes da correção ele reprovava 23 dos 69 modelos; depois, passa nos 69.
+
+**Pendência:** nos hatches (`boxy_hatch`, `family_hatch`, `rideshare_hatch`, `turbo_hatch`), no `large_suv` e no `monster_truck`, o vidro da porta (com a moldura) é mais
+largo que a porta, até 19 cm para trás da borda de trás: a janela segue a coluna de trás e a pele da porta é cortada reta. Aberta, a moldura passa da porta
+no alto. Correção: cortar a pele da porta com o degrau da janela (como a porta de verdade, que sobe junto com o vidro) ou dividir o vidro com um vidro fixo atrás.
+
 ## Vidro embaçado por dentro
 
 Desde 2026-11-05: `createWindshieldMist` (`game-vehicles-three`) põe uma película clara em cada vidro do `context.glass`, **filha do próprio vidro** (desce com a

@@ -378,8 +378,7 @@ export class PieceSystem {
 
   /** Contact blows on the fixed parts become `blunt` hits of `destruction` (`engine-impacts.ts`). Returns the way to stop it. */
   contactHits(destruction: DestructionWorld, options?: EngineImpactsOptions): () => void {
-    const engine = this.engine
-    return createEngineImpacts(this.loop, engine.statics, destruction, { harmless: (body) => engine.pieceOfBody(body)?.debris === true, ...options })
+    return createEngineImpacts(this.loop, this.engine.statics, destruction, options, (body) => this.engine.pieceOfBody(body)?.debris === true)
   }
 
   /**
@@ -1142,7 +1141,8 @@ export class PieceSystem {
     if (most === undefined || !Number.isFinite(most)) return
     let awake = 0
     for (const b of this.list) {
-      if (b.sleeping || b.held) continue
+      // debris has the fragments' own budget (`maxFragments`): it takes no place among the pieces, or a wall coming down would put the furniture to sleep
+      if (b.sleeping || b.held || b.debris) continue
       // one held up at an angle never sleeps by itself (`still`), though it has come to rest: with a budget it does, whatever the count. One that has lain still for `SLEEP_AFTER`
       // sleeps whatever the count too: the engine wakes a sleeper that touches an awake body at every step, so the ones left awake under the count would never sleep by themselves
       if (this.hasComeToRest(b) && (b.balancing || (b.still >= SLEEP_AFTER && !b.hinge && !this.onSteepSupport(b)))) this.sleepByBudget(b)
@@ -1150,7 +1150,7 @@ export class PieceSystem {
     }
     for (const b of this.list) {
       if (awake <= most) return
-      if (b.sleeping || b.held || !this.hasComeToRest(b)) continue
+      if (b.sleeping || b.held || b.debris || !this.hasComeToRest(b)) continue
       this.sleepByBudget(b)
       awake--
     }
@@ -1170,12 +1170,14 @@ export class PieceSystem {
       const c = this.centerOf(b, this.p)
       return Math.hypot(c.x - focus[0], c.y - focus[1], c.z - focus[2]) > keep.far.distance
     }
-    const atRest = this.list.filter((b) => !b.held && this.hasComeToRest(b))
+    // debris is kept or let go by the fragments' own budget and life
+    const pieces = this.list.filter((b) => !b.debris)
+    const atRest = pieces.filter((b) => !b.held && this.hasComeToRest(b))
     if (keep.far.action === 'sleep') {
       for (const b of atRest) if (!b.sleeping && isFarAndOld(b)) this.sleepByBudget(b)
     }
     const fades = keep.far.action === 'fade'
-    let over = this.list.length - keep.maxLive
+    let over = pieces.length - keep.maxLive
     const far = new Set(atRest.filter(isFarAndOld))
     // far and old first, the oldest next (the list is in the order the pieces were made)
     for (const b of [...atRest].sort((a, c) => Number(far.has(c)) - Number(far.has(a)))) {

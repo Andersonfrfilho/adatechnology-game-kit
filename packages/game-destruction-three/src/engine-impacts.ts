@@ -27,7 +27,7 @@ const DEFAULT_CONTACT_RADIUS = 0.1
  * `hitPart(object, part, ...)` with the energy the blow gave it, about `impulse x approach / 2` (the work of a blow with no bounce), along the way the other body was going. A flying
  * piece into a wall, a slab onto a crate: the cascade of a blast takes the next wall by itself. Nothing is made per row; one `Hit` is made per part hit. Returns the way to stop it.
  */
-export const createEngineImpacts = (loop: PhysicsLoop, statics: EngineStatics, destruction: DestructionWorld, options: EngineImpactsOptions = {}): (() => void) => {
+export const createEngineImpacts = (loop: PhysicsLoop, statics: EngineStatics, destruction: DestructionWorld, options: EngineImpactsOptions = {}, isDebris?: (body: BodyId) => boolean): (() => void) => {
   const hitsMax = options.hitsMax ?? DEFAULT_HITS_MAX
   const radius = options.contactRadius ?? DEFAULT_CONTACT_RADIUS
   const minApproach = options.minApproach ?? DEFAULT_MIN_APPROACH
@@ -35,6 +35,8 @@ export const createEngineImpacts = (loop: PhysicsLoop, statics: EngineStatics, d
     minImpulse: options.minImpulse ?? DEFAULT_MIN_IMPULSE,
     bodiesMax: hitsMax,
     accepts: (body: BodyId) => statics.ownerOf.has(body),
+    // what is left of a part that broke breaks nothing again when it lands: a blow of debris is no blow to the world
+    ...(isDebris ? { ignores: isDebris } : {}),
     onImpact: (impact) => {
       if (impact.approach < minApproach) return
       // debris is no object of the world: what is left of a column that crumbled does not crack the roof it was holding up

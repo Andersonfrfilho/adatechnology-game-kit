@@ -77,6 +77,10 @@ const DOOR_STRIP_VERTICES = 60000
 const DOOR_SILL = 0.25
 /** A strip reaching this far over a door, metres, is cut at its edge: any length of it left on the body stands across the opening. */
 const DOOR_STRIP_OVER = 0.05
+/** A part that hangs on a door reaches no further than this past the door's edges along the car, metres; longer, it is cut at the edges (a cabin's trim panel drawn per seat row, a livery stripe, a step rail). */
+const DOOR_FIT_SLACK = 0.01
+/** What a cut leaves over the door shorter than this, metres, stays on the body: a sliver of a part that is the next door's. */
+const DOOR_FIT_MIN = 0.03
 /** A door's cut goes this far past the lower edge of its pane, metres. */
 const DOOR_TOP_OVER_PANE = 0.03
 /** How far outside a lamp's box a glowing piece still belongs to that lamp, metres. */
@@ -441,7 +445,10 @@ export class VehicleVisuals implements CreaseWork {
           const mirrors = this.mirrorsOn(z)
           const frames = this.framesAround(panes, inv)
           const thin = I.followersIn(this.c, z, inv) as Obj[]
-          const followers = [...thin, ...this.doorTrimIn(z, inv).filter((o) => !thin.includes(o))].filter((o) => !this.takeSeam(o, id, z, inv) && !this.inFloor(o, piv, z, inv))
+          const followers = [...thin, ...this.doorTrimIn(z, inv).filter((o) => !thin.includes(o))]
+            .filter((o) => !this.takeSeam(o, id, z, inv) && !this.inFloor(o, piv, z, inv))
+            .map((o) => this.fitToDoor(o, z, inv))
+            .filter((o): o is Obj => o !== null)
           objs = [...pcs, ...this.shellOf(pcs, z, inv), ...followers, ...panes, ...seals, ...mirrors, ...frames]
         }
       } else {
@@ -517,6 +524,30 @@ export class VehicleVisuals implements CreaseWork {
       const inside = centre.x > B.x0 - DOOR_TRIM_MARGIN && centre.x < B.x1 + DOOR_TRIM_MARGIN && centre.y > B.y0 && centre.y < B.y1 && centre.z > B.z0 - DOOR_TRIM_MARGIN && centre.z < B.z1 + DOOR_TRIM_MARGIN
       return inside && Math.max(size.x, size.y, size.z) <= DOOR_TRIM_SIZE
     })
+  }
+  /**
+   * A part that would hang on the door but reaches past its edges along the car (the cabin draws its trim panel per seat row, not per door;
+   * a livery stripe or a step rail runs the length of the side) is cut at the door's edges, as a strip across the opening is: the part over
+   * the door goes with it, the rest stays on the body. Hung whole it would stand out past the open door, in the air. Answers what goes with
+   * the door, or null when only a sliver of the part is over it.
+   */
+  private fitToDoor(o: Obj, z: DamageZone, inv: Matrix4): Obj | null {
+    if (!o.isMesh || o.userData.glass || !o.parent) return o
+    const x0 = z.box.x0 + 0.03
+    const x1 = z.box.x1 - 0.03
+    const box = this.I.localBox(this.c, o, inv)
+    if (box.isEmpty() || (box.min.x >= x0 - DOOR_FIT_SLACK && box.max.x <= x1 + DOOR_FIT_SLACK)) return o
+    if (Math.min(box.max.x, x1) - Math.max(box.min.x, x0) < DOOR_FIT_MIN) return null
+    const toVehicle = new this.THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld)
+    const over = cutStripOverDoor(this.kit, { strip: o, toVehicle, x0, x1 }) as Obj
+    over.position.copy(o.position)
+    over.quaternion.copy(o.quaternion)
+    over.scale.copy(o.scale)
+    over.castShadow = o.castShadow
+    over.receiveShadow = o.receiveShadow
+    o.parent.add(over)
+    over.updateMatrixWorld(true)
+    return over
   }
   /** A thin part at the foot of the opening, well inside the skin (a step, a sill trim, a rail on the floor), is the floor's: it does not swing with the door. */
   private inFloor(o: Obj, piv: Object3D, z: DamageZone, inv: Matrix4): boolean {
@@ -634,6 +665,8 @@ export class VehicleVisuals implements CreaseWork {
       if (!o.isMesh || o.userData.glass) continue
       const box = this.I.localBox(this.c, o, inv)
       const size = box.getSize(new this.THREE.Vector3())
+      // the frame round the window above the door is rubber, black on a real car: only the panel below the window line is the door's trim
+      if (box.getCenter(new this.THREE.Vector3()).y > z.box.y1) continue
       if (size.x > (z.box.x1 - z.box.x0) * 0.4 && size.y > (z.box.y1 - z.box.y0) * 0.3 && size.z < DOOR_DEPTH * 1.5 && o.material?.color?.getHSL({ h: 0, s: 0, l: 0 }).l < DOOR_LINER_DARK) o.material = card
     }
   }
