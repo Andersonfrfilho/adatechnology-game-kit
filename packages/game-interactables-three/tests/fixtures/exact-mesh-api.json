@@ -721,10 +721,10 @@
   ]
  },
  "household/toilet:high": {
-  "hash": "58429456",
+  "hash": "ee9985aa",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh ca62862e",
+   "0/0 Mesh ea95d69e",
    "0/1 Group 8e7aa3a6",
    "0/1/0 Mesh 233f41ac",
    "0/2 Group c1bc931f",
@@ -1811,10 +1811,10 @@
   ]
  },
  "household/toilet:game": {
-  "hash": "bfe9ec94",
+  "hash": "a7afc711",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 80aa02a3",
+   "0/0 Mesh 1fabbd60",
    "0/1 Group 8e7aa3a6",
    "0/1/0 Mesh e35a7070",
    "0/2 Group c1bc931f",
