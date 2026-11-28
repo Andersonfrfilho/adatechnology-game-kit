@@ -176,4 +176,46 @@ describe('the floor goes from under a foot of what stands free on it', () => {
     run(renderer, 0.5)
     expect(loosened).toEqual([])
   })
+
+  it('a table 4.4 m long that loses the two legs of one long side goes over across its 46 cm as a table does, not spun up: it never turns faster than a fall gives it', () => {
+    const scene = new THREE.Scene()
+    const world = new FakeWorld()
+    const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world: world.asWorld(), groundAt: () => 0 })
+    const legs: ReadonlyArray<readonly [number, number]> = [[-2.1, -0.2], [2.1, -0.2], [-2.1, 0.2], [2.1, 0.2]]
+    world.addObject('long_table', [partState('top', 'wood', { mass: 56 }), ...legs.map((_, i) => partState(`leg${i}`, 'wood', { mass: 1.4 }))])
+    const root = new THREE.Group()
+    const top = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.04, 0.46))
+    top.position.set(0, 0.76, 0)
+    root.add(top)
+    const parts: Record<string, THREE.Object3D> = { top }
+    legs.forEach(([x, z], i) => {
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.74, 0.06))
+      leg.position.set(x, 0.37, z)
+      root.add(leg)
+      parts[`leg${i}`] = leg
+    })
+    markKitOrigin(root, { owner: 'test', kind: 'furniture', id: 'long_table' })
+    scene.add(root)
+    root.updateMatrixWorld(true)
+    renderer.bind('long_table', root, { parts })
+    const piece = renderer.makePiece('long_table')
+    run(renderer, 4)
+    expect(piece.sleeping).toBe(true)
+    // the two legs on the +z side, shot off one after the other
+    for (const i of [2, 3]) {
+      const part = world.part('long_table', `leg${i}`)
+      if (part) part.status = 'broken'
+      world.emit({ type: 'fracture', object: 'long_table', part: `leg${i}`, point: [legs[i]![0], 0.3, 0.2], style: 'splinter', fragments: [] })
+    }
+    let fastest = 0
+    for (let t = 0; t < 4; t += 1 / 60) {
+      renderer.update(1 / 60)
+      fastest = Math.max(fastest, Math.hypot(...piece.angularVelocity))
+    }
+    // a top falling 0.76 m about the feet that are left reaches about 6 rad/s; the push 2.2 m out from its middle gave it 19.5 in the first update
+    expect(fastest).toBeLessThan(9)
+    root.updateMatrixWorld(true)
+    const edge = new THREE.Vector3(0, 0.76, 0.23).applyMatrix4(root.matrixWorld)
+    expect(edge.y, 'it went over toward the side that lost its legs').toBeLessThan(0.4)
+  })
 })
