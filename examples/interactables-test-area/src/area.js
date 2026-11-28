@@ -21,7 +21,7 @@ import { createFixtureStreams } from './fixture-streams.js'
 /** @typedef {import('@adatechnology/game-interactables').PartDestruction} PartDestruction */
 /** @typedef {import('@adatechnology/game-interactables').Motion} Motion */
 /** @typedef {import('@adatechnology/game-contracts').TestableItem} TestableItem */
-/** @typedef {'box' | 'cylinder' | 'plane' | 'leaf'} PrimFn */
+/** @typedef {'box' | 'cylinder' | 'plane' | 'leaf' | 'lathe'} PrimFn */
 /** @typedef {{ key: string; aabb: number[]; vol: number }} PrimShape */
 /** @typedef {PrimShape & { fn: PrimFn; args: unknown[] }} Prim */
 /** @typedef {{ id: string; pivot: number[]; ry: number; prims: Prim[] }} PartRecord */
@@ -139,6 +139,21 @@ function describePrimitive(fn, a) {
     const [, material, x, y, z, w, h, , ry = 0, rx = 0, rz = 0] = /** @type {Parameters<PropsApi['plane']>} */ (a)
     return { key: material, aabb: aabbOfBox([x, y, z], [w, h, 0.012], ry, rx, rz), vol: w * h * 0.012 }
   }
+  if (fn === 'lathe') {
+    // the box round the solid of revolution, and its volume by Pappus: 2π × the profile's area moment about the axis (shoelace)
+    const [, material, x, y, z, points] = /** @type {Parameters<NonNullable<PropsApi['lathe']>>} */ (a)
+    const r = Math.max(...points.map((q) => q[0]))
+    const ys = points.map((q) => q[1])
+    const lo = Math.min(...ys)
+    const hi = Math.max(...ys)
+    let moment = 0
+    for (let i = 0; i < points.length; i++) {
+      const [r0, y0] = points[i]
+      const [r1, y1] = points[(i + 1) % points.length]
+      moment += ((r0 * y1 - r1 * y0) * (r0 + r1)) / 6
+    }
+    return { key: material, aabb: [x - r, y + lo, z - r, x + r, y + hi, z + r], vol: Math.max(1e-6, 2 * Math.PI * Math.abs(moment)) }
+  }
   // leaf
   const [, x, y, z, w, h, , ry = 0] = /** @type {Parameters<PropsApi['leaf']>} */ (a)
   return { key: 'plant', aabb: aabbOfBox([x, y + h / 2, z], [w, h, w * 0.2], ry), vol: w * h * w * 0.1 }
@@ -179,7 +194,7 @@ function partBox(rec) {
 // Recording api: sits between the household pack and the mesh api (or nothing)
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /** @type {readonly PrimFn[]} */
-const FNS = ['box', 'cylinder', 'plane', 'leaf']
+const FNS = ['box', 'cylinder', 'plane', 'leaf', 'lathe']
 
 /**
  * Wraps the api a household pack draws through. Primitives drawn inside `part` go straight to `inner` (and are recorded per part);
@@ -663,17 +678,20 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
   }
 
   /**
-   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl, from its floor, held by the piece the floor belongs to. Its level is
+   * The liquid of a piece in the bowl it says (`BasinSpec`): a box as wide and deep as the bowl (an upright cylinder in a round one), from its floor, held by the piece the floor belongs to. Its level is
    * the litres over the bowl's floor area, and never more water than the bowl holds.
    * @param {FluidFixture} f
-   * @param {{ from: Triple; to: Triple }} bowl
+   * @param {{ from: Triple; to: Triple; shape?: 'box' | 'round' }} bowl
    * @param {ReturnType<typeof analyse>} a
    */
   function bowlFluid(f, bowl, a) {
     const size = /** @type {Triple} */ ([0, 1, 2].map((k) => round(bowl.to[k] - bowl.from[k])))
     const offset = /** @type {Triple} */ ([round((bowl.from[0] + bowl.to[0]) / 2), round(bowl.from[1]), round((bowl.from[2] + bowl.to[2]) / 2)])
-    // the fluid world fills the shape in proportion to `capacity`: the shape is the whole bowl, so its capacity is what the bowl holds, or the level would stand higher than the litres
-    const capacity = round(size[0] * size[1] * size[2] * 1000, 2)
+    // a round bowl (a toilet's) holds the upright cylinder inside the box, so its water is a disc, never a square in a round bowl. The fluid world fills the shape in
+    // proportion to `capacity`: the shape is the whole bowl, so its capacity is what the bowl holds, or the level would stand higher than the litres
+    const radius = round(Math.min(size[0], size[2]) / 2)
+    const isRound = bowl.shape === 'round'
+    const capacity = round((isRound ? Math.PI * radius * radius * size[1] : size[0] * size[1] * size[2]) * 1000, 2)
     const inside = (/** @type {{ position: number[]; shape: { size: number[] } }} */ p) => [0, 1, 2].every((k) => Math.abs(offset[k] + (k === 1 ? 0.005 : 0) - p.position[k]) <= p.shape.size[k] / 2 + 0.01)
     const part = a.destructible.parts.find(inside) ?? a.destructible.parts[0]
     return {
@@ -682,8 +700,8 @@ export function createFurnitureArea({ GameInteractablesHousehold: HHP, GameInter
         liquid: 'water',
         liters: Math.min(f.liters, round(capacity * BOWL_FILL_MAX, 2)),
         temperature: 18,
-        shape: { kind: /** @type {const} */ ('box'), size },
-        opening: Math.min(f.opening, Math.min(size[0], size[2]) / 2),
+        shape: isRound ? { kind: /** @type {const} */ ('cylinder'), radius, height: size[1] } : { kind: /** @type {const} */ ('box'), size },
+        opening: Math.min(f.opening, radius),
       },
       part: part?.id,
       uses: ['pour'],

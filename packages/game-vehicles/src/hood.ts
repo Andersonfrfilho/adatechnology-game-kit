@@ -125,15 +125,16 @@ export function installHood(kit: Kit) {
     const cx = (x0 + x1) / 2
     const paint = c.paint(o.col || c.meta.color || '#666')
     const out: Record<string, Vector3> = {}
-    c.roundBox(L, 0.03, 2 * zw, 0.01, MATERIALS.bay, cx, fl, 0)
+    /* the floor and the side walls start at the firewall's face and the walls stop 4 mm short of the floor's front: no face on another's (CLAUDE.md §13) */
+    c.roundBox(L - 0.03, 0.03, 2 * zw, 0.01, MATERIALS.bay, cx + 0.015, fl, 0)
     c.roundBox(0.03, H + 0.04, 2 * zw, 0.01, MATERIALS.bay, x0 + 0.015, fl + H / 2, 0)
     ;[1, -1].forEach(function (s) {
-      c.roundBox(L, H * 0.75, 0.03, 0.01, MATERIALS.bay, cx, fl + H * 0.37, s * zw)
+      c.roundBox(L - 0.034, H * 0.75, 0.03, 0.01, MATERIALS.bay, x0 + 0.03 + (L - 0.034) / 2, fl + H * 0.37, s * zw)
     })
     const rx = x1 - 0.06
     const rh = H * 0.82
     const rad = c.roundBox(0.05, rh, zw * 1.5, 0.012, MATERIALS.radiator, rx, fl + rh / 2 + 0.02, 0)
-    for (let f = 0; f < 6; f++) c.roundBox(0.054, 0.006, zw * 1.46, 0.002, MATERIALS.steel, rx, fl + 0.06 + (f * (rh - 0.06)) / 6, 0)
+    for (let f = 0; f < 6; f++) c.roundBox(0.062, 0.006, zw * 1.46, 0.002, MATERIALS.steel, rx, fl + 0.06 + (f * (rh - 0.06)) / 6, 0)
     c.roundBox(0.07, 0.04, zw * 1.5, 0.015, MATERIALS.plastic, rx, fl + rh + 0.03, 0)
     out.rad = new V3(rx, fl + rh / 2, 0)
     const fanR = Math.min(rh * 0.42, zw * 0.45)
@@ -172,8 +173,9 @@ export function installHood(kit: Kit) {
     }
     function battery(x: number, y: number, z: number, sc?: number | undefined) {
       sc = sc || 1
+      x = Math.max(x, x0 + 0.034 + 0.1 * sc) // clear of the firewall (0.03 thick), never with a face on its front (CLAUDE.md §13)
       c.roundBox(0.2 * sc, 0.15 * sc, 0.15 * sc, 0.015, makeMaterial('#1a1b1c', { roughness: 0.5 }), x, y, z)
-      c.roundBox(0.2 * sc, 0.012, 0.15 * sc, 0.005, makeMaterial('#2e3a6a', { roughness: 0.5 }), x, y + 0.04 * sc, z)
+      c.roundBox(0.2 * sc + 0.008, 0.012, 0.15 * sc + 0.008, 0.005, makeMaterial('#2e3a6a', { roughness: 0.5 }), x, y + 0.04 * sc, z) // the label band 4 mm proud of the case's sides
       c.cylinder(0.016, 0.018, 0.03, MATERIALS.postRed, x + 0.06 * sc, y + 0.09 * sc, z + 0.045 * sc)
       c.cylinder(0.016, 0.018, 0.03, MATERIALS.postBlack, x + 0.06 * sc, y + 0.09 * sc, z - 0.045 * sc)
       c.tube(
@@ -192,7 +194,7 @@ export function installHood(kit: Kit) {
     reservoir(x0 + 0.12, uy - 0.04, -zw * 0.55, 0.07, 0.06, 0.07, MATERIALS.coolant, makeMaterial('#c9b26a', { roughness: 0.3 }), MATERIALS.yellow)
     reservoir(x1 - 0.2, fl + H * 0.45, zw * 0.72, 0.12, 0.13, 0.1, MATERIALS.washer, makeMaterial('#3f8fc0', { roughness: 0.3 }), MATERIALS.capBlue)
     c.roundBox(0.12, 0.07, 0.13, 0.015, MATERIALS.plastic, x0 + 0.18, uy - 0.02, -zw * 0.78)
-    c.roundBox(0.12, 0.006, 0.13, 0.003, MATERIALS.dark, x0 + 0.18, uy + 0.017, -zw * 0.78)
+    c.roundBox(0.116, 0.006, 0.126, 0.003, MATERIALS.dark, x0 + 0.18, uy + 0.017, -zw * 0.78) // the lid 2 mm inside the box's sides
     if (mot === 'electric') {
       const fx0 = x0 + L * 0.4
       const fx1 = x1 - 0.14
@@ -346,7 +348,7 @@ export function installHood(kit: Kit) {
       const afx = x1 - L * 0.32
       const afy = Math.min(top - 0.07, fl + H * 0.7)
       c.roundBox(0.22, 0.1, 0.26, 0.03, MATERIALS.plastic, afx, afy, zw * 0.5)
-      c.roundBox(0.22, 0.012, 0.26, 0.004, MATERIALS.dark, afx, afy + 0.01, zw * 0.5)
+      c.roundBox(0.224, 0.012, 0.264, 0.004, MATERIALS.dark, afx, afy + 0.01, zw * 0.5) // the seam band 2 mm proud of the box's sides
       c.tube(
         [
           [afx - 0.11, afy, zw * 0.4],

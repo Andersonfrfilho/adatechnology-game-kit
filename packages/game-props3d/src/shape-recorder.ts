@@ -113,6 +113,9 @@ export function createShapeRecorder(options: ShapeRecorderOptions = {}): ShapeRe
           list.push({ kind: 'cylinder', radiusTop: 1, radiusBottom: 1, height: 1, radialSegments: cyl, ...place })
       }
     },
+    lathe(M, material, x, y, z, points, color) {
+      into(M).push({ kind: 'lathe', material, color, position: [x, y, z], points: points.map(([r, py]): [number, number] => [r, py]), segments: cyl })
+    },
     leaf(M, x, y, z, w, h, color, ry, rx) {
       into(M).push({ kind: 'mesh', ...LEAF, material: 'plant', color, position: [x, y, z], rotation: [rx, ry, 0], rotationOrder: 'YXZ', scale: [w, h, 1] })
     },

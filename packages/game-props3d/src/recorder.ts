@@ -17,6 +17,7 @@ export function createRecorder(options: { light?: boolean } = {}): { api: PropsA
     cylinder: (M, material, x, y, z, r, h, color, rx, rz, shape) => void primitives.push({ kind: 'cylinder', M, material, x, y, z, r, h, color, rx, rz, shape }),
     leaf: (M, x, y, z, w, h, color, ry, rx) => void primitives.push({ kind: 'leaf', M, x, y, z, w, h, color, ry, rx }),
     plane: (M, material, x, y, z, w, h, color, ry, rx, rz, uv) => void primitives.push({ kind: 'plane', M, material, x, y, z, w, h, color, ry, rx, rz, uv }),
+    lathe: (M, material, x, y, z, points, color) => void primitives.push({ kind: 'lathe', M, material, x, y, z, points, color }),
   }
   if (options.light !== false) {
     api.light = (M, x, y, z, color, range, lightKind) => void primitives.push({ kind: 'light', M, x, y, z, color, range, lightKind })

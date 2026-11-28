@@ -15,6 +15,32 @@ const FINISH_CHUNK = 16
 type WarmStep = 'compile' | 'yield'
 
 const nextTask = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
+/** How long `linkInParallel` waits between two looks at the programs still linking (three's own `compileAsync` waits 10 ms). */
+const LINK_POLL_MS = 10
+const wait = (milliseconds: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, milliseconds))
+
+type LinkingProgram = { isReady?(): boolean }
+
+/**
+ * `renderer.compile` and then the wait for each program it started to report linked: what three's `compileAsync` does, except that a material whose
+ * program is gone before it reports (disposed meanwhile: the room cleared, an effect ended) is dropped instead of read. three r160's `compileAsync`
+ * reads `currentProgram.isReady()` of such a material and throws from its timer, out of reach of any caller (a page error on every `room.clear()`
+ * during the warm-up). A renderer whose `compile` does not hand back the materials (a fake, an older three) gets one task instead.
+ */
+async function linkInParallel(renderer: WarmupRenderer, scene: Object3D, camera: Camera): Promise<void> {
+  const compiled = renderer.compile(scene, camera)
+  const properties = renderer.properties
+  if (!(compiled instanceof Set) || typeof properties?.get !== 'function') return nextTask()
+  const linking = new Set<object>(compiled as Set<object>)
+  for (;;) {
+    for (const material of linking) {
+      const program = (properties.get(material) as { currentProgram?: LinkingProgram } | undefined)?.currentProgram
+      if (program === undefined || typeof program.isReady !== 'function' || program.isReady()) linking.delete(material)
+    }
+    if (linking.size === 0) return
+    await wait(LINK_POLL_MS)
+  }
+}
 
 function chunksOf<TItem>(items: readonly TItem[], size: number): TItem[][] {
   const chunks: TItem[][] = []
@@ -327,11 +353,12 @@ export function createProgramWarmup(THREE: Pick<ThreeLib, 'Group' | 'Sprite' | '
       for (let step = steps.next(); ; step = steps.next()) if (step.done === true) return step.value
     },
     async warmUpAsync(renderer, scene, camera, options = {}): Promise<WarmupReport> {
-      const compileAsync = renderer.compileAsync?.bind(renderer)
+      // the parallel link is three r158+'s (`compileAsync` marks it); the wait is the kit's own (`linkInParallel`), which survives a material disposed meanwhile
+      const parallel = typeof renderer.compileAsync === 'function'
       const steps = warmSteps(renderer, scene, camera, options)
       for (let step = steps.next(); ; step = steps.next()) {
         if (step.done === true) return step.value
-        if (step.value === 'compile' && compileAsync !== undefined) await compileAsync(scene, camera)
+        if (step.value === 'compile' && parallel) await linkInParallel(renderer, scene, camera)
         else await nextTask()
       }
     },

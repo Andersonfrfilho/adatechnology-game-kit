@@ -360,6 +360,8 @@ export interface BasinSpec {
   id: string
   from: Vec3
   to: Vec3
+  /** `'round'` for a round bowl (a toilet's): the liquid is the upright cylinder inside the box, as wide as its narrower side. Default `'box'`. */
+  shape?: 'box' | 'round'
 }
 
 export interface MirrorSpec {

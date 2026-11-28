@@ -8,7 +8,7 @@ import type {
   SlotSpec,
   Vec3,
 } from '@adatechnology/game-interactables'
-import type { CylinderShape, Material, Primitive } from '@adatechnology/game-props3d'
+import type { CylinderShape, LathePoint, Material, Primitive } from '@adatechnology/game-props3d'
 import { DESTRUCTION, partDestruction } from './destruction'
 import type { HouseholdApi, HouseholdItem, HouseholdTypeDef, Region } from './types'
 import { cornersOf, hex, rng, round3, seedOf, sweepOf } from './util'
@@ -113,6 +113,22 @@ export class Ctx {
     const o = this.off
     this.track({ kind: 'cylinder', M: this.M, material: m, x, y, z, r, h, color, rx, rz, shape })
     this.api.cylinder(this.M, m, x - o[0], y - o[1], z - o[2], r, h, color, rx, rz, shape)
+  }
+
+  /**
+   * A solid of revolution round the vertical axis through (x, z): its closed profile `points` (`[r, y]`, y from `y`) goes up outside and down inside for a hollow
+   * piece (a toilet bowl, a seat ring), so both faces show and what is inside is open. A host without lathes draws the cylinder round it.
+   */
+  lathe(m: Material, x: number, y: number, z: number, points: readonly LathePoint[], color: number): void {
+    const o = this.off
+    this.track({ kind: 'lathe', M: this.M, material: m, x, y, z, points, color })
+    if (this.api.lathe) {
+      this.api.lathe(this.M, m, x - o[0], y - o[1], z - o[2], points, color)
+      return
+    }
+    const ys = points.map((q) => q[1])
+    const lo = Math.min(...ys)
+    this.api.cylinder(this.M, m, x - o[0], y + lo - o[1], z - o[2], Math.max(...points.map((q) => q[0])), Math.max(...ys) - lo, color, 0, 0)
   }
 
   /** Cylinder lying along x (`axis` 'x') or z (`axis` 'z'), centered at (x, y, z), length `len`. */

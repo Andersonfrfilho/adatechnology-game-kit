@@ -101,8 +101,8 @@ if (existsSync(roomHtml)) {
     page = page.slice(0, bodyIdx + 6) + '\n' + overlay + '\n' + page.slice(bodyIdx + 6)
   }
 
-  // Turn synchronous room bundle script into inert text script so the loading screen paints immediately
-  page = page.replace('<script>(()=>{', '<script type="text/plain" id="room-bundle">(()=>{')
+  // the bare room carries its bundle as inert text and makes the room once Jolt loads (examples/test-room/area-page.mjs): this page waits for it
+  if (!page.includes('__testRoomReady')) throw new Error('the room page is not the bare room of examples/test-room (base/test-room.html): build examples/test-room again')
 
   const bootScript = `<script type="text/plain" id="floorplan-bundle">${safe(bundle)}</script>
 <script>
@@ -152,7 +152,8 @@ if (existsSync(roomHtml)) {
   paint(30).then(function () {
     return setProgress(15, 'Carregando motor 3D e ambiente…', 'Loading 3D engine and arena…', 40);
   }).then(function () {
-    run('room-bundle');
+    return window.__testRoomReady;
+  }).then(function () {
     return setProgress(45, 'Compilando catálogo e módulos de arquitetura…', 'Compiling floorplan modules…', 40);
   }).then(function () {
     run('floorplan-bundle');

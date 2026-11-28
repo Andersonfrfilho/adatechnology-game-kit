@@ -5,6 +5,8 @@ import type { JointSpec, PartSpec } from '@adatechnology/game-destruction'
 export const HOLD_REACH = 0.05
 /** How close (m) to the back of the piece a part must be to be screwed to the wall behind it (a shower head, a range hood, a curtain rod). */
 const BACK_TOUCH = 0.02
+/** How close (m) to the back of the piece what stands of it must reach for the piece to be laid against a wall (a counter under its hood); farther, it stands free. */
+const AGAINST_WALL = 0.1
 /** What is not screwed to a wall: it hangs from what is (the pleats of a curtain from its rings). */
 const SOFT = new Set(['fabric', 'paper', 'foliage'])
 
@@ -69,22 +71,18 @@ function standsAlone(group: readonly PartSpec[], boxOf: HoldLooseParams['boxOf']
   return Math.min(across(0), across(2)) >= STANDS_ALONE * height
 }
 
-/**
- * Joins every group but the biggest to the nearest part of it, unless it stands on the floor by itself: a pool's ladder, a wall bracket are the piece; a stool is not.
- * A group held by its own anchor (a tap screwed to the wall over a laundry tub) is joined by a joint that `tears`: it is one piece with the body while the body
- * stands, and the body that loses its feet is not held up by it. A plain joint there hung the tub in the air from its tap (CLAUDE.md §12).
- */
+/** Joins every group but the biggest to the nearest part of it, unless it stands on the floor by itself: a pool's ladder, a wall bracket are the piece; a stool is not. */
 function joinBodies({ parts, joints, boxOf }: HoldLooseParams, byId: ReadonlyMap<string, PartSpec>): void {
   const groups = groupsOf(parts, joints).map((ids) => ids.map((id) => byId.get(id) as PartSpec)).sort((a, b) => b.length - a.length)
   const [main, ...rest] = groups
   if (!main) return
-  const mainAnchored = main.some((part) => part.anchored)
+  const mainHeld = main.some((part) => part.anchored)
   for (const group of rest) {
     if (standsAlone(group, boxOf)) continue
     const joint = nearestJoint(group, main, boxOf, Infinity)
-    if (!joint) continue
-    // `a` is the group's part, `b` the body's: the group hangs on the body only while the body's own anchors hold it
-    joints.push(mainAnchored && group.some((part) => part.anchored) ? { ...joint, tears: true } : joint)
+    // what the wall holds (a tap, a range hood) is joined to the body that stands on the floor only while that body stands (`tears`): when its feet break the body
+    // falls and the tap stays on the wall, instead of the body hanging from the tap
+    if (joint) joints.push(mainHeld && group.some((part) => part.anchored) ? { ...joint, tears: true } : joint)
   }
 }
 
@@ -93,7 +91,7 @@ function joinBodies({ parts, joints, boxOf }: HoldLooseParams, byId: ReadonlyMap
  * what holds it in a house. A group drawn a little apart (within `HOLD_REACH`) is joined to the nearest part that stands; one at the back of the piece is screwed to
  * the wall behind it (its parts there are anchored, as a wall-mounted cabinet is); what still hangs was drawn without what holds it (the stem of a fruit) and is
  * joined to the nearest part that stands. Last, one piece is one body: what is still apart is joined to it, but a group that stands on the floor by itself (a stool
- * beside a counter). Changes `parts` and `joints` in place.
+ * beside a counter); one the wall holds (a tap, a range hood) is joined to a body that stands on its own feet only while that body stands. Changes `parts` and `joints` in place.
  */
 export function holdLooseGroups(params: HoldLooseParams): void {
   const byId = new Map(params.parts.map((part) => [part.id, part]))
@@ -116,7 +114,9 @@ function holdHanging({ parts, joints, boxOf }: HoldLooseParams, byId: ReadonlyMa
         changed = true
         continue
       }
-      const onWall = group.filter((part) => !SOFT.has(part.material) && boxOf(part.id).min[2] <= back + BACK_TOUCH)
+      // only a piece laid against a wall (what stands of it reaches the back too) has a wall behind it: the fruit at the back of a free-standing tree is not on a wall
+      const againstWall = held.length === 0 || held.some((part) => boxOf(part.id).min[2] <= back + AGAINST_WALL)
+      const onWall = againstWall ? group.filter((part) => !SOFT.has(part.material) && boxOf(part.id).min[2] <= back + BACK_TOUCH) : []
       if (onWall.length === 0) continue
       for (const part of onWall) part.anchored = true
       changed = true

@@ -16,6 +16,7 @@ export type {
   Color,
   CoverOptions,
   CylinderShape,
+  LathePoint,
   DocumentLike,
   EmitFn,
   FloorAtlas,
