@@ -14,7 +14,7 @@ export interface RoomAvatarItemUse {
   /** How closed the other hand is when it works on the item (turning a cap off); the room brings it there with `reach`. */
   readonly gripL?: number
   /** Which arms a hand use takes (`HandUseDef.body` of game-items): the item to the mouth, or both hands together. Left out, the body goes by `id`. */
-  readonly body?: 'mouth' | 'two_hands'
+  readonly body?: 'mouth' | 'two_hands' | 'hand' | 'reach'
 }
 
 /** What the room tells the avatar every frame. */

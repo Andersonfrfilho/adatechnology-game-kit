@@ -44,15 +44,29 @@
       "reset": 1.2
     },
     {
-      "id": "two_hand_swing",
-      "note": "a long weapon in both hands (bat, pipe, crowbar, axe, sledgehammer, katana): swung flat from the right shoulder across the body, the hips leading, as the shovel's swing",
+      "id": "bat_swing",
+      "note": "a club in both hands (bat, pipe, crowbar, sledgehammer): drawn back behind the right shoulder, swung level through the chest with the hips and shoulders turning, and carried round over the left shoulder (follow-through)",
       "weapons": [
         "baseball_bat",
         "nail_bat",
         "iron_pipe",
         "crowbar",
+        "sledgehammer"
+      ],
+      "blows": [
+        {
+          "clip": "bat_swing",
+          "motion": "bat_swing",
+          "seconds": 0.7
+        }
+      ],
+      "reset": 1.2
+    },
+    {
+      "id": "two_hand_swing",
+      "note": "a long weapon in both hands with its weight at the head or an edge (axe, pickaxe, katana): swung flat and low from the right shoulder across the body, the hips leading, as the shovel's swing",
+      "weapons": [
         "axe",
-        "sledgehammer",
         "pickaxe",
         "katana"
       ],

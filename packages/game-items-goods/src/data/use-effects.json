@@ -84,7 +84,44 @@
     "consumes": false,
     "items": [
       "flashlight"
-    ]
+    ],
+    "params": {
+      "clip": "toggle_flashlight"
+    }
+  },
+  {
+    "id": "ignite",
+    "effect": "ignite",
+    "consumes": false,
+    "items": [
+      "lighter"
+    ],
+    "params": {
+      "clip": "light_lighter"
+    }
+  },
+  {
+    "id": "radio_call",
+    "effect": "radio_call",
+    "consumes": false,
+    "items": [
+      "portable_radio",
+      "walkie_talkies"
+    ],
+    "params": {
+      "clip": "use_radio"
+    }
+  },
+  {
+    "id": "turn_key",
+    "effect": "turn_key",
+    "consumes": false,
+    "category": [
+      "keys"
+    ],
+    "params": {
+      "clip": "turn_key"
+    }
   },
   {
     "id": "swap_bag",

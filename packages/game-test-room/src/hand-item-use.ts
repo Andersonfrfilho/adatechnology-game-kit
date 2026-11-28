@@ -7,7 +7,7 @@ import type * as THREE_NS from 'three'
 import type { HandTargets, ModuleItemUse } from '@adatechnology/game-contracts'
 import type { ItemUsePlayer } from '@adatechnology/game-fluids'
 import { createHandUse } from '@adatechnology/game-items'
-import type { HandUseBody, HandUseDef } from '@adatechnology/game-items'
+import type { HandUseBody, HandUseDef, HandUseEvent } from '@adatechnology/game-items'
 
 import type { TestRoomItem } from './types'
 
@@ -17,8 +17,8 @@ const EATEN_SCALE = 0.35
 /** A use in the room's slot that also says which arms it takes. */
 export type RoomUsePlayer = ItemUsePlayer & { readonly body?: HandUseBody }
 
-/** Plays `def` on the item drawn at `root`: the pose for the hand, and the food shrinking a little at each bite. */
-export const createHandItemUse = (def: HandUseDef, root: THREE_NS.Object3D): RoomUsePlayer => {
+/** Plays `def` on the item drawn at `root`: the pose for the hand, the food shrinking a little at each bite, and every other action told to `onAction` (a switch, a flame, a key). */
+export const createHandItemUse = (def: HandUseDef, root: THREE_NS.Object3D, onAction?: (event: HandUseEvent) => void): RoomUsePlayer => {
   const hand = createHandUse(def)
   const size = root.scale.x
   return {
@@ -32,7 +32,10 @@ export const createHandItemUse = (def: HandUseDef, root: THREE_NS.Object3D): Roo
     },
     pose: () => hand.pose(),
     update: (dt) => {
-      for (const event of hand.update(dt)) if (event.action === 'bite') root.scale.setScalar(size * (1 - (1 - EATEN_SCALE) * event.share))
+      for (const event of hand.update(dt)) {
+        if (event.action === 'bite') root.scale.setScalar(size * (1 - (1 - EATEN_SCALE) * event.share))
+        else onAction?.(event)
+      }
       return []
     },
     cancel: () => {
@@ -75,4 +78,13 @@ export const handUsesOf = (item: TestRoomItem | undefined, defs: readonly HandUs
   const clip = item?.use?.clip
   if (clip === undefined || !defs.some((def) => def.id === clip)) return []
   return item?.fluid?.uses?.some((use) => use === 'eat' || use === 'drink') ? [] : [clip]
+}
+
+/** Where `point` (world) is in the eye's frame of the hand uses: from `eye`, turned back by the body's `yaw` (x to the right, y up, z back toward the eye). */
+export const inEyeFrame = (point: readonly [number, number, number], eye: readonly [number, number, number], yaw: number): [number, number, number] => {
+  const dx = point[0] - eye[0]
+  const dz = point[2] - eye[2]
+  const cos = Math.cos(yaw)
+  const sin = Math.sin(yaw)
+  return [dx * cos - dz * sin, point[1] - eye[1], dx * sin + dz * cos]
 }

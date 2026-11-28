@@ -10,10 +10,13 @@ import { blowOfTool, createBodySounds, createStrideCounter, swingLead } from './
 import type { Piece } from '@adatechnology/game-destruction-three'
 import { dragMarkFor, FURNITURE_PUSH_DEFAULTS, PLAYER_WALK_PUSH_NEWTONS } from '@adatechnology/game-player'
 import { canDualWield, createArsenal, createMeleeBlowCycle, DEFAULT_LOADOUT, realLoadout } from '@adatechnology/game-weapons'
-import { HAND_USES } from '@adatechnology/game-items'
-import { createHandItemUse, handUseEffectText, handUsesOf, usedItemTargets } from './hand-item-use'
+import { aimHandUse, HAND_USES } from '@adatechnology/game-items'
+import { createHandItemUse, handUseEffectText, handUsesOf, inEyeFrame, usedItemTargets } from './hand-item-use'
+import { createHandToolEffects } from './hand-tool-use'
+import { createLeafLocks } from './leaf-locks'
+import { BODY_HEIGHT, KICK_HEIGHT, KICK_MASS, KICK_RESTITUTION, STEP_UP } from './walk-limits'
 import { openingProgress } from './opening-progress'
-import { waterEntryAlong } from './water-entry'
+import { WATER_ENTRY_SPEED, WATER_SPLASH_SOUND, WAVE_GRIP, WAVE_WAKE, waterEntryAlong } from './water-entry'
 import type { WaterEntry } from './water-entry'
 import type { RoomUsePlayer } from './hand-item-use'
 import type { Detonation, MountKind, Shot, TriggerResult, Use, WeaponState } from '@adatechnology/game-weapons'
@@ -158,7 +161,6 @@ const LITERS_PER_CUBIC_METRE = 1000
 /** Metres a holder's drawn box may fall short of a point and still hold it (the rim of a top), and how far under its declared top it may end and still be the top (a broken stand's base is not). */
 const HOLDER_EDGE = 0.02
 const HOLDER_TOP_DROP = 0.06
-/** The effect ids of the explosives of the arsenal (the profiles of `game-vfx`) the room draws at load. */
 // the left hand's tool (a tool in each hand): its blows wait on a key of their own and its random streams start from a seed of their own
 const LEFT_HAND_KEY = '#L'
 const OFF_HAND_SEED = 11
@@ -170,23 +172,6 @@ const DEFAULT_PARTICLE_LIMIT = 900
 const BATCH_MIN_MESHES = 8
 /** Owners that draw their own batches or move every frame (a vehicle batches itself; people and animals are posed each frame). */
 const UNBATCHED_OWNERS = /vehicles|characters|animals|crowd/
-/** Highest top (m above the feet) the player steps onto: low debris; higher stops the walk. */
-const STEP_UP = 0.45
-/** Height of the walking body (m): what starts above it is walked under. */
-const BODY_HEIGHT = 1.75
-/** Pieces lighter than this (kg) are kicked out of the way instead of stepped on or stopping the player; how high above the feet they still are. */
-const KICK_MASS = 6
-const KICK_HEIGHT = 0.6
-/** Restitution of a shoe's sole on what it kicks (rubber on a can, a bottle, a book: about 0.5): a still thing leaves at up to 1.5 times the speed of the walk. */
-const KICK_RESTITUTION = 0.5
-/** Metres per second a body has to hit the water at for a splash. */
-const WATER_ENTRY_SPEED = 1.5
-/** The recorded splash a round or a blast on water plays. */
-const WATER_SPLASH_SOUND = 'water_splash'
-/** Per second, the share of the speed of the water a wave crest moves that a floating body takes. */
-const WAVE_GRIP = 3
-/** Below this push (m/s) a wave leaves a floater asleep. */
-const WAVE_WAKE = 0.03
 /** Metres a round is followed for the water it meets, and where its tracer ends when it hits nothing. */
 const SHOT_REACH = 40
 /** Seconds between two looks at what stands still on the ground. */
@@ -974,7 +959,17 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     return leaves
   }
   /** Locked leaves: `objectId\0part`, or `objectId\0*` for every leaf of the object. */
-  const lockedLeaves = new Set<string>()
+  const leafLocks = createLeafLocks()
+  // the flashlights, lighters, radios and keys used in the hand; a key turns the lock of the leaf in reach
+  const toolEffects = createHandToolEffects({ THREE, lights, sound: playSound, turnKey: () => leafLocks.turn(keyLeaf()) })
+  // the leaf a key in the hand reaches (the doors look past a hand that holds something only for it)
+  let keyReach = false
+  const keyLeaf = (): ReturnType<typeof doors.aimed> => {
+    keyReach = true
+    const leaf = doors.aimed()
+    keyReach = false
+    return leaf
+  }
   const doorShoulder = new THREE.Vector3()
   const doors = createRoomDoors({
     THREE,
@@ -990,7 +985,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       return [doorShoulder.x, doorShoulder.y, doorShoulder.z]
     },
     pick: () => {
-      if (heldPiece) return []
+      if (heldPiece && !keyReach) return []
       aim()
       const hits: Array<{ objectId: string; part: string; point: Vec3 }> = []
       const r = rayWorld([aimO[0], aimO[1], aimO[2]], [aimD[0], aimD[1], aimD[2]], DOOR_REACH)
@@ -1015,7 +1010,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       placePart(obj, rest, pose)
       followPart(e, part, obj, rest)
     },
-    isLocked: (objectId, part) => lockedLeaves.has(`${objectId}\0*`) || lockedLeaves.has(`${objectId}\0${part}`),
+    isLocked: leafLocks.isLocked,
     nameOf,
     impactKey: (objectId, part) => impactKey(world.materials.get(world.part(objectId, part)?.material ?? heaviestMaterial(objectId) ?? '')),
     leafSound: (objectId, part, moment) => {
@@ -1380,6 +1375,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const removeEntry = (id: string): void => {
     const e = entries.get(id)
     if (!e) return
+    toolEffects.forget(id)
     if (entries.held === e) releaseHeld()
     for (let i = playing.length - 1; i >= 0; i--) if (playing[i].entry === e) playing.splice(i, 1)
     vessels.remove(e)
@@ -3268,12 +3264,16 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   const useByHand = (e: Entry, use: ModuleItemUse): boolean => {
     const def = handUseDefs.find((d) => d.id === use.clip)
     if (!def || (useItemPlayer && !useItemPlayer.done)) return false
-    useItemPlayer = createHandItemUse(def, e.so.root)
+    // a key goes to the lock of the leaf in reach the eye rests on, and turns in the air without one
+    const lock = def.body === 'reach' && keyLeaf() ? (aim(), rayWorld(aimO, aimD, DOOR_REACH)) : null
+    let effect: string | undefined
+    const aimed = lock ? aimHandUse(def, inEyeFrame(lock.point, v3(camera.position), player.yaw)) : def
+    useItemPlayer = createHandItemUse(aimed, e.so.root, (event) => (effect = toolEffects.act(event.action, e.so.objectId, e.so.root) ?? effect))
     useItemName = def.id
     action('use_item', t('act.use_item', { name: e.name, use: S.text[`use.${def.id}`] ?? def.id }), { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id } })
     handUseEnd = () => {
       const moved = vitals.used(use)
-      const told = `${t(use.consumes ? 'act.used_up' : 'act.used', { name: e.name, effect: handUseEffectText(use, t) })}${moved ? ` · ${moved}` : ''}`
+      const told = `${t(use.consumes ? 'act.used_up' : 'act.used', { name: e.name, effect: effect ? t(effect) : handUseEffectText(use, t) })}${moved ? ` · ${moved}` : ''}`
       say(told)
       action('used_item', told, { objectId: e.so.objectId, itemId: e.so.itemId, data: { use: def.id, consumes: use.consumes, ...(use.effect ? { effect: use.effect.id, ...use.effect } : {}), hunger: vitals.body.state.hunger, thirst: vitals.body.state.thirst, health: vitals.body.state.health } })
       if (use.consumes) removeEntry(e.so.objectId)
@@ -3338,6 +3338,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   let useSoundIn = 0
 
   const updateItemUse = (dt: number): void => {
+    toolEffects.update(dt)
     if (!useItemPlayer) return
     const e = entries.held
     const c = e?.containerId ? fluids.container(e.containerId) : undefined
@@ -4969,11 +4970,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     useLeaf: (objectId, part) => doors.useLeaf(objectId, part),
     leafOpening: (objectId, part) => doors.opening(objectId, part ?? leavesOf(objectId)[0]?.part ?? ''),
     leaves: (objectId) => leavesOf(objectId).map((l) => l.part),
-    lockLeaf(objectId, locked = true, part) {
-      const k = `${objectId}\0${part ?? '*'}`
-      if (locked) lockedLeaves.add(k)
-      else lockedLeaves.delete(k)
-    },
+    lockLeaf: (objectId, locked = true, part) => leafLocks.set(objectId, locked, part),
     get door() {
       return doors.state
     },

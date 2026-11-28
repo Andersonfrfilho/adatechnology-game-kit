@@ -26,6 +26,7 @@ Leia `spec.md` e `plan.md`. Arma na mão e animação só fecham com print nas d
 - T2.4 `melee-families.json`: cada arma branca do arsenal apontada para uma família (dados).
 
 > Parcial em 2026-11-27 (pedido do dono na sala 4280): 3 famílias ligadas na sala (`short_blade` corte + estocada, `one_hand_swing`, `two_hand_swing` com o giro da pá), clipes `knife_slash`/`knife_stab` e movimentos em `FAMILY_MOTIONS`. Faltam as outras famílias de R3 (golpe de cima de duas mãos, lança, motosserra) e a T2.1 com `opus`.
+> Em 2026-11-28: família `bat_swing` (taco, cano, pé de cabra, marreta) com tacada própria de duas mãos; faca legível em 1ª pessoa (movimento girando no punho, `pivot: 'grip'`).
 
 ## Fase 3 — Mão ↔ mundo
 > 🤖 Modelo: `sonnet`
@@ -35,6 +36,7 @@ Leia `spec.md` e `plan.md`. Arma na mão e animação só fecham com print nas d
 - T3.3 Uso por categoria (R5), com o contrato de animação de item.
 
 > Parcial em 2026-11-27: comer com a mão, beber sem líquido, remédio, curativo e higiene (`HAND_USES` de game-items, `ModuleItemUse` no contrato, `goodsItemUse`), na tecla F da sala. Faltam lanterna, isqueiro/fósforo, rádio e chave.
+> Em 2026-11-28: lanterna (liga e desliga, luz do orçamento), isqueiro (risca e acende), rádio e walkie-talkie (ao rosto, gira o botão, fala) e chave (vai à fechadura da porta na mira e tranca/destranca, ou gira no ar), na tecla F. Falta o fósforo.
 
 ## Fase 4 — Armas de fogo
 > 🤖 Modelo: `sonnet`

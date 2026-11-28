@@ -6,16 +6,24 @@
  */
 import handUsesJson from './data/hand-uses.json'
 
-/** What happens at a key: a bite taken, a pill or a sip swallowed, the dressing pressed on, soap rubbed. */
-export type HandUseAction = 'bite' | 'swallow' | 'apply' | 'scrub'
-/** Which arms the use takes: the item to the `mouth`, or both hands together in front of the body. */
-export type HandUseBody = 'mouth' | 'two_hands'
+/**
+ * What happens at a key: a bite taken, a pill or a sip swallowed, the dressing pressed on, soap rubbed; a switch pressed (a flashlight), a flame struck (a lighter), a knob
+ * turned and words spoken (a radio), a key turned in its lock.
+ */
+export type HandUseAction = 'bite' | 'swallow' | 'apply' | 'scrub' | 'switch' | 'ignite' | 'tune' | 'talk' | 'turn'
+/**
+ * Which arms the use takes: the item to the `mouth`, both hands together in front of the body (`two_hands`), the one `hand` that holds it raised before the chest, or
+ * that arm stretched out to `reach` something ahead (a lock).
+ */
+export type HandUseBody = 'mouth' | 'two_hands' | 'hand' | 'reach'
 
 export interface HandUseKey {
   readonly t: number
   readonly position: readonly [number, number, number]
   readonly rotation: readonly [number, number, number]
   readonly action?: HandUseAction
+  /** The item is at what the use reaches for at this key (a key in its lock): `aimHandUse` moves it there when the host has a target. */
+  readonly reach?: boolean
 }
 
 export interface HandUseDef {
@@ -47,6 +55,23 @@ export const HAND_USES: readonly HandUseDef[] = handUsesJson as unknown as reado
 
 /** The hand use with that id, among `defs`. */
 export const handUseOf = (id: string, defs: readonly HandUseDef[] = HAND_USES): HandUseDef | undefined => defs.find((def) => def.id === id)
+
+/** Farthest the hand carries an item from the eye (metres): an arm's length. */
+export const HAND_USE_REACH = 0.62
+
+/**
+ * The use with its `reach` keys moved onto `target` (a point in the eye's frame, as the keys are: a lock seen ahead), kept within `HAND_USE_REACH` of the eye; the keys keep
+ * how they lay around the first reach key, so a key still goes in, turns and comes out. Without reach keys the use is returned as it is.
+ */
+export const aimHandUse = (def: HandUseDef, target: readonly [number, number, number]): HandUseDef => {
+  const anchor = def.keys.find((key) => key.reach)
+  if (!anchor) return def
+  const length = Math.hypot(target[0], target[1], target[2])
+  const k = length > HAND_USE_REACH ? HAND_USE_REACH / length : 1
+  const shift = [target[0] * k - anchor.position[0], target[1] * k - anchor.position[1], target[2] * k - anchor.position[2]] as const
+  const moved = (key: HandUseKey): HandUseKey => ({ ...key, position: [key.position[0] + shift[0], key.position[1] + shift[1], key.position[2] + shift[2]] })
+  return { ...def, keys: def.keys.map((key) => (key.reach ? moved(key) : key)) }
+}
 
 const lerp = (a: readonly number[], b: readonly number[], k: number): [number, number, number] => [
   a[0]! + (b[0]! - a[0]!) * k,

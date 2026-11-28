@@ -39,6 +39,12 @@ export const SHIPPED_WEAPON_ITEM_MODELS: ReadonlyArray<readonly [string, WeaponI
   ['kabar', { flip: true }],
   ['katana', { flip: true, grips: { handle: -0.35, support: -0.4622 } }],
   ['brass_knuckles', { turn: 1, roll: 1, grips: { handle: -0.35, handleAt: [-0.045, 0.03] } }],
+  // a club is swung with both hands at the knob end as a batter holds it: the left hand below at the knob, the right just above it (a sledgehammer's right hand higher up the haft)
+  ['baseball_bat', { grips: { handle: -0.3, support: -0.41 } }],
+  ['nail_bat', { grips: { handle: -0.3, support: -0.41 } }],
+  ['iron_pipe', { grips: { handle: -0.29, support: -0.41 } }],
+  ['crowbar', { grips: { handle: -0.3, support: -0.42 } }],
+  ['sledgehammer', { grips: { handle: -0.22, support: -0.42 } }],
 ]
 
 /** The weapons whose item model has another id or turns another way, with the draw that reads them: one set, with no other set sharing it. */

@@ -31,6 +31,14 @@ describe('goods item use', () => {
     expect(goodsItemUse(item('soap'))).toEqual({ clip: 'use_hygiene', consumes: false, effect: { id: 'wash' } })
   })
 
+  it('switches a flashlight, lights a lighter, talks on a radio and turns a key, spending none', () => {
+    expect(goodsItemUse(item('flashlight'))).toEqual({ clip: 'toggle_flashlight', consumes: false, effect: { id: 'toggle_light' } })
+    expect(goodsItemUse(item('lighter'))).toEqual({ clip: 'light_lighter', consumes: false, effect: { id: 'ignite' } })
+    expect(goodsItemUse(item('portable_radio'))).toEqual({ clip: 'use_radio', consumes: false, effect: { id: 'radio_call' } })
+    expect(goodsItemUse(item('walkie_talkies'))?.clip).toBe('use_radio')
+    for (const key of ['house_key', 'car_key', 'padlock_key']) expect(goodsItemUse(item(key)), key).toEqual({ clip: 'turn_key', consumes: false, effect: { id: 'turn_key' } })
+  })
+
   it('plays no use for what is not used in the hand', () => {
     expect(goodsItemUse(item('knife'))).toBeUndefined()
   })
