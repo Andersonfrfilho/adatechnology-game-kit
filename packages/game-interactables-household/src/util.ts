@@ -93,6 +93,11 @@ export function cornersOf(p: Primitive): Vec3[] {
     }
   } else if (p.kind === 'leaf') {
     out.push([p.x, p.y, p.z], [p.x, p.y + p.h, p.z])
+  } else if (p.kind === 'lathe') {
+    // the box round the solid of revolution: as wide as its widest point, from its lowest to its highest
+    const r = Math.max(...p.points.map((q) => q[0]))
+    const ys = p.points.map((q) => q[1])
+    for (const sx of [-1, 1]) for (const y of [Math.min(...ys), Math.max(...ys)]) for (const sz of [-1, 1]) out.push([p.x + sx * r, p.y + y, p.z + sz * r])
   } else {
     out.push([p.x, p.y, p.z])
   }

@@ -118,7 +118,15 @@ export interface PropsApi {
   plane(M: PropItem, material: Material, x: number, y: number, z: number, w: number, h: number, color: number, ry: number, rx: number, rz: number, uv?: Uv): void
   /** A real light (optional; at most one per room). Without it, `emit('light', data)` is called instead. */
   light?(M: PropItem, x: number, y: number, z: number, color: number, range: number, kind: string): void
+  /**
+   * A solid of revolution round the vertical axis through (x, z), its profile `points` (`[r, y]`, r the distance from the axis, y from `y`) closed on itself: a
+   * bowl, a ring, a hollow vase (the profile goes up outside and down inside, so both faces show). Optional: a host without it gets a cylinder as wide and tall.
+   */
+  lathe?(M: PropItem, material: Material, x: number, y: number, z: number, points: readonly LathePoint[], color: number): void
 }
+
+/** A point of a lathe's profile: distance from the axis, height. */
+export type LathePoint = readonly [number, number]
 
 export type Builder = (M: PropItem, api: PropsApi) => void
 export type BuilderMap = Record<PropType, Builder>
@@ -231,3 +239,4 @@ export type Primitive =
   | { kind: 'leaf'; M: PropItem; x: number; y: number; z: number; w: number; h: number; color: number; ry: number; rx: number }
   | { kind: 'plane'; M: PropItem; material: Material; x: number; y: number; z: number; w: number; h: number; color: number; ry: number; rx: number; rz: number; uv?: Uv }
   | { kind: 'light'; M: PropItem; x: number; y: number; z: number; color: number; range: number; lightKind: string }
+  | { kind: 'lathe'; M: PropItem; material: Material; x: number; y: number; z: number; points: readonly LathePoint[]; color: number }

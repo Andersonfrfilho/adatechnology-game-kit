@@ -418,7 +418,7 @@
     },
     "household/toilet": {
       "draws": 6,
-      "triangles": 672,
+      "triangles": 648,
       "materials": 2
     },
     "household/utility_sink": {

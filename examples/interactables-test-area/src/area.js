@@ -21,7 +21,7 @@ import { createFixtureStreams } from './fixture-streams.js'
 /** @typedef {import('@adatechnology/game-interactables').PartDestruction} PartDestruction */
 /** @typedef {import('@adatechnology/game-interactables').Motion} Motion */
 /** @typedef {import('@adatechnology/game-contracts').TestableItem} TestableItem */
-/** @typedef {'box' | 'cylinder' | 'plane' | 'leaf'} PrimFn */
+/** @typedef {'box' | 'cylinder' | 'plane' | 'leaf' | 'lathe'} PrimFn */
 /** @typedef {{ key: string; aabb: number[]; vol: number }} PrimShape */
 /** @typedef {PrimShape & { fn: PrimFn; args: unknown[] }} Prim */
 /** @typedef {{ id: string; pivot: number[]; ry: number; prims: Prim[] }} PartRecord */
@@ -139,6 +139,21 @@ function describePrimitive(fn, a) {
     const [, material, x, y, z, w, h, , ry = 0, rx = 0, rz = 0] = /** @type {Parameters<PropsApi['plane']>} */ (a)
     return { key: material, aabb: aabbOfBox([x, y, z], [w, h, 0.012], ry, rx, rz), vol: w * h * 0.012 }
   }
+  if (fn === 'lathe') {
+    // the box round the solid of revolution, and its volume by Pappus: 2π × the profile's area moment about the axis (shoelace)
+    const [, material, x, y, z, points] = /** @type {Parameters<NonNullable<PropsApi['lathe']>>} */ (a)
+    const r = Math.max(...points.map((q) => q[0]))
+    const ys = points.map((q) => q[1])
+    const lo = Math.min(...ys)
+    const hi = Math.max(...ys)
+    let moment = 0
+    for (let i = 0; i < points.length; i++) {
+      const [r0, y0] = points[i]
+      const [r1, y1] = points[(i + 1) % points.length]
+      moment += ((r0 * y1 - r1 * y0) * (r0 + r1)) / 6
+    }
+    return { key: material, aabb: [x - r, y + lo, z - r, x + r, y + hi, z + r], vol: Math.max(1e-6, 2 * Math.PI * Math.abs(moment)) }
+  }
   // leaf
   const [, x, y, z, w, h, , ry = 0] = /** @type {Parameters<PropsApi['leaf']>} */ (a)
   return { key: 'plant', aabb: aabbOfBox([x, y + h / 2, z], [w, h, w * 0.2], ry), vol: w * h * w * 0.1 }
@@ -179,7 +194,7 @@ function partBox(rec) {
 // Recording api: sits between the household pack and the mesh api (or nothing)
 // ---------------------------------------------------------------------------------------------------------------------------------------
 /** @type {readonly PrimFn[]} */
-const FNS = ['box', 'cylinder', 'plane', 'leaf']
+const FNS = ['box', 'cylinder', 'plane', 'leaf', 'lathe']
 
 /**
  * Wraps the api a household pack draws through. Primitives drawn inside `part` go straight to `inner` (and are recorded per part);
