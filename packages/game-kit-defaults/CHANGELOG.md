@@ -1,5 +1,12 @@
 # @adatechnology/game-kit-defaults
 
+## 1.0.2
+
+### Patch Changes
+
+- Updated dependencies [e82bdba]
+  - @adatechnology/game-characters-people@0.6.0
+
 ## 1.0.1
 
 ### Patch Changes

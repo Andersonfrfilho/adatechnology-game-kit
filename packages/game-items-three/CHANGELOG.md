@@ -1,5 +1,12 @@
 # @adatechnology/game-items-three
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [e82bdba]
+  - @adatechnology/game-items@0.4.0
+
 ## 0.11.0
 
 ### Minor Changes
