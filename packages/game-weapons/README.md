@@ -312,3 +312,7 @@ trava, calor do cano, dispersão, chumbos de espingarda, recuo, ruído), além d
 `weapon.drain()` entrega os eventos (saque, tiro, pane, recarga...) para animação e som; `rules` muda qualquer número (`faults: false` desliga as panes). Cada disparo vira um `Shot` (energia em joules, calibre em mm, direção) que se passa direto para
 `world.shoot(origem, direção, shot.energy, shot.caliber)` do `@adatechnology/game-destruction`. Use `createArsenal({ locale: 'pt-BR' })` para os nomes
 em português (`arsenal.name('rifle_5_56')` devolve "fuzil 5,56"). A recarga nunca é automática; o jogo chama `reload()`.
+
+## Melee families
+
+`MELEE_FAMILIES` (`data/melee-families.json`, spec 015 R3) groups the melee weapons that strike alike and lists their blows in order: `short_blade` (knife, tactical knife, KA-BAR, cleaver) cuts then thrusts (`knife_slash`, `knife_stab`), `one_hand_swing` (machete, hatchet, sickle, hammer, baton, skillet) chops from over the shoulder, `two_hand_swing` (bats, pipe, crowbar, axe, sledgehammer, pickaxe, katana) swings flat as the shovel. A blow names the body's clip (`ATTACK_CLIPS` of game-characters-people), the weapon's motion (`TOOL_MOTIONS` of game-weapons-three) and their seconds. `meleeFamilyOf(id)`, `meleeStrikeClips()` (the clip of each weapon, for a host's strike-clip map) and `createMeleeBlowCycle()` (the next blow of a family; after `reset` seconds without one it starts over) read them.

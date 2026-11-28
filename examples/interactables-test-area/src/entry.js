@@ -15,7 +15,7 @@ import { rng } from '@adatechnology/game-interactables'
 import * as GameInteractablesHousehold from '@adatechnology/game-interactables-household'
 import * as GameInteractablesThree from '@adatechnology/game-interactables-three'
 import { placeFinds } from '@adatechnology/game-items'
-import { createGoodsFindsProvider, createGoodsItems, goodsText } from '@adatechnology/game-items-goods'
+import { createGoodsFindsProvider, createGoodsItems, goodsItemUse, goodsText } from '@adatechnology/game-items-goods'
 import { buildItem, itemModels } from '@adatechnology/game-items-three'
 import { createItemsTestModule } from '@adatechnology/game-items-three/testing'
 import { createWeatherTestModule } from '@adatechnology/game-weather/testing'
@@ -176,7 +176,7 @@ function loadSteps(room, options, lang) {
   mod('explosives', () => createExplosivesTestModule({ locale: lang, room, items: itemModels }))
   // the 1.80 m reference of the items area is a person of the kit (a survivor of the Retratos do Vale builder), not a figure drawn on the spot
   const person = (/** @type {unknown} */ THREE) => createPersonBuilder(/** @type {ThreeLib} */ (THREE), { createCanvas: () => document.createElement('canvas') }).build(personSpecOf(PROFESSIONS.find((/** @type {{ id: string; }} */ p) => p.id === 'mechanic') ?? PROFESSIONS[0])).root
-  mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person }))
+  mod('items', () => createItemsTestModule({ catalog: createGoodsItems(), translate: goodsText, locale: lang, person, itemUse: goodsItemUse }))
   // the bodies of the characters module are DestructibleImpls with the 'flesh' material, which the room's world has to know before the module is checked
   mod('characters', () => createCharactersModule({ fluids: room.fluids, film: room.film, locale: lang }), () => registerBodyMaterial(/** @type {Parameters<typeof registerBodyMaterial>[0]} */ (/** @type {unknown} */ (room.world))))
   mod('animals', () => createAnimalsModule({ locale: lang }))

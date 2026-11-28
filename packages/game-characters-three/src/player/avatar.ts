@@ -91,7 +91,12 @@ export type AvatarItemUsePose = {
   readonly rotation: readonly [number, number, number]
   /** How closed the other hand is (0 open to 1 closed) when it works on the item, as a hand turning a cap off opens between strokes; the room brings it there with `reach`. */
   readonly gripL?: number
+  /** Which arms the use takes (`HandUseDef.body` of game-items): the item to the `mouth` (a drink, a bite, a pill), or `two_hands` together in front of the body (soap, a dressing). Left out, the drinks go to the mouth by `id`. */
+  readonly body?: 'mouth' | 'two_hands'
 }
+
+/** The fluid uses that take the item to the mouth when the use does not say (`AvatarItemUsePose.body`). */
+const MOUTH_USES: ReadonlySet<string> = new Set(['drink', 'sip', 'chug', 'eat'])
 
 export type AvatarUpdate = {
   /** Ground speed, m/s. Ties cadence and swing to the ground (the game's `walkCad` and `walkGait`). */
@@ -437,7 +442,22 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       return { armL: -0.45 + bob, armLz: 0.22, elbL: -1.05 }
     }
     const { id, position, rotation } = itemUse
-    if (id === 'drink' || id === 'sip' || id === 'chug') {
+    const body = itemUse.body ?? (MOUTH_USES.has(id) ? 'mouth' : undefined)
+    if (body === 'two_hands') {
+      // both hands together before the belly, the other hand meeting the one that holds the item, and rubbing side to side with it
+      const reach = clamp((0.22 - position[0]) / 0.2, 0, 1)
+      const rub = clamp(position[0] / 0.08, -1, 1)
+      return {
+        armL: -0.45 - 0.55 * reach,
+        armLz: 0.22 + 0.32 * reach + 0.08 * rub,
+        elbL: -1.05 - 0.45 * reach,
+        armR: -0.95 * reach,
+        armRz: -0.42 * reach + 0.08 * rub,
+        elbR: -1.45 * reach,
+        headX: 0.22 * reach,
+      }
+    }
+    if (body === 'mouth') {
       const raise = clamp((position[1] + 0.2) / 0.22, 0, 1)
       const tilt = clamp(Math.abs(rotation[0]) / 1.22, 0, 1.15)
       return {
@@ -700,7 +720,7 @@ export const createPlayerAvatar = (THREE: Three, options: PlayerAvatarOptions = 
       hands.forEach((hand) => {
         const isRight = hand.side < 0
         const holdRight = isRight && (!!state.holding || !!state.itemUse)
-        const holdLeft = !isRight && (state.itemUse?.id === 'open' || state.itemUse?.id === 'close' || state.itemUse?.gripL !== undefined)
+        const holdLeft = !isRight && (state.itemUse?.id === 'open' || state.itemUse?.id === 'close' || state.itemUse?.gripL !== undefined || state.itemUse?.body === 'two_hands')
         const grip =
           !isRight && state.itemUse?.gripL !== undefined
             ? 1.22 * state.itemUse.gripL

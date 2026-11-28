@@ -1387,6 +1387,250 @@
           }
         }
       ]
+    },
+    {
+      "id": "knife_slash",
+      "source": {
+        "authored": "game-kit",
+        "note": "authored in the kit: a knife cut from the right shoulder down and across the chest, the hips turning into it and the weight onto the front leg; the hand is the knife's (game-weapons-three TOOL_MOTIONS slash), the clip moves the body"
+      },
+      "duration": 0.46,
+      "loop": false,
+      "channels": "body",
+      "keys": [
+        {
+          "t": 0,
+          "pose": {
+            "lean": 0.05,
+            "twist": 0,
+            "side": 0,
+            "drop": 0,
+            "headX": 0.25,
+            "headY": 0,
+            "headZ": 0,
+            "legL": 0,
+            "kneeL": 0.05,
+            "legR": 0,
+            "kneeR": 0.05
+          }
+        },
+        {
+          "t": 0.14,
+          "pose": {
+            "lean": 0.04,
+            "twist": -0.45,
+            "side": 0,
+            "drop": -0.03,
+            "headX": 0.25,
+            "headY": 0.25,
+            "headZ": 0,
+            "legL": 0.15,
+            "kneeL": 0.2,
+            "legR": -0.12,
+            "kneeR": 0.18
+          }
+        },
+        {
+          "t": 0.2,
+          "pose": {
+            "lean": 0.16,
+            "twist": 0.35,
+            "side": 0,
+            "drop": -0.06,
+            "headX": 0.25,
+            "headY": -0.15,
+            "headZ": 0,
+            "legL": 0.28,
+            "kneeL": 0.28,
+            "legR": -0.22,
+            "kneeR": 0.3
+          }
+        },
+        {
+          "t": 0.29,
+          "pose": {
+            "lean": 0.2,
+            "twist": 0.55,
+            "side": 0,
+            "drop": -0.07,
+            "headX": 0.25,
+            "headY": -0.22,
+            "headZ": 0,
+            "legL": 0.3,
+            "kneeL": 0.3,
+            "legR": -0.24,
+            "kneeR": 0.32
+          }
+        },
+        {
+          "t": 0.46,
+          "pose": {
+            "lean": 0.05,
+            "twist": 0,
+            "side": 0,
+            "drop": 0,
+            "headX": 0.25,
+            "headY": 0,
+            "headZ": 0,
+            "legL": 0,
+            "kneeL": 0.05,
+            "legR": 0,
+            "kneeR": 0.05
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.windup"
+          }
+        },
+        {
+          "t": 0.14,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.strike"
+          }
+        },
+        {
+          "t": 0.2,
+          "type": "impact",
+          "data": {
+            "kind": "slash"
+          }
+        },
+        {
+          "t": 0.29,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.recover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "knife_stab",
+      "source": {
+        "authored": "game-kit",
+        "note": "authored in the kit: a knife thrust, the right side drawn back then driven forward with a lunge onto the front leg; the hand is the knife's (game-weapons-three TOOL_MOTIONS stab), the clip moves the body"
+      },
+      "duration": 0.42,
+      "loop": false,
+      "channels": "body",
+      "keys": [
+        {
+          "t": 0,
+          "pose": {
+            "lean": 0.05,
+            "twist": 0,
+            "side": 0,
+            "drop": 0,
+            "headX": 0.25,
+            "headY": 0,
+            "headZ": 0,
+            "legL": 0,
+            "kneeL": 0.05,
+            "legR": 0,
+            "kneeR": 0.05
+          }
+        },
+        {
+          "t": 0.12,
+          "pose": {
+            "lean": 0.0,
+            "twist": -0.3,
+            "side": 0,
+            "drop": -0.02,
+            "headX": 0.25,
+            "headY": 0.15,
+            "headZ": 0,
+            "legL": 0.12,
+            "kneeL": 0.18,
+            "legR": -0.1,
+            "kneeR": 0.16
+          }
+        },
+        {
+          "t": 0.18,
+          "pose": {
+            "lean": 0.24,
+            "twist": 0.25,
+            "side": 0,
+            "drop": -0.1,
+            "headX": 0.25,
+            "headY": -0.1,
+            "headZ": 0,
+            "legL": 0.38,
+            "kneeL": 0.38,
+            "legR": -0.3,
+            "kneeR": 0.25
+          }
+        },
+        {
+          "t": 0.25,
+          "pose": {
+            "lean": 0.24,
+            "twist": 0.22,
+            "side": 0,
+            "drop": -0.1,
+            "headX": 0.25,
+            "headY": -0.08,
+            "headZ": 0,
+            "legL": 0.38,
+            "kneeL": 0.38,
+            "legR": -0.3,
+            "kneeR": 0.25
+          }
+        },
+        {
+          "t": 0.42,
+          "pose": {
+            "lean": 0.05,
+            "twist": 0,
+            "side": 0,
+            "drop": 0,
+            "headX": 0.25,
+            "headY": 0,
+            "headZ": 0,
+            "legL": 0,
+            "kneeL": 0.05,
+            "legR": 0,
+            "kneeR": 0.05
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.windup"
+          }
+        },
+        {
+          "t": 0.12,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.strike"
+          }
+        },
+        {
+          "t": 0.18,
+          "type": "impact",
+          "data": {
+            "kind": "stab"
+          }
+        },
+        {
+          "t": 0.25,
+          "type": "phase",
+          "data": {
+            "label": "attack_clip.phase.recover"
+          }
+        }
+      ]
     }
   ],
   "locales": {

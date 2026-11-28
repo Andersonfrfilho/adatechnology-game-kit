@@ -876,6 +876,12 @@
       "impact": {
         "response": "dent",
         "pushImpulse": true
+      },
+      "use": {
+        "clip": "use_hygiene",
+        "sounds": [
+          "scrub"
+        ]
       }
     }
   }

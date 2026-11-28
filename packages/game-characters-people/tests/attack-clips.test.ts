@@ -33,6 +33,9 @@ const EXPECTED: Record<string, Expectation> = {
   // a shovelful: the foot drives the blade, the body levers and lifts (the bite is taken there), then turns to throw the earth aside
   shovel_dig: { duration: 1.5, channels: 'body', impactAt: [0.6, 0.9], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
   shovel_swing: { duration: 0.6, channels: 'body', impactAt: [0.2, 0.35], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
+  // a knife in one hand: the hand is the knife's motion, the body turns into the cut and lunges into the thrust
+  knife_slash: { duration: 0.46, channels: 'body', impactAt: [0.15, 0.25], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
+  knife_stab: { duration: 0.42, channels: 'body', impactAt: [0.15, 0.22], neutral: TOOL_HELD, phases: ['windup', 'strike', 'recover'] },
 }
 
 function mirrorPose(pose: Record<string, number>): Record<string, number> {

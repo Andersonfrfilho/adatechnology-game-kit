@@ -5,6 +5,7 @@
 import type * as THREE_NS from 'three'
 import type { Vec3 } from '@adatechnology/game-destruction'
 import type { HandTargets } from '@adatechnology/game-contracts'
+import { meleeStrikeClips } from '@adatechnology/game-weapons'
 
 export interface RoomAvatarItemUse {
   readonly id: string
@@ -12,6 +13,8 @@ export interface RoomAvatarItemUse {
   readonly rotation: readonly [number, number, number]
   /** How closed the other hand is when it works on the item (turning a cap off); the room brings it there with `reach`. */
   readonly gripL?: number
+  /** Which arms a hand use takes (`HandUseDef.body` of game-items): the item to the mouth, or both hands together. Left out, the body goes by `id`. */
+  readonly body?: 'mouth' | 'two_hands'
 }
 
 /** What the room tells the avatar every frame. */
@@ -107,7 +110,7 @@ export type PunchHand = 'alternate' | 'left' | 'right'
 export type CameraMode = 'first' | 'third'
 
 /** Which clip a melee tool plays before its blow lands (`TestRoomOptions.strikeClips`). */
-export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { hand: 'punch_right', fists: 'punch_right', brass_knuckles: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', shovel: 'shovel_swing' }
+export const DEFAULT_STRIKE_CLIPS: Readonly<Record<string, string>> = { ...meleeStrikeClips(), hand: 'punch_right', fists: 'punch_right', brass_knuckles: 'punch_right', shove: 'shove_two_hands', kick: 'front_kick', shovel: 'shovel_swing' }
 /** The first-person stance of the tools that choose one (`TestRoomOptions.handStances`). */
 export const DEFAULT_HAND_STANCES: Readonly<Record<string, string>> = { fists: 'fists' }
 

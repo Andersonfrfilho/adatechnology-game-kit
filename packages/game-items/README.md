@@ -71,6 +71,7 @@ const { contents, leftover } = placeFinds(stacks, slots, items)                 
 | `blockChance`, `wearBlocked`, `repairPiece`, `pieceBlock` | layered clothing protection |
 | `maxLoadKg`, `carriedKg`, `loadState`, `bagOption`, `canTake` | carry weight and slots |
 | `resolveUse` | what using an item does, as data; with `UseContext.seal` a sealed item (`ItemDef.seal`, a `SealSpec` of game-contracts) still closed, holed or leaking is not eaten (`blocked`) |
+| `HAND_USES`, `createHandUse`, `handUseOf` | uses of an item in the hand without a liquid (spec 015 R5): `eat_food` in three bites, `drink`, `take_medicine`, `apply_dressing`, `use_hygiene`; keys of the item's place from the hand's rest in the eye's frame (the frame of the fluid uses), `body` (`mouth` or `two_hands`) for the arms, and the `bite`/`swallow`/`apply`/`scrub` events the host acts on |
 | `canCraft`, `craft` | recipes |
 | `createFindsProvider`, `rollByCategory`, `rollExplicitPool`, `spawnData`, `depletionFactor`, `placeFinds`, `toLootTables` | finds |
 | `itemsFromArsenal` | the arsenal as items |

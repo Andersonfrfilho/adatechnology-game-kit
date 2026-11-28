@@ -27,10 +27,11 @@ import type { SchedulerStats } from '@adatechnology/game-runtime'
 import type { Material, Rolling, ShapeDesc } from '@adatechnology/game-physics'
 import type { FilmBridge, FluidRenderer } from '@adatechnology/game-fluids-three'
 import type { ContainerSpec, FluidWorld, ItemUseDef, LiquidDef, SurfaceSpec } from '@adatechnology/game-fluids'
+import type { HandUseDef } from '@adatechnology/game-items'
 import type { RoomSeat } from './seating'
 import type { ToolCondition } from './shovel'
 import type { BagResult, InventorySnapshot } from './inventory-types'
-import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, RainCover, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
+import type { AnimationClipSpec, BlastImpulseOptions, BlastShoveOptions, BusyOptions, BusyTask, ControlValue, DestructibleImpl, EnvironmentBus, HandTargets, RainCover, ItemSeat, ItemSounds, ModuleControl, ModuleItemSeal, ModuleItemUse, ModuleLayer, TestableModule, WarmUpProbes } from '@adatechnology/game-contracts'
 
 export type { InspectInfo } from './ui'
 import type { InspectInfo } from './ui'
@@ -86,6 +87,8 @@ export interface TestRoomItem {
    * within reach or a weapon of the loadout), and refuses while it needs a tool there is not; a hole through it or a leak spoils it for eating and drinking.
    */
   seal?: ModuleItemSeal
+  /** Used up in the hand without a liquid (eaten, taken, applied, `ModuleItemUse`): F plays its hand use and the effect is applied at the end. */
+  use?: ModuleItemUse
   /** The item is also a weapon the player can equip from the catalogue (e.g. a crowbar, a knife, a pistol on the table). */
   weapon?: string
   /** Its catalog weight, size and volume: the bag weighs and fits it by these, not by the bounding box of the drawn object. */
@@ -208,6 +211,8 @@ export interface SceneryTap {
 export interface RoomFirstPersonArms {
   readonly root: THREE_NS.Object3D
   update(dt: number, state: { camera: THREE_NS.Object3D; targets?: HandTargets | null; stance?: string; speed?: number; running?: boolean; crouch?: boolean }): void
+  /** Plays a strike of the arms in the view (a punch, a shove, a kick's foot: `createFirstPersonArms` with `clips`), the same id the body plays; false when it has none of that id. */
+  play?(clipId: string, options?: { leg?: 'left' | 'right'; hand?: 'left' | 'right' }): boolean
   dispose(): void
 }
 
@@ -234,6 +239,8 @@ export interface TestRoomOptions {
   fluids?: FluidWorld
   liquids?: LiquidDef[]
   itemUses?: ItemUseDef[]
+  /** Uses of an item without a liquid, by `TestRoomItem.use.clip` (eat with the hand, take a pill...), added to `HAND_USES` of game-items. */
+  handUses?: HandUseDef[]
   surfaces?: SurfaceSpec[]
   /** Extra scripted checks offered as buttons (the built-in `SCENARIOS` are always there). */
   scenarios?: TestRoomScenario[]

@@ -30,3 +30,5 @@ export type { SlingSwing, SlingSwingRules, SlingSwingState } from './sling-swing
 export { weaponMenu, WEAPON_MENU_GROUPS } from './menu'
 export { genericWeapons, realLoadout } from './generics'
 export type { WeaponMenuEntry, WeaponMenuGroup, WeaponMenuGroupDef, WeaponMenuOptions, WeaponMenuSection } from './menu'
+export { MELEE_FAMILIES, createMeleeBlowCycle, meleeFamilyOf, meleeStrikeClips } from './melee-families'
+export type { MeleeBlow, MeleeBlowCycle, MeleeFamily } from './melee-families'
