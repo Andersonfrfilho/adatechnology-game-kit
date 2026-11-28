@@ -43,7 +43,12 @@ export interface PlayerOptions {
    * The physics world of the room's loop: the body is then a walker in it (`player-body.ts`) and the view stands where the feet are drawn between the last two
    * steps, set in the scheduler's `present` phase. Without it the room walks the player itself.
    */
-  engine?: EngineBody & { readonly scheduler: Pick<Scheduler, 'add'>; /** Runs after the view stands on the drawn feet: the room puts the body's eyes back where it wants the camera. */ readonly afterPresent?: () => void }
+  engine?: EngineBody & { readonly scheduler: Pick<Scheduler, 'add'> }
+  /**
+   * Runs after the player moves the view between the room's own steps (the view standing on the drawn feet, the kick of a shot, a scripted walk): the view is then
+   * at the player's own eye, and the room puts the body's eyes back where it wants the camera before anything (the weapon in the hands) is placed against it.
+   */
+  afterView?: () => void
   /** Half size of the arena. */
   limit: number
   start: Vec3
@@ -240,14 +245,18 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
     cam.position.set(locomotion.drawnX, posY, locomotion.drawnZ)
     cam.updateMatrixWorld(true)
   }
+  /** The view the player moved on its own, between the room's steps: the room puts the body's eyes back at once (`afterView`). */
+  const applyMoved = (): void => {
+    apply()
+    o.afterView?.()
+  }
   apply()
   // the view follows the feet as they are drawn between two fixed steps: the scheduler's alpha, which `present` has and the loop's frame does not
   const stopPresent = o.engine?.scheduler.add(
     (context) => {
       if (!context.simulated || context.scripted) return
       locomotion.present?.(context.alpha)
-      apply()
-      o.engine?.afterPresent?.()
+      applyMoved()
     },
     { phase: 'present', order: -100, id: 'player.present' },
   )
@@ -579,16 +588,16 @@ export function createPlayer(THREE: typeof THREE_NS, o: PlayerOptions): Player {
       yaw += (yawDeg * Math.PI) / 180
       recoilDebt.pitch += (pitch - before) * recoilReturn.share
       recoilDebt.yaw += ((yawDeg * Math.PI) / 180) * recoilReturn.share
-      apply()
+      applyMoved()
     },
     moveBy(dx, dz) {
       locomotion.moveBy(dx, dz)
-      apply()
+      applyMoved()
     },
     takeWish: () => locomotion.takeWish(),
     walk(forward, right) {
       locomotion.moveBy(-Math.sin(yaw) * forward + Math.cos(yaw) * right, -Math.cos(yaw) * forward - Math.sin(yaw) * right)
-      apply()
+      applyMoved()
     },
     dispose() {
       stopPresent?.()
