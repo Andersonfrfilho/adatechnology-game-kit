@@ -8,6 +8,9 @@ import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+/** @typedef {{ readonly center: number[]; readonly half: number[]; readonly rotation?: number[] }} PartBox */
+/** @typedef {{ readonly centerV: import('three').Vector3; readonly partBoxes?: readonly PartBox[]; readonly halfExtents: number[] }} DrawnPiece */
+
 const here = dirname(fileURLToPath(import.meta.url))
 const require = createRequire(import.meta.url)
 /** Playwright from NODE_PATH (browser-checks sets it), else the workspace's playwright-core. @returns {typeof import('playwright')} */
@@ -70,7 +73,8 @@ const found = await page.evaluate(async () => {
   const out = {}
   let looked = 0
   for (const { id, so } of laid) {
-    const piece = r.renderer.pieces().find((/** @type {any} */ p) => p.objectId === so.objectId)
+    // the renderer's piece also carries its centre and its part boxes, which its public type leaves out
+    const piece = /** @type {(DrawnPiece & import('@adatechnology/game-destruction-three').Piece) | undefined} */ (r.renderer.pieces().find((/** @type {any} */ p) => p.objectId === so.objectId))
     if (!piece) continue
     looked++
     /** @type {any[]} */
