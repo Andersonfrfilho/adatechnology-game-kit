@@ -20,8 +20,17 @@ const AT_REST = 0.3
  * down the kit gives what stands on too little under 4 across the catalogue at every size below; the push with the wrong arm gave 8 to 15.
  */
 const EARLY_GAIN = 4.5
-/** Each piece as the catalogue has it, three times as long and three times as deep: how far a start down throws a piece grows with how long it is for how wide. */
-const SIZES: ReadonlyArray<readonly [string, number, number]> = [['as the catalogue has it', 1, 1], ['three times as long', 3, 1], ['three times as deep', 1, 3]]
+/**
+ * Each piece as the catalogue has it, then stretched each way and shrunk: how far a start down throws a piece grows with how long it is for how wide, how hard a nudge
+ * turns it with how tall it is, and a rule written for a metre misbehaves at 30 cm.
+ */
+const SIZES: ReadonlyArray<readonly [string, number, number, number]> = [
+  ['as the catalogue has it', 1, 1, 1],
+  ['three times as long', 3, 1, 1],
+  ['three times as deep', 1, 3, 1],
+  ['three times as tall', 1, 1, 3],
+  ['a third of its size', 0.3, 0.3, 0.3],
+]
 
 const catalog = defaultFurnitureCatalog()
 const types = [...new Set(catalog.map((entry) => entry.type))]
@@ -39,11 +48,11 @@ const cornerSpeed = (piece: Piece): number => {
  * The piece laid loose as the room lays it, its parts broken one after the other from the floor up (a leg first, then what it held, as shots do): the most any piece that
  * was at rest when a part broke gained at its fastest corner right after, and what it was.
  */
-function brokenPartByPart(type: string, wide: number, deep: number): { gain: number; what: string } | null {
+function brokenPartByPart(type: string, wide: number, deep: number, tall: number): { gain: number; what: string } | null {
   const entry = catalog.find((one) => one.type === type)
   let made: ReturnType<typeof furnitureSpec>
   try {
-    made = furnitureSpec(THREE, type, { catalog, document: fakeDocument, options: { chairs: false }, w: (entry?.w ?? 1) * wide, d: (entry?.d ?? 1) * deep })
+    made = furnitureSpec(THREE, type, { catalog, document: fakeDocument, options: { chairs: false }, w: (entry?.w ?? 1) * wide, d: (entry?.d ?? 1) * deep, h: (entry?.h ?? 1) * tall })
   } catch {
     return null
   }
@@ -86,9 +95,9 @@ function brokenPartByPart(type: string, wide: number, deep: number): { gain: num
 }
 
 describe('every piece of furniture of the catalogue, broken part by part', () => {
-  it.each(SIZES)('%s: no piece at rest is spun up when a part of it breaks', (_, wide, deep) => {
+  it.each(SIZES)('%s: no piece at rest is spun up when a part of it breaks', (_, wide, deep, tall) => {
     const spun = types.flatMap((type) => {
-      const worst = brokenPartByPart(type, wide, deep)
+      const worst = brokenPartByPart(type, wide, deep, tall)
       return worst && worst.gain > EARLY_GAIN ? [`${type}: ${worst.what}`] : []
     })
     expect(spun).toEqual([])

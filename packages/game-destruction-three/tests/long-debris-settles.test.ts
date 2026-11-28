@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createDestruction } from '@adatechnology/game-destruction'
 import { describe, expect, it } from 'vitest'
 
 import { createDestructionRenderer } from '../src/renderer'
@@ -117,5 +118,93 @@ describe('debris of any length comes to lie on the floor', () => {
     const overEdge = middle.y + slope * (0.3 - middle.x)
     expect(overEdge, 'the board over the edge of the crate').toBeGreaterThan(0.48)
     expect(overEdge, 'the board over the edge of the crate').toBeLessThan(0.6)
+  })
+})
+
+/** Board lengths (m) of the tops broken by the core itself: a stool, a table, a long table, the room's 4.4 m one. */
+const TOPS = [0.5, 1.5, 3, 4.4]
+
+/**
+ * What the debris of a table top did wrong when the world itself broke it: six boards of `length` on four legs, shot through until each gives way, so the pieces are the
+ * ones the core cuts and throws (their sizes, speeds and turns), not ones made up here.
+ */
+function shotApart(length: number): string[] {
+  const scene = new THREE.Scene()
+  const world = createDestruction()
+  const renderer = createDestructionRenderer(THREE, { physics: physicsOption(), scene, world })
+  const boards = [0, 1, 2, 3, 4, 5]
+  const legs: ReadonlyArray<readonly [number, number]> = [[-length / 2 + 0.1, -0.2], [length / 2 - 0.1, -0.2], [-length / 2 + 0.1, 0.2], [length / 2 - 0.1, 0.2]]
+  const parts = [
+    ...boards.map((i) => ({ id: `b${i}`, material: 'wood_hard', shape: { kind: 'box', size: [length, 0.04, 0.075] }, position: [0, 0.76, -0.19 + i * 0.076] })),
+    ...legs.map(([x, z], i) => ({ id: `leg${i}`, material: 'wood_hard', shape: { kind: 'box', size: [0.06, 0.74, 0.06] }, position: [x, 0.37, z] })),
+  ]
+  const id = world.add({ parts } as never, { id: 'table' })
+  const root = new THREE.Group()
+  const meshOf: Record<string, THREE.Object3D> = {}
+  for (const part of parts) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...(part.shape.size as [number, number, number])))
+    mesh.position.set(...(part.position as [number, number, number]))
+    root.add(mesh)
+    meshOf[part.id] = mesh
+  }
+  scene.add(root)
+  root.updateMatrixWorld(true)
+  renderer.bind(id, root, { parts: meshOf })
+  const wrong = new Set<string>()
+  const born = new Map<THREE.Object3D, number>()
+  const before = new Map<THREE.Object3D, THREE.Vector3>()
+  let watching = false
+  const debris = (): THREE.Object3D[] => {
+    const found: THREE.Object3D[] = []
+    scene.traverse((node) => {
+      if (node.name === 'fragment') found.push(node)
+    })
+    return found
+  }
+  const name = (mesh: THREE.Object3D): string => `a piece ${Math.max(mesh.scale.x, mesh.scale.y, mesh.scale.z).toFixed(1)} m long of the ${length} m top`
+  const run = (seconds: number): void => {
+    for (let t = 0; t < seconds; t += STEP) {
+      world.update(STEP)
+      renderer.update(STEP)
+      for (const mesh of debris()) {
+        if (!born.has(mesh)) born.set(mesh, mesh.position.y)
+        if (mesh.position.y > (born.get(mesh) ?? 0) + RISE) wrong.add(`${name(mesh)} rose ${(mesh.position.y - (born.get(mesh) ?? 0)).toFixed(2)} m above where it broke off`)
+        if (!watching) continue
+        const was = before.get(mesh)
+        // a fragment fading away shrinks as it goes: only one that kept its size is judged
+        if (was && was.z === mesh.scale.x && Math.hypot(was.x - mesh.position.x, was.y - mesh.position.y) > 1e-4) wrong.add(`${name(mesh)} still moved ${SETTLED} s after the last shot`)
+        before.set(mesh, new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.scale.x))
+      }
+    }
+  }
+  run(0.5)
+  for (const board of boards) {
+    for (let shot = 0; shot < 60; shot++) {
+      const state = world.part(id, `b${board}`)
+      if (!state || state.status === 'broken') break
+      world.hitPart(id, `b${board}`, { type: 'ballistic', point: [(((shot * 37) % 100) / 100 - 0.5) * length * 0.8, 0.76, -0.19 + board * 0.076], direction: [0, -0.3, -1], energy: 1316, radius: 0.003, source: 'test' } as never)
+      run(0.08)
+    }
+  }
+  run(SETTLED)
+  watching = true
+  run(WATCH)
+  let big = 0
+  for (const mesh of debris()) {
+    const longest = Math.max(mesh.scale.x, mesh.scale.y, mesh.scale.z)
+    if (longest < 0.3) continue
+    big++
+    const long = mesh.scale.x >= mesh.scale.y && mesh.scale.x >= mesh.scale.z ? new THREE.Vector3(1, 0, 0) : mesh.scale.y >= mesh.scale.z ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1)
+    const steep = (Math.asin(Math.min(1, Math.abs(long.applyQuaternion(mesh.quaternion).y))) * 180) / Math.PI
+    if (steep > STEEPEST) wrong.add(`${name(mesh)} stands ${steep.toFixed(0)} degrees up`)
+    if (mesh.position.y > LYING) wrong.add(`${name(mesh)} lies with its middle ${mesh.position.y.toFixed(2)} m up`)
+  }
+  if (length >= 1.5 && big === 0) wrong.add(`no piece of 30 cm or more came off the ${length} m top: the scene tests nothing`)
+  return [...wrong]
+}
+
+describe('a table top shot apart by the world itself', () => {
+  it.each(TOPS)('%d m long: none of its pieces rises, stands on its end or keeps moving', (length) => {
+    expect(shotApart(length)).toEqual([])
   })
 })
