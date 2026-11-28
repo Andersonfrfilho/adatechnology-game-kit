@@ -69,14 +69,14 @@ export function stove(c: Ctx): void {
   for (const y of [0.28, 0.46]) c.b('metal', ox0 + 0.01, y, -hd + 0.04, ox1 - 0.01, y + 0.006, zb - 0.03, 0x9a9ea2) // racks
   // front panel strip above the oven door
   c.b('plain', -hw + 0.02, oy1 + 0.003, zb, hw - 0.02, top, zf, body)
-  c.b('plain', -hw + 0.02, oy1 + 0.003, zf - 0.004, hw - 0.02, oy1 + 0.012, zf, shade(body, 0.8))
+  c.b('plain', -hw + 0.02, oy1 + 0.005, zf - 0.004, hw - 0.02, oy1 + 0.012, zf + 0.002, shade(body, 0.8)) // 2 mm proud of the strip (CLAUDE.md §13)
   // oven door hinged at the bottom
   dropDoor(c, {
     id: 'oven_door', x0: -hw + 0.012, x1: hw - 0.012, y0: 0.045, y1: oy1 - 0.004, zf, t: dt, color: shade(body, 0.95), inner: 0x8a8c90, angle: 1.5, handle: 'bar_h', handleLen: 0.4, label: 'prompt.oven_door',
     extra: () => {
       // window: dark glass framed by a raised bezel
       c.b('plain', -hw + 0.07, 0.15, zf - 0.002, hw - 0.07, 0.56, zf + 0.002, shade(body, 0.8))
-      c.plane('glass', 0, 0.355, zf + 0.0025, c.w - 0.2, 0.36, 0x1c1e22)
+      c.plane('glass', 0, 0.355, zf + 0.0045, c.w - 0.2, 0.36, 0x1c1e22) // 2.5 mm in front of the bezel
     },
   })
   // burners + knobs
@@ -98,7 +98,7 @@ export function stove(c: Ctx): void {
       // grate over every burner: two crossing bars and a rim
       for (const s of [-1, 1]) {
         c.b('metal', x - r - 0.03, topY + 0.02, z + s * r - 0.006, x + r + 0.03, topY + 0.032, z + s * r + 0.006, 0x222224)
-        c.b('metal', x + s * r - 0.006, topY + 0.02, z - r - 0.03, x + s * r + 0.006, topY + 0.032, z + r + 0.03, 0x222224)
+        c.b('metal', x + s * r - 0.006, topY + 0.018, z - r - 0.03, x + s * r + 0.006, topY + 0.03, z + r + 0.03, 0x222224) // 2 mm lower where the bars cross
       }
       const knobId = `knob_${n}`
       const kx = knobXs[n - 1]
@@ -155,7 +155,7 @@ export function gasBottle(c: Ctx): void {
   // neck + valve
   c.cyl('metal', 0, H - 0.17, 0, 0.032, 0.1, 0xc8a24a, 'cyl')
   c.cyl('metal', 0, H - 0.075, 0, 0.022, 0.03, 0x9c7c32, 'cyl6')
-  c.b('metal', 0.02, H - 0.1, -0.012, 0.075, H - 0.07, 0.012, 0xb08a34) // outlet spigot toward +x
+  c.b('metal', 0.02, H - 0.1, -0.012, 0.075, H - 0.072, 0.012, 0xb08a34) // outlet spigot toward +x, its top 2 mm under the neck's
   c.part(
     'valve',
     [0, H - 0.045, 0],
@@ -357,16 +357,16 @@ export function shower(c: Ctx): void {
   // tiled walls (back and left) with a darker grout line pattern
   c.b('plain', -hw, 0.07, -hd, hw, h, -hd + 0.03, tile)
   c.b('plain', -hw, 0.07, -hd + 0.03, -hw + 0.03, h, hd - 0.05, tile)
+  // aluminum frame: top rails and the post; grout, strip and rails stop at the post (CLAUDE.md §13)
+  const f = 0.02
   for (let y = 0.4; y < h - 0.2; y += 0.3) {
-    c.b('plain', -hw + 0.03, y, -hd + 0.03, hw, y + 0.006, -hd + 0.033, 0xc2c6c8)
+    c.b('plain', -hw + 0.03, y, -hd + 0.03, hw - f, y + 0.006, -hd + 0.033, 0xc2c6c8)
     c.b('plain', -hw + 0.03, y, -hd + 0.033, -hw + 0.033, y + 0.006, hd - 0.05, 0xc2c6c8)
   }
-  c.b('plain', -hw + 0.03, 1.0, -hd + 0.033, hw, 1.12, -hd + 0.036, 0x8aa6b4) // accent strip
-  // aluminum frame: top rail and posts
-  const f = 0.02
-  c.b('metal', -hw + 0.03, h - f, hd - 0.05, hw, h, hd, 0xc4c8cc)
+  c.b('plain', -hw + 0.03, 1.0, -hd + 0.033, hw - f, 1.12, -hd + 0.036, 0x8aa6b4) // accent strip
+  c.b('metal', -hw + 0.03, h - f, hd - 0.05, hw - f, h, hd, 0xc4c8cc)
   c.b('metal', hw - f, 0.07, -hd + 0.03, hw, h, hd, 0xc4c8cc)
-  c.b('metal', -hw + 0.03, h - f, -hd + 0.03, hw, h, -hd + 0.03 + 0.001, 0xc4c8cc)
+  c.b('metal', -hw + 0.03, h - f, -hd + 0.03, hw - f, h, -hd + 0.04, 0xc4c8cc)
   // shower head on an arm, valve on the back wall
   const hy = 1.95
   c.b('metal', -0.015, hy, -hd + 0.03, 0.015, hy + 0.02, -hd + 0.2, CHROME)
@@ -395,7 +395,8 @@ export function shower(c: Ctx): void {
   c.part(
     'glass_door', [dx1 - dw / 2, gy, zSlide], { kind: 'slide', axis: [-1, 0, 0], distance: round3(dw - 0.06) },
     () => {
-      c.b('glass', dx1 - dw, gy, zSlide - 0.004, dx1, gy + gh, zSlide + 0.004, gl)
+      // the glass sits 2 mm inside the rails at the ends and the bottom/top (CLAUDE.md §13)
+      c.b('glass', dx1 - dw + 0.002, gy + 0.002, zSlide - 0.004, dx1 - 0.002, gy + gh - 0.002, zSlide + 0.004, gl)
       c.b('metal', dx1 - dw, gy, zSlide - 0.008, dx1, gy + 0.015, zSlide + 0.008, 0xc4c8cc)
       c.b('metal', dx1 - dw, gy + gh - 0.015, zSlide - 0.008, dx1, gy + gh, zSlide + 0.008, 0xc4c8cc)
       c.b('metal', dx1 - dw, gy + gh * 0.45, zSlide + 0.004, dx1 - dw + 0.02, gy + gh * 0.45 + 0.3, zSlide + 0.024, 0xc4c8cc) // grip
@@ -421,9 +422,9 @@ export function toilet(c: Ctx): void {
   // pedestal and bowl
   c.cyl('plain', 0, 0, -0.02, 0.13, 0.28, sh, 'cyl')
   c.cyl('plain', 0, 0.2, 0.02, 0.19, 0.2, w, 'sphere') // bowl body (ellipsoid)
-  c.b('plain', -0.17, 0.36, -0.2, 0.17, 0.4, -0.02, w)
+  // the back block stays 2 mm inside the rim's top and bottom (CLAUDE.md §13); the water shows through the seat's opening disc
+  c.b('plain', -0.17, 0.362, -0.2, 0.17, 0.398, -0.02, w)
   c.cyl('plain', 0, 0.36, 0.12, 0.19, 0.04, w, 'cyl')
-  c.cyl('plain', 0, 0.395, 0.12, 0.14, 0.005, 0xdfe8ec, 'cyl') // water in the bowl
   // cistern
   const ty = 0.42
   const th = 0.8 - ty - 0.025
@@ -434,13 +435,13 @@ export function toilet(c: Ctx): void {
   const seatY = 0.4
   c.cyl('plain', 0, seatY, 0.12, 0.2, 0.025, 0xeef0f0, 'cyl')
   c.cyl('plain', 0, seatY + 0.025, 0.12, 0.13, 0.002, 0xdfe8ec, 'cyl')
-  c.b('plain', -0.17, seatY, -0.07, 0.17, seatY + 0.025, 0.0, 0xeef0f0)
+  c.b('plain', -0.17, seatY + 0.002, -0.07, 0.17, seatY + 0.023, 0.0, 0xeef0f0)
   // lid, hinged at the back of the seat
   c.part(
     'lid', [0, seatY + 0.025, -0.06], { kind: 'hinge', axis: [1, 0, 0], angle: -1.65 },
     () => {
       c.cyl('plain', 0, seatY + 0.027, 0.12, 0.2, 0.012, w, 'cyl')
-      c.b('plain', -0.17, seatY + 0.027, -0.07, 0.17, seatY + 0.039, 0.0, w)
+      c.b('plain', -0.17, seatY + 0.029, -0.07, 0.17, seatY + 0.037, 0.0, w)
       c.cyl('plain', 0, seatY + 0.039, 0.12, 0.17, 0.003, shade(w, 1.02), 'cyl')
     },
     { label: 'prompt.toilet_lid', at: [0, seatY + 0.05, 0.14] },
@@ -456,7 +457,7 @@ export function toilet(c: Ctx): void {
     { label: 'prompt.flush', at: false, noSweep: true },
   )
   c.add('fixtures', { id: 'flush', kind: 'flush', outlet: [0, 0.36, 0.12], dir: [0, -1, 0], volume: 6, part: 'flush_button', tank: 'auto' })
-  // the bowl: a square inside the water's disc (radius 0.14 at 0.395), from the drain's height up to the seat. The flush is water running down from under the rim
+  // the bowl: a square inside the seat opening's water disc (radius 0.13), from the drain's height up to the seat. The flush is water running down from under the rim
   // into the drain, inside the bowl: never a column as wide as the bowl, nor a spray that leaves it
   const bowl: BasinSpec = { id: 'bowl', from: [-0.095, 0.3, 0.025], to: [0.095, 0.4, 0.215] }
   c.add('basins', bowl)
