@@ -227,12 +227,13 @@ export function layHouseTables(measure: (itemId: string) => ItemSize | null, loc
     z = centreZ - line.depth / 2 - AISLE
   }
 
-  // what stands on a counter is drawn at the counter's height: it is laid over the piece it stands on
+  // what stands on a counter is laid over the piece it stands on, on its top
   for (const section of plan.sections) {
     for (const [item, base] of Object.entries(section.onTopOf ?? {})) {
       const under = placements.find((placement) => placement.item === base)
       if (!under || pieceOf(item).length === 0) continue
-      placements.push({ item, position: [under.position[0], 0, under.position[2]] })
+      // on the top of the piece it stands on: a loose body is set down by the bottom of what it draws
+      placements.push({ item, position: [under.position[0], under.position[1] + (measure(base)?.h ?? 0), under.position[2]] })
       onFloor.add(item)
     }
   }
