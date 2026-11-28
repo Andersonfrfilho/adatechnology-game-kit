@@ -716,7 +716,7 @@ export class EnginePieces {
       return { kind: 'compound', children: [{ shape: { kind: 'cylinder', halfHeight: b.halfExtents[round.axis], radius: round.radius }, position: [0, 0, 0], rotation }] }
     }
     if (b.partBoxes && b.partBoxes.length > 0) {
-      return { kind: 'compound', children: mergeFlushBoxes(b.partBoxes).map((part, i) => ({ shape: { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
+      return { kind: 'compound', children: mergeFlushBoxes(b.partBoxes).map((part, i) => ({ shape: part.hull ? { kind: 'convex', points: [...part.hull] } : part.round ? { kind: 'cylinder', halfHeight: part.half[1], radius: (part.half[0] + part.half[2]) / 2 } : { kind: 'box', half: part.half }, position: part.center, ...(part.rotation ? { rotation: part.rotation } : {}), tag: i })) }
     }
     return { kind: 'box', half: b.halfExtents }
   }

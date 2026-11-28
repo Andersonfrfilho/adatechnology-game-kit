@@ -7,6 +7,13 @@ export interface PartBox {
   readonly center: Vec3
   readonly half: Vec3
   readonly rotation?: readonly [number, number, number, number]
+  /** A round primitive (a leg, a basin, a tank): a cylinder along the box's own y, its radius the mean of the box's x and z halves. The engine holds it as that cylinder, not as the box around it, whose corners are air. */
+  readonly round?: true
+  /**
+   * A primitive neither a box nor a straight whole cylinder (half a log, a cone, a ball): the points of its convex hull, x y z each, about the box's centre in the box's
+   * own frame. The engine holds it as that hull.
+   */
+  readonly hull?: readonly number[]
 }
 
 const rows = (r: readonly [number, number, number, number]): number[] => {
