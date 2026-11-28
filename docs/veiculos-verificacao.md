@@ -63,6 +63,21 @@ detrito da oficina (os mesmos do tiro na parede) e nenhuma marca própria. O fur
   o furo; `metal_bullet` para slug e calibre pesado.
 - **Pendência:** a lasca do tijolo é outro sistema (partículas `chips` de vida curta, de `vfx.burst`), que só quica no chão e some em 2 a 4 s: não empilha.
 
+## Golpes na lataria e o tiro visto por dentro (2026-11-28)
+
+- **Golpe de mão** (`strikeMarkShape`, `game-vehicles`; dados de energia e raio do golpe do `game-weapons`, linha de contato da família `bat_swing`):
+  soco = amassado pequeno e raso; chute = amassado mais fundo, com a tinta trincada em volta; taco e cano = vinco comprido ao longo do cabo; faca = risco que
+  mostra o primer; facão = corte até o metal; katana e machado = rasgo na chapa. O risco e o vinco seguem o movimento do golpe (`MOTION_SWEEPS` e `sweepOf`
+  do `game-weapons`; `Hit.sweep` e `Hit.contactLength` no contrato). O amassado move os vértices da chapa (`dent-at.ts`), então quem olha de dentro, com a
+  porta aberta, vê a mesma deformação.
+- **Tiro que atravessa** (`exit-marks.ts`): saída com pétalas viradas para dentro na face interna da chapa, furo no forro da porta e saída do forro do lado
+  da cabine. Tudo é filho da porta e vai com ela. O que está além (o banco) recebe o tiro do mundo como peça própria.
+- **Testes:** `game-vehicles/tests/strike-shape.test.ts` (armas do SDK) e `game-vehicles-fleet/tests/blows-on-the-skin.test.ts` (sedã: soco e chute afundam
+  a chapa no ponto e não a um palmo dele; o vinco do taco é comprido ao longo do golpe; o risco da lâmina fica deitado na chapa ao longo do golpe; o tiro deixa
+  saída na face interna e furo e saída no forro). No jogo real, `examples/test-room/car-blows-test.mjs`, com prints em `shots/car-blows-*.png`.
+- **Pendência:** a faca de cozinha (`knife`) tem alcance de 0,4 m medido do centro do corpo e não alcança a lateral do carro em pé (o corpo tem 0,3 m
+  de raio). A faca tática (0,6 m) alcança. É um dado do arsenal para revisar.
+
 ## Vidro embaçado por dentro
 
 Desde 2026-11-05: `createWindshieldMist` (`game-vehicles-three`) põe uma película clara em cada vidro do `context.glass`, **filha do próprio vidro** (desce com a

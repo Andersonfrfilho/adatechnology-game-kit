@@ -48,10 +48,11 @@ describe('bullet holes stay one draw call no matter how many rounds', () => {
     const door = d.state().parts.find((p) => p.id === 'door_front_left')!
     expect(door.holes).toHaveLength(shots)
 
-    // every round still leaves a visible hole...
-    expect(after.instances - before.instances).toBe(shots)
-    // ...but they are drawn by one instanced batch, never one mesh each
-    expect(after.batches - before.batches + (after.loneMeshes - before.loneMeshes)).toBeLessThanOrEqual(1)
+    // every round still leaves a visible hole (and, through the door, its exit inside the sheet and its hole through the card behind)...
+    expect(after.instances - before.instances).toBeGreaterThanOrEqual(shots)
+    expect((after.instances - before.instances) % shots).toBe(0)
+    // ...but they are drawn by one instanced batch per kind of mark (entry, exit, card), never one mesh each
+    expect(after.batches - before.batches + (after.loneMeshes - before.loneMeshes)).toBeLessThanOrEqual(3)
     expect(after.loneMeshes).toBe(before.loneMeshes)
   })
 })
