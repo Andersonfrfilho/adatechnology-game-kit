@@ -208,8 +208,13 @@ const NO_PROGRESS = 0.75
 const WAY_STEP_MIN = 0.02
 const WAY_STEP_MAX = 0.1
 
+/** What a piece of debris can be made inside: the fixed things and the debris cut beside it (it meets nothing else, layer `rubble`). */
+const BORN_INSIDE = { layers: ['static', 'rubble'] } as const
+
 interface Link {
   readonly id: BodyId
+  /** The fixed things a piece of debris was made inside and has not left yet (`throughStatics`): it passes through them until it is out. */
+  through?: BodyId[]
   /** The ground under its centre when it went to sleep: the engine does not see `groundAt` change, the kit looks (`groundTurn`). */
   groundAtSleep: number
   readonly user: number
@@ -308,6 +313,12 @@ export class EnginePieces {
   private readonly blasts: Array<{ x: number; z: number; radius: number }> = []
   /** The host's fixed things (`staticSolids`) as static bodies. */
   readonly statics: EngineStatics
+  /** The debris still passing through a fixed thing it was made inside (`throughStatics`). */
+  private readonly passing = new Set<PieceBody>()
+  /** A set of one fixed body, to ask how deep a piece is in that one. */
+  private readonly oneStatic = new Set<BodyId>()
+  /** The bodies a piece of debris overlaps where it is made (`throughStatics`), kept between asks. */
+  private readonly overlapped: BodyId[] = []
   private readonly ignored = new Set<string>()
   private readonly knocks = new Map<string, number>()
   private readonly footprintOut: Footprint = { corners: new Float64Array(16), normals: new Float64Array(6), minX: 0, maxX: 0, minZ: 0, maxZ: 0 }
@@ -406,6 +417,7 @@ export class EnginePieces {
     this.byUser.delete(link.user)
     this.byBody.delete(link.id)
     this.bodyIds.delete(link.id)
+    this.passing.delete(b)
     this.active.delete(b)
     if (this.byObject.get(b.objectId) === b) this.byObject.delete(b.objectId)
     this.links.delete(b)
@@ -567,6 +579,7 @@ export class EnginePieces {
     this.makeBodies(each)
     each((b) => this.hang(b))
     each((b) => this.sync(b, dt, h))
+    this.meetStaticsAgain()
     if (this.schedule) this.layGroundLater(each, dt)
     else this.layGround(each, dt)
     this.keepApart(apart)
@@ -847,7 +860,8 @@ export class EnginePieces {
       this.byBody.set(id, b)
       this.bodyIds.add(id)
       this.byObject.set(b.objectId, b)
-      this.outOfStatics(b, link)
+      if (b.debris) this.throughStatics(b, link)
+      else this.outOfStatics(b, link)
     })
   }
 
@@ -865,7 +879,7 @@ export class EnginePieces {
       centreAtOrigin: true,
       keepPartContacts: shape.kind === 'compound' && shape.children.length > 1,
       material: this.material(b),
-      layer: 'debris',
+      layer: b.debris ? 'rubble' : 'debris',
       // no air drag: the kit's pieces never had any (a round piece's rolling resistance is the adapter's, `rolling`)
       angularDamping: 0,
       linearDamping: 0,
@@ -938,6 +952,54 @@ export class EnginePieces {
    * lifted (`underGround`). Left to the engine it is pushed out a little each step (`maxPushOut`), which reads as the piece rising by itself: a roof sheet made 1 m
    * into a shelf rose 0.83-0.94 m over the room's 11 s. Only past a contact's sink (`SINK`): resting on a shelf it is not moved.
    */
+  /**
+   * A piece of debris made inside something (the bars of a cage that gave way, inside the wall that still stands; a chunk overlapping the part next to the one that broke,
+   * or the chunk cut beside it) is not moved out of it as a piece is (`outOfStatics`), and the engine does not push the two apart: debris is born
+   * where the thing broke. It passes through what it was made inside until it is out of it, and only through that.
+   */
+  private throughStatics(b: PieceBody, link: Link): void {
+    const q = b.root.quaternion
+    const c = this.centre(b)
+    const found = this.overlapped
+    this.world.overlapShape(this.shapeOf(b), [c.x, c.y, c.z], [q.x, q.y, q.z, q.w], found, BORN_INSIDE)
+    for (const id of found) {
+      if (id === link.id || link.through?.includes(id) || !(this.statics.ids.has(id) || this.bodyIds.has(id))) continue
+      this.world.ignorePair(link.id, id, true)
+      ;(link.through ??= []).push(id)
+    }
+    if (link.through?.length) this.passing.add(b)
+  }
+
+  /** The debris passing through what it was made inside meets it again once it is out of it; what was made again meanwhile (a fixed thing's body is a new one) is looked at afresh. */
+  private meetStaticsAgain(): void {
+    if (this.passing.size === 0 || !this.world.penetration) return
+    const one = this.oneStatic
+    for (const b of this.passing) {
+      const link = this.links.get(b)
+      const through = link?.through
+      if (!link || !through) {
+        this.passing.delete(b)
+        continue
+      }
+      let remade = false
+      for (let i = through.length - 1; i >= 0; i--) {
+        const id = through[i] as BodyId
+        if (!this.statics.ids.has(id) && !this.bodyIds.has(id)) {
+          remade = true
+          through.splice(i, 1)
+          continue
+        }
+        one.clear()
+        one.add(id)
+        if (this.world.penetration(link.id, this.outAxis, one) > SINK) continue
+        this.world.ignorePair(link.id, id, false)
+        through.splice(i, 1)
+      }
+      if (remade) this.throughStatics(b, link)
+      if (through.length === 0) this.passing.delete(b)
+    }
+  }
+
   private outOfStatics(b: PieceBody, link: Link): void {
     if (!this.world.penetration) return
     const axis = this.outAxis

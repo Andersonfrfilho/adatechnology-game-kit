@@ -33,6 +33,8 @@ export interface Live {
   air: number
   /** A big one (`isBig`): it stays where it lies, and what walks steps on it or kicks it. */
   body: LooseBody | null
+  /** The rigid body that moves it (`FragmentSystemOptions.rigid`), or null: it moves by the light physics. */
+  rigid: RigidHandle | null
   /** The `update` count when it was made. */
   born: number
   /** Seconds it stays at rest before it fades (0 = forever). */
@@ -112,7 +114,26 @@ export function restingBox(f: Live): RestingBox {
 /** What a fragment's resting time can depend on: the fragment (its material, size, shape) and the id of the object it came from. */
 export type FragmentLifeRule = (fragment: Fragment, objectId: string) => number
 
+/** A piece of debris moved as a rigid body (`RigidDebris`): what the fragment system reads of it. */
+export interface RigidHandle {
+  readonly sleeping: boolean
+}
+
+/**
+ * Who moves the big debris (`isBig`, or `lasting`): the rigid bodies of the host, where a board metres long falls, leans and lies as every loose piece does. The fragment
+ * system keeps the mesh, its budget and its life; the body writes the mesh's position and turn.
+ */
+export interface RigidDebris {
+  /** The mesh becomes a body with the box `half` (m, the mesh's own axes) about its origin. */
+  add(mesh: THREE_NS.Mesh, half: readonly [number, number, number], mass: number, velocity: readonly [number, number, number], angular: readonly [number, number, number]): RigidHandle
+  remove(handle: RigidHandle): void
+  /** Gives it this speed on the floor (m/s), as a kick does. */
+  push(handle: RigidHandle, velocityX: number, velocityZ: number): void
+}
+
 export interface FragmentSystemOptions {
+  /** The rigid bodies the big debris moves by. Default: none, and it moves by the light physics of the splinters, which knows no lever and no leaning. */
+  rigid?: RigidDebris
   /** Keep the pose of the step before the last, to draw between it and the step's (`presentPose`). Default off: the meshes are always the step's. */
   interpolate?: boolean
   scene: THREE_NS.Scene
@@ -458,6 +479,7 @@ export class FragmentSystem {
       dying: false,
       air: f.shape === 'scrap' && sz[2] <= SHEET_MAX ? SHEET_AIR : 0,
       body: null,
+      rigid: null,
       born: this.tick,
       life: lasting ? 0 : Math.max(0, typeof this.o.life === 'function' ? this.o.life(f, home) : this.o.life),
       seq: this.nextSeq++,
@@ -467,9 +489,12 @@ export class FragmentSystem {
     }
     // a big piece stays where it fell, whatever its shape: a slab of a roof tile is debris as much as a chunk of brick is
     if (lasting || isBig(f.size)) {
+      const rigid = this.o.rigid
+      if (rigid) live.rigid = rigid.add(mesh, [sc.x / 2, sc.y / 2, sc.z / 2], f.mass, f.velocity, f.angularVelocity)
       live.body = {
         mass: f.mass,
         push: (x, z) => {
+          if (rigid && live.rigid) return rigid.push(live.rigid, x, z)
           live.vel.x = x
           live.vel.z = z
           live.vel.y = Math.max(live.vel.y, 0.3)
@@ -505,7 +530,8 @@ export class FragmentSystem {
     for (const f of this.list) {
       const d = this.v.copy(f.mesh.position).sub(this.w.set(point[0], point[1], point[2]))
       const dist = d.length()
-      if (dist > radius || f.dying) continue
+      // a rigid one is thrown with the host's loose pieces
+      if (dist > radius || f.dying || f.rigid) continue
       const k = (1 - dist / radius) ** 2 * speed
       d.normalize().multiplyScalar(k)
       d.y += k * 0.4
@@ -570,7 +596,7 @@ export class FragmentSystem {
   /** What lies inside the disc looks at the ground again: it was dug or heaped under it. */
   wakeRegion(x: number, z: number, radius: number): void {
     for (const f of this.list) {
-      if (!f.asleep || Math.hypot(f.mesh.position.x - x, f.mesh.position.z - z) > radius) continue
+      if (!f.asleep || f.rigid || Math.hypot(f.mesh.position.x - x, f.mesh.position.z - z) > radius) continue
       this.rouse(f)
     }
   }
@@ -579,6 +605,7 @@ export class FragmentSystem {
     this.tick++
     this.clock += dt
     this.wakeUnsupported()
+    this.wakeRigid()
     this.beginTick()
     const g = this.o.gravity
     for (let i = this.active.length - 1; i >= 0; i--) {
@@ -589,6 +616,7 @@ export class FragmentSystem {
         if (f.fade <= 0) {
           this.instances.remove(f.mesh)
           this.o.scene.remove(f.mesh)
+          this.release(f)
           f.isActive = false
           this.active.splice(i, 1)
           this.list.splice(this.list.indexOf(f), 1)
@@ -597,7 +625,8 @@ export class FragmentSystem {
         f.mesh.scale.copy(f.baseScale).multiplyScalar(f.fade)
       }
       if (f.asleep) continue
-      this.step(f, dt, g)
+      if (f.rigid) this.follow(f)
+      else this.step(f, dt, g)
     }
     this.expireSleepers()
     this.keepBudget()
@@ -605,12 +634,30 @@ export class FragmentSystem {
     this.drawInstanced()
   }
 
+  /** Its body goes with it. */
+  private release(f: Live): void {
+    if (f.rigid) this.o.rigid?.remove(f.rigid)
+    f.rigid = null
+  }
+
+  /** The debris moved by a rigid body that the body's world woke (something fell on it, a blast, its ground dug): it is awake here too. */
+  private wakeRigid(): void {
+    for (const f of this.list) if (f.rigid && f.asleep && !f.dying && !f.rigid.sleeping) this.rouse(f)
+  }
+
+  /** A piece of debris moved by its rigid body: the body wrote its pose; it sleeps here when the body does. */
+  private follow(f: Live): void {
+    f.box = undefined
+    if (f.rigid?.sleeping) this.sleep(f)
+  }
+
   /** The meshes go back to the step's pose and the ones awake are recorded as the previous one (`interpolate`). */
   private beginTick(): void {
     const trail = this.trail
     if (!trail) return
     trail.begin()
-    for (const f of this.active) if (!f.asleep) trail.record(f.mesh)
+    // the rigid ones are drawn between steps by their bodies' system
+    for (const f of this.active) if (!f.asleep && !f.rigid) trail.record(f.mesh)
   }
 
   /** The meshes get the step pose back, before anything reads them. The instances take it at the next `update`. */
@@ -628,7 +675,8 @@ export class FragmentSystem {
   /** The fragments in flight are drawn by the instances, those at rest on their own (the settled batches take them): then the instances take the transforms of this update. */
   private drawInstanced(): void {
     for (const f of this.active) {
-      if (f.asleep) this.instances.remove(f.mesh)
+      // a rigid one is few and big: it is drawn by its own mesh, which its body moves
+      if (f.asleep || f.rigid) this.instances.remove(f.mesh)
       else this.instances.add(f.mesh)
     }
     this.instances.sync()
@@ -639,12 +687,12 @@ export class FragmentSystem {
     const most = this.o.maxAwake
     if (most === undefined || !Number.isFinite(most)) return
     let awake = 0
-    for (const f of this.active) if (!f.asleep && !f.dying) awake++
+    for (const f of this.active) if (!f.asleep && !f.dying && !f.rigid) awake++
     if (awake <= most) return
     for (let i = 0; i < this.active.length; i++) {
       const f = this.active[i]
       if (awake <= most) return
-      if (f.asleep || f.dying || !f.contact || !isSlow(f)) continue
+      if (f.asleep || f.dying || f.rigid || !f.contact || !isSlow(f)) continue
       this.sleep(f)
       i--
       awake--
@@ -678,7 +726,8 @@ export class FragmentSystem {
     for (let k = 0; k < Math.min(SUPPORT_CHECKS, n); k++) {
       this.supportTurn = (this.supportTurn + 1) % n
       const f = this.list[this.supportTurn]
-      if (!f.asleep || f.dying) continue
+      // what a rigid one lies on is its body's to know
+      if (!f.asleep || f.dying || f.rigid) continue
       const e = this.m.makeRotationFromQuaternion(f.mesh.quaternion).elements
       const ext = Math.abs(e[1]) * f.half.x + Math.abs(e[5]) * f.half.y + Math.abs(e[9]) * f.half.z
       // measured afresh: the floor kept from its landing is the top it landed on, which may have broken or been carried off since
@@ -895,6 +944,7 @@ export class FragmentSystem {
       if (this.list[i].home === home) {
         this.instances.remove(this.list[i].mesh)
         this.o.scene.remove(this.list[i].mesh)
+        this.release(this.list[i])
         this.deactivate(this.list[i])
         this.list[i].deadline = Infinity
         this.list.splice(i, 1)
@@ -905,7 +955,10 @@ export class FragmentSystem {
   clear(): void {
     this.trail?.clear()
     this.instances.clear()
-    for (const f of this.list) this.o.scene.remove(f.mesh)
+    for (const f of this.list) {
+      this.o.scene.remove(f.mesh)
+      this.release(f)
+    }
     this.list.length = 0
     this.active.length = 0
     this.mortal.length = 0

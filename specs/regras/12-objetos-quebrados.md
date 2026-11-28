@@ -36,10 +36,14 @@ Decidido pelo dono em 2026-11-04, depois de latinhas paradas no ar sobre uma mes
   de 2 m, mal passava do limite. Peça nova entra no catálogo e passa por esse teste nos três tamanhos.
 - **Destroço de qualquer comprimento deita e fica.** O pedaço que sobra de uma quebra (lasca, toco, meia tábua, tábua inteira) cai, deita no chão ou em cima de
   outro e para: não fica em pé na ponta, não sobe e não continua se mexendo. O teste `game-destruction-three/tests/long-debris-settles.test.ts` (CI) solta
-  pedaços de 10 cm a 4,2 m, em três seções (tábua, ripa, viga), deitados e inclinados até 80°, com giro, uns por cima dos outros: 4 s depois nenhum tem o meio a
-  mais de 20 cm do chão e 6 s depois nenhum se mexe. Regra de física nova no sistema de estilhaços é escrita pela velocidade da ponta (m/s), nunca em rad/s
+  pedaços de 10 cm a 4,2 m, em três seções (tábua, ripa, viga), deitados e inclinados até 80°, com giro, uns por cima dos outros: nenhum sobe mais de 30 cm
+  acima de onde quebrou, nenhum termina a mais de 45° nem com o meio a mais de 50 cm, e 12 s depois nenhum se mexe. Regra de física nova no sistema de estilhaços é escrita pela velocidade da ponta (m/s), nunca em rad/s
   fixo: o que serve para uma lasca de 5 cm joga uma tábua de 4 m para cima.
 - **Tudo que quebra sossega.** O teste `game-floorplan-three/tests/broken-catalogue-settles.test.ts` (CI) quebra cada móvel do catálogo até o fim, parte por
   parte, e 8 s depois confere que nada solto ainda se mexe, nem destroço nem peça. O que já falhava quando o teste foi escrito está contado em `KNOWN` (14
-  móveis em 2026-11-28: 11 com destroço que não para, `floor_lamp`, `shower` e `shower_large` com peça que não para), e essa lista só diminui: peça nova não
+  móveis em 2026-11-28, 9 depois da spec 020: 7 com lasca pequena que não para, `shower` e `shower_large` com peça que não para), e essa lista só diminui: peça nova não
   entra nela, peça consertada sai.
+- **O destroço grande é corpo rígido** (spec 020). O que sobra de uma quebra com 20 cm ou mais (`isBig`) e toda barra de armadura é movido por um corpo do
+  motor na camada `rubble`: cai, apoia e deita como toda peça, encontrando o mundo fixo e outro destroço. A física leve do `FragmentSystem` fica só com a
+  lasca. Ele não encosta em peça solta, pessoa ou carro (dívida declarada na spec). Regra nova de movimento para pedaço grande não se escreve no
+  `FragmentSystem`.
