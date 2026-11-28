@@ -11,6 +11,8 @@ import type { BlastQuery, BodyId, PhysicsLoop } from '@adatechnology/game-physic
 import { createEngineImpacts } from './engine-impacts'
 import type { EngineImpactsOptions } from './engine-impacts'
 import { EnginePieces } from './engine-pieces'
+import { KitEnergyLedger } from './kit-energy'
+import type { KitEnergyOver, KitRule } from './kit-energy'
 import type { StaticSolid } from './engine-pieces'
 import type { GroundGrid } from './engine-ground'
 import type { GroundPatchRead } from './engine-ground-job'
@@ -53,6 +55,8 @@ export interface PieceSystemOptions {
   gravity: number
   /** A piece hit the ground faster than 3 m/s (throttled per piece). */
   onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
+  /** A rule of the kit gave a piece more energy than its own fall would (`KitEnergyLedger`). */
+  onKitEnergy?: (over: KitEnergyOver) => void
   /** Notified when a piece is about to be removed. */
   scene: THREE_NS.Scene
   /**
@@ -338,6 +342,8 @@ export class PieceSystem {
   private supportNormal: Vec3 = UP
   private supportFriction: PieceFriction | null = null
   private supportBody: PieceBody | null = null
+  /** What each rule of the kit gave the pieces it pushed (`ruleImpulse`, and the engine's own `topple`). */
+  readonly kitEnergy: KitEnergyLedger
 
   constructor(
     private readonly THREE: typeof THREE_NS,
@@ -352,7 +358,9 @@ export class PieceSystem {
     this.loop = resolved.loop
     this.stepsItself = resolved.stepsItself
     this.trail = o.interpolate ? new PoseTrail() : null
+    this.kitEnergy = new KitEnergyLedger(o.onKitEnergy)
     this.engine = new EnginePieces(THREE, resolved.loop.world, {
+        kitEnergy: this.kitEnergy,
         groundAt: o.terrainAt ?? o.groundAt,
         ...(o.terrainRollingAt ? { groundRollingAt: o.terrainRollingAt } : {}),
         ...(o.terrainRollingDampingAt ? { groundRollingDampingAt: o.terrainRollingDampingAt } : {}),
@@ -723,6 +731,22 @@ export class PieceSystem {
     b.sleeping = false
     b.still = 0
     b.calmAt = null
+  }
+
+  /** `impulse` given by a rule of the kit on its own, measured by its name (`kitEnergy`). */
+  ruleImpulse(rule: KitRule, b: PieceBody, impulse: Vec3, point?: Vec3): void {
+    this.kitEnergy.begin(b)
+    this.impulse(b, impulse, point)
+    this.kitEnergy.end(rule, b)
+  }
+
+  /** Spin (rad/s, world axes x and z) added by a rule of the kit on its own, measured by its name (`kitEnergy`). */
+  ruleSpin(rule: KitRule, b: PieceBody, x: number, z: number): void {
+    this.kitEnergy.begin(b)
+    b.angularVelocity[0] += x
+    b.angularVelocity[2] += z
+    b.sleeping = false
+    this.kitEnergy.end(rule, b)
   }
 
   /** I^-1 * (x, y, z) in world space for a box with the body's half extents and mass (needs `this.m` to hold the body's rotation). */

@@ -46,6 +46,7 @@ import { createTestTable } from './test-table'
 import { groundHostOf, toHostEvent } from './host-events'
 import { createDualReload } from './dual-reload'
 import { createLog } from './log'
+import { createInvariantLog } from './invariant-log'
 import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
@@ -350,6 +351,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
 
   const rendererPieces = new Map<string, Piece>()
   const entries = kit.objects
+  const invariants = createInvariantLog({ log, t, destruction: kit.destruction, subjectOf: (objectId) => { const e = entries.get(objectId); return e && { name: e.name, itemId: e.so.itemId } } })
   const splitOf = new Map<string, Entry>()
 
   // the body's own sounds (jump, landing, the swing and the knuckles, sole or blade of a blow); the footsteps are the player module's, on the footfalls the room sends
@@ -368,13 +370,11 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     rendererPieces.set(objectId, piece)
     if (!handTake.wasTakenFrom(objectId)) action('loosened', t(cause === 'blast' ? 'act.loosened' : cause === 'ground' ? 'act.lost_ground' : 'act.came_apart', { name: e.name }), { objectId, itemId: e.so.itemId })
   })
-  // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, which is a bug the room says aloud
+  // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go, and a kit rule that made energy, are bugs the room says aloud
   kit.destruction.on('brokenChecked', (objectId, released) => {
     bodyBoxes.delete(objectId)
     if (standingIds.includes(objectId)) leaveFootprint(objectId)
-    if (!released) return
-    const e = entries.get(objectId)
-    log.add({ channel: 'check', type: 'fail', text: t('check.broken_floating', { name: e?.name ?? objectId }), objectId, ...(e ? { itemId: e.so.itemId } : {}), data: { invariant: 'broken_floating' } })
+    if (released) invariants.brokenFloating(objectId)
   })
   kit.destruction.on('piece', (piece) => {
     rendererPieces.set(piece.objectId, piece)

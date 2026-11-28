@@ -1,6 +1,8 @@
 export { MIN_PIECE_MASS_KG, impactKey, shotKey, dragSoundKey, createDestructionRenderer, SUGGESTED_MAX_AWAKE_FRAGMENTS, SUGGESTED_MAX_AWAKE_PIECES } from './renderer'
 export { isPhysicsLoop } from '@adatechnology/game-physics'
 export { EVENT_CLASS } from './event-class'
+export { KIT_ENERGY_RESOLUTION, KIT_RULE } from './kit-energy'
+export type { KitEnergyOver, KitRule, KitRuleTally } from './kit-energy'
 export { EVENT_APPLY_WEIGHT, STRUCTURAL_UNITS_PER_FRAME, eventApplyWeight } from './event-weight'
 export { BLAST_RAYS_PER_FRAME, BLAST_WAVE_PARTS_PER_FRAME, createBlastPacer } from './blast-pacer'
 export type { BlastPacer, BlastPacerOptions, PacedBlast } from './blast-pacer'

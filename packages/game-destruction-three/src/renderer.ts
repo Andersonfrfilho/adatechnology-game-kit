@@ -29,6 +29,8 @@ import type { HostSolid } from '@adatechnology/game-contracts'
 import { sameSolids } from './engine-statics'
 import { MIN_PIECE_HALF, PieceSystem } from './pieces'
 import type { PieceSweepHit } from './pieces'
+import { KIT_RULE } from './kit-energy'
+import type { KitRuleTally } from './kit-energy'
 import { RebarCages } from './rebar'
 import { partHintOf, specFrameInverse } from './spec'
 import { surfaceOf } from './friction'
@@ -754,6 +756,7 @@ class Renderer implements DestructionRenderer {
         ? { keep: { maxLive: this.blastDebris.maxLivePieces, far: this.blastDebris.far, ...(o.focus ? { focus: o.focus } : {}), onFade: (b: PieceBody) => this.fadePiece(b) } }
         : {}),
       onHardLanding: (p, point, speed) => this.hardLanding(p, point, speed),
+      ...(o.onKitEnergy ? { onKitEnergy: o.onKitEnergy } : {}),
       sweep: (p, from, to) => this.sweepPiece(p, from, to),
       onSlam: (p, hit, speed) => this.slam(p, hit, speed),
       // two pieces knocked together: each sounds as its material does (a can on a can, a bottle on a table's leg)
@@ -1238,6 +1241,11 @@ class Renderer implements DestructionRenderer {
   piece(objectId: string): Piece | null {
     const piece = this.pieceSys.get(objectId)
     return piece && !piece.debris ? piece : null
+  }
+
+  /** What each rule of the kit that moves a piece by itself (`KIT_RULE`) gave the pieces it pushed, against their own fall (see `RendererOptions.onKitEnergy`). */
+  kitEnergy(): KitRuleTally[] {
+    return this.pieceSys.kitEnergy.tally()
   }
 
   impulse(objectId: string, impulse: Vec3, point?: Vec3): void {
@@ -3101,9 +3109,7 @@ class Renderer implements DestructionRenderer {
     // balanced on an edge it is started over it, and gravity does the rest: turning about (z, 0, -x) moves the top toward (x, z)
     const loose = b.piece
     if (away && loose) {
-      loose.angularVelocity[0] += away.z * EDGE_NUDGE
-      loose.angularVelocity[2] -= away.x * EDGE_NUDGE
-      loose.sleeping = false
+      this.pieceSys.ruleSpin(KIT_RULE.LOOSEN_IF_FOOTLESS, loose, away.z * EDGE_NUDGE, -away.x * EDGE_NUDGE)
     } else this.tipIfTopHeavy(b)
     // the host stops keeping the footprint it had where it stood: it is a body that moves now
     this.o.onLoosened?.(objectId, piece, 'apart')
@@ -3212,7 +3218,7 @@ class Renderer implements DestructionRenderer {
       body.sleeping = false
       body.still = 0
       body.calmAt = null
-      if (held.length > 0 && length > 1e-6) this.pieceSys.impulse(body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + gx, floor, centre[2] + gz])
+      if (held.length > 0 && length > 1e-6) this.pieceSys.ruleImpulse(KIT_RULE.CHECK_UNDERMINED, body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + gx, floor, centre[2] + gz])
       if (!was) this.o.onLoosened?.(b.id, body, 'ground')
     }
   }
@@ -3233,7 +3239,7 @@ class Renderer implements DestructionRenderer {
     // as far as the piece itself reaches the way it goes over: its longest side stood for it whichever way that was, and a table 4.4 m long going over across its
     // 46 cm was pushed 2.2 m out from its middle, ten times its own width (19.5 rad/s in one update: a table top doing a pirouette)
     const reach = this.reachAlong(body, inside.out.x, inside.out.z)
-    this.pieceSys.impulse(body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + inside.out.x * reach, feet.floor, centre[2] + inside.out.z * reach])
+    this.pieceSys.ruleImpulse(KIT_RULE.GO_OVER_IF_BALANCED, body, [0, -body.mass * UNDERMINED_PUSH, 0], [centre[0] + inside.out.x * reach, feet.floor, centre[2] + inside.out.z * reach])
   }
 
   /** How far (m) the box of a piece reaches from its middle along the level direction (x, z), turned as it is: the support of its box that way. */

@@ -3,6 +3,8 @@ import type { RayBroadPhase, Vec3 } from '@adatechnology/game-destruction'
 import type { BodyDesc, BodyId, HeightRegion, JointId, Material, Quat, Rolling, SeamWorld, ShapeDesc } from '@adatechnology/game-physics'
 import { samePatch } from '@adatechnology/game-terrain'
 import type { HeightPatch } from '@adatechnology/game-terrain'
+import { KIT_RULE } from './kit-energy'
+import type { KitEnergyLedger } from './kit-energy'
 
 import { GROUND_CELL, buildGroundTile, flatTile, readGround, sampleCount, shapeGround } from './engine-ground'
 import type { AwakeList } from './awake-list'
@@ -59,6 +61,8 @@ export interface EnginePieceOptions {
   readonly onSlam?: (piece: PieceBody, hit: PieceSweepHit, speed: number) => void
   readonly onKnock?: (a: PieceBody, b: PieceBody, point: Vec3, speed: number) => void
   readonly onHardLanding: (piece: PieceBody, point: Vec3, speed: number) => void
+  /** Measures what `topple` gives each piece (`KitEnergyLedger`). */
+  readonly kitEnergy?: KitEnergyLedger
   /**
    * The most tiles of ground laid at a blast (`layAhead`), nearest the centre first; 0 turns it off. A blast's pieces come into being in the next update, on tiles not laid yet:
    * laying the ones the blast reaches at the blast, before any piece needs them, takes that cost out of the frame the pieces appear in, and puts it in the explosion's. Default `BLAST_TILES` (off).
@@ -1215,20 +1219,25 @@ export class EnginePieces {
     if (wx <= wz) {
       const edge = dirX > 0 ? x1 : x0
       const dw = edge * dirX > 0 ? -dirX * this.topplePush(edge, height, isColumn && Math.abs(w[2]!) < PUSH_SPIN, this.turningOf(b, 2)) * dt : 0
+      if (dw === 0) return
       const rx = -edge
       const ry = -low
+      this.o.kitEnergy?.begin(b)
       w[2] += dw
       v[0] += -dw * ry
       v[1] += dw * rx
     } else {
       const edge = dirZ > 0 ? z1 : z0
       const dw = edge * dirZ > 0 ? dirZ * this.topplePush(edge, height, isColumn && Math.abs(w[0]!) < PUSH_SPIN, this.turningOf(b, 0)) * dt : 0
+      if (dw === 0) return
       const rz = -edge
       const ry = -low
+      this.o.kitEnergy?.begin(b)
       w[0] += dw
       v[1] += -dw * rz
       v[2] += dw * ry
     }
+    this.o.kitEnergy?.end(KIT_RULE.TOPPLE, b)
   }
 
   /** Propped pieces lose most of their friction until they move or sleep (the push only presses them into the prop: an energy-free way to end a wedge). */

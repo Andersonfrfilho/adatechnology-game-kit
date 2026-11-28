@@ -11,6 +11,7 @@ import type {
   FragmentLifeRule,
   GroundWorkerPort,
   JitWarmUpOptions,
+  KitEnergyOver,
   LoosenCause,
   Piece,
   PiecePhysics,
@@ -62,6 +63,8 @@ export type DestructionEvents = {
   readonly released: (pieceIds: readonly string[]) => void
   readonly loosened: (objectId: string, piece: Piece, cause: LoosenCause) => void
   readonly brokenChecked: (objectId: string, released: boolean) => void
+  /** A rule of the kit gave a piece more energy than its own fall would (`RendererOptions.onKitEnergy`): a bug of that rule, for the host to log. */
+  readonly kitEnergy: (over: KitEnergyOver) => void
 }
 
 /** The renderer with the queues it hands to a frame budget. */
@@ -113,7 +116,7 @@ export type DestructionDeps = {
 
 export function createDestructionHost(deps: DestructionDeps): KitWorldDestruction {
   const { debris, ground, pieces, camera } = deps
-  const listeners: { [TEvent in keyof DestructionEvents]: Set<DestructionEvents[TEvent]> } = { piece: new Set(), released: new Set(), loosened: new Set(), brokenChecked: new Set() }
+  const listeners: { [TEvent in keyof DestructionEvents]: Set<DestructionEvents[TEvent]> } = { piece: new Set(), released: new Set(), loosened: new Set(), brokenChecked: new Set(), kitEnergy: new Set() }
   let isShoveable: (objectId: string) => boolean = () => false
   const blast = debris?.blast === false ? undefined : (debris?.blast ?? {})
   const groundWorker = debris?.groundWorker === false ? undefined : (debris?.groundWorker ?? deps.groundWorker ?? undefined)
@@ -161,6 +164,9 @@ export function createDestructionHost(deps: DestructionDeps): KitWorldDestructio
     // after a break the collision of the object is measured again from what is still drawn; what stood on nothing was let go
     onBrokenChecked: (objectId, released) => {
       for (const handler of [...listeners.brokenChecked]) handler(objectId, released)
+    },
+    onKitEnergy: (over) => {
+      for (const handler of [...listeners.kitEnergy]) handler(over)
     },
     onPiece: (piece) => {
       pieces.add(piece)
