@@ -759,12 +759,12 @@
   ]
  },
  "household/service_entrance:high": {
-  "hash": "66f6a0ee",
+  "hash": "fbcf38c8",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh a4518d7a",
-   "0/1 Mesh c0cf6f2a",
-   "0/2 Mesh 204f07ea",
+   "0/0 Mesh 7a06c740",
+   "0/1 Mesh 26e63a64",
+   "0/2 Mesh 144edaa6",
    "0/3 Group 2f4ffa5",
    "0/3/0 Mesh cd1d42d0",
    "0/3/1 Mesh 6d98f14e"
@@ -1847,10 +1847,10 @@
   ]
  },
  "household/service_entrance:game": {
-  "hash": "c719c30",
+  "hash": "927eadaa",
   "nodes": [
    "0 Group 99159f93",
-   "0/0 Mesh 181d54f",
+   "0/0 Mesh 7605898d",
    "0/1 Group 5050a01f",
    "0/1/0 Mesh 72cc9519",
    "0/1/1 Mesh cd6a7752"
