@@ -50,6 +50,7 @@ import { createRoomMetrics, heapMB, ROOM_METRICS } from './metrics'
 import { createMemoryWatch } from './memory-watch'
 import { createNarrator } from './narrate'
 import { bindDebrisToPlayer } from './debris-contacts'
+import { withSweep } from './strike-sweep'
 import { createPlayer, PLAYER_RADIUS, type PlayerSlam } from './player'
 import { createModuleBlockers } from './module-blockers'
 import { createSceneryBlocking } from './scenery-blocking'
@@ -216,7 +217,6 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
   // the small corner picture a module can lend (`host.cornerImage`); `ui: false` draws nothing
   const cornerImage = options.ui !== false ? createCornerImage({ container: options.container, labels: { open: t('corner.open'), close: t('corner.close'), source: t('corner.source') } }) : null
   const num = numberFormat(locale)
-
   // ---------------------------------------------------------------------------------------------------------------------------------------
   // The world: the kit's host (`createKitWorldSync`, spec 011) makes the renderer, scene, camera, sun, ground, destruction, liquids, sound, effects, the
   // render budget and the frame. The room passes every option it has: its own physics (the page's loop, never 'jolt'), no workers of the host, and the
@@ -2415,7 +2415,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (length < 1e-6) return use
     return { ...use, origin, direction: [dx / length, dy / length, dz / length] }
   }
-  const meleeUse = (use: Extract<Use, { kind: 'melee' }>, id = toolId): void => {
+  const meleeUse = (use: Extract<Use, { kind: 'melee' }>, id = toolId, motion?: string): void => {
     const w = toolName(id)
     const u = id === 'kick' ? footRay(use) : bodyReach(use)
     const r = rayWorld(u.origin, u.direction, u.reach)
@@ -2423,7 +2423,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       action('melee', t('act.melee.miss', { weapon: w }), { data: { weapon: id } })
       return
     }
-    const hit = useToHit(u, r.point, r.normal)!
+    const hit = withSweep(useToHit(u, r.point, r.normal)!, { weapon: id, motion, forward: u.direction })
     const result = world.hitPart(r.object, r.part, { ...hit, source: 'player' })
     // a blow that leaves no mark (a punch on solid wood, a kick on the ground) still meets the surface: its impact sounds, by material and blow
     if (!result.events.some((e) => MARK_EVENTS.has(e.type))) {
@@ -2516,7 +2516,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
     if (clip === undefined || seconds === null) {
       if (leg) {
         legAim()
-        meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id)
+        meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id, familyBlow?.motion)
       } else meleeUse(u, id)
       return
     }
@@ -2531,7 +2531,7 @@ export function createTestRoom(options: TestRoomOptions): TestRoom {
       land: () => {
         if (leg) legAim()
         else aim()
-        meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id)
+        meleeUse({ ...u, origin: [aimO[0], aimO[1], aimO[2]], direction: [aimD[0], aimD[1], aimD[2]] }, id, familyBlow?.motion)
       },
     })
   }

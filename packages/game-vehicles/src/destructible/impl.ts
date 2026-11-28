@@ -37,6 +37,8 @@ import { createVehicleClips } from './clips'
 import { raycastMeshesLikeThree } from '../tri-index'
 import { bulletHoleShape } from '../hole-shape'
 import { createMarkFitter } from './mark-fit'
+import { createStrikeMarker } from './strike-marks'
+import { createExitMarker } from './exit-marks'
 import type { BulletHoleShape } from '../hole-shape'
 
 export interface VehicleDestructibleOptions {
@@ -763,6 +765,8 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
 
   // ---- hits ----------------------------------------------------------------------------------------------------------------------------
   const normalOf = (d: PartDef, v: Vector3): Vector3 => faceNormal(d, v)
+  const markExit = createExitMarker({ vector: (x, y, z) => new V3(x, y, z), visuals: () => vis })
+  const markStrike = createStrikeMarker({ vector: (x, y, z) => new V3(x, y, z), surfaceRay: (ray) => surfaceRay(ray), partOf: (partId) => ps.get(partId)?.def, toLocal, dirToLocal, visuals: () => vis })
   const fitter = createMarkFitter({ vector: (x, y, z) => new V3(x, y, z), surfaceRay: (ray) => surfaceRay(ray), toWorld, dirToWorld })
   /** The mark shrunk until its rim lies on the panel: a hole by an edge is smaller, never hanging off it (no visuals: nothing drawn, nothing to fit). */
   const fitMark = (v: Vector3, n: Vector3, shape: BulletHoleShape, along: Vector3): BulletHoleShape => (vis ? fitter(shape, { point: v, normal: n, along }) : shape)
@@ -812,6 +816,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       p.holes.push(hp)
       out.push(ev({ type: 'hole', part: d.id, hole: hp, worldPoint, worldNormal: r3(dirToWorld(n.clone().normalize())), direction: r3(dirToWorld(dir)), ...(through ? { energyLeft: r2(energyLeft()) } : {}), ...(through ? { exitPoint: add3(worldPoint, r3(dirToWorld(dir.clone().multiplyScalar(Math.max(0.02, Math.min(d.box.size[0], d.box.size[1], d.box.size[2])))))) } : {}) }))
       vis?.holeDecal([v.x, v.y, v.z], [n.x, n.y, n.z], d.material === 'glass' ? shapeOf(through) : fitMark(v, n, shapeOf(through), dir), d, [dir.x, dir.y, dir.z])
+      if (through && metal) markExit({ point: v, normal: n, dir, bore: holeDiam, part: d })
       if (d.role === 'mirror') vis?.shatterMirror(d.id)
       startLeak(p, v, cal, out, dir)
     }
@@ -1225,6 +1230,7 @@ export function createVehicleDestructible(kit: VehicleKit, vehicleCtx: VehicleCo
       case 'blunt':
       case 'slash':
         blunt(hh, out)
+        markStrike(hh)
         break
       case 'explosive':
         explosive(hh, out)
